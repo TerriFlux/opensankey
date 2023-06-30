@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef} from 'react'
-import { Modal,Button, Popover, Form,Pagination} from 'react-bootstrap'
-import parse from 'html-react-parser'
+import { Popover, Form,Pagination,Button,ButtonGroup,Carousel} from 'react-bootstrap'
+
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
 
@@ -27,6 +27,10 @@ import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenu
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
 import i18next from './traduction'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faShareNodes, faArrowPointer,faFilter,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
+import { FaAngleDoubleLeft,FaUser} from 'react-icons/fa'
 
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
@@ -136,7 +140,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [path,setPath] = useState('')
 
   //- Modals and Dialogs
-  const [welcome_text,set_welcome_text] = useState(window.sankey ? window.sankey.welcome_text : '')
+  // const [welcome_text,set_welcome_text] = useState(window.sankey ? window.sankey.welcome_text : '')
   const [show_draw, set_show_draw] = useState(false)
   const [show_load,set_show_load] = useState(false)
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
@@ -176,22 +180,56 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     setFailure(true)
     setNotStarted(false)
   }
+
+  const tmp=JSON.parse(JSON.stringify(exemple_menu))
+
+  let carousel_img=[] as string[]
+  if(tmp['OpenSankey'] && tmp['OpenSankey']['carousel_img']){
+    carousel_img=tmp['OpenSankey']['carousel_img']
+  }
+  const content_carousel=<Carousel variant='dark' >
+    {carousel_img.map((_) =>
+    {
+      const title=_.split('.').splice(0,1).join('')
+      return (<Carousel.Item>
+        <img alt={title} src={'/fm/userfiles/OpenSankey/image_carousel/'+_}   style={{'objectFit':'contain','width':'100%','height':'650px',display:'inline-block'}}   />
+        {/* <Carousel.Caption style={{display:'inline-block'}}><p>{title.replaceAll('_',' ')}</p></Carousel.Caption> */}
+      </Carousel.Item>)
+    })
+    }</Carousel>
+
+
   const [active_page,set_active_page]=useState('intro')
+  const style_border='solid 1px grey'
+  const src_intro_static = 'intro_static.png'
+  const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
+  const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
+  const buttons_filter=<>{(node_filter)?<Button size='sm' variant='light'>{t('Menu.Noeuds')}</Button>:<></>}
+  
+    {(flux_filter)?<Button size='sm' variant='light' >{t('Menu.flux')}</Button>:<></>}
+    {(Object.values(data.dataTags).length>0)?<Button size='sm' variant='light'>{t('Banner.data')}</Button>:<></>}</>
+
   const intro=<div>
-    <img src='/fm/userfiles/OpenSankey/image_carousel/intro.png'   style={{'objectFit':'contain','width':'100%'}}/>
+    {/* <img src='/fm/userfiles/OpenSankey/image_carousel/intro.png' alt='intro carousel' style={{'objectFit':'contain','width':'100%'}}/> */}
+    {window.SankeyToolsStatic ?<img src={src_intro_static} alt='intro carousel' style={{'objectFit':'contain','width':'100%'}}/>:content_carousel}
     <p>{t('Banner.hlp_1_txt_1')}</p>
-    <ol>
-      <li>{t('welcome.1')}</li>
-      <li>{t('welcome.2')}</li>
-      <li>{t('welcome.3')}</li>
-      <li>{t('welcome.4')}</li>
-      <li>{t('welcome.5')}</li>
-      <li>{t('welcome.6')}</li>
-      <li>{t('welcome.7')}</li>
-      <li>{t('welcome.8')}</li>
-      <li>{t('welcome.9')}</li>
-      <li>{t('welcome.10')}</li>
-    </ol>
+    <table style={{'border':style_border,textAlign:'center'}} >
+      {!window.SankeyToolsStatic?<>
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FaUser/></Button></td><td style={{'border':style_border}}>{t('welcome.9')}</td></tr>
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'info'}><FontAwesomeIcon icon={faArrowPointer} /></Button><Button size='sm' variant={'secondary'}><FontAwesomeIcon icon={faShareNodes} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.1')}</td></tr>
+        {/* <tr style={{'border':style_border}}><td style={{'border':style_border}}>&nbsp;</td><td style={{'border':style_border}}>{t('welcome.8')}</td></tr> */}
+      </>:<></>}   
+        
+      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'warning'}><FontAwesomeIcon icon={faFolderTree} /></Button></td><td style={{'border':style_border}}>{t('welcome.3')}</td></tr>
+      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FontAwesomeIcon icon={faFilter} /></Button></td><td style={{'border':style_border}}>{t('welcome.4')}</td></tr>
+      <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsUpDown} /></Button><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsLeftRight} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.5')}</td></tr>
+      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FontAwesomeIcon icon={faDiagramProject} /></Button></td><td style={{'border':style_border}}>{t('welcome.6')}</td></tr>
+      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'info'}> ?</Button></td><td style={{'border':style_border}}>{t('welcome.7')}</td></tr>
+      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FaAngleDoubleLeft/></Button></td><td style={{'border':style_border}}>{t('welcome.10')}</td></tr>
+      {window.SankeyToolsStatic && window.sankey && window.sankey.excel?<tr style={{'border':style_border}}><td style={{'border':style_border}}><Button variant='link'>{t('Banner.tl')}</Button></td><td style={{'border':style_border}}>{t('welcome.excel')}</td></tr>:<></>}
+      <tr style={{'border':style_border}}><td style={{'border':style_border}}>{buttons_filter}</td><td style={{'border':style_border}}>{t('welcome.2')}</td></tr>
+        
+    </table>
   </div>
   
   const pagination_intro=<Pagination.Item active={active_page==='intro'} key={'intro'} onClick={()=>{
@@ -321,8 +359,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       </Popover.Body>
     </Popover>
   const {filter}=data.display_style
-  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate
-  )
+  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate,set_never_see_again)
   Object.keys(toolbar).forEach(k=>{
     sankey_menus[k]=toolbar[k]
   })
@@ -484,7 +521,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           setShowPreference={setShowPreference}
           set_show_publish_dialog={set_show_publish_dialog}
           cardsTemplate={cardsTemplate}
-          set_welcome_text={set_welcome_text}
+          // set_welcome_text={set_welcome_text}
           show_modalTemplate={show_modalTemplate}
           set_show_modalTemplate={set_show_modalTemplate}
           token={false}
@@ -530,7 +567,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             token={true}
             set_show_toast_limit_node={()=>false}
           />) : (<></>)}
-        <Modal
+        {/* <Modal
           bsSize="large"
           show={welcome_text !== undefined && welcome_text !== ''}
           onHide={()=>{
@@ -552,7 +589,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
               }}
             >J&apos;ai lu</Button>
           </Modal.Body>
-        </Modal>
+        </Modal> */}
       </>
     </div>
   )

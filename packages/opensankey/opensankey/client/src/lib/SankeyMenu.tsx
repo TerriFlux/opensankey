@@ -97,17 +97,14 @@ const MenuPropTypes = {
   set_show_publish_dialog: PropTypes.func.isRequired,
 
   menus: PropTypes.objectOf(PropTypes.element.isRequired).isRequired,
-  set_welcome_text: PropTypes.func.isRequired,
   show_modalTemplate:PropTypes.bool.isRequired,
   set_show_modalTemplate:PropTypes.func.isRequired,
   cardsTemplate:PropTypes.element.isRequired,
   token:PropTypes.bool.isRequired,
   useNavigate:PropTypes.func.isRequired,
   external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  // menu_banner:PropTypes.object.isRequired,
   loginOut:PropTypes.func.isRequired,
   unsetTokens:PropTypes.func.isRequired,
-  // modalShortcut:PropTypes.element.isRequired,
   min_width_and_height :PropTypes.func.isRequired,
   name_user:PropTypes.string.isRequired,
   reinitialization:PropTypes.func.isRequired,
@@ -470,7 +467,6 @@ export const addAllDropDownNode = (
                   overrideStrings={{
                     'selectAll': 'Tout sélectionner',
                   }}
-                  // hasSelectAll={false}
                   value={selected}
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
@@ -523,11 +519,6 @@ export const addAllDropDownNode = (
         </FormGroup>)
     }
   })
-  // if (!level) {
-  //   return (<><tr><th >{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD}</>)
-  // } else {
-  //   return (<><tr><th >{t('Banner.ndd_lst')}</th><th></th></tr>{allDD}</>)
-  // }
   return (<>{allDD}</>)
 }
 
@@ -692,7 +683,6 @@ export const addAllDropDownFlux = (
                   overrideStrings={{
                     'selectAll': 'Tout sélectionner',
                   }}
-                  // hasSelectAll={false}
                   value={selected}
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
@@ -1071,7 +1061,6 @@ export const OpenSankeyMenus = (
                   reinitialization()
                   const result = String((e.target as FileReader).result)
                   const new_data = default_sankey_data()
-                  //result = result.split('<br>').join('\\\\n')
                   const result_data = JSON.parse(result)
                   Object.assign(new_data, result_data)
                   if (result_data.version === undefined) {
@@ -1214,14 +1203,12 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_apply_layout, set_show_apply_layout,
     show_save_json, set_show_save_json,
     menus,
-    set_welcome_text,
     show_modalTemplate,
     set_show_modalTemplate,
     cardsTemplate,
     token,
     useNavigate,
     external_modal,
-    // menu_banner,
     loginOut,
     unsetTokens,
     min_width_and_height,
@@ -1346,7 +1333,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_data({...data})
   }
   const ordered_menu:{[s:string]:JSX.Element}={}
-  const oredred_key=['file','edition','filter','view','afm','formation','demo','aide']
+  const oredred_key=['file','edition','diagramme','excel','filter','view','afm','formation','demo','aide']
   oredred_key.forEach((k:string)=>{
     if(Object.keys(menus).includes(k)){
       ordered_menu[k]=menus[k]
@@ -1494,7 +1481,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           </>:<></>
           }
 
-          <Navbar.Brand onClick={()=>set_welcome_text(window.sankey.welcome_text)}><img src={logo} width={logo_width ? logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
+          <Navbar.Brand /*onClick={()=>set_welcome_text(window.sankey.welcome_text)}*/><img src={logo} width={logo_width ? logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
           {/* {!window.SankeyToolsStatic ? (<>
             <Nav className='me-auto'>
               {menus.map((c,i)=>{
@@ -1718,8 +1705,19 @@ export const OpenSankeyModalWelcome=(t:TFunction,
 
 
 
+  const content_rc_static=<>
+    <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
+    <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
+    <p><b>{t('Menu.rcc_acdn_bold')}</b>{t('Menu.rcc_acdn')}</p>
+    <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
+    
+    <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
+    <p><b>{t('Menu.rcc_F8_bold')}</b>{t('Menu.rcc_F8')}</p>
+    <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
 
-  const content_rc=<>
+  </>
+
+  const content_rc_not_static=<>
     <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
 
     <h5>{t('Menu.rcc_titre_select')}:</h5>
@@ -1748,13 +1746,12 @@ export const OpenSankeyModalWelcome=(t:TFunction,
     <p><b>{t('Menu.rcc_a_fc_bold')}</b>{t('Menu.rcc_a_fc')}</p>
     <p><b>{t('Menu.rcc_a_dbm_bold')}</b>{t('Menu.rcc_a_dbm')}</p>
     <p><b>{t('Menu.rcc_a_ech_bold')}</b>{t('Menu.rcc_a_ech')}</p>
-    
+    <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
     {additional_shortcut_item}
-
   </>
-  external_content['rc']=content_rc
+  external_content['rc']=window.SankeyToolsStatic?content_rc_static:content_rc_not_static
 
   const tmp=JSON.parse(JSON.stringify(exemple_menu))
   let list_template_data=[] as string[]
@@ -1803,31 +1800,31 @@ export const OpenSankeyModalWelcome=(t:TFunction,
     set_show_modal_welcome(false)
   }}>
     <Modal.Header closeButton>
-      <Modal.Title>{t('welcome.welcome')}</Modal.Title>
+      <Modal.Title>{t('welcome.'+active_page)}</Modal.Title>
     </Modal.Header>
     <Modal.Body>
       {external_content[active_page]}
     </Modal.Body>
 
-    {window.SankeyToolsStatic ? <></> : <Modal.Footer style={{justifyContent:'center'}}>
+    <Modal.Footer style={{justifyContent:'center'}}>
       <Pagination >
         {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
 
         <Pagination.Item active={active_page==='rc'} key={'rc'} onClick={()=>{
           set_active_page('rc')
         }}>
-          {t('Menu.rc')}
+          {t('welcome.rc')}
         </Pagination.Item>
-        <Pagination.Item active={active_page==='licence'} key={'licence'} onClick={()=>{
+        {window.SankeyToolsStatic?<></>:<Pagination.Item active={active_page==='licence'} key={'licence'} onClick={()=>{
           set_active_page('licence')
         }}>
-          {t('Menu.licence')}
-        </Pagination.Item>
+          {t('welcome.licence')}
+        </Pagination.Item>}
       </Pagination>
       <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again} onChange={evt=>{
         set_never_see_again(evt.target.checked)
         localStorage.setItem('dontSeeAggainWelcome','1')
       }}/>
-    </Modal.Footer>}
+    </Modal.Footer>
   </Modal>
 }
