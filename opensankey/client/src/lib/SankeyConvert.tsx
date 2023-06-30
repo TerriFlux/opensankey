@@ -245,6 +245,30 @@ export const compute_initial_colors = (
       }
     }
   )
+
+  Object.values(data.dataTags).forEach(
+    tags_group => {
+      if(Object.values(tags_group.tags).filter(tag=>tag.color !== '').length === 0) {
+        const nb_tags = Object.keys(tags_group.tags).length
+        if (tags_group.color_map === 'custom') {
+          return
+        }
+        const colors = colormap({
+          colormap: tags_group.color_map,
+          nshades: Math.max(11, nb_tags),
+          format: 'hex',
+          alpha: 1
+        })
+        let step = 1
+        if (nb_tags < 11) {
+          step = Math.round(11 / nb_tags)
+        }
+        Object.keys(tags_group.tags).forEach(
+          (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
+        )
+      }
+    }
+  )
 }
 
 export const convert_boolean = (
@@ -609,7 +633,7 @@ export const convert_tags = (
   })
   Object.values(data.dataTags).forEach(t=>{
     t.show_legend=typeof(t.show_legend)=='boolean'?t.show_legend:((t.show_legend===1))
-    t.siblings=t.siblings?t.siblings:[]
+    t.siblings=t.siblings?t.siblings:[]    
   })
 }
 
