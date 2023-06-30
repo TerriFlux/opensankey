@@ -1395,6 +1395,22 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 >{t('useTutoExcel')}</Button>
                 :<></>}
+                {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','_reconciled.xlsx'))?
+                <Button variant='info'
+                  onClick={() => {
+
+
+                    launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
+
+                    SankeyUtils.uploadExemple(
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,reinitialization
+                    )
+                    set_show_modale_tuto(false)
+
+                  }
+                  }
+                >{t('useTutoExcel')}</Button>
+                :<></>}
 
             </ButtonGroup>
           </Card.Body>
