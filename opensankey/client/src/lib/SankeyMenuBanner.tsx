@@ -371,7 +371,8 @@ export const toolbar_builder = (
   set_first_selected_node:(o:object)=>void,
   min_width_and_height:(d:SankeyData)=>number[],
   setDiagram : (the_diagram : string,data : SankeyData,set_data : (d:SankeyData)=>void)=>void,
-  set_show_modal_welcome:(b:boolean)=>void
+  set_show_modal_welcome:(b:boolean)=>void,
+  set_never_see_again:(b:boolean)=>void
 ) => {
   const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
@@ -660,7 +661,6 @@ export const toolbar_builder = (
         overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
         <Button  variant={(!(mode_selection.current == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
           <Col><FontAwesomeIcon icon={faArrowPointer} /></Col>
-          {/* <Col className='textIcon'>Select.</Col> */}
         </Button>
       </OverlayTrigger>
       <OverlayTrigger
@@ -794,7 +794,7 @@ export const toolbar_builder = (
         overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
         }
       >
-        <Button variant='info' onClick={() => { set_show_modal_welcome(true) }} >
+        <Button variant='info' onClick={() => { set_never_see_again(false);localStorage.removeItem('dontSeeAggainWelcome'),set_show_modal_welcome(true) }} >
           <Col> ? </Col>
         </Button>
       </OverlayTrigger> : <></>}

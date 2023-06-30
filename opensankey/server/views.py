@@ -599,6 +599,17 @@ def parse_folder(current_dir, menus, key=None):
                     # blob=send_file(file_name,mimetype='image/png')
                     menus[key]['Image'].append(file_name)
                     menus[key]['Image'].sort()
+            # Save name of image for carousel welcome in menu dict
+            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'image_carousel' in folder_content):
+                file_names = os.listdir(os.path.join(current_dir, 'image_carousel'))
+                for file_name in file_names:
+                    if key not in menus:
+                        menus[key] = {}
+                    if 'carousel_img' not in menus[key]:
+                        menus[key]['carousel_img'] = []
+                    # blob=send_file(file_name,mimetype='image/png')
+                    menus[key]['carousel_img'].append(file_name)
+                    menus[key]['carousel_img'].sort()
             # Save template sorted in difficulty
             if (os.path.split(current_dir)[1] == 'OpenSankey' and 'easy_template' in folder_content):
                 file_names = os.listdir(os.path.join(current_dir, 'easy_template'))
