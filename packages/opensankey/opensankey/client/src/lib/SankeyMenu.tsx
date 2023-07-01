@@ -1395,7 +1395,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                   }
                 >{t('useTutoExcel')}</Button>
                 :<></>}
-                {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','_reconciled.xlsx'))?
+              {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','_reconciled.xlsx'))?
                 <Button variant='info'
                   onClick={() => {
 
