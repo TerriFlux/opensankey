@@ -68,11 +68,11 @@ export const setDiagram = (
     //   set_diagram(the_diagram)
     // }
 
-    Object.values(data.nodes).forEach(node => {
+    Object.values(new_data.nodes).forEach(node => {
       node.node_visible = true
       node.display = true
     })
-    set_nodes_level(data)
+    set_nodes_level(new_data)
     // new_data.fit_screen = true
     d3.select(' .opensankey #svg').on('.zoom', null)
     set_current_data({...new_data })
