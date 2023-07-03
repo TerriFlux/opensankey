@@ -444,6 +444,7 @@ def save_excel(
                         skip = False
                 if skip:
                     del sankey_data['nodeTags']['Primaire']
+                    tags_sheet.pop()
                     continue
             if banner == 'level':
                 the_tag_group_type = 'levelTags'
