@@ -15,8 +15,12 @@ let logo = ''
 try {
   /* eslint-disable */
   // @ts-ignore
-  logo = require('../css/opensankey.png')
+  logo = require('./css/opensankey.png')
   /* eslint-enable */
+  const path = window.location.href
+  if ( !path.includes('localhost') ) {
+    logo = logo.replace('static/', 'static/opensankey/')
+  }
 } catch (expt) {
   console.log('opensankey.png not found')
 }
@@ -27,53 +31,15 @@ try {
   // @ts-ignore
   logo_terriflux = require('./css/terriflux.png')
   /* eslint-enable */
+  const path = window.location.href
+  if ( !path.includes('localhost') ) {
+    logo_terriflux = logo_terriflux.replace('static/', 'static/opensankey/')
+  }
 } catch (expt) {
   console.log('terriflux.png not found')
 }
 
 
-// Search for licence logo
-let logo_OS = ''
-try {
-  /* eslint-disable */
-  // @ts-ignore
-  logo_OS = require('./css/Open_Sankey_logo.jpg')
-  /* eslint-enable */
-  const path = window.location.href
-  if ( !path.includes('localhost') ) {
-    logo_OS = logo_OS.replace('static/', 'static/sankeysuite/')
-  }
-} catch (expt) {
-  console.log('logo_OS not found')
-}
-
-let logo_OSP = ''
-try {
-  /* eslint-disable */
-  // @ts-ignore
-  logo_OSP = require('./css/OSP.png')
-  /* eslint-enable */
-  const path = window.location.href
-  if ( !path.includes('localhost') ) {
-    logo_OSP = logo_OSP.replace('static/', 'static/sankeysuite/')
-  }
-} catch (expt) {
-  console.log('logo_OSP not found')
-}
-
-let logo_OSS = ''
-try {
-  /* eslint-disable */
-  // @ts-ignore
-  logo_OSS = require('./css/OSS.jpg')
-  /* eslint-enable */
-  const path = window.location.href
-  if ( !path.includes('localhost') ) {
-    logo_OSS = logo_OSS.replace('static/', 'static/sankeysuite/')
-  }
-} catch (expt) {
-  console.log('logo_OSS not found')
-}
 
 window.React = React
 
@@ -104,7 +70,7 @@ if (!window.SankeyToolsStatic) {
     window.sankey = {}
   }
   // Search if a data is stored in localStorage of the navigator
-  const json_data = LZString.decompress(localStorage.getItem('data') as string) as string
+  const json_data = LZString.decompress(localStorage.getItem('data') as string)
   // const json_data = localStorage.getItem('data')
 
   // If there is, store the data in the sankey_data
@@ -123,12 +89,12 @@ if (!window.SankeyToolsStatic) {
   let exemple_menu = {}
   let formations_menu = {}
   const path = window.location.origin
-  const url = path + '/sankey/menu_examples'
+  const url = path + '/opensankey/sankey/menu_examples'
   fetch(url, fetchData).then(response => {
     response.text().then(text => {
       const json_data = JSON.parse(text)
       exemple_menu = json_data.exemples_menu
-      formations_menu = {...json_data.exemples_menu['Formations']}
+      formations_menu = {...Object.fromEntries(Object.entries(json_data.exemples_menu['Formations']).filter(m=>m[0]=='0_OpenSankey'))}
       delete json_data.exemples_menu['Formations']
       render(
         <>
@@ -138,10 +104,6 @@ if (!window.SankeyToolsStatic) {
             formations_menu={formations_menu}
             logo={logo}
             logo_terriflux={logo_terriflux}
-            logo_OS={logo_OS}
-            logo_OSP={logo_OSP}
-            logo_OSS={logo_OSS}
-
           />
         </>,
         document.getElementById('react-container')
@@ -155,11 +117,6 @@ if (!window.SankeyToolsStatic) {
             formations_menu={{}}
             logo={logo}
             logo_terriflux={logo_terriflux}
-            logo_OS={logo_OS}
-            logo_OSP={logo_OSP}
-            logo_OSS={logo_OSS}
-
-
           />
         </>,
         document.getElementById('react-container')
@@ -189,11 +146,6 @@ if (!window.SankeyToolsStatic) {
         formations_menu={{}}
         logo={logo}
         logo_terriflux={logo_terriflux}
-        logo_OS={logo_OS}
-        logo_OSP={logo_OSP}
-        logo_OSS={logo_OSS}
-
-
       />
       {window.sankey.footer ? (
         <div id="copyright">

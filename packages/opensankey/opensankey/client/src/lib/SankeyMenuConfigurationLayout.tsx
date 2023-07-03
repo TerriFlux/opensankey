@@ -172,7 +172,7 @@ export const OpenSankeyMenuConfigurationLayout = (
           placement={'top'}
           delay={500}
           rootClose
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('Menu.tooltips.EEN_h')} </Tooltip>}>
+          overlay={<Tooltip id={'tooltip-adjust'}>{t('MEP.tooltips.EEN_h')} </Tooltip>}>
           <FormControl
             type="text"
             value={node_hspace}

@@ -16,7 +16,7 @@ type modalPreferenceTypes = InferProps<typeof modalPreferencePropTypes>
 export const OpenSankeyDefaultModalePreferenceContent=(
   t:TFunction,
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   trad:i18n
 )=>{
   const ui={

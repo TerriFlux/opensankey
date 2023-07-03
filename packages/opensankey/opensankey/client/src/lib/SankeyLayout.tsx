@@ -630,6 +630,26 @@ export const updateLayout = (
       }
     }
   }
+
+  if(mode.includes('tagData')){
+    for (const tag_group_key in new_layout.dataTags) {
+      data.dataTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.dataTags[tag_group_key]))
+    }
+    for (const tag_group_key in data.dataTags) {
+      if (!(tag_group_key in new_layout.dataTags)) {
+        continue
+      }
+      data.dataTags[tag_group_key].show_legend = new_layout.dataTags[tag_group_key].show_legend
+      data.dataTags[tag_group_key].banner = new_layout.dataTags[tag_group_key].banner
+      for (const tag in data.dataTags[tag_group_key].tags) {
+        if (!(tag in new_layout.dataTags[tag_group_key].tags)) {
+          continue
+        }
+        data.dataTags[tag_group_key].tags[tag].color = new_layout.dataTags[tag_group_key].tags[tag].color
+        data.dataTags[tag_group_key].tags[tag].selected = new_layout.dataTags[tag_group_key].tags[tag].selected
+      }
+    }
+  }
   
   
 
