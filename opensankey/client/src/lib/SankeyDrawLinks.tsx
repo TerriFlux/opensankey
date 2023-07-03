@@ -31,7 +31,7 @@ export const OpenSankeyDrawLinks = (
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   set_displayed_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
@@ -60,7 +60,7 @@ export const OpenSankeyDrawLinks = (
     multi_selected_links:{current: SankeyLink[] },
     links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
     select_link:(n: SankeyLink) => void,
-    set_data:React.Dispatch<React.SetStateAction<SankeyData>>
+    set_data:(d:SankeyData)=>void
   )=>{
     mode_selection.current='s'
     if (!mode_visualisation) {
