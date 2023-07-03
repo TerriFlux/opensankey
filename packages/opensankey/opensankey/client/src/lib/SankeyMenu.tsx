@@ -2,11 +2,11 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card,Alert} from 'react-bootstrap'
+import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
-import { FaAngleDoubleLeft,FaUser,FaPowerOff,FaAngleDoubleRight} from 'react-icons/fa'
+import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
 import * as SankeyUtils from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
@@ -100,18 +100,14 @@ const MenuPropTypes = {
   show_modalTemplate:PropTypes.bool.isRequired,
   set_show_modalTemplate:PropTypes.func.isRequired,
   cardsTemplate:PropTypes.element.isRequired,
-  token:PropTypes.bool.isRequired,
-  useNavigate:PropTypes.func.isRequired,
   external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  loginOut:PropTypes.func.isRequired,
-  unsetTokens:PropTypes.func.isRequired,
   min_width_and_height :PropTypes.func.isRequired,
-  name_user:PropTypes.string.isRequired,
   reinitialization:PropTypes.func.isRequired,
   set_show_modale_tuto:PropTypes.func.isRequired,
   show_modale_tuto:PropTypes.bool.isRequired,
   show_modale_support:PropTypes.bool.isRequired,
-  set_show_modale_support:PropTypes.func.isRequired
+  set_show_modale_support:PropTypes.func.isRequired,
+  additional_nav_item:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
 
 }
 
@@ -1206,14 +1202,12 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_modalTemplate,
     set_show_modalTemplate,
     cardsTemplate,
-    token,
-    useNavigate,
+    
     external_modal,
-    loginOut,
-    unsetTokens,
     min_width_and_height,
-    name_user,formations_menu,reinitialization,set_show_modale_tuto,show_modale_tuto,
-    show_modale_support,set_show_modale_support
+    formations_menu,reinitialization,set_show_modale_tuto,show_modale_tuto,
+    show_modale_support,set_show_modale_support,
+    additional_nav_item
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1327,11 +1321,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
 
 
-  const navigate=useNavigate()
-  const returnToApp=()=>{
-    navigate('/')
-    set_data({...data})
-  }
+  
   const ordered_menu:{[s:string]:JSX.Element}={}
   const oredred_key=['file','edition','diagramme','excel','filter','view','afm','formation','demo','aide']
   oredred_key.forEach((k:string)=>{
@@ -1498,36 +1488,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           }
 
           <Navbar.Brand /*onClick={()=>set_welcome_text(window.sankey.welcome_text)}*/><img src={logo} width={logo_width ? logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
-          {/* {!window.SankeyToolsStatic ? (<>
-            <Nav className='me-auto'>
-              {menus.map((c,i)=>{
-                return <React.Fragment key={i}>{c}</React.Fragment>
-              })}
-            </Nav>
-            {toolbar}
-
-            <Nav>
-              <Col>
-                <Button style={{'marginRight':'15px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
-                <Form.Label style={{display:'contents'}}>{(token)?name_user:t('connect')}</Form.Label>
-                {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
-
-              </Col>
-            </Nav>
-          </>
-          ) : (<>
-
-            <Col><h4 onClick={()=>set_welcome_text(window.sankey.welcome_text)}><a href="#" style={{color:"#666"}}>{window.sankey.header}</a></h4></Col>
-            {toolbar}
-          </>)}  */}
           {menu_nav}
-          {!window.SankeyToolsStatic ?<Nav>
-            <Col>
-              <Alert.Link onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}  style={{display:'contents'}}>{(token)?name_user:t('connect')}</Alert.Link> {!token?<>/<Alert.Link onClick={()=> navigate('/license_register')}  style={{display:'contents'}}> {t('UserPages.to_reg')}</Alert.Link></>:<></>}
-              <Button style={{'marginRight':'10px','marginLeft':'10px','width':'35px','height':'35px','backgroundColor':(!token)?'#ff7851':'#78c2ad','borderColor':(!token)?'#ff7851':'#78c2ad'}} onClick={()=> (token)?navigate('/dashboard'):navigate('/login')}><FaUser/></Button>
-              {token?<Button style={{'marginRight':'15px','width':'35px','height':'35px'}}variant='danger' onClick={()=>loginOut(unsetTokens,returnToApp)}><FaPowerOff/></Button>:<></>}
-            </Col>
-          </Nav>:<></>}
+          {additional_nav_item}
+          
         </Container>
       </Navbar>
       {/* Bottom Navbar with some more info */}
@@ -1713,9 +1676,6 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   external_pagination:JSX.Element[],
   external_content:{[s:string]:JSX.Element},
   exemple_menu: object,
-  logo_OS:string,
-  logo_OSP:string,
-  logo_OSS:string,
 )=>{
 
 
@@ -1784,32 +1744,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
 
 
 
-  const content_licence=<>
-    <Row>
-      <Col xs={3}><img src={logo_OS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col style={{whiteSpace:'pre-line'}}>{t('Menu.presentation_OS')}<Button>{t('desire_to_know_more')}</Button></Col>
-    </Row>
-
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} />
-
-    <Row>
-      <Col style={{whiteSpace:'pre-line'}}>{t('Menu.presentation_OSP')}
-        <Button href="https://terriflux.com/downloads/open-sankey-plus/" target="_blank" rel="noopener noreferrer">
-          {t('desire_to_know_more')}
-        </Button></Col>
-      <Col xs={3}><img src={logo_OSP} style={{'objectFit':'contain','width':'250px'}} /></Col>
-    </Row>
-
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} />
-
-    <Row>
-      <Col xs={3}><img src={logo_OSS} style={{'objectFit':'contain','width':'250px'}} /></Col><Col style={{whiteSpace:'pre-line'}}>{t('Menu.presentation_OSS')}
-        <Button href="https://terriflux.com/downloads/sankey-suite/" target="_blank" rel="noopener noreferrer">
-          {t('desire_to_know_more')}
-        </Button></Col>
-    </Row>
-  </>
-
-  external_content['licence']=content_licence
+  // external_content['licence']=content_licence
 
 
   return <Modal scrollable size='xl' show={show_modal_welcome && !never_see_again} onHide={()=>{
@@ -1831,11 +1766,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
         }}>
           {t('welcome.rc')}
         </Pagination.Item>
-        {window.SankeyToolsStatic?<></>:<Pagination.Item active={active_page==='licence'} key={'licence'} onClick={()=>{
-          set_active_page('licence')
-        }}>
-          {t('welcome.licence')}
-        </Pagination.Item>}
+        
       </Pagination>
       <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again} onChange={evt=>{
         set_never_see_again(evt.target.checked)

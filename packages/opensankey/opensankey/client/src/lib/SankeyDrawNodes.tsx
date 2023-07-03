@@ -17,7 +17,7 @@ typeof globalThis & {
 
 export const OpenSankeyDrawNodes = (
   data:SankeyData, 
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   multi_selected_nodes:{current: SankeyNode[] },
@@ -481,12 +481,8 @@ export const OpenSankeyDrawNodes = (
 
 
   }
-
+  
   add_nodes(static_sankey)
         
-  return (
-    <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
-  
-  )
 }
 

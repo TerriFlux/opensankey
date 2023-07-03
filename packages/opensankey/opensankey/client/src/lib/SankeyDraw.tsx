@@ -427,7 +427,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // Delete key allow us to delete selected elments (nodes,links, free label)
 export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_nav:React.Dispatch<React.SetStateAction<boolean>>,
