@@ -1189,7 +1189,7 @@ export const processExample = (server_data: SankeyData ) => {
     convert_data((data as SankeyData & layout_type).layout)
     complete_sankey_data((data as SankeyData & layout_type).layout,default_sankey_data,default_node,default_link)
     compute_default_input_outputLinksId(data.nodes, data.links)
-    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral'])
+    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','tagData','attrGeneral'])
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
   set_nodes_level(data)
@@ -1264,6 +1264,7 @@ export const uploadExemple = (
         alert(error)
         return
       }
+      
       if (file_name.includes('.xlsx')) {
         // Object.assign(data,processExample(server_data))
         // callback(data)
@@ -1303,7 +1304,6 @@ export const downloadExempleExcel = (
       }
       clickSaveExcel('/opensankey/',server_data)
 
-      
     })
   })
 }

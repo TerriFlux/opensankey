@@ -426,7 +426,6 @@ export const toolbar_builder = (
   const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
 
-  const diagram_label = 'Diagrammes'
 
 
   let max_link_value = 0
@@ -556,9 +555,6 @@ export const toolbar_builder = (
   let diagrams_element = <React.Fragment key={'1'}></React.Fragment>
   if (window.SankeyToolsStatic && sous_filieres && !is_split) {
     diagrams_element =
-    <Popover id='popover-diagram' style={{maxWidth:'100%'}}>
-      <Popover.Header as="h3">{diagram_label}</Popover.Header>
-      <Popover.Body>
         <Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
           <Form.Select style={{ width: '200px', color:'black' }}
             onChange={evt=> {
@@ -569,13 +565,11 @@ export const toolbar_builder = (
             {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
           </Form.Select>
         </Form.Group>
-      </Popover.Body>
-    </Popover>
   }
   if (window.SankeyToolsStatic && sous_filieres && is_split) {
     diagrams_element =
       <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
-        <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+        {/* <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel> */}
         <Form.Select style={{ width: '200px', color:'black' }}
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             set_diagram(evt.target.value)
@@ -631,19 +625,8 @@ export const toolbar_builder = (
 
   const ui :{[s:string]:JSX.Element}= {}
   if ((Object.keys(diagrams).length > 0)) {
-    ui['diagramme']=(
-      <Col>
-        <OverlayTrigger
-          key={'tooltip-diagrams'}
-          placement={'left'}
-          trigger={'click'}
-          rootClose
-          overlay={diagrams_element}>
-          <Button variant='dark' id='button-diagrams' >
-            {'Diagramme: ' + diagram}
-          </Button>
-        </OverlayTrigger>
-      </Col>)}
+    ui['diagramme']=diagrams_element
+  }
   if (window.sankey && window.sankey.excel) {
     ui['excel']=(excel_element)
   }

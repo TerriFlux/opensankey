@@ -6,7 +6,7 @@ import { TFunction } from 'i18next'
 
 export const OpenSankeyMenuConfigurationLegend= (
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   t: TFunction,
   legend_position:number[],
   set_legend_position:(n:number[])=>void

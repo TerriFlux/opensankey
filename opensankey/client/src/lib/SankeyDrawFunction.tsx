@@ -350,7 +350,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
   select_node:(n: SankeyNode) => void,
   static_sankey:boolean,
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   mode_selection:{current:string}
 )=>{
   if (!static_sankey && !mode_visualisation &&  (event.ctrlKey || event.metaKey)) {
@@ -396,7 +396,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
   }
 }
 
-export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,data:SankeyData,set_agregation_node:React.Dispatch<React.SetStateAction<string>>,set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
+export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,data:SankeyData,set_agregation_node:React.Dispatch<React.SetStateAction<string>>,set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_data:(d:SankeyData)=>void)=>{
   ev.preventDefault()
   if (!n.dimensions) {
     return
@@ -737,7 +737,7 @@ export const drawArrows = (
 export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTMLElement,unknown>,
   mode_selection:{current:string},
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current:SankeyLink[]},
   first_selected_node:object,
@@ -928,7 +928,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes,
 // or creating a nodes at first click then linking it to a already existing one or the opposite
-export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>,first_selected_node:object,set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
+export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:(d:SankeyData)=>void,first_selected_node:object,set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
 
     if(d.name.includes('_tmp')){
