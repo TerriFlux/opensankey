@@ -9,7 +9,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
   data:SankeyData,
   selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   t:TFunction,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,

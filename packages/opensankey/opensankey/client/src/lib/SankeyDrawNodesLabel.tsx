@@ -1,5 +1,4 @@
 import { SankeyData, SankeyNode,SankeyLinkValue } from './types'
-import React from 'react'
 import * as d3 from 'd3'
 
 import { dragNodeTextEventWidthBoxEvent } from './SankeyDrag'
@@ -9,7 +8,7 @@ import {textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value
 
 export const OpenSankeyDrawNodesLabel = (
   data:SankeyData, 
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current: SankeyNode[] },
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
   

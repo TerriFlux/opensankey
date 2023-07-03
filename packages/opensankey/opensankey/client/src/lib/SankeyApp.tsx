@@ -30,7 +30,7 @@ import i18next from './traduction'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faFilter,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
-import { FaAngleDoubleLeft,FaUser} from 'react-icons/fa'
+import { FaAngleDoubleLeft} from 'react-icons/fa'
 
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
@@ -38,10 +38,6 @@ type SankeyAppTypes = {
   formations_menu      : object
   logo: string,
   logo_terriflux: string,
-  logo_OS:string,
-  logo_OSP:string,
-  logo_OSS:string,
-
 }
 
 declare const window: Window &
@@ -64,7 +60,7 @@ typeof globalThis & {
   }
 }
 
-export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo,logo_terriflux,logo_OS,logo_OSP,logo_OSS} : SankeyAppTypes) => {
+export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo,logo_terriflux} : SankeyAppTypes) => {
   exemple_menu
 
   //- All
@@ -79,14 +75,20 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const accordion_ref = useRef<HTMLDivElement>(null)
   const links_accordion_ref = useRef<HTMLDivElement>(null)
   const nodes_accordion_ref = useRef<HTMLDivElement>(null)
-  const [data,set_data] = useState<SankeyData>(initial_sankey_data)
+  const [data,pre_set_data] = useState<SankeyData>(initial_sankey_data)
   const [show_nav,set_show_nav] = useState(false)
   const [show_modal_welcome,set_show_modal_welcome]=useState(true)
   const [never_see_again,set_never_see_again]=useState((localStorage.getItem('dontSeeAggainWelcome')==='1'))
   const multi_selected_label = useRef([])
   const [show_modale_tuto,set_show_modale_tuto]=useState(false)
   const [show_modale_support,set_show_modale_support]=useState(false)
-
+  const set_data=(ndata:SankeyData)=>{
+    set_user_scale(ndata.user_scale)
+    if(ndata.legend_position!==legend_position){
+      set_legend_position(ndata.legend_position)
+    }
+    pre_set_data({...ndata})
+  }
 
   // For SankeyDraw
   const [alt_key_pressed,set_alt_key_pressed] = useState(false)
@@ -140,15 +142,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [path,setPath] = useState('')
 
   //- Modals and Dialogs
-  // const [welcome_text,set_welcome_text] = useState(window.sankey ? window.sankey.welcome_text : '')
-  const [show_draw, set_show_draw] = useState(false)
   const [show_load,set_show_load] = useState(false)
   const [show_excel_dialog, set_show_excel_dialog] = useState(false)
   const [show_apply_layout, set_show_apply_layout] = useState(false)
   const [show_save_json, set_show_save_json] = useState(false)
   const [showPreference, setShowPreference] = useState(false)
   //Modal et fonctions pour l'édition et affectation des styles de noeud
-  // const [showStyle,setShowStyle] = useState(false)
   const showStyleEdition = () => null
   //Modal et fonctions pour l'edition et affectation des style de flux
   const showStyleEditionLink = () => null
@@ -157,7 +156,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- Styles
   const selected_style_node = useState('default')[0]
-
 
   const {t} =useTranslation()
 
@@ -193,7 +191,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       const title=_.split('.').splice(0,1).join('')
       return (<Carousel.Item>
         <img alt={title} src={'/fm/userfiles/OpenSankey/image_carousel/'+_}   style={{'objectFit':'contain','width':'100%','height':'650px',display:'inline-block'}}   />
-        {/* <Carousel.Caption style={{display:'inline-block'}}><p>{title.replaceAll('_',' ')}</p></Carousel.Caption> */}
       </Carousel.Item>)
     })
     }</Carousel>
@@ -210,25 +207,23 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     {(Object.values(data.dataTags).length>0)?<Button size='sm' variant='light'>{t('Banner.data')}</Button>:<></>}</>
 
   const intro=<div>
-    {/* <img src='/fm/userfiles/OpenSankey/image_carousel/intro.png' alt='intro carousel' style={{'objectFit':'contain','width':'100%'}}/> */}
     {window.SankeyToolsStatic ?<img src={src_intro_static} alt='intro carousel' style={{'objectFit':'contain','width':'100%'}}/>:content_carousel}
     <p>{t('Banner.hlp_1_txt_1')}</p>
     <table style={{'border':style_border,textAlign:'center'}} >
-      {!window.SankeyToolsStatic?<>
-        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FaUser/></Button></td><td style={{'border':style_border}}>{t('welcome.9')}</td></tr>
-        <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'info'}><FontAwesomeIcon icon={faArrowPointer} /></Button><Button size='sm' variant={'secondary'}><FontAwesomeIcon icon={faShareNodes} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.1')}</td></tr>
-        {/* <tr style={{'border':style_border}}><td style={{'border':style_border}}>&nbsp;</td><td style={{'border':style_border}}>{t('welcome.8')}</td></tr> */}
-      </>:<></>}   
-        
-      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'warning'}><FontAwesomeIcon icon={faFolderTree} /></Button></td><td style={{'border':style_border}}>{t('welcome.3')}</td></tr>
-      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FontAwesomeIcon icon={faFilter} /></Button></td><td style={{'border':style_border}}>{t('welcome.4')}</td></tr>
-      <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsUpDown} /></Button><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsLeftRight} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.5')}</td></tr>
-      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FontAwesomeIcon icon={faDiagramProject} /></Button></td><td style={{'border':style_border}}>{t('welcome.6')}</td></tr>
-      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'info'}> ?</Button></td><td style={{'border':style_border}}>{t('welcome.7')}</td></tr>
-      <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FaAngleDoubleLeft/></Button></td><td style={{'border':style_border}}>{t('welcome.10')}</td></tr>
-      {window.SankeyToolsStatic && window.sankey && window.sankey.excel?<tr style={{'border':style_border}}><td style={{'border':style_border}}><Button variant='link'>{t('Banner.tl')}</Button></td><td style={{'border':style_border}}>{t('welcome.excel')}</td></tr>:<></>}
-      <tr style={{'border':style_border}}><td style={{'border':style_border}}>{buttons_filter}</td><td style={{'border':style_border}}>{t('welcome.2')}</td></tr>
-        
+      <tbody>
+        {!window.SankeyToolsStatic?<>
+          <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'info'}><FontAwesomeIcon icon={faArrowPointer} /></Button><Button size='sm' variant={'secondary'}><FontAwesomeIcon icon={faShareNodes} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.1')}</td></tr>
+        </>:<></>}   
+          
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'warning'}><FontAwesomeIcon icon={faFolderTree} /></Button></td><td style={{'border':style_border}}>{t('welcome.3')}</td></tr>
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FontAwesomeIcon icon={faFilter} /></Button></td><td style={{'border':style_border}}>{t('welcome.4')}</td></tr>
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsUpDown} /></Button><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsLeftRight} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.5')}</td></tr>
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FontAwesomeIcon icon={faDiagramProject} /></Button></td><td style={{'border':style_border}}>{t('welcome.6')}</td></tr>
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'info'}> ?</Button></td><td style={{'border':style_border}}>{t('welcome.7')}</td></tr>
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FaAngleDoubleLeft/></Button></td><td style={{'border':style_border}}>{t('welcome.10')}</td></tr>
+        {window.SankeyToolsStatic && window.sankey && window.sankey.excel?<tr style={{'border':style_border}}><td style={{'border':style_border}}><Button variant='link'>{t('Banner.tl')}</Button></td><td style={{'border':style_border}}>{t('welcome.excel')}</td></tr>:<></>}
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}>{buttons_filter}</td><td style={{'border':style_border}}>{t('welcome.2')}</td></tr>
+      </tbody>
     </table>
   </div>
   
@@ -240,7 +235,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const external_pagination=[pagination_intro]
   const external_content={'intro':intro} 
 
-  const intro_modal=!window.SankeyToolsStatic?OpenSankeyModalWelcome(t,active_page,set_active_page,show_modal_welcome,set_show_modal_welcome,never_see_again,set_never_see_again,[],external_pagination,external_content,exemple_menu,logo_OS,logo_OSP,logo_OSS):<></>
+  const intro_modal=!window.SankeyToolsStatic?OpenSankeyModalWelcome(t,active_page,set_active_page,show_modal_welcome,set_show_modal_welcome,never_see_again,set_never_see_again,[],external_pagination,external_content,exemple_menu):<></>
 
 
   //- 1. Builds Configuration Menus
@@ -275,8 +270,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_data={set_data}
     elementTagNameProp='dataTags'
     elementNameProp='links' />
-  //- 1.5 Builds Configuration Menus FreeLabel
-  // const menu_configuration_free_labels=OpenSankeyMenuConfigurationFreeLabels(data,set_data,multi_selected_label,t,forceUpdate,setForceUpdate)
   //- 1.6 Builds Configuration Menus Legend
 
   const menu_configuration_legends=  OpenSankeyMenuConfigurationLegend(data,set_data,t,legend_position,set_legend_position)
@@ -299,28 +292,13 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_show_save_json,showStyleEdition,showStyleEditionLink,
     set_show_modal_welcome,set_never_see_again,data,set_data,'',set_show_modalTemplate,set_show_modale_support,[],[]
   )
-  // sankey_menus['formation']=<DropdownButton title={t('Menu.Formations')} id="formation" >
-  //   <ExempleItem
-  //     exemple_menu={formations_menu as unknown as Validator<ReactElementLike> | Validator<{ [x: string]: ReactElementLike; }>}
-  //     data={data}
-  //     set_data={set_data}
-  //     current_path={'Formations'}
-  //     url_prefix=''
-  //     multi_selected_links={multi_selected_links}
-  //     multi_selected_nodes={multi_selected_nodes}
-  //     launch={launch}
-  //     reinitialization={reinitialization}
-  //   /></DropdownButton >
-  // sankey_menus['formation']=<Button variant='light' onClick={()=>set_show_modale_tuto(true)}>{t('menuTuto')}</Button>
+
   sankey_menus['formation']=<>{()=>set_show_modale_tuto(true)}</>
 
   
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,i18next)
-
-  //const modale_style_link=SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_link,selected_style_link,set_selected_style_link,false,[])
-  //const modale_style_node=SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,false)
 
   const elments_of_modale_preference=Object.values(regular_ui).map(d=>{
     return d
@@ -330,8 +308,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     setShowPreference={setShowPreference}
     ui={elments_of_modale_preference}
   />
-  // external_menu_modal.push(modale_style_link)
-  // external_menu_modal.push(modale_style_node)
   external_menu_modal.push(modale_preference)
   external_menu_modal.push(intro_modal)
 
@@ -385,91 +361,50 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const formatKeyHandler=(e:KeyboardEvent)=>{
     keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_show_nav,mode_selection)
   }
-
+  useEffect(()=>{
   // Call the function that add nodes to the sankey
-  OpenSankeyDrawNodes(data,set_data,
-    nodes_accordion_ref,links_accordion_ref,
-    multi_selected_nodes,multi_selected_links,
-    mode_selection,
-    first_selected_node,set_first_selected_node,
-    accordion_ref,button_ref,
-    set_agregation_node,set_is_agregation,set_show_agregation,
-    select_node,
-    alt_key_pressed,
-    data.static_sankey,
-    position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,multi_selected_label)
+    OpenSankeyDrawNodes(data,set_data,
+      nodes_accordion_ref,links_accordion_ref,
+      multi_selected_nodes,multi_selected_links,
+      mode_selection,
+      first_selected_node,set_first_selected_node,
+      accordion_ref,button_ref,
+      set_agregation_node,set_is_agregation,set_show_agregation,
+      select_node,
+      alt_key_pressed,
+      data.static_sankey,
+      position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,multi_selected_label)
 
-  OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue)
+    OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue)
 
-  // Call the function that add links to the sankey
-  OpenSankeyDrawLinks(
-    data,links_accordion_ref,
-    multi_selected_links,
-    mode_selection,
-    accordion_ref,
-    button_ref,
-    select_link,
-    alt_key_pressed,
-    data.static_sankey,position,node_arrow_visible,
-    linkTooltipsContent,
-    SankeyUtils.link_text,SankeyUtils.getLinkValue,set_data,set_displayed_value,tags_selected,set_tags_selected,linkStroke,drawArrows,set_display_link_opacity
-  )
+    // Call the function that add links to the sankey
+    OpenSankeyDrawLinks(
+      data,links_accordion_ref,
+      multi_selected_links,
+      mode_selection,
+      accordion_ref,
+      button_ref,
+      select_link,
+      alt_key_pressed,
+      data.static_sankey,position,node_arrow_visible,
+      linkTooltipsContent,
+      SankeyUtils.link_text,SankeyUtils.getLinkValue,set_data,set_displayed_value,tags_selected,set_tags_selected,linkStroke,drawArrows,set_display_link_opacity
+    )
 
 
-  OpenSankeyDrawLegend(data,SankeyUtils.getLinkValue,t)
+    OpenSankeyDrawLegend(data,SankeyUtils.getLinkValue,t)
+  })
+ 
   //Event listener sur les touche du clavier
   //Réagis à :
   //-Flêches qui déplace les noeuds sélectionnés
   //-Echape qui ferme la navbar
   //-Ctrl+S qui sauvegarde une vue
-  //document.onkeydown = formatKeyHandler
   document.onkeydown = formatKeyHandler
 
-  //const tmp=JSON.parse(JSON.stringify(exemple_menu))
-  // let list_template_data=[] as string[]
 
-  // if(Object.keys(tmp).length!=0 && Object.keys(tmp).includes('OpenSankey') ){
-  //   list_template_image=tmp['OpenSankey']['Image']
-  //   list_template_data=tmp['OpenSankey']['Files'].filter((f:string)=>!f.includes('.xlsx'))
-  // }
   const cardsTemplate=
   <>
-    {/* {list_template_image.map((_,idx) =>
-    {
-      // let tmp_template=''
-      // try {
-      //   tmp_template=require('../images/'+list_template_image[idx])
-      // } catch (expt) {
-      //   console.log('images '+list_template_image[idx]+' for template not found')
-      // }
-      const title=_.split('_')
-      title.splice(-1,1)
-      return(
-        <Col>
-          <Card>
-            <Card.Img className='img-card' variant="top" src={'/fm/userfiles/OpenSankey/image_preview/'+list_template_image[idx]} style={{'objectFit':'contain','minHeight':'350px','maxHeight':'500px'}} />
-            <Card.Body>
-              <Card.Title>{title.join(' ')}</Card.Title>
-              <Card.Text>
-
-              </Card.Text>
-              <Button variant='primary'
-                onClick={() => {
-                  multi_selected_nodes.current = []
-                  multi_selected_links.current = []
-                  multi_selected_label.current = []
-                  SankeyUtils.uploadExemple(
-                    'OpenSankey/sankey/'+list_template_data[idx], '', data, set_data
-                  )
-                  set_data({...data})
-                }
-
-                }
-              >Use this template</Button>
-            </Card.Body>
-          </Card>
-        </Col>
-      )})} */}
   </>
   const d= (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
@@ -486,8 +421,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           path={path}
           launch={launch}
           url_prefix={ ''}
-          logo={!window.SankeyToolsStatic ? logo.replace('static/', 'static/opensankey/') : window.sankey.logo as string}
-          logo_terriflux={!window.SankeyToolsStatic ? logo_terriflux.replace('static/', 'static/opensankey/') : ''}
+          logo={!window.SankeyToolsStatic ? logo: window.sankey.logo as string}
+          logo_terriflux={!window.SankeyToolsStatic ? logo_terriflux: ''}
           logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}
           app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
           mode_selection={mode_selection}
@@ -521,75 +456,47 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           setShowPreference={setShowPreference}
           set_show_publish_dialog={set_show_publish_dialog}
           cardsTemplate={cardsTemplate}
-          // set_welcome_text={set_welcome_text}
           show_modalTemplate={show_modalTemplate}
           set_show_modalTemplate={set_show_modalTemplate}
-          token={false}
-          useNavigate={()=>''}
           external_modal={external_menu_modal}
-          loginOut={()=>null}
-          unsetTokens={()=>null}
-          // modalShortcut={shortcut_modale}
           min_width_and_height={min_width_and_height}
-          name_user={''}
           formations_menu={formations_menu}
           reinitialization={reinitialization}
           set_show_modale_tuto={set_show_modale_tuto}
           show_modale_tuto={show_modale_tuto}
           show_modale_support={show_modale_support}
           set_show_modale_support={set_show_modale_support}
+          additional_nav_item={[] as JSX.Element[]}
         />
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
         {useEffect(() => {
           const timer = setTimeout(() => {
-            set_show_draw(true)
+            // set_show_draw(true)
+            SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
           }, 100)
           return () => clearTimeout(timer)
         }, [])}
-        {
-          (show_draw ) ? (<SankeyDraw
-            data={data}
-            set_data={set_data}
-            animation={false}
-            multi_selected_nodes={multi_selected_nodes}
-            multi_selected_links={multi_selected_links}
-            mode_selection={mode_selection}
-            first_selected_node={first_selected_node}
-            set_first_selected_node={set_first_selected_node}
-            show_agregation={show_agregation}
-            set_show_agregation={set_show_agregation}
-            agregation_node={agregation_node}
-            is_agregation={is_agregation}
-            set_alt_key_pressed={set_alt_key_pressed}
-            min_width_and_height={min_width_and_height}
-            getLinkValue={SankeyUtils.getLinkValue}
-            token={true}
-            set_show_toast_limit_node={()=>false}
-          />) : (<></>)}
-        {/* <Modal
-          bsSize="large"
-          show={welcome_text !== undefined && welcome_text !== ''}
-          onHide={()=>{
-            set_welcome_text('')
-          }}
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}>
-          <Modal.Header closeButton>
-            <Modal.Title>Lisez Moi</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {welcome_text ? parse(welcome_text) : ''}
-            <Button
-              onClick={()=>{
-                set_welcome_text('')
-              }}
-            >J&apos;ai lu</Button>
-          </Modal.Body>
-        </Modal> */}
+        
+        <SankeyDraw
+          data={data}
+          set_data={set_data}
+          animation={false}
+          multi_selected_nodes={multi_selected_nodes}
+          multi_selected_links={multi_selected_links}
+          mode_selection={mode_selection}
+          first_selected_node={first_selected_node}
+          set_first_selected_node={set_first_selected_node}
+          show_agregation={show_agregation}
+          set_show_agregation={set_show_agregation}
+          agregation_node={agregation_node}
+          is_agregation={is_agregation}
+          set_alt_key_pressed={set_alt_key_pressed}
+          min_width_and_height={min_width_and_height}
+          getLinkValue={SankeyUtils.getLinkValue}
+          token={true}
+          set_show_toast_limit_node={()=>false}
+        />
       </>
     </div>
   )

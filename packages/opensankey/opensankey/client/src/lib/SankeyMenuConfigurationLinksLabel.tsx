@@ -6,7 +6,7 @@ import {TFunction} from 'i18next'
 export const SankeyMenuConfigurationLinksLabel = (
   data:SankeyData,
   multi_selected_links:{current:SankeyLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   t:TFunction,
   menu_for_style:boolean,
   selected_style_link:string
