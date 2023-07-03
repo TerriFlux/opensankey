@@ -426,7 +426,6 @@ export const toolbar_builder = (
   const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
 
-  const diagram_label = 'Diagrammes'
 
 
   let max_link_value = 0

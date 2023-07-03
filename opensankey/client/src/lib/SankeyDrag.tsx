@@ -277,7 +277,7 @@ export const dragGNodeEvent=(
  * @param {React.Dispatch<React.SetStateAction<SankeyData>>} set_data
  * @returns {*}
  */
-export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
+export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:(d:SankeyData)=>void)=>{
   return d3.drag<SVGRectElement, SankeyNode>()
     .subject(Object).on('drag', function (event, node) {
       if(event.dx<100){

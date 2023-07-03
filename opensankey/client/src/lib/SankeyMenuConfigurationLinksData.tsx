@@ -13,7 +13,7 @@ export const SankeyMenuConfigurationLinksData = (
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
   selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   t:TFunction,
   additional_data_element:JSX.Element[],
   displayed_value:string,
