@@ -338,5 +338,7 @@ export const sankey_plus_min_width_and_height = (data:SankeyPlusData) => {
   height = height + (data.grid_square_size * 2 )
   width = width + (data.grid_square_size * 2 )
 
-  return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40)]
+
+
+  return [width,height]
 }

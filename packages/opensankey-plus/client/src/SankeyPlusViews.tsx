@@ -1164,7 +1164,9 @@ export const keyHandler = (
     mode_selection:{current : string})=>void,
   connected:boolean,
   min_width_and_height:(data:SankeyPlusData)=>number[],
-  set_view_not_saved:(s:string)=>void
+  set_view_not_saved:(s:string)=>void,
+  fullscreen:boolean,
+  set_fullscreen:(b:boolean)=>void
 ) => {
   // Applique le control de touche issu de opensankey (pour eviter de copier/coller et avoir de potentiel différence)
   // Apply keyHandling from opensankey (to avoid copy/paste that can generate error)
@@ -1258,7 +1260,7 @@ export const keyHandler = (
     // Check if there is unsaved change before we switch view
     // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
     let saved=true
-    if(view !== 'none' && connected){
+    if(view !== 'none' && connected && !fullscreen){
       const diff=check_current_view_saved(master_data,data,view)
       if(diff.length>0 && !window.SankeyToolsStatic){
         saved=false
@@ -1314,7 +1316,7 @@ export const keyHandler = (
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
       let saved=true
-      if(view !== 'none' &&  connected){
+      if(view !== 'none' &&  connected && !fullscreen){
         const diff=check_current_view_saved(master_data,data,view)
         if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
@@ -1344,7 +1346,7 @@ export const keyHandler = (
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
       let saved=true
-      if(view !== 'none' && connected){
+      if(view !== 'none' && connected && !fullscreen){
         const diff=check_current_view_saved(master_data,data,view)
         if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
@@ -1442,6 +1444,8 @@ export const keyHandler = (
       d3.select('#'+l.idLabel+ ' rect').attr('stroke-width',1)
     })
     multi_selected_labels.current=[]
+    
+    set_fullscreen(false)
   }
 
   if(e.key==='Delete'){
@@ -1452,6 +1456,16 @@ export const keyHandler = (
       multi_selected_labels.current=[]
       set_data({...data})
     }
+  }
+  if((e.key==='f') && e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
+    e.preventDefault()
+
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen()
+    }
+    set_fullscreen(!fullscreen)
   }
 
   
@@ -1467,7 +1481,8 @@ const selecteur_view=(data:SankeyPlusData,
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
   t:TFunction,
-  set_view_not_saved:(s:string)=>void
+  set_view_not_saved:(s:string)=>void,
+  fullscreen=false
 )=>{
   return <Form.Select id="selectionNode"
     onChange={
@@ -1483,7 +1498,7 @@ const selecteur_view=(data:SankeyPlusData,
         // Verify if we saved the view before changing the view
         // If not, we display a modal that will warn the user with the possibility to save before exit
         let saved=true
-        if(view !== 'none'){
+        if(view !== 'none' && !fullscreen){
           const difference=check_current_view_saved(master_data,data,view)
           if(difference.length !== 0 && !window.SankeyToolsStatic){
             saved=false
@@ -1930,7 +1945,8 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
   t:TFunction,
   connected:boolean,
-  set_view_not_saved:(s:string)=>void
+  set_view_not_saved:(s:string)=>void,
+  fullscreen:boolean
 
 )=>{
 
@@ -2014,7 +2030,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       </Button>
     </OverlayTrigger>
   
-    <>{!window.SankeyToolsStatic?<>
+    <>{!window.SankeyToolsStatic&&!fullscreen?<>
       {buttonCreateView}
       {buttonUpdateView}
     </>:<></>}</>
@@ -2058,7 +2074,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
         <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
       </Button>
     </OverlayTrigger>
-    {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
+    {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,fullscreen)}</>:<></>}
 
   </>
 }
@@ -2128,4 +2144,28 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
         >{t('view.save')}</Button>
       </Modal.Footer>
     </Modal>)
+}
+
+
+
+
+export const toolbar_fullscreen=(data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  view:string,
+  set_view:(s:string)=>void,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_links:{current:SankeyPlusLink[]},
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  master_data:SankeyPlusData,
+  set_master_data:(d:SankeyPlusData)=>void,
+  t:TFunction,
+  connected:boolean,
+  set_view_not_saved:(s:string)=>void,
+)=>{
+  const buttons_view= SankeyPlusBannerView(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,connected,set_view_not_saved,true)
+  const group_btn=<ButtonGroup>
+    {buttons_view}
+  </ButtonGroup>
+  return <>{group_btn}</>
+    
 }
