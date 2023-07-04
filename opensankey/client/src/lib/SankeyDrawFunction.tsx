@@ -1926,9 +1926,9 @@ export const min_width_and_height = (data:SankeyData) => {
   })
   const vertical_shift=  get_vertical_marfin_for_sankey_zone()
 
+  const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
 
-
-  return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40 - (vertical_shift))]
+  return [Math.max(width, window.innerWidth - 60 - has_scroll_bar), Math.max(height, window.innerHeight - 20 - (vertical_shift))]
 }
 
 // Function that draw the grid in the background of the sankey zone

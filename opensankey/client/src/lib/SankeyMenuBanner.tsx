@@ -721,26 +721,7 @@ export const toolbar_builder = (
       </Overlay>
 
 
-      <OverlayTrigger
-        key={'tooltip-adjust-h'}
-        placement={'left'}
-        delay={500}
-        overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-        <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
-          <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
-          {/* <Col className='textIcon'>{t('Menu.ajustH')}</Col> */}
-        </Button>
-      </OverlayTrigger>
-      <OverlayTrigger
-        key={'tooltip-adjust-v'}
-        placement={'left'}
-        delay={500}
-        overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-        <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
-          <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
-          {/* <Col className='textIcon'>{t('Menu.ajustV')}</Col> */}
-        </Button>
-      </OverlayTrigger>
+      {stretchButtons(data,min_width_and_height,t)}
 
       { url_prefix !== '' ?
         <OverlayTrigger
@@ -788,3 +769,25 @@ export const toolbar_builder = (
 }
 
 
+export const stretchButtons=(data:SankeyData,min_width_and_height:(d:SankeyData)=>number[],t:TFunction)=>{
+  return <> <OverlayTrigger
+    key={'tooltip-adjust-h'}
+    placement={'left'}
+    delay={500}
+    overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+    <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
+      <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
+      {/* <Col className='textIcon'>{t('Menu.ajustH')}</Col> */}
+    </Button>
+  </OverlayTrigger>
+  <OverlayTrigger
+    key={'tooltip-adjust-v'}
+    placement={'left'}
+    delay={500}
+    overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+    <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
+      <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
+      {/* <Col className='textIcon'>{t('Menu.ajustV')}</Col> */}
+    </Button>
+  </OverlayTrigger></>
+}
