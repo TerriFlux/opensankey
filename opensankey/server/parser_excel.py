@@ -130,9 +130,10 @@ def parse_tags(
                         anta_tagg.name_unformatted for anta_tagg in tagg.antagonists_taggs]
                 }
                 # Specific case for tag 'échange'
-                if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
-                    if (CONST_IO_XL.NODE_TYPE_EXCHANGE in nodeTags[CONST_IO_XL.NODE_TYPE]['tags']):
-                        nodeTags[CONST_IO_XL.NODE_TYPE]['tags'][CONST_IO_XL.NODE_TYPE_EXCHANGE]['selected'] = 0
+                # Why ? Julien
+                # if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
+                #     if (CONST_IO_XL.NODE_TYPE_EXCHANGE in nodeTags[CONST_IO_XL.NODE_TYPE]['tags']):
+                #         nodeTags[CONST_IO_XL.NODE_TYPE]['tags'][CONST_IO_XL.NODE_TYPE_EXCHANGE]['selected'] = 0
             continue
         if (tagg_type == CONST_IO_XL.TAG_TYPE_FLUX):
             for tagg in taggs.values():
