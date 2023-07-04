@@ -496,6 +496,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           getLinkValue={SankeyUtils.getLinkValue}
           token={true}
           set_show_toast_limit_node={()=>false}
+          additional_draw_element={[]}
         />
       </>
     </div>

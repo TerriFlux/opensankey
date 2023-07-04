@@ -37,8 +37,9 @@ const SankeyDrawPropTypes = {
   min_width_and_height:PropTypes.func.isRequired,
   getLinkValue:PropTypes.func.isRequired,
   token:PropTypes.bool.isRequired,
-  set_show_toast_limit_node:PropTypes.func.isRequired
+  set_show_toast_limit_node:PropTypes.func.isRequired,
 
+  additional_draw_element:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
 
 }
 
@@ -62,7 +63,8 @@ export const SankeyDrawDefaultProps = {
   min_width_and_height:()=>[],
   getLinkValue:()=>[],
   token:false,
-  set_show_toast_limit_node:()=>false
+  set_show_toast_limit_node:()=>false,
+  additional_draw_element:[]
 
 }
 
@@ -79,7 +81,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
-  getLinkValue,token,set_show_toast_limit_node
+  getLinkValue,token,set_show_toast_limit_node,
+  additional_draw_element
 }) => {
 
   // const [first_selected_node,set_first_selected_node] = useState({})
@@ -381,9 +384,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const width_to_display=((data.width) ? data.width : window.innerWidth*0.975)
   return (
     <>
-      <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id='visualization_div' >
+      <div className="span12" style={{ 'color': 'black','display': 'inline' }} id='visualization_div' >
+        {additional_draw_element}
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
-          <svg id='svg' transform-origin='0 0' style={{ 'margin': '20px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
+          <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
             if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection.current=='s') {
               removeAnimate()
               multi_selected_nodes.current = []
@@ -487,7 +491,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         d.x = d.x - data.grid_square_size
 
         //Diminue largeur svg si le noeud est près du bord
-        if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
+        if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 50) {
           data.width -= 50
         }
       })

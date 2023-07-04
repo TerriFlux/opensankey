@@ -590,8 +590,8 @@ export const default_sankey_data = (): SankeyData => {
 
     accordeonToShow: ['MEP'],
 
-    width: window.innerWidth - 40,
-    height: window.innerHeight - 40,
+    width: window.innerWidth - 50,
+    height: window.innerHeight - 50,
 
     h_space: 200,
     v_space: 100,
@@ -1501,11 +1501,16 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
     size_menu=540
   }
   // Width of the screen minus the margin of the sankey zone minus the width of the configuration menu if it's open
-  const visible_size=((window.innerWidth-(+d3.select(' .opensankey #svg').style('margin').replace('px',''))*2)*0.985)-size_menu
+  const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
+  const is_fullscreen=d3.selectAll('.opensankey .fullscreen_toolbar').nodes().length>0?35:0
+
+
+  const visible_size=window.innerWidth -size_menu - has_scroll_bar - (is_fullscreen?-50:50)
   
   const vertical_margin=get_vertical_marfin_for_sankey_zone()
-  const vertical_visible_size=window.innerHeight - 40 - (vertical_margin)
 
+
+  const vertical_visible_size=window.innerHeight - 50 - (vertical_margin) - is_fullscreen
   const scale=vertical?(vertical_visible_size/data.height):(visible_size/data.width)
   const zoomed=()=> {
     d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+')')
