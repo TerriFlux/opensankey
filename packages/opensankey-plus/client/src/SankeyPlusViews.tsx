@@ -8,7 +8,7 @@ import { TFunction } from 'i18next'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal } from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
 import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
-import {  clickSaveDiagram,adjust_sankey_zone,set_nodes_level } from 'open-sankey/dist/SankeyUtils'
+import {  clickSaveDiagram,adjust_sankey_zone,node_displayed } from 'open-sankey/dist/SankeyUtils'
 import { updateLayout, compute_default_input_outputLinksId, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
@@ -68,11 +68,11 @@ export const setDiagram = (
     //   set_diagram(the_diagram)
     // }
 
-    Object.values(new_data.nodes).forEach(node => {
-      node.node_visible = true
-      node.display = true
-    })
-    set_nodes_level(new_data)
+    // Object.values(new_data.nodes).forEach(node => {
+    //   node.node_visible = true
+    //   node.display = true
+    // })
+    // set_nodes_level(new_data)
     // new_data.fit_screen = true
     d3.select(' .opensankey #svg').on('.zoom', null)
     set_current_data({...new_data })
@@ -1857,9 +1857,9 @@ export const viewsAccordion = (
             const keep_visible_nodes = true
             if (keep_visible_nodes) {
               const initial_nodes = JSON.parse(JSON.stringify(imported_data.nodes))
-              const visible_nodes = Object.values(imported_data.nodes).filter(n => n.node_visible)
+              const visible_nodes = Object.values(imported_data.nodes).filter(n => node_displayed(data,n))
               const visible_links = Object.values(imported_data.links).filter(l => 
-                imported_data.nodes[l.idSource].node_visible && imported_data.nodes[l.idTarget].node_visible
+                node_displayed(imported_data,imported_data.nodes[l.idSource]) && node_displayed(imported_data,imported_data.nodes[l.idTarget])
               )
               imported_data.nodes = Object.assign({}, ...visible_nodes.map(n => ({ [n.idNode]: { ...n } })))
               imported_data.links = Object.assign({}, ...visible_links.map(l => ({ [l.idLink]: { ...l } })))

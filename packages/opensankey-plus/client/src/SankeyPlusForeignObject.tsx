@@ -8,6 +8,8 @@ import {SankeyPlusData,SankeyPlusNode} from './types'
 import ReactQuill,{Quill} from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import ImageResize from 'quill-image-resize-module-react'
+import {node_displayed} from 'open-sankey/dist/SankeyUtils'
+
 Quill.register('modules/imageResize', ImageResize)
 declare const window: Window &
 typeof globalThis & {
@@ -157,7 +159,7 @@ export const SankeyPlusDrawNodesFO = (
 
   const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection === 's')? 'pointer' : 'unset')
-    if ((d as SankeyPlusNode).display && (window.SankeyToolsStatic || event.shiftKey)) {
+    if (node_displayed(data,(d as SankeyPlusNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyPlusNode))
@@ -165,7 +167,7 @@ export const SankeyPlusDrawNodesFO = (
   }
 
   const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
-    if (((d as SankeyPlusNode).display) && (window.SankeyToolsStatic || event.shiftKey)) {
+    if ((node_displayed(data,(d as SankeyPlusNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight
