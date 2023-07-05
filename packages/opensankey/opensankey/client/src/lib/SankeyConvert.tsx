@@ -22,10 +22,8 @@ interface ConvertSankeyNode {
   output_offsets: number[],
   horizontal_index: number,
   visible?: number | boolean,
-  display: number | boolean,
   label_visible: number | boolean,
   shape_visible: number | boolean,
-  node_visible: number | boolean,
   trade_close: boolean,
   show_value: number | boolean,
   type?: string
@@ -278,12 +276,9 @@ export const convert_boolean = (
 
   Object.values(data.nodes).forEach(
     n => {
-      n.node_visible = Boolean(n.node_visible)
       n.show_value = Boolean(n.show_value)
       n.label_visible = Boolean(n.label_visible)
       n.shape_visible = Boolean(n.shape_visible)
-      n.node_visible = Boolean(n.node_visible)
-      n.display = Boolean(n.display)
     }
   )
   Object.values(data.links).forEach(
@@ -718,9 +713,7 @@ export const convert_nodes = (
       if (n.y === undefined) {
         n.y = 0
       }
-      // if (n_convert.visible === undefined && !n.node_visible && data.version !== '0.5' ) {
-      //   n.shape_visible = true
-      // }
+
       if (n_convert.visible === 1) {
         n.shape_visible = true
       }
@@ -728,21 +721,7 @@ export const convert_nodes = (
         n.shape_visible = false
       }
       delete n_convert.visible
-      if (n.node_visible === undefined) {
-        n.node_visible = n.shape_visible || n.label_visible
-      }
-      // if (n.iconName === undefined) {
-      //   n.iconName = 'none'
-      // }
-      // if (n.iconColor === undefined) {
-      //   n.iconColor = '#fff'
-      // }
-      // if (n.iconRatio === undefined) {
-      //   n.iconRatio = 80
-      // }
-      // if (n.iconVisible === undefined) {
-      //   n.iconVisible = true
-      // }
+      
       if (n_convert.type) {
         n.shape = n_convert.type === 'product' ? 'ellipse' : 'rect'
         if ( has_product && !n.tags['Type de noeud']) {
@@ -765,12 +744,10 @@ export const convert_nodes = (
       }
 
       if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
-        n.node_visible = true
         if (data_to_convert.display_style.trade_close !== undefined) {
           n_convert.trade_close = data_to_convert.display_style.trade_close
         }
       } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
-        n.node_visible = true
         if (data_to_convert.display_style.trade_close !== undefined) {
           n_convert.trade_close = data_to_convert.display_style.trade_close
         }
