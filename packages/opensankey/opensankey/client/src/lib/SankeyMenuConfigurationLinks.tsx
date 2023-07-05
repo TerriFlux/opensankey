@@ -3,7 +3,7 @@ import { Row, Form, Col, FormLabel, Tabs,  Button, ButtonGroup, Dropdown, FormGr
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { cut_name, default_link, delete_link } from './SankeyUtils'
+import { cut_name, default_link, delete_link,node_displayed } from './SankeyUtils'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
@@ -97,7 +97,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_tags_selected(dataTagsSelected)
   }
 
-  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(data.nodes[l.idSource].display && data.nodes[l.idTarget].display):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
+  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
   const selected_links = multi_selected_links.current.map((d) => {
     if (data.nodes[d.idSource] == undefined || data.nodes[d.idTarget] == undefined) {
       return

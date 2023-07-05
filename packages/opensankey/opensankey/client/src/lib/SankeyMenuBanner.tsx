@@ -3,7 +3,7 @@ import { Row, Col, Form, FormLabel, Button,  FormGroup, OverlayTrigger, Tooltip,
 import {  SankeyData, TagsGroup} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { convert_data } from './SankeyConvert'
-import { findMaxLinkValue, set_nodes_level,adjust_sankey_zone } from './SankeyUtils'
+import { findMaxLinkValue,adjust_sankey_zone } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -153,7 +153,15 @@ export const addAllDropDownNode = (
                   value={selected}
                   placeholder='all'
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
+                    // Delete all local node variable : local_aggregation 
+                    Object.values(data.nodes).filter(n=>n.local!==undefined).forEach(n=>{
+                      if(n.local){
+                        delete n.local.local_aggregation
+                      }
+                    })
+                    handleSimpleDropdown(evt, tags_group, data, set_data) 
+                    
+                  }}>{
                     Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
                       return (<option key={i} value={tag_key}>{tag.name}</option>)
                     })}
@@ -173,7 +181,6 @@ export const addAllDropDownNode = (
                     onChange={evt => {
                       tags_group.activated = evt.target.checked
                       tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
-                      set_nodes_level(data)
                       set_data({ ...data })
                     }}
                   />
@@ -285,9 +292,6 @@ export const addAllDropDownNode = (
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
-  if (tags_group.banner === 'level' ) {
-    set_nodes_level(data)
-  }
   set_data({ ...data })
 }
 
@@ -346,11 +350,7 @@ export const setDiagram = (
   //   set_diagram(the_diagram)
   // }
 
-  Object.values(data.nodes).forEach(node => {
-    node.node_visible = true
-    node.display = true
-  })
-  set_nodes_level(data)
+
   // new_data.fit_screen = true
   d3.select(' .opensankey #svg').on('.zoom', null)
   set_data({ ...new_data })
