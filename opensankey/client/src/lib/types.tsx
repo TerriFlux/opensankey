@@ -1,5 +1,10 @@
 import PropTypes, { InferProps } from 'prop-types'
 
+export const SankeyNodeAttrLocalTypes ={
+  local_aggregation:PropTypes.bool
+}
+export type SankeyNodeAttrLocal = InferProps<typeof SankeyNodeAttrLocalTypes>
+
 export const SankeyNodePropTypes = {
   // identification
   idNode: PropTypes.string.isRequired,
@@ -15,11 +20,12 @@ export const SankeyNodePropTypes = {
 
   // DISPLAY ATTRIBUTES
   // display controls the agregation desagregation process. 
-  display: PropTypes.bool.isRequired,
   // hide_lone_node:PropTypes.bool.isRequired,
   // node_visible controls the other process in particular tags manipulations
-  node_visible: PropTypes.bool.isRequired,
   // shape_visible and label_visible control the visibility of the element of the node
+
+  local:PropTypes.shape(SankeyNodeAttrLocalTypes),
+
   shape_visible: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
 

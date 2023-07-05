@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 
 import { dragNodeTextEventWidthBoxEvent } from './SankeyDrag'
 import {textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap} from './SankeyDrawFunction'
-
+import { node_displayed } from './SankeyUtils'
 
 
 export const OpenSankeyDrawNodesLabel = (
@@ -42,7 +42,7 @@ export const OpenSankeyDrawNodesLabel = (
           return 'start'
         }
       })
-      .attr('visibility', n => (n as SankeyNode).node_visible && (n as SankeyNode).label_visible ? 'visible' : 'hidden')
+      .attr('visibility', n => node_displayed(data,(n as SankeyNode)) && (n as SankeyNode).label_visible ? 'visible' : 'hidden')
       .style('text-align', 'center')
       .style('font-weight', n => ((n as SankeyNode).display_style.bold) ? 'bold' : 'normal')
       .style('font-style', n => ((n as SankeyNode).display_style.italic) ? 'italic' : 'normal')
@@ -62,7 +62,7 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('x', n =>node_value_posX(n as SankeyNode))
       .attr('y', n => node_value_posY(n as SankeyNode))
       .attr('text-anchor', (n) => (n as SankeyNode).display_style.label_horiz_valeur.replace('left','end').replace('right','start'))
-      .attr('visibility', n => (n as SankeyNode).node_visible && (n as SankeyNode).show_value ? 'visible' : 'hidden')
+      .attr('visibility', n => node_displayed(data,(n as SankeyNode)) && (n as SankeyNode).show_value ? 'visible' : 'hidden')
     // .style('text-align', 'center')
     // .style('font-weight', n => ((n as SankeyNode).display_style.bold) ? 'bold' : 'normal')
     // .style('font-style', n => ((n as SankeyNode).display_style.italic) ? 'italic' : 'normal')

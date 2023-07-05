@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect,Requireable } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes} from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { setSelectedTags,  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
+import {  delete_link,delete_node,clickSaveDiagram,node_displayed} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar} from './SankeyDrawFunction'
 import LZString from 'lz-string'
@@ -35,7 +35,6 @@ const SankeyDrawPropTypes = {
   set_alt_key_pressed:PropTypes.func.isRequired,
 
   min_width_and_height:PropTypes.func.isRequired,
-  getLinkValue:PropTypes.func.isRequired,
   token:PropTypes.bool.isRequired,
   set_show_toast_limit_node:PropTypes.func.isRequired,
 
@@ -61,7 +60,6 @@ export const SankeyDrawDefaultProps = {
 
   set_alt_key_pressed:()=>false,
   min_width_and_height:()=>[],
-  getLinkValue:()=>[],
   token:false,
   set_show_toast_limit_node:()=>false,
   additional_draw_element:[]
@@ -81,7 +79,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
-  getLinkValue,token,set_show_toast_limit_node,
+  token,set_show_toast_limit_node,
   additional_draw_element
 }) => {
 
@@ -95,9 +93,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .append('div')
     .style('opacity', 0)
     .attr('class', 'sankey-tooltip')
-
-
-  setSelectedTags(data,getLinkValue,false)
 
 
   sankeyTooltip
@@ -393,7 +388,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               multi_selected_nodes.current = []
               multi_selected_links.current = []
               // multi_selected_label.current = []
-              Object.values(data.nodes).filter(n=>n.node_visible).forEach(n=>d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0))
+              Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n=>d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0))
               const visible_links = Object.values(data.links)
               visible_links.forEach(l=> {
                 const sel = d3.selectAll(' .opensankey #gg_' + l.idLink+ ' rect')
