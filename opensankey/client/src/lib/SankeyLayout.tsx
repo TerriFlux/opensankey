@@ -1,5 +1,5 @@
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes} from './types'
-import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
+import { findMaxLinkValue,node_displayed } from './SankeyUtils'
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
@@ -204,15 +204,16 @@ export const explore_branch = (
   current_length: number,
   visited_nodes: string[],
   links: { [link_id : string]:SankeyLink},
-  nodes: { [node_id : string]:SankeyNode}
+  nodes: { [node_id : string]:SankeyNode},
+  data:SankeyData
 ) => {
   let no_input_link = true
   let highest_branch_length = current_length
   Object.values(links).forEach(link => {
-    if (link.idTarget === idNode && nodes[link.idSource].node_visible && nodes[link.idSource].display ) {
+    if (link.idTarget === idNode && node_displayed(data,nodes[link.idSource]) ) {
       if (visited_nodes.indexOf(idNode) === -1) {
         no_input_link = false
-        const branch_length = explore_branch(link.idSource, current_length + 1, [...visited_nodes,idNode], links,nodes)
+        const branch_length = explore_branch(link.idSource, current_length + 1, [...visited_nodes,idNode], links,nodes,data)
         if (branch_length > highest_branch_length) {
           highest_branch_length = branch_length
         }
@@ -231,7 +232,7 @@ export const arrangeNodes = (
   data: SankeyData
 ) => {
   Object.values(data.nodes).forEach(node => {
-    if ( !node.node_visible || node.position === 'relative' ) {
+    if ( !node_displayed(data,node) || node.position === 'relative' ) {
       return
     }
     const x = Math.round(node.x / data.grid_square_size) * data.grid_square_size
@@ -262,14 +263,14 @@ export const compute_auto_sankey = (
 
   const vspace = data.v_space
   const horizontal_indices: { [node_id:string]:number} = {}
-  Object.values(data.nodes).filter(n=>n.node_visible).forEach(node => {
-    const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes)
+  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(node => {
+    const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes,data)
     horizontal_indices[node.idNode] = horizontal_index
     if (horizontal_index > max_horizontal_index) {
       max_horizontal_index = horizontal_index
     }
   })
-  Object.values(data.links).filter(l=>data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible && data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(l => {
+  Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).forEach(l => {
     if (horizontal_indices[l.idSource] >= horizontal_indices[l.idTarget]) {
       l.recycling = true
     }
@@ -278,7 +279,7 @@ export const compute_auto_sankey = (
   const width = max_horizontal_index* h_space 
 
   Object.values(data.nodes).forEach(node => {
-    if (!node.node_visible || !node.display) {
+    if (!node_displayed(data,node)) {
       return
     }
     node.x = max_horizontal_index !== 0 ? 50 + horizontal_indices[node.idNode] / max_horizontal_index * width : 50 //* 0.9
@@ -286,7 +287,7 @@ export const compute_auto_sankey = (
 
   // Reorder links using the x of source name as criteria 
   // Compute input_outputLinksId
-  Object.values(data.nodes).filter(n=>n.node_visible && n.display).forEach(n => data.nodes[n.idNode] = {...n})
+  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n => data.nodes[n.idNode] = {...n})
   compute_default_input_outputLinksId(data.nodes, data.links)
 
   // Vertical position of vertical nodes
@@ -295,7 +296,7 @@ export const compute_auto_sankey = (
   for (let i = 0; i <= max_horizontal_index; i++) {
     let vertical_space: number
     let vertical_offset = 0
-    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && n.display && horizontal_indices[n.idNode] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && horizontal_indices[n.idNode] === i)
     if (the_nodes.length > 1) {
       vertical_space = vspace //(200 - total_height) / (total_nb - 1)
     }
@@ -319,13 +320,13 @@ export const compute_auto_sankey = (
     }
   }
   for (let i = 0; i <= max_horizontal_index; i++) {
-    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && n.display && horizontal_indices[n.idNode] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && horizontal_indices[n.idNode] === i)
     let total_nb_outputLinksId_up = 0
     let total_nb_outputLinksId_down = 0
     the_nodes.forEach((node) => {
       node.outputLinksId.forEach(
         (idLink) => {
-          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible && data.nodes[data.links[idLink].idSource].display && data.nodes[data.links[idLink].idTarget].display) {
+          if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
               return
@@ -344,7 +345,7 @@ export const compute_auto_sankey = (
     the_nodes.forEach(node => {
       node.outputLinksId.forEach(
         (idLink) => {
-          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible && data.nodes[data.links[idLink].idSource].display && data.nodes[data.links[idLink].idTarget].display) {
+          if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget]) ) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
               return
@@ -390,7 +391,7 @@ export const updateLayout = (
 ) => {
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
-    if (!node.node_visible) {
+    if (!node_displayed(data,node)) {
       return
     }
     max_vertical_offset = Math.max(node.y, max_vertical_offset)
@@ -518,7 +519,6 @@ export const updateLayout = (
 
       
       node.shape_visible = node_layout.shape_visible
-      node.node_visible = node_layout.node_visible
       node.label_visible = node_layout.label_visible
     }
     // if(mode.includes('tagNode')){
@@ -682,7 +682,6 @@ export const updateLayout = (
       data.display_style.filter_label = 0
     }
   }
-  set_nodes_level(data)
   
 }
 
@@ -690,17 +689,10 @@ export const desagregation = (
   data: SankeyData,   
   idNode: string, 
   cur_dimension: string,
-  control_display = true
 ) => {
   const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
   if (dim_desagregate_nodes.length == 0) {
     return
-  }
-  if (control_display) {
-    dim_desagregate_nodes.forEach( n => {
-      n.display = true
-      n.node_visible = true
-    })
   }
   const nb_desagregated = dim_desagregate_nodes.length
   let current_y = data.v_space/2
@@ -711,11 +703,22 @@ export const desagregation = (
       n.y = data.nodes[idNode].y - current_y
     }
     current_y = current_y - delta_y
+
+    if(n.local==undefined || n.local==null){
+      n.local={local_aggregation:true}
+    }else{
+      if(n.local){
+        n.local.local_aggregation=true
+      }
+    }
   })
-  if (control_display) {
-    // Hides agregated nodes
-    data.nodes[idNode].display = false
-    data.nodes[idNode].node_visible = false
+  const clicked_node=data.nodes[idNode]
+  if(clicked_node.local==undefined || clicked_node.local==null){
+    clicked_node.local={local_aggregation:false}
+  }else{
+    if(clicked_node.local){
+      clicked_node.local.local_aggregation=false
+    }
   }
 }
 
@@ -723,7 +726,6 @@ export const agregation = (
   data : SankeyData, 
   idNode: string,
   cur_dimension: string,
-  control_display = true
 ) =>  {
   if ( !(cur_dimension in data.nodes[idNode].dimensions)) {
     return
@@ -743,11 +745,6 @@ export const agregation = (
   })
 
 
-  if (control_display) {
-    // show agregated node
-    parent_node.display = true
-    parent_node.node_visible = true
-  }
   if (dim_desagregated_nodes.length === 0) {
     return
   }
@@ -755,14 +752,18 @@ export const agregation = (
   let mean_x = 0
   let mean_y = 0
   dim_desagregated_nodes.forEach(n => {
-    if (control_display) {
-      data.nodes[n.idNode].display = false
-      data.nodes[n.idNode].node_visible = false
-    }
     if (n.x) {
       mean_x += n.x  
       mean_y += n.y
     }
+    if(n.local==undefined || n.local==null){
+      n.local={local_aggregation:false}
+    }else{
+      if(n.local){
+        n.local.local_aggregation=false
+      }
+    }
+
   })
   mean_x = mean_x/dim_desagregated_nodes.length
   mean_y = mean_y/dim_desagregated_nodes.length
@@ -770,6 +771,13 @@ export const agregation = (
   if (parent_node.x === undefined || (parent_node.x === 0 && parent_node.y === 0) ) {
     parent_node.x = mean_x
     parent_node.y = mean_y
+  }
+  if(parent_node.local==undefined || parent_node.local==null){
+    parent_node.local={local_aggregation:true}
+  }else{
+    if(parent_node.local){
+      parent_node.local.local_aggregation=true
+    }
   }
 }
 

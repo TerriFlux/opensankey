@@ -3,7 +3,7 @@ import { Row, Tabs, Button, ButtonGroup, Col, Dropdown, Form, FormControl, FormC
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNode, SankeyNodePropTypes,SankeyLinkValue } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
-import { cut_name,default_node,delete_node } from './SankeyUtils'
+import { cut_name,default_node,delete_node,node_displayed } from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -67,7 +67,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const [forceUpdate, setForceUpdate] = useState(false)
 
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?d.display:true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?node_displayed(data,d):true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
 
   const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
 

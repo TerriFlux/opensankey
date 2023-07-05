@@ -352,7 +352,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const select_link=(l: SankeyLink) => {
     selected_link.current = l
   }
-  const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !n.node_visible || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
+  const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !SankeyUtils.node_displayed(data,n) || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
   const position = data.static_sankey ? 'relative' : 'absolute'
 
 
@@ -493,7 +493,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           is_agregation={is_agregation}
           set_alt_key_pressed={set_alt_key_pressed}
           min_width_and_height={min_width_and_height}
-          getLinkValue={SankeyUtils.getLinkValue}
           token={true}
           set_show_toast_limit_node={()=>false}
           additional_draw_element={[]}

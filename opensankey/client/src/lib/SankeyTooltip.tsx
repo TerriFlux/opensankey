@@ -1,5 +1,5 @@
 import { SankeyNode, SankeyLink, SankeyData,SankeyLinkValue } from './types'
-import { toPrecision,link_visible } from './SankeyUtils'
+import { toPrecision,link_visible,node_displayed } from './SankeyUtils'
 
 
 /**
@@ -191,7 +191,7 @@ export const nodeTooltipsContent = (
       if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
-      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+      if (node_displayed(data,nodes[link.idSource]) && node_displayed(data,nodes[link.idTarget]) ) {
         total += (the_value)?the_value:0
       }
     }
@@ -223,7 +223,7 @@ export const nodeTooltipsContent = (
       if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
-      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+      if (node_displayed(data,nodes[link.idSource]) && node_displayed(data,nodes[link.idTarget]) ) {
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
         t += '<tr><td style="white-space: nowrap;">' + source_name + '</td>'
         t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'
@@ -260,7 +260,7 @@ export const nodeTooltipsContent = (
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
 
-      if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+      if (node_displayed(data,nodes[link.idSource]) && node_displayed(data,nodes[link.idTarget]) ) {
         total += (the_value)?the_value:0
       }
     }
@@ -286,7 +286,7 @@ export const nodeTooltipsContent = (
         if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
           the_value = Number(String(link_info.display_value).replace('*',''))
         }
-        if (nodes[link.idSource].node_visible && nodes[link.idTarget].node_visible) {
+        if (node_displayed(data,nodes[link.idSource]) && node_displayed(data,nodes[link.idTarget]) ) {
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
           t += '<tr><td style="white-space: nowrap;">' + target_name + '</td>'
           t +=  '<td>' + toPrecision( (the_value)?the_value:0)+'</td>'

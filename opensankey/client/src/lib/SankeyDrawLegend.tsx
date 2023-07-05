@@ -3,7 +3,7 @@ import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
-import { link_visible} from './SankeyUtils'
+import { link_visible,node_displayed} from './SankeyUtils'
 import { TFunction } from 'i18next'
 
 export const OpenSankeyDrawLegend = (
@@ -66,7 +66,7 @@ export const OpenSankeyDrawLegend = (
               return t>0
             }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
               const t2=Object.values(data.nodes).filter(n=>{
-                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ) && n.display && n.position !== 'relative'
+                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && node_displayed(data,n) && n.position !== 'relative'
               }).length
               return t2>0
             }else if(data.colorMap && data.colorMap.includes('dataTags_')){
