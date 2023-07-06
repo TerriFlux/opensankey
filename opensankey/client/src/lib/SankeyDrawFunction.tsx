@@ -781,9 +781,10 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
           // isDown = true
           // creation nouveau noeud
           const new_node1 = default_node(data)
-          const listId: number[] = []
-          Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-          const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+          let idNode = Object.keys(data.nodes).length
+          while (data.nodes[idNode]) {
+            idNode = idNode+1
+          }
           new_node1.idNode = 'node' + idNode
           new_node1.name = 'node_tmp'
           data.nodes[new_node1.idNode] = new_node1
@@ -874,9 +875,10 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
         //Création second noeud
         const new_node1 = default_node(data)
-        const listId: number[] = []
-        Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-        const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+        let idNode = Object.keys(data.nodes).length
+        while (data.nodes[idNode]) {
+          idNode = idNode+1
+        }
         new_node1.idNode = 'node' + idNode
         new_node1.name = new_node1.idNode
         if (Object.keys(data.nodes).length < 5) {
@@ -911,9 +913,10 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
 
         const n_link = default_link(data)
         const n_node = default_node(data)
-        const listIdN: number[] = []
-        Object.keys(data.nodes).forEach(elt => listIdN.push(Number(elt.replace('node', ''))))
-        const idNode = listIdN.length > 0 ? Math.max(...listIdN) + 1 : 0
+        let idNode = Object.keys(data.nodes).length
+        while (data.nodes[idNode]) {
+          idNode = idNode+1
+        }
         n_node.idNode = 'node' + idNode
         n_node.name = 'node'+idNode
         data.nodes[n_node.idNode] = n_node
@@ -2042,6 +2045,9 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
 
 
 export const node_label_posX=(n:SankeyNode)=>{
+  if (d3.select(' .opensankey #' + n.idNode).empty()) {
+    return 0
+  }
   const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
   if (n.x_label) {
     return n.x_label
@@ -2056,6 +2062,9 @@ export const node_label_posX=(n:SankeyNode)=>{
   }
 }
 export const node_label_posY=(n:SankeyNode,data:SankeyData)=>{
+  if (d3.select(' .opensankey #' + n.idNode).empty()) {
+    return 0
+  }
   const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
   if (n.y_label && data.show_structure !== 'structure') {
     return n.y_label

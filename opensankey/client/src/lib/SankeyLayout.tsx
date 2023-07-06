@@ -399,18 +399,18 @@ export const updateLayout = (
   Object.values(data.nodes).forEach(compute_offset)
   max_vertical_offset = max_vertical_offset + 200
 
-  let listId = [] as number[]
-  Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-  Object.keys(new_layout.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-  let maxIdNode = listId.length > 0 ? Math.max(...listId) : 0
+  let idNode = Object.keys(data.nodes).length
+  while (data.nodes[idNode]) {
+    idNode = idNode+1
+  }
 
   //- Stores a mapping between idNode of initial data and layout idNodes
   const idNodesMap: {[s:string]:string} = {}
   Object.values(data.nodes).forEach( n => {
     const layout_nodes = Object.values(new_layout.nodes).filter(node_layout=>normalize_name(n.name) === normalize_name(node_layout.name))
     if (layout_nodes.length === 0) {
-      maxIdNode = maxIdNode+1
-      idNodesMap[n.idNode] = 'node'+maxIdNode
+      idNode = idNode+1
+      idNodesMap[n.idNode] = 'node'+idNode
       return
     }
     const layout_node = layout_nodes[0]
@@ -430,10 +430,10 @@ export const updateLayout = (
     l.idTarget=idNodesMap[l.idTarget]    
   })
 
-  listId = []
-  Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-  Object.keys(new_layout.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-  let maxIdLink = listId.length > 0 ? Math.max(...listId) : 0
+  let idLink = Object.keys(data.links).length
+  while (data.links[idLink]) {
+    idLink = idLink+1
+  }
   //- Stores a mapping between idLink of initial data and layout idLinks
   const idLinksMap: {[s:string]:string} = {}
   const links_with_no_match : SankeyLink [] = []
@@ -450,8 +450,8 @@ export const updateLayout = (
       l.idSource === link_layout.idSource && l.idTarget === link_layout.idTarget
     )
     if (layout_links.length === 0) {
-      maxIdLink = maxIdLink+1
-      idLinksMap[l.idLink] = 'link'+maxIdLink
+      idLink = idLink+1
+      idLinksMap[l.idLink] = 'link'+idLink
       return
     }
     const layout_link = layout_links[0]
