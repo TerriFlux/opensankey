@@ -620,7 +620,6 @@ export const default_sankey_data = (): SankeyData => {
     grid_square_size: 50,
     grid_visible: true,
 
-    static_sankey: false,
 
     nodeTags: {},
     dataTags: {},

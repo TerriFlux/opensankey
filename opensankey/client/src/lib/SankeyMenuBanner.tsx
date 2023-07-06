@@ -345,7 +345,6 @@ export const setDiagram = (
   ) as SankeyData
   //Object.assign(sankey_data, new_data)
   convert_data(new_data)
-  new_data.static_sankey = true
   // if (!is_split) {
   //   set_diagram(the_diagram)
   // }

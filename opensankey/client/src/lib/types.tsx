@@ -214,7 +214,6 @@ export const SankeyDataPropTypes = {
   grid_square_size: PropTypes.number.isRequired,
   grid_visible: PropTypes.bool.isRequired,
 
-  static_sankey: PropTypes.bool.isRequired,
 
   nodeTags: TagsCatalogPropTypes,
   dataTags: TagsCatalogPropTypes,
