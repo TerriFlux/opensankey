@@ -151,13 +151,12 @@ export const SankeyPlusNodeFO = (
 export const SankeyPlusDrawNodesFO = (
   data:SankeyPlusData,
   mode_selection:string,
-  static_sankey:boolean,
   nodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
 
 ) => {
 
 
-  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
+  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection === 's')? 'pointer' : 'unset')
     if (node_displayed(data,(d as SankeyPlusNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
       sankeyTooltip
@@ -166,7 +165,7 @@ export const SankeyPlusDrawNodesFO = (
     }
   }
 
-  const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
+  const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     if ((node_displayed(data,(d as SankeyPlusNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
       let pos_tooltip_y= event.clientY
@@ -208,10 +207,10 @@ export const SankeyPlusDrawNodesFO = (
       .attr('height',(n)=>+d3.select(' .opensankey #' + n.idNode).attr('height'))
       .attr('id',(d)=> d.idNode + '_fo')
       .on('mouseover', function (event, d) {
-        node_mouse_over(data,this,mode_selection,static_sankey,event,d,sankeyTooltip)
+        node_mouse_over(data,this,mode_selection,event,d,sankeyTooltip)
       })
       .on('mousemove', function (event,d) {
-        node_mouse_move(static_sankey,event,d,sankeyTooltip)
+        node_mouse_move(event,d,sankeyTooltip)
       })
       .on('mouseout', function () {
         sankeyTooltip.style('opacity', 0)

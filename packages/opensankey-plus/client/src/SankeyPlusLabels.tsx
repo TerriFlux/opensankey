@@ -6,6 +6,11 @@ import { textwrap } from 'd3-textwrap'
 
 import {drawGrid,min_width_and_height} from 'open-sankey/dist/SankeyDrawFunction'
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
+
 
 export const SankeyPlusDrawLabels = (
   data:SankeyPlusData,
@@ -39,7 +44,7 @@ export const SankeyPlusDrawLabels = (
 
 
 
-      gg_label.on('click', (event) => eventLabelClick(event,d,data,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data))
+      gg_label.on('click', (event) => eventLabelClick(event,d,data,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data))
 
       // Traite les labels qui sont dans des foreignObject
       gg_label.filter(()=>{
@@ -181,8 +186,8 @@ const pos_zdt_y=(d:SankeyPlusLabel)=>{
 }
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
-export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_label:{current:SankeyPlusLabel[]},set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
-  if ((event.ctrlKey || event.metaKey )&& !mode_visualisation) {
+export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_label:{current:SankeyPlusLabel[]},set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
+  if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     sankeyTooltip.style('opacity', 0)
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
       button_ref.current.click()

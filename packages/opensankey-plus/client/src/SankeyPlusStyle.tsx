@@ -85,7 +85,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyPlusData,
   return(
     <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'} >
       <Modal.Header closeButton>
-        <Modal.Title>Édition Style</Modal.Title>
+        <Modal.Title>{t('Menu.esn')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
 
@@ -221,7 +221,7 @@ export const SankeyPlusModalStyleLink = (t:TFunction,data:SankeyPlusData,
   return (
     <Modal show={showStyleLink} onHide={closeStyleEditionLink} size={'lg'} >
       <Modal.Header closeButton>
-        <Modal.Title>Édition Style</Modal.Title>
+        <Modal.Title>{t('Menu.esf')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
 

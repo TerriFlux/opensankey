@@ -12,8 +12,14 @@ Quill.register('modules/imageResize', ImageResize)
 
 import {  preferenceCheck } from 'open-sankey/dist/SankeyMenuPreferences'
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
+
+
 export const SankeyPlusMenuPreferenceLabels=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
-  return  (<Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('LL')} type="checkbox" label={t('Menu.LL')} onChange={() => {
+  return  (<Form.Check disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('LL')} type="checkbox" label={t('Menu.LL')} onChange={() => {
     preferenceCheck('LL',data)
     set_data({ ...data })
   }} />)

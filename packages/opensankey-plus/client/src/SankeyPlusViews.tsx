@@ -63,7 +63,6 @@ export const setDiagram = (
     ) as SankeyPlusData
     //Object.assign(sankey_data, new_data)
     convert_data(new_data)
-    new_data.static_sankey = true
     // if (!is_split) {
     //   set_diagram(the_diagram)
     // }
@@ -2080,7 +2079,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
 }
 
 export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
-  return <Form.Check disabled={data.static_sankey} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
+  return <Form.Check disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
     preferenceCheck('Vis',data)
     set_data({ ...data })
   }} />
