@@ -18,9 +18,9 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
 
 ) => {
 
-  if (Object.values(data.nodeTags).filter(tag=>tag.banner === 'level').length > 0 && cube_dimension === 'Primaire') {
-    if (Object.values(data.nodeTags).filter(tag=>tag.banner === 'level' && tag.group_name === 'Primaire').length === 0) {
-      set_cube_dimension(Object.entries(data.nodeTags).filter(([,tag])=>tag.banner === 'level')[0][0])
+  if (Object.values(data.levelTags).length > 0 && cube_dimension === 'Primaire') {
+    if (Object.values(data.levelTags).filter(tag=>tag.group_name === 'Primaire').length === 0) {
+      set_cube_dimension(Object.entries(data.levelTags)[0][0])
     }
   }
   return<Tab eventKey="agregation" title={t('Noeud.agre.Agré')}>
@@ -28,7 +28,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
       <Form.Group as={Row} >
         <FormLabel column>{t('Noeud.agre.DC')}</FormLabel>
         <Col><Form.Select placeholder='all' value={cube_dimension} onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_cube_dimension(evt.target.value)} >
-          {Object.entries(data.nodeTags).filter(tag=>tag[1].banner === 'level').map((tag,i) => {
+          {Object.entries(data.levelTags).map((tag,i) => {
             return (<option key={i} value={tag[0]}>{tag[1].group_name}</option>)
           })}
         </Form.Select></Col>
