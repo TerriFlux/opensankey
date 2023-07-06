@@ -2,7 +2,7 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, FormGroup } from 'react-bootstrap'
-import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
+import { SankeyDataPropTypes, SankeyLink, } from './types'
 import { updateLayout } from './SankeyLayout'
 import { complete_sankey_data, convert_data } from './SankeyConvert'
 import { default_link, default_node, default_sankey_data,clickSaveDiagram } from './SankeyUtils'
