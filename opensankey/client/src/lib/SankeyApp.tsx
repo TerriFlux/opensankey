@@ -318,17 +318,17 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     display_style.filter = +new_current_filter
     set_data({ ...data })
   }
-  Object.values(data.nodeTags).filter(tag_group=>tag_group.banner==='level').forEach(tag_group=>tag_group.activated = false)
-  if ('Primaire' in data.nodeTags && data.nodeTags['Primaire'].activated === false) {
-    data.nodeTags['Primaire'].activated = true
+  Object.values(data.levelTags).forEach(tag_group=>tag_group.activated = false)
+  if ('Primaire' in data.levelTags && data.levelTags['Primaire'].activated === false) {
+    data.levelTags['Primaire'].activated = true
   }
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const detail_level=
     <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
       <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
       <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-
-        <table>{(Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0) ? (<>
+      
+        <table>{(Object.entries(data.levelTags).length > 0) ? (<>
           {addSimpleLevelDropDown(t,data,set_data)}</>
         ) : (<>
           <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</table>

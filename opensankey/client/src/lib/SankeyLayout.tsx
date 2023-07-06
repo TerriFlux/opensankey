@@ -588,7 +588,7 @@ export const updateLayout = (
 
 
   // Always assign level tag from new layout
-  const new_layout_level_tag=Object.fromEntries(Object.entries(new_layout.nodeTags).filter(nt=>nt[1].banner=='level'))
+  const new_layout_level_tag=Object.fromEntries(Object.entries(new_layout.levelTags))
   for (const tag_group_key in new_layout_level_tag) {
     if (tag_group_key in data.nodeTags) {
       continue

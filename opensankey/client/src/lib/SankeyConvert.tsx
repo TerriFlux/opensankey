@@ -604,7 +604,7 @@ export const convert_tags = (
       data.fluxTags['flux_types'].tags.computed_data.color = '#D3D3D3' //LightGray
     }
   }
-  if (!('Primaire' in data.nodeTags)) {
+  if (!('Primaire' in data.nodeTags) && !('Primaire' in data.levelTags)) {
     data.nodeTags['Primaire'] = {
       group_name: 'Primaire',
       show_legend: false,
@@ -630,6 +630,16 @@ export const convert_tags = (
     t.show_legend=typeof(t.show_legend)=='boolean'?t.show_legend:((t.show_legend===1))
     t.siblings=t.siblings?t.siblings:[]    
   })
+
+  // Convertie les nodeTags avec pour bannière 'level' en levelTags 
+  if(has_not_converted_nodeTags_as_levelTags(data)){
+    console.log(JSON.parse(JSON.stringify(data.nodeTags)))
+    console.log(JSON.parse(JSON.stringify(data.levelTags)))
+    data.levelTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner==='level'))
+    data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
+  }
+
+
 }
 
 export const convert_nodes = (
@@ -1426,4 +1436,7 @@ export const convert_data = (
   //   convert_nodes(v.view_data as unknown as SankeyData)
   //   convert_links(v.view_data as unknown as SankeyData)
   // })
+}
+const has_not_converted_nodeTags_as_levelTags=(data:SankeyData)=>{
+  return Object.values(data.nodeTags).filter(nt=>nt.banner=='level').length>0
 }

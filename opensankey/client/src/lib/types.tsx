@@ -218,6 +218,7 @@ export const SankeyDataPropTypes = {
   nodeTags: TagsCatalogPropTypes,
   dataTags: TagsCatalogPropTypes,
   fluxTags: TagsCatalogPropTypes,
+  levelTags:TagsCatalogPropTypes,
   colorMap: PropTypes.string.isRequired,
 
   legend_width:PropTypes.number.isRequired,
