@@ -24,7 +24,6 @@ export const OpenSankeyDrawLinks = (
   select_link:(l: SankeyLink) => void,
 
   alt_key_pressed:boolean,
-  static_sankey:boolean,
   position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
   linkTooltipsContent:(data: SankeyData, l: SankeyLink,
@@ -54,7 +53,7 @@ export const OpenSankeyDrawLinks = (
 
   // Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear (center handle,shift handles,drag zone) and add pointer event to those element
   const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLink,
-    mode_visualisation:boolean,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+    sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
     accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
     button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
     multi_selected_links:{current: SankeyLink[] },
@@ -63,7 +62,7 @@ export const OpenSankeyDrawLinks = (
     set_data:(d:SankeyData)=>void
   )=>{
     mode_selection.current='s'
-    if (!mode_visualisation) {
+    if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
       sankeyTooltip.style('opacity', 0)
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
         button_ref.current.click()
@@ -252,7 +251,6 @@ export const OpenSankeyDrawLinks = (
 
 
   const add_links = (
-    static_sankey: boolean,
     linkStroke:(l:SankeyLink,
       data:SankeyData,
       getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
@@ -297,7 +295,7 @@ export const OpenSankeyDrawLinks = (
       })
 
     const paths = gg_links.append('path')
-    if (!static_sankey ) {
+    if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
       let error_msg: { text: string | undefined } | undefined
       paths.call(dragLinkEvent(multi_selected_links,data,display_nodes,display_links,error_msg,display_style,drawCurveFunction,scale,inv_scale)
       )
@@ -349,7 +347,7 @@ export const OpenSankeyDrawLinks = (
         return  link_visible(d, data,getLinkValue) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
       })
 
-    if (!static_sankey ) {
+    if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
       // A voir avec Julien
       select2.call(dragLinkTextEvent(alt_key_pressed)
       )
@@ -364,7 +362,7 @@ export const OpenSankeyDrawLinks = (
         })
     }
 
-    if (!static_sankey) {
+    if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
       select2.call(dragLinkTextEvent(alt_key_pressed))
     }
     let error_msg: { text?: string | undefined } | undefined
@@ -429,7 +427,7 @@ export const OpenSankeyDrawLinks = (
         }
       })
 
-    paths.on('click', (event, d) =>eventLinkClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,select_link,set_data))
+    paths.on('click', (event, d) =>eventLinkClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,select_link,set_data))
     // const arrowVisible=(l :SankeyLink)=>{
     //   return  data.nodes[l.idSource].display && data.nodes[l.idTarget].display && l.arrow
 
@@ -466,7 +464,7 @@ export const OpenSankeyDrawLinks = (
       })
       .each(function (l) {
         if((l as SankeyLink).orientation=='vv' ||(l as SankeyLink).orientation=='hh'){
-          add_drag_link_zone((l as SankeyLink),data.nodes,data,set_data,multi_selected_links,data.static_sankey,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
+          add_drag_link_zone((l as SankeyLink),data.nodes,data,set_data,multi_selected_links,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
         }
       })
     if (error_msg && error_msg.text) {
@@ -816,7 +814,7 @@ export const OpenSankeyDrawLinks = (
     link.label_position = 'frozen'
   }
 
-  add_links(static_sankey,linkStroke,drawArrows)
+  add_links(linkStroke,drawArrows)
   
   return (<>
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>

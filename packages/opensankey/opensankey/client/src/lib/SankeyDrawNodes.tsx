@@ -32,7 +32,6 @@ export const OpenSankeyDrawNodes = (
   set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,
   select_node:(n: SankeyNode) => void,
   alt_key_pressed:boolean,
-  static_sankey:boolean,
   position:'absolute' | 'relative',
   nodeTooltipsContent: (data: SankeyData, d: SankeyNode,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
@@ -314,7 +313,7 @@ export const OpenSankeyDrawNodes = (
     
  
     
-  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
+  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
     if ((d as SankeyNode).shape_visible && (window.SankeyToolsStatic ||event.shiftKey)) {
       sankeyTooltip
@@ -323,7 +322,7 @@ export const OpenSankeyDrawNodes = (
     }
   }
     
-  const node_mouse_move=(static_sankey:boolean,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,over_icon:boolean)=>{
+  const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,over_icon:boolean)=>{
     if (((d as SankeyNode).shape_visible ||over_icon) && (window.SankeyToolsStatic ||event.shiftKey)) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
@@ -351,7 +350,6 @@ export const OpenSankeyDrawNodes = (
   
     
   const add_nodes = (
-    static_sankey: boolean,
     remove_previous_nodes = true
   ) => {
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
@@ -380,10 +378,10 @@ export const OpenSankeyDrawNodes = (
       .attr('class', 'ggg_nodes')
       .attr('transform', d =>nodeTransform(d,display_nodes,display_links))
 
-    if (!data.static_sankey) {
+    if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
       // Add event listener to click 
       // When we Ctrl + click a node, it select it and open a menu 
-      ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,data.static_sankey,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,static_sankey,data,set_data,mode_selection))
+      ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,data,set_data,mode_selection))
 
       if (mode_selection.current == 'ln') {
         ggg_nodes.on('mousedown', function (event, d) {
@@ -395,7 +393,7 @@ export const OpenSankeyDrawNodes = (
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s'){
-        ggg_nodes.call(dragGNodeEvent(data,display_nodes,multi_selected_nodes,multi_selected_label,mode_selection,alt_key_pressed,static_sankey,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
+        ggg_nodes.call(dragGNodeEvent(data,display_nodes,multi_selected_nodes,multi_selected_label,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
       }
     }
     ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
@@ -455,11 +453,11 @@ export const OpenSankeyDrawNodes = (
     d3.selectAll(' .opensankey .gg_nodes')
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
-        node_mouse_over(data,this,mode_selection,static_sankey,event,d,sankeyTooltip)
+        node_mouse_over(data,this,mode_selection,event,d,sankeyTooltip)
       })
       .on('mousemove', function (event, d) {
         // Triggered when the mouse move over the node
-        node_mouse_move(static_sankey,event,d,sankeyTooltip,false)
+        node_mouse_move(event,d,sankeyTooltip,false)
       })
       .on('mouseout', function (event, d) {
         node_mouse_out(d,sankeyTooltip)
@@ -481,7 +479,7 @@ export const OpenSankeyDrawNodes = (
 
   }
   
-  add_nodes(static_sankey)
+  add_nodes()
         
 }
 

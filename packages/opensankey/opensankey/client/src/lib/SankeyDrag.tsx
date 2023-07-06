@@ -3,6 +3,37 @@ import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,Sanke
 import {removeAnimate,compute_end_points, min_width_and_height,drawCurveFunction, drawArrows} from './SankeyDrawFunction'
 import {   link_visible,test_link_value } from './SankeyUtils'
 import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
+
+
+
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+  sankey: {
+    sankey_data_file:RequestInfo
+    sous_filieres : { [ key : string ] : string }
+    units: string[]
+    flask_logo? : string
+    flask_header? : string
+    logo_width? : number
+    legend_average : string
+    legend_uncert : string
+    help_text : string
+    welcome_text: string
+    excel : string
+    logo: string,
+    advanced: boolean
+  }
+}
+
+
+
+
+
+
+
+
+
 /**
  *  Function that allow us to change link position in target or source nodes
  *
@@ -180,7 +211,6 @@ export const dragLinkCenterHandleEvent=(
  */
 export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
-  mode_visualisation:boolean,
   nodes:{ [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
   display_style: { node_font_size: number;  filter: number; filter_label: number },
@@ -200,7 +230,7 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
 )=>{
   return d3.drag<SVGRectElement, unknown>()
     .subject(Object).on('drag', function (event) {
-      if(multi_selected_links.current.includes(link) && !mode_visualisation){
+      if(multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
         drag_handle(
           link, nodes, links, display_style,    selected_tags,    this, position, event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,    link_text,getLinkValue
         )
@@ -230,7 +260,6 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
  * @param {SankeyDrawCurve} drawCurveFunction
  * @param {string} mode_selection
  * @param {boolean} alt_key_pressed
- * @param {boolean} static_sankey
  * @returns {{}, drawGrid: () => void, scale: (t: number) => number, inv_scale: ...}
  */
 export const dragGNodeEvent=(
@@ -240,7 +269,6 @@ export const dragGNodeEvent=(
   multi_selected_label:{current:SankeyPlusLabel[]},
   mode_selection:{current:string},
   alt_key_pressed:boolean,
-  static_sankey:boolean,
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
@@ -251,7 +279,7 @@ export const dragGNodeEvent=(
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object).on('drag', function (event,node) {
       if(mode_selection.current=='s'){
-        if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed && !static_sankey){
+        if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
           drag_nodes(
@@ -900,7 +928,6 @@ export const add_drag_link_zone=(
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
-  mode_visualisation:boolean,
   display_nodes:{[node_id:string]:SankeyNode},
   display_links:{[link_id:string]:SankeyLink},
   default_handle_size:number,
@@ -939,7 +966,7 @@ export const add_drag_link_zone=(
       .append('rect')
       .attr('id', 'drag_zone_s_' + link.idLink)
       .attr('class','drag_zone')
-      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
+      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?1:0)
       .attr('width', 10)
       .attr('height', 10)
       .attr('stroke','black')
@@ -954,7 +981,7 @@ export const add_drag_link_zone=(
       .append('rect')
       .attr('id', 'drag_zone_t_' + link.idLink)
       .attr('class','drag_zone')
-      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !mode_visualisation)?1:0)
+      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?1:0)
       .attr('width', 10)
       .attr('height', 10)
       .attr('stroke','black')

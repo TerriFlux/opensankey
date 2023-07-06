@@ -80,7 +80,6 @@ if (!window.SankeyToolsStatic) {
     convert_data(data)
     complete_sankey_data(data,default_sankey_data,default_node,default_link)
   }
-  data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
 
   const fetchData = {
     method: 'POST'
@@ -136,7 +135,6 @@ if (!window.SankeyToolsStatic) {
     Object.assign(data, new_data)
     convert_data(data)
     complete_sankey_data(data,default_sankey_data,default_node,default_link)
-    data.static_sankey = window.SankeyToolsStatic ? window.SankeyToolsStatic : false
   }
   render(
     <>

@@ -586,6 +586,33 @@ export const updateLayout = (
     }
   }
 
+
+  // Always assign level tag from new layout
+  const new_layout_level_tag=Object.fromEntries(Object.entries(new_layout.nodeTags).filter(nt=>nt[1].banner=='level'))
+  for (const tag_group_key in new_layout_level_tag) {
+    if (tag_group_key in data.nodeTags) {
+      continue
+    }
+    data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout_level_tag[tag_group_key]))
+  }
+  for (const tag_group_key in data.nodeTags) {
+    if (!(tag_group_key in new_layout_level_tag)) {
+      continue
+    }
+    data.nodeTags[tag_group_key].show_legend = new_layout_level_tag[tag_group_key].show_legend
+    data.nodeTags[tag_group_key].banner = new_layout_level_tag[tag_group_key].banner
+    for (const tag in data.nodeTags[tag_group_key].tags) {
+      if (!(tag in new_layout_level_tag[tag_group_key].tags)) {
+        continue
+      }
+      data.nodeTags[tag_group_key].tags[tag].color = new_layout_level_tag[tag_group_key].tags[tag].color
+      if (tag !== 'échange') {
+        data.nodeTags[tag_group_key].tags[tag].selected = new_layout_level_tag[tag_group_key].tags[tag].selected
+      }
+    }
+  }
+
+
   if(mode.includes('tagNode')){
     for (const tag_group_key in new_layout.nodeTags) {
       if (tag_group_key in data.nodeTags) {

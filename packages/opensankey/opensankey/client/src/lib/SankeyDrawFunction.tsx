@@ -341,19 +341,18 @@ export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyN
 }
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
-export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,mode_visualisation:boolean,
+export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   multi_selected_nodes:{current: SankeyNode[] },
   nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   select_node:(n: SankeyNode) => void,
-  static_sankey:boolean,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   mode_selection:{current:string}
 )=>{
-  if (!static_sankey && !mode_visualisation &&  (event.ctrlKey || event.metaKey)) {
+  if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  (event.ctrlKey || event.metaKey)) {
     mode_selection.current='s'
     d3.select(' .opensankey #svg').attr('class','mode_selection')
     sankeyTooltip.style('opacity', 0)
@@ -382,7 +381,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }
-  }else if(!static_sankey &&  !event.ctrlKey){
+  }else if(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  !event.ctrlKey){
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
@@ -743,8 +742,29 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
   first_selected_node:object,
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
   token:boolean,
-  set_show_toast_limit_node:(b:boolean)=>void
+  set_show_toast_limit_node:(b:boolean)=>void,
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
+
 )=>{
+  const open_links_menu=()=>{
+    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+      button_ref.current.click()
+    }
+    if ( accordion_ref && accordion_ref.current) {
+      for ( const child in accordion_ref.current.children) {
+        if (accordion_ref.current.children[child].id === 'Flux') {
+          (accordion_ref.current.children[0] as HTMLLabelElement).click();
+          (accordion_ref.current.children[child] as HTMLLabelElement).click()
+        }
+      }
+    }
+    if ( links_accordion_ref && links_accordion_ref.current) {
+      (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
+      (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+    }
+  }
 
   svgSankey.on('mousedown', evt => {
     //si le mode de souris est noeud+flux alors crée le premier noeuds
@@ -883,6 +903,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         }
         data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
         data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
+        open_links_menu()
         set_first_selected_node({})
         set_data({...data})
       }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
@@ -915,6 +936,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         fsn.outputLinksId.push(n_link.idLink)
         n_node.inputLinksId.push(n_link.idLink)
         multi_selected_links.current=[n_link]
+        open_links_menu()
+
         set_first_selected_node({})
         set_data({ ...data })
 
@@ -1490,7 +1513,7 @@ const add_center_handle=(
       .append('circle')
       .attr('id', 'center_handle_' + link.idLink)
       .attr('class','center_handle')
-      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !data.static_sankey)?1:0)
+      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?1:0)
       .attr('r','5')
       .attr('stroke','black')
       .attr('stroke-opacity',(multi_selected_links.current.includes(link))?1:0)
@@ -1569,11 +1592,11 @@ const add_shift_handle = (
       .append('rect')
       .attr('id', shift_name + link.idLink)
       .attr('class','handle')
-      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !data.static_sankey)?1:0)
+      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?1:0)
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
-      .attr('cursor',(multi_selected_links.current.includes(link)&& !data.static_sankey)?'ew-resize':'pointer')
-      .call(dragLinkShiftHandleEvent(multi_selected_links,link,data.static_sankey,nodes,links,display_style,selected_tags,position,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
+      .attr('cursor',(multi_selected_links.current.includes(link)&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'ew-resize':'pointer')
+      .call(dragLinkShiftHandleEvent(multi_selected_links,link,nodes,links,display_style,selected_tags,position,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
       )
   }
 
@@ -1692,7 +1715,7 @@ const drawCurve = (
   // handles_positions(links, link, xs, ys, xt, yt)
   if(link.orientation=='vv' ||link.orientation=='hh'){
     add_shift_handles(data,set_data,link,multi_selected_links, nodes, links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height,getLinkValue)
-    add_drag_link_zone(link,nodes,data,set_data,multi_selected_links,data.static_sankey,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
+    add_drag_link_zone(link,nodes,data,set_data,multi_selected_links,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
   }
   add_center_handle(data,set_data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
 

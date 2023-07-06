@@ -1264,39 +1264,15 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
     if(!show_nav){
-      // Lors de l'ouverture du menu, enregistre l'échelle de la zone de sankey
-      // et la position des scroll bar
-
-      const scaleOfSVG=d3.select(' .opensankey #svg').attr('transform').split(' ').filter(s=>s.includes('scale'))[0].replace('scale(','').replace(')','')
-      sessionStorage.setItem('scale',scaleOfSVG)
-
-      const SL=document.getElementsByTagName ('html')[0]?.scrollLeft
-      const string_SL=(SL!==undefined)?SL.toString():'none'
-      sessionStorage.setItem('scrollLeft',string_SL)
-
-      const ST=document.getElementsByTagName ('html')[0]?.scrollTop
-      const string_ST=(ST!==undefined)?ST.toString():'none'
-      sessionStorage.setItem('scrollTop',string_ST)
-
-      SankeyUtils.adjust_sankey_zone(data,min_width_and_height,true)
+      [data.width, data.height] = min_width_and_height(data)
+      const transform=d3.select('.opensankey #svg').attr('transform').split('scale(')
+      let scale_svg=1
+      if(transform!==undefined){
+        scale_svg=Number(transform[1].replace(')',''))
+      }
+      d3.select('.scroll_zone').style('width',((data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
     }else{
-      // Lors de la fermeture du menu, remet l'échelle de la zone de sankey avant l'ouverture du menu
-      // et replace la position des scroll bar comme elles etaient avant
-      const scaleToUse=sessionStorage.getItem('scale')
-      const SlToUse=sessionStorage.getItem('scrollLeft')
-      const StToUse=sessionStorage.getItem('scrollTop')
-
-      if(scaleToUse){
-        d3.select(' .opensankey #svg').attr('transform','translate(0,0) scale('+scaleToUse+')')
-      }else{
-        SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
-      }
-      if(SlToUse && StToUse){
-        document.getElementsByTagName ('html')[0]?.scrollTo(+SlToUse,+StToUse)
-      }
-      sessionStorage.removeItem('scale')
-      sessionStorage.removeItem('scrollLeft')
-      sessionStorage.removeItem('scrollTop')
+      d3.select('.scroll_zone').style('width',null)
     }
   }
   const setChecked = useState(false)[1]
@@ -1515,7 +1491,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
 
-      {(!data.static_sankey) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
+      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
             nav_item_active={nav_item_active}
@@ -1530,7 +1506,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?540+has_scrollbar_shift:has_scrollbar_shift)}}
       >
         {menus['toolbar']}
-        {!data.static_sankey ? (
+        {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
           <ToggleButton
             ref={button_ref as Ref<HTMLLabelElement>}
             id="toggle-check"

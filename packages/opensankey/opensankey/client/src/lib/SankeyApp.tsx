@@ -353,7 +353,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     selected_link.current = l
   }
   const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !SankeyUtils.node_displayed(data,n) || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
-  const position = data.static_sankey ? 'relative' : 'absolute'
+  const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
 
 
   // let alt_key_pressed = false
@@ -372,7 +372,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       set_agregation_node,set_is_agregation,set_show_agregation,
       select_node,
       alt_key_pressed,
-      data.static_sankey,
       position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,multi_selected_label)
 
     OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue)
@@ -386,7 +385,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       button_ref,
       select_link,
       alt_key_pressed,
-      data.static_sankey,position,node_arrow_visible,
+      position,node_arrow_visible,
       linkTooltipsContent,
       SankeyUtils.link_text,SankeyUtils.getLinkValue,set_data,set_displayed_value,tags_selected,set_tags_selected,linkStroke,drawArrows,set_display_link_opacity
     )
@@ -496,6 +495,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           token={true}
           set_show_toast_limit_node={()=>false}
           additional_draw_element={[]}
+          accordion_ref={accordion_ref}
+          button_ref={button_ref}
+          links_accordion_ref={links_accordion_ref}
         />
       </>
     </div>
