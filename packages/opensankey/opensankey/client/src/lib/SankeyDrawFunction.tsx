@@ -905,6 +905,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         }
         data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
         data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
+        multi_selected_links.current=[new_link]
         open_links_menu()
         set_first_selected_node({})
         set_data({...data})
