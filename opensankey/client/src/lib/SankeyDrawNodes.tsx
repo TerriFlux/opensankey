@@ -3,7 +3,7 @@ import { SankeyLink, SankeyData, SankeyNode,SankeyLinkValue} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 
-import {node_color} from './SankeyUtils'
+import {node_color,node_displayed} from './SankeyUtils'
 import { BaseType } from 'd3'
 import { scale,inv_scale,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
   eventNodeContextMenu,nodeTransform,node_stroke_width } from './SankeyDrawFunction'
@@ -361,7 +361,7 @@ export const OpenSankeyDrawNodes = (
     if (remove_previous_nodes) {
       d3.selectAll(' .opensankey .gg_nodes').remove()
     }
-    const gg_nodes = d3.select(' .opensankey #g_nodes').selectAll('.gg_nodes').data(Object.values(display_nodes).filter(n=>n.display)).enter().append('g')
+    const gg_nodes = d3.select(' .opensankey #g_nodes').selectAll('.gg_nodes').data(Object.values(display_nodes).filter(n=>node_displayed(data,n))).enter().append('g')
       .attr('id', d => {
         return 'gg_' + d.idNode
       })
@@ -370,7 +370,7 @@ export const OpenSankeyDrawNodes = (
     // Cela permettra de mieux gérer des zooms sur les éléments visibles
       .style('display', (d) => {
         let display: string
-        if (d.node_visible && d.position === 'absolute' ) { display = 'inline' } else { display = 'none' }
+        if (d.position === 'absolute' ) { display = 'inline' } else { display = 'none' }
         return display
       })
       .style('font-family', d => d.display_style.font_family)
@@ -442,8 +442,7 @@ export const OpenSankeyDrawNodes = (
     // Apply node's parameters to each node
     d3.selectAll(' .opensankey .node')
       .attr('id', d => (d as SankeyNode).idNode)
-    // .attr('visibility', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? 'visible' : 'hidden')
-      .attr('fill-opacity', d => (d as SankeyNode).node_visible && (d as SankeyNode).shape_visible ? '1' : '0')
+      .attr('fill-opacity', d => (d as SankeyNode).shape_visible ? '1' : '0')
       .attr('fill', d => node_color(d as SankeyNode,data) as string)
       .attr('stroke', 'black')
       .attr('stroke-width', d => {

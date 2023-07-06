@@ -425,8 +425,6 @@ export const SankeyMenuConfigurationNodesLabel = (
               type='switch'
               checked={isAllNodeTotal()}
               onChange={evt => {
-                // node.shape_visible = evt.target.checked
-                // node.node_visible = node.label_visible || node.shape_visible
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.show_value = evt.target.checked)
                 set_data({ ...data })
               }}/>

@@ -4,7 +4,7 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color,get_vertical_marfin_for_sankey_zone} from './SankeyUtils'
+import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color,get_vertical_marfin_for_sankey_zone,node_displayed} from './SankeyUtils'
 import { desagregation, agregation } from './SankeyLayout'
 import { BaseType } from 'd3'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
@@ -1894,7 +1894,7 @@ const handles_positions = (
 export const min_width_and_height = (data:SankeyData) => {
   let height = 0
   let width = 0
-  Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
+  Object.values(data.nodes).filter(n => node_displayed(data,n)).forEach(n => {
     // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
     let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width??0
     if(n.display_style.label_horiz=='left'){
@@ -1909,8 +1909,8 @@ export const min_width_and_height = (data:SankeyData) => {
       node_width = +d3.select(' .opensankey #' + n.idNode).attr('width')
     }
 
-    height = (n.y && n.node_visible) ? Math.max(height, n.y + node_height) : height
-    width = (n.x && n.node_visible) ? Math.max(width, n.x+node_width+width_label) : width
+    height = (n.y ) ? Math.max(height, n.y + node_height) : height
+    width = (n.x ) ? Math.max(width, n.x+node_width+width_label) : width
   })
 
 
@@ -1918,13 +1918,13 @@ export const min_width_and_height = (data:SankeyData) => {
   width = width + 100
   Object.values(data.links).forEach(l => {
     if (l.recycling) {
-      height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y + l.vert_shift + 100, data.nodes[l.idTarget].y + l.vert_shift + 100, height) : height
+      height = (l.vert_shift && node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]) ) ? Math.max(data.nodes[l.idSource].y + l.vert_shift + 100, data.nodes[l.idTarget].y + l.vert_shift + 100, height) : height
     }
   })
 
   Object.values(data.links).forEach(l => {
     if (l.recycling) {
-      width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
+      width = (data.nodes[l.idTarget].x && node_displayed(data,data.nodes[l.idTarget]) && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
     }
   })
   const vertical_shift=  get_vertical_marfin_for_sankey_zone()
@@ -1992,7 +1992,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
         }
         let tmp=getLinkValue(data, link.idLink).value
         tmp=(tmp)?tmp:0
-        if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+        if (node_displayed(data,display_nodes[link.idSource]) && node_displayed(data,display_nodes[link.idTarget]) ) {
           total += tmp
         }
       }
@@ -2007,7 +2007,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
           }
           let tmp=getLinkValue(data, link.idLink).value
           tmp=(tmp)?tmp:0
-          if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+          if (node_displayed(data,display_nodes[link.idSource]) && node_displayed(data,display_nodes[link.idTarget]) ) {
             total += tmp
           }
         }
