@@ -624,6 +624,7 @@ export const default_sankey_data = (): SankeyData => {
     nodeTags: {},
     dataTags: {},
     fluxTags: {},
+    levelTags: {},
 
     colorMap: 'no_colormap', 
 
@@ -1419,7 +1420,7 @@ export const node_displayed=(data:SankeyData,n:SankeyNode)=>{
 export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
   let to_display=true
 
-  Object.entries(data.nodeTags).filter(nt=>nt[1].banner!='level' && nt[0] !== 'Type de noeud' && Object.keys(n.tags).includes(nt[0])).forEach(nt=>{
+  Object.entries(data.nodeTags).filter(nt=> nt[0] !== 'Type de noeud' && Object.keys(n.tags).includes(nt[0])).forEach(nt=>{
     // Check tags from the group attribued to the node
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr=n.tags[nt[0]]
@@ -1437,14 +1438,19 @@ export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
 export const node_has_displayed_level=(data:SankeyData,n:SankeyNode)=>{
   let to_display=true
   // Check if there is other aggregation tags than 'Primaire',
-  const multi_level=Object.entries(data.nodeTags).filter(nt=>nt[1].banner=='level' && nt[0]!=='Primaire').map(nt=>nt[0]).length>0
+  const multi_level=Object.entries(data.levelTags).filter(nt=> nt[0]!=='Primaire').map(nt=>nt[0]).length>0
+
+  const only_one_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).length==1
+  const only_primaire_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).map(nt=>nt[0])[0]=='Primaire'
+  
+  const multy_but_only_primaire=multi_level && only_one_activated && only_primaire_activated
 
   // To display a node according to level tag we search if:
   // - The node grp tag banner is 'level'
   // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
   // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
   // - The node has the grp tag name in his tags
-  Object.entries(data.nodeTags).filter(nt=>nt[1].banner=='level'&& (multi_level?nt[0]!=='Primaire':true) && nt[1].activated && Object.keys(n.tags).includes(nt[0])).forEach(nt=>{
+  Object.entries(data.levelTags).filter(nt=>((multi_level && !multy_but_only_primaire)?nt[0]!=='Primaire':true) && nt[1].activated && Object.keys(n.tags).includes(nt[0])).forEach(nt=>{
     // Check tags from the group attribued to the node
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr=n.tags[nt[0]]

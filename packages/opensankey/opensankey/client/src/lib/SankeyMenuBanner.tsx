@@ -11,25 +11,39 @@ import { faShareNodes, faArrowPointer,faFilter,faCodeBranch,faFolderTree, faDiag
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
+// Delete all local node variable : local_aggregation when we switch general aggregation 
+const delete_local_aggregation=(data:SankeyData)=>{
+  Object.values(data.nodes).filter(n=>n.local!==undefined).forEach(n=>{
+    if(n.local){
+      delete n.local.local_aggregation
+    }
+  })
+}
+
 export const addSimpleLevelDropDown = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void
 ) => {
-  const {nodeTags} = data
-  if (Object.keys(nodeTags['Primaire'].tags).length < 2) {
+  const {levelTags} = data
+  if (Object.keys(levelTags['Primaire'].tags).length < 2) {
     return <></>
   }
-  const tmp = Object.entries(nodeTags['Primaire'].tags).filter(tag=>tag[1].selected)
+  const tmp = Object.entries(levelTags['Primaire'].tags).filter(tag=>tag[1].selected)
   const selected = tmp.length > 0 ? tmp[0][0] : ''
   return (
     <>
       <tr>
         <td >
-          {<Form.Select style={{ width: '200px', color: 'black' }} key={nodeTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, nodeTags['Primaire'], data, set_data) }}>{
-            Object.entries(nodeTags['Primaire'].tags).map(([tag_key, tag],i) => {
-              return (<option key={i} value={tag_key}>{tag.name}</option>)
-            })}
+          {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
+            
+            delete_local_aggregation(data)
+            handleSimpleDropdown(evt, levelTags['Primaire'], data, set_data) 
+          
+          }}>{
+              Object.entries(levelTags['Primaire'].tags).map(([tag_key, tag],i) => {
+                return (<option key={i} value={tag_key}>{tag.name}</option>)
+              })}
           </Form.Select>}
         </td>
       </tr>
@@ -44,14 +58,14 @@ export const addAllDropDownNode = (
   level:boolean
 ) => {
   const color = 'black'
-  const {nodeTags} = data
-  let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
+  const {nodeTags,levelTags} = data
+  let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
   if (level) {
-    const nb_level_tag = Object.values(nodeTags).filter(tags_group=>tags_group.banner === 'level' && (Object.keys(tags_group.tags).length > 0 )).length
+    const nb_level_tag = Object.values(levelTags).filter(tags_group=>(Object.keys(tags_group.tags).length > 0 )).length
     if (nb_level_tag > 1) {
-      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
+      banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
     } else {
-      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
+      banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => Object.keys(tags_group.tags).length > 1)
     }
   }
   const allDD = banner_grouptag.map(([, tags_group]) => {
@@ -153,12 +167,7 @@ export const addAllDropDownNode = (
                   value={selected}
                   placeholder='all'
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    // Delete all local node variable : local_aggregation 
-                    Object.values(data.nodes).filter(n=>n.local!==undefined).forEach(n=>{
-                      if(n.local){
-                        delete n.local.local_aggregation
-                      }
-                    })
+                    delete_local_aggregation(data)
                     handleSimpleDropdown(evt, tags_group, data, set_data) 
                     
                   }}>{
@@ -373,7 +382,7 @@ export const toolbar_builder = (
   set_show_modal_welcome:(b:boolean)=>void,
   set_never_see_again:(b:boolean)=>void
 ) => {
-  const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
+  const level_filter = Object.entries(data.levelTags).length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
   const target_link_threshold=useRef(null)
   const [show_detail_level,set_show_detail_level]=useState(false)
