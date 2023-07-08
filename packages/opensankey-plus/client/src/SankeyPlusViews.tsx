@@ -45,7 +45,7 @@ const deep_diff = require('deep-diff')
 // }
 
 export const setDiagram = (
-  set_current_data: (d:SankeyPlusData)=>void,
+  set_master_data: (d:SankeyPlusData)=>void,
   set_view: (s:string)=>void
 ) => {
   return (
@@ -74,7 +74,7 @@ export const setDiagram = (
     // set_nodes_level(new_data)
     // new_data.fit_screen = true
     d3.select(' .opensankey #svg').on('.zoom', null)
-    set_current_data({...new_data })
+    set_master_data({...new_data })
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
       set_view(new_data.view[0].id)
       // set_data({...new_data.view[0].view_data as SankeyPlusData})
@@ -1189,8 +1189,19 @@ export const keyHandler = (
     e.preventDefault()
 
     if (master) {
-      // If we do a control+S while we are on master data, we create view empty
+      // If we do a control+X while we are on master data, we create view empty
       // data is master data and master_data might not be  set
+
+      data.view.forEach(current_v=>{
+        // existing view should not be modified if master is modified, the diff between master_data and data 
+        // is "inverted" on the view so that no changes on view are observed
+        let difference = deep_diff.diff(data, master_data)
+        difference = (difference !== undefined) ? difference : []
+        difference = difference.filter((d:{path:string[]}) => !d.path.includes('view'))
+        difference = filter_view(difference)
+        current_v.view_data.diff = current_v.view_data.diff.concat(difference)
+      })
+
       const new_ind = 'view_' + String(new Date().getTime())
       const copy_data = {diff:[]}
       data.view.push({
@@ -1270,12 +1281,13 @@ export const keyHandler = (
 
     if(saved){
       set_view('none')
-      set_data({ ...master_data })
+      set_data({ ...JSON.parse(JSON.stringify(master_data)) })
     }
   }
   // Changing view to next or previous
   if ([ 'F8', 'F9'].includes(e.key)) {
     if (e.key === 'F8') {
+      // going backward
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
       master_data.view.map((v, i) => {
@@ -1287,30 +1299,6 @@ export const keyHandler = (
         ind = Object.keys(master_data.view).length
       }
       const data_view=get_data_from_view(master_data,master_data.view[ind-1].id) as SankeyPlusData
-      // let update = false
-      // const filtered_nodes = Object.values(data_view.nodes).filter(n=>n.idNode !== undefined)
-      // if ( filtered_nodes.length !== Object.keys(data_view.nodes).length ) {
-      //   update = true
-      //   data_view.nodes = Object.assign({}, ...filtered_nodes.map(n => ({ [n.idNode]: { ...n } })))
-      // }
-      // const filtered_links = Object.values(data_view.links).filter(l=>l.idLink !== undefined)
-      // if ( filtered_links.length !== Object.keys(data_view.links).length ) {
-      //   update = true
-      //   data_view.links = Object.assign({}, ...filtered_links.map(l => ({ [l.idLink]: { ...l } })))
-      // }
-      // if (update) {
-      //   compute_default_input_outputLinksId(
-      //     data_view.nodes,
-      //     data_view.links
-      //   )
-      //   
-      //   let difference = deep_diff.diff(master_data, data_view)
-      //   difference=(difference!==undefined)?difference:[]
-      //   difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      //   master_data.view[ind-1].view_data = {diff:difference}
-      //   set_data({...data_view as SankeyPlusData})
-      //   set_master_data({...master_data as SankeyPlusData})
-      // }
 
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
@@ -1331,6 +1319,18 @@ export const keyHandler = (
       }
 
     } else if (e.key === 'F9') {
+      if (master) {
+        data.view.forEach(current_v=>{
+          // existing view should not be modified if master is modified, the diff between master_data and data 
+          // is "inverted" on the view so that no changes on view are observed
+          let difference = deep_diff.diff(data, master_data)
+          difference = (difference !== undefined) ? difference : []
+          difference = difference.filter((d:{path:string[]}) => !d.path.includes('view'))
+          difference = filter_view(difference)
+          current_v.view_data.diff = current_v.view_data.diff.concat(difference)
+        })
+        set_master_data({ ...JSON.parse(JSON.stringify(data)) }) 
+      }
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
       master_data.view.map((v, i) => {
@@ -1520,7 +1520,7 @@ const selecteur_view=(data:SankeyPlusData,
 
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
-            set_data({...master_data})
+            set_data({...JSON.parse(JSON.stringify(master_data))})
           }
         }
       }
