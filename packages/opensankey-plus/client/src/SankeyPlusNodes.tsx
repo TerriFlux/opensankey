@@ -5,7 +5,7 @@ import { TFunction } from 'i18next'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
-import {  getLinkValue,node_color,link_color,node_displayed } from 'open-sankey/dist/SankeyUtils'
+import {  getLinkValue,node_color,link_color,node_displayed,is_all_node_attr_same_value,return_correct_attribute_value,assign_value_to_correct_var,return_value_node,is_diplaying_value_local } from 'open-sankey/dist/SankeyUtils'
 
 
 declare const window: Window &
@@ -18,22 +18,31 @@ export const SankeyPlusNodesAttributes = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean
+  is_activated:boolean,
+  menu_for_style:boolean,
+  selected_style_node:string
 ) => {
+  const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
+  const selected_parameter=(menu_for_style)?[data.style_node[selected_style_node]]:multi_selected_nodes.current
+
   const isAllNodeVisible = () => {
     let visible = false
-    multi_selected_nodes.current.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
+    selected_parameter.map(d => visible = (return_correct_attribute_value(data,d,'shape_visible',menu_for_style) || return_correct_attribute_value(data,d,'not_to_scale',menu_for_style)) ? true : visible)
     return visible
   }
-  const isAllNodeToScale = () => {
-    let toScale = false
-    multi_selected_nodes.current.map(d => toScale = (d.not_to_scale) ? true : toScale)
-    return toScale
-  }
+  
+
+  // const isAllNodeToScale = () => {
+  //   let toScale = false
+  //   selected_parameter.map(d => toScale = (d.not_to_scale) ? true : toScale)
+  //   return toScale
+  // }
+  const isAllNodeToScale=is_all_node_attr_same_value(data,selected_parameter,'not_to_scale',menu_for_style) as boolean
+
   const isAllNodeNotToScaleOrientation = (orientation:string) => {
     let same_orientation = true
-    if (multi_selected_nodes.current.length > 0) {
-      multi_selected_nodes.current.map(d => same_orientation = (d.not_to_scale_direction !== orientation) ? false : same_orientation)
+    if (selected_parameter.length > 0) {
+      selected_parameter.map(d => same_orientation = (return_correct_attribute_value(data,d,'not_to_scale_direction',menu_for_style) !== orientation) ? false : same_orientation)
     } else {
       same_orientation = false
     }
@@ -42,15 +51,16 @@ export const SankeyPlusNodesAttributes = (
   const form_elements= [
     <Form.Group as={Row} >
       <Col xs={4}>
-        <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.toScale')}</FormLabel>
+        <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.toScale')+(is_diplaying_value_local(multi_selected_nodes,'not_to_scale',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col xs={1}>
         <FormCheck inline
           type='switch'
-          checked={isAllNodeToScale()}
+          checked={isAllNodeToScale}
           disabled={!is_activated}
           onChange={evt => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale = evt.target.checked)
+            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale = evt.target.checked)
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale',evt.target.checked,menu_for_style))
             set_data({ ...data })
           }}
         />
@@ -58,7 +68,7 @@ export const SankeyPlusNodesAttributes = (
 
     </Form.Group>,
     <Col xs={5}>
-      <FormLabel style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')}</FormLabel>
+      <FormLabel style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')+(is_diplaying_value_local(multi_selected_nodes,'not_to_scale_direction',menu_for_style)?'*':'')}</FormLabel>
     </Col>,
     <Form.Group as={Row} >
       <Col  xs={3}>
@@ -66,10 +76,12 @@ export const SankeyPlusNodesAttributes = (
           value="left"
           type='radio'
           label={t('Noeud.apparence.toScaleLeft')}
-          disabled={(!is_activated)?true:!isAllNodeToScale()}
+          disabled={(!is_activated)?true:!isAllNodeToScale}
           checked={isAllNodeNotToScaleOrientation('left')}
           onChange={evt => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
+
             set_data({ ...data })
           }}
         />
@@ -79,10 +91,11 @@ export const SankeyPlusNodesAttributes = (
           value="right"
           type='radio'
           label={t('Noeud.apparence.toScaleRight')}
-          disabled={(!is_activated)?true:!isAllNodeToScale()}
+          disabled={(!is_activated)?true:!isAllNodeToScale}
           checked={isAllNodeNotToScaleOrientation('right')}
           onChange={evt => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
             set_data({ ...data })
           }}
         />
@@ -92,10 +105,12 @@ export const SankeyPlusNodesAttributes = (
           value="top"
           type='radio'
           label={t('Noeud.apparence.toScaleTop')}
-          disabled={(!is_activated)?true:!isAllNodeToScale()}
+          disabled={(!is_activated)?true:!isAllNodeToScale}
           checked={isAllNodeNotToScaleOrientation('top')}
           onChange={evt => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
+
             set_data({ ...data })
           }}
         />
@@ -105,10 +120,11 @@ export const SankeyPlusNodesAttributes = (
           value="bottom"
           type='radio'
           label={t('Noeud.apparence.toScaleBottom')}
-          disabled={(!is_activated)?true:!isAllNodeToScale()}
+          disabled={(!is_activated)?true:!isAllNodeToScale}
           checked={isAllNodeNotToScaleOrientation('bottom')}
           onChange={evt => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
             set_data({ ...data })
           }}
         />
@@ -358,7 +374,7 @@ const branchAnimate = (
       // Modification des arrows après l'animation
       const arrow=d3.selectAll(' .opensankey #'+idLink+'_arrow')
       if(arrow!==undefined && arrow!= null){
-        const colorTarget=(data.nodes[idTarget].shape_visible)?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+        const colorTarget=(return_value_node(data,data.nodes[idTarget],'shape_visible'))?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
         // const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
         const t=(data.links[idLink].gradient)?colorTarget:link_color(data.links[idLink],data,getLinkValue)
         if(t){
@@ -366,6 +382,7 @@ const branchAnimate = (
           arrow.attr('opacity',0.85)
         }
       }
+      
       // reaffichage des link value après l'animation
       d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
         .style('display', 'inline')
@@ -423,7 +440,7 @@ export const node_icon_fill_color=(data:SankeyPlusData,n:SankeyPlusNode)=>{
   if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
     const selected_tag = n.tags[n.colorTag][0]
     const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-    if (tag && !n.shape_visible) {
+    if (tag && !return_value_node(data,n,'shape_visible')) {
       return tag.color as string
     } else {
       //console.log('tutu')
@@ -448,12 +465,12 @@ export const SankeyPlusDrawNodesIcon = (
   nodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
 
 ) => {
-
+  
 
 
   const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection === 's')? 'pointer' : 'unset')
-    if ((d as SankeyPlusNode).shape_visible && (window.SankeyToolsStatic || event.shiftKey)) {
+    if (return_value_node(data,d,'shape_visible') && (window.SankeyToolsStatic || event.shiftKey)) {
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyPlusNode))
@@ -461,7 +478,7 @@ export const SankeyPlusDrawNodesIcon = (
   }
 
   const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,over_icon:boolean)=>{
-    if (((d as SankeyPlusNode).shape_visible ||over_icon) && (window.SankeyToolsStatic || event.shiftKey)) {
+    if ((return_value_node(data,d,'shape_visible') ||over_icon) && (window.SankeyToolsStatic || event.shiftKey)) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight

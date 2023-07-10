@@ -54,6 +54,13 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
   const defGradient = d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
 
 
+  const nodes = data.nodes
+
+  const n_source=nodes[l.idSource]
+  const n_source_color=OpensankeyUtils.return_value_node(data,n_source,'color')
+
+  const n_target=nodes[l.idTarget]
+  const n_target_color=OpensankeyUtils.return_value_node(data,n_target,'color')
 
   const width_src = +d3.select(' .opensankey #' + l.idSource).attr('width')
   const height_src = +d3.select(' .opensankey #' + l.idSource).attr('height')
@@ -67,8 +74,8 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
     .attr('id', 'stop-start')
     .attr('offset', '0%')
     .attr('stop-color', () => {
-      if (data.nodes[l.idSource].x <= data.nodes[l.idTarget].x) {
-        const n = data.nodes[l.idSource]
+      if (nodes[l.idSource].x <= nodes[l.idTarget].x) {
+        const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -76,9 +83,9 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
-        const n = data.nodes[l.idTarget]
+        const n = n_target
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -86,7 +93,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     })
     .attr('stop-opacity', 1)
@@ -94,8 +101,8 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
     .attr('id', 'stop-end')
     .attr('offset', '100%')
     .attr('stop-color', () => {
-      if (data.nodes[l.idSource].x <= data.nodes[l.idTarget].x) {
-        const n = data.nodes[l.idTarget]
+      if (nodes[l.idSource].x <= nodes[l.idTarget].x) {
+        const n = n_target
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -103,9 +110,9 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       } else {
-        const n = data.nodes[l.idSource]
+        const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -113,20 +120,19 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       }
     })
     .attr('stop-opacity', 1)
-  const nodes = data.nodes
   if (l.orientation === 'hh' || l.orientation === 'hv') {
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[l.idSource].x < nodes[l.idTarget].x) {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-          .attr('x1', data.nodes[l.idSource].x + width_src)
+          .attr('x1', nodes[l.idSource].x + width_src)
           .attr('y1', '0')
           .attr('x2', nodes[l.idTarget].x)
           .attr('y2', 0)
-        const n = data.nodes[l.idSource]
+        const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -134,14 +140,14 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-          .attr('x1', data.nodes[l.idTarget].x + width_trgt)
+          .attr('x1', nodes[l.idTarget].x + width_trgt)
           .attr('y1', '0')
           .attr('x2', nodes[l.idSource].x)
           .attr('y2', 0)
-        const n = nodes[l.idTarget]
+        const n = n_target
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -149,13 +155,13 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[l.idSource].x > nodes[l.idTarget].x) {
-        const n = nodes[l.idSource]
+        const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -163,9 +169,9 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
-        const n = nodes[l.idTarget]
+        const n = n_target
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -173,7 +179,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
@@ -183,10 +189,10 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
       if (nodes[l.idSource].y < nodes[l.idTarget].y) {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', 0)
-          .attr('y1', data.nodes[l.idSource].y + height_src)
+          .attr('y1', nodes[l.idSource].y + height_src)
           .attr('x2', 0)
-          .attr('y2', data.nodes[l.idTarget].y)
-        const n = nodes[l.idSource]
+          .attr('y2', nodes[l.idTarget].y)
+        const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -194,14 +200,14 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', 0)
-          .attr('y1', data.nodes[l.idTarget].y + height_src)
+          .attr('y1', nodes[l.idTarget].y + height_src)
           .attr('x2', 0)
-          .attr('y2', data.nodes[l.idSource].y)
-        const n = nodes[l.idTarget]
+          .attr('y2', nodes[l.idSource].y)
+        const n = n_target
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -209,13 +215,13 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[l.idSource].y > nodes[l.idTarget].y) {
-        const n = nodes[l.idSource]
+        const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -223,9 +229,9 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
-        const n = nodes[l.idTarget]
+        const n = n_target
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -233,7 +239,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
@@ -241,11 +247,11 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[l.idSource].x < nodes[l.idTarget].x) {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-          .attr('x1', data.nodes[l.idSource].x + width_src - 10)
+          .attr('x1', nodes[l.idSource].x + width_src - 10)
           .attr('y1', '0')
           .attr('x2', nodes[l.idTarget].x)
           .attr('y2', 0)
-        const n = nodes[l.idSource]
+        const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -253,14 +259,14 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
-          .attr('x1', data.nodes[l.idTarget].x + width_trgt + 10)
+          .attr('x1', nodes[l.idTarget].x + width_trgt + 10)
           .attr('y1', '0')
           .attr('x2', nodes[l.idSource].x)
           .attr('y2', 0)
-        const n = nodes[l.idTarget]
+        const n = n_target
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -268,13 +274,13 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[l.idSource].x > nodes[l.idTarget].x) {
-        const n = nodes[l.idSource]
+        const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -282,9 +288,9 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
-        const n = nodes[l.idTarget]
+        const n = n_target
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
           const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -292,7 +298,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
@@ -309,6 +315,13 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
   const height_src = +d3.select(' .opensankey #' + link.idSource).attr('height')
   const width_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('width')
   //const height_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('height')
+
+  
+  const n_source=nodes[link.idSource]
+  const n_source_color=OpensankeyUtils.return_value_node(data,n_source,'color')
+
+  const n_target=nodes[link.idTarget]
+  const n_target_color=OpensankeyUtils.return_value_node(data,n_target,'color')
 
 
   if (link.orientation === 'hh' || link.orientation === 'hv') {
@@ -327,7 +340,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       }else {
         d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', data.nodes[link.idTarget].x + width_trgt)
@@ -342,7 +355,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
@@ -357,7 +370,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
         const n = nodes[link.idTarget]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -367,7 +380,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
@@ -381,7 +394,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
           .attr('x2', 0)
           .attr('y2', data.nodes[link.idTarget].y)
 
-        return nodes[link.idSource].color
+        return n_source_color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', 0)
@@ -389,16 +402,16 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
           .attr('x2', 0)
           .attr('y2', data.nodes[link.idSource].y)
 
-        return nodes[link.idTarget].color
+        return n_target_color
       }
     }
     )
 
     d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
       if (nodes[link.idSource].y > nodes[link.idTarget].y) {
-        return nodes[link.idSource].color
+        return n_source_color
       } else {
-        return nodes[link.idTarget].color
+        return n_target_color
       }
     }
     )
@@ -419,7 +432,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
         d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
           .attr('x1', data.nodes[link.idTarget].x + width_trgt + 10)
@@ -434,7 +447,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
@@ -449,7 +462,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
             return tag.color as string
           }
         }
-        return n.color
+        return n_source_color
       } else {
         const n = nodes[link.idTarget]
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
@@ -459,7 +472,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
             return tag.color as string
           }
         }
-        return n.color
+        return n_target_color
       }
     }
     )
