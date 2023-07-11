@@ -1,7 +1,10 @@
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
-import { SankeyData, SankeyNode, } from './types'
+import { SankeyData, SankeyNode } from './types'
+import { return_correct_node_attribute_value,assign_node_value_to_correct_var,is_node_diplaying_value_local,is_all_node_attr_same_value } from './SankeyUtils'
+
+
 
 export const SankeyMenuConfigurationNodesLabel = (
   t:TFunction,
@@ -15,106 +18,62 @@ export const SankeyMenuConfigurationNodesLabel = (
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[selected_style_node]]:multi_selected_nodes.current
 
-  const isAllLabelVisible = () => {
-    let visible = false
-    selected_parameter.map(d => visible = (d.label_visible) ? true : visible)
-    return visible
-  }
+  
+  const isAllLabelVisible=is_all_node_attr_same_value(data,selected_parameter,'label_visible',menu_for_style) as boolean
 
-  const isAllLabelWhite = () => {
-    let visible = false
-    selected_parameter.map(d => visible = (d.display_style.label_color) ? true : visible)
-    return visible
-  }
 
-  const isAllNodeTotal = () => {
-    let show_value = false
-    selected_parameter.map(d => show_value = (d.show_value) ? true : show_value)
-    return show_value
+  const isAllLabelWhite =is_all_node_attr_same_value(data,selected_parameter,'label_color',menu_for_style) as boolean
+
+  const isAllNodeTotal =is_all_node_attr_same_value(data,selected_parameter,'show_value',menu_for_style) as boolean
+
+  const valueAllNodeLabelBox =is_all_node_attr_same_value(data,selected_parameter,'label_box_width',menu_for_style) as number
+
+  const allNodeLabelFontSize =is_all_node_attr_same_value(data,selected_parameter,'font_size',menu_for_style) as number
+
+  const allNodeValueFontSize =is_all_node_attr_same_value(data,selected_parameter,'value_font_size',menu_for_style) as number
+  
+
+  const isAllNodeBold =is_all_node_attr_same_value(data,selected_parameter,'bold',menu_for_style) as boolean
+
+  const isAllNodeUpper =is_all_node_attr_same_value(data,selected_parameter,'uppercase',menu_for_style) as boolean
+
+  const isAllNodeItalic =is_all_node_attr_same_value(data,selected_parameter,'italic',menu_for_style) as boolean
+
+  const isAllNodeLabelVert = (arg: string, pos: string) => {
+    let all_same = true
+    if (selected_parameter.length > 0) {
+      if (arg == 'vert') {
+        // selected_parameter.map(d => all_same = (d.display_style.label_vert !== pos) ? false : all_same)
+        selected_parameter.map(d => all_same = (return_correct_node_attribute_value(data,d,'label_vert',menu_for_style)!==pos) ? false : all_same)
+
+      } else if (arg == 'horiz') {
+        // selected_parameter.map(d => all_same = (d.display_style.label_horiz !== pos) ? false : all_same)
+        selected_parameter.map(d => all_same = (return_correct_node_attribute_value(data,d,'label_horiz',menu_for_style)!==pos) ? false : all_same)
+      }
+    } else {
+      all_same = false
+    }
+    return all_same
   }
 
   const isAllNodeLabelValueVert = (arg: string, pos: string) => {
     let all_same = true
     if (selected_parameter.length > 0) {
       if (arg == 'vert') {
-        selected_parameter.map(d => all_same = (d.display_style.label_vert_valeur !== pos) ? false : all_same)
+        // selected_parameter.map(d => all_same = (d.display_style.label_vert_valeur !== pos) ? false : all_same)
+        selected_parameter.map(d => all_same = (return_correct_node_attribute_value(data,d,'label_vert_valeur',menu_for_style)!== pos) ? false : all_same)
       } else if (arg == 'horiz') {
-        selected_parameter.map(d => all_same = (d.display_style.label_horiz_valeur !== pos) ? false : all_same)
+        // selected_parameter.map(d => all_same = (d.display_style.label_horiz_valeur !== pos) ? false : all_same)
+        selected_parameter.map(d => all_same = (return_correct_node_attribute_value(data,d,'label_horiz_valeur',menu_for_style)!== pos) ? false : all_same)
+
       }
     } else {
       all_same = false
     }
+    
     return all_same
   }
 
-  const valueAllNodeLabelBox = () => {
-    let display_size = true
-    let size = 110
-    if (selected_parameter.length != 0) {
-      size = selected_parameter[0].display_style.label_box_width
-    }
-    selected_parameter.map((d) => {
-      display_size = (d.display_style.label_box_width == size) ? display_size : false
-    })
-    const d = (size == 0) ? '' : size
-    return (display_size) ? d : 110
-  }
-
-  const isAllNodeLabelVert = (arg: string, pos: string) => {
-    let all_same = true
-    if (selected_parameter.length > 0) {
-      if (arg == 'vert') {
-        selected_parameter.map(d => all_same = (d.display_style.label_vert !== pos) ? false : all_same)
-      } else if (arg == 'horiz') {
-        selected_parameter.map(d => all_same = (d.display_style.label_horiz !== pos) ? false : all_same)
-      }
-    } else {
-      all_same = false
-    }
-    return all_same
-  }
-
-  const allNodeLabelFontSize = () => {
-    let display_size = true
-    let size = 11
-    if (selected_parameter.length != 0) {
-      size = selected_parameter[0].display_style.font_size
-    }
-    selected_parameter.map((d) => {
-      display_size = (d.display_style.font_size == size) ? display_size : false
-    })
-    return (display_size) ? size : 11
-  }
-
-  const allNodeValueFontSize = () => {
-    let display_size = true
-    let size = 11
-    if (selected_parameter.length != 0) {
-      size = selected_parameter[0].display_style.value_font_size
-    }
-    selected_parameter.map((d) => {
-      display_size = (d.display_style.value_font_size == size) ? display_size : false
-    })
-    return (display_size) ? size : 11
-  }
-
-  const isAllNodeBold = () => {
-    let visible = true
-    selected_parameter.map(d => visible = (!d.display_style.bold) ? false : visible)
-    return (selected_parameter.length > 0) ? visible : false
-  }
-
-  const isAllNodeUpper = () => {
-    let visible = true
-    selected_parameter.map(d => visible = (!d.display_style.uppercase) ? false : visible)
-    return (selected_parameter.length > 0) ? visible : false
-  }
-
-  const isAllNodeItalic = () => {
-    let visible = true
-    selected_parameter.map(d => visible = (!d.display_style.italic) ? false : visible)
-    return (selected_parameter.length > 0) ? visible : false
-  }
 
   return <Tab eventKey="label_desc" title={t('Noeud.labels.labels')}>
     <Form>
@@ -129,9 +88,9 @@ export const SankeyMenuConfigurationNodesLabel = (
             overlay={<Tooltip id={'noeud.labels.tooltips.1'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
             <FormCheck inline
               type='switch'
-              checked={isAllLabelVisible()}
+              checked={isAllLabelVisible}
               onChange={evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.label_visible = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'label_visible',evt.target.checked,menu_for_style))
                 set_data({ ...data })
               }}/>
           </OverlayTrigger>
@@ -140,7 +99,9 @@ export const SankeyMenuConfigurationNodesLabel = (
 
       {/* Label en blanc ou noir */}
       <Form.Group as={Row} >
-        <Col xs={4}>{t('Noeud.labels.lb')}</Col>
+        <Col xs={4}>
+          <FormLabel style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.lb')+(is_node_diplaying_value_local(multi_selected_nodes,'label_color',menu_for_style)?'*':'')}</FormLabel>
+        </Col>
         <Col xs={1}>
           <OverlayTrigger
             key={'noeud.labels.tooltips.2'}
@@ -149,9 +110,9 @@ export const SankeyMenuConfigurationNodesLabel = (
             overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
             <FormCheck inline
               type='switch'
-              checked={isAllLabelWhite()}
+              checked={isAllLabelWhite}
               onChange={evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_color = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_color',evt.target.checked,menu_for_style))
                 set_data({ ...data })
               }}/>
           </OverlayTrigger>
@@ -161,7 +122,7 @@ export const SankeyMenuConfigurationNodesLabel = (
       {/* Position verticale du label par rapport au noeud */}
       <Form.Group as={Row}>
         <Col xs={4}>
-          <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >{t('Noeud.labels.pv')}</FormLabel>
+          <FormLabel style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.pv')+(is_node_diplaying_value_local(multi_selected_nodes,'label_vert',menu_for_style)?'*':'')}</FormLabel>
         </Col>
         {/* En haut */}
         <Col>
@@ -170,13 +131,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.3'}>{t('Noeud.labels.tooltips.haut')} </Tooltip>}>
-            <FormCheck disabled={!isAllLabelVisible()}
+            <FormCheck disabled={!isAllLabelVisible && !menu_for_style}
               type='radio'
               label={t('Noeud.labels.haut')}
               checked={isAllNodeLabelVert('vert', 'top')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_vert = 'top'
+                  assign_node_value_to_correct_var(d,'label_vert','top',menu_for_style)
                   delete d.x_label
                   delete d.y_label
                 })
@@ -192,13 +153,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.4'}>{t('Noeud.labels.tooltips.Milieu_pv')} </Tooltip>}>
-            <FormCheck disabled={!isAllLabelVisible()}
+            <FormCheck disabled={!isAllLabelVisible && !menu_for_style}
               type='radio'
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelVert('vert', 'middle')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_vert = 'middle'
+                  assign_node_value_to_correct_var(d,'label_vert','middle',menu_for_style)
                   delete d.x_label
                   delete d.y_label
                 })
@@ -214,13 +175,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.5'}>{t('Noeud.labels.tooltips.Bas')} </Tooltip>}>
-            <FormCheck disabled={!isAllLabelVisible()}
+            <FormCheck disabled={!isAllLabelVisible && !menu_for_style}
               type='radio'
               label={t('Noeud.labels.Bas')}
               checked={isAllNodeLabelVert('vert', 'bottom')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_vert = 'bottom'
+                  assign_node_value_to_correct_var(d,'label_vert','bottom',menu_for_style)
                   delete d.x_label
                   delete d.y_label
                 })
@@ -233,7 +194,7 @@ export const SankeyMenuConfigurationNodesLabel = (
       {/* Position laterale du label par rapport au noeud */}
       <Form.Group as={Row} >
         <Col xs={4}>
-          <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >{t('Noeud.labels.ph')}</FormLabel>
+          <FormLabel style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.ph')+(is_node_diplaying_value_local(multi_selected_nodes,'label_horiz',menu_for_style)?'*':'')}</FormLabel>
         </Col>
         {/* A gauche  */}
         <Col>
@@ -242,13 +203,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.6'}>{t('Noeud.labels.tooltips.gauche')} </Tooltip>}>
-            <FormCheck disabled={!isAllLabelVisible()}
+            <FormCheck disabled={!isAllLabelVisible && !menu_for_style}
               type='radio'
               label={t('Noeud.labels.gauche')}
               checked={isAllNodeLabelVert('horiz', 'left')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_horiz = 'left'
+                  assign_node_value_to_correct_var(d,'label_horiz','left',menu_for_style)
                   delete d.x_label
                   delete d.y_label
                 })
@@ -264,13 +225,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.7'}>{t('Noeud.labels.tooltips.Milieu_ph')} </Tooltip>}>
-            <FormCheck disabled={!isAllLabelVisible()}
+            <FormCheck disabled={!isAllLabelVisible && !menu_for_style}
               type='radio'
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelVert('horiz', 'middle')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_horiz = 'middle'
+                  assign_node_value_to_correct_var(d,'label_horiz','middle',menu_for_style)
                   delete d.x_label
                   delete d.y_label
                 })
@@ -286,13 +247,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.8'}>{t('Noeud.labels.tooltips.droite')} </Tooltip>}>
-            <FormCheck disabled={!isAllLabelVisible()}
+            <FormCheck disabled={!isAllLabelVisible && !menu_for_style}
               type='radio'
               label={t('Noeud.labels.droite')}
               checked={isAllNodeLabelVert('horiz', 'right')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_horiz = 'right'
+                  assign_node_value_to_correct_var(d,'label_horiz','right',menu_for_style)
                   delete d.x_label
                   delete d.y_label
                 })
@@ -305,38 +266,38 @@ export const SankeyMenuConfigurationNodesLabel = (
       {/* Taille du texte de label */}
       <Form.Group as={Row} >
         <Col xs={4}>
-          <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
+          <FormLabel style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')+(is_node_diplaying_value_local(multi_selected_nodes,'font_size',menu_for_style)?'*':'')}</FormLabel>
         </Col>
         <Col xs={5}>
           <FormControl
             min={11}
             type={'number'}
-            disabled={!isAllLabelVisible()}
-            value={allNodeLabelFontSize()}
+            disabled={!isAllLabelVisible && !menu_for_style}
+            value={allNodeLabelFontSize}
             onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.font_size = +evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'font_size',+evt.target.value,menu_for_style))
               set_data({ ...data })
             }}
           />
         </Col>
-        <Col style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}}>px</Col>
+        <Col style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}}>px</Col>
       </Form.Group>
 
       {/* Style de police */}
       <Form.Group as={Row} >
         <Col xs={3}>
-          <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}} >{t('Noeud.labels.police')}</FormLabel>
+          <FormLabel style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.police')}</FormLabel>
         </Col>
         {/* Gras */}
         <Col>
           <FormCheck
             type='checkbox'
-            label={t('Noeud.labels.gras')}
-            checked={isAllNodeBold()}
-            disabled={!isAllLabelVisible()}
+            label={t('Noeud.labels.gras')+(is_node_diplaying_value_local(multi_selected_nodes,'bold',menu_for_style)?'*':'')}
+            checked={isAllNodeBold}
+            disabled={!isAllLabelVisible && !menu_for_style}
             onChange={
               evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.bold = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'bold',evt.target.checked,menu_for_style))
                 set_data({ ...data })
               }
             }
@@ -347,12 +308,12 @@ export const SankeyMenuConfigurationNodesLabel = (
         <Col>
           <FormCheck
             type='checkbox'
-            label={t('Noeud.labels.maj')}
-            disabled={!isAllLabelVisible()}
-            checked={isAllNodeUpper()}
+            label={t('Noeud.labels.maj')+(is_node_diplaying_value_local(multi_selected_nodes,'uppercase',menu_for_style)?'*':'')}
+            disabled={!isAllLabelVisible && !menu_for_style}
+            checked={isAllNodeUpper}
             onChange={
               evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.uppercase = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'uppercase',evt.target.checked,menu_for_style))
                 set_data({ ...data })
               }
             }
@@ -363,12 +324,12 @@ export const SankeyMenuConfigurationNodesLabel = (
         <Col>
           <FormCheck
             type='checkbox'
-            label={t('Noeud.labels.ita')}
-            checked={isAllNodeItalic()}
-            disabled={!isAllLabelVisible()}
+            label={t('Noeud.labels.ita')+(is_node_diplaying_value_local(multi_selected_nodes,'italic',menu_for_style)?'*':'')}
+            checked={isAllNodeItalic}
+            disabled={!isAllLabelVisible && !menu_for_style}
             onChange={
               evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.italic = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'italic',evt.target.checked,menu_for_style))
                 set_data({ ...data })
               }
             }
@@ -379,8 +340,8 @@ export const SankeyMenuConfigurationNodesLabel = (
       {/* Largeur de la zone de texte du label */}
       <Form.Group as={Row}>
         <Col xs={4}>
-          <FormLabel style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}}>
-            {t('Noeud.labels.cl')}
+          <FormLabel style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}}>
+            {t('Noeud.labels.cl')+(is_node_diplaying_value_local(multi_selected_nodes,'label_box_width',menu_for_style)?'*':'')}
           </FormLabel>
         </Col>
         <Col xs={5}>
@@ -391,29 +352,29 @@ export const SankeyMenuConfigurationNodesLabel = (
             rootClose
             overlay={<Tooltip id={'noeud.labels.tooltips.9'}>{t('Noeud.labels.tooltips.cl')} </Tooltip>}>
             <FormControl
-              value={valueAllNodeLabelBox()}
+              value={valueAllNodeLabelBox}
               type={'number'}
-              disabled={!isAllLabelVisible()}
+              disabled={!isAllLabelVisible && !menu_for_style}
               placeholder={'110'}
               min={0}
               max={500}
               onChange={evt => {
                 if (!isNaN(+evt.target.value)) {
                   const val = (+evt.target.value < 0) ? 0 : +evt.target.value
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.label_box_width = val)
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_box_width',val,menu_for_style))
                   set_data({ ...data })
                 }
               }}/>
           </OverlayTrigger>
         </Col>
-        <Col style={{color:(isAllLabelVisible())?'#555555':'#DADADA'}}>px</Col>
+        <Col style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}}>px</Col>
       </Form.Group>
 
       {/* Activer l'affichage de la valeur de la donnée des noeuds */}
       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} ></hr>
       <Form.Group as={Row} >
         <Col xs={4}>
-          <FormLabel >{t('Noeud.labels.vdv')} </FormLabel>
+          <FormLabel style={{color:(isAllNodeTotal||menu_for_style)?'#555555':'#DADADA'}}>{t('Noeud.labels.vdv')} </FormLabel>
         </Col>
         <Col xs={1}>
           <OverlayTrigger
@@ -423,9 +384,9 @@ export const SankeyMenuConfigurationNodesLabel = (
             overlay={<Tooltip id={'noeud.labels.tooltips.10'}>{t('Noeud.labels.tooltips.vdv')} </Tooltip>}>
             <FormCheck inline
               type='switch'
-              checked={isAllNodeTotal()}
+              checked={isAllNodeTotal}
               onChange={evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.show_value = evt.target.checked)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'show_value',evt.target.checked,menu_for_style))
                 set_data({ ...data })
               }}/>
           </OverlayTrigger>
@@ -435,7 +396,7 @@ export const SankeyMenuConfigurationNodesLabel = (
       {/* Position vertical de l'affichage des données par rapport au noeud */}
       <Form.Group as={Row} >
         <Col xs={4}>
-          <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >{t('Noeud.labels.pv')}</FormLabel>
+          <FormLabel style={{color:(isAllNodeTotal||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.pv')+(is_node_diplaying_value_local(multi_selected_nodes,'label_vert_valeur',menu_for_style)?'*':'')}</FormLabel>
         </Col>
         {/* en haut */}
         <Col>
@@ -445,13 +406,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.11'}>{t('Noeud.labels.tooltips.haut_val')} </Tooltip>}>
             <FormCheck
-              disabled={!isAllNodeTotal()}
+              disabled={!isAllNodeTotal&& !menu_for_style}
               type='radio'
               label={t('Noeud.labels.haut')}
               checked={isAllNodeLabelValueVert('vert', 'top')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_vert_valeur = 'top'
+                  assign_node_value_to_correct_var(d,'label_vert_valeur','top',menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -466,13 +427,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.12'}>{t('Noeud.labels.tooltips.Milieu_pv_val')} </Tooltip>}>
             <FormCheck
-              disabled={!isAllNodeTotal()}
+              disabled={!isAllNodeTotal&& !menu_for_style}
               type='radio'
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelValueVert('vert', 'middle')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_vert_valeur = 'middle'
+                  assign_node_value_to_correct_var(d,'label_vert_valeur','middle',menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -489,11 +450,11 @@ export const SankeyMenuConfigurationNodesLabel = (
             <FormCheck
               type='radio'
               label={t('Noeud.labels.Bas')}
-              disabled={!isAllNodeTotal()}
+              disabled={!isAllNodeTotal&& !menu_for_style}
               checked={isAllNodeLabelValueVert('vert', 'bottom')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_vert_valeur = 'bottom'
+                  assign_node_value_to_correct_var(d,'label_vert_valeur','bottom',menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -504,7 +465,7 @@ export const SankeyMenuConfigurationNodesLabel = (
       {/* Position horizontale de l'affichage des données par rapport au noeud */}
       <Form.Group as={Row}>
         <Col xs={4}>
-          <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >{t('Noeud.labels.ph')}</FormLabel>
+          <FormLabel style={{color:(isAllNodeTotal||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.ph')+(is_node_diplaying_value_local(multi_selected_nodes,'label_horiz_valeur',menu_for_style)?'*':'')}</FormLabel>
         </Col>
 
         {/* A gauche */}
@@ -514,13 +475,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.14'}>{t('Noeud.labels.tooltips.gauche_val')} </Tooltip>}>
-            <FormCheck disabled={!isAllNodeTotal()}
+            <FormCheck disabled={!isAllNodeTotal&& !menu_for_style}
               type='radio'
               label={t('Noeud.labels.gauche')}
               checked={isAllNodeLabelValueVert('horiz', 'left')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_horiz_valeur = 'left'
+                  assign_node_value_to_correct_var(d,'label_horiz_valeur','left',menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -534,13 +495,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.15'}>{t('Noeud.labels.tooltips.Milieu_ph_val')} </Tooltip>}>
-            <FormCheck disabled={!isAllNodeTotal()}
+            <FormCheck disabled={!isAllNodeTotal&& !menu_for_style}
               type='radio'
               label={t('Noeud.labels.Milieu')}
               checked={isAllNodeLabelValueVert('horiz', 'middle')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_horiz_valeur = 'middle'
+                  assign_node_value_to_correct_var(d,'label_horiz_valeur','middle',menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -554,13 +515,13 @@ export const SankeyMenuConfigurationNodesLabel = (
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.labels.tooltips.16'}>{t('Noeud.labels.tooltips.droite_val')} </Tooltip>}>
-            <FormCheck disabled={!isAllNodeTotal()}
+            <FormCheck disabled={!isAllNodeTotal&& !menu_for_style}
               type='radio'
               label={t('Noeud.labels.droite')}
               checked={isAllNodeLabelValueVert('horiz', 'right')}
               onChange={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.display_style.label_horiz_valeur = 'right'
+                  assign_node_value_to_correct_var(d,'label_horiz_valeur','right',menu_for_style)
                   delete d.x_label
                   delete d.y_label
                 })
@@ -573,22 +534,22 @@ export const SankeyMenuConfigurationNodesLabel = (
       {/* Taille de la police du texte de la valeur */}
       <Form.Group as={Row} >
         <Col xs={4}>
-          <FormLabel style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}
+          <FormLabel style={{color:(isAllNodeTotal||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}
           </FormLabel>
         </Col>
         <Col xs={5}>
           <FormControl
             min={11}
             type={'number'}
-            disabled={!isAllNodeTotal()}
-            value={allNodeValueFontSize()}
+            disabled={!isAllNodeTotal&& !menu_for_style}
+            value={allNodeValueFontSize}
             onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.display_style.value_font_size = +evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'value_font_size',+evt.target.value,menu_for_style))
               set_data({ ...data })
             }}
           />
         </Col>
-        <Col style={{color:(isAllNodeTotal())?'#555555':'#DADADA'}}>px</Col>
+        <Col style={{color:(isAllNodeTotal||menu_for_style)?'#555555':'#DADADA'}}>px</Col>
       </Form.Group>
     </Form>
   </Tab>

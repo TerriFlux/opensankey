@@ -3,7 +3,7 @@ import { SankeyLink, SankeyData, SankeyNode,SankeyLinkValue} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 
-import {node_color,node_displayed} from './SankeyUtils'
+import {node_color,node_displayed,return_value_node} from './SankeyUtils'
 import { BaseType } from 'd3'
 import { scale,inv_scale,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
   eventNodeContextMenu,nodeTransform,node_stroke_width } from './SankeyDrawFunction'
@@ -54,7 +54,7 @@ export const OpenSankeyDrawNodes = (
   )=>{
     const display_nodes=data.nodes
     const display_links=data.links
-    Object.values(display_nodes).filter(n=>n.not_to_scale).map(n=>{
+    Object.values(display_nodes).filter(n=>return_value_node(data,n,'not_to_scale')).map(n=>{
       setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale,getLinkValue)
       d3.select(' .opensankey #' + n.idNode)
         .attr('fill-opacity',0)
@@ -65,39 +65,39 @@ export const OpenSankeyDrawNodes = (
       .classed('node_sub_shape', true)
       .attr('x',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
-        return (n.not_to_scale_direction=='left')?width_node-(width_node/50):0
+        return (return_value_node(data,n,'not_to_scale_direction')=='left')?width_node-(width_node/50):0
       })
       .attr('y',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
-        return (n.not_to_scale_direction=='top')?(height_node-height_node/50):0})
+        return (return_value_node(data,n,'not_to_scale_direction')=='top')?(height_node-height_node/50):0})
       .attr('width',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
     
-        return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/50})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/50})
       .attr('height',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/50:height_node})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/50:height_node})
       .attr('fill',d => node_color(d as SankeyNode,data) as string)
     
     // 2
@@ -106,15 +106,15 @@ export const OpenSankeyDrawNodes = (
       .classed('node_sub_shape', true)
       .attr('x',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
     
-        if(n.not_to_scale_direction=='right'){
+        if(return_value_node(data,n,'not_to_scale_direction')=='right'){
           return width_node/25
-        }else if(n.not_to_scale_direction=='left'){
+        }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
           return width_node-width_node/10
         }else{
           return 0
@@ -122,15 +122,15 @@ export const OpenSankeyDrawNodes = (
       })
       .attr('y',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
     
-        if(n.not_to_scale_direction=='bottom'){
+        if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
           return height_node/25
-        }else if(n.not_to_scale_direction=='top'){
+        }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
           return height_node-height_node/10
         }else{
           return 0
@@ -138,22 +138,22 @@ export const OpenSankeyDrawNodes = (
       })
       .attr('height',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/20:height_node})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/20:height_node})
       .attr('width',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/20})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/20})
       .attr('fill',d => node_color(d as SankeyNode,data) as string)
     
     // 3
@@ -162,15 +162,15 @@ export const OpenSankeyDrawNodes = (
       .classed('node_sub_shape', true)
       .attr('x',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
     
-        if(n.not_to_scale_direction=='right'){
+        if(return_value_node(data,n,'not_to_scale_direction')=='right'){
           return width_node/8.5
-        }else if(n.not_to_scale_direction=='left'){
+        }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
           return width_node-width_node/4.3
         }else{
           return 0
@@ -178,15 +178,15 @@ export const OpenSankeyDrawNodes = (
       })
       .attr('y',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
     
-        if(n.not_to_scale_direction=='bottom'){
+        if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
           return height_node/8.5
-        }else if(n.not_to_scale_direction=='top'){
+        }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
           return height_node-height_node/4.3
         }else{
           return 0
@@ -194,22 +194,22 @@ export const OpenSankeyDrawNodes = (
       })
       .attr('height',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/9:height_node})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/9:height_node})
       .attr('width',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/9})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/9})
       .attr('fill',d => node_color(d as SankeyNode,data) as string)
     
     // 4
@@ -218,15 +218,15 @@ export const OpenSankeyDrawNodes = (
       .classed('node_sub_shape', true)
       .attr('x',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
     
-        if(n.not_to_scale_direction=='right'){
+        if(return_value_node(data,n,'not_to_scale_direction')=='right'){
           return width_node/4
-        }else if(n.not_to_scale_direction=='left'){
+        }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
           return width_node-width_node/2.1
         }else{
           return 0
@@ -234,15 +234,15 @@ export const OpenSankeyDrawNodes = (
       })
       .attr('y',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
     
-        if(n.not_to_scale_direction=='bottom'){
+        if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
           return height_node/4
-        }else if(n.not_to_scale_direction=='top'){
+        }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
           return height_node-height_node/2.1
         }else{
           return 0
@@ -250,22 +250,22 @@ export const OpenSankeyDrawNodes = (
       })
       .attr('width',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/4.5})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/4.5})
       .attr('height',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/4.5:height_node})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/4.5:height_node})
       .attr('fill',d => node_color(d as SankeyNode,data) as string)
     
     // 5
@@ -274,40 +274,40 @@ export const OpenSankeyDrawNodes = (
       .classed('node_sub_shape', true)
       .attr('x',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
         
-        return (n.not_to_scale_direction=='right')?(width_node/2):0})
+        return (return_value_node(data,n,'not_to_scale_direction')=='right')?(width_node/2):0})
       .attr('y',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
     
-        return (n.not_to_scale_direction=='bottom')?(height_node/2):0})
+        return (return_value_node(data,n,'not_to_scale_direction')=='bottom')?(height_node/2):0})
       .attr('width',n=>{
         let width_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
         }else{
           width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/2})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/2})
       .attr('height',n=>{
         let height_node=0
-        if(n.shape=='rect'){
+        if(return_value_node(data,n,'shape')=='rect'){
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
         }else{
           height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
         }
         
-        return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/2:height_node})
+        return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/2:height_node})
       .attr('fill',d => node_color(d as SankeyNode,data) as string)
   }
     
@@ -315,7 +315,7 @@ export const OpenSankeyDrawNodes = (
     
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
-    if ((d as SankeyNode).shape_visible && (window.SankeyToolsStatic ||event.shiftKey)) {
+    if (return_value_node(data,(d as SankeyNode),'shape_visible') && (window.SankeyToolsStatic ||event.shiftKey)) {
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyNode,getLinkValue))
@@ -323,7 +323,7 @@ export const OpenSankeyDrawNodes = (
   }
     
   const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,over_icon:boolean)=>{
-    if (((d as SankeyNode).shape_visible ||over_icon) && (window.SankeyToolsStatic ||event.shiftKey)) {
+    if ((return_value_node(data,(d as SankeyNode),'shape_visible') ||over_icon) && (window.SankeyToolsStatic ||event.shiftKey)) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight 
@@ -343,7 +343,7 @@ export const OpenSankeyDrawNodes = (
   
     
   const node_mouse_out=(d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
-    if ((d as SankeyNode).shape_visible) {
+    if (return_value_node(data,(d as SankeyNode),'shape_visible')) {
       sankeyTooltip.style('opacity', 0)
     }
   }
@@ -371,7 +371,10 @@ export const OpenSankeyDrawNodes = (
         if (d.position === 'absolute' ) { display = 'inline' } else { display = 'none' }
         return display
       })
-      .style('font-family', d => d.display_style.font_family)
+      .style('font-family',(d) => {
+        // d.display_style.font_family
+        return return_value_node(data,d,'font_family') as string
+      })
 
     const ggg_nodes = gg_nodes.append('g')
       .attr('id', d => 'ggg_' + d.idNode)
@@ -411,26 +414,24 @@ export const OpenSankeyDrawNodes = (
         .append('rect')
         .classed('node', true)
         .classed('node_shape', true)
-      // .attr('height', d => d.node_height)
-      // .attr('width', d => d.node_width)
+
     } else {
       ggg_nodes
-        .filter(d => d.shape === 'rect')
+        .filter(d => return_value_node(data,d,'shape') === 'rect')
         .append('rect')
         .classed('node', true)
         .classed('node_shape', true)
-      // .attr('height', d => d.node_height)
-      // .attr('width', d => d.node_width)      
+   
 
       ggg_nodes
-        .filter(d => d.shape === 'ellipse')
+        .filter(d => return_value_node(data,d,'shape') === 'ellipse')
         .append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('cx', d => d.node_width / 2)
-        .attr('cy', d => d.node_height / 2)
-        .attr('rx', d => d.node_width / 2)
-        .attr('ry', d => d.node_height / 2)
+        .attr('cx', d =>return_value_node(data,d,'node_width') as number / 2)
+        .attr('cy', d =>return_value_node(data,d,'node_height') as number / 2)
+        .attr('rx', d =>return_value_node(data,d,'node_width') as number / 2)
+        .attr('ry', d =>return_value_node(data,d,'node_height') as number / 2)
             
             
     }
@@ -440,7 +441,7 @@ export const OpenSankeyDrawNodes = (
     // Apply node's parameters to each node
     d3.selectAll(' .opensankey .node')
       .attr('id', d => (d as SankeyNode).idNode)
-      .attr('fill-opacity', d => (d as SankeyNode).shape_visible ? '1' : '0')
+      .attr('fill-opacity', d => return_value_node(data,(d as SankeyNode),'shape_visible') ? '1' : '0')
       .attr('fill', d => node_color(d as SankeyNode,data) as string)
       .attr('stroke', 'black')
       .attr('stroke-width', d => {
@@ -472,7 +473,7 @@ export const OpenSankeyDrawNodes = (
     Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale,getLinkValue))
         
     const nodes_not_to_scale=ggg_nodes
-      .filter(d=>d.not_to_scale)
+      .filter(d=>return_value_node(data,d,'not_to_scale') as boolean)
       .append('g')
     addNodesNotToScale(nodes_not_to_scale,data,scale,inv_scale)
 

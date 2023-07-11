@@ -2,7 +2,7 @@ import { TFunction } from 'i18next'
 import React from 'react'
 import { Row, Form, FormControl, FormLabel, Col, FormCheck, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyNode } from './types'
-
+import { return_correct_node_attribute_value,assign_node_value_to_correct_var,is_node_diplaying_value_local,is_all_node_attr_same_value} from './SankeyUtils'
 export const OpenSankeyConfigurationNodesAttributes = (
   t:TFunction,
   data:SankeyData,
@@ -13,21 +13,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
 ) => {
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[selected_style_node]]:multi_selected_nodes.current
-  const isAllNodeVisible = () => {
-    let visible = false
-    selected_parameter.map(d => visible = (d.shape_visible || d.not_to_scale) ? true : visible)
-    return visible
-  }
 
-  const isAllNodeRect = () => {
-    let rect = true
-    if (selected_parameter.length > 0) {
-      selected_parameter.map(d => rect = (d.shape !== 'rect') ? false : rect)
-    } else {
-      rect = false
-    }
-    return rect
-  }
   const getBrowserName = () => {
     const browserInfo = navigator.userAgent
     let browser
@@ -47,56 +33,88 @@ export const OpenSankeyConfigurationNodesAttributes = (
     return browser
   }
 
+  // const isAllNodeVisible = () => {
+  //   let visible = false
+  //   selected_parameter.map(d => visible = (return_correct_node_attribute_value(data,d,'shape_visible',menu_for_style) || return_correct_node_attribute_value(data,d,'not_to_scale',menu_for_style)) ? true : visible)
+  //   return visible
+  // }
+  const isAllNodeVisible=is_all_node_attr_same_value(data,selected_parameter,'shape_visible',menu_for_style) as boolean
+
+  const isAllNodeRect = () => {
+    let rect = true
+    if (selected_parameter.length > 0) {
+      selected_parameter.map(d => rect = (return_correct_node_attribute_value(data,d,'shape',menu_for_style) !== 'rect') ? false : rect)
+    } else {
+      rect = false
+    }
+    return rect
+  }
+
+
+
   const isAllNodeCircle = () => {
     let circle = true
     if (selected_parameter.length > 0) {
-      selected_parameter.map(d => circle = (d.shape !== 'ellipse') ? false : circle)
+      selected_parameter.map(d => circle = (return_correct_node_attribute_value(data,d,'shape',menu_for_style) !== 'ellipse') ? false : circle)
     } else {
       circle = false
     }
     return circle
   }
 
-  const isAllNodeColorSustainable = () => {
-    let colorS = true
-    if (selected_parameter.length > 0) {
-      selected_parameter.map(d => colorS = (!d.colorSustainable) ? false : colorS)
-    } else {
-      colorS = false
-    }
-    return colorS
-  }
+  // const isAllNodeColorSustainable = () => {
+  //   let colorS = true
+  //   if (selected_parameter.length > 0) {
+  //     selected_parameter.map(d => colorS = (!(return_correct_node_attribute_value(data,d,'colorSustainable',menu_for_style) as boolean)) ? false : colorS)
+  //   } else {
+  //     colorS = false
+  //   }
+  //   return colorS
+  // }
 
-  const displayedValueNodeWidth = () => {
-    let display_width = true
-    let width = 0
-    if (selected_parameter.length != 0) {
-      width = selected_parameter[0].node_width
-    }
-    selected_parameter.map((d) => {
-      display_width = (d.node_width == width) ? display_width : false
-    })
-    return (display_width) ? width : 0
-  }
+  const isAllNodeColorSustainable=is_all_node_attr_same_value(data,selected_parameter,'colorSustainable',menu_for_style) as boolean
 
-  const displayedValueNodeHeight = () => {
-    let display_height = true
-    let width = 0
-    if (selected_parameter.length != 0) {
-      width = selected_parameter[0].node_height
-    }
-    selected_parameter.map((d) => {
-      display_height = (d.node_height == width) ? display_height : false
-    })
-    return (display_height) ? width : 0
-  }
+
+  // const displayedValueNodeWidth = () => {
+  //   let display_width = true
+  //   let width = 0
+  //   if (selected_parameter.length != 0) {
+  //     // width = selected_parameter[0].node_width
+  //     width = return_correct_node_attribute_value(data,selected_parameter[0],'node_width',menu_for_style) as number
+  //   }
+  //   selected_parameter.map((d) => {
+  //     display_width = (return_correct_node_attribute_value(data,d,'node_width',menu_for_style) == width) ? display_width : false
+  //   })
+  //   return (display_width) ? width : 0
+  // }
+
+  const displayedValueNodeWidth=is_all_node_attr_same_value(data,selected_parameter,'node_width',menu_for_style) as number
+
+
+  // const displayedValueNodeHeight = () => {
+  //   let display_height = true
+  //   let height = 0
+  //   if (selected_parameter.length != 0) {
+  //     // height = selected_parameter[0].node_height
+  //     height = return_correct_node_attribute_value(data,selected_parameter[0],'node_height',menu_for_style) as number
+
+  //   }
+  //   selected_parameter.map((d) => {
+  //     // display_height = (d.node_height == height) ? display_height : false
+  //     display_height = (return_correct_node_attribute_value(data,d,'node_height',menu_for_style) == height) ? display_height : false
+
+  //   })
+  //   return (display_height) ? height : 0
+  // }
+  const displayedValueNodeHeight=is_all_node_attr_same_value(data,selected_parameter,'node_height',menu_for_style) as number
+
 
   // Tableau d'elements de sous-menu attribut de noeuds
   return [
     /* Visibilite du noeud */
     <Form.Group as={Row} key={'node_visibility'} >
       <Col xs={4}>
-        <FormLabel >{t('Noeud.apparence.Visibilité')}</FormLabel>
+        <FormLabel >{t('Noeud.apparence.Visibilité')+(is_node_diplaying_value_local(multi_selected_nodes,'shape_visible',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col xs={1}>
         <OverlayTrigger
@@ -106,9 +124,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
           <FormCheck inline
             type='switch'
-            checked={isAllNodeVisible()}
+            checked={isAllNodeVisible}
             onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.shape_visible = evt.target.checked)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape_visible',evt.target.checked,menu_for_style))
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -118,7 +136,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     /* Couleur du noeud */
     <Form.Group as={Row}>
       <Col xs={4}>
-        <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.Couleur')}</FormLabel>
+        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Couleur')+(is_node_diplaying_value_local(multi_selected_nodes,'color',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col xs={3}>
         <OverlayTrigger
@@ -128,19 +146,19 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.apparence.tooltips.2'}>{t('Noeud.apparence.tooltips.Couleur')} </Tooltip>}>
           {(getBrowserName()==='Firefox')?<Form.Control
             type='color'
-            disabled={ !isAllNodeVisible()}
-            value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
+            disabled={ menu_for_style?false:!isAllNodeVisible}
+            value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
             onChange={evt=>{
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
               set_data({ ...data })
               
             }}
           />:<Form.Control
             type='color'
-            disabled={ !isAllNodeVisible()}
-            value={(selected_parameter.length == 1) ? selected_parameter[0].color : '#ffffff'}
+            disabled={ menu_for_style?false:!isAllNodeVisible}
+            value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
             onChange={evt=>{
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.color = evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
               // set_data({ ...data })
             }}
             onBlurCapture={()=>{
@@ -154,7 +172,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     /* Figer la couleur */
     <Form.Group as={Row}>
       <Col xs={4}>
-        <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.CouleurPérenne')}</FormLabel>
+        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>{t('Noeud.apparence.CouleurPérenne')+(is_node_diplaying_value_local(multi_selected_nodes,'colorSustainable',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col xs={3}>
         <OverlayTrigger
@@ -165,10 +183,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           <Form.Check
             type='checkbox'
             //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-            checked={isAllNodeColorSustainable()}
+            checked={isAllNodeColorSustainable}
             onChange={evt => {
               const checked = evt.target.checked
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.colorSustainable= checked)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'colorSustainable',checked,menu_for_style))
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -178,7 +196,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     /* Forme du noeud */
     <Form.Group as={Row} >
       <Col xs={4}>
-        <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>{t('Noeud.apparence.Forme')}</FormLabel>
+        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Forme')+(is_node_diplaying_value_local(multi_selected_nodes,'shape',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col xs={2}>
         <OverlayTrigger
@@ -190,10 +208,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
             value="ellipse"
             type='radio'
             label={t('Noeud.apparence.Cercle')}
-            disabled={!isAllNodeVisible()}
+            disabled={menu_for_style?false:!isAllNodeVisible}
             checked={isAllNodeCircle()}
             onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape',evt.target.value,menu_for_style))
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -208,10 +226,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
             value="rect"
             type='radio'
             label={t('Noeud.apparence.Rectangle')}
-            disabled={!isAllNodeVisible()}
+            disabled={menu_for_style?false:!isAllNodeVisible}
             checked={isAllNodeRect()}
             onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.shape = evt.target.value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape',evt.target.value,menu_for_style))
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -221,7 +239,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     /* Largeur minimale du noeud */
     <Form.Group as={Row} >
       <Col xs={4}>
-        <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}} >{t('Noeud.apparence.TML')}</FormLabel>
+        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.apparence.TML')+(is_node_diplaying_value_local(multi_selected_nodes,'node_width',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col>
         <OverlayTrigger
@@ -233,24 +251,25 @@ export const OpenSankeyConfigurationNodesAttributes = (
           <FormControl
             min={0} max={100}
             type={'number'}
-            value={displayedValueNodeWidth()}
-            disabled={!isAllNodeVisible()}
+            value={displayedValueNodeWidth}
+            disabled={menu_for_style?false:!isAllNodeVisible}
             onChange={
               evt => {
-                selected_parameter.map(d => d.node_width = +evt.target.value)
+                selected_parameter.map(d=>assign_node_value_to_correct_var(d,'node_width',+evt.target.value,menu_for_style))
+                // selected_parameter.map(d => d.node_width = +evt.target.value,menu_for_style)
                 //set_multi_selected_nodes(multi_selected_nodes)
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.node_width = +evt.target.value)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'node_width',evt.target.value,menu_for_style))
                 set_data({ ...data })
               }}/>
         </OverlayTrigger>
       </Col>
-      <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
+      <Col style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>px</Col>
     </Form.Group>,
 
     /* Hauteur minimale du noeud */
     <Form.Group as={Row} >
       <Col xs={4}>
-        <FormLabel style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}} >{t('Noeud.apparence.TMH')}</FormLabel>
+        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.apparence.TMH')+(is_node_diplaying_value_local(multi_selected_nodes,'node_height',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col>
         <OverlayTrigger
@@ -262,17 +281,17 @@ export const OpenSankeyConfigurationNodesAttributes = (
           <FormControl
             min={0} max={100}
             type={'number'}
-            value={displayedValueNodeHeight()}
-            disabled={!isAllNodeVisible()}
+            value={displayedValueNodeHeight}
+            disabled={menu_for_style?false:!isAllNodeVisible}
             onChange={
               evt => {
                 //set_multi_selected_nodes(multi_selected_nodes)
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.node_height = +evt.target.value)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'node_height',evt.target.value,menu_for_style))
                 set_data({ ...data })
               }}/>
         </OverlayTrigger>
       </Col>
-      <Col style={{color:(isAllNodeVisible())?'#555555':'#DADADA'}}>px</Col>
+      <Col style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>px</Col>
     </Form.Group>
   ]
 }

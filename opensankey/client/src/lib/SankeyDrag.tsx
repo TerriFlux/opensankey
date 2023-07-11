@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,SankeyLinkValue,drawArrowsType } from './types'
 import {removeAnimate,compute_end_points, min_width_and_height,drawCurveFunction, drawArrows} from './SankeyDrawFunction'
-import {   link_visible,test_link_value } from './SankeyUtils'
+import {   link_visible,test_link_value,return_value_node,assign_node_local_attribute,return_value_link,assign_link_local_attribute} from './SankeyUtils'
 import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
 
 
@@ -179,10 +179,11 @@ export const dragLinkCenterHandleEvent=(
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 )=>{
+  const l_ori=return_value_link(data,link,'orientation')
   return d3.drag<SVGCircleElement, unknown>()
     .subject(Object)
     .on('drag', function (event) {
-      if(multi_selected_links.current.includes(link) && (link.orientation=='hh' || link.orientation=='vv')){
+      if(multi_selected_links.current.includes(link) && (l_ori=='hh' || l_ori=='vv')){
         const shift_handle=d3.selectAll(' .opensankey #gg_'+link.idLink+' .handle').nodes()
         drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
         drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
@@ -311,10 +312,15 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:(d:Sanke
       if(event.dx<100){
         let pos_node=d3.select(' .opensankey #ggg_' + node.idNode).attr('transform').replace('translate(','')
         pos_node=pos_node.split(',')[0]
+        const tmp=return_value_node(data,data.nodes[node.idNode],'label_box_width') as number
+
         if(event.x<pos_node){
-          data.nodes[node.idNode].display_style.label_box_width-=event.dx
+          // data.nodes[node.idNode].display_style.label_box_width-=event.dx;
+          assign_node_local_attribute(data.nodes[node.idNode],'label_box_width',tmp-event.dx)
         }else{
-          data.nodes[node.idNode].display_style.label_box_width+=event.dx
+          // data.nodes[node.idNode].display_style.label_box_width+=event.dx
+          assign_node_local_attribute(data.nodes[node.idNode],'label_box_width',tmp-event.dx)
+
         }
         set_data({...data})
       }
@@ -435,6 +441,7 @@ export  const drag_nodes = (
  * @returns {{ node_id: any; type: string; origin: any; }}
  */
 const identify_node = (
+  data:SankeyData,
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
   link: SankeyLink,
@@ -450,17 +457,19 @@ const identify_node = (
   const target_x_max = target_x_min + parseInt(d3.select(' .opensankey #' + target_node.idNode).attr('width'))
   const target_y_min = target_node.y
   const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #' + target_node.idNode).attr('height'))
-  const tolerance = 3 * source_node.node_width
-  if ((link.orientation === 'hh' || link.orientation === 'hv') && mouse_coord[1] >= source_y_min && mouse_coord[1] <= source_y_max && (mouse_coord[0] <= source_x_max + tolerance)) {
+  const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
+  const l_ori=return_value_link(data,link,'orientation')
+
+  if ((l_ori === 'hh' || l_ori === 'hv') && mouse_coord[1] >= source_y_min && mouse_coord[1] <= source_y_max && (mouse_coord[0] <= source_x_max + tolerance)) {
     return { 'node_id': source_node.idNode, 'type': 'source', 'origin': source_y_min }
   }
-  if ((link.orientation === 'hh' || link.orientation === 'hv') && mouse_coord[1] >= target_y_min && mouse_coord[1] <= target_y_max && (mouse_coord[0] >= target_x_min - tolerance)) {
+  if ((l_ori === 'hh' || l_ori === 'hv') && mouse_coord[1] >= target_y_min && mouse_coord[1] <= target_y_max && (mouse_coord[0] >= target_x_min - tolerance)) {
     return { 'node_id': target_node.idNode, 'type': 'target', 'origin': target_y_min }
   }
-  if ((link.orientation === 'vv' || link.orientation === 'vh') && mouse_coord[0] >= source_x_min && mouse_coord[0] <= source_x_max && (mouse_coord[1] <= source_y_max + tolerance)) {
+  if ((l_ori === 'vv' || l_ori === 'vh') && mouse_coord[0] >= source_x_min && mouse_coord[0] <= source_x_max && (mouse_coord[1] <= source_y_max + tolerance)) {
     return { 'node_id': source_node.idNode, 'type': 'source', 'origin': source_x_min }
   }
-  if ((link.orientation === 'vv' || link.orientation === 'vh') && mouse_coord[0] >= target_x_min && mouse_coord[0] <= target_x_max && (mouse_coord[1] >= target_y_min - tolerance)) {
+  if ((l_ori === 'vv' || l_ori === 'vh') && mouse_coord[0] >= target_x_min && mouse_coord[0] <= target_x_max && (mouse_coord[1] >= target_y_min - tolerance)) {
     return { 'node_id': target_node.idNode, 'type': 'target', 'origin': target_x_min }
   }
 }
@@ -510,7 +519,7 @@ const drag_link = (
   //ou bien peut etre appelé par le rect de drag qui a l'id du link après un prefix
   const idLink = d3.select(dragged).attr('id').replace('drag_zone_s_','').replace('drag_zone_t_','')
   const p2 = d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))
-  const linked_node = identify_node(nodes, links, links[idLink], p2)
+  const linked_node = identify_node(data,nodes, links, links[idLink], p2)
   if (linked_node === undefined) {
     return
   }
@@ -518,17 +527,20 @@ const drag_link = (
   let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && link_visible(data.links[id],data,getLinkValue) })
   let id_output_filtered=node.outputLinksId.filter(id=>link_visible(data.links[id],data,getLinkValue))
   const link_dragged=data.links[idLink]
+  const l_ori=return_value_link(data,link_dragged,'orientation')
+  const l_recy=return_value_link(data,link_dragged,'recycling')
+
   let io=''
       
   if (linked_node.type === 'source') {
       
-    if(link_dragged.orientation=='hh' ||link_dragged.orientation=='hv' ){
-      if((!link_dragged.recycling && data.nodes[link_dragged.idTarget].x>data.nodes[linked_node.node_id].x) ||(link_dragged.recycling && data.nodes[link_dragged.idTarget].x<data.nodes[linked_node.node_id].x) ){
+    if(l_ori=='hh' ||l_ori=='hv' ){
+      if((!l_recy && data.nodes[link_dragged.idTarget].x>data.nodes[linked_node.node_id].x) ||(l_recy && data.nodes[link_dragged.idTarget].x<data.nodes[linked_node.node_id].x) ){
         io='right'
       }else{
         io='left'
       }
-    }else if(link_dragged.orientation=='vv' ||link_dragged.orientation=='vh'){
+    }else if(l_ori=='vv' ||l_ori=='vh'){
       if(data.nodes[link_dragged.idTarget].y<data.nodes[linked_node.node_id].y){
         io='top'
       }else{
@@ -538,14 +550,16 @@ const drag_link = (
     //Filtre les flux qui arrivent du même coté que le flux dragged
     id_output_filtered=id_output_filtered.filter(id=>{
       let good_orientation=false
+      const nl_ori=return_value_link(data,data.links[id],'orientation')
+      const nl_recy=return_value_link(data,data.links[id],'recycling') as boolean
       if(io=='right'){
-        good_orientation=((!data.links[id].recycling && data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x) || (data.links[id].recycling && data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x)) && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        good_orientation=((!nl_recy && data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x) || (nl_recy && data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x)) && (nl_ori=='hh' || nl_ori=='hv')
       }else if(io=='left'){
-        good_orientation=((!data.links[id].recycling && data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x)|| (data.links[id].recycling && data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x)) && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        good_orientation=((!nl_recy && data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x)|| (nl_recy && data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x)) && (nl_ori=='hh' || nl_ori=='hv')
       }else if (io=='top'){
-        good_orientation=data.nodes[data.links[id].idTarget].y<data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
+        good_orientation=data.nodes[data.links[id].idTarget].y<data.nodes[linked_node.node_id].y && (nl_ori=='vv' || nl_ori=='vh')
       }else if(io=='bottom'){
-        good_orientation=data.nodes[data.links[id].idTarget].y>=data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
+        good_orientation=data.nodes[data.links[id].idTarget].y>=data.nodes[linked_node.node_id].y && (nl_ori=='vv' || nl_ori=='vh')
       }
       return good_orientation 
     })
@@ -572,14 +586,14 @@ const drag_link = (
       next_link_index=node.outputLinksId.indexOf(id_output_filtered[source_order+1])
     }
     if(value){
-      if (links[idLink].orientation === 'hh' || links[idLink].orientation === 'hv') {
+      if (l_ori === 'hh' || l_ori === 'hv') {
         if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value)) {
           swap(node.outputLinksId, true_source_order, next_link_index)
         }
         if (source_order > 0 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(output_offset)) {
           swap(node.outputLinksId, true_source_order, prec_link_index)
         }
-      } else if (links[idLink].orientation === 'vv') {
+      } else if (l_ori === 'vv') {
         if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(output_offset + value)) {
           swap(node.outputLinksId, true_source_order, next_link_index)
         }
@@ -591,13 +605,13 @@ const drag_link = (
       
   }
   if (linked_node.type === 'target') {
-    if(link_dragged.orientation=='hh' ||link_dragged.orientation=='hv' ){
-      if((!link_dragged.recycling && data.nodes[link_dragged.idSource].x>data.nodes[linked_node.node_id].x) ||(link_dragged.recycling && data.nodes[link_dragged.idSource].x<data.nodes[linked_node.node_id].x)){
+    if(l_ori=='hh' ||l_ori=='hv' ){
+      if((!l_recy && data.nodes[link_dragged.idSource].x>data.nodes[linked_node.node_id].x) ||(l_recy && data.nodes[link_dragged.idSource].x<data.nodes[linked_node.node_id].x)){
         io='right'
       }else{
         io='left'
       }
-    }else if(link_dragged.orientation=='vv' ||link_dragged.orientation=='vh'){
+    }else if(l_ori=='vv' ||l_ori=='vh'){
       if(data.nodes[link_dragged.idSource].y<data.nodes[linked_node.node_id].y){
         io='top'
       }else{
@@ -608,14 +622,16 @@ const drag_link = (
       
     id_input_filtered=id_input_filtered.filter(id=>{
       let good_orientation=false
+      const nl_ori=return_value_link(data,data.links[id],'orientation')
+      const nl_recy=return_value_link(data,data.links[id],'recycling') as boolean
       if(io=='right'){
-        good_orientation=((!data.links[id].recycling && data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x) || (data.links[id].recycling && data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x)) && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        good_orientation=((!nl_recy && data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x) || (nl_recy && data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x)) && (nl_ori=='hh' || nl_ori=='hv')
       }else if(io=='left'){
-        good_orientation=((!data.links[id].recycling && data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x)|| (data.links[id].recycling && data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x)) && (data.links[id].orientation=='hh' || data.links[id].orientation=='hv')
+        good_orientation=((!nl_recy && data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x)|| (nl_recy && data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x)) && (nl_ori=='hh' || nl_ori=='hv')
       }else if (io=='top'){
-        good_orientation=data.nodes[data.links[id].idSource].y<data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
+        good_orientation=data.nodes[data.links[id].idSource].y<data.nodes[linked_node.node_id].y && (nl_ori=='vv' || nl_ori=='vh')
       }else if(io=='bottom'){
-        good_orientation=data.nodes[data.links[id].idSource].y>=data.nodes[linked_node.node_id].y && (data.links[id].orientation=='vv' || data.links[id].orientation=='vh')
+        good_orientation=data.nodes[data.links[id].idSource].y>=data.nodes[linked_node.node_id].y && (nl_ori=='vv' || nl_ori=='vh')
       }
       return good_orientation 
     })
@@ -642,14 +658,14 @@ const drag_link = (
       next_link_index=node.inputLinksId.indexOf(id_input_filtered[target_order+1])
     }
     if(value){
-      if (links[idLink].orientation === 'hh') {
+      if (l_ori === 'hh') {
         if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(input_offset + value)) {
           swap(node.inputLinksId, true_target_order, next_link_index)
         }
         if (target_order > 0 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(input_offset)) {
           swap(node.inputLinksId, true_target_order, prec_link_index)
         }
-      } else if (links[idLink].orientation === 'vv') {
+      } else if (l_ori === 'vv') {
         if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(input_offset + value)) {
           swap(node.inputLinksId, true_target_order, next_link_index)
         }
@@ -717,6 +733,12 @@ export const drag_handle = (
   let u_center_new = -1
   const source_node = nodes[d.idSource]
   const target_node = nodes[d.idTarget]  
+  const d_recy=return_value_link(data,d,'recycling')
+  const d_v_s=return_value_link(data,d,'vert_shift') as number
+  const d_l_h_s=return_value_link(data,d,'left_horiz_shift') as number
+  const d_r_h_s=return_value_link(data,d,'right_horiz_shift') as number
+  const d_ori=return_value_link(data,d,'orientation')
+
   if (isNaN(source_node.x)) {
     source_node.x = 100
   }
@@ -730,34 +752,43 @@ export const drag_handle = (
     target_node.y = 100
   }
   const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, selected_tags,data,scale,inv_scale,getLinkValue)  
-  if (!d.recycling) {
-    if (d.orientation === 'hh') {
+  if (!d_recy) {
+    if (d_ori === 'hh') {
       const link_x_length = Math.abs(xt - xs)
       u_center_new = Math.abs(new_x - xs) / link_x_length
-    } else if (d.orientation === 'vv') {
+    } else if (d_ori === 'vv') {
       const link_y_length = Math.abs(yt - ys)
       u_center_new = Math.abs(new_y - ys) / link_y_length
     }
     if (u_center_new >= 0 && u_center_new <= 1) {
       if (handle_type === 'left') {
-        d.left_horiz_shift = u_center_new
-        if (d.right_horiz_shift && d.left_horiz_shift && d.right_horiz_shift < d.left_horiz_shift) {
-          d.right_horiz_shift = d.left_horiz_shift
+        // d_l_h_s = u_center_new
+        assign_link_local_attribute(d,'left_horiz_shift',u_center_new)
+        if (d_r_h_s && d_l_h_s && d_r_h_s < d_l_h_s) {
+          // d_r_h_s = d_l_h_s
+          assign_link_local_attribute(d,'right_horiz_shift',d_l_h_s)
+
         }
       } else {
-        d.right_horiz_shift = u_center_new
-        if (d.right_horiz_shift && d.left_horiz_shift && d.right_horiz_shift < d.left_horiz_shift) {
-          d.left_horiz_shift = d.right_horiz_shift
+        // d_r_h_s = u_center_new
+        assign_link_local_attribute(d,'right_horiz_shift',u_center_new)
+
+        if (d_r_h_s && d_l_h_s && d_r_h_s < d_l_h_s) {
+          // d_l_h_s = d_r_h_s
+          assign_link_local_attribute(d,'left_horiz_shift',d_r_h_s)
+
         }
       }
     } else {
       return
     }
   } else if (handle_type === 'vert') {
-    const vert_shift = d.vert_shift ? d.vert_shift : 0
-    d.vert_shift = vert_shift + the_event.dy
-    if (data.height < d.vert_shift + Math.max(data.nodes[d.idSource].y, data.nodes[d.idTarget].y) + 100) {
-      data.height = d.vert_shift + Math.max(data.nodes[d.idSource].y, data.nodes[d.idTarget].y) + 100
+    const vert_shift = d_v_s ? d_v_s : 0
+    // d_v_s = vert_shift + the_event.dy
+    assign_link_local_attribute(d,'vert_shift',vert_shift + the_event.dy)
+
+    if (data.height < d_v_s + Math.max(data.nodes[d.idSource].y, data.nodes[d.idTarget].y) + 100) {
+      data.height = d_v_s + Math.max(data.nodes[d.idSource].y, data.nodes[d.idTarget].y) + 100
       d3.select(' .opensankey #svg').style('height', data.height + 'px')
       drawGrid(data)
     }
@@ -768,20 +799,23 @@ export const drag_handle = (
       drawGrid(data)
     }
   } else if (handle_type === 'left') {
-    const left_horiz_shift = d.left_horiz_shift ? d.left_horiz_shift : 0
+    const left_horiz_shift = d_l_h_s ? d_l_h_s : 0
     let tmp=getLinkValue(data, d.idLink).value
     tmp=(tmp)?tmp:0
     if (left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(tmp) / 2) {
-      d.left_horiz_shift = left_horiz_shift + the_event.dx
+      // d_l_h_s = left_horiz_shift + the_event.dx
+      assign_link_local_attribute(d,'left_horiz_shift',left_horiz_shift + the_event.dx)
+
     } else {
       return
     }
   } else if (handle_type === 'right') {
-    const right_horiz_shift = d.right_horiz_shift ? d.right_horiz_shift : 0
+    const right_horiz_shift = d_r_h_s ? d_r_h_s : 0
     if (right_horiz_shift + the_event.dx > -default_horiz_shift) {
-      d.right_horiz_shift = right_horiz_shift + the_event.dx
-      if (data.width < d.right_horiz_shift + data.nodes[d.idSource].x + 100) {
-        data.width = d.right_horiz_shift + data.nodes[d.idSource].x + 100
+      // d_r_h_s = right_horiz_shift + the_event.dx
+      assign_link_local_attribute(d,'right_horiz_shift',right_horiz_shift + the_event.dx)
+      if (data.width < d_r_h_s + data.nodes[d.idSource].x + 100) {
+        data.width = d_r_h_s + data.nodes[d.idSource].x + 100
         d3.select(' .opensankey #svg').style('width', data.width + 'px')
         drawGrid(data)
       }
@@ -819,7 +853,8 @@ const  drag_link_text = (
   d3.select(' .opensankey #' + link.idLink + '_text').attr('y', new_y)
   link.x_label = new_x
   link.y_label = new_y
-  link.label_position = 'frozen'
+  // link.label_position = 'frozen'
+  assign_link_local_attribute(link,'label_position','frozen')
 }
 /**
  * Function that return the position of rectangle element on selected links that represent the zone to drag to trigger dragLink
@@ -850,13 +885,16 @@ const drag_zone_position=(link:SankeyLink,
 )=>{      
   const pos_drag_zone_left = 1 / 50  
   const pos_drag_zone_right = 49 / 50
+  const l_recy=return_value_link(data,link,'recycling')
+  const l_v_s=return_value_link(data,link,'vert_shift') as number
+  const l_ori=return_value_link(data,link,'orientation')
   
   const link_value = test_link_value(data, display_nodes, link,getLinkValue)
   const tmp=(link_value=='')?1:link_value  
-  if (link.orientation === 'hh' && link.recycling) {
+  if (l_ori === 'hh' && l_recy) {
     // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
-    if (!link.vert_shift) {
-      link.vert_shift = 0
+    if (!l_v_s) {
+      assign_link_local_attribute(link,'left_horiz_shift',0)
     }
     
     if (xt < xs) {  
@@ -868,36 +906,36 @@ const drag_zone_position=(link:SankeyLink,
       const left = 'translate(' + (xs - default_handle_size ) + ' ,' + (ys  - default_handle_size / 2) + ')'
       return [vert, left]
     }
-  } else if (link.orientation === 'vv' && link.recycling) {
+  } else if (l_ori === 'vv' && l_recy) {
     // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
    
-    if (!link.vert_shift) {
-      link.vert_shift = 0
+    if (!l_v_s) {
+      assign_link_local_attribute(link,'left_horiz_shift',0)
     }
     const y_left = yt - default_horiz_shift + pos_drag_zone_left - scale(tmp) // x14 
     const y_right = ys + default_horiz_shift + pos_drag_zone_right + scale(tmp) // x2 
-    const x_vert = Math.max(xs, xt) + scale(2 * tmp) + link.vert_shift // y8 
+    const x_vert = Math.max(xs, xt) + scale(2 * tmp) + l_v_s // y8 
     const vert = 'translate(' + (x_vert - default_handle_size / 2) + ', ' + (y_left + (y_right - y_left) / 2 - default_handle_size / 2) + ')'
     const left = 'translate(' + (xt + (x_vert - xt) / 2 - default_handle_size / 2) + ' ,' + (y_left - default_handle_size / 2) + ')'
     const right = 'translate(' + (xs + (x_vert - xs) / 2 - default_handle_size / 2) + ' ,' + (y_right - default_handle_size / 2) + ')'
     return [vert, left, right]
-  } else if (link.orientation === 'hh') {
+  } else if (l_ori === 'hh') {
     const right_s=(xs>xt)?0:-10
     const left_s=(xs>xt)?-10:0
     const shift_left = 'translate(' + (xs + (xt - xs) * pos_drag_zone_left+left_s) + ', ' + (ys - default_handle_size / 2) + ')'
     const shift_right = 'translate(' + (xs + (xt - xs) * pos_drag_zone_right+right_s) + ', ' + (yt - default_handle_size / 2) + ')'
     return [shift_left, shift_right]
-  } else if (link.orientation === 'vv') {
+  } else if (l_ori === 'vv') {
     const right_s=(ys>yt)?0:-10
     const left_s=(ys>yt)?-10:0
     const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_left+left_s) + ')'
     const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_right+right_s) + ')'
     return [shift_left, shift_right]  
-  } else if (link.orientation === 'vh') {
+  } else if (l_ori === 'vh') {
     const x_center_draw = xs
     const y_center_draw = yt
     return ['translate(' + x_center_draw + ', ' + y_center_draw + ')']
-  } else if (link.orientation === 'hv') {
+  } else if (l_ori === 'hv') {
     const x_center_draw = xt
     const y_center_draw = ys
     return ['translate(' + x_center_draw + ', ' + y_center_draw + ')']

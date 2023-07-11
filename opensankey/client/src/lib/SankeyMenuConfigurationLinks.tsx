@@ -3,7 +3,7 @@ import { Row, Form, Col, FormLabel, Tabs,  Button, ButtonGroup, Dropdown, FormGr
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { cut_name, default_link, delete_link,node_displayed } from './SankeyUtils'
+import { cut_name, default_link, delete_link,node_displayed,return_value_link,assign_link_value_to_correct_var,return_correct_link_attribute_value } from './SankeyUtils'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
@@ -68,7 +68,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_value,tags_selected,set_tags_selected,set_display_link_opacity}
 ) => {
   const { fluxTags, dataTags } = data
-  const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
+  const [, set_style_to_apply_to_link] = useState('default')
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
   const set_show_link = useState(true)[1]
 
@@ -121,7 +121,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
             multi_selected_links.current = m_s
-            set_display_link_opacity(m_s[0].opacity)
+            set_display_link_opacity(return_value_link(data,m_s[0],'opacity'))
             Object.values(data.links).forEach( l => {
               d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
               d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
@@ -225,7 +225,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     link.idSource = nodes[node_keys[0]].idNode
     link.idTarget = nodes[node_keys[1]].idNode
     if (link.idSource === link.idTarget) {
-      link.recycling = true
+      // link.recycling = true
+      assign_link_value_to_correct_var(link,'recycling',true,false)
+
     }
 
     nodes[node_keys[0]].outputLinksId.push(link.idLink)
@@ -233,7 +235,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     selected_link.current = link
     multi_selected_links.current = [link]
-    set_display_link_opacity(link.opacity)
+    set_display_link_opacity(return_correct_link_attribute_value(data,link,'opacity',false))
+    
     set_data({ ...data })
     set_show_link(true)
   }
@@ -248,7 +251,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
     if (link.idSource === link.idTarget) {
-      link.recycling = true
+      assign_link_value_to_correct_var(link,'recycling',true,false)
     }
     source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
 
@@ -281,7 +284,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
     if (link.idSource === link.idTarget) {
-      link.recycling = true
+      // link.recycling = true
+      assign_link_value_to_correct_var(link,'recycling',true,false)
+
     }
 
     target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
@@ -290,28 +295,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   }
 
   const apply_style_to_selected_links = () => {
-    const style = data.style_link[style_to_apply_to_link]
-
     multi_selected_links.current.map(d => {
-      // type of link
-      d.recycling = style.recycling
-      d.orientation = style.orientation
-      d.arrow = style.arrow
-
-      // display_attribute
-      d.label_position = style.label_position
-      d.orthogonal_label_position = style.orthogonal_label_position
-      d.label_on_path = style.label_on_path
-      d.label_visible = style.label_visible
-      d.text_color = style.text_color
-      d.color = style.color
-      d.opacity=style.opacity
-      d.left_horiz_shift = style.left_horiz_shift
-      d.right_horiz_shift = style.right_horiz_shift
-
-
-      d.curvature = style.curvature
-      d.curved = style.curved
+      delete d.local
     })
   }
 
@@ -510,7 +495,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 nodes_to_reorganize.push(target_node)
               })
               nodes_to_reorganize.forEach(n => {
-                reorganize_inputLinksId(n, true, true, data.nodes, data.links)
+                reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
               })
               set_data({ ...data })
             }}>
