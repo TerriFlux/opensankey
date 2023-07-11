@@ -2,6 +2,7 @@ import React from 'react'
 import { Row, Form, Col, FormLabel, FormCheck, Tab, FormControl, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import { SankeyData, SankeyLink, } from './types'
 import {TFunction} from 'i18next'
+import { return_correct_link_attribute_value,assign_link_value_to_correct_var,is_all_link_attr_same_value,is_link_diplaying_value_local, return_value_link} from './SankeyUtils'
 
 export const SankeyMenuConfigurationLinksLabel = (
   data:SankeyData,
@@ -21,17 +22,17 @@ export const SankeyMenuConfigurationLinksLabel = (
       switch (param) {
       case 'white':
         selected_parameter.map(d => {
-          allChecked = (d.text_color == 'white') ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'text_color',menu_for_style) == 'white') ? allChecked : false
         })
         break
       case 'black':
         selected_parameter.map(d => {
-          allChecked = (d.text_color == 'black') ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'text_color',menu_for_style) == 'black') ? allChecked : false
         })
         break
       case 'color':
         selected_parameter.map(d => {
-          allChecked = (d.text_color == d.color) ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'text_color',menu_for_style) == return_correct_link_attribute_value(data,d,'color',menu_for_style)) ? allChecked : false
         })
         break
       }
@@ -45,10 +46,10 @@ export const SankeyMenuConfigurationLinksLabel = (
     let display_size = true
     let size = 11
     if (selected_parameter.length != 0) {
-      size = selected_parameter[0].label_font_size
+      size = return_correct_link_attribute_value(data,selected_parameter[0],'label_font_size',menu_for_style) as number
     }
     selected_parameter.map((d) => {
-      display_size = (d.label_font_size == size) ? display_size : false
+      display_size = ((return_correct_link_attribute_value(data,d,'label_font_size',menu_for_style) as number) == size) ? display_size : false
     })
     return (display_size) ? size : 11
   }
@@ -59,17 +60,17 @@ export const SankeyMenuConfigurationLinksLabel = (
       switch (param) {
       case 'beginning':
         selected_parameter.map(d => {
-          allChecked = (d.label_position == 'beginning') ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'label_position',menu_for_style)== 'beginning') ? allChecked : false
         })
         break
       case 'middle':
         selected_parameter.map(d => {
-          allChecked = (d.label_position == 'middle') ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'label_position',menu_for_style) == 'middle') ? allChecked : false
         })
         break
       case 'end':
         selected_parameter.map(d => {
-          allChecked = (d.label_position == 'end') ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'label_position',menu_for_style) == 'end') ? allChecked : false
         })
         break
       }
@@ -79,39 +80,41 @@ export const SankeyMenuConfigurationLinksLabel = (
     }
   }
 
-  const labelSticktoLinkDisabled = () => {
-    let labelSticktoLink = false
-    selected_parameter.map(d => {
-      labelSticktoLink = (d.label_on_path) ? true : labelSticktoLink
-    })
-    return labelSticktoLink
-  }
+  // const labelSticktoLinkDisabled = () => {
+  //   let labelSticktoLink = false
+  //   selected_parameter.map(d => {
+  //     labelSticktoLink = (d.label_on_path) ? true : labelSticktoLink
+  //   })
+  //   return labelSticktoLink
+  // }
+  const labelSticktoLinkDisabled= is_all_link_attr_same_value(data,selected_parameter,'label_on_path',menu_for_style) as boolean
+
 
   const labelLinkFree = () => {
     let labelLinkFree = false
     selected_parameter.map(d => {
-      labelLinkFree = (d.label_position === 'frozen'&& d.orthogonal_label_position === 'frozen') ? true : labelLinkFree
+      labelLinkFree = (return_correct_link_attribute_value(data,d,'label_position',menu_for_style) === 'frozen'&& (return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)) === 'frozen') ? true : labelLinkFree
     })
     return labelLinkFree
   }
-
+  // return_correct_link_attribute_value(data,d,'frozen',menu_for_style)
   const labelPositionOrtho = (param: string) => {
     let allChecked = true
     if (selected_parameter.length != 0) {
       switch (param) {
       case 'above':
         selected_parameter.map(d => {
-          allChecked = (d.orthogonal_label_position == 'above') ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style) == 'above') ? allChecked : false
         })
         break
       case 'middle':
         selected_parameter.map(d => {
-          allChecked = (d.orthogonal_label_position == 'middle') ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style) == 'middle') ? allChecked : false
         })
         break
       case 'below':
         selected_parameter.map(d => {
-          allChecked = (d.orthogonal_label_position == 'below') ? allChecked : false
+          allChecked = (return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style) == 'below') ? allChecked : false
         })
         break
       }
@@ -121,13 +124,14 @@ export const SankeyMenuConfigurationLinksLabel = (
     }
   }
 
-  const labelVisibleChecked = () => {
-    let labelVisibleChecked = true
-    selected_parameter.map(d => {
-      labelVisibleChecked = (d.label_visible) ? labelVisibleChecked : false
-    })
-    return labelVisibleChecked
-  }
+  // const labelVisibleChecked = () => {
+  //   let labelVisibleChecked = true
+  //   selected_parameter.map(d => {
+  //     labelVisibleChecked = (d.label_visible) ? labelVisibleChecked : false
+  //   })
+  //   return labelVisibleChecked
+  // }
+  const labelVisibleChecked=is_all_link_attr_same_value(data,selected_parameter,'label_visible',menu_for_style) as boolean
 
 
   return <Tab eventKey="label" title={t('Flux.label.label')}>
@@ -141,11 +145,12 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.1'}>{t('Flux.label.tooltips.label')} </Tooltip>}>
           <FormCheck
             type='switch'
-            checked={labelVisibleChecked()}
+            checked={labelVisibleChecked}
             onChange={
               evt => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.label_visible = evt.target.checked
+                  // d.label_visible = evt.target.checked
+                  assign_link_value_to_correct_var(d,'label_visible',evt.target.checked,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -167,14 +172,15 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.2'}>{t('Flux.label.tooltips.len')} </Tooltip>}>
           <FormCheck
             value='black'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
-            label={t('Flux.label.len')}
+            label={t('Flux.label.len')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}
             checked={linkLabelColor('black')}
             onChange={
               (evt) => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.text_color = evt.target.value
+                  // d.text_color = evt.target.value
+                  assign_link_value_to_correct_var(d,'text_color',evt.target.value,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -190,14 +196,15 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.3'}>{t('Flux.label.tooltips.lb')} </Tooltip>}>
           <FormCheck
             value='white'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
-            label={t('Flux.label.lb')}
+            label={t('Flux.label.lb')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}
             checked={linkLabelColor('white')}
             onChange={
               (evt) => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.text_color = evt.target.value
+                  // d.text_color = evt.target.value
+                  assign_link_value_to_correct_var(d,'text_color',evt.target.value,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -213,14 +220,15 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.4'}>{t('Flux.label.tooltips.lec')} </Tooltip>}>
           <FormCheck
             value='same_color'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
-            label={t('Flux.label.lec')}
+            label={t('Flux.label.lec')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}
             checked={linkLabelColor('color')}
             onChange={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.text_color = d.color
+                  // d.text_color = d.color
+                  assign_link_value_to_correct_var(d,'text_color',return_value_link(data,d,'color'),menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -231,21 +239,24 @@ export const SankeyMenuConfigurationLinksLabel = (
     {/* Taille de la police  */}
     <Form.Group as={Row} >
       <Col xs={4}>
-        <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')}</FormLabel>
+        <FormLabel style={{color:(labelVisibleChecked)?'#555555':'#DADADA'}} >{t('Noeud.labels.tp')+(is_link_diplaying_value_local(multi_selected_links,'label_font_size',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col xs={5}>
         <FormControl
           min={11}
           type={'number'}
-          disabled={!labelVisibleChecked()}
+          disabled={!labelVisibleChecked}
           value={allNodeLabelFontSize()}
           onChange={evt => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => d.label_font_size = +evt.target.value)
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>{
+              //  d.label_font_size = +evt.target.value
+              assign_link_value_to_correct_var(d,'label_font_size',+evt.target.value,menu_for_style)
+            })
             set_data({ ...data })
           }}
         />
       </Col>
-      <Col style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>px</Col>
+      <Col style={{color:(labelVisibleChecked)?'#555555':'#DADADA'}}>px</Col>
     </Form.Group>
 
     {/* Orienter le texte du label le long du flux  */}
@@ -257,18 +268,26 @@ export const SankeyMenuConfigurationLinksLabel = (
           delay={500}
           overlay={<Tooltip id={'flux.label.tooltips.5'}>{t('Flux.label.tooltips.acf')} </Tooltip>}>
           <FormCheck
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
-            label={t('Flux.label.acf')}
+            label={t('Flux.label.acf')+(is_link_diplaying_value_local(multi_selected_links,'label_on_path',menu_for_style)?'*':'')}
             // disabled={selected_link.current.label_position === 'frozen'}
-            checked={labelSticktoLinkDisabled()}
+            checked={labelSticktoLinkDisabled}
             onClick={()=>{
-              const val=labelSticktoLinkDisabled()
+              const val=labelSticktoLinkDisabled
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                d.label_on_path = !val
+                // d.label_on_path = !val
+                assign_link_value_to_correct_var(d,'label_on_path',!val,menu_for_style)
+
                 if(!val){
-                  d.label_position=(d.label_position=='frozen')?'middle':d.label_position
-                  d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+                  // d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                  // d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+
+                  const l_pos=return_value_link(data,d,'label_position')
+                  const l_orth_pos=return_value_link(data,d,'orthogonal_label_position')
+                  assign_link_value_to_correct_var(d,'label_position',(l_pos=='frozen')?'middle':l_pos,menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(l_orth_pos=='frozen')?'middle':l_orth_pos,menu_for_style)
+
                 }
               })
               set_data({ ...data })
@@ -280,7 +299,7 @@ export const SankeyMenuConfigurationLinksLabel = (
     {/* Positionnement lateral des label */}
     <Form.Group as={Row} >
       <Col>
-        <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>{t('Flux.label.pl')}:</FormLabel>
+        <FormLabel style={{color:(labelVisibleChecked)?'#555555':'#DADADA'}}>{t('Flux.label.pl')+(is_link_diplaying_value_local(multi_selected_links,'label_position',menu_for_style)?'*':'')}:</FormLabel>
       </Col>
       {/* Vers le début  */}
       <Col>
@@ -291,15 +310,19 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.6'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
           <Form.Check
             value='beginning'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
             label={t('Flux.label.deb')}
             checked={labelPositionVert('beginning')}
             onChange={
               evt => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.label_position = evt.target.value
-                  d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+                  // d.label_position = evt.target.value
+                  // d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+
+                  const orth_pos=return_value_link(data,d,'orthogonal_label_position')
+                  assign_link_value_to_correct_var(d,'label_position',evt.target.value,menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -315,15 +338,19 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.7'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
           <Form.Check
             value='middle'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
             label={t('Flux.label.milieu')}
             checked={labelPositionVert('middle')}
             onChange={
               evt => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.label_position = evt.target.value
-                  d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+                  // d.label_position = evt.target.value
+                  // d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+
+                  const orth_pos=return_value_link(data,d,'orthogonal_label_position')
+                  assign_link_value_to_correct_var(d,'label_position',evt.target.value,menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -339,15 +366,19 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.8'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
           <Form.Check
             value='end'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
             label={t('Flux.label.fin')}
             checked={labelPositionVert('end')}
             onChange={
               evt => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.label_position = evt.target.value
-                  d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+                  // d.label_position = evt.target.value
+                  // d.orthogonal_label_position=(d.orthogonal_label_position=='frozen')?'middle':d.orthogonal_label_position
+
+                  const orth_pos=return_value_link(data,d,'orthogonal_label_position')
+                  assign_link_value_to_correct_var(d,'label_position',evt.target.value,menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -358,7 +389,7 @@ export const SankeyMenuConfigurationLinksLabel = (
     {/* Positionnement vertical des label  */}
     <Form.Group as={Row} >
       <Col>
-        <FormLabel style={{color:(labelVisibleChecked())?'#555555':'#DADADA'}}>{t('Flux.label.po')}:</FormLabel>
+        <FormLabel style={{color:(labelVisibleChecked)?'#555555':'#DADADA'}}>{t('Flux.label.po')+(is_link_diplaying_value_local(multi_selected_links,'orthogonal_label_position',menu_for_style)?'*':'')}:</FormLabel>
       </Col>
       {/* Positionnement au dessous  */}
       <Col>
@@ -369,15 +400,19 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
           <Form.Check
             value='below'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
             label={t('Flux.label.dessous')}
             checked={labelPositionOrtho('below')}
             onChange={
               evt => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.orthogonal_label_position = evt.target.value
-                  d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                  // d.orthogonal_label_position = evt.target.value
+                  // d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+
+                  const lab_pos=return_value_link(data,d,'label_position')
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',evt.target.value,menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -392,15 +427,19 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
           <Form.Check
             value='middle'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
             label={t('Flux.label.milieu')}
             checked={labelPositionOrtho('middle')}
             onChange={
               evt => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.orthogonal_label_position = evt.target.value
-                  d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                  // d.orthogonal_label_position = evt.target.value
+                  // d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+
+                  const lab_pos=return_value_link(data,d,'label_position')
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',evt.target.value,menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -415,15 +454,19 @@ export const SankeyMenuConfigurationLinksLabel = (
           overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
           <Form.Check
             value='above'
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='radio'
             label={t('Flux.label.dessus')}
             checked={labelPositionOrtho('above')}
             onChange={
               evt => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.orthogonal_label_position = evt.target.value
-                  d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+                  // d.orthogonal_label_position = evt.target.value
+                  // d.label_position=(d.label_position=='frozen')?'middle':d.label_position
+
+                  const lab_pos=return_value_link(data,d,'label_position')
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',evt.target.value,menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}/>
@@ -440,17 +483,23 @@ export const SankeyMenuConfigurationLinksLabel = (
           delay={500}
           overlay={<Tooltip id={'flux.label.tooltips.12'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
           <FormCheck
-            disabled={!labelVisibleChecked()}
+            disabled={!labelVisibleChecked}
             type='checkbox'
-            label={t('Flux.label.pls')}
+            label={t('Flux.label.pls')+(is_link_diplaying_value_local(multi_selected_links,'label_position',menu_for_style)?'*':'')}
             // disabled={selected_link.current.label_position === 'frozen'}
             checked={labelLinkFree()}
             onChange={
               evt => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  d.label_on_path = (evt.target.checked)?false:d.label_on_path
-                  d.label_position=(evt.target.checked)?'frozen':'middle'
-                  d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'
+                  // d.label_on_path = (evt.target.checked)?false:d.label_on_path
+                  // d.label_position=(evt.target.checked)?'frozen':'middle'
+                  // d.orthogonal_label_position=(evt.target.checked)?'frozen':'middle'
+
+
+                  const l_o_p=return_value_link(data,d,'label_on_path')
+                  assign_link_value_to_correct_var(d,'label_on_path',((evt.target.checked)?false:l_o_p),menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
                 })
                 set_data({ ...data })
               }}/>

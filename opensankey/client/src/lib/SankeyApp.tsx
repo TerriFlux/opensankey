@@ -31,6 +31,7 @@ import i18next from './traduction'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faFilter,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { FaAngleDoubleLeft} from 'react-icons/fa'
+import { return_value_link } from './SankeyUtils'
 
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
@@ -352,7 +353,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const select_link=(l: SankeyLink) => {
     selected_link.current = l
   }
-  const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !SankeyUtils.node_displayed(data,n) || (n.inputLinksId.length === 0) || (!data.links[n.inputLinksId[0]].arrow) ? false : true
+  const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !SankeyUtils.node_displayed(data,n) || (n.inputLinksId.length === 0) || (!(return_value_link(data,data.links[n.inputLinksId[0]],'arrow'))) ? false : true
   const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
 
 
