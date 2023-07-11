@@ -137,13 +137,12 @@ export const OpenSankeyConfigurationsMenus = (
                 t={t}
                 data={data}
                 set_data={set_data}
-                style_to_apply={style_to_apply}
+                // style_to_apply={style_to_apply}
                 set_style_to_apply={set_style_to_apply}
                 selected_node={selected_node}
                 multi_selected_nodes={multi_selected_nodes}
                 multi_selected_links={multi_selected_links}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
-                style_editable={style_editable}
                 token={token}
                 set_display_link_opacity={set_display_link_opacity}
               />

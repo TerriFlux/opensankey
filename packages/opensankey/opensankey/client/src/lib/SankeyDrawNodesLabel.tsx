@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 
 import { dragNodeTextEventWidthBoxEvent } from './SankeyDrag'
 import {textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap} from './SankeyDrawFunction'
-import { node_displayed } from './SankeyUtils'
+import { node_displayed,return_value_node } from './SankeyUtils'
 
 
 export const OpenSankeyDrawNodesLabel = (
@@ -24,51 +24,51 @@ export const OpenSankeyDrawNodesLabel = (
     const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
     ggg_nodes
       .append('text')
-      .attr('fill',n=>((n as SankeyNode).display_style.label_color)?'white':'black')
+      .attr('fill',n=>(return_value_node(data,n,'label_color') )?'white':'black')
       .classed('node', true)
       .classed('node_text', true)
       .classed('test_new_file',true)
       .attr('id', n => (n as SankeyNode).idNode + '_text')
-      .attr('x',n => node_label_posX(n as SankeyNode))
+      .attr('x',n => node_label_posX(data,n as SankeyNode))
       .attr('y', n => node_label_posY((n as SankeyNode),data))
       .attr('text-anchor', n => {
-        if ((n as SankeyNode).display_style.label_horiz == 'middle') {
+        if (return_value_node(data,n,'label_horiz') == 'middle') {
           return 'middle'
-        } else if ((n as SankeyNode).display_style.label_horiz == 'left') {
+        } else if (return_value_node(data,n,'label_horiz') == 'left') {
           return 'end'
-        } else if ((n as SankeyNode).display_style.label_horiz == 'right') {
+        } else if (return_value_node(data,n,'label_horiz') == 'right') {
           return 'start'
         } else {
           return 'start'
         }
       })
-      .attr('visibility', n => node_displayed(data,(n as SankeyNode)) && (n as SankeyNode).label_visible ? 'visible' : 'hidden')
+      .attr('visibility', n => node_displayed(data,(n as SankeyNode)) && return_value_node(data,n,'label_visible')? 'visible' : 'hidden')
       .style('text-align', 'center')
-      .style('font-weight', n => ((n as SankeyNode).display_style.bold) ? 'bold' : 'normal')
-      .style('font-style', n => ((n as SankeyNode).display_style.italic) ? 'italic' : 'normal')
-      .style('font-size', n => (n as SankeyNode).display_style.font_size + 'px')
+      .style('font-weight', n => (return_value_node(data,n,'bold')) ? 'bold' : 'normal')
+      .style('font-style', n => (return_value_node(data,n,'italic')) ? 'italic' : 'normal')
+      .style('font-size', n => return_value_node(data,n,'font_size') + 'px')
       .style('font-family', () => data.display_style.node_font_family_selected)
-      .style('text-transform', n => ((n as SankeyNode).display_style.uppercase) ? 'uppercase' : 'none')
+      .style('text-transform', n => (return_value_node(data,n,'uppercase')) ? 'uppercase' : 'none')
       .text(n => node_label_text(data,n as SankeyNode))
       .each(n => textNodeWrap((n as SankeyNode),data))
 
     // Display value of nodes
     // Value of nodes are the maximum between the sum of input links and the sum of output links
     ggg_nodes.append('text')
-      .attr('fill',n=>((n as SankeyNode).display_style.label_color)?'white':'black')
+      .attr('fill',n=>(return_value_node(data,n,'label_color'))?'white':'black')
       .classed('node', true)
       .classed('node_text_value', true)
       .attr('id', n => (n as SankeyNode).idNode + '_text_value')
-      .attr('x', n =>node_value_posX(n as SankeyNode))
-      .attr('y', n => node_value_posY(n as SankeyNode))
-      .attr('text-anchor', (n) => (n as SankeyNode).display_style.label_horiz_valeur.replace('left','end').replace('right','start'))
-      .attr('visibility', n => node_displayed(data,(n as SankeyNode)) && (n as SankeyNode).show_value ? 'visible' : 'hidden')
+      .attr('x', n =>node_value_posX(data,n as SankeyNode))
+      .attr('y', n => node_value_posY(data,n as SankeyNode))
+      .attr('text-anchor', (n) => (return_value_node(data,n,'label_horiz_valeur') as string).replace('left','end').replace('right','start'))
+      .attr('visibility', n => node_displayed(data,(n as SankeyNode)) && return_value_node(data,n,'show_value') ? 'visible' : 'hidden')
     // .style('text-align', 'center')
-    // .style('font-weight', n => ((n as SankeyNode).display_style.bold) ? 'bold' : 'normal')
-    // .style('font-style', n => ((n as SankeyNode).display_style.italic) ? 'italic' : 'normal')
+    // .style('font-weight', n => (return_value_node(data,n,'bold) ? 'bold' : 'normal')
+    // .style('font-style', n => (return_value_node(data,n,'italic) ? 'italic' : 'normal')
       .style('font-family', () => data.display_style.node_font_family_selected)
-      .style('font-size', n => (n as SankeyNode).display_style.value_font_size + 'px')
-    // .style('text-transform', n => ((n as SankeyNode).display_style.uppercase) ? 'uppercase' : 'none')
+      .style('font-size', n => return_value_node(data,n,'value_font_size') + 'px')
+    // .style('text-transform', n => (return_value_node(data,n,'uppercase) ? 'uppercase' : 'none')
       .text(n => textNodeValue((n as SankeyNode),data,display_links,display_nodes,getLinkValue))
 
         
@@ -83,11 +83,11 @@ export const OpenSankeyDrawNodesLabel = (
         const width = +d3.select(' .opensankey #' + nn.idNode).attr('width')
         if (nn.x_label) {
           return nn.x_label
-        } else if (nn.display_style.label_horiz == 'middle') {
-          return width/2-nn.display_style.label_box_width/2
-        } else if (nn.display_style.label_horiz == 'left') {
-          return -nn.display_style.label_box_width
-        } else if (nn.display_style.label_horiz == 'right') {
+        } else if (return_value_node(data,nn,'label_horiz') == 'middle') {
+          return width/2-(return_value_node(data,nn,'label_box_width')as number)/2
+        } else if (return_value_node(data,nn,'label_horiz') == 'left') {
+          return -(return_value_node(data,nn,'label_box_width')as number)
+        } else if (return_value_node(data,nn,'label_horiz') == 'right') {
           return width
         } else {
           return 0
@@ -99,17 +99,17 @@ export const OpenSankeyDrawNodesLabel = (
         const height = +d3.select(' .opensankey #' + nn.idNode).attr('height')
         if (nn.y_label && data.show_structure !== 'structure') {
           return nn.y_label
-        } else if (nn.display_style.label_vert == 'middle') {
+        } else if (return_value_node(data,nn,'label_vert') == 'middle') {
           return 0
-        } else if (nn.display_style.label_vert == 'top') {
+        } else if (return_value_node(data,nn,'label_vert') == 'top') {
           return -4
-        } else if (nn.display_style.label_vert == 'bottom') {
+        } else if (return_value_node(data,nn,'label_vert') == 'bottom') {
           return height
         } else {
           return 0
         }   
       })
-      .attr('width',n=>(n as SankeyNode).display_style.label_box_width)
+      .attr('width',n=>return_value_node(data,n,'label_box_width') as number)
       .attr('height',n=>{
         const h=document.getElementById((n as SankeyNode).idNode+'_text')?.getBoundingClientRect().height
         return (h!=undefined)?h:25

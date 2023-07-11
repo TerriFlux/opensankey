@@ -1,11 +1,12 @@
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes} from './types'
-import { findMaxLinkValue,node_displayed } from './SankeyUtils'
+import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_value_link } from './SankeyUtils'
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 import { SankeyPlusLabel } from 'sankeyanimation/src/types'
 
 export const reorganize_node_inputLinksId = (
+  data:SankeyData,
   node: SankeyNode,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
@@ -16,6 +17,13 @@ export const reorganize_node_inputLinksId = (
   input_links.sort((l1, l2) => {
     const n1Id = l1.idSource
     const n2Id = l2.idSource
+    const l1_recy=return_value_link(data,l1,'recycling')
+    const l2_recy=return_value_link(data,l2,'recycling')
+    const l1_v_s=return_value_link(data,l1,'vert_shift') as number
+    const l2_v_s=return_value_link(data,l2,'vert_shift') as number
+    const l1_ori=return_value_link(data,l1,'orientation')
+    const l2_ori=return_value_link(data,l2,'orientation')
+
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
@@ -25,19 +33,19 @@ export const reorganize_node_inputLinksId = (
       if (n1.position == 'relative') {
         return -1
       }
-      if ( l1.recycling && !l2.recycling) {
-        if (l1.vert_shift && l1.vert_shift < 0) {
+      if ( l1_recy && !l2_recy) {
+        if (l1_v_s && l1_v_s < 0) {
           return -1
         }
         return 1        
       }
-      if ( !l1.recycling && l2.recycling) {
-        if (l2.vert_shift && l2.vert_shift < 0) {
+      if ( !l1_recy && l2_recy) {
+        if (l2_v_s && l2_v_s < 0) {
           return 1
         }
         return -1       
       } 
-      if (l1.orientation === 'vh' && l2.orientation === 'vh' || l1.orientation === 'vv' && l2.orientation === 'vv') {
+      if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
         if (n1 && n2 && n1.x < n2.x) {
           return -1
         }
@@ -68,6 +76,7 @@ export const reorganize_node_inputLinksId = (
 }
 
 export const reorganize_node_outputLinksId = (
+  data:SankeyData,
   node: SankeyNode,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
@@ -78,6 +87,13 @@ export const reorganize_node_outputLinksId = (
   output_links.sort((l1, l2) => {
     const n1Id = l1.idTarget
     const n2Id = l2.idTarget
+    const l1_recy=return_value_link(data,l1,'recycling')
+    const l2_recy=return_value_link(data,l2,'recycling')
+    const l1_v_s=return_value_link(data,l1,'vert_shift') as number
+    const l2_v_s=return_value_link(data,l2,'vert_shift') as number
+    const l1_ori=return_value_link(data,l1,'orientation')
+    const l2_ori=return_value_link(data,l2,'orientation')
+
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
@@ -87,19 +103,19 @@ export const reorganize_node_outputLinksId = (
       if (n1.position == 'relative') {
         return 1
       }
-      if ( l1.recycling && !l2.recycling) {
-        if (l1.vert_shift && l1.vert_shift < 0) {
+      if ( l1_recy && !l2_recy) {
+        if (l1_v_s && l1_v_s < 0) {
           return 1
         }
         return -1        
       }
-      if ( !l1.recycling && l2.recycling) {
-        if (l2.vert_shift && l2.vert_shift < 0) {
+      if ( !l1_recy && l2_recy) {
+        if (l2_v_s && l2_v_s < 0) {
           return 1
         }
         return -1       
       }      
-      if (l1.orientation === 'vh' && l2.orientation === 'vh' || l1.orientation === 'vv' && l2.orientation === 'vv') {
+      if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
         if (n1 && n2 && n1.x < n2.x) {
           return -1
         }
@@ -130,6 +146,7 @@ export const reorganize_node_outputLinksId = (
 }
 
 export const reorganize_inputLinksId = (
+  data:SankeyData,
   node: SankeyNode,
   input: boolean,
   output: boolean,
@@ -138,10 +155,10 @@ export const reorganize_inputLinksId = (
 ) => {
 
   if (input) {
-    reorganize_node_inputLinksId(node, nodes, links)
+    reorganize_node_inputLinksId(data,node, nodes, links)
   }
   if (output) {
-    reorganize_node_outputLinksId(node, nodes, links)
+    reorganize_node_outputLinksId(data,node, nodes, links)
   }
 }
 
@@ -272,7 +289,9 @@ export const compute_auto_sankey = (
   })
   Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).forEach(l => {
     if (horizontal_indices[l.idSource] >= horizontal_indices[l.idTarget]) {
-      l.recycling = true
+      // l.recycling = true
+      assign_link_local_attribute(l,'recycling',true)
+
     }
   })
 
@@ -351,12 +370,16 @@ export const compute_auto_sankey = (
               return
             }
             if ( target_node.y < node.y ) {
-              data.links[idLink].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
-              data.links[idLink].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
+              assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
+              assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
+              // data.links[idLink].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
+              // data.links[idLink].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
               current_output_link_up += 1
             } else {
-              data.links[idLink].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
-              data.links[idLink].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
+              assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
+              assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
+              // data.links[idLink].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
+              // data.links[idLink].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
               current_output_link_down += 1
             }
 
@@ -369,18 +392,19 @@ export const compute_auto_sankey = (
 
   data.width = width + h_space
   
-  reorganize_all_input_outputLinksId(data.nodes, data.links)
+  reorganize_all_input_outputLinksId(data,data.nodes, data.links)
 
   return []
 }
 
 export const reorganize_all_input_outputLinksId = (
+  data:SankeyData,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
 ) => {
   Object.values(nodes).forEach( node => {
-    reorganize_node_inputLinksId(node, nodes, links)
-    reorganize_node_outputLinksId(node, nodes, links)
+    reorganize_node_inputLinksId(data,node, nodes, links)
+    reorganize_node_outputLinksId(data,node, nodes, links)
   })
 }
 
@@ -490,11 +514,14 @@ export const updateLayout = (
     const node_layout = new_layout.nodes[node_layout_key]
     if(mode.includes('posNode')){
       node.name = node_layout.name
+      if(node.local===undefined || node.local===null){
+        node.local={}
+      }
       node.position = node_layout.position
-      node.node_width = node_layout.node_width
-      node.node_height = node_layout.node_height
-      node.show_value = node_layout.show_value
-      node.shape = node_layout.shape
+      node.local.node_width = node_layout.local?.node_width
+      node.local.node_height = node_layout.local?.node_height
+      node.local.show_value = node_layout.local?.show_value
+      node.local.shape = node_layout.local?.shape
       if (node_layout.x !== 0 && node_layout.y != 0) { 
         node.x = node_layout.x
         node.y = node_layout.y
@@ -506,7 +533,7 @@ export const updateLayout = (
       node.y_label = node_layout.y_label
     }
     if(mode.includes('attrNode')){
-      node.display_style = {...node_layout.display_style}
+      node.local=node_layout?.local
 
       // node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
       // node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
@@ -515,11 +542,11 @@ export const updateLayout = (
   
       node.colorTag = node_layout.colorTag
       node.colorParameter = node_layout.colorParameter
-      node.color = node_layout.color
+      // node.color = node_layout.color
 
       
-      node.shape_visible = node_layout.shape_visible
-      node.label_visible = node_layout.label_visible
+      // node.shape_visible = node_layout.shape_visible
+      // node.label_visible = node_layout.label_visible
     }
     // if(mode.includes('tagNode')){
     //   for (const node_tag_key in node_layout.tags) {
@@ -545,31 +572,33 @@ export const updateLayout = (
       if (!link) {
         continue
       }
-  
-      const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,label_font_size } = link_layout
-      link.curvature = curvature
-      link.curved = curved
-      link.arrow = arrow
-      link.text_color = link_layout.text_color
-      link.label_position = label_position
-      link.label_visible = label_visible
-      link.label_font_size = label_font_size
-      link.x_label = x_label
-      link.y_label = y_label
-      link.left_horiz_shift = link_layout.left_horiz_shift
-      link.right_horiz_shift = link_layout.right_horiz_shift
-      link.orientation = link_layout.orientation
-      link.recycling = recycling
-      link.orthogonal_label_position = orthogonal_label_position
+      if(link.local===undefined || link.local===null){
+        link.local={}
+      }
+      // const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,label_font_size } = link_layout
+      link.local.curvature = link_layout.local?.curvature
+      link.local.curved = link_layout.local?.curved
+      link.local.arrow = link_layout.local?.arrow
+      link.local.text_color = link_layout.local?.text_color
+      link.local.label_position = link_layout.local?.label_position
+      link.local.label_visible = link_layout.local?.label_visible
+      link.local.label_font_size = link_layout.local?.label_font_size
+      link.x_label = link_layout.x_label
+      link.y_label = link_layout.y_label
+      link.local.left_horiz_shift = link_layout.local?.left_horiz_shift
+      link.local.right_horiz_shift = link_layout.local?.right_horiz_shift
+      link.local.orientation = link_layout.local?.orientation
+      link.local.recycling = link_layout.local?.recycling
+      link.local.orthogonal_label_position = link_layout.local?.orthogonal_label_position
   
       link.colorTag = link_layout.colorTag
       link.colorParameter = link_layout.colorParameter
-      link.color = link_layout.color
+      link.local.color = link_layout.local?.color
   
-      if (link_layout.vert_shift) {
-        link.left_horiz_shift = link_layout.left_horiz_shift
-        link.right_horiz_shift = link_layout.right_horiz_shift
-        link.vert_shift = link_layout.vert_shift
+      if (link_layout.local?.vert_shift) {
+        link.local.left_horiz_shift = link_layout.local?.left_horiz_shift
+        link.local.right_horiz_shift = link_layout.local?.right_horiz_shift
+        link.local.vert_shift = link_layout.local?.vert_shift
       }
     }
     
