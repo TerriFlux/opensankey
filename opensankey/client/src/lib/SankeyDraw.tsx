@@ -42,6 +42,7 @@ const SankeyDrawPropTypes = {
   links_accordion_ref:PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
   accordion_ref:PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
   button_ref:PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
+  set_displayed_input_link_value:PropTypes.func.isRequired,
 
 }
 
@@ -69,6 +70,7 @@ export const SankeyDrawDefaultProps = {
   links_accordion_ref:{current:null},
   accordion_ref:{current:null},
   button_ref:{current:null},
+  set_displayed_input_link_value:()=>null
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
@@ -86,7 +88,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   set_alt_key_pressed,min_width_and_height,
   token,set_show_toast_limit_node,
   additional_draw_element,links_accordion_ref,accordion_ref,
-  button_ref
+  button_ref,set_displayed_input_link_value
 }) => {
 
   // const [first_selected_node,set_first_selected_node] = useState({})
@@ -329,7 +331,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       )
     //Ajout des events sur les l'ajout des noeuds aux click
-    eventOnSankeyZone(svgSankey,mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,token,set_show_toast_limit_node,accordion_ref,button_ref,links_accordion_ref)
+    eventOnSankeyZone(svgSankey,mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,token,set_show_toast_limit_node,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value)
 
     drawGrid(data)
 

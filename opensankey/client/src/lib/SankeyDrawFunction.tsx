@@ -757,7 +757,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
-
+  set_displayed_input_link_value:(s:string)=>void
 )=>{
   const open_links_menu=()=>{
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
@@ -919,6 +919,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
         data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
         multi_selected_links.current=[new_link]
+        set_displayed_input_link_value('')
         open_links_menu()
         set_first_selected_node({})
         set_data({...data})
@@ -954,6 +955,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         }
         fsn.outputLinksId.push(n_link.idLink)
         n_node.inputLinksId.push(n_link.idLink)
+        set_displayed_input_link_value('')
         multi_selected_links.current=[n_link]
         open_links_menu()
 
@@ -970,7 +972,17 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes,
 // or creating a nodes at first click then linking it to a already existing one or the opposite
-export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:(d:SankeyData)=>void,first_selected_node:object,set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
+export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,
+  d:SankeyNode,data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  first_selected_node:object,
+  set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
+  multi_selected_links:{current:SankeyLink[]},
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  set_displayed_input_link_value:(s:string)=>void,
+)=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
 
     if(d.name.includes('_tmp')){
@@ -999,7 +1011,7 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
       fsn.outputLinksId.push(n_link.idLink)
       d.inputLinksId.push(n_link.idLink)
 
-
+      set_displayed_input_link_value('')
       multi_selected_links.current=[n_link]
 
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {

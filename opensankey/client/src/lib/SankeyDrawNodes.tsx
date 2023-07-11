@@ -39,7 +39,8 @@ export const OpenSankeyDrawNodes = (
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  multi_selected_label:{current:SankeyPlusLabel[]}
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  set_displayed_input_link_value:(s:string)=>void
 
 ) => {
   const display_nodes=data.nodes
@@ -392,7 +393,7 @@ export const OpenSankeyDrawNodes = (
             set_first_selected_node(d)
           }
         })
-          .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref))
+          .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value))
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s'){
