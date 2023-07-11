@@ -3,7 +3,7 @@ import { Row, Form, Col, FormLabel, FormCheck, Tab, OverlayTrigger, Tooltip } fr
 import { SankeyData, SankeyLink } from './types'
 import {value_selected_parameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
-
+import { return_value_link,assign_link_local_attribute } from './SankeyUtils'
 import {TFunction} from 'i18next'
 
 
@@ -103,7 +103,9 @@ export const SankeyMenuConfigurationLinksData = (
                       const was_empty=value_selected_parameter(data,multi_selected_links,tags_selected).value===''
                       let val = Object(selected_link.current.value)
                       multi_selected_links.current.map(d => {
-                        d.dashed=(was_empty)?false:d.dashed
+                        const dashed=return_value_link(data,multi_selected_links.current[0],'dashed') as boolean
+                        assign_link_local_attribute(d,'dashed',(was_empty)?false:dashed)
+                        // d.dashed=(was_empty)?false:d.dashed
                         val = d.value
                         Object.values(tags_selected).forEach(tag => {
                           if (val[tag] === undefined) {
@@ -125,7 +127,8 @@ export const SankeyMenuConfigurationLinksData = (
                       let val = Object(selected_link.current.value)
                       multi_selected_links.current.map(d => {
                         val = d.value
-                        d.dashed=true
+                        // d.dashed=true
+                        assign_link_local_attribute(d,'dashed',true)
                         Object.values(tags_selected).forEach(tag => {
                           if (val[tag] === undefined) {
                             val[tag] = {}
