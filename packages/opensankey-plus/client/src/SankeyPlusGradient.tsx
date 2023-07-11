@@ -11,15 +11,25 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
   multi_selected_links:{current:SankeyPlusLink[]},
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
-  is_activated:boolean
+  is_activated:boolean,
+  menu_for_style:boolean,
+  selected_style_link:string,
 )=>{
-  const gradChecked = () => {
-    let gradChecked = true
-    multi_selected_links.current.map(d => {
-      gradChecked = (d.gradient) ? gradChecked : false
-    })
-    return gradChecked
-  }
+
+  const parameter_to_modify=(menu_for_style)?data.style_link:data.links
+  const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
+
+
+
+  // const gradChecked = () => {
+  //   let gradChecked = true
+  //   multi_selected_links.current.map(d => {
+  //     const l_grad=OpensankeyUtils.return_value_link(data,d,'gradient')
+  //     gradChecked = (l_grad) ? gradChecked : false
+  //   })
+  //   return gradChecked
+  // }
+  const gradChecked=OpensankeyUtils.is_all_link_attr_same_value(data,selected_parameter,'gradient',menu_for_style)
   return <OverlayTrigger
     key={'gradiantDisabled'}
     placement={'top'}
@@ -28,7 +38,7 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
   >
     <Form.Group as={Row} >
       <Col>
-        <FormLabel style={{color:(!is_activated)?'grey':'#555555'}} >{t('Flux.apparence.grad')}:</FormLabel>
+        <FormLabel style={{color:(!is_activated)?'grey':'#555555'}} >{t('Flux.apparence.grad')+(OpensankeyUtils.is_link_diplaying_value_local(multi_selected_links,'gradient',menu_for_style)?'*':'')}:</FormLabel>
       </Col>
       <Col>
         <Form.Check
@@ -36,12 +46,16 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
           disabled={!is_activated}
           type="checkbox"
           checked={
-            gradChecked()
+            gradChecked
           }
           onChange={
             evt => {
               // selected_link.gradient = evt.target.checked
-              Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.gradient = evt.target.checked)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                // d.gradient = evt.target.checked
+                OpensankeyUtils.assign_link_value_to_correct_var(d,'gradient',evt.target.checked,menu_for_style)
+                
+              })
               set_data({ ...data })
             }
           }
@@ -62,6 +76,8 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
   const n_target=nodes[l.idTarget]
   const n_target_color=OpensankeyUtils.return_value_node(data,n_target,'color')
 
+  const l_ori=OpensankeyUtils.return_value_link(data,l,'orientation')
+  const l_grad=OpensankeyUtils.return_value_link(data,l,'gradient')
   const width_src = +d3.select(' .opensankey #' + l.idSource).attr('width')
   const height_src = +d3.select(' .opensankey #' + l.idSource).attr('height')
   const width_trgt = +d3.select(' .opensankey #' + l.idTarget).attr('width')
@@ -124,7 +140,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
       }
     })
     .attr('stop-opacity', 1)
-  if (l.orientation === 'hh' || l.orientation === 'hv') {
+  if (l_ori === 'hh' || l_ori === 'hv') {
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[l.idSource].x < nodes[l.idTarget].x) {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
@@ -183,7 +199,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
       }
     }
     )
-  } else if (l.orientation === 'vv' || l.orientation === 'hv') {
+  } else if (l_ori === 'vv' || l_ori === 'hv') {
     //orientation vert-vert
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[l.idSource].y < nodes[l.idTarget].y) {
@@ -243,7 +259,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
       }
     }
     )
-  } else if (l.orientation === 'vh') {
+  } else if (l_ori === 'vh') {
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[l.idSource].x < nodes[l.idTarget].x) {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
@@ -303,7 +319,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
     }
     )
   }
-  return (l.gradient && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : OpensankeyDrawFunction.linkStroke(l,data,getLinkValue)
+  return (l_grad && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : OpensankeyDrawFunction.linkStroke(l,data,getLinkValue)
 }
 
 // Function used to create gradient for each link, but are used only if the link has the gradient varibale at true
@@ -323,8 +339,10 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
   const n_target=nodes[link.idTarget]
   const n_target_color=OpensankeyUtils.return_value_node(data,n_target,'color')
 
+  const l_ori=OpensankeyUtils.return_value_link(data,link,'orientation')
 
-  if (link.orientation === 'hh' || link.orientation === 'hv') {
+
+  if (l_ori === 'hh' || l_ori === 'hv') {
     d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[link.idSource].x < nodes[link.idTarget].x) {
         d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode)
@@ -384,7 +402,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
       }
     }
     )
-  } else if (link.orientation === 'vv' || link.orientation === 'hv') {
+  } else if (l_ori === 'vv' || l_ori === 'hv') {
     //orientation vert-vert
     d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[link.idSource].y < nodes[link.idTarget].y) {
@@ -415,7 +433,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
       }
     }
     )
-  } else if (link.orientation === 'vh') {
+  } else if (l_ori === 'vh') {
 
     d3.select(' .opensankey #gradient-' + nodes[link.idSource].idNode + '-' + nodes[link.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
       if (nodes[link.idSource].x < nodes[link.idTarget].x) {
@@ -493,7 +511,9 @@ export const SankeyPlusDrawArrows = (
 ) => {
   OpensankeyDrawFunction.drawArrows(n,selected_tags,data,scale,inv_scale,getLinkValue,display_style)
   for (let i = 0; i < n.inputLinksId.length; i++) {
-    if(data.links[n.inputLinksId[i]].arrow && data.links[n.inputLinksId[i]].gradient){
+    const l_arrow=OpensankeyUtils.return_value_link(data,data.links[n.inputLinksId[i]],'arrow')
+    const l_grad=OpensankeyUtils.return_value_link(data,data.links[n.inputLinksId[i]],'gradient')
+    if(l_arrow && l_grad){
       d3.selectAll(' .opensankey #'+n.inputLinksId[i]+'_arrow').attr('fill',OpensankeyUtils.node_color(n,data))
     }
   }

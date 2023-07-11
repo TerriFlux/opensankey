@@ -1,4 +1,4 @@
-import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog,SankeyNodeStyle} from 'open-sankey/src/lib/types'
+import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal} from 'open-sankey/src/lib/types'
 
 export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
 
@@ -9,11 +9,14 @@ export interface SankeyPlusData extends SankeyData {
     view:{id: string, view_data: {diff:{path:string[],kind:string,rhs:string}[]},nom:string,details:string}[],
     labels:{[x: string]:SankeyPlusLabel}
     style_node:{[x: string]:SankeyPlusNodeStyle},
-    style_link:{[x: string]:SankeyPlusLink},
+    style_link:{[x: string]:SankeyPlusLinkStyle},
 
 }
 
 export type SankeyPlusNodeStyle = SankeyNodeStyle
+export interface SankeyPlusLinkStyle extends SankeyLinkStyle{
+  gradient:boolean,
+}
 
 export interface SankeyPlusNode extends SankeyNode{
     iconName: string,
@@ -26,8 +29,12 @@ export interface SankeyPlusNode extends SankeyNode{
     FO_content:string,
 }
 
+export interface SankeyPlusLinkAttrLocal extends SankeyLinkAttrLocal{
+  gradient?:boolean,
+}
+
 export interface SankeyPlusLink extends SankeyLink{
-  gradient:boolean,
+  local?:SankeyPlusLinkAttrLocal
 
 }
 

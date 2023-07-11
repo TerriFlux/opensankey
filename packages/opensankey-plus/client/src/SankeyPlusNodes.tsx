@@ -5,7 +5,7 @@ import { TFunction } from 'i18next'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
-import {  getLinkValue,node_color,link_color,node_displayed,is_all_node_attr_same_value,return_correct_attribute_value,assign_value_to_correct_var,return_value_node,is_diplaying_value_local } from 'open-sankey/dist/SankeyUtils'
+import {  getLinkValue,node_color,link_color,node_displayed,is_all_node_attr_same_value,return_correct_node_attribute_value,assign_node_value_to_correct_var,return_value_node,is_node_diplaying_value_local,return_value_link } from 'open-sankey/dist/SankeyUtils'
 
 
 declare const window: Window &
@@ -27,7 +27,7 @@ export const SankeyPlusNodesAttributes = (
 
   const isAllNodeVisible = () => {
     let visible = false
-    selected_parameter.map(d => visible = (return_correct_attribute_value(data,d,'shape_visible',menu_for_style) || return_correct_attribute_value(data,d,'not_to_scale',menu_for_style)) ? true : visible)
+    selected_parameter.map(d => visible = (return_correct_node_attribute_value(data,d,'shape_visible',menu_for_style) || return_correct_node_attribute_value(data,d,'not_to_scale',menu_for_style)) ? true : visible)
     return visible
   }
   
@@ -42,7 +42,7 @@ export const SankeyPlusNodesAttributes = (
   const isAllNodeNotToScaleOrientation = (orientation:string) => {
     let same_orientation = true
     if (selected_parameter.length > 0) {
-      selected_parameter.map(d => same_orientation = (return_correct_attribute_value(data,d,'not_to_scale_direction',menu_for_style) !== orientation) ? false : same_orientation)
+      selected_parameter.map(d => same_orientation = (return_correct_node_attribute_value(data,d,'not_to_scale_direction',menu_for_style) !== orientation) ? false : same_orientation)
     } else {
       same_orientation = false
     }
@@ -51,7 +51,7 @@ export const SankeyPlusNodesAttributes = (
   const form_elements= [
     <Form.Group as={Row} >
       <Col xs={4}>
-        <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.toScale')+(is_diplaying_value_local(multi_selected_nodes,'not_to_scale',menu_for_style)?'*':'')}</FormLabel>
+        <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.toScale')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale',menu_for_style)?'*':'')}</FormLabel>
       </Col>
       <Col xs={1}>
         <FormCheck inline
@@ -60,7 +60,7 @@ export const SankeyPlusNodesAttributes = (
           disabled={!is_activated}
           onChange={evt => {
             // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale = evt.target.checked)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale',evt.target.checked,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale',evt.target.checked,menu_for_style))
             set_data({ ...data })
           }}
         />
@@ -68,7 +68,7 @@ export const SankeyPlusNodesAttributes = (
 
     </Form.Group>,
     <Col xs={5}>
-      <FormLabel style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')+(is_diplaying_value_local(multi_selected_nodes,'not_to_scale_direction',menu_for_style)?'*':'')}</FormLabel>
+      <FormLabel style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale_direction',menu_for_style)?'*':'')}</FormLabel>
     </Col>,
     <Form.Group as={Row} >
       <Col  xs={3}>
@@ -80,7 +80,7 @@ export const SankeyPlusNodesAttributes = (
           checked={isAllNodeNotToScaleOrientation('left')}
           onChange={evt => {
             // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
 
             set_data({ ...data })
           }}
@@ -95,7 +95,7 @@ export const SankeyPlusNodesAttributes = (
           checked={isAllNodeNotToScaleOrientation('right')}
           onChange={evt => {
             // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
             set_data({ ...data })
           }}
         />
@@ -109,7 +109,7 @@ export const SankeyPlusNodesAttributes = (
           checked={isAllNodeNotToScaleOrientation('top')}
           onChange={evt => {
             // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
 
             set_data({ ...data })
           }}
@@ -124,7 +124,7 @@ export const SankeyPlusNodesAttributes = (
           checked={isAllNodeNotToScaleOrientation('bottom')}
           onChange={evt => {
             // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
             set_data({ ...data })
           }}
         />
@@ -376,7 +376,8 @@ const branchAnimate = (
       if(arrow!==undefined && arrow!= null){
         const colorTarget=(return_value_node(data,data.nodes[idTarget],'shape_visible'))?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
         // const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-        const t=(data.links[idLink].gradient)?colorTarget:link_color(data.links[idLink],data,getLinkValue)
+        const l_grad=return_value_link(data,data.links[idLink],'gradient')
+        const t=(l_grad)?colorTarget:link_color(data.links[idLink],data,getLinkValue)
         if(t){
           arrow.attr('fill',t)
           arrow.attr('opacity',0.85)
@@ -404,7 +405,7 @@ const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target
   //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud
   //exemple : n0 -> n1  et n0 -> n2 -> n1
   //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
-  const next_link = n.outputLinksId.filter(f=>(!data.links[f].recycling && !Object.values(link_to_avoid).includes(f)))
+  const next_link = n.outputLinksId.filter(f=>(!return_value_link(data,data.links[f],'recycling') && !Object.values(link_to_avoid).includes(f)))
   let max=0
 
   if(n.idNode === target.idNode){
