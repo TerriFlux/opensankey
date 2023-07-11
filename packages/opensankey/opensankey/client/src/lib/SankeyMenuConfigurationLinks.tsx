@@ -25,7 +25,7 @@ const SankeyMenuConfigurationLinksPropTypes = {
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   style_editable:PropTypes.bool.isRequired,
-  set_displayed_value:PropTypes.func.isRequired,
+  set_displayed_input_link_value:PropTypes.func.isRequired,
   tags_selected:PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
   set_tags_selected:PropTypes.func.isRequired,
   set_display_link_opacity:PropTypes.func.isRequired,
@@ -43,15 +43,15 @@ export const OpenSankeyMenuConfigurationLinks = (
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
   additional_data_element:JSX.Element[],
-  displayed_value:string,
-  set_displayed_value:(s:string)=>void,
+  displayed_input_link_value:string,
+  set_displayed_input_link_value:(s:string)=>void,
   additional_link_appearence_items:JSX.Element[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
 ) => {
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
-    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,additional_data_element,displayed_value,set_displayed_value),
+    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,additional_data_element,displayed_input_link_value,set_displayed_input_link_value),
     'appearence': SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity),
     'label': SankeyMenuConfigurationLinksLabel(data,multi_selected_links,set_data,t,false,'default'),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,selected_link,t)
@@ -65,7 +65,7 @@ export const OpenSankeyMenuConfigurationLinks = (
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_value,tags_selected,set_tags_selected,set_display_link_opacity}
+  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity}
 ) => {
   const { fluxTags, dataTags } = data
   const [, set_style_to_apply_to_link] = useState('default')
@@ -146,7 +146,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
                 set_tags_selected(new_tags_selected)
-                set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
 
               }else if(Object.values(data.dataTags).length>0){
                 // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -158,9 +158,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 Object.keys(data.dataTags).forEach((dt,i)=>{
                   n_t_s[dt]=tmp[i]
                 })
-                set_displayed_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
+                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
               }else{
-                set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
               }
             }
            

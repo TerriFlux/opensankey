@@ -16,8 +16,8 @@ export const SankeyMenuConfigurationLinksData = (
   set_data:(d:SankeyData)=>void,
   t:TFunction,
   additional_data_element:JSX.Element[],
-  displayed_value:string,
-  set_displayed_value:(s:string)=>void
+  displayed_input_link_value:string,
+  set_displayed_input_link_value:(s:string)=>void
 )=>{
 
   const isAllLinkToPrecision=(multi_selected_links:{current:SankeyLink[]},)=>{
@@ -53,7 +53,7 @@ export const SankeyMenuConfigurationLinksData = (
                         set_tags_selected(prevState => {
                           tmp= ({...prevState,[name]: value})
                           return ({...prevState,[name]: value})})
-                        set_displayed_value(value_selected_parameter(data,multi_selected_links,tmp).value)
+                        set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,tmp).value)
 
                       }}>
                     {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
@@ -85,10 +85,10 @@ export const SankeyMenuConfigurationLinksData = (
                 <Form.Control
                   className='inputValueLink'
                   type='text'
-                  value={displayed_value}
+                  value={displayed_input_link_value}
                   onChange={
                     evt => {
-                      set_displayed_value(evt.target.value)
+                      set_displayed_input_link_value(evt.target.value)
                       const formatedValue=evt.target.value.replace(',','.')
                       if(formatedValue!='' && isNaN(+formatedValue)){
                         d3.select('.inputValueLink').style('border','red 1px solid')

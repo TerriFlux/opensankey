@@ -31,7 +31,7 @@ export const OpenSankeyDrawLinks = (
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   set_data:(d:SankeyData)=>void,
-  set_displayed_value:(s:string)=>void,
+  set_displayed_input_link_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
   linkStroke:(l:SankeyLink,
@@ -113,7 +113,7 @@ export const OpenSankeyDrawLinks = (
             new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
           }
           set_tags_selected(new_tags_selected)
-          set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+          set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
         }else if(Object.values(data.dataTags).length>0){
           // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
           const tmp=[] as string[]
@@ -124,12 +124,12 @@ export const OpenSankeyDrawLinks = (
           Object.keys(data.dataTags).forEach((dt,i)=>{
             n_t_s[dt]=tmp[i]
           })
-          set_displayed_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
+          set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
         }else{
-          set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+          set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
         }
       }else{
-        set_displayed_value('')
+        set_displayed_input_link_value('')
       }
 
       select_link(d)
