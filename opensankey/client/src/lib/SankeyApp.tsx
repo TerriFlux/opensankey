@@ -409,7 +409,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const d= (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <>
-      <div className='div-Menu'>
+        <div className='div-Menu'>
           <Menu
             t={t}
             data={data}

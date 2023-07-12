@@ -341,7 +341,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
-    d3.select('.div-Menu').on('mouseup',e=>{
+    d3.select('.div-Menu').on('mouseup',()=>{
       if(mode_selection.current=='ln'){
         mode_selection.current='s'
         set_data({...data})
