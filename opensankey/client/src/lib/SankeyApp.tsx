@@ -409,65 +409,67 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const d= (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <>
-        <Menu
-          t={t}
-          data={data}
-          set_data={set_data}
-          default_sankey_data={SankeyUtils.default_sankey_data}
-          show_nav={show_nav}
-          set_show_nav={set_show_nav}
-          nav_item_active={nav_item_active}
-          callback={()=>null}
-          path={path}
-          launch={launch}
-          url_prefix={ ''}
-          logo={!window.SankeyToolsStatic ? logo: window.sankey.logo as string}
-          logo_terriflux={!window.SankeyToolsStatic ? logo_terriflux: ''}
-          logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}
-          app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
-          mode_selection={mode_selection}
-          style_to_apply={style_to_apply}
-          set_style_to_apply={set_style_to_apply}
+      <div className='div-Menu'>
+          <Menu
+            t={t}
+            data={data}
+            set_data={set_data}
+            default_sankey_data={SankeyUtils.default_sankey_data}
+            show_nav={show_nav}
+            set_show_nav={set_show_nav}
+            nav_item_active={nav_item_active}
+            callback={()=>null}
+            path={path}
+            launch={launch}
+            url_prefix={ ''}
+            logo={!window.SankeyToolsStatic ? logo: window.sankey.logo as string}
+            logo_terriflux={!window.SankeyToolsStatic ? logo_terriflux: ''}
+            logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}
+            app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
+            mode_selection={mode_selection}
+            style_to_apply={style_to_apply}
+            set_style_to_apply={set_style_to_apply}
 
-          selected_node={selected_node}
-          accordion_ref={accordion_ref as {current : HTMLDivElement}}
-          button_ref={button_ref as {current : HTMLLabelElement}}
-          show_load={show_load}
-          set_show_load={set_show_load}
-          processing={processing}
-          setProcessing={setProcessing}
-          failure={failure}
-          setFailure={setFailure}
-          not_started={not_started}
-          setNotStarted={setNotStarted}
-          result={result}
-          setResult={setResult}
-          configurations_menus={configurations_menus}
-          menus={sankey_menus}
-          show_excel_dialog={show_excel_dialog}
-          show_apply_layout={show_apply_layout}
-          show_save_json={show_save_json}
-          showPreference={showPreference}
-          show_publish_dialog={show_publish_dialog}
+            selected_node={selected_node}
+            accordion_ref={accordion_ref as {current : HTMLDivElement}}
+            button_ref={button_ref as {current : HTMLLabelElement}}
+            show_load={show_load}
+            set_show_load={set_show_load}
+            processing={processing}
+            setProcessing={setProcessing}
+            failure={failure}
+            setFailure={setFailure}
+            not_started={not_started}
+            setNotStarted={setNotStarted}
+            result={result}
+            setResult={setResult}
+            configurations_menus={configurations_menus}
+            menus={sankey_menus}
+            show_excel_dialog={show_excel_dialog}
+            show_apply_layout={show_apply_layout}
+            show_save_json={show_save_json}
+            showPreference={showPreference}
+            show_publish_dialog={show_publish_dialog}
 
-          set_show_excel_dialog={set_show_excel_dialog}
-          set_show_apply_layout={set_show_apply_layout}
-          set_show_save_json={set_show_save_json}
-          setShowPreference={setShowPreference}
-          set_show_publish_dialog={set_show_publish_dialog}
-          cardsTemplate={cardsTemplate}
-          show_modalTemplate={show_modalTemplate}
-          set_show_modalTemplate={set_show_modalTemplate}
-          external_modal={external_menu_modal}
-          min_width_and_height={min_width_and_height}
-          formations_menu={formations_menu}
-          reinitialization={reinitialization}
-          set_show_modale_tuto={set_show_modale_tuto}
-          show_modale_tuto={show_modale_tuto}
-          show_modale_support={show_modale_support}
-          set_show_modale_support={set_show_modale_support}
-          additional_nav_item={[] as JSX.Element[]}
-        />
+            set_show_excel_dialog={set_show_excel_dialog}
+            set_show_apply_layout={set_show_apply_layout}
+            set_show_save_json={set_show_save_json}
+            setShowPreference={setShowPreference}
+            set_show_publish_dialog={set_show_publish_dialog}
+            cardsTemplate={cardsTemplate}
+            show_modalTemplate={show_modalTemplate}
+            set_show_modalTemplate={set_show_modalTemplate}
+            external_modal={external_menu_modal}
+            min_width_and_height={min_width_and_height}
+            formations_menu={formations_menu}
+            reinitialization={reinitialization}
+            set_show_modale_tuto={set_show_modale_tuto}
+            show_modale_tuto={show_modale_tuto}
+            show_modale_support={show_modale_support}
+            set_show_modale_support={set_show_modale_support}
+            additional_nav_item={[] as JSX.Element[]}
+          />
+        </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
         {useEffect(() => {

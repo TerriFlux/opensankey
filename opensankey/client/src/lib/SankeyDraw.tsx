@@ -43,7 +43,6 @@ const SankeyDrawPropTypes = {
   accordion_ref:PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
   button_ref:PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
   set_displayed_input_link_value:PropTypes.func.isRequired,
-
 }
 
 export const SankeyDrawDefaultProps = {
@@ -54,7 +53,6 @@ export const SankeyDrawDefaultProps = {
   multi_selected_links: {current : []},
   multi_selected_label: {current : []},
   mode_selection: {current:'s'},
-
   first_selected_node:{},
   set_first_selected_node:()=>null,
 
@@ -343,6 +341,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
+    d3.select('.div-Menu').on('mouseup',e=>{
+      if(mode_selection.current=='ln'){
+        mode_selection.current='s'
+        set_data({...data})
+      }
+    })
+    d3.select('.sankey-menu').on('click',e=>{
+      if(mode_selection.current=='ln' && d3.select(e.target).attr('class')!=='accordion-item'){
+        mode_selection.current='s'
+        set_data({...data})
+      }
+    })
+    // d3.select('body')
 
 
     // try {
