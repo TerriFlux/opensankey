@@ -969,8 +969,8 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
 // Sort the outputLinksId tab of the node by using position of output node
 export const sort_outputLinksId_by_YPos=(data:SankeyData,n:SankeyNode)=>{
   return n.outputLinksId.filter(idL=>data.nodes[data.links[idL].idTarget].position!=='relative')
-  .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y 
-  )
+    .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y 
+    )
   
 }
 
