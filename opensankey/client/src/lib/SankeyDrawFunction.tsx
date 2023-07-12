@@ -954,6 +954,7 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
 
         }
         fsn.outputLinksId.push(n_link.idLink)
+        fsn.outputLinksId=sort_outputLinksId_by_YPos(data,fsn)
         n_node.inputLinksId.push(n_link.idLink)
         set_displayed_input_link_value('')
         multi_selected_links.current=[n_link]
@@ -963,11 +964,14 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
         set_data({ ...data })
 
       }
-
-
     })
-
-
+}
+// Sort the outputLinksId tab of the node by using position of output node
+export const sort_outputLinksId_by_YPos=(data:SankeyData,n:SankeyNode)=>{
+  return n.outputLinksId.filter(idL=>data.nodes[data.links[idL].idTarget].position!=='relative')
+  .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y 
+  )
+  
 }
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes,
