@@ -121,7 +121,7 @@ export const OpenSankeyDrawNodesLabel = (
     // .attr('stroke-dasharray',('3,2'))
       .attr('stroke-width','2px')
       .attr('cursor','ew-resize')
-      .attr('visibility',n=>(multi_selected_nodes.current.includes(n as SankeyNode)?'visible':'hidden'))
+      .attr('visibility',n=>(multi_selected_nodes.current.length==1 && multi_selected_nodes.current.includes(n as SankeyNode)?'visible':'hidden'))
       .call(dragNodeTextEventWidthBoxEvent(data,set_data))
 
   }
