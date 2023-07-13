@@ -1,11 +1,11 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect,Requireable } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes} from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData} from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import {  delete_link,delete_node,clickSaveDiagram,node_displayed} from './SankeyUtils'
+import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar} from './SankeyDrawFunction'
+import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 
 window.d3 = d3
@@ -19,14 +19,8 @@ const SankeyDrawPropTypes = {
   set_data: PropTypes.func.isRequired,
   animation:PropTypes.bool.isRequired,
 
-  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-
-
   mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
 
-  first_selected_node:PropTypes.object.isRequired,
-  set_first_selected_node:PropTypes.func.isRequired,
 
   show_agregation:PropTypes.bool.isRequired, set_show_agregation:PropTypes.func.isRequired,
   agregation_node:PropTypes.string.isRequired,
@@ -35,26 +29,16 @@ const SankeyDrawPropTypes = {
   set_alt_key_pressed:PropTypes.func.isRequired,
 
   min_width_and_height:PropTypes.func.isRequired,
-  token:PropTypes.bool.isRequired,
-  set_show_toast_limit_node:PropTypes.func.isRequired,
-
   additional_draw_element:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  links_accordion_ref:PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
-  accordion_ref:PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
-  button_ref:PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
-  set_displayed_input_link_value:PropTypes.func.isRequired,
+
 }
 
 export const SankeyDrawDefaultProps = {
   set_data: () => null,
   animation: false,
 
-  multi_selected_nodes: {current : []},
-  multi_selected_links: {current : []},
   multi_selected_label: {current : []},
   mode_selection: {current:'s'},
-  first_selected_node:{},
-  set_first_selected_node:()=>null,
 
   show_agregation:false, set_show_agregation:()=>false,
   agregation_node:'',
@@ -62,13 +46,9 @@ export const SankeyDrawDefaultProps = {
 
   set_alt_key_pressed:()=>false,
   min_width_and_height:()=>[],
-  token:false,
   set_show_toast_limit_node:()=>false,
   additional_draw_element:[],
-  links_accordion_ref:{current:null},
-  accordion_ref:{current:null},
-  button_ref:{current:null},
-  set_displayed_input_link_value:()=>null
+
 }
 
 type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
@@ -77,16 +57,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
   set_data = SankeyDrawDefaultProps.set_data,
   animation,
-  multi_selected_nodes = SankeyDrawDefaultProps.multi_selected_nodes,
-  multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
-  mode_selection,first_selected_node,set_first_selected_node,
+  mode_selection,
   show_agregation, set_show_agregation,
   agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
-  token,set_show_toast_limit_node,
-  additional_draw_element,links_accordion_ref,accordion_ref,
-  button_ref,set_displayed_input_link_value
+  additional_draw_element
 }) => {
 
   // const [first_selected_node,set_first_selected_node] = useState({})
@@ -195,7 +171,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('dblclick.zoom', null)
 
 
-    const svgSankey = d3.select(' .opensankey #svg')
+    const svgSankey = d3.select('.opensankey #svg')
 
     svgSankey.attr('viewBox', null)
     svgSankey.style('width', data.width + 'px')
@@ -328,8 +304,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
 
       )
-    //Ajout des events sur les l'ajout des noeuds aux click
-    eventOnSankeyZone(svgSankey,mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,token,set_show_toast_limit_node,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value)
 
     drawGrid(data)
 
@@ -382,22 +356,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         {additional_draw_element}
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <div className='scroll_zone' >
-            <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
-              if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection.current=='s') {
-                removeAnimate()
-                multi_selected_nodes.current = []
-                multi_selected_links.current = []
-                // multi_selected_label.current = []
-                Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n=>d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0))
-                const visible_links = Object.values(data.links)
-                visible_links.forEach(l=> {
-                  const sel = d3.selectAll(' .opensankey #gg_' + l.idLink+ ' rect')
-                  sel.attr('fill-opacity', '0')
-                })
-                set_data({...data})
-
-              }
-            }}>
+            <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
               <g className='grid' id='grid'></g>
               <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
               <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
