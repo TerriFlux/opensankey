@@ -1,5 +1,5 @@
 import  { InferProps } from 'prop-types'
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode } from './types'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
@@ -20,7 +20,8 @@ export const SankeyPlusDrawLabels = (
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
   alt_key_pressed:boolean,
   min_width_and_height:(data:SankeyPlusData)=>number[],
-  multi_selected_nodes:{current:SankeyPlusNode[]}
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_links:{current:SankeyPlusLink[]},
 ) => {
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
@@ -44,7 +45,7 @@ export const SankeyPlusDrawLabels = (
 
 
 
-      gg_label.on('click', (event) => eventLabelClick(event,d,data,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data))
+      gg_label.on('click', (event) => eventLabelClick(event,d,data,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
 
       // Traite les labels qui sont dans des foreignObject
       gg_label.filter(()=>{
@@ -186,7 +187,14 @@ const pos_zdt_y=(d:SankeyPlusLabel)=>{
 }
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
-export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,multi_selected_label:{current:SankeyPlusLabel[]},set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
+export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_links:{current:SankeyPlusLink[]},
+  )=>{
   if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     sankeyTooltip.style('opacity', 0)
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
@@ -211,6 +219,11 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
       }
     }
 
+  }else{
+    multi_selected_label.current=[]
+    multi_selected_nodes.current=[]
+    multi_selected_links.current=[]
+    set_data({...data})
   }
 }
 
