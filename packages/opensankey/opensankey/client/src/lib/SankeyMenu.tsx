@@ -142,9 +142,9 @@ const pre_process_export_svg=()=>{
   svg.select('#grid').style('opacity','0')
   svg.selectAll('.box_width_threshold').remove()
   d3.selectAll('.gg_nodes rect').attr('stroke-width',0)
-  d3.selectAll(' .opensankey .gg_links rect.handle').attr('fill-opacity', '0').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey .gg_links .drag_zone').attr('cursor', 'pointer').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey .gg_links .center_handle').attr('stroke-opacity', '0').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0').attr('fill-opacity', '0')
   d3.selectAll('.opensankey .gg_label rect').attr('stroke-width','1')
 
   return svg

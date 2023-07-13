@@ -219,12 +219,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         .on('start',()=>{
         // Cache les handles des liens
-          d3.selectAll(' .opensankey .gg_links rect.handle').attr('fill-opacity', '0')
-          d3.selectAll(' .opensankey .gg_links rect.handle').attr('cursor', 'pointer')
-          d3.selectAll(' .opensankey .gg_links .drag_zone').attr('cursor', 'pointer')
-          d3.selectAll(' .opensankey .gg_links .drag_zone').attr('stroke-opacity', '0')
-          d3.selectAll(' .opensankey .gg_links .center_handle').attr('stroke-opacity', '0')
-          d3.selectAll(' .opensankey .gg_links .center_handle').attr('fill-opacity', '0')
+          d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0')
+          d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('cursor', 'pointer')
+          d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer')
+          d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('stroke-opacity', '0')
+          d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0')
+          d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('fill-opacity', '0')
         })
         .on('drag', function (event) {
           d3.selectAll('.ggg_nodes').filter(n=>(n as SankeyNode).position!=='relative').attr('transform',(d)=>{
@@ -360,6 +360,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
               <g className='grid' id='grid'></g>
               <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
               <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
+              <g className='g_link_handles' id='g_link_handles'></g>
               <g className='g_legend' id='g_legend'></g>
             </svg>
           </div>

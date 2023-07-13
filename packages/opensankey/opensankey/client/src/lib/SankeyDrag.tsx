@@ -112,7 +112,7 @@ export const dragLinkTextEvent=(alt_key_pressed:boolean,
  * @param {number} min_thickness
  * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => string}
  */
-export const dragLinkEvent2=(multi_selected_links:{current: SankeyLink[]},
+export const dragLinkIOPosition=(multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -184,7 +184,7 @@ export const dragLinkCenterHandleEvent=(
     .subject(Object)
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && (l_ori=='hh' || l_ori=='vv')){
-        const shift_handle=d3.selectAll(' .opensankey #gg_'+link.idLink+' .handle').nodes()
+        const shift_handle=d3.selectAll(' .opensankey #gg_link_handle_'+link.idLink+' .handle').nodes()
         drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
         drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
       }            
@@ -763,7 +763,8 @@ export const drag_handle = (
   const old_y = +old_y_str.substring(0, old_y_str.length - 1)
   const new_x = old_x + the_event.dx
   const new_y = old_y + the_event.dy
-  const d: SankeyLink = d3.select(dragged).data()[0] as SankeyLink
+  // const d: SankeyLink = d3.select(dragged).data()[0] as SankeyLink
+  const d: SankeyLink = data.links[d3.select(dragged).attr('id').replace('right_horiz_shift','').replace('left_horiz_shift','')]
   let u_center_new = -1
   const source_node = nodes[d.idSource]
   const target_node = nodes[d.idTarget]  
@@ -1034,7 +1035,7 @@ export const add_drag_link_zone=(
     }
     const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
     const pos_d=drag_zone_position(link,xs,ys,xt,yt,data,display_nodes,default_handle_size,default_horiz_shift,scale,getLinkValue)
-    d3.select(' .opensankey #gg_' + link.idLink)
+    d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
       .attr('id', 'drag_zone_s_' + link.idLink)
       .attr('class','drag_zone')
@@ -1047,9 +1048,9 @@ export const add_drag_link_zone=(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link))?'ns-resize':'pointer')
-      .call(dragLinkEvent2(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows)
+      .call(dragLinkIOPosition(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows)
       )  
-    d3.select(' .opensankey #gg_' + link.idLink)
+    d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
       .attr('id', 'drag_zone_t_' + link.idLink)
       .attr('class','drag_zone')
@@ -1062,7 +1063,7 @@ export const add_drag_link_zone=(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[1])
       .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-      .call(dragLinkEvent2(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows))  
+      .call(dragLinkIOPosition(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,link_text,min_width_and_height,getLinkValue,drawArrows))  
   }
 }
 /**

@@ -4,7 +4,6 @@ import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import { cut_name, default_link, delete_link,node_displayed,return_value_link,assign_link_value_to_correct_var,return_correct_link_attribute_value } from './SankeyUtils'
-import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH, FaMinus, FaPlus } from 'react-icons/fa'
@@ -121,16 +120,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
             multi_selected_links.current = m_s
-            set_display_link_opacity(return_value_link(data,m_s[0],'opacity'))
-            Object.values(data.links).forEach( l => {
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-            })
-            multi_selected_links.current.forEach( l => {
-              const sel = d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect')
-              sel.attr('fill-opacity', '1')
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-            })
+            if(m_s.length>0){
+              set_display_link_opacity(return_value_link(data,m_s[0],'opacity'))
+            }           
 
             if(multi_selected_links.current.length>0){
               let new_tags_selected=tags_selected
