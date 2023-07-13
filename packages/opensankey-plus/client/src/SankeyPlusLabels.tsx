@@ -347,3 +347,21 @@ export const sankey_plus_min_width_and_height = (data:SankeyPlusData) => {
 
   return [width,height]
 }
+
+export const zone_selection_label=(data:SankeyPlusData,
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  evt:MouseEvent,
+)=>{
+  
+  if( d3.selectAll('.selection_zone').nodes().length>0){
+    const z_x=Number(d3.select('.selection_zone rect').attr('x'))
+    const z_y=Number(d3.select('.selection_zone rect').attr('y'))
+    const z_w=Number(d3.select('.selection_zone rect').attr('width'))
+    const z_h=Number(d3.select('.selection_zone rect').attr('height'))
+    if(evt.shiftKey){
+      Object.values(data.labels).filter(n=>!multi_selected_label.current.includes(n) &&  n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h)).forEach(n=>multi_selected_label.current.push(n))
+    }else{
+      multi_selected_label.current=Object.values(data.labels).filter(n=>n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
+    }
+  }
+}
