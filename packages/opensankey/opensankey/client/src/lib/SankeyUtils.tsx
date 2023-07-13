@@ -1337,7 +1337,7 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   const scale=vertical?(vertical_visible_size/data.height):(visible_size/data.width)
   const zoomed=()=> {
     d3.select(' .opensankey #svg').attr('transform', 'scale('+scale+')')
-    d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(1/((scale<1)?scale:1))+')')
+    d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(1/((scale<1)?scale:1))+')')
     d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)/((scale<1)?scale:1))))
     d3.select(' .opensankey #svg')
       .style('border', Math.round(2 ) + 'px solid #d3d3d3')

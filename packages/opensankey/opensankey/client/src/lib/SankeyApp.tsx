@@ -395,7 +395,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     )
 
 
-    OpenSankeyDrawLegend(data,SankeyUtils.getLinkValue,t)
+    OpenSankeyDrawLegend(data,set_data,SankeyUtils.getLinkValue,t)
   })
  
   //Event listener sur les touche du clavier
