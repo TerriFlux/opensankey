@@ -1469,34 +1469,36 @@ export const convert_data = (
   convert_links(data)
 
   // Convert Data labes
-  Object.values(data_to_convert.labels).forEach(l=>{
-    if(l.is_edit_raw===undefined){
-      l.is_edit_raw=true
-    }
-    if(l.isTextHTML===undefined){
-      l.isTextHTML=false
-      l.is_edit_raw=true
-    }
-    if(['haut','bas'].includes(l.position_vert)){
-      if(l.position_vert=='haut'){
-        l.position_vert='top'
-      }else if(l.position_vert=='bas'){
-        l.position_vert='bottom'
+  if(data_to_convert.labels){
+    Object.values(data_to_convert.labels).forEach(l=>{
+      if(l.is_edit_raw===undefined){
+        l.is_edit_raw=true
       }
-    }
-    if(['gauche','droite'].includes(l.position_horiz)){
-      if(l.position_horiz=='gauche'){
-        l.position_horiz='left'
-      }else if(l.position_horiz=='droite'){
-        l.position_horiz='right'
+      if(l.isTextHTML===undefined){
+        l.isTextHTML=false
+        l.is_edit_raw=true
       }
-    }
-    // CONVERT TEXT ZONE TRANSPARENT -> OPACITY (0-100)
-    if(l.transparent!==undefined){
-      l.opacity=l.transparent?0:100
-      delete ((l as unknown) as SankeyPlusLabelToConvcert).transparent
-    }
-  })
+      if(['haut','bas'].includes(l.position_vert)){
+        if(l.position_vert=='haut'){
+          l.position_vert='top'
+        }else if(l.position_vert=='bas'){
+          l.position_vert='bottom'
+        }
+      }
+      if(['gauche','droite'].includes(l.position_horiz)){
+        if(l.position_horiz=='gauche'){
+          l.position_horiz='left'
+        }else if(l.position_horiz=='droite'){
+          l.position_horiz='right'
+        }
+      }
+      // CONVERT TEXT ZONE TRANSPARENT -> OPACITY (0-100)
+      if(l.transparent!==undefined){
+        l.opacity=l.transparent?0:100
+        delete ((l as unknown) as SankeyPlusLabelToConvcert).transparent
+      }
+    })
+  }
 
 
   if (!data_to_convert.view) {
@@ -1536,7 +1538,6 @@ export const convert_data = (
   //   convert_links(v.view_data as unknown as SankeyData)
   // })
 
-  console.log(typeof(Object.values(data_to_convert.style_node)[0]))
   // Convert style of node and link
   // Previously tehy were object identical to SankeyNode or SankeyLink, now they are like local attribute  
   if(Object.keys(data_to_convert.style_link['default'])!== Object.keys(SankeyLinkStyleTypes) ){

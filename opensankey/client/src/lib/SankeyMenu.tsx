@@ -835,6 +835,8 @@ export const OpenSankeyMenus = (
                   convert_data(new_data)
                   complete_sankey_data(new_data,default_sankey_data,SankeyUtils.default_node,SankeyUtils.default_link)
                   // SankeyUtils.set_nodes_level(data)
+                  console.log('open json')
+
                   set_data(new_data)
                   const test = document.getElementsByClassName('navbar')
                   let margin_top = 0

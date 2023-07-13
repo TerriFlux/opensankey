@@ -3,6 +3,7 @@ import { Popover, Form,Pagination,Button,ButtonGroup,Carousel} from 'react-boots
 
 import { useBeforeunload } from 'react-beforeunload'
 import LZString from 'lz-string'
+import * as d3 from 'd3'
 
 import SankeyDraw from './SankeyDraw'
 import Menu, { OpenSankeyMenus,OpenSankeyModalWelcome} from './SankeyMenu'
@@ -25,7 +26,7 @@ import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 //import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
-import {linkStroke, min_width_and_height,drawArrows} from './SankeyDrawFunction'
+import {linkStroke, min_width_and_height,drawArrows,eventOnSankeyZoneMouseDown,eventOnSankeyZoneMouseMove,eventOnSankeyZoneMouseUp} from './SankeyDrawFunction'
 import i18next from './traduction'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -84,6 +85,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_modale_tuto,set_show_modale_tuto]=useState(false)
   const [show_modale_support,set_show_modale_support]=useState(false)
   const set_data=(ndata:SankeyData)=>{
+    console.log('set_data')
     set_user_scale(ndata.user_scale)
     if(ndata.legend_position!==legend_position){
       set_legend_position(ndata.legend_position)
@@ -93,6 +95,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   // For SankeyDraw
   const [alt_key_pressed,set_alt_key_pressed] = useState(false)
+  const start_point=useRef([0,0])
 
   const [first_selected_node,set_first_selected_node] = useState({})
   const [show_agregation, set_show_agregation] = useState(false)
@@ -473,6 +476,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
         {useEffect(() => {
+          
           const timer = setTimeout(() => {
             // set_show_draw(true)
             SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
@@ -484,30 +488,34 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           data={data}
           set_data={set_data}
           animation={false}
-          multi_selected_nodes={multi_selected_nodes}
-          multi_selected_links={multi_selected_links}
           mode_selection={mode_selection}
-          first_selected_node={first_selected_node}
-          set_first_selected_node={set_first_selected_node}
           show_agregation={show_agregation}
           set_show_agregation={set_show_agregation}
           agregation_node={agregation_node}
           is_agregation={is_agregation}
           set_alt_key_pressed={set_alt_key_pressed}
           min_width_and_height={min_width_and_height}
-          token={true}
-          set_show_toast_limit_node={()=>false}
           additional_draw_element={[]}
-          accordion_ref={accordion_ref}
-          button_ref={button_ref}
-          links_accordion_ref={links_accordion_ref}
-          set_displayed_input_link_value={set_displayed_input_link_value}
         />
       </>
     </div>
   )
 
-
+  // Wait a delay before adding the event for the element to be created, because otherwise the d3 selection return nothing
+  setTimeout(() => {
+    //Ajout des events sur les l'ajout des noeuds aux click
+    const svgSankey=d3.select('.opensankey #svg')
+    svgSankey.on('mousedown',evt=>{
+      eventOnSankeyZoneMouseDown(mode_selection,data,set_data,set_first_selected_node,true,()=>false,evt,start_point)
+    })
+    svgSankey.on('mousemove',evt=>{
+      eventOnSankeyZoneMouseMove(mode_selection,data,first_selected_node,set_first_selected_node,evt,start_point)
+    })
+    svgSankey.on('mouseup',evt=>{
+      eventOnSankeyZoneMouseUp(mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,true,()=>false,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value,evt,start_point)
+    })
+  }, 100)
+  
   return (
     d
 
