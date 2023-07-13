@@ -75,12 +75,12 @@ export const OpenSankeyDrawLinks = (
       } else {
         multi_selected_links.current.push(d)
         set_display_link_opacity(return_value_link(data,multi_selected_links.current[0],'opacity') as string)
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '1')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'ns-resize')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
-        d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
+        // d3.selectAll(' .opensankey #gg_link_handle_'+ d.idLink + ' rect.handle').attr('fill-opacity', '1')
+        // d3.selectAll(' .opensankey #gg_link_handle_'+ d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
+        // d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'ns-resize')
+        // d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
+        // d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
+        // d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
       }
       if((event.ctrlKey || event.metaKey)){
         if ( accordion_ref && accordion_ref.current) {
@@ -274,6 +274,7 @@ export const OpenSankeyDrawLinks = (
 
     d3.select(' .opensankey #svg').selectAll('.link_value').remove()
 
+    d3.selectAll('.opensankey .gg_link_handles').remove()
     if (display_links === undefined) {
       return
     }

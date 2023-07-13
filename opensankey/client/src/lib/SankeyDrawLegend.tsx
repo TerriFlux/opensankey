@@ -1,5 +1,5 @@
 import { SankeyData,SankeyLinkValue } from './types'
-import React, { useEffect } from 'react'
+import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
@@ -264,37 +264,37 @@ export const OpenSankeyDrawLegend = (
 
     
     const drag_legend=()=>d3.drag<SVGRectElement, unknown>()
-    .subject(Object).on('drag', function (event) {
-      const old_pos=data.legend_position
-      let new_pos=[0,0]
-      if(d3.select('.opensankey #svg').nodes().length>0){
-        const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-        const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-        scale_for_legend=(scale_svg<1?(1/scale_svg):1)
-      }
+      .subject(Object).on('drag', function (event) {
+        const old_pos=data.legend_position
+        const new_pos=[0,0]
+        if(d3.select('.opensankey #svg').nodes().length>0){
+          const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+          const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+          scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+        }
 
-      new_pos[0]=Math.round(old_pos[0]+(event.dx*scale_for_legend))
-      new_pos[1]=Math.round(old_pos[1]+(event.dy*scale_for_legend))
-      d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (new_pos[0]) + ',' + new_pos[1] + ') scale('+scale_for_legend+')')
+        new_pos[0]=Math.round(old_pos[0]+(event.dx*scale_for_legend))
+        new_pos[1]=Math.round(old_pos[1]+(event.dy*scale_for_legend))
+        d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (new_pos[0]) + ',' + new_pos[1] + ') scale('+scale_for_legend+')')
 
-      data.legend_position=new_pos
-    }).on('end',()=>set_data({...data}))
+        data.legend_position=new_pos
+      }).on('end',()=>set_data({...data}))
     const g_legend_drag_zone=d3.select('.opensankey #g_legend').append('rect')
-    .attr('class','drag_zone_leg')
-    .attr('width',data.legend_width)
-    .attr('height','5px')
-    .attr('stroke','none')
-    .attr('stroke-dasharray','6,6')
-    .attr('fill','grey')
-    .attr('fill-opacity','0')
-    .on('mouseover',()=>{
-      d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke','grey')
-      d3.select('.opensankey #g_legend .drag_zone_leg').attr('fill-opacity','0.05')
-    })
-    .on('mouseleave',()=>{
-      d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke','none')
-      d3.select('.opensankey #g_legend .drag_zone_leg').attr('fill-opacity','0')
-    })
+      .attr('class','drag_zone_leg')
+      .attr('width',data.legend_width)
+      .attr('height','5px')
+      .attr('stroke','none')
+      .attr('stroke-dasharray','6,6')
+      .attr('fill','grey')
+      .attr('fill-opacity','0')
+      .on('mouseover',()=>{
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke','grey')
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('fill-opacity','0.05')
+      })
+      .on('mouseleave',()=>{
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke','none')
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('fill-opacity','0')
+      })
 
     let h=document.getElementById('g_legend')?.getBoundingClientRect().height
     h=h?h:50

@@ -1899,7 +1899,7 @@ const add_center_handle=(
       [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
     }
     const pos_d=center_handle_position(data,link,xs,ys,xt,yt,getLinkValue)
-    d3.select(' .opensankey #gg_' + link.idLink)
+    d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('circle')
       .attr('id', 'center_handle_' + link.idLink)
       .attr('class','center_handle')
@@ -1979,7 +1979,7 @@ const add_shift_handle = (
 
 ) => {
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)) {
-    d3.select(' .opensankey #gg_' + link.idLink)
+    d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
       .attr('id', shift_name + link.idLink)
       .attr('class','handle')
@@ -2020,7 +2020,7 @@ const add_shift_handles = (
 
 ) => {
   const recy=return_value_link(data,link,'recycling') as boolean
-
+  d3.select('.opensankey #g_link_handles').append('g').attr('class','gg_link_handles').attr('id','gg_link_handle_'+link.idLink)
   let shift_handles
   if (recy) {
     shift_handles = [
@@ -2116,8 +2116,8 @@ const drawCurve = (
   if(ori=='vv' ||ori=='hh'){
     add_shift_handles(data,set_data,link,multi_selected_links, nodes, links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height,getLinkValue)
     add_drag_link_zone(link,nodes,data,set_data,multi_selected_links,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
+    add_center_handle(data,set_data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
   }
-  add_center_handle(data,set_data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
 
 
   if (link_value > display_style.filter_label || val.extension?.free_visible) {
@@ -2575,12 +2575,12 @@ export const value_selected_parameter = (data:SankeyData,
 }
 
 export const deselect_visualy_links=(d:SankeyLink)=>{
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '0')
   
 }
 
