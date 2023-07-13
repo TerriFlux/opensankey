@@ -373,9 +373,11 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
       deselect_visualy_nodes(d)
     } else {
-      multi_selected_nodes.current.push(d)
       d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
-      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      multi_selected_nodes.current.push(d)
+      if(multi_selected_nodes.current.length==1){
+        d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      }
     }
     select_node(d)
     if ( accordion_ref && accordion_ref.current) {
@@ -398,7 +400,9 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
     } else {
       multi_selected_nodes.current.push(d)
       d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
-      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      if(multi_selected_nodes.current.length==1){
+        d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      } 
     }
     set_data({...data})
   }
