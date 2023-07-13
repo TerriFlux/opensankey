@@ -367,11 +367,39 @@ export  const drag_nodes = (
 ) => {
   removeAnimate()
   let error_msg: { text: string | undefined } | undefined
+  const idNode = dragged.id.substring(4)
+  const node=nodes[idNode]
+
+  // Cherche si des noeuds seront hors zone si on les drag 
+  // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
+  const out_of_zone_item=Object.values(data.nodes).filter(d=>{
+    const n=d as SankeyNode
+    if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
+      return multi_selected_nodes.current.filter(n=>n.position!=='relative').includes(n) && (n.x-event.dx<0 || n.y-event.dy<0)
+    }else if(node.position!=='relative'){
+      return node==n && (n.x-event.dx<0 || n.y-event.dy<0)
+    }else{
+      return false
+    }
+  })
+  // Pousse les element non sélectionnés dans la direction opposé
+  if(out_of_zone_item.length>0){
+    if(out_of_zone_item[0].x<0){
+      Object.values(data.nodes).filter(nf=>(multi_selected_nodes.current.length>0?!multi_selected_nodes.current.includes(nf):nf!==node) && nf.position!=='relative').forEach(n_shift=>{
+        n_shift.x+=(Math.abs(out_of_zone_item[0].x))
+        d3.selectAll('#ggg_'+n_shift.idNode).attr('transform','translate('+n_shift.x+','+n_shift.y+')')
+      })
+    }
+    if(out_of_zone_item[0].y<0){
+      Object.values(data.nodes).filter(nf=>(multi_selected_nodes.current.length>0?!multi_selected_nodes.current.includes(nf):nf!==node) && nf.position!=='relative').forEach(n_shift=>{
+        n_shift.y+=(Math.abs(out_of_zone_item[0].y))
+        d3.selectAll('#ggg_'+n_shift.idNode).attr('transform','translate('+n_shift.x+','+n_shift.y+')')
+      })
+    }
+  }
 
   d3.selectAll('.ggg_nodes').filter((d)=>{
     const n=d as SankeyNode
-    const idNode = dragged.id.substring(4)
-    const node=nodes[idNode]
     // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
     // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changemetn au noeud draggé
     if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
@@ -385,6 +413,12 @@ export  const drag_nodes = (
     const n=d as SankeyNode
     n.x+=event.dx
     n.y+=event.dy
+    if(n.x<0){
+      n.x=0
+    }
+    if(n.y<0){
+      n.y=0
+    }
     return 'translate('+n.x+','+n.y+')'
   })
   if(multi_selected_nodes.current.length>0){
