@@ -194,7 +194,7 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
   set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
-  )=>{
+)=>{
   if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     sankeyTooltip.style('opacity', 0)
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
