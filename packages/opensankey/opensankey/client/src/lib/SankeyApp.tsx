@@ -101,6 +101,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_agregation, set_show_agregation] = useState(false)
   const [agregation_node, set_agregation_node] = useState('')
   const [is_agregation, set_is_agregation] = useState(true)
+  const accept_simple_click=useRef(true)
 
   // For OpenSankeyConfigurationsMenus
   const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
@@ -376,9 +377,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       set_agregation_node,set_is_agregation,set_show_agregation,
       select_node,
       alt_key_pressed,
-      position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,multi_selected_label,set_displayed_input_link_value)
+      position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,multi_selected_label,set_displayed_input_link_value,accept_simple_click)
 
-    OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue)
+    OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue,accept_simple_click)
 
     // Call the function that add links to the sankey
     OpenSankeyDrawLinks(
