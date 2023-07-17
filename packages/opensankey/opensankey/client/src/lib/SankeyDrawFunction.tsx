@@ -2598,3 +2598,85 @@ export const repositionne_sidebar=()=>{
   const menu_open=d3.select('.offcanvas-body').node()
   d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?540:0))+'px')  
 }
+
+// Function that compute the link width
+export const linkStrokeWidth=(l:SankeyLink,
+  data:SankeyData,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  min_thickness:number,
+  display_nodes:{ [node_id: string]: SankeyNode},
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+)=>{
+  const node = data.nodes[l.idSource]
+  // const links = data.links
+  const nodes = data.nodes
+  // const stream_io = node.inputLinksId.concat(node.outputLinksId)
+  //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
+  //position noeud source ou target
+  let pos_x_src, pos_y_src
+  if (node.idNode == nodes[l.idSource].idNode) {
+    pos_x_src = nodes[l.idTarget].x
+    pos_y_src = nodes[l.idTarget].y
+  } else {
+    pos_x_src = nodes[l.idSource].x
+    pos_y_src = nodes[l.idSource].y
+  }
+  const link_values = getLinkValue(data, l.idLink)
+  const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
+  if (display_free_as_dashed) {
+    // Generale settings: free link value are displayed dashed without text without witdh
+    const link_value_is_free = link_values.extension && link_values.extension?.free_mini !== undefined
+    if (link_value_is_free) {
+      if (link_values.extension?.free_visible && link_values.value === 0 ) {
+        // zero value of free variables are displayed when free_visible is set to true
+        return 5
+      } else if (link_values.extension?.free_visible && link_values.value !== 0 ) {
+        // Not treated as free
+      } else if (!link_values.extension?.free_visible) {
+        // Link value is free should be displayed dashed without text without witdh
+        return 5
+      }
+    }
+  }
+  if (link_values.extension && link_values.extension?.display_thin) {
+    // if flux is displayed thin
+    return 5
+  }
+  let link_value = test_link_value(data, nodes, l,getLinkValue)
+  link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
+  //Zones limite à ne pas êtres
+  // const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
+  const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + (return_value_node(data,node,'node_width') as number) + scale(link_value / 2)]
+  const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]
+  let draw_warning = false
+  //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
+  //si partie gauche du noeud ne se situe pas dans les coord du noeud source
+  const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
+  //si partie droite du noeud ne se situe pas dans le noeud source
+  // const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
+  const right_in_src = node.x + (return_value_node(data,node,'node_width') as number) > limit_x[0] && node.x + (return_value_node(data,node,'node_width') as number) < limit_x[1]
+  //si partie haute du noeud ne se situe pas dans le noeud source
+  const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
+  // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
+  if (return_value_link(data,l,'orientation') == 'hh') {
+    //orientation hh
+    draw_warning = left_in_src || right_in_src
+  } else if (return_value_link(data,l,'orientation') == 'vv') {
+    //orientation vv
+    draw_warning = top_in_src
+  } else if (return_value_link(data,l,'orientation') == 'vh') {
+    draw_warning = left_in_src || right_in_src || top_in_src
+  } else {
+    //orientation hv
+    //draw_warning = node_in_src_hh || node_in_src_vv
+    draw_warning = left_in_src || right_in_src || top_in_src
+  }
+  if (draw_warning && !return_value_link(data,l,'recycling')) {
+    return '1px'
+  } else {
+    const link_value = test_link_value(data, display_nodes, l,getLinkValue)
+    const tmp =(link_value=='')?1:link_value
+    return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
+  }
+}
