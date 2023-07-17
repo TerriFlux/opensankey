@@ -351,7 +351,7 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:(d:Sanke
 export  const drag_nodes = (
   nodes: { [node_id: string]: SankeyNode },
   dragged:Element,
-  event: { dx: number; dy: number },
+  event: { dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current: SankeyNode[] },
   data:SankeyData,
   multi_selected_label:{current:SankeyPlusLabel[]},
@@ -375,24 +375,24 @@ export  const drag_nodes = (
   const out_of_zone_item=Object.values(data.nodes).filter(d=>{
     const n=d as SankeyNode
     if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
-      return multi_selected_nodes.current.filter(n=>n.position!=='relative').includes(n) && (n.x-event.dx<0 || n.y-event.dy<0)
+      return multi_selected_nodes.current.filter(n=>n.position!=='relative').includes(n) && (n.x<=0 || n.y<=0)  && (event.x<0 || event.y<0)
     }else if(node.position!=='relative'){
-      return node==n && (n.x-event.dx<0 || n.y-event.dy<0)
+      return node==n && (n.x<=0 || n.y<=0)  && (event.x<0 || event.y<0)
     }else{
       return false
     }
   })
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
-    if(out_of_zone_item[0].x<0){
+    if(out_of_zone_item[0].x<=0 && event.x<0){
       Object.values(data.nodes).filter(nf=>(multi_selected_nodes.current.length>0?!multi_selected_nodes.current.includes(nf):nf!==node) && nf.position!=='relative').forEach(n_shift=>{
-        n_shift.x+=(Math.abs(out_of_zone_item[0].x))
+        n_shift.x+=5
         d3.selectAll('#ggg_'+n_shift.idNode).attr('transform','translate('+n_shift.x+','+n_shift.y+')')
       })
     }
-    if(out_of_zone_item[0].y<0){
+    if(out_of_zone_item[0].y<=0 && event.y<0){
       Object.values(data.nodes).filter(nf=>(multi_selected_nodes.current.length>0?!multi_selected_nodes.current.includes(nf):nf!==node) && nf.position!=='relative').forEach(n_shift=>{
-        n_shift.y+=(Math.abs(out_of_zone_item[0].y))
+        n_shift.y+=5
         d3.selectAll('#ggg_'+n_shift.idNode).attr('transform','translate('+n_shift.x+','+n_shift.y+')')
       })
     }
@@ -401,7 +401,7 @@ export  const drag_nodes = (
   d3.selectAll('.ggg_nodes').filter((d)=>{
     const n=d as SankeyNode
     // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
-    // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changemetn au noeud draggé
+    // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changement au noeud draggé
     if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
       return multi_selected_nodes.current.filter(n=>n.position!=='relative').includes(n)
     }else if(node.position!=='relative'){
