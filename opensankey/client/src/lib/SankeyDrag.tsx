@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,SankeyLinkValue,drawArrowsType } from './types'
-import {removeAnimate,compute_end_points, min_width_and_height,drawCurveFunction, drawArrows} from './SankeyDrawFunction'
+import {removeAnimate,compute_end_points, min_width_and_height,drawCurveFunction, drawArrows,linkStrokeWidth} from './SankeyDrawFunction'
 import {   link_visible,test_link_value,return_value_node,assign_node_local_attribute,return_value_link,assign_link_local_attribute} from './SankeyUtils'
 import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
 
@@ -442,6 +442,7 @@ export  const drag_nodes = (
         data.nodes, data.links, data.display_style,
         data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
       ))
+      d3.select(' .opensankey #' + l.idLink).attr('stroke-width',linkStrokeWidth(l,data,scale,inv_scale,2,data.nodes,getLinkValue))
     })
   }
   
