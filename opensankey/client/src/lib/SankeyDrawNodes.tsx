@@ -40,7 +40,8 @@ export const OpenSankeyDrawNodes = (
   min_width_and_height:(d:SankeyData)=>number[],
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  set_displayed_input_link_value:(s:string)=>void
+  set_displayed_input_link_value:(s:string)=>void,
+  accept_simple_click:{current:boolean}
 
 ) => {
   const display_nodes=data.nodes
@@ -385,7 +386,17 @@ export const OpenSankeyDrawNodes = (
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
       // Add event listener to click 
       // When we Ctrl + click a node, it select it and open a menu 
-      ggg_nodes.on('click', (event, d) => eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,data,set_data,mode_selection))
+
+      const simpleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
+        setTimeout(()=>{
+          if(accept_simple_click.current){
+            eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,data,set_data,mode_selection)
+          }
+        },200)
+      }
+
+      ggg_nodes
+        .on('click', (event, d) => simpleGNodeClick(event,d))
 
       if (mode_selection.current == 'ln') {
         ggg_nodes.on('mousedown', function (event, d) {
