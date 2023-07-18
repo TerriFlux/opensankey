@@ -1,10 +1,12 @@
 import  { InferProps } from 'prop-types'
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from './types'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink,plusDrawArrowsType} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
+import { SankeyLinkValue} from 'open-sankey/src/lib/types'
 
 import {drawGrid,min_width_and_height} from 'open-sankey/dist/SankeyDrawFunction'
+import {return_out_of_bound_element,opposing_drag_elements,drag_elements} from 'open-sankey/dist/SankeyDrag'
 
 declare const window: Window &
 typeof globalThis & {
@@ -22,6 +24,11 @@ export const SankeyPlusDrawLabels = (
   min_width_and_height:(data:SankeyPlusData)=>number[],
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:plusDrawArrowsType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 ) => {
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
@@ -135,7 +142,7 @@ export const SankeyPlusDrawLabels = (
         })
 
 
-      gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,min_width_and_height,drawGrid,multi_selected_nodes))
+      gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,min_width_and_height,drawGrid,multi_selected_nodes,multi_selected_links,link_text,getLinkValue,drawArrows,scale,inv_scale))
       gg_label.append('rect')
         .attr('id','drag_zone_'+d.idLabel)
         .attr('width', d.label_width).attr('height', d.label_height)
@@ -259,59 +266,28 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   set_data:(d:SankeyPlusData)=>void,
   min_width_and_height:(d:SankeyPlusData)=>number[],
   drawGrid:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]}
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_links:{current: SankeyPlusLink[] },
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:plusDrawArrowsType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 
 )=>{
   return (d3.drag<SVGGElement, unknown>()
     .subject(Object).on('drag', function (event) {
-      if(multi_selected_label.current.length !== 0 && multi_selected_label.current.includes(d)){
 
-        multi_selected_label.current.map(l=>{
-          const new_pos_x = l.x + event.dx
-          const new_pos_y = l.y + event.dy
-          l.x = new_pos_x
-          l.y = new_pos_y
-          d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')');
-          [data.width, data.height] = min_width_and_height(data)
-          if (data.fit_screen) {
-            const svgSankey = d3.select(' .opensankey #svg')
-            svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
-          } else {
-            d3.select(' .opensankey #svg').style('width', data.width + 'px')
-          }
-
-          d3.select(' .opensankey #svg').style('height', data.height + 'px')
-
-        })
-      }else{
-        const new_pos_x = d.x + event.dx
-        const new_pos_y = d.y + event.dy
-        d.x = new_pos_x
-        d.y = new_pos_y
-        d3.select(' .opensankey #' + d.idLabel).attr('transform', 'translate(' + d.x + ',' + d.y + ')');
-        [data.width, data.height] = min_width_and_height(data)
-        if (data.fit_screen) {
-          const svgSankey = d3.select(' .opensankey #svg')
-          svgSankey.attr('viewBox', [0, 0, data.width, data.height] as unknown as string)
-        } else {
-          d3.select(' .opensankey #svg').style('width', data.width + 'px')
-        }
-
-        d3.select(' .opensankey #svg').style('height', data.height + 'px')
-        drawGrid(data)
-      }
-
-      // Drag selected nodes too
-      d3.selectAll('.ggg_nodes').filter((d)=>{
-        const n=d as SankeyPlusNode
-        return n.position!=='relative' && multi_selected_nodes.current.map(nn=>nn.idNode).includes(n.idNode)
-      }).attr('transform',(d)=>{
-        const n=d as SankeyPlusNode
-        n.x+=event.dx
-        n.y+=event.dy
-        return 'translate('+n.x+','+n.y+')'
-      })
-
+        // Drag zdt
+  // Cherche si des element seront hors zone si on les drag 
+  // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
+  const out_of_zone_item=return_out_of_bound_element(d,data,event,multi_selected_nodes)
+  // Pousse les element non sélectionnés dans la direction opposé
+  if(out_of_zone_item.length>0){
+    opposing_drag_elements(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
+  }
+  drag_elements(d,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+    
 
     })
     .on('end',()=>set_data({...data}))
