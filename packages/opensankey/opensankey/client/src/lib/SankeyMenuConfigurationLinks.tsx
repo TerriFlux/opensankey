@@ -150,6 +150,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 Object.keys(data.dataTags).forEach((dt,i)=>{
                   n_t_s[dt]=tmp[i]
                 })
+                set_tags_selected(n_t_s)
                 set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
               }else{
                 set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
