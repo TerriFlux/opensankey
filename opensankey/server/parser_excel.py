@@ -364,7 +364,7 @@ def parse_nodes(
                         str(int(tag.name) - 1),
                         include_anti_tags=False)
                     if upper_tag is not None:
-                        parent_nodes_for_leveltagg = upper_tag.references
+                        parent_nodes_for_leveltagg = set(upper_tag.references) & set(node.parents)
                         if len(parent_nodes_for_leveltagg) > 0:
                             # Try to check parenthood consistency
                             for parent_node_primary in node.parents:
@@ -373,8 +373,12 @@ def parse_nodes(
                                         parent_node_primary.id
                             # Otherwise we take the first parent node
                             if 'parent_name' not in new_node['dimensions'][tagg.name_unformatted]:
-                                new_node['dimensions'][tagg.name_unformatted]['parent_name'] = \
-                                    parent_nodes_for_leveltagg[0].id
+                                for parent_node_primary in node.parents:
+                                    for grand_parent_node_primary in parent_node_primary.parents:
+                                        if grand_parent_node_primary in parent_nodes_for_leveltagg:
+                                            new_node['dimensions'][tagg.name_unformatted]['parent_name'] = \
+                                                grand_parent_node_primary.id
+                                            break
     # Create primary level tag if necessary
     if (sankey.max_nodes_level > 1):
         nodeTags['Primaire'] = {
