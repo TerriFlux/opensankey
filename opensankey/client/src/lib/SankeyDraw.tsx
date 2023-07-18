@@ -7,6 +7,7 @@ import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar} from './SankeyDrawFunction'
 import LZString from 'lz-string'
+import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
 
 window.d3 = d3
 declare const window: Window &
@@ -298,6 +299,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
             return new_path.join(' ')
           })
 
+          // Drag ZDT too
+          Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
+            const new_pos_x = lb.x + event.dx
+            const new_pos_y = lb.y + event.dy
+            lb.x = new_pos_x
+            lb.y = new_pos_y
+            d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
+          })
+
+          const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+          const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+          const scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+          data.legend_position[0]+=event.dx
+          data.legend_position[1]+=event.dy
+          d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
+          
         })
         .on('end',()=>{
           set_data({...data})
