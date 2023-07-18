@@ -1,10 +1,11 @@
-import { SankeyData,SankeyLinkValue } from './types'
+import { SankeyData,SankeyLinkValue, SankeyNode } from './types'
 import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
 import { link_visible,node_displayed} from './SankeyUtils'
 import { TFunction } from 'i18next'
+import { opposing_drag_elements } from './SankeyDrag'
 
 declare const window: Window &
 typeof globalThis & {
@@ -315,7 +316,12 @@ export const OpenSankeyDrawLegend = (
           scale_for_legend=(scale_svg<1?(1/scale_svg):1)
           data.legend_position[0]+=(event.dx)
           data.legend_position[1]+=(event.dy)
+          data.legend_position[0]=(data.legend_position[0]>=0?data.legend_position[0]:0)
+          data.legend_position[1]=(data.legend_position[1]>=0?data.legend_position[1]:0)
           d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
+          if(data.legend_position[0]==0 ||data.legend_position[1]==0){
+            opposing_drag_elements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]},{current:[]})
+          }
         }
       }).on('end',()=>set_data({...data}))
 
