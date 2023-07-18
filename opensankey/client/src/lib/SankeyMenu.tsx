@@ -523,11 +523,11 @@ export const OpenSankeyMenus = (
   set_never_see_again:(b:boolean)=>void,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  url_prefix:string,
   set_show_modalTemplate:(b:boolean)=>void,
   set_show_modale_support:(b:boolean)=>void,
   external_edition_item:JSX.Element[],
   externale_save_item:JSX.Element[],
+  set_tags_selected:(o:{[x:string]:string})=>void
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
@@ -608,6 +608,13 @@ export const OpenSankeyMenus = (
                   const pureLinks=Object.fromEntries(pl)
                   data.links=pureLinks
                   handleSimpleDropdown(evt, tags_group,data,set_data)
+                  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+                    return (Object.keys(dataTag.tags).length > 0) ? [
+                      dataTagKey,
+                      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+                  }))
+                  const dataTagsSelected = Object.fromEntries(newEntries)
+                  set_tags_selected(dataTagsSelected)
                 }}>
                   {
                     Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
