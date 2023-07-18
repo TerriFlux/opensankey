@@ -454,10 +454,10 @@ export const updateLayout = (
     l.idTarget=idNodesMap[l.idTarget]    
   })
 
-  let idLink = Object.keys(data.links).length
-  while (data.links[idLink]) {
-    idLink = idLink+1
-  }
+  //let idLink = Object.keys(data.links).length
+  // while (data.links[idLink]) {
+  //   idLink = idLink+1
+  // }
   //- Stores a mapping between idLink of initial data and layout idLinks
   const idLinksMap: {[s:string]:string} = {}
   const links_with_no_match : SankeyLink [] = []
@@ -474,8 +474,8 @@ export const updateLayout = (
       l.idSource === link_layout.idSource && l.idTarget === link_layout.idTarget
     )
     if (layout_links.length === 0) {
-      idLink = idLink+1
-      idLinksMap[l.idLink] = 'link'+idLink
+      //idLink = idLink+1
+      idLinksMap[l.idLink] = l.idSource+'---'+l.idTarget
       return
     }
     const layout_link = layout_links[0]

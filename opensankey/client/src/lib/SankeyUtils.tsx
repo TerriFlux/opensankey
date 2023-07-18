@@ -1119,8 +1119,8 @@ export const downloadExamples = (
 export const processExample = (server_data: SankeyData ) => {
   const data = default_sankey_data()
   Object.assign(data, server_data)
-  //convert_data(data)
   complete_sankey_data(data,default_sankey_data,default_node,default_link)
+  convert_data(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
