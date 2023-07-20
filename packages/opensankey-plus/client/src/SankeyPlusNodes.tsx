@@ -1,11 +1,11 @@
 import React from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip } from 'react-bootstrap'
-import {  SankeyLink} from 'open-sankey/src/lib/types'
+import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Dropdown,ButtonGroup } from 'react-bootstrap'
+import {  SankeyLink,} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
-import {  getLinkValue,node_color,link_color,node_displayed,is_all_node_attr_same_value,return_correct_node_attribute_value,assign_node_value_to_correct_var,return_value_node,is_node_diplaying_value_local,return_value_link } from 'open-sankey/dist/SankeyUtils'
+import {  getLinkValue,node_color,link_color,node_displayed,is_all_node_attr_same_value,return_correct_node_attribute_value,assign_node_value_to_correct_var,return_value_node,is_node_diplaying_value_local,return_value_link, } from 'open-sankey/dist/SankeyUtils'
 
 
 declare const window: Window &
@@ -572,3 +572,56 @@ export const SankeyPlusDrawNodesIcon = (
 
 }
 
+export const context_node_icon=(contextualised_node:SankeyPlusNode,
+  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  t:TFunction
+  
+)=>{
+
+  const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
+
+
+  return contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='dark' drop='end'>
+    <Dropdown.Toggle variant="dark" id="dropdown-basic">
+      {t('Noeud.icon.icon')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='dark'>
+      <Dropdown.Item onClick={()=>{
+        contextualised_node.iconVisible=!contextualised_node.iconVisible
+        multi_selected_nodes.current.filter(n=>n!==contextualised_node).forEach(n=>n.iconVisible=contextualised_node.iconVisible)
+        set_data({...data})
+      }} >
+        {t('Noeud.apparence.Visibilité')}{checked(contextualised_node.iconVisible)}
+      </Dropdown.Item>
+      <Dropdown.Item eventKey='1' as={Form} >
+        <Form.Control hidden id='c_n_color'  type='color' value={contextualised_node.iconColor}
+          onChange={(evt)=>{
+            contextualised_node.iconColor=evt.target.value
+            multi_selected_nodes.current.filter(n=>n!==contextualised_node).forEach(n=>n.iconColor=evt.target.value)
+          }}
+          onBlurCapture={()=>set_data({...data})} 
+        />
+        <Form.Label htmlFor='c_n_color'>{t('Noeud.apparence.Couleur')}</Form.Label>
+      </Dropdown.Item>
+      <Dropdown.Item>
+        <Form.Select
+          disabled={!contextualised_node.iconVisible}
+          onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
+            contextualised_node.iconName=evt.target.value
+            multi_selected_nodes.current.filter(f => f!==contextualised_node).map(d => {
+              d.iconName = evt.target.value
+            })
+            set_data({ ...data })
+          }}
+        >
+          <option key={0} value={'none'} selected={contextualised_node.iconName==='none'}>{t('Noeud.icon.Aucun')}</option>
+          {Object.keys(data.icon_catalog).map((n, i) => {
+            return <option key={i + 1} value={n} selected={contextualised_node.iconName===n}>{n}</option>
+          })}
+        </Form.Select>
+
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+}
