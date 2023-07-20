@@ -278,15 +278,15 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   return (d3.drag<SVGGElement, unknown>()
     .subject(Object).on('drag', function (event) {
 
-        // Drag zdt
-  // Cherche si des element seront hors zone si on les drag 
-  // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-  const out_of_zone_item=return_out_of_bound_element(d,data,event,multi_selected_nodes)
-  // Pousse les element non sélectionnés dans la direction opposé
-  if(out_of_zone_item.length>0){
-    opposing_drag_elements(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
-  }
-  drag_elements(d,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+    // Drag zdt
+    // Cherche si des element seront hors zone si on les drag 
+    // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
+    const out_of_zone_item=return_out_of_bound_element(d,data,event,multi_selected_nodes)
+    // Pousse les element non sélectionnés dans la direction opposé
+    if(out_of_zone_item.length>0){
+      opposing_drag_elements(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
+    }
+    drag_elements(d,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
     
 
     })

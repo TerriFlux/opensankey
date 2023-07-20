@@ -552,7 +552,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               <FormCheck
                 disabled={is_activated?allLabelAsHTML():true}
                 type='radio'
-                label={t('Noeud.labels.haut')}
+                label={t('Noeud.labels.top')}
                 checked={allNodeLabelVert('vert', 'top')}
                 onChange={
                   () => {
@@ -569,7 +569,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               <FormCheck
                 disabled={is_activated?allLabelAsHTML():true}
                 type='radio'
-                label={t('Noeud.labels.Milieu')}
+                label={t('Noeud.labels.middle')}
                 checked={allNodeLabelVert('vert', 'middle')}
                 onChange={
                   () => {
@@ -585,7 +585,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               <FormCheck
                 disabled={is_activated?allLabelAsHTML():true}
                 type='radio'
-                label={t('Noeud.labels.Bas')}
+                label={t('Noeud.labels.bottom')}
 
                 checked={allNodeLabelVert('vert', 'bottom')}
                 onChange={
@@ -607,7 +607,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               <FormCheck
                 disabled={is_activated?allLabelAsHTML():true}
                 type='radio'
-                label={t('Noeud.labels.gauche')}
+                label={t('Noeud.labels.left')}
                 checked={allNodeLabelVert('horiz', 'left')}
                 onChange={
                   () => {
