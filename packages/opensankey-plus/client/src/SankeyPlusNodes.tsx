@@ -1,12 +1,13 @@
 import React from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Dropdown,ButtonGroup } from 'react-bootstrap'
+import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button } from 'react-bootstrap'
 import {  SankeyLink,} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
 import {  getLinkValue,node_color,link_color,node_displayed,is_all_node_attr_same_value,return_correct_node_attribute_value,assign_node_value_to_correct_var,return_value_node,is_node_diplaying_value_local,return_value_link, } from 'open-sankey/dist/SankeyUtils'
-
+import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 declare const window: Window &
 typeof globalThis & {
@@ -151,7 +152,8 @@ export const SankeyPlusNodeIcon = (
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   radio_selected:string,
-  is_activated:boolean
+  is_activated:boolean,
+  menu_for_modal=false
 )=> {
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
   const isAllIconSame = (param: string) => {
@@ -179,97 +181,97 @@ export const SankeyPlusNodeIcon = (
     return visible
   }
 
-  return <Tab eventKey="node_icon" title={t('Noeud.icon.icon')}>
-    <OverlayTrigger
-      key={'iconDisabled'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
-      <Form>
-        <Form.Group as={Row}>
-          <Col xs={4}>
-            <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Visibilité')}</FormLabel>
-          </Col>
-          <Col xs={5}>
-            <FormCheck inline
-              type='switch'
-              checked={isAllIconVisible()}
-              disabled={!is_activated}
-              onChange={evt => {
+  const content_tab=<OverlayTrigger
+    key={'iconDisabled'}
+    placement={'top'}
+    delay={500}
+    overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+  >
+    <Form>
+      <Form.Group as={Row}>
+        <Col xs={4}>
+          <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Visibilité')}</FormLabel>
+        </Col>
+        <Col xs={5}>
+          <FormCheck inline
+            type='switch'
+            checked={isAllIconVisible()}
+            disabled={!is_activated}
+            onChange={evt => {
 
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconVisible = evt.target.checked)
-                set_data({ ...data })
-              }}
-            />
-          </Col>
-        </Form.Group>
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconVisible = evt.target.checked)
+              set_data({ ...data })
+            }}
+          />
+        </Col>
+      </Form.Group>
 
 
-        <Form.Group as={Row}>
-          <Col xs={4}>
-            <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}}>{t('Noeud.icon.si')}</FormLabel>
-          </Col>
-          <Col xs={5}>
-            <Form.Select
-              disabled={!is_activated?true:!isAllIconVisible()}
-              onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  d.iconName = evt.target.value
-                })
-                set_data({ ...data })
-              }}
-            >
-              <option key={0} value={'none'} selected={isAllIconSame('none')}>{t('Noeud.icon.Aucun')}</option>
+      <Form.Group as={Row}>
+        <Col xs={4}>
+          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}}>{t('Noeud.icon.si')}</FormLabel>
+        </Col>
+        <Col xs={5}>
+          <Form.Select
+            disabled={!is_activated?true:!isAllIconVisible()}
+            onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                d.iconName = evt.target.value
+              })
+              set_data({ ...data })
+            }}
+          >
+            <option key={0} value={'none'} selected={isAllIconSame('none')}>{t('Noeud.icon.Aucun')}</option>
 
-              {Object.keys(data.icon_catalog).map((n, i) => {
+            {Object.keys(data.icon_catalog).map((n, i) => {
 
-                return <option key={i + 1} value={n} selected={isAllIconSame(n)}>{n}</option>
-              })}
-            </Form.Select>
-          </Col>
-        </Form.Group>
-        <Form.Group as={Row}>
-          <Col xs={4}>
-            <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.apparence.Couleur')}</FormLabel>
-          </Col>
-          <Col xs={3}>
-            <Form.Control
-              type='color'
-              disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
-              value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
-              onChange={evt => {
-                const color = evt.target.value
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
-                set_data({ ...data })
-              }}
-            />
-          </Col>
-        </Form.Group>
-        <Form.Group as={Row}>
-          <Col xs={4}>
-            <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.icon.rIN')}</FormLabel>
-          </Col>
-          <Col xs={3}>
-            <Form.Control
-              type='number'
-              disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
-              value={valueAllIconRatio()}
-              onChange={evt => {
-                let ratio = +evt.target.value
-                ratio = (ratio > 100) ? 100 : ratio
-                ratio = (ratio < 0) ? 0 : ratio
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconRatio = ratio)
-                set_data({ ...data })
-              }}
-            />
-          </Col>
-          <Col xs={4}>
-            <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >%</FormLabel>
-          </Col>
-        </Form.Group>
-      </Form></OverlayTrigger>
-  </Tab>
+              return <option key={i + 1} value={n} selected={isAllIconSame(n)}>{n}</option>
+            })}
+          </Form.Select>
+        </Col>
+      </Form.Group>
+      <Form.Group as={Row}>
+        <Col xs={4}>
+          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.apparence.Couleur')}</FormLabel>
+        </Col>
+        <Col xs={3}>
+          <Form.Control
+            type='color'
+            disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
+            value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
+            onChange={evt => {
+              const color = evt.target.value
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
+              set_data({ ...data })
+            }}
+          />
+        </Col>
+      </Form.Group>
+      <Form.Group as={Row}>
+        <Col xs={4}>
+          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.icon.rIN')}</FormLabel>
+        </Col>
+        <Col xs={3}>
+          <Form.Control
+            type='number'
+            disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
+            value={valueAllIconRatio()}
+            onChange={evt => {
+              let ratio = +evt.target.value
+              ratio = (ratio > 100) ? 100 : ratio
+              ratio = (ratio < 0) ? 0 : ratio
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconRatio = ratio)
+              set_data({ ...data })
+            }}
+          />
+        </Col>
+        <Col xs={4}>
+          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >%</FormLabel>
+        </Col>
+      </Form.Group>
+    </Form></OverlayTrigger>
+
+  return menu_for_modal?content_tab:<Tab eventKey="node_icon" title={t('Noeud.icon.icon')}>{content_tab}</Tab>
 }
 
 
@@ -573,55 +575,17 @@ export const SankeyPlusDrawNodesIcon = (
 }
 
 export const context_node_icon=(contextualised_node:SankeyPlusNode,
-  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
+  set_show_menu_node_icon:(b:boolean)=>void,
+  set_contextualised_node:(b:SankeyPlusNode|undefined)=>void,
   t:TFunction
-  
 )=>{
 
-  const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
+  const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 
 
-  return contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='dark' drop='end'>
-    <Dropdown.Toggle variant="dark" id="dropdown-basic">
-      {t('Noeud.icon.icon')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='dark'>
-      <Dropdown.Item onClick={()=>{
-        contextualised_node.iconVisible=!contextualised_node.iconVisible
-        multi_selected_nodes.current.filter(n=>n!==contextualised_node).forEach(n=>n.iconVisible=contextualised_node.iconVisible)
-        set_data({...data})
-      }} >
-        {t('Noeud.apparence.Visibilité')}{checked(contextualised_node.iconVisible)}
-      </Dropdown.Item>
-      <Dropdown.Item eventKey='1' as={Form} >
-        <Form.Control hidden id='c_n_color'  type='color' value={contextualised_node.iconColor}
-          onChange={(evt)=>{
-            contextualised_node.iconColor=evt.target.value
-            multi_selected_nodes.current.filter(n=>n!==contextualised_node).forEach(n=>n.iconColor=evt.target.value)
-          }}
-          onBlurCapture={()=>set_data({...data})} 
-        />
-        <Form.Label htmlFor='c_n_color'>{t('Noeud.apparence.Couleur')}</Form.Label>
-      </Dropdown.Item>
-      <Dropdown.Item>
-        <Form.Select
-          disabled={!contextualised_node.iconVisible}
-          onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
-            contextualised_node.iconName=evt.target.value
-            multi_selected_nodes.current.filter(f => f!==contextualised_node).map(d => {
-              d.iconName = evt.target.value
-            })
-            set_data({ ...data })
-          }}
-        >
-          <option key={0} value={'none'} selected={contextualised_node.iconName==='none'}>{t('Noeud.icon.Aucun')}</option>
-          {Object.keys(data.icon_catalog).map((n, i) => {
-            return <option key={i + 1} value={n} selected={contextualised_node.iconName===n}>{n}</option>
-          })}
-        </Form.Select>
+  return contextualised_node!==undefined?<Button onClick={()=>{
+    set_show_menu_node_icon(true)
+    set_contextualised_node(undefined)
+  }} variant='light'>{t('Noeud.icon.icon')} {icon_open_modal}</Button>:<></>
 
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>:<></>
 }
