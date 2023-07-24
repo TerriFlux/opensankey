@@ -1145,3 +1145,15 @@ textarea {
 	margin-top: 25px;
 	margin-bottom: 25px;
 }
+
+#context_node_pop_over .popover-arrow,#context_link_pop_over .popover-arrow,#context_zdd_pop_over .popover-arrow{
+	top:10px;
+}
+/* #context_node_pop_over .popover-arrow:after,#context_link_pop_over .popover-arrow:after{
+	border-right-color:#343a40
+} */
+#context_node_pop_over .btn,#context_link_pop_over .btn,#context_zdd_pop_over .btn{
+	background-color: #fff;
+	border: none;
+	text-align: left;
+}

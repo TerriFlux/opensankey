@@ -10,7 +10,8 @@ export const SankeyMenuConfigurationLinksLabel = (
   set_data:(d:SankeyData)=>void,
   t:TFunction,
   menu_for_style:boolean,
-  selected_style_link:string
+  selected_style_link:string,
+  menu_for_modal=false
 )=>{
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
@@ -133,8 +134,7 @@ export const SankeyMenuConfigurationLinksLabel = (
   // }
   const labelVisibleChecked=is_all_link_attr_same_value(data,selected_parameter,'label_visible',menu_for_style) as boolean
 
-
-  return <Tab eventKey="label" title={t('Flux.label.label')}>
+  const content=<>
     {/* Display label  */}
     <Form.Group as={Row}>
       <Col xs={2}>
@@ -506,5 +506,7 @@ export const SankeyMenuConfigurationLinksLabel = (
         </OverlayTrigger>
       </Col>
     </Form.Group>
-  </Tab>
+  </>
+
+  return menu_for_modal?content:<Tab eventKey="label" title={t('Flux.label.label')}>{content}</Tab>
 }
