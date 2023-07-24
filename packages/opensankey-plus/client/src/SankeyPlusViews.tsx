@@ -1160,12 +1160,26 @@ export const keyHandler = (
     accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
     button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
     set_show_nav:(b:boolean)=>void,
-    mode_selection:{current : string})=>void,
+    mode_selection:{current : string},
+    set_show_menu_node_apparence:(b:boolean)=>void,
+    set_show_menu_node_label:(b:boolean)=>void,
+    set_show_menu_node_io:(b:boolean)=>void,
+    set_show_menu_link_data:(b:boolean)=>void,
+    set_show_menu_link_appearence:(b:boolean)=>void,
+    set_show_menu_link_label:(b:boolean)=>void,
+    )=>void,
   connected:boolean,
   min_width_and_height:(data:SankeyPlusData)=>number[],
   set_view_not_saved:(s:string)=>void,
   fullscreen:boolean,
-  set_fullscreen:(b:boolean)=>void
+  set_fullscreen:(b:boolean)=>void,
+  set_show_menu_node_apparence:(b:boolean)=>void,
+  set_show_menu_node_label:(b:boolean)=>void,
+  set_show_menu_node_io:(b:boolean)=>void,
+  set_show_menu_link_data:(b:boolean)=>void,
+  set_show_menu_link_appearence:(b:boolean)=>void,
+  set_show_menu_link_label:(b:boolean)=>void,
+  set_show_menu_node_icon:(b:boolean)=>void,
 ) => {
   // Applique le control de touche issu de opensankey (pour eviter de copier/coller et avoir de potentiel différence)
   // Apply keyHandling from opensankey (to avoid copy/paste that can generate error)
@@ -1177,7 +1191,7 @@ export const keyHandler = (
     accordion_ref,
     button_ref,
     set_show_nav,
-    mode_selection)
+    mode_selection,set_show_menu_node_apparence,set_show_menu_node_label,set_show_menu_node_io,set_show_menu_link_data,set_show_menu_link_appearence,set_show_menu_link_label)
   if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
     multi_selected_labels.current=Object.values(data.labels)
@@ -1438,6 +1452,7 @@ export const keyHandler = (
   
   // Add deselection of all selected zdt
   if (e.key === 'Escape') {
+
     multi_selected_labels.current.forEach(l=>{
       console.log(d3.select('#'+l.idLabel))
       d3.select('#'+l.idLabel+ ' rect').attr('stroke-width',1)
@@ -1445,6 +1460,7 @@ export const keyHandler = (
     multi_selected_labels.current=[]
     
     set_fullscreen(false)
+    set_show_menu_node_icon(false)
   }
 
   if(e.key==='Delete'){
