@@ -742,285 +742,6 @@ export const drawArrows = (
   }
 }
 
-
-
-// Function that is triggered when some event occure on the sankey zone like :
-// - a simple click on the sankey zone (not on link or node) deselect all elements
-// - if we are in mouse mode add node + link : on mousedown add a node, while we dragg the mouse after clicking on the sankey zone a line will appear between the first added node and the mouse
-// until the mouse is released wich add a second node and add a link between these 2 nodes
-// export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTMLElement,unknown>,
-//   mode_selection:{current:string},
-//   data:SankeyData,
-//   set_data:(d:SankeyData)=>void,
-//   multi_selected_nodes:{current:SankeyNode[]},
-//   multi_selected_links:{current:SankeyLink[]},
-//   first_selected_node:object,
-//   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
-//   token:boolean,
-//   set_show_toast_limit_node:(b:boolean)=>void,
-//   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-//   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
-//   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
-//   set_displayed_input_link_value:(s:string)=>void,
-  
-// )=>{
-//   const open_links_menu=()=>{
-//     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
-//       button_ref.current.click()
-//     }
-//     if ( accordion_ref && accordion_ref.current) {
-//       for ( const child in accordion_ref.current.children) {
-//         if (accordion_ref.current.children[child].id === 'Flux') {
-//           (accordion_ref.current.children[0] as HTMLLabelElement).click();
-//           (accordion_ref.current.children[child] as HTMLLabelElement).click()
-//         }
-//       }
-//     }
-//     if ( links_accordion_ref && links_accordion_ref.current) {
-//       (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
-//       (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
-//     }
-//   }
-//   let start_point=[0,0]
-//   console.log
-//   svgSankey.on('mousedown', evt => {
-//     //si le mode de souris est noeud+flux alors crée le premier noeuds
-//   console.log(evt)
-//   console.log(typeof(evt))
-    
-//     if(d3.select(evt.target).attr('class')!='node node_shape' && mode_selection.current == 'ln'){
-
-//       if ((!evt.ctrlKey && !evt.metaKey) ) {
-//         if(!token && Object.keys(data.nodes).length>15){
-//           set_show_toast_limit_node(true)
-//           setTimeout(function () {
-//             set_show_toast_limit_node(false)
-//           }, 3000)
-//         }else{
-//           // isDown = true
-//           // creation nouveau noeud
-//           const new_node1 = default_node(data)
-//           let idNode = Object.keys(data.nodes).length
-//           while (data.nodes[idNode]) {
-//             idNode = idNode+1
-//           }
-//           new_node1.idNode = 'node' + idNode
-//           new_node1.name = 'node_tmp'
-//           data.nodes[new_node1.idNode] = new_node1
-//           const pos = d3.pointer(event)
-//           new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
-//           new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
-//           set_first_selected_node(new_node1)
-//           set_data({ ...data })
-//         }
-//       }
-//     }else if(mode_selection.current=='s' && !evt.ctrlKey){
-//       const pos = d3.pointer(evt)
-//       start_point=pos
-//       d3.select('#svg').append('g').attr('class','selection_zone')
-//       .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
-//     }
-//   })
-//     .on('mousemove', evt => {
-//       //Empêche lors du drag de la souris d'avoir
-//       // l'effet sélection de texte sur les labels des éléments de diagramme
-
-//       //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
-//       // alors crée une droite entre le premier noeud clické et le pointeur du curseur
-//       window.event?.stopPropagation()
-//       window.event?.preventDefault()
-
-//       if(mode_selection.current=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
-//         data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
-//         set_first_selected_node({})
-//       }
-//       if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
-//         d3.selectAll(' .opensankey #svg #path-flux').remove()
-//       }
-//       if(mode_selection.current=='s' && d3.selectAll('.selection_zone').nodes().length>0){
-//         // Create change the size of the selection zone according to the mouse
-//         const pos = d3.pointer(evt)
-
-//         const new_x=(pos[0]>start_point[0])?start_point[0]:pos[0]
-//         const new_w=(pos[0]>start_point[0])?(pos[0]-start_point[0]):start_point[0]-pos[0]
-
-//         const new_y=(pos[1]>start_point[1])?start_point[1]:pos[1]
-//         const new_h=(pos[1]>start_point[1])?(pos[1]-start_point[1]):start_point[1]-pos[1]
-
-
-//         // console.log(new_x,new_y,new_w,new_h)
-
-//         d3.select('.selection_zone rect').attr('x',new_x)
-//         d3.select('.selection_zone rect').attr('y',new_y)
-//         d3.select('.selection_zone rect').attr('width',Math.abs(new_w))
-//         d3.select('.selection_zone rect').attr('height',Math.abs(new_h))
-//       }else if( mode_selection.current == 'ln'){
-//         if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
-//           // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris
-//           // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison
-//           set_first_selected_node({})
-//           Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].name=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].idNode
-//         }else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
-//           const pos = d3.pointer(event)
-//           const node_keys = Object.keys(data.nodes)
-//           const last_node = data.nodes[node_keys[node_keys.length - 1]]
-//           // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
-//           if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
-//             d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
-//               .attr('x1', last_node.x + (return_value_node(data,last_node,'node_width') as number / 2))
-//               .attr('y1', last_node.y + (return_value_node(data,last_node,'node_height') as number / 2))
-//               .attr('x2', pos[0])
-//               .attr('y2', pos[1])
-//               .style('stroke', '#d9af58')
-//               .style('stroke-width', '2px')
-//           } else {
-//             d3.selectAll(' .opensankey #svg #path-flux')
-//               .attr('x2', pos[0])
-//               .attr('y2', pos[1])
-//           }
-//         }
-//       }
-      
-      
-//       if (Object.keys(first_selected_node).length != 0) {
-//         const pos = d3.pointer(event)
-//         const fsn = (first_selected_node as SankeyNode)
-//         if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
-//           // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
-//           d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
-//             .attr('x1', fsn.x + (return_value_node(data,fsn,'node_width') as number / 2))
-//             .attr('y1', fsn.y + (return_value_node(data,fsn,'node_height') as number / 2))
-//             .attr('x2', pos[0])
-//             .attr('y2', pos[1])
-//             .style('stroke', 'red')
-//             .style('stroke-width', '2px')
-//         } else {
-//           d3.selectAll(' .opensankey #svg #path-flux')
-//             .attr('x2', pos[0]-5)
-//             .attr('y2', pos[1]-5)
-//         }
-//       }
-
-//     })
-//     .on('mouseup', evt => {
-
-//       if(mode_selection.current=='s' && d3.selectAll('.selection_zone').nodes().length>0){
-//         const z_x=Number(d3.select('.selection_zone rect').attr('x'))
-//         const z_y=Number(d3.select('.selection_zone rect').attr('y'))
-//         const z_w=Number(d3.select('.selection_zone rect').attr('width'))
-//         const z_h=Number(d3.select('.selection_zone rect').attr('height'))
-//         if(evt.shiftKey){
-//           Object.values(data.nodes).filter(n=>!multi_selected_nodes.current.includes(n) && node_displayed(data,n) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h)).forEach(n=>multi_selected_nodes.current.push(n))
-//         }else{
-//           multi_selected_nodes.current=Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
-//         }
-        
-//         multi_selected_links.current=[]
-//         start_point=[0,0]
-//         d3.selectAll('.selection_zone').remove()
-//         set_data({...data})
-//       }
-//       // si le token de connexion est à false alors ne crée pas de second noeud
-//       //si le mode de souris est noeud+flux alors crée un second noeud au relachement
-//       //et crée un lien entre le premier noeud crée lors du click et ce dernier
-//       if(mode_selection.current=='ln'){
-//         if(!token && Object.keys(data.nodes).length>15 ){
-//           Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
-//           d3.selectAll(' .opensankey #svg #path-flux').remove()
-//           set_first_selected_node({})
-//           set_show_toast_limit_node(true)
-//           setTimeout(function () {
-//             set_show_toast_limit_node(false)
-//           }, 3000)
-//         }else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
-//           // isDown = false
-//           d3.selectAll(' .opensankey #svg #path-flux').remove()
-//           Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
-//           //Création second noeud
-//           const new_node1 = default_node(data)
-//           let idNode = Object.keys(data.nodes).length
-//           while (data.nodes[idNode]) {
-//             idNode = idNode+1
-//           }
-//           new_node1.idNode = 'node' + idNode
-//           new_node1.name = new_node1.idNode
-//           if (Object.keys(data.nodes).length < 5) {
-//             new_node1.x = Object.keys(data.nodes).length * 200 + 200
-//           } else {
-//             new_node1.x = 200
-//           }
-//           data.nodes[new_node1.idNode] = new_node1
-//           const pos = d3.pointer(event)
-//           new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
-//           new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
-//           //Ajout du lien entre les deux noeuds créés
-//           const new_link = default_link(data)
-//           const listIdLink: number[] = []
-//           Object.keys(data.links).forEach(elt => listIdLink.push(Number(elt.replace('link', ''))))
-//           const idLink = listIdLink.length > 0 ? Math.max(...listIdLink) + 1 : 0
-//           new_link.idLink = 'link' + idLink
-//           data.links[new_link.idLink] = new_link
-//           const node_keys = Object.keys(data.nodes)
-//           new_link.idSource = data.nodes[node_keys[node_keys.length - 2]].idNode
-//           new_link.idTarget = data.nodes[node_keys[node_keys.length - 1]].idNode
-//           if (new_link.idSource === new_link.idTarget) {
-//             // new_link.recycling = true
-//             assign_link_local_attribute(new_link,'recycling',true)
-            
-//           }
-//           data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
-//           data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
-//           multi_selected_links.current=[new_link]
-//           set_displayed_input_link_value('')
-//           open_links_menu()
-//           set_first_selected_node({})
-//           set_data({...data})
-//         }else if((!evt.ctrlKey && !evt.metaKey) && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
-  
-  
-//           const n_link = default_link(data)
-//           const n_node = default_node(data)
-//           let idNode = Object.keys(data.nodes).length
-//           while (data.nodes[idNode]) {
-//             idNode = idNode+1
-//           }
-//           n_node.idNode = 'node' + idNode
-//           n_node.name = 'node'+idNode
-//           data.nodes[n_node.idNode] = n_node
-//           const pos = d3.pointer(event)
-//           n_node.x = pos[0]-(return_value_node(data,n_node,'node_width') as number/2)
-//           n_node.y = pos[1]-(return_value_node(data,n_node,'node_height') as number/2)
-  
-//           const { links } = data
-//           const fsn = (first_selected_node as SankeyNode)
-//           const listId: number[] = []
-//           Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-//           const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
-//           n_link.idLink = 'link' + idLink
-//           links[n_link.idLink] = n_link
-//           n_link.idSource = fsn.idNode
-//           n_link.idTarget = n_node.idNode
-//           if (n_link.idSource === n_link.idTarget) {
-//             // n_link.recycling = true
-//             assign_link_local_attribute(n_link,'recycling',true)
-  
-//           }
-//           fsn.outputLinksId.push(n_link.idLink)
-//           fsn.outputLinksId=sort_outputLinksId_by_YPos(data,fsn)
-//           n_node.inputLinksId.push(n_link.idLink)
-//           set_displayed_input_link_value('')
-//           multi_selected_links.current=[n_link]
-//           open_links_menu()
-  
-//           set_first_selected_node({})
-//           set_data({ ...data })
-  
-//         }
-//       }
-     
-//     })
-// }
-
 export const eventOnSankeyZoneMouseDown =(
   mode_selection:{current:string},
   data:SankeyData,
@@ -1050,7 +771,7 @@ export const eventOnSankeyZoneMouseDown =(
         // creation nouveau noeud
         const new_node1 = default_node(data)
         let idNode = Object.keys(data.nodes).length
-        while (data.nodes[idNode]) {
+        while (data.nodes['node'+idNode]) {
           idNode = idNode+1
         }
         new_node1.idNode = 'node' + idNode
@@ -1232,7 +953,7 @@ export const eventOnSankeyZoneMouseUp =(
       //Création second noeud
       const new_node1 = default_node(data)
       let idNode = Object.keys(data.nodes).length
-      while (data.nodes[idNode]) {
+      while (data.nodes['node'+idNode]) {
         idNode = idNode+1
       }
       new_node1.idNode = 'node' + idNode
@@ -1248,9 +969,10 @@ export const eventOnSankeyZoneMouseUp =(
       new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
       //Ajout du lien entre les deux noeuds créés
       const new_link = default_link(data)
-      const listIdLink: number[] = []
-      Object.keys(data.links).forEach(elt => listIdLink.push(Number(elt.replace('link', ''))))
-      const idLink = listIdLink.length > 0 ? Math.max(...listIdLink) + 1 : 0
+      let idLink = Object.keys(data.links).length
+      while (data.links['link'+idLink]) {
+        idLink = idLink+1
+      }
       new_link.idLink = 'link' + idLink
       data.links[new_link.idLink] = new_link
       const node_keys = Object.keys(data.nodes)
@@ -1274,7 +996,7 @@ export const eventOnSankeyZoneMouseUp =(
       const n_link = default_link(data)
       const n_node = default_node(data)
       let idNode = Object.keys(data.nodes).length
-      while (data.nodes[idNode]) {
+      while (data.nodes['node'+idNode]) {
         idNode = idNode+1
       }
       n_node.idNode = 'node' + idNode
@@ -1286,9 +1008,10 @@ export const eventOnSankeyZoneMouseUp =(
 
       const { links } = data
       const fsn = (first_selected_node as SankeyNode)
-      const listId: number[] = []
-      Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-      const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+      let idLink = Object.keys(data.links).length
+      while (data.links['link'+idLink]) {
+        idLink = idLink+1
+      }
       n_link.idLink = 'link' + idLink
       links[n_link.idLink] = n_link
       n_link.idSource = fsn.idNode
@@ -1344,10 +1067,10 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
       const n_link = default_link(data)
       const { links } = data
       const fsn = (first_selected_node as SankeyNode)
-      const listId: number[] = []
-      Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-
-      const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+      let idLink = Object.keys(data.links).length
+      while (data.links['link'+idLink]) {
+        idLink = idLink+1
+      }
       n_link.idLink = 'link' + idLink
       links[n_link.idLink] = n_link
 
@@ -1392,9 +1115,10 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
     const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
     //Ajout du lien entre les deux noeuds créés
     const new_link = default_link(data)
-    const listIdLink: number[] = []
-    Object.keys(data.links).forEach(elt => listIdLink.push(Number(elt.replace('link', ''))))
-    const idLink = listIdLink.length > 0 ? Math.max(...listIdLink) + 1 : 0
+    let idLink = Object.keys(data.links).length
+    while (data.links['link'+idLink]) {
+      idLink = idLink+1
+    }
     new_link.idLink = 'link' + idLink
     data.links[new_link.idLink] = new_link
     new_link.idSource = tmp.idNode

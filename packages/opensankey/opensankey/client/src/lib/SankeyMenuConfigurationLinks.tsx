@@ -209,9 +209,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     }
     const link: SankeyLink = default_link(data)
     // Méthode pour incrementer idNode
-    const listId: number[] = []
-    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-    const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    let idLink = Object.keys(data.links).length
+    while (data.links['link'+idLink]) {
+      idLink = idLink+1
+    }
     link.idLink = 'link' + idLink
     links[link.idLink] = link
     const node_keys = Object.keys(nodes)

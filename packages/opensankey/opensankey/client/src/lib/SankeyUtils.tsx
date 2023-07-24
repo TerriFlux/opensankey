@@ -1360,9 +1360,10 @@ export const clickSaveDiagram = (data:SankeyData,name='sankey_diagram') => {
 export const add_tag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string)=>{
   const elementTagName = type_tag_name
   // Méthode pour incrementer idElement
-  const listId: number[] = []
-  Object.keys(data[elementTagName][tags_group_key].tags).forEach(elt => listId.push(Number(elt.replace('element', ''))))
-  const idElement = listId.length > 0 ? Math.max(...listId) + 1 : 0
+  let idElement = Object.keys(data[elementTagName][tags_group_key].tags).length
+  while (data[elementTagName][tags_group_key].tags['element' + idElement]) {
+    idElement = idElement+1
+  }
   data[elementTagName][tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
   const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
   const colors = colormap({

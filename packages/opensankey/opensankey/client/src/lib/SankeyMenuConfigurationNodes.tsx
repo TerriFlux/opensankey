@@ -106,9 +106,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     const node: SankeyNode = default_node(data)
 
     // Méthode pour incrementer idNode
-    const listId: number[] = []
-    Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-    const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    let idNode = Object.keys(data.nodes).length
+    while (data.nodes['node'+idNode]) {
+      idNode = idNode+1
+    }
     node.idNode = 'node' + idNode
     node.name = node.idNode
     if (Object.keys(nodes).length < 5) {
