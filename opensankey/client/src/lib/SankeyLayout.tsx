@@ -424,7 +424,7 @@ export const updateLayout = (
   max_vertical_offset = max_vertical_offset + 200
 
   let idNode = Object.keys(data.nodes).length
-  while (data.nodes[idNode]) {
+  while (data.nodes['node'+idNode]) {
     idNode = idNode+1
   }
 
@@ -498,9 +498,10 @@ export const updateLayout = (
     //     // Case of not a label
     //     node = {...node_layout}
     //     // Méthode pour incrementer idNode
-    //     const listId : number[] = []
-    //     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-    //     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    // let idLink = Object.keys(data.links).length
+    // while (data.links['link'+idLink]) {
+    //   idLink = idLink+1
+    // }
     //     node.idNode = 'idNode'+idNode
     //     data.nodes[node.idNode]
     //   } else {
