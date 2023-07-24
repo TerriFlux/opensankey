@@ -5,7 +5,6 @@ import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
 import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color,get_vertical_marfin_for_sankey_zone,node_displayed,return_value_node,return_value_link, assign_link_local_attribute} from './SankeyUtils'
-import { desagregation, agregation } from './SankeyLayout'
 import { BaseType } from 'd3'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
 
@@ -408,70 +407,132 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
   }
 }
 
-export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,data:SankeyData,set_agregation_node:React.Dispatch<React.SetStateAction<string>>,set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_data:(d:SankeyData)=>void)=>{
+export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
+  set_contextualised_node:(n:SankeyNode)=>void,pointer_pos:{current:number[]},
+  multi_selected_nodes:{current: SankeyNode[] },              
+)=>{
   ev.preventDefault()
-  if (!n.dimensions) {
-    return
+  pointer_pos.current=[ev.pageX,ev.pageY]
+  if(!multi_selected_nodes.current.includes(n)){
+    multi_selected_nodes.current.push(n)
+    select_visualy_nodes(n)
   }
-  if (ev.altKey) {
-    const child_names: string[] = []
-    const dim_names: string[] = []
-    Object.values(data.nodes).forEach(n2 => {
-      for (const dim in n2.dimensions) {
-        if ( dim === 'Primaire') {
-          if ( data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
-            child_names.push(n2.idNode)
-            dim_names.push(dim)
-          }
-        } else if (!data.levelTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
-          if (dim_names.indexOf(dim) === -1) {
-            child_names.push(n2.idNode)
-            dim_names.push(dim)
-          }
-        }
-      }
-      return false
-    })
-    if (child_names.length === 0) {
-      return
-    }
-    if (child_names.length > 1) {
-      set_agregation_node(n.idNode)
-      set_is_agregation(false)
-      set_show_agregation(true)
-    } else {
-      desagregation(data, n.idNode, dim_names[0])
-    }
-  } else {
-    const parent_names: string[] = []
-    const dim_names: string[] = []
-    Object.keys(n.dimensions).forEach(
-      dim => {
-        if (dim === 'Primaire') {
-          if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
-            parent_names.push(n.idNode)
-            dim_names.push(dim)
-          }
-        } else if (!data.levelTags['Primaire'].activated && n.dimensions[dim].parent_name) {
-          parent_names.push(n.dimensions[dim].parent_name as string)
-          dim_names.push(dim)
-        }
-      }
-    )
-    if (parent_names.length === 0) {
-      return
-    }
-    if (parent_names.length > 1) {
-      set_agregation_node(n.idNode)
-      set_is_agregation(true)
-      set_show_agregation(true)
-    } else {
-      agregation(data, n.idNode, dim_names[0])
-    }
-  }
-  set_data({ ...data })
-
+  set_contextualised_node(n)
 }
+
+export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:SankeyLink,set_contextualised_link:(l:SankeyLink)=>void,pointer_pos:{current:number[]},
+  data:SankeyData,set_data:(d:SankeyData)=>void,
+  multi_selected_links:{current:SankeyLink[]},
+  set_displayed_input_link_value:(s:string)=>void,
+  tags_selected:{[k: string]: string},
+  set_tags_selected:(o:{[k: string]: string})=>void,
+  set_display_link_opacity:(s:string)=>void,
+
+)=>{
+  ev.preventDefault()
+  pointer_pos.current=[ev.pageX,ev.pageY]
+  if(!multi_selected_links.current.includes(l)){
+    multi_selected_links.current.push(l)
+    select_visualy_links(l)
+  }
+  const link_data_ref=l.idLink
+  let new_tags_selected=tags_selected
+  if(link_data_ref.includes('_')){
+    const index_grp_tag=link_data_ref.split('_')
+    // Supprime le première élément du tableau qui ne contient que l'id du flux
+    index_grp_tag.shift()
+    new_tags_selected={}
+    // On fabrique un tags_selected pour récupérer la bonne valeur pour value_selected_parameter
+    for(const i in index_grp_tag){
+      const key=Object.keys(data.dataTags)[Number(i)]
+      new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
+    }
+    set_tags_selected(new_tags_selected)
+    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+  }else if(Object.values(data.dataTags).length>0){
+    // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
+    const tmp=[] as string[]
+    Object.values(data.dataTags).forEach(dt=>{
+      tmp.push(Object.entries(dt.tags).filter(t=>t[1].selected)[0][0])
+    })
+    const n_t_s={} as {[x:string]:string}
+    Object.keys(data.dataTags).forEach((dt,i)=>{
+      n_t_s[dt]=tmp[i]
+    })
+    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
+  }else{
+    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+  }
+
+
+  set_display_link_opacity(return_value_link(data,l,'opacity') as string)
+  set_contextualised_link(l)
+  set_data({...data})
+}
+// export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,data:SankeyData,set_agregation_node:React.Dispatch<React.SetStateAction<string>>,set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_data:(d:SankeyData)=>void)=>{
+//   ev.preventDefault()
+//   if (!n.dimensions) {
+//     return
+//   }
+//   if (ev.altKey) {
+//     const child_names: string[] = []
+//     const dim_names: string[] = []
+//     Object.values(data.nodes).forEach(n2 => {
+//       for (const dim in n2.dimensions) {
+//         if ( dim === 'Primaire') {
+//           if ( data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+//             child_names.push(n2.idNode)
+//             dim_names.push(dim)
+//           }
+//         } else if (!data.levelTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
+//           if (dim_names.indexOf(dim) === -1) {
+//             child_names.push(n2.idNode)
+//             dim_names.push(dim)
+//           }
+//         }
+//       }
+//       return false
+//     })
+//     if (child_names.length === 0) {
+//       return
+//     }
+//     if (child_names.length > 1) {
+//       set_agregation_node(n.idNode)
+//       set_is_agregation(false)
+//       set_show_agregation(true)
+//     } else {
+//       desagregation(data, n.idNode, dim_names[0])
+//     }
+//   } else {
+//     const parent_names: string[] = []
+//     const dim_names: string[] = []
+//     Object.keys(n.dimensions).forEach(
+//       dim => {
+//         if (dim === 'Primaire') {
+//           if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+//             parent_names.push(n.idNode)
+//             dim_names.push(dim)
+//           }
+//         } else if (!data.levelTags['Primaire'].activated && n.dimensions[dim].parent_name) {
+//           parent_names.push(n.dimensions[dim].parent_name as string)
+//           dim_names.push(dim)
+//         }
+//       }
+//     )
+//     if (parent_names.length === 0) {
+//       return
+//     }
+//     if (parent_names.length > 1) {
+//       set_agregation_node(n.idNode)
+//       set_is_agregation(true)
+//       set_show_agregation(true)
+//     } else {
+//       agregation(data, n.idNode, dim_names[0])
+//     }
+//   }
+//   set_data({ ...data })
+
+// }
 // Function that wrap node text when the length of the label exceed the limit
 export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   const wrap = textwrap()
@@ -742,7 +803,9 @@ export const drawArrows = (
   }
 }
 
-export const eventOnSankeyZoneMouseDown =(
+
+
+export const eventOnSankeyZoneMouseDown=(
   mode_selection:{current:string},
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -751,49 +814,55 @@ export const eventOnSankeyZoneMouseDown =(
   set_show_toast_limit_node:(b:boolean)=>void,
   evt2:unknown,
   // set_start_point:React.Dispatch<React.SetStateAction<number[]>>
-  start_point:{current:number[]}
+  start_point:{current:number[]},
+  set_contextualised_node:(n:SankeyNode|undefined)=>void,
+  set_contextualised_link:(l:SankeyLink|undefined)=>void,
+  set_show_context_zdd:(b:boolean)=>void
 )=>{
-
-  const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean} 
-
+  set_contextualised_node(undefined)
+  set_contextualised_link(undefined)
+  set_show_context_zdd(false)
+  const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
-  
-  if(d3.select(evt.target).attr('class')!='node node_shape' && mode_selection.current == 'ln'){
+  if(evt.which==1){
 
-    if ((!evt.ctrlKey && !evt.metaKey) ) {
-      if(!token && Object.keys(data.nodes).length>15){
-        set_show_toast_limit_node(true)
-        setTimeout(function () {
-          set_show_toast_limit_node(false)
-        }, 3000)
-      }else{
-        // isDown = true
-        // creation nouveau noeud
-        const new_node1 = default_node(data)
-        let idNode = Object.keys(data.nodes).length
-        while (data.nodes['node'+idNode]) {
-          idNode = idNode+1
+    if(d3.select(evt.target).attr('class')!='node node_shape' && mode_selection.current == 'ln'){
+
+      if ((!evt.ctrlKey && !evt.metaKey) ) {
+        if(!token && Object.keys(data.nodes).length>15){
+          set_show_toast_limit_node(true)
+          setTimeout(function () {
+            set_show_toast_limit_node(false)
+          }, 3000)
+        }else{
+          // isDown = true
+          // creation nouveau noeud
+          const new_node1 = default_node(data)
+          let idNode = Object.keys(data.nodes).length
+          while (data.nodes['node'+idNode]) {
+            idNode = idNode+1
+          }
+          new_node1.idNode = 'node' + idNode
+          new_node1.name = 'node_tmp'
+          data.nodes[new_node1.idNode] = new_node1
+          const pos = d3.pointer(event)
+          new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
+          new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+          set_first_selected_node(new_node1)
+          set_data({ ...data })
         }
-        new_node1.idNode = 'node' + idNode
-        new_node1.name = 'node_tmp'
-        data.nodes[new_node1.idNode] = new_node1
-        const pos = d3.pointer(event)
-        new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
-        new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
-        set_first_selected_node(new_node1)
-        set_data({ ...data })
       }
+    }else if(mode_selection.current=='s' && !evt.ctrlKey){
+      const pos = d3.pointer(evt)
+      start_point.current=pos
+      d3.select('#svg').append('g').attr('class','selection_zone')
+        .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
     }
-  }else if(mode_selection.current=='s' && !evt.ctrlKey){
-    const pos = d3.pointer(evt)
-    start_point.current=pos
-    d3.select('#svg').append('g').attr('class','selection_zone')
-      .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
   }
  
 
 }
-export const eventOnSankeyZoneMouseMove =(
+export const eventOnSankeyZoneMouseMove=(
   mode_selection:{current:string},
   data:SankeyData,
   first_selected_node:object,
@@ -876,8 +945,7 @@ export const eventOnSankeyZoneMouseMove =(
     }
   }
 }
-
-export const eventOnSankeyZoneMouseUp =(
+export const eventOnSankeyZoneMouseUp=(
   mode_selection:{current:string},
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -2311,10 +2379,19 @@ export const deselect_visualy_links=(d:SankeyLink)=>{
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '0')
   
 }
+export const select_visualy_links=(d:SankeyLink)=>{
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '1')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '1')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '1')
+}
 
 export const deselect_visualy_nodes=(n:SankeyNode)=>{
   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
   d3.select(' .opensankey #ggg_' + n.idNode+' .box_width_threshold').attr('visibility','hidden')
+}
+export const select_visualy_nodes=(n:SankeyNode)=>{
+  d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
 }
 
 export const repositionne_sidebar=()=>{
