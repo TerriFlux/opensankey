@@ -453,166 +453,179 @@ export const SankeyMenuConfigurationNodesIO = (
   set_link_pos:React.Dispatch<React.SetStateAction<string>>,
   tab_colored:boolean,
   set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  menu_for_modal=false
 ) => {
   // const [link_io,set_link_io]=useState<string>('output')
   // const [link_pos,set_link_pos]=useState<string>('right')
   // const [tab_colored,set_tab_colored]=useState<boolean>(false)
 
-  return <Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>
-    <Form>
-      <Form.Group as={Row}>
-        <Col xs={6}>
-          <FormLabel >{t('Noeud.PF.FES')}</FormLabel>
-        </Col>
+  // return <Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>
+  const logo_enter=<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512 512" width="15" height="15">
+    <g>
+      <path d="M170.699,448H72.757c-4.814-0.012-8.714-3.911-8.725-8.725V72.725c0.012-4.814,3.911-8.714,8.725-8.725h97.941   c17.673,0,32-14.327,32-32s-14.327-32-32-32H72.757C32.612,0.047,0.079,32.58,0.032,72.725v366.549   C0.079,479.42,32.612,511.953,72.757,512h97.941c17.673,0,32-14.327,32-32S188.372,448,170.699,448z"/>
+      <path d="M480.032,224l-290.987,0.576l73.941-73.941c12.501-12.495,12.506-32.758,0.011-45.259s-32.758-12.506-45.259-0.011   l-82.752,82.752c-37.491,37.49-37.491,98.274-0.001,135.764c0,0,0.001,0.001,0.001,0.001l82.752,82.752   c12.501,12.495,32.764,12.49,45.259-0.011s12.49-32.764-0.011-45.259l-72.811-72.789L480.032,288   c17.673-0.035,31.971-14.391,31.936-32.064S497.577,223.965,479.904,224H480.032z"/>
+    </g>
+  </svg>
+  const logo_exit=<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="15" height="15">
+    <g>
+      <path d="M170.698,448H72.757c-4.814-0.012-8.714-3.911-8.725-8.725V72.725c0.012-4.814,3.911-8.714,8.725-8.725h97.941   c17.673,0,32-14.327,32-32s-14.327-32-32-32H72.757C32.611,0.047,0.079,32.58,0.032,72.725v366.549   C0.079,479.42,32.611,511.953,72.757,512h97.941c17.673,0,32-14.327,32-32S188.371,448,170.698,448z"/>
+      <path d="M483.914,188.117l-82.816-82.752c-12.501-12.495-32.764-12.49-45.259,0.011s-12.49,32.764,0.011,45.259l72.789,72.768   L138.698,224c-17.673,0-32,14.327-32,32s14.327,32,32,32l0,0l291.115-0.533l-73.963,73.963   c-12.042,12.936-11.317,33.184,1.618,45.226c12.295,11.445,31.346,11.436,43.63-0.021l82.752-82.752   c37.491-37.49,37.491-98.274,0.001-135.764c0,0-0.001-0.001-0.001-0.001L483.914,188.117z"/>
+    </g>
+  </svg>
+  const content=<><Form>
+    <Form.Group as={Row}>
+      <Col xs={6}>
+        <FormLabel >{t('Noeud.PF.FES')}</FormLabel>
+      </Col>
 
-        {/* Choisir un lien entrant */}
-        <Col xs={3}>
+      {/* Choisir un lien entrant */}
+      <Col >
+        <ButtonGroup>
           <OverlayTrigger
             key={'noeud.pf.tooltips.1'}
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.pf.tooltips.1'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
-            <FormCheck
-              value="output"
-              type='radio'
-              label={t('Noeud.PF.sort')}
-              checked={link_io=='output'}
-              onChange={() => {
+            <Button
+              variant={(link_io=='output')?'dark':'outline-dark'}
+              onClick={() => {
                 set_link_io('output')
                 set_link_pos('')
-              }}/>
-          </OverlayTrigger>
-        </Col>
+              }}>{logo_exit}</Button>
 
-        {/* Choisir un lien entrant */}
-        <Col xs={3}>
+          </OverlayTrigger>
+          
+
+          {/* Choisir un lien entrant */}
+
           <OverlayTrigger
             key={'noeud.pf.tooltips.2'}
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'noeud.pf.tooltips.2'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
-            <FormCheck
-              value="input"
-              type='radio'
-              label={t('Noeud.PF.ent')}
-              checked={link_io=='input'}
-              onChange={() => {
+            <Button
+              variant={(link_io=='input')?'dark':'outline-dark'}
+              onClick={() => {
                 set_link_io('input')
                 set_link_pos('')
-              }}/>
-          </OverlayTrigger>
-        </Col>
-      </Form.Group>
+              }}>{logo_enter}</Button>
 
-      <Form.Group as={Row}>
-        <Col xs={2}>
-          <FormLabel >{t('Noeud.PF.FRN')}</FormLabel>
-        </Col>
-
-        {/* Choisir un lien situé à gauche */}
-        <Col xs={2}>
-          <OverlayTrigger
-            key={'noeud.pf.tooltips.3'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.pf.tooltips.3'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
-            <FormCheck
-              disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
-              value="left"
-              type='radio'
-              label={t('Noeud.PF.gauche')}
-              checked={link_pos=='left'}
-              onChange={() => {
-                set_link_pos('left')
-              }}/>
           </OverlayTrigger>
-        </Col>
+        </ButtonGroup>
+      </Col>
+    </Form.Group>
 
-        {/* Choisir un lien situé à droite */}
-        <Col xs={2}>
-          <OverlayTrigger
-            key={'noeud.pf.tooltips.4'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.pf.tooltips.4'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
-            <FormCheck
-              disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
-              value="right"
-              type='radio'
-              label={t('Noeud.PF.droite')}
-              checked={link_pos=='right'}
-              onChange={() => {
-                set_link_pos('right')
-              }}/>
-          </OverlayTrigger>
-        </Col>
+    <Form.Group as={Row}>
+      <Col xs={2}>
+        <FormLabel >{t('Noeud.PF.FRN')}</FormLabel>
+      </Col>
 
-        {/* Choisir un lien situé au dessus */}
-        <Col xs={3}>
-          <OverlayTrigger
-            key={'noeud.pf.tooltips.5'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.pf.tooltips.5'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
-            <FormCheck
-              disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
-              value="top"
-              type='radio'
-              label={t('Noeud.PF.ades')}
-              checked={link_pos=='top'}
-              onChange={() => {
-                set_link_pos('top')
-              }}/>
-          </OverlayTrigger>
-        </Col>
+      {/* Choisir un lien situé à gauche */}
+      <Col xs={2}>
+        <OverlayTrigger
+          key={'noeud.pf.tooltips.3'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.pf.tooltips.3'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
+          <FormCheck
+            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
+            value="left"
+            type='radio'
+            label={t('Noeud.PF.gauche')}
+            checked={link_pos=='left'}
+            onChange={() => {
+              set_link_pos('left')
+            }}/>
+        </OverlayTrigger>
+      </Col>
 
-        {/* Choisir un lien situé en dessous */}
-        <Col xs={3}>
-          <OverlayTrigger
-            key={'noeud.pf.tooltips.6'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.pf.tooltips.6'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
-            <FormCheck
-              disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
-              value="bottom"
-              type='radio'
-              label={t('Noeud.PF.edes')}
-              checked={link_pos=='bottom'}
-              onChange={() => {
-                set_link_pos('bottom')
-              }}/>
-          </OverlayTrigger>
-        </Col>
-      </Form.Group>
+      {/* Choisir un lien situé à droite */}
+      <Col xs={2}>
+        <OverlayTrigger
+          key={'noeud.pf.tooltips.4'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.pf.tooltips.4'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
+          <FormCheck
+            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
+            value="right"
+            type='radio'
+            label={t('Noeud.PF.droite')}
+            checked={link_pos=='right'}
+            onChange={() => {
+              set_link_pos('right')
+            }}/>
+        </OverlayTrigger>
+      </Col>
 
-      {/* Mettre les couleurs des flux dans le tableau pour les indentifier */}
-      <Form.Group as={Row}>
-        <Col xs={8}>
-          <FormLabel >{t('Noeud.PF.lti')}</FormLabel>
-        </Col>
-        <Col xs={3}>
-          <OverlayTrigger
-            key={'noeud.pf.tooltips.7'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.pf.tooltips.7'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
-            <FormCheck
-              value="bottom"
-              type='checkbox'
-              label={t('Noeud.PF.col')}
-              checked={tab_colored}
-              onChange={() => {
-                //console.log(tab_colored)
-                set_tab_colored(!tab_colored)
-              }}/>
-          </OverlayTrigger>
-        </Col>
-      </Form.Group>
-    </Form>
-    {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored,getLinkValue)}
-  </Tab>
+      {/* Choisir un lien situé au dessus */}
+      <Col xs={3}>
+        <OverlayTrigger
+          key={'noeud.pf.tooltips.5'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.pf.tooltips.5'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
+          <FormCheck
+            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
+            value="top"
+            type='radio'
+            label={t('Noeud.PF.ades')}
+            checked={link_pos=='top'}
+            onChange={() => {
+              set_link_pos('top')
+            }}/>
+        </OverlayTrigger>
+      </Col>
+
+      {/* Choisir un lien situé en dessous */}
+      <Col xs={3}>
+        <OverlayTrigger
+          key={'noeud.pf.tooltips.6'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.pf.tooltips.6'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
+          <FormCheck
+            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
+            value="bottom"
+            type='radio'
+            label={t('Noeud.PF.edes')}
+            checked={link_pos=='bottom'}
+            onChange={() => {
+              set_link_pos('bottom')
+            }}/>
+        </OverlayTrigger>
+      </Col>
+    </Form.Group>
+
+    {/* Mettre les couleurs des flux dans le tableau pour les indentifier */}
+    <Form.Group as={Row}>
+      <Col xs={8}>
+        <FormLabel >{t('Noeud.PF.lti')}</FormLabel>
+      </Col>
+      <Col xs={3}>
+        <OverlayTrigger
+          key={'noeud.pf.tooltips.7'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.pf.tooltips.7'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
+          <FormCheck
+            value="bottom"
+            type='checkbox'
+            label={t('Noeud.PF.col')}
+            checked={tab_colored}
+            onChange={() => {
+              //console.log(tab_colored)
+              set_tab_colored(!tab_colored)
+            }}/>
+        </OverlayTrigger>
+      </Col>
+    </Form.Group>
+  </Form>
+  {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored,getLinkValue)}
+  </>
+
+  return menu_for_modal?content:<Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>{content}</Tab>
 }
 
 

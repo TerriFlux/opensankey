@@ -31,6 +31,8 @@ const SankeyDrawPropTypes = {
 
   min_width_and_height:PropTypes.func.isRequired,
   additional_draw_element:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  pointer_pos:PropTypes.shape({current:PropTypes.arrayOf(PropTypes.number.isRequired).isRequired}).isRequired,
+  set_show_context_zdd:PropTypes.func.isRequired
 
 }
 
@@ -49,6 +51,8 @@ export const SankeyDrawDefaultProps = {
   min_width_and_height:()=>[],
   set_show_toast_limit_node:()=>false,
   additional_draw_element:[],
+  pointer_pos:{current:[]},
+  set_show_context_zdd:()=>false
 
 }
 
@@ -63,7 +67,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
-  additional_draw_element
+  additional_draw_element,
+  pointer_pos,
+  set_show_context_zdd
 }) => {
 
   // const [first_selected_node,set_first_selected_node] = useState({})
@@ -321,6 +327,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
 
       )
+    svgSankey.on('contextmenu',(evt)=>{
+      evt.preventDefault()
+      pointer_pos.current=[evt.pageX,evt.pageY]
+      console.log(d3.select(evt.target).attr('class'))
+      if(d3.select(evt.target).attr('class')=='mode_selection'){
+        set_show_context_zdd(true)
+      }
+    })
 
     drawGrid(data)
 
@@ -408,7 +422,14 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_nav:React.Dispatch<React.SetStateAction<boolean>>,
-  mode_selection:{current : string}
+  mode_selection:{current : string},
+  set_show_menu_node_apparence:(b:boolean)=>void,
+  set_show_menu_node_label:(b:boolean)=>void,
+  set_show_menu_node_io:(b:boolean)=>void,
+  set_show_menu_link_data:(b:boolean)=>void,
+  set_show_menu_link_appearence:(b:boolean)=>void,
+  set_show_menu_link_label:(b:boolean)=>void,
+
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
@@ -504,6 +525,12 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     multi_selected_links.current=[]
 
     set_show_nav(false)
+    set_show_menu_node_apparence(false)
+    set_show_menu_node_label(false)
+    set_show_menu_node_io(false)
+    set_show_menu_link_data(false)
+    set_show_menu_link_appearence(false)
+    set_show_menu_link_label(false)
     // set_mode_selection('s')
     // if ( button_ref && button_ref.current && accordion_ref ) {
     //   button_ref.current.click()

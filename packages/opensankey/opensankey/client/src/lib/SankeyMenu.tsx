@@ -1,9 +1,10 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
-import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref } from 'react'
+import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card} from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink} from './types'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink,SankeyNode,SankeyLinkValue} from './types'
+
 import { convert_data,complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
@@ -13,11 +14,17 @@ import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 // import ModalPreference from './SankeyMenuPreferences'
 // import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
+import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
-import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileExport, faTrashCan, faFileInvoice, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileExport, faTrashCan, faFileInvoice, faPenToSquare,faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {addAllDropDownNode} from './SankeyMenuBanner'
+import { reorganize_inputLinksId } from './SankeyLayout'
+import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinks'
+import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
+import Draggable from 'react-draggable'
+import CloseButton from 'react-bootstrap/CloseButton'
 
 declare const window: Window &
   typeof globalThis & {
@@ -109,6 +116,11 @@ const MenuPropTypes = {
   show_modale_support:PropTypes.bool.isRequired,
   set_show_modale_support:PropTypes.func.isRequired,
   additional_nav_item:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+
+  set_contextualised_node:PropTypes.func.isRequired,
+  set_contextualised_link:PropTypes.func.isRequired,
+  set_show_context_zdd:PropTypes.func.isRequired,
+
 
 }
 
@@ -986,12 +998,14 @@ const Menu: FunctionComponent<MenuTypes> = (
     min_width_and_height,
     formations_menu,reinitialization,set_show_modale_tuto,show_modale_tuto,
     show_modale_support,set_show_modale_support,
-    additional_nav_item
+    additional_nav_item,
+    set_contextualised_node,
+    set_contextualised_link,
+    set_show_context_zdd
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
-
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
     const new_max_link_value = SankeyUtils.findMaxLinkValue(
@@ -1230,11 +1244,17 @@ const Menu: FunctionComponent<MenuTypes> = (
   </Modal>
 
 
+
+
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
       {/* Top Navbar with navigation and edition elements */}
-      <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} >
+      <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
+        set_contextualised_node(undefined)
+        set_contextualised_link(undefined)
+        set_show_context_zdd(false)
+      }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>
             <Navbar.Brand style={{marginRight:'0px'}} href="https://terriflux.com/" ><img src={logo_terriflux} width={100} /> </Navbar.Brand>
@@ -1529,4 +1549,746 @@ export const OpenSankeyModalWelcome=(t:TFunction,
       }}/>
     </Modal.Footer>
   </Modal>
+}
+
+const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem','paddingRight':'0.75rem',
+  'position': 'fixed',
+  'flexDirection': 'column',
+  'backgroundColor': '#fff',
+  'backgroundClip': 'padding-box',
+  'border': '1px solid rgba(0, 0, 0, 0.2)',
+  'borderRadius':' 0.6rem',
+  'zIndex':'1',
+  overflowY:'auto'
+} as CSSProperties
+
+export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{current:number[]},title:string,set_display_menu:(b:boolean)=>void)=>{
+  const class_name=title.replaceAll('/','').replaceAll('.','').split(' ').join('_')
+  return <Draggable  handle='.title_menu' 
+    defaultPosition={{x:pointer_pos.current[0],y:pointer_pos.current[1]}}
+    onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
+      d3.select('.menu_conf.'+class_name).style('z-index','2')
+    }} 
+  >
+    <div className={'menu_conf '+class_name}
+      style={style_menu_draggable}       
+    >
+      <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'1','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
+        <Col><h3>{title}</h3></Col>
+        <Col className='text-end'>{<CloseButton onClick={()=>{set_display_menu(false)}}/>}</Col>
+      </Row>  
+      {content}
+    </div>
+  </Draggable>
+}
+
+
+const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
+const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
+const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
+
+export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
+  data:SankeyData,set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
+  multi_selected_links:{current:SankeyLink[]},
+  t:TFunction,
+  set_show_menu_node_apparence:React.Dispatch<React.SetStateAction<boolean>>,
+  set_show_menu_node_label:React.Dispatch<React.SetStateAction<boolean>>,
+  set_show_menu_node_io:React.Dispatch<React.SetStateAction<boolean>>,
+  set_agregation_node:React.Dispatch<React.SetStateAction<string>>,
+  set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,
+  set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,
+  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
+  pointer_pos:{current:number[]},
+  additional_context_element:JSX.Element[]
+)=>{
+  let style_c_n='0px 0px auto auto'
+  if(contextualised_node!==undefined){
+    style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+  } 
+
+  // Dropdown to change some pararmeter concerning the appearence of the node  
+  const dropdown_c_n_tag=contextualised_node!==undefined ?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Menu.tagNode_assign')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu  variant='light'>
+      {Object.entries(data.nodeTags).filter(nt=>Object.keys(nt[1].tags).length>0).map(nt=>{
+        return <Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+          <Dropdown.Toggle variant="light" id="dropdown-basic">
+            {nt[1].group_name}
+          </Dropdown.Toggle>
+          <Dropdown.Menu  variant='light'>
+            {Object.keys(nt[1].tags).map(t=>{
+              return <Dropdown.Item onClick={()=>{
+                // Contextualised node
+                if(!Object.keys(contextualised_node.tags).includes(nt[0])){
+                  contextualised_node.tags[nt[0]]=[]
+                }
+                if(!contextualised_node.tags[nt[0]].includes(t)){
+                  contextualised_node.tags[nt[0]].push(t)
+                }else{
+                  contextualised_node.tags[nt[0]].splice(contextualised_node.tags[nt[0]].indexOf(t))
+                }
+                //Selected nodes
+                multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
+                  if(!Object.keys(n.tags).includes(nt[0])){
+                    n.tags[nt[0]]=[]
+                  }
+                  if(!n.tags[nt[0]].includes(t)){
+                    n.tags[nt[0]].push(t)
+                  }else{
+                    n.tags[nt[0]].splice(n.tags[nt[0]].indexOf(t))
+                  }
+                })
+
+                set_data({...data})
+              }}>
+                {nt[1].tags[t].name}{checked(contextualised_node.tags[nt[0]] &&contextualised_node.tags[nt[0]].includes(t))}
+              </Dropdown.Item>
+            })}
+          </Dropdown.Menu>
+        </Dropdown>
+      })}
+
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+  // const dropdown_c_n_label_position_horiz=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
+  //     {t('Noeud.labels.ph')}
+  //   </Dropdown.Toggle>
+
+  //   <Dropdown.Menu  variant='light'>
+  //     {['left','middle','right'].map(lab=>{
+  //       return <Dropdown.Item onClick={()=>{
+  //         assign_value_to_contextualised_node('label_horiz',lab)
+  //         set_data({...data})
+  //       }}>
+  //         {t('Noeud.labels.'+lab)}{checked(SankeyUtils.return_value_node(data,contextualised_node,'label_horiz')==lab)}
+  //       </Dropdown.Item>
+  //     })}
+
+  //   </Dropdown.Menu>
+  // </Dropdown>:<></>
+
+  // const dropdown_c_n_label_position_vert=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
+  //     {t('Noeud.labels.pv')}
+  //   </Dropdown.Toggle>
+  
+  //   <Dropdown.Menu  variant='light'>
+  //     {['top','middle','bottom'].map(lab=>{
+  //       return <Dropdown.Item onClick={()=>{
+  //         assign_value_to_contextualised_node('label_vert',lab)
+  //         set_data({...data})
+  //       }}>
+  //         {t('Noeud.labels.'+lab)}{checked(SankeyUtils.return_value_node(data,contextualised_node,'label_vert')==lab)}
+  //       </Dropdown.Item>
+  //     })}
+  
+  //   </Dropdown.Menu>
+  // </Dropdown>:<></>
+  
+  // const dropdown_c_n_label_position=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
+  //     {t('Noeud.labels.pos')}
+  //   </Dropdown.Toggle>
+
+  //   <Dropdown.Menu  variant='light'>
+  //     {dropdown_c_n_label_position_horiz}
+  //     {dropdown_c_n_label_position_vert}
+
+  //   </Dropdown.Menu>
+  // </Dropdown>:<></>
+
+  
+  // Position of node value label 
+  // const dropdown_c_n_label_value_position_horiz=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
+  //     {t('Noeud.labels.ph')}
+  //   </Dropdown.Toggle>
+
+  //   <Dropdown.Menu  variant='light'>
+  //     {['left','middle','right'].map(lab=>{
+  //       return <Dropdown.Item onClick={()=>{
+  //         assign_value_to_contextualised_node('label_horiz_valeur',lab)
+  //         set_data({...data})
+  //       }}>
+  //         {t('Noeud.labels.'+lab)}{checked(SankeyUtils.return_value_node(data,contextualised_node,'label_horiz_valeur')==lab)}
+  //       </Dropdown.Item>
+  //     })}
+
+  //   </Dropdown.Menu>
+  // </Dropdown>:<></>
+
+  // const dropdown_c_n_label_value_position_vert=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
+  //     {t('Noeud.labels.pv')}
+  //   </Dropdown.Toggle>
+  
+  //   <Dropdown.Menu  variant='light'>
+  //     {['top','middle','bottom'].map(lab=>{
+  //       return <Dropdown.Item onClick={()=>{
+  //         assign_value_to_contextualised_node('label_vert_valeur',lab)
+  //         set_data({...data})
+  //       }}>
+  //         {t('Noeud.labels.'+lab)}{checked(SankeyUtils.return_value_node(data,contextualised_node,'label_vert_valeur')==lab)}
+  //       </Dropdown.Item>
+  //     })}
+  
+  //   </Dropdown.Menu>
+  // </Dropdown>:<></>
+  
+  // const dropdown_c_n_label_value_position=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
+  //     {t('Noeud.labels.pos_v')}
+  //   </Dropdown.Toggle>
+
+  //   <Dropdown.Menu  variant='light'>
+  //     {dropdown_c_n_label_value_position_horiz}
+  //     {dropdown_c_n_label_value_position_vert}
+
+  //   </Dropdown.Menu>
+  // </Dropdown>:<></>
+
+
+
+  // Context menu for label
+  // const dropdown_c_n_label=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
+  //     {t('Noeud.labels.labels')}
+  //   </Dropdown.Toggle>
+  //   <Dropdown.Menu variant='light'>
+  //     <Dropdown.Item onClick={()=>{
+  //       assign_value_to_contextualised_node('label_visible',!SankeyUtils.return_value_node(data,contextualised_node,'label_visible'))
+  //       set_data({...data})
+  //     }}>
+  //       {t('Noeud.labels.vdb')}{checked(Boolean(SankeyUtils.return_value_node(data,contextualised_node,'label_visible')))}
+  //     </Dropdown.Item>
+  //     {SankeyUtils.return_value_node(data,contextualised_node,'label_visible')?dropdown_c_n_label_position:<></>}
+  //     <Dropdown.Item onClick={()=>{
+  //       assign_value_to_contextualised_node('show_value',!SankeyUtils.return_value_node(data,contextualised_node,'show_value'))
+  //       set_data({...data})
+  //     }}>
+  //       {t('Noeud.labels.vdv')}{checked(Boolean(SankeyUtils.return_value_node(data,contextualised_node,'show_value')))}
+  //     </Dropdown.Item>
+  //     {SankeyUtils.return_value_node(data,contextualised_node,'show_value')?dropdown_c_n_label_value_position:<></>}
+  //   </Dropdown.Menu>
+  // </Dropdown>:<></>
+  const dropdown_c_n_label=contextualised_node!==undefined?<Button onClick={()=>{
+    set_show_menu_node_label(true)
+    set_contextualised_node(undefined)
+  }} variant='light'>{t('Noeud.labels.labels')} {icon_open_modal}</Button>:<></>
+
+
+
+  const dropdown_c_n_apparence=contextualised_node!==undefined?<Button onClick={()=>{
+    set_show_menu_node_apparence(true)
+    set_contextualised_node(undefined)
+  }} variant='light'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>:<></>
+
+
+  // Dropdown to change some pararmeter concerning the style of the node  
+  const dropdown_c_n_style_select=contextualised_node!==undefined?<Dropdown autoClose='outside' as={Button} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.SelectStyle')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      {
+        Object.values(data.style_node).map(sn=>{
+          return <Dropdown.Item onClick={()=>{
+            contextualised_node.style=sn.idNode
+            multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>n.style=sn.idNode)
+
+            set_data({...data})
+          }}>{sn.name}{checked(contextualised_node.style==sn.idNode)}</Dropdown.Item>
+        })
+      }
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+  const dropdown_c_n_style=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.Style')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item onClick={()=>{
+        delete contextualised_node.local
+        multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>delete n.local)
+
+        set_data({...data})
+      }}>{t('Noeud.AS')}</Dropdown.Item>
+      {dropdown_c_n_style_select}
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+  const dropdown_c_n_io=contextualised_node!==undefined?<Button onClick={()=>{
+    set_show_menu_node_io(true)
+    set_contextualised_node(undefined)
+  }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>:<></>
+
+  // Pop over that serve as context menu 
+  return contextualised_node!==undefined?<Popover  id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
+    <Popover.Body>
+      <ButtonGroup vertical>
+        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.node_context_has_aggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
+          SankeyUtils.aggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
+          set_data({...data})
+          set_contextualised_node(undefined)
+        }}>Aggregation</Button>:<></>}
+        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.node_context_has_desaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
+          SankeyUtils.desaggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
+          set_data({...data})
+          set_contextualised_node(undefined)
+        }}>Desaggregation</Button>:<></>}
+        {sep}        
+        <Button
+          variant='light'
+          onClick={() => {
+            multi_selected_links.current = [] as SankeyLink[]
+            multi_selected_links.current = Object.values(data.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink))
+            const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
+            set_display_link_opacity(opacity)
+            set_contextualised_node(undefined)
+            set_data(data)
+          }}>
+          {t('Noeud.SlctOutLink')}
+        </Button>
+        <Button
+          variant='light'
+          onClick={() => {
+            multi_selected_links.current = [] as SankeyLink[]
+            multi_selected_links.current = Object.values(data.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink))
+            const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
+            set_display_link_opacity(opacity)
+            set_contextualised_node(undefined)
+            set_data(data)
+          }}>
+          {t('Noeud.SlctInLink')}
+        </Button>
+        <Button
+          variant='light'
+          onClick={() => {
+            reorganize_node_inputLinksId(data,contextualised_node, data.nodes, data.links)
+            reorganize_node_outputLinksId(data,contextualised_node, data.nodes, data.links)
+            multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
+              reorganize_node_inputLinksId(data,n, data.nodes, data.links)
+              reorganize_node_outputLinksId(data,n, data.nodes, data.links)
+            })
+            set_contextualised_node(undefined)
+            set_data({ ...data })
+          }}>
+          {t('Noeud.Reorg')}
+        </Button>
+        {multi_selected_nodes.current.length==1?dropdown_c_n_io:<></>}
+        {sep}
+        {dropdown_c_n_tag}
+        {sep}
+
+        {dropdown_c_n_apparence}
+        {dropdown_c_n_label}
+        {additional_context_element}
+        {sep}
+        {dropdown_c_n_style}
+
+      </ButtonGroup>
+    </Popover.Body>
+  </Popover>:<></>
+}
+
+export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_contextualised_node:(n:SankeyLink|undefined)=>void,
+  set_show_menu_link_data:(b:boolean)=>void,
+  set_show_menu_link_appearence:(b:boolean)=>void,
+  set_show_menu_link_label:(b:boolean)=>void,
+  data:SankeyData,set_data:(d:SankeyData)=>void,
+  tags_selected:{[k: string]: string},
+  multi_selected_links:{current:SankeyLink[]},
+  t:TFunction,
+  pointer_pos:{current:number[]}
+)=>{
+  let style_c_l='0px 0px auto auto'
+  if(contextualised_link!==undefined){
+    style_c_l=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+  }
+
+  const invert_flux=(l:SankeyLink,nodes_to_reorganize: SankeyNode[])=>{
+              
+    const tmp = l.idSource
+    const previous_node_s = data.nodes[l.idSource]
+    previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
+    const source_node = data.nodes[l.idTarget]
+    l.idSource = source_node.idNode
+    source_node.outputLinksId.push(l.idLink)
+    nodes_to_reorganize.push(source_node)
+    const previous_node_t = data.nodes[l.idTarget]
+    previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
+    const target_node = data.nodes[tmp]
+    l.idTarget = target_node.idNode
+    target_node.inputLinksId.push(l.idLink)
+    nodes_to_reorganize.push(target_node)
+              
+              
+  }
+  
+  const value_selected_parameter_contextualised_link = (): SankeyLinkValue => {
+    if(contextualised_link===undefined){
+      return ({} as SankeyLinkValue)
+    }else{
+      if ( Object.keys(data.links).length === 0 || !(contextualised_link.idLink in data.links) ) {
+        let val = JSON.parse(JSON.stringify(Object(contextualised_link.value)))
+        Object.values(tags_selected).map(tag_selected => {
+          if (val[tag_selected] === undefined) {
+            val[tag_selected] = {}
+          }
+          val = val[tag_selected]
+        })
+        return val
+      }
+      let val = JSON.parse(JSON.stringify(Object(data.links[contextualised_link.idLink].value)))
+      Object.values(tags_selected).map(tag_selected => {
+        if (val[tag_selected] === undefined) {
+          val[tag_selected] = {'display_value': '',tags:{},value:0}
+        }
+        val = val[tag_selected]
+      })
+      return val
+    }
+    
+  }
+
+  // // Dropdown to change some pararmeter concerning the appearence of the node  
+  const dropdown_c_l_tag=contextualised_link!==undefined && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Menu.tagFlux_assign')}
+    </Dropdown.Toggle>
+
+    <Dropdown.Menu  variant='light'>
+      {Object.entries(data.fluxTags).filter(nt=>Object.keys(nt[1].tags).length>0).map(nt=>{
+        return <Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+          <Dropdown.Toggle variant="light" id="dropdown-basic">
+            {nt[1].group_name}
+          </Dropdown.Toggle>
+          <Dropdown.Menu  variant='light'>
+            {Object.keys(nt[1].tags).map(t=>{
+              return <Dropdown.Item onClick={()=>{
+                // Assign tag to selected links
+                multi_selected_links.current.filter(l=>l!==contextualised_link).forEach(l=>{
+                  let val = Object(l.value)
+                  Object.values(tags_selected).forEach(tag => {
+                    if (val[tag] === undefined) {
+                      val[tag] = {}
+                    }
+                    val = val[tag]
+                  })
+                  val.tags[nt[0]] = !(value_selected_parameter_contextualised_link().tags[nt[0]] === t)? t : ''
+                })
+
+                // Assign tag to contextualised link
+                let val = Object(contextualised_link.value)
+                Object.values(tags_selected).forEach(tag => {
+                  if (val[tag] === undefined) {
+                    val[tag] = {}
+                  }
+                  val = val[tag]
+                })
+                val.tags[nt[0]] = !(value_selected_parameter_contextualised_link().tags[nt[0]] === t)? t : ''
+
+                
+                set_data({...data})
+              }}>
+                {nt[1].tags[t].name}{checked(value_selected_parameter_contextualised_link().tags[nt[0]] === t)}
+              </Dropdown.Item>
+            })}
+          </Dropdown.Menu>
+        </Dropdown>
+      })}
+
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+  const button_open_link_label=contextualised_link!==undefined?<Button onClick={()=>{
+    set_show_menu_link_label(true)
+    set_contextualised_node(undefined)
+  }} variant='light'>{t('Flux.label.label')} {icon_open_modal}</Button>:<></>
+ 
+  const button_open_link_appearence=contextualised_link!==undefined?<Button onClick={()=>{
+    set_show_menu_link_appearence(true)
+    set_contextualised_node(undefined)
+  }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
+
+  // Dropdown to change some pararmeter concerning the style of the node  
+  const dropdown_c_l_style_select=contextualised_link!==undefined?<Dropdown autoClose='outside' as={Button} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.SelectStyle')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      {
+        Object.values(data.style_node).map(sn=>{
+          return <Dropdown.Item onClick={()=>{
+            contextualised_link.style=sn.idNode
+            multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>n.style=sn.idNode)
+
+            set_data({...data})
+          }}>{sn.name}{checked(contextualised_link.style==sn.idNode)}</Dropdown.Item>
+        })
+      }
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+  const dropdown_c_l_style=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.Style')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item onClick={()=>{
+        delete contextualised_link.local
+        multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>delete n.local)
+        set_data({...data})
+      }}>{t('Noeud.AS')}</Dropdown.Item>
+      {dropdown_c_l_style_select}
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+  const dropdown_c_l_layout=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Flux.layout')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>      
+      <Dropdown.Item onClick={()=>{
+        multi_selected_links.current.forEach(n=>handleDownLink(data,n.idLink))
+        set_data({...data})
+      }}>{t('Flux.layoutUp')}</Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        multi_selected_links.current.map(l => {
+          const i = l.idLink
+          const { links } = data
+          const listElmt = Object.keys(links)
+          const posElemt = listElmt.indexOf(i)
+          listElmt.splice(posElemt, 1)
+          listElmt.splice(listElmt.length, 0, i)
+          const new_cat: { [key: string]: SankeyLink } = {}
+          listElmt.forEach(elt => {
+            new_cat[elt] = links[elt]
+          })
+          for (const member in links) delete links[member]
+          Object.assign(links, new_cat)
+        })
+        set_data({...data})
+      }}>{t('Flux.layoutTop')}</Dropdown.Item>
+
+
+
+
+
+      <Dropdown.Item onClick={()=>{
+        multi_selected_links.current.forEach(n=>handleUpLink(data,n.idLink))
+        set_data({...data})
+      }}>{t('Flux.layoutDown')}</Dropdown.Item>
+
+      <Dropdown.Item onClick={()=>{
+        multi_selected_links.current.map(l => {
+          const i = l.idLink
+          const { links } = data
+          const listElmt = Object.keys(links)
+          const posElemt = listElmt.indexOf(i)
+          listElmt.splice(posElemt, 1)
+          listElmt.splice(0, 0, i)
+          const new_cat: { [key: string]: SankeyLink } = {}
+          listElmt.forEach(elt => {
+            new_cat[elt] = links[elt]
+          })
+          for (const member in links) delete links[member]
+          Object.assign(links, new_cat)
+        })
+        set_data({...data})
+      }}>{t('Flux.layoutBottom')}</Dropdown.Item>
+     
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+  const button_open_link_data=contextualised_link!==undefined?<Button onClick={()=>{
+    set_show_menu_link_data(true)
+    set_contextualised_node(undefined)
+  }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
+
+  // Pop over that serve as context menu 
+  return contextualised_link!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
+    <Popover.Body >
+      <ButtonGroup vertical>
+        <Button variant='light' onClick={()=>{
+          const nodes_to_reorganize: SankeyNode[] = []
+          invert_flux(contextualised_link,nodes_to_reorganize)
+          multi_selected_links.current.filter(l=>l!==contextualised_link).forEach(l => {
+            invert_flux(l,nodes_to_reorganize)
+          })
+          nodes_to_reorganize.forEach(n => {
+            reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
+          })
+          set_data({ ...data })
+        }}>{t('Flux.if')}</Button>
+
+        {sep}
+        {dropdown_c_l_layout}
+        {sep}
+        {dropdown_c_l_tag}
+        {sep}
+        {button_open_link_data}
+        {button_open_link_appearence}
+        {button_open_link_label}
+        {sep}
+        {dropdown_c_l_style}
+
+      </ButtonGroup>
+    </Popover.Body>
+  </Popover>:<></>
+}
+
+export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolean)=>void,
+  data:SankeyData,set_data:(d:SankeyData)=>void,
+  pointer_pos:{current:number[]},
+  node_hspace:number,
+  set_node_hspace:(n:number)=>void,
+  node_vspace:number,
+  set_node_vspace:(n:number)=>void,
+  t:TFunction
+)=>{
+
+  let style_c_zdd='0px 0px auto auto'
+  if(show_context_zdd){
+    style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+  }
+    
+  const button_bg_color=<Form as={Button} variant='light'><Form.Control hidden type='color' id='color_bg_zdd' name='color_bg_zdd' onChange={(evt)=>{
+    data.couleur_fond_sankey=evt.target.value
+    set_data({...data})
+  }}></Form.Control>
+  <Form.Label htmlFor='color_bg_zdd'>{t('Menu.BgC')}</Form.Label>
+  </Form>
+
+  const button_bg_grid=<><Button variant='light' onClick={()=>{
+    data.grid_visible = !data.grid_visible
+    set_data({...data})
+  }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
+  </>
+
+
+  const dropdown_c_zdd_scale=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('MEP.Echelle')}
+    </Dropdown.Toggle>
+
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item as={Button} variant='light'>
+        <Form.Control
+          type="text"
+          value={data.user_scale}
+          onChange={evt => {
+            data.user_scale = +evt.target.value
+            set_data({ ...data })
+          }}
+        />
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>
+
+  const dropdown_c_zdd_max_size_link=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('MEP.MaxFlux')}
+    </Dropdown.Toggle>
+
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item as={Button} variant='light'>
+        <Form.Control
+          type="text"
+          value={data.maximum_flux == null ? undefined :data.maximum_flux}
+          onChange={(evt) => {
+            const maximum_flux =isNaN(+evt.target.value)?null:+evt.target.value
+            data.maximum_flux = maximum_flux
+            set_data({ ...data })
+          }}
+        />
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>
+
+  const button_pa=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('MEP.PA')}
+    </Dropdown.Toggle>
+
+    <Dropdown.Menu variant='light'>
+
+      {/* Set vertical value for automatic positionning */}
+      <Dropdown.Item as={Button} variant='light'>
+        <Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+          <Dropdown.Toggle variant="light" id="dropdown-basic">
+            {t('MEP.Horizontal')}
+          </Dropdown.Toggle>
+          <Dropdown.Menu variant='light'>
+            <Dropdown.Item as={Button} variant='light'>
+              <Form.Control
+                type="text"
+                value={node_hspace}
+                onChange={evt => {
+                  set_node_hspace(+evt.target.value)
+                  data.h_space = +evt.target.value
+                }}
+              /></Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+      </Dropdown.Item>
+
+      {/* Set vertical value for automatic positionning */}
+      <Dropdown.Item as={Button} variant='light'>
+        <Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+          <Dropdown.Toggle variant="light" id="dropdown-basic">
+            {t('MEP.Vertical')}
+          </Dropdown.Toggle>
+          <Dropdown.Menu variant='light'>
+            <Dropdown.Item as={Button} variant='light'>
+              <Form.Control
+                type="text"
+                value={node_vspace}
+                onChange={evt => {
+                  set_node_vspace(+evt.target.value)
+                  data.h_space = +evt.target.value
+                }}
+              /></Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+      </Dropdown.Item>
+    
+      <Dropdown.Item as={Button} variant='light' onClick={() => {
+        compute_auto_sankey(data, node_hspace)
+        set_data({ ...data })
+      }}>{t('MEP.PA_action')}</Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>
+  
+  
+  
+  const button_an=<Button variant='light'
+    onClick={() => {
+      arrangeNodes(data)
+      set_data({ ...data })
+    }}>
+    {t('MEP.AN')}
+  </Button>
+
+
+
+
+  return show_context_zdd?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
+    <Popover.Body >
+      <ButtonGroup vertical>
+        {button_bg_color}
+        {button_bg_grid}
+        {dropdown_c_zdd_scale}
+        {dropdown_c_zdd_max_size_link}
+        {sep}
+        {button_pa}
+        {button_an}
+      </ButtonGroup>
+    </Popover.Body>
+  </Popover>:<></>
 }

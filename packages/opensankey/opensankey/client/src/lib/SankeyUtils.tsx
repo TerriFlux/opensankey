@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup,SankeyNodeAttrLocal,SankeyNodeStyle,SankeyLinkAttrLocal,SankeyLinkStyle } from './types'
 import FileSaver from 'file-saver'
 import { complete_sankey_data, convert_data } from './SankeyConvert'
-import {  compute_auto_sankey, updateLayout,compute_default_input_outputLinksId } from './SankeyLayout'
+import {  compute_auto_sankey, updateLayout,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
 import * as d3 from 'd3'
 import colormap from 'colormap'
 
@@ -1695,4 +1695,124 @@ export const assign_link_local_attribute=(l:SankeyLink,k:keyof SankeyLinkAttrLoc
 // Assign the value to attribute of link style "l"
 export const assign_link_style_attribute=(l:SankeyLinkStyle,k:keyof SankeyLinkStyle,v:boolean|string|number)=>{
   (l[k] as unknown)=v
+}
+export const node_context_has_aggregate=(n:SankeyNode,data:SankeyData)=>{
+  if (!n.dimensions) {
+    return false
+  }
+      
+  const parent_names: string[] = []
+  const dim_names: string[] = []
+  Object.keys(n.dimensions).forEach(
+    dim => {
+      if (dim === 'Primaire') {
+        if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+          parent_names.push(n.idNode)
+          dim_names.push(dim)
+        }
+      } else if (!data.levelTags['Primaire'].activated && n.dimensions[dim].parent_name) {
+        parent_names.push(n.dimensions[dim].parent_name as string)
+        dim_names.push(dim)
+      }
+    }
+  )
+
+  if (parent_names.length > 0) {
+    return true
+  } else {
+    return false
+  }
+    
+}
+export const aggregate=(n:SankeyNode,data:SankeyData,set_agregation_node:(s:string)=>void,set_is_agregation:(b:boolean)=>void,set_show_agregation:(b:boolean)=>void)=>{
+  const parent_names: string[] = []
+  const dim_names: string[] = []
+  Object.keys(n.dimensions).forEach(
+    dim => {
+      if (dim === 'Primaire') {
+        if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+          parent_names.push(n.idNode)
+          dim_names.push(dim)
+        }
+      } else if (!data.levelTags['Primaire'].activated && n.dimensions[dim].parent_name) {
+        parent_names.push(n.dimensions[dim].parent_name as string)
+        dim_names.push(dim)
+      }
+    }
+  )
+  if (parent_names.length === 0) {
+    return
+  }
+  if (parent_names.length > 1) {
+    set_agregation_node(n.idNode)
+    set_is_agregation(true)
+    set_show_agregation(true)
+  } else {
+    agregation(data, n.idNode, dim_names[0])
+  }
+    
+}
+
+export const desaggregate=(n:SankeyNode,data:SankeyData,set_agregation_node:(s:string)=>void,set_is_agregation:(b:boolean)=>void,set_show_agregation:(b:boolean)=>void)=>{
+  const child_names: string[] = []
+  const dim_names: string[] = []
+  Object.values(data.nodes).forEach(n2 => {
+    for (const dim in n2.dimensions) {
+      if ( dim === 'Primaire') {
+        if ( data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+          child_names.push(n2.idNode)
+          dim_names.push(dim)
+        }
+      } else if (!data.levelTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
+        if (dim_names.indexOf(dim) === -1) {
+          child_names.push(n2.idNode)
+          dim_names.push(dim)
+        }
+      }
+    }
+    return false
+  })
+  if (child_names.length === 0) {
+    return
+  }
+  if (child_names.length > 1) {
+    set_agregation_node(n.idNode)
+    set_is_agregation(false)
+    set_show_agregation(true)
+  } else {
+    desagregation(data, n.idNode, dim_names[0])
+  }
+    
+}
+
+export const node_context_has_desaggregate=(n:SankeyNode,data:SankeyData)=>{
+  if (!n.dimensions) {
+    return false
+  }
+      
+  const child_names: string[] = []
+  const dim_names: string[] = []
+  Object.values(data.nodes).forEach(n2 => {
+    for (const dim in n2.dimensions) {
+      if ( dim === 'Primaire') {
+        if ( data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+          child_names.push(n2.idNode)
+          dim_names.push(dim)
+        }
+      } else if (!data.levelTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
+        if (dim_names.indexOf(dim) === -1) {
+          child_names.push(n2.idNode)
+          dim_names.push(dim)
+        }
+      }
+    }
+    return false
+  })
+
+  if (child_names.length > 0) {
+    return true
+  } else {
+    return false
+  }
+    
 }

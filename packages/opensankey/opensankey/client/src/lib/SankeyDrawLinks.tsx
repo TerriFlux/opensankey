@@ -3,7 +3,7 @@ import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyL
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import {  link_color,link_visible,node_displayed,return_value_node,return_value_link} from './SankeyUtils'
-import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height, deselect_visualy_links} from './SankeyDrawFunction'
+import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height, deselect_visualy_links,eventLinkContextMenu} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 import {value_selected_parameter,linkStrokeWidth} from './SankeyDrawFunction'
 
@@ -38,7 +38,9 @@ export const OpenSankeyDrawLinks = (
     data:SankeyData,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
   drawArrows:drawArrowsType,
-  set_display_link_opacity:(s:string)=>void
+  set_display_link_opacity:(s:string)=>void,
+  set_contextualised_link:(l:SankeyLink)=>void,
+  pointer_pos:{current:number[]}
 
 
 ) => {
@@ -184,7 +186,9 @@ export const OpenSankeyDrawLinks = (
     linkStroke:(l:SankeyLink,
       data:SankeyData,
       getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
-    drawArrows:drawArrowsType
+    drawArrows:drawArrowsType,
+    set_contextualised_link:(l:SankeyLink)=>void,
+    pointer_pos:{current:number[]}
   ) => {
     // Structure svg du link
     //- link :
@@ -224,6 +228,9 @@ export const OpenSankeyDrawLinks = (
       .attr('stroke-dasharray', d => {
         return strokeDasharray(d,data,getLinkValue)
       })
+    gg_links.on('contextmenu', (ev, l) => eventLinkContextMenu(ev,l,set_contextualised_link,pointer_pos,data,set_data,
+      multi_selected_links,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
+    ))
 
     const paths = gg_links.append('path')
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
@@ -757,7 +764,7 @@ export const OpenSankeyDrawLinks = (
     link.local.label_position = 'frozen'
   }
 
-  add_links(linkStroke,drawArrows)
+  add_links(linkStroke,drawArrows,set_contextualised_link,pointer_pos)
   
   return (<>
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>

@@ -166,39 +166,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     return DD
   }
 
-  //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
-  //Permet donc de les déssiner avant
-  const handleUpLink = (i: string) => {
-    const { links } = data
-    const listElmt = Object.keys(links)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt - 1, 0, i)
-    const new_cat: { [key: string]: SankeyLink } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = links[elt]
-    })
-    for (const member in links) delete links[member]
-    Object.assign(links, new_cat)
-    set_data({ ...data })
-  }
 
-  //Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
-  //Permet donc de les déssiner après
-  const handleDownLink = (i: string) => {
-    const { links } = data
-    const listElmt = Object.keys(links)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt + 1, 0, i)
-    const new_cat: { [key: string]: SankeyLink } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = links[elt]
-    })
-    for (const member in links) delete links[member]
-    Object.assign(links, new_cat)
-    set_data({ ...data })
-  }
 
   //Add new link and selection it
   const add_new_link = () => {
@@ -514,8 +482,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             <Button variant='info' disabled={multi_selected_links.current.length != 1}
               onClick={() => {
                 multi_selected_links.current.map(l => {
-                  handleDownLink(l.idLink)
+                  handleDownLink(data,l.idLink)
                 })
+                set_data({ ...data })
               }}>
               <FaAngleUp/>
             </Button>
@@ -557,8 +526,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             <Button variant='warning' disabled={multi_selected_links.current.length != 1}
               onClick={() => {
                 multi_selected_links.current.map(l => {
-                  handleUpLink(l.idLink)
+                  handleUpLink(data,l.idLink)
                 })
+                set_data({ ...data })
+
               }}>
               <FaAngleDown />
             </Button>
@@ -661,3 +632,36 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 SankeyMenuConfigurationLinks.propTypes = SankeyMenuConfigurationLinksPropTypes
 
 export default SankeyMenuConfigurationLinks
+
+
+//Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
+//Permet donc de les déssiner avant
+export const handleUpLink = (data:SankeyData,i: string) => {
+  const { links } = data
+  const listElmt = Object.keys(links)
+  const posElemt = listElmt.indexOf(i)
+  listElmt.splice(posElemt, 1)
+  listElmt.splice(posElemt - 1, 0, i)
+  const new_cat: { [key: string]: SankeyLink } = {}
+  listElmt.forEach(elt => {
+    new_cat[elt] = links[elt]
+  })
+  for (const member in links) delete links[member]
+  Object.assign(links, new_cat)
+}
+
+//Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
+//Permet donc de les déssiner après
+export const handleDownLink = (data:SankeyData,i: string) => {
+  const { links } = data
+  const listElmt = Object.keys(links)
+  const posElemt = listElmt.indexOf(i)
+  listElmt.splice(posElemt, 1)
+  listElmt.splice(posElemt + 1, 0, i)
+  const new_cat: { [key: string]: SankeyLink } = {}
+  listElmt.forEach(elt => {
+    new_cat[elt] = links[elt]
+  })
+  for (const member in links) delete links[member]
+  Object.assign(links, new_cat)
+}

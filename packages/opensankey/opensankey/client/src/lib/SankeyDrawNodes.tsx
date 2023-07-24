@@ -41,7 +41,9 @@ export const OpenSankeyDrawNodes = (
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   multi_selected_label:{current:SankeyPlusLabel[]},
   set_displayed_input_link_value:(s:string)=>void,
-  accept_simple_click:{current:boolean}
+  accept_simple_click:{current:boolean},
+  set_contextualised_node:(n:SankeyNode)=>void,
+  pointer_pos:{current:number[]}
 
 ) => {
   const display_nodes=data.nodes
@@ -352,15 +354,14 @@ export const OpenSankeyDrawNodes = (
   
     
   const add_nodes = (
-    remove_previous_nodes = true
+    pointer_pos:{current:number[]}
   ) => {
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
         
     // The majority of data used to design the node are located in data['nodes']
     // Or if you want information about the type of these variable, you can find them in file types.tsx
-    if (remove_previous_nodes) {
-      d3.selectAll(' .opensankey .gg_nodes').remove()
-    }
+    d3.selectAll(' .opensankey .gg_nodes').remove()
+
     const gg_nodes = d3.select(' .opensankey #g_nodes').selectAll('.gg_nodes').data(Object.values(display_nodes).filter(n=>node_displayed(data,n))).enter().append('g')
       .attr('id', d => {
         return 'gg_' + d.idNode
@@ -411,7 +412,8 @@ export const OpenSankeyDrawNodes = (
         ggg_nodes.call(dragGNodeEvent(data,display_nodes,multi_selected_nodes,multi_selected_label,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
       }
     }
-    ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
+    // ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
+    ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,set_contextualised_node,pointer_pos,multi_selected_nodes))
     // if node have a unique groupTag then it control the shape of the node
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
@@ -492,7 +494,7 @@ export const OpenSankeyDrawNodes = (
 
   }
   
-  add_nodes()
+  add_nodes(pointer_pos)
         
 }
 
