@@ -1,6 +1,8 @@
 """
 Auteur : Julien ALAPETITE
 Date : /
+
+Modifs : Vincent LE DOZE - 06/2023
 """
 
 # External libs ---------------------------------------------------------------
@@ -8,7 +10,7 @@ import pandas as pd
 import numpy as np
 import copy
 
-# Local libs -------------------------------------------------------
+# Local libs ------------------------------------------------------------------
 import SankeyExcelParser.io_excel_constants as CONST_IO_XL
 
 # External modules ------------------------------------------------------------
@@ -34,16 +36,20 @@ def parse_excel(sankey: Sankey):
     :return: Data as json format
     :rtype: dict
     """
+    # Parser object
+    sankeyToJson = SankeyToJson()
     # Parse all tags -> data struct
     dataTags = {}
     nodeTags = {}
     fluxTags = {}
-    parse_tags(sankey, dataTags, nodeTags, fluxTags)
+    sankeyToJson.parse_tags(sankey, dataTags, nodeTags, fluxTags)
     # Parser all nodes -> data struct
     nodes = {}
-    parse_nodes(sankey, nodes, nodeTags)
+    sankeyToJson.parse_nodes(sankey, nodes, nodeTags)
+    # Parser all links -> data struct
     links = {}
-    parse_links(sankey, links)
+    sankeyToJson.parse_links(sankey, links)
+    # Return data struct
     return {
         'version': '0.8',
 
@@ -57,265 +63,501 @@ def parse_excel(sankey: Sankey):
     }
 
 
-def parse_tags(
-    sankey: Sankey,
-    dataTags: dict,
-    nodeTags: dict,
-    fluxTags: dict
-):
+class SankeyToJson(object):
     """
-    Extract tags from sankey struct for json data format.
-
-    Parameters
-    ----------
-    :param sankey: Input sankey struct
-    :type sankey: Sankey
-
-    :param dataTags: data tags
-    :type dataTags: dict
-
-    :param nodeTags: node tags
-    :type nodeTags: dict
-
-    :param fluxTags: flux tags
-    :type fluxTags: dict
+    Class created to ease the parsing process by permitting methods overloading.
     """
-    # Go trough all tags
-    for tagg_type, taggs in sankey.taggs.items():
-        # Data tags parsing
-        if (tagg_type == CONST_IO_XL.TAG_TYPE_DATA):
-            for tagg in taggs.values():
-                # tags dict
-                tags = {tag.name_unformatted: {
-                    'name': tag.name_unformatted,
-                    'selected': False,
-                    'color': tag.color_in_hex} for tag in tagg.tags.values()}
-                next(iter(tags.values()))['selected'] = True  # by default select first tag
-                # tag group dict
-                dataTags[tagg.name_unformatted] = {
-                    'group_name': tagg.name_unformatted,
-                    'show_legend': False,
-                    'tags': tags,
-                    'banner': 'one',
-                    'activated': True,
-                    'siblings': []
-                }
-            continue
-        if (tagg_type == CONST_IO_XL.TAG_TYPE_NODE) or (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL):
-            for tagg in taggs.values():
-                # tags dict
-                tags = {tag.name_unformatted: {
-                    'name': tag.name_unformatted,
-                    'selected': True,
-                    'color': tag.color_in_hex} for tag in tagg.tags.values()}
-                # case level tag
-                if (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL):
-                    for tag in list(tags.values())[1:]:
-                        tag['selected'] = False
-                # Banner type
-                banner = 'multi'
-                if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
-                    banner = 'none'
-                if (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL) or \
-                   (tagg.name_unformatted == 'Primaire'):
-                    banner = 'level'
-                # tag group dict
-                nodeTags[tagg.name_unformatted] = {
-                    'group_name': tagg.name_unformatted,
-                    'show_legend': False,
-                    'tags': tags,
-                    'banner': banner,
-                    'activated': True,
-                    'siblings': [
-                        anta_tagg.name_unformatted for anta_tagg in tagg.antagonists_taggs]
-                }
-                # Specific case for tag 'échange'
-                # Why ? Julien
-                # if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
-                #     if (CONST_IO_XL.NODE_TYPE_EXCHANGE in nodeTags[CONST_IO_XL.NODE_TYPE]['tags']):
-                #         nodeTags[CONST_IO_XL.NODE_TYPE]['tags'][CONST_IO_XL.NODE_TYPE_EXCHANGE]['selected'] = 0
-            continue
-        if (tagg_type == CONST_IO_XL.TAG_TYPE_FLUX):
-            for tagg in taggs.values():
-                # tags dict
-                tags = {tag.name_unformatted: {
-                    'name': tag.name_unformatted,
-                    'selected': True,
-                    'color': tag.color_in_hex} for tag in tagg.tags.values()}
-                # Specific tags for reconcillation
-                # TODO remove ?
-                tagg_name = tagg.name_unformatted
-                if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
-                    tagg_name = 'flux_types'
-                    tags['initial_data'] = tags.pop(CONST_IO_XL.DATA_COLLECTED)
-                    tags['computed_data'] = tags.pop(CONST_IO_XL.DATA_COMPUTED)
-                # tag group dict
-                fluxTags[tagg_name] = {
-                    'group_name': tagg.name_unformatted,
-                    'show_legend': False,
-                    'tags': tags,
-                    'banner': 'multi',
-                    'activated': True,
-                    'siblings': []
-                }
 
+    def __init__(self):
+        pass
 
-def parse_links(
-    sankey: Sankey,
-    links: dict
-):
-    """
-    Extract links from sankey struct for json data format.
+    def parse_tags(
+        self,
+        sankey: Sankey,
+        dataTags: dict,
+        nodeTags: dict,
+        fluxTags: dict
+    ):
+        """
+        Extract tags from sankey struct for json data format.
 
-    Parameters
-    ----------
-    :param sankey: Input sankey object
-    :type sankey: Sankey
+        Parameters
+        ----------
+        :param sankey: Input sankey struct
+        :type sankey: Sankey
 
-    :param links: links data struct
-    :type links: dict (modified)
-    """
-    # First create default datas struct
-    default_data_strct = {
-        "value": "",
-        "display_value": "",
-        "tags": {},
-        "extension": {}
-    }
-    # Add flux tag groups to default data structure
-    for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
-        # Replace specific names
-        tagg_name = tagg.name_unformatted
-        if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
-            tagg_name = "flux_types"
-        # Update fluxtags struct
-        default_data_strct['tags'][tagg_name] = ""  # tag_name
-    # Go trough all tags
-    for flux in sankey.flux.values():
-        # Boolean that memorized if flux have at least one value
-        has_data = False
+        :param dataTags: data tags
+        :type dataTags: dict (modified)
+
+        :param nodeTags: node tags
+        :type nodeTags: dict (modified)
+
+        :param fluxTags: flux tags
+        :type fluxTags: dict (modified)
+        """
+        # Go trough all tags
+        for taggs_type, taggs in sankey.taggs.items():
+            # Data tags parsing
+            if (taggs_type == CONST_IO_XL.TAG_TYPE_DATA):
+                self._parse_data_tags(taggs, dataTags)
+                continue
+            if (taggs_type == CONST_IO_XL.TAG_TYPE_NODE) or (taggs_type == CONST_IO_XL.TAG_TYPE_LEVEL):
+                self._parse_node_tags(taggs_type, taggs, nodeTags)
+                continue
+            if (taggs_type == CONST_IO_XL.TAG_TYPE_FLUX):
+                self._parse_flux_tags(taggs, fluxTags)
+
+    def _parse_data_tags(self, taggs, data_tags_json):
+        """
+        Extract nodes tags from dict of taggs to update json data format.
+
+        Parameters
+        ----------
+        :param taggs: Input taggroups from sankey struct
+        :type taggs: dict(tagg_name: tagg)
+
+        :param data_tags_json: data tags json struct
+        :type data_tags_json: dict (modified)
+        """
+        for tagg in taggs.values():
+            # tags dict
+            tags = {tag.name_unformatted: {
+                'name': tag.name_unformatted,
+                'selected': False,
+                'color': tag.color_in_hex} for tag in tagg.tags.values()}
+            next(iter(tags.values()))['selected'] = True  # by default select first tag
+            # tag group dict
+            data_tags_json[tagg.name_unformatted] = {
+                'group_name': tagg.name_unformatted,
+                'show_legend': False,
+                'tags': tags,
+                'banner': 'one',
+                'activated': True,
+                'siblings': []
+            }
+
+    def _parse_node_tags(self, taggs_type, taggs, node_tags_json):
+        """
+        Extract nodes tags from dict of taggs to update json data format.
+
+        Parameters
+        ----------
+        :param taggs_type: Type of all taggroups from input taggs dict
+        :type taggs_type: str
+
+        :param taggs: Input taggroups from sankey struct
+        :type taggs: dict(tagg_name: tagg)
+
+        :param node_tags_json: nodes tags json struct
+        :type node_tags_json: dict (modified)
+        """
+        for tagg in taggs.values():
+            # tags dict
+            tags = {tag.name_unformatted: {
+                'name': tag.name_unformatted,
+                'selected': True,
+                'color': tag.color_in_hex} for tag in tagg.tags.values()}
+            # case level tag
+            if (taggs_type == CONST_IO_XL.TAG_TYPE_LEVEL):
+                for tag in list(tags.values())[1:]:
+                    tag['selected'] = False
+            # Banner type
+            banner = 'multi'
+            if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
+                banner = 'none'
+            if (taggs_type == CONST_IO_XL.TAG_TYPE_LEVEL) or \
+               (tagg.name_unformatted == 'Primaire'):
+                banner = 'level'
+            # tag group dict
+            node_tags_json[tagg.name_unformatted] = {
+                'group_name': tagg.name_unformatted,
+                'show_legend': False,
+                'tags': tags,
+                'banner': banner,
+                'activated': True,
+                'siblings': [
+                    anta_tagg.name_unformatted for anta_tagg in tagg.antagonists_taggs]
+            }
+            # Specific case for tag 'échange'
+            # Why ? Julien
+            # if (tagg.name_unformatted == CONST_IO_XL.NODE_TYPE):
+            #     if (CONST_IO_XL.NODE_TYPE_EXCHANGE in node_tags_json[CONST_IO_XL.NODE_TYPE]['tags']):
+            #         node_tags_json[CONST_IO_XL.NODE_TYPE]['tags'][CONST_IO_XL.NODE_TYPE_EXCHANGE]['selected'] = 0
+
+    def _parse_flux_tags(self, taggs, flux_tags_json):
+        """
+        Extract flux tags from dict of taggs to update json data format.
+
+        Parameters
+        ----------
+        :param taggs: Input taggroups from sankey struct
+        :type taggs: dict(tagg_name: tagg)
+
+        :param flux_tags_json: flux tags json struct
+        :type flux_tags_json: dict (modified)
+        """
+        for tagg in taggs.values():
+            # tags dict
+            tags = {tag.name_unformatted: {
+                'name': tag.name_unformatted,
+                'selected': True,
+                'color': tag.color_in_hex} for tag in tagg.tags.values()}
+            # Specific tags for reconcillation
+            # TODO remove ?
+            tagg_name = tagg.name_unformatted
+            if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
+                tagg_name = 'flux_types'
+                tags['initial_data'] = tags.pop(CONST_IO_XL.DATA_COLLECTED)
+                tags['computed_data'] = tags.pop(CONST_IO_XL.DATA_COMPUTED)
+            # tag group dict
+            flux_tags_json[tagg_name] = {
+                'group_name': tagg.name_unformatted,
+                'show_legend': False,
+                'tags': tags,
+                'banner': 'multi',
+                'activated': True,
+                'siblings': []
+            }
+
+    def parse_links(
+        self,
+        sankey: Sankey,
+        links_with_datas_json: dict
+    ):
+        """
+        Extract links from sankey struct for json data format.
+
+        Parameters
+        ----------
+        :param sankey: Input sankey object
+        :type sankey: Sankey
+
+        :param links_with_datas_json: links & data json struct
+        :type links_with_datas_json: dict (modified)
+        """
+        # First create default datas struct
+        default_data_strct = {
+            "value": "",
+            "display_value": "",
+            "tags": {},
+            "extension": {}
+        }
+        # Add flux tag groups to default data structure
+        for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
+            # Replace specific names
+            tagg_name = tagg.name_unformatted
+            if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
+                tagg_name = "flux_types"
+            # Update fluxtags struct
+            default_data_strct['tags'][tagg_name] = ""  # tag_name
+        # Create the links json struct
+        self._create_links_with_datas_json(sankey, default_data_strct, links_with_datas_json)
+
+    def _create_links_with_datas_json(
+        self,
+        sankey: Sankey,
+        default_data_json: dict,
+        links_with_datas_json: dict
+    ):
+        """
+        Extract all nodes from sankey object to update json data format.
+
+        Parameters
+        ----------
+        :param sankey: Input sankey object
+        :type sankey: Sankey
+
+        :param default_data_json: data json struct inituialized but empty
+        :type default_data_json: dict
+
+        :param links_with_datas_json: links with datas json struct
+        :type links_with_datas_json: dict (modified)
+        """
+        # Go trough all links
+        for flux in sankey.flux.values():
+            links_with_datas_json[flux.id] = self._create_link_with_datas_json(sankey, flux, default_data_json)
+
+    def _create_link_with_datas_json(
+        self,
+        sankey: Sankey,
+        flux,
+        default_data_json: dict,
+    ):
+        """
+        Extract a given node info from sankey object to update json data format.
+
+        Parameters
+        ----------
+        :param sankey: Input sankey object
+        :type sankey: Sankey
+
+        :param flux: Input flux object
+        :type flux: Sankey
+
+        :param nodes: nodes json struct
+        :type nodes: dict (modified)
+        """
         # Initilialize datas struct
-        datas_strct = copy.deepcopy(default_data_strct)
+        datas_json = copy.deepcopy(default_data_json)
         for tagg in reversed(sankey.taggs[CONST_IO_XL.TAG_TYPE_DATA].values()):
             next_datas_strct = {}
             for tag in tagg.tags.values():
-                next_datas_strct[tag.name_unformatted] = copy.deepcopy(datas_strct)
-            datas_strct = next_datas_strct
+                next_datas_strct[tag.name_unformatted] = copy.deepcopy(datas_json)
+            datas_json = next_datas_strct
         # We use result data if present instead of simple data
-        if flux.has_result():
-            for result in flux.results:
-                has_data |= result.value is not None
-                parse_data(
-                    sankey,
-                    result,
-                    default_data_strct,
-                    datas_strct)
-        elif flux.has_data():
-            for data in flux.datas:
-                has_data |= data.value is not None
-                parse_data(
-                    sankey,
-                    data,
-                    default_data_strct,
-                    datas_strct)
+        has_data = self._parse_datas_or_results(
+            sankey,
+            flux,
+            default_data_json,
+            datas_json)
         # Color of link : default = color of source node
         color = flux.orig.color_in_hex
         if flux.dest.has_specific_tag(CONST_IO_XL.NODE_TYPE, CONST_IO_XL.NODE_TYPE_PRODUCT):
             color = flux.dest.color_in_hex
         # Then create link struct
-        links[flux.id] = {
+        return {
             'idLink': flux.id,
             'idSource': flux.orig.id,
             'idTarget': flux.dest.id,
-            'value': datas_strct,
+            'value': datas_json,
             'color': color,
             'dashed': (not has_data)
         }
 
+    def _parse_datas_or_results(
+        self,
+        sankey: Sankey,
+        flux,
+        default_data_strct: dict,
+        datas_json: dict
+    ):
+        """
+        Choose the way to parse datas or results from flux
 
-def parse_data(
-    sankey: Sankey,
-    data,
-    default_data_strct: dict,
-    datas_strct: dict
-):
-    """
-    Extract datas from link struct for json data format.
+        Parameters
+        ----------
+        :param sankey: sankey struct
+        :type sankey: Sankey
 
-    Parameters
-    ----------
-    :param data: Input data object
-    :type data: Data
+        :param flux: flux to get data from t
+        :type flux: Flux
 
-    :param default_data_strct: Default data json struct
-    :type default_data_strct: dict
+        :param default_data_strct: Default data json struct
+        :type default_data_strct: dict
 
-    :param datas_strct: Output json struct that contains all datas
-    :type datas_strct: dict (modified)
-    """
-    # Reccurent function specific to this function
-    def add_data_to_datas(tags, datas_strct, data_strct):
-        # Check if we reached the last data tag
-        if len(tags) == 0:
-            datas_strct.update(data_strct)
-            return
-        # Otherwise we have a reccurence
-        for tag in tags:
-            if tag.name_unformatted in datas_strct.keys():
-                tags.remove(tag)
-                add_data_to_datas(
-                    tags,
-                    datas_strct[tag.name_unformatted],
-                    data_strct)
+        :param datas_json: Output json struct that contains all datas
+        :type datas_json: dict (modified)
+        """
+        # Boolean that memorized if flux have at least one value
+        has_data = False
+        # We use result data if present instead of simple data
+        if flux.has_result():
+            for result in flux.results:
+                has_data |= result.value is not None
+                self._parse_data(
+                    sankey,
+                    result,
+                    default_data_strct,
+                    datas_json)
+        elif flux.has_data():
+            for data in flux.datas:
+                has_data |= data.value is not None
+                self._parse_data(
+                    sankey,
+                    data,
+                    default_data_strct,
+                    datas_json)
+        return has_data
+
+    def _parse_data(
+        self,
+        sankey: Sankey,
+        data,
+        default_data_strct: dict,
+        datas_json: dict
+    ):
+        """
+        Extract datas from link struct for json data format.
+
+        General struct for datas in links
+
+        link = {
+            ...,
+            'value': {
+                'dataTag1_dataTagGroup1': {
+                    dataTag1_dataTagGroup2: {
+                        'value': <float>,
+                        'display_value': <str>,
+                        'tags': {
+                            'fluxTagGroup1': 'fluxTagX_fluxTagGroup1',
+                            'fluxTagGroup2': 'fluxTagY_fluxTagGroup2',
+                            ...
+                        },
+                        extensions: {<reserved>}
+                    }
+                    dataTag2_dataTagGroup2: {
+                        ...
+                    }
+                },
+                'dataTag2_dataTagGroup1': {
+                    ...
+                },
+                ...
+            }
+        }
+
+        Parameters
+        ----------
+        :param data: sankey struct
+        :type data: Sankey
+
+        :param data: Input data object
+        :type data: Data
+
+        :param default_data_strct: Default data json struct
+        :type default_data_strct: dict
+
+        :param datas_json: Output json struct that contains all datas
+        :type datas_json: dict (modified)
+        """
+        # Reccurent function specific to this function
+        def add_data_to_datas(tags, datas_json, data_json):
+            # Check if we reached the last data tag
+            if len(tags) == 0:
+                datas_json.update(data_json)
                 return
-        # TODO : Mettre gestion erreur aucun tag trouvé ?
-    # Create data structure
-    data_strct = copy.deepcopy(default_data_strct)
-    data_strct['value'] = data.value if (data.value is not None) else ""
-    data_strct['display_value'] = ''
-    # Update flux tags to data structure
-    for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
-        # TODO : Checker si len(tags) > 1 -> normalement ça ne devrait pas arriver
-        tags = data.get_tags_from_taggroup(tagg)
-        if tags is not None:
-            # Replace specific names for tags and tagggroup
-            tagg_name = tagg.name_unformatted
-            tag_name = tags[0].name_unformatted
-            if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
-                tagg_name = "flux_types"
-                tag_name = tag_name \
-                    .replace(CONST_IO_XL.DATA_COLLECTED, "initial_data") \
-                    .replace(CONST_IO_XL.DATA_COMPUTED, "computed_data")
-            # Update fluxtags struct
-            data_strct['tags'][tagg_name] = tag_name
-    # Reference data struct from data tags
-    tags = [tag for tag in data.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)]
-    add_data_to_datas(tags, datas_strct, data_strct)
+            # Otherwise we have a reccurence
+            for tag in tags:
+                if tag.name_unformatted in datas_json.keys():
+                    tags.remove(tag)
+                    add_data_to_datas(
+                        tags,
+                        datas_json[tag.name_unformatted],
+                        data_json)
+                    return
+            # TODO : Mettre gestion erreur aucun tag trouvé ?
+        # Create data structure
+        data_json = self._init_data_struct(sankey, data, default_data_strct)
+        # Reference data struct from data tags
+        tags = [tag for tag in data.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)]
+        add_data_to_datas(tags, datas_json, data_json)
 
+    def _init_data_struct(self, sankey, data, default_data_strct):
+        """
+        Initialize data_struct with data attributes
 
-def parse_nodes(
-    sankey: Sankey,
-    nodes: dict,
-    nodeTags
-):
-    """
-    Extract nodes from sankey object for json data format.
+        Parameters
+        ----------
+        :param data: sankey struct
+        :type data: Sankey
 
-    Parameters
-    ----------
-    :param sankey: Input sankey object
-    :type sankey: Sankey
+        :param data: Input data object
+        :type data: Data
 
-    :param nodes: nodes json struct
-    :type nodes: dict (modified)
+        :param default_data_strct: Default data json struct
+        :type default_data_strct: dict
 
-    :param nodeTags: node tags json struct - Updated if necessary
-    :type nodeTags: dict (modified)
-    """
-    # Create nodes struct
-    for node in sankey.nodes.values():
+        Returns
+        -------
+        :return: Data json struct with data attributes
+        :rtype: dict
+        """
+        data_json = copy.deepcopy(default_data_strct)
+        data_json["value"] = data.value if (data.value is not None) else ""
+        data_json["display_value"] = ""
+        # Update flux tags to data structure
+        for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
+            # TODO : Checker si len(tags) > 1 -> normalement ça ne devrait pas arriver
+            tags = data.get_tags_from_taggroup(tagg)
+            if tags is not None:
+                # Replace specific names for tags and tagggroup
+                tagg_name = tagg.name_unformatted
+                tag_name = tags[0].name_unformatted
+                if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
+                    tagg_name = "flux_types"
+                    tag_name = tag_name \
+                        .replace(CONST_IO_XL.DATA_COLLECTED, "initial_data") \
+                        .replace(CONST_IO_XL.DATA_COMPUTED, "computed_data")
+                # Update fluxtags struct
+                data_json["tags"][tagg_name] = tag_name
+        return data_json
+
+    def parse_nodes(
+        self,
+        sankey: Sankey,
+        nodes: dict,
+        nodeTags
+    ):
+        """
+        Extract nodes from sankey object for json data format.
+
+        Parameters
+        ----------
+        :param sankey: Input sankey object
+        :type sankey: Sankey
+
+        :param nodes: nodes json struct
+        :type nodes: dict (modified)
+
+        :param nodeTags: node tags json struct - Updated if necessary
+        :type nodeTags: dict (modified)
+        """
+        # Update nodes json struct
+        self._create_nodes_json(sankey, nodes)
+        # Create primary level tag if necessary
+        if (sankey.max_nodes_level > 1):
+            nodeTags['Primaire'] = {
+                'group_name': 'Primaire',
+                'show_legend': False,
+                'tags': {},
+                'banner': 'level',
+                'activated': True
+            }
+            for tag in range(1, sankey.max_nodes_level+1):
+                nodeTags['Primaire']['tags'][str(tag)] = {
+                    'name': str(tag),
+                    'selected': (tag == 1),
+                    'color': ''
+                }
+
+    def _create_nodes_json(
+        self,
+        sankey: Sankey,
+        nodes_json: dict
+    ):
+        """
+        Extract all nodes from sankey object to update json data format.
+
+        Parameters
+        ----------
+        :param sankey: Input sankey object
+        :type sankey: Sankey
+
+        :param nodes: nodes json struct
+        :type nodes: dict (modified)
+        """
+        # Create nodes struct
+        for node in sankey.nodes.values():
+            nodes_json[node.id] = self._create_node_json(sankey, node)
+
+    def _create_node_json(
+        self,
+        sankey: Sankey,
+        node
+    ):
+        """
+        Extract a given node info from sankey object to update json data format.
+
+        Parameters
+        ----------
+        :param sankey: Input sankey object
+        :type sankey: Sankey
+
+        :param nodes: nodes json struct
+        :type nodes: dict (modified)
+        """
         # Create node struct
-        new_node = {
+        node_json = {
             'idNode': node.id,
             'name': node.name,
             'definition': node.definition,
@@ -329,71 +571,68 @@ def parse_nodes(
                 'Primaire': {}
             }
         }
-        nodes[node.id] = new_node
         # Update tags
         for tag in node.tags:
             tag_group_name = tag.group.name_unformatted
             # Create group entry if not already the case
-            if tag_group_name not in new_node['tags'].keys():
-                new_node['tags'][tag_group_name] = []
+            if tag_group_name not in node_json['tags'].keys():
+                node_json['tags'][tag_group_name] = []
             # Add the tag
-            new_node['tags'][tag_group_name].append(tag.name_unformatted)
-            new_node['tags'][tag_group_name].sort()
+            node_json['tags'][tag_group_name].append(tag.name_unformatted)
+            node_json['tags'][tag_group_name].sort()
         # Parents relations -> TODO duplicate node for each parent
         if (node.has_parents()):
-            new_node['dimensions']['Primaire']['parent_name'] = node.parents[0].id
+            node_json['dimensions']['Primaire']['parent_name'] = node.parents[0].id
         # Child relations
         if (node.has_at_least_one_child()):
             # The node has children : Primary tag is only the node's level
-            new_node['tags']['Primaire'] = [str(node.level)]
+            node_json['tags']['Primaire'] = [str(node.level)]
         else:
             # The node does not have child : Primary tags are all level
             # starting from the nod's level
-            new_node['tags']['Primaire'] = \
+            node_json['tags']['Primaire'] = \
                 [str(_) for _ in range(node.level, sankey.max_nodes_level+1)]
         # Level tag parent relations
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values():
             # Check all current node level tags groups
             if tagg in node.taggs:
-                new_node['dimensions'][tagg.name_unformatted] = {}
+                node_json['dimensions'][tagg.name_unformatted] = {}
                 # For each node level tag group, get associated tags
                 tags = node.get_tags_from_taggroup(tagg)
                 if tags is not None:
-                    tag = tags[0]
-                    upper_tag = tagg.get_tag_from_name(
-                        str(int(tag.name) - 1),
-                        include_anti_tags=False)
+                    # Get the upper level tag if it exists :
+                    # ie if tag = 2, upper_tag = 1
+                    # ie if tags = 3:4, upper_tag = 2
+                    # Levels tags can be something different than pure numbers, ie level1:level2:level3
+                    upper_tag = None
+                    for tag in tags:
+                        upper_tag = tagg.get_previous_tag(tag)
+                        # Verify that if we are in multiple level tags config (such as tag=2:3)
+                        # the tag "2" can not be the upper tag, it must be the tag "1"
+                        if upper_tag not in tags:
+                            break
+                        else:
+                            upper_tag = None
+                    # We found an upper tag
                     if upper_tag is not None:
-                        parent_nodes_for_leveltagg = set(upper_tag.references) & set(node.parents)
-                        if len(parent_nodes_for_leveltagg) > 0:
-                            # Try to check parenthood consistency
-                            for parent_node_primary in node.parents:
-                                if parent_node_primary in parent_nodes_for_leveltagg:
-                                    new_node['dimensions'][tagg.name_unformatted]['parent_name'] = \
-                                        parent_node_primary.id
-                            # Otherwise we take the first parent node
-                            if 'parent_name' not in new_node['dimensions'][tagg.name_unformatted]:
-                                for parent_node_primary in node.parents:
-                                    for grand_parent_node_primary in parent_node_primary.parents:
-                                        if grand_parent_node_primary in parent_nodes_for_leveltagg:
-                                            new_node['dimensions'][tagg.name_unformatted]['parent_name'] = \
-                                                grand_parent_node_primary.id
-                                            break
-    # Create primary level tag if necessary
-    if (sankey.max_nodes_level > 1):
-        nodeTags['Primaire'] = {
-            'group_name': 'Primaire',
-            'show_legend': False,
-            'tags': {},
-            'banner': 'level',
-            'activated': True
-        }
-        for tag in range(1, sankey.max_nodes_level+1):
-            nodeTags['Primaire']['tags'][str(tag)] = {
-                'name': str(tag),
-                'selected': (tag == 1),
-                'color': ''
-            }
+                        # Try to find parent nodes that have given upper tag
+                        parenthood_search_limit = 0
+                        while (parenthood_search_limit < 10):
+                            node_parents = node.get_all_parents(limit=parenthood_search_limit)
+                            parent_nodes_for_leveltagg = list(set(upper_tag.references) & set(node_parents))
+                            if len(parent_nodes_for_leveltagg) > 0:
+                                # We found matching nodes
+                                # TODO : if more than 1 parent_node_for_leveltagg -> we have a problem in input file
+                                # I do a sort here to be sure that we always have the same id
+                                # if multiple parent nodes are found
+                                parent_nodes_ids_for_leveltagg = sorted([_.id for _ in parent_nodes_for_leveltagg])
+                                node_json['dimensions'][tagg.name_unformatted]['parent_name'] = \
+                                    parent_nodes_ids_for_leveltagg[0]
+                                # Break the loop
+                                break
+                            else:
+                                parenthood_search_limit += 1
+        return node_json
 
 
 def save_excel(
