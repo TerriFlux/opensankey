@@ -229,7 +229,8 @@ export const explore_branch = (
     if (link.idTarget === idNode && node_displayed(data,nodes[link.idSource]) ) {
       if (visited_nodes.indexOf(idNode) === -1) {
         no_input_link = false
-        const branch_length = explore_branch(link.idSource, current_length + 1, [...visited_nodes,idNode], links,nodes,data)
+        visited_nodes.push(idNode)
+        const branch_length = explore_branch(link.idSource, current_length + 1, visited_nodes, links,nodes,data)
         if (branch_length > highest_branch_length) {
           highest_branch_length = branch_length
         }
