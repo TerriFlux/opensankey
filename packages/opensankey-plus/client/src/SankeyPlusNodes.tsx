@@ -1,13 +1,16 @@
 import React from 'react'
 import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button } from 'react-bootstrap'
-import {  SankeyLink,} from 'open-sankey/src/lib/types'
+import {  SankeyLinkValue} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
+import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove} from 'open-sankey/dist/SankeyDrawFunction'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
 import {  getLinkValue,node_color,link_color,node_displayed,is_all_node_attr_same_value,return_correct_node_attribute_value,assign_node_value_to_correct_var,return_value_node,is_node_diplaying_value_local,return_value_link, } from 'open-sankey/dist/SankeyUtils'
 import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
+import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
 
 declare const window: Window &
 typeof globalThis & {
@@ -347,7 +350,7 @@ const branchAnimate = (
   d3.select(' .opensankey #' + nodeData.idNode).style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
   d3.select(' .opensankey #' + nodeData.idNode + '_text').style('fill', d3.select(' .opensankey #' + nodeData.idNode).attr('fill'))
 
-  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyLink, HTMLElement, SankeyLink>)
+  const glinks = (d3.select(' .opensankey #svg').selectAll('.gg_links') as d3.Selection<SVGElement, SankeyPlusLink, HTMLElement, SankeyPlusLink>)
     .filter(function (d) {
       return d.idSource === nodeStart
     })
@@ -464,7 +467,6 @@ export const node_icon_path=(data:SankeyPlusData,n:SankeyPlusNode)=>{
 export const SankeyPlusDrawNodesIcon = (
   data:SankeyPlusData,
   mode_selection:string,
-  
   nodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
 
 ) => {
@@ -564,12 +566,7 @@ export const SankeyPlusDrawNodesIcon = (
       .attr('d', n =>node_icon_path(data,n))
 
   }
-  // useEffect(()=>{
-  //   console.log('test')
-  //   add_nodes_icon()
-  //   console.log('test2')
 
-  // })
   add_nodes_icon()
 
 }
@@ -587,5 +584,213 @@ export const context_node_icon=(contextualised_node:SankeyPlusNode,
     set_show_menu_node_icon(true)
     set_contextualised_node(undefined)
   }} variant='light'>{t('Noeud.icon.icon')} {icon_open_modal}</Button>:<></>
+
+}
+
+export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[],
+  event:{ dx: number; dy: number,x:number,y:number },
+  dragged:SankeyPlusNode|SankeyPlusLabel,
+  data:SankeyPlusData,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_label:{current:SankeyPlusLabel[]},
+)=>{
+
+
+  opposing_drag_elements(out_of_zone_item,event,dragged,data,multi_selected_nodes)
+
+  const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
+
+  if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
+    // Shift not selected zdt to opposing direction
+    Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
+      if(!multi_selected_label.current.includes(lb) &&  lb.idLabel!==zdt.idLabel){
+        const new_pos_x = lb.x + 5
+        lb.x = new_pos_x
+        d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
+      }
+    })
+  }
+
+
+  if((out_of_zone_item[0].y<=0 && event.y<0) || (out_of_zone_item[0].y<=0 && event.dy<0)){
+    
+    // Shift zdt to opposing direction
+    Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
+      if(!multi_selected_label.current.includes(lb)  && lb.idLabel!==zdt.idLabel ){
+        const new_pos_y = lb.y + 5
+        lb.y = new_pos_y
+        d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
+      }
+    })
+
+  }
+}
+
+export const SankeyPlusNodeDragEvent=(
+  data:SankeyPlusData,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  multi_selected_nodes:{current: SankeyPlusNode[] },
+  mode_selection:{current:string},
+  alt_key_pressed:boolean,
+  set_data:(d:SankeyPlusData)=>void,
+  multi_selected_links:{current:SankeyPlusLink[]},
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  min_width_and_height:(d:SankeyPlusData)=>number[],
+
+)=>{
+  (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(SankeyPlusdragGNodeEvent(data,display_nodes,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale,multi_selected_label,min_width_and_height));
+  (d3.select('.opensankey #svg') as d3.Selection<Element, unknown, HTMLElement, unknown>).call(d3.drag<Element, unknown, HTMLElement>()
+    .subject(Object)
+    .filter(evt=>{
+      evt.stopPropagation()
+      evt.preventDefault()
+
+      return d3.select(evt.target).attr('id')==='svg' && evt.which===2
+    })
+    .on('start',()=>svgDragMiddleMouseStart())
+    .on('drag',evt=>{
+      svgDragMiddleMouseMove(evt,data)
+      // Drag ZDT too
+      Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
+        const new_pos_x = lb.x + evt.dx
+        const new_pos_y = lb.y + evt.dy
+        lb.x = new_pos_x
+        lb.y = new_pos_y
+        d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
+      })
+    }).on('end',()=>set_data({...data}))
+  
+  )
+
+}
+
+export const SankeyPlusdragGNodeEvent=(
+  data:SankeyPlusData,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  multi_selected_nodes:{current: SankeyPlusNode[] },
+  mode_selection:{current:string},
+  alt_key_pressed:boolean,
+  set_data:(d:SankeyPlusData)=>void,
+  multi_selected_links:{current:SankeyPlusLink[]},
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  min_width_and_height:(d:SankeyPlusData)=>number[],
+
+)=>{
+  const node_visible=[] as string[]
+  return d3.drag<SVGGElement, SankeyPlusNode>()
+    .subject(Object)
+    .on('start',()=>{
+      d3.selectAll('.node_shape').nodes().forEach(element => {
+        node_visible.push(d3.select(element).attr('id')) 
+      })
+    })
+    .on('drag', function (event,node) {
+      if(mode_selection.current==='s'){
+        if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
+          drag_node_text(node, event)
+        }else if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && !alt_key_pressed){
+          drag_nodes_plus(node,event,multi_selected_nodes,data,
+            set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,multi_selected_label,node_visible
+          )
+        }
+        if(d3.select(event.subject.sourceEvent.target).node().tagName==='rect' || d3.select(event.subject.sourceEvent.target).node().tagName==='ellipse'){
+          drag_nodes_plus(node,event,multi_selected_nodes,data,
+            set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,multi_selected_label,node_visible
+          )
+        }
+      }
+    }).on('end',()=>{
+      set_data({...data})
+    })
+}
+
+export  const drag_nodes_plus = (node:SankeyPlusNode,
+  event: { dx: number; dy: number,x:number,y:number },
+  multi_selected_nodes:{current: SankeyPlusNode[] },
+  data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  multi_selected_links:{current: SankeyPlusLink[] },
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  min_width_and_height:(d:SankeyPlusData)=>number[],
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:plusDrawArrowsType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  node_visible:string[]
+) => {
+  removeAnimate()
+
+  // Cherche si des element seront hors zone si on les drag 
+  // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
+  const out_of_zone_item=return_out_of_bound_element_plus(node,data,event,multi_selected_nodes,node_visible)
+  // Pousse les element non sélectionnés dans la direction opposé
+  if(out_of_zone_item.length>0){
+    opposing_drag_elements_plus(out_of_zone_item,event,node,data,multi_selected_nodes,multi_selected_label)
+  }
+
+  drag_elements_plus(node,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+    
+}
+
+export const drag_elements_plus=(dragged:SankeyPlusNode|SankeyPlusLabel,data:SankeyPlusData,event:{ dx: number; dy: number,x:number,y:number },
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  set_data:(d:SankeyPlusData)=>void,
+  multi_selected_links:{current: SankeyPlusLink[] },
+  link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  min_width_and_height:(d:SankeyPlusData)=>number[],
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  drawArrows:plusDrawArrowsType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+)=>{
+  // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
+  const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
+  drag_elements(dragged,data,event,multi_selected_nodes,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+
+
+  // Drag zdt too
+  multi_selected_label.current.map(l=>{
+    const new_pos_x = l.x + event.dx
+    const new_pos_y = l.y + event.dy
+    l.x = (new_pos_x>=0)?new_pos_x:0
+    l.y = (new_pos_y>0)?new_pos_y:0
+    d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')')
+  })
+  if(multi_selected_label.current.length===0 && Object.keys(zdt).length>0){
+    const new_pos_x = zdt.x + event.dx
+    const new_pos_y = zdt.y + event.dy
+    zdt.x = (new_pos_x>=0)?new_pos_x:0
+    zdt.y = (new_pos_y>0)?new_pos_y:0
+    d3.select(' .opensankey #' + zdt.idLabel).attr('transform', 'translate(' + zdt.x + ',' + zdt.y + ')')
+  }
+}
+
+export const return_out_of_bound_element_plus=(dragged:SankeyPlusNode|SankeyPlusLabel,data:SankeyPlusData,event:{ dx: number; dy: number,x:number,y:number },
+  multi_selected_nodes:{current:SankeyPlusNode[]},node_visible:string[]
+)=>{
+
+  // Cherche si des noeuds seront hors zone si on les drag 
+  // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
+
+
+  const out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[]=return_out_of_bound_element(dragged,data,event,multi_selected_nodes,node_visible)
+  
+
+  Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).filter(lb=>{
+    return (lb.x<=0 && event.dx<0) || (lb.y<=0 && event.dy<0) || (lb.x<=0 && event.x<0) || (lb.y<=0 && event.y<0) 
+  }).forEach(lb=>out_of_zone_item.push(lb))
+
+  
+  return out_of_zone_item
 
 }
