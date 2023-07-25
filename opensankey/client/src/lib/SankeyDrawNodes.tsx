@@ -8,7 +8,6 @@ import { BaseType } from 'd3'
 import { scale,inv_scale,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
   eventNodeContextMenu,nodeTransform,node_stroke_width } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
-import { SankeyPlusLabel } from 'sankeyanimation/src/types'
 
 declare const window: Window &
 typeof globalThis & {
@@ -39,7 +38,7 @@ export const OpenSankeyDrawNodes = (
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  multi_selected_label:{current:SankeyPlusLabel[]},
+  // multi_selected_label:{current:SankeyPlusLabel[]},
   set_displayed_input_link_value:(s:string)=>void,
   accept_simple_click:{current:boolean},
   set_contextualised_node:(n:SankeyNode)=>void,
@@ -409,7 +408,7 @@ export const OpenSankeyDrawNodes = (
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s'){
-        ggg_nodes.call(dragGNodeEvent(data,display_nodes,multi_selected_nodes,multi_selected_label,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
+        ggg_nodes.call(dragGNodeEvent(data,display_nodes,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
       }
     }
     // ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )

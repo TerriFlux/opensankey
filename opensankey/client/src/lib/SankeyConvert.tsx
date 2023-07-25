@@ -1,12 +1,8 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,differenceType,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal } from './types'
-import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
 import colormap from 'colormap'
 import { default_sankey_data, default_node,assign_link_local_attribute, return_value_link, default_link_style,default_node_style} from './SankeyUtils'
 
-interface SankeyPlusLabelToConvcert extends SankeyPlusLabel{
-  transparent?:boolean
-}
 
 interface ConvertSankeyNode {
   id?: string
@@ -121,7 +117,6 @@ interface ConvertSankeyData {
   show_structure: boolean | string
   show_data?: boolean
   view:{id: string,view_data: object,nom:string,details:string}[]
-  labels:{[x: string]:SankeyPlusLabelToConvcert}
 }
 
 interface ConvertSankeyValue {
@@ -1468,37 +1463,6 @@ export const convert_data = (
   convert_nodes(data)
   convert_links(data)
 
-  // Convert Data labes
-  if(data_to_convert.labels){
-    Object.values(data_to_convert.labels).forEach(l=>{
-      if(l.is_edit_raw===undefined){
-        l.is_edit_raw=true
-      }
-      if(l.isTextHTML===undefined){
-        l.isTextHTML=false
-        l.is_edit_raw=true
-      }
-      if(['haut','bas'].includes(l.position_vert)){
-        if(l.position_vert=='haut'){
-          l.position_vert='top'
-        }else if(l.position_vert=='bas'){
-          l.position_vert='bottom'
-        }
-      }
-      if(['gauche','droite'].includes(l.position_horiz)){
-        if(l.position_horiz=='gauche'){
-          l.position_horiz='left'
-        }else if(l.position_horiz=='droite'){
-          l.position_horiz='right'
-        }
-      }
-      // CONVERT TEXT ZONE TRANSPARENT -> OPACITY (0-100)
-      if(l.transparent!==undefined){
-        l.opacity=l.transparent?0:100
-        delete ((l as unknown) as SankeyPlusLabelToConvcert).transparent
-      }
-    })
-  }
 
 
   if (!data_to_convert.view) {

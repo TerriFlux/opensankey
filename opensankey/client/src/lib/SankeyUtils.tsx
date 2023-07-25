@@ -1,7 +1,7 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup,SankeyNodeAttrLocal,SankeyNodeStyle,SankeyLinkAttrLocal,SankeyLinkStyle } from './types'
 import FileSaver from 'file-saver'
 import { complete_sankey_data, convert_data } from './SankeyConvert'
-import {  compute_auto_sankey, updateLayout,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
+import {  compute_auto_sankey,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
 import * as d3 from 'd3'
 import colormap from 'colormap'
 
@@ -1116,7 +1116,7 @@ export const downloadExamples = (
  * @param {SankeyData} server_data
  * @returns {*}
  */
-export const processExample = (server_data: SankeyData ) => {
+export const processExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[])=>void ) => {
   const data = default_sankey_data()
   Object.assign(data, server_data)
   complete_sankey_data(data,default_sankey_data,default_node,default_link)

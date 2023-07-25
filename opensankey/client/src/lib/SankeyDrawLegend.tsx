@@ -320,7 +320,7 @@ export const OpenSankeyDrawLegend = (
           data.legend_position[1]=(data.legend_position[1]>=0?data.legend_position[1]:0)
           d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
           if(data.legend_position[0]==0 ||data.legend_position[1]==0){
-            opposing_drag_elements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]},{current:[]})
+            opposing_drag_elements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
           }
         }
       }).on('end',()=>set_data({...data}))
