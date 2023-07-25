@@ -55,9 +55,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
   //add a tags to the selected groupTag
   const handleAddTagButton = () => {
     add_tag(data,type_tag_name,tags_group_key)
-    // if (elementTagName === 'nodeTags' && data.nodeTags[tags_group_key].banner === 'level') {
-    //   Object.values(data.nodes).forEach(node=>node.dimensions[tags_group_key] = {parent_name : undefined})
-    // }
     set_data({ ...data })
   }
 
@@ -494,15 +491,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                         <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
                           value={data[type_tag_name][tags_group_key].banner}
                         >
-                          {/* {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' selected={data[elementTagName][tags_group_key].banner === 'none' || !data[elementTagName][tags_group_key].banner} value='none'>{t('Tags.Aucun')}</option>:<></>}
-                          <option key={'one' + i} id='OneBaner' selected={data[elementTagName][tags_group_key].banner === 'one'} value='one'>{t('Tags.Unique')}</option>
-                          <option key={'multi' + i} id='MultipleBaner' selected={data[elementTagName][tags_group_key].banner === 'multi'} value='multi'>{t('Tags.Multiple')}</option>
-                          {(elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' selected={data[elementTagName][tags_group_key].banner === 'level'} value='level'>{t('Tags.Niveau')}</option>:<></>} */}
-
                           {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Tags.Aucun')}</option>:<></>}
                           <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
                           <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
-                          {/* {(elementTagName!='dataTags')?<option key={'level' + i} id='LevelBaner' value='level'>{t('Tags.Niveau')}</option>:<></>} */}
                         </Form.Select>
                       </OverlayTrigger>
                     </td>

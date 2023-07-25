@@ -12,11 +12,16 @@ const modalPreferencePropTypes = {
 }
 type modalPreferenceTypes = InferProps<typeof modalPreferencePropTypes>
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
+
 
 export const OpenSankeyDefaultModalePreferenceContent=(
   t:TFunction,
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   trad:i18n
 )=>{
   const ui={
@@ -41,7 +46,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
 
     'mode_expert':<ButtonGroup key={'3'}>
       <Button variant='info'
-        disabled={data.static_sankey}
+        disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
         onClick={() => {
           data.accordeonToShow = ['MEP']
           set_data({ ...data })
@@ -49,33 +54,33 @@ export const OpenSankeyDefaultModalePreferenceContent=(
         }}
       >Simple</Button>
       <Button variant='dark'
-        disabled={data.static_sankey}
+        disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
         onClick={() => {
           data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg']
           set_data({ ...data })
         }}
       >Expert</Button>
     </ButtonGroup>,
-    'form':[<Form.Check key='MEP' disabled={data.static_sankey} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label={t('Menu.MEP')} onChange={() => {
+    'form':[<Form.Check key='MEP' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label={t('Menu.MEP')} onChange={() => {
       preferenceCheck('MEP',data)
       set_data({ ...data })
     }} />,
-    <Form.Check key='Node' checked={!data.static_sankey} disabled type="checkbox" label={t('Menu.Noeuds')} />,
-    <Form.Check key='EN' disabled={data.static_sankey} checked={data.accordeonToShow.includes('EN')} type="checkbox" label={t('Menu.EN')} onChange={() => {Form.Check
+    <Form.Check key='Node' checked={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} disabled type="checkbox" label={t('Menu.Noeuds')} />,
+    <Form.Check key='EN' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('EN')} type="checkbox" label={t('Menu.EN')} onChange={() => {Form.Check
       preferenceCheck('EN',data)
       set_data({ ...data })
     }} />,
-    <Form.Check key='flux' checked={!data.static_sankey} disabled type="checkbox" label={t('Menu.flux')} />,
-    <Form.Check key='ef' disabled={data.static_sankey} checked={data.accordeonToShow.includes('EF')} type="checkbox" label={t('Menu.EF')} onChange={() => {
+    <Form.Check key='flux' checked={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} disabled type="checkbox" label={t('Menu.flux')} />,
+    <Form.Check key='ef' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('EF')} type="checkbox" label={t('Menu.EF')} onChange={() => {
       preferenceCheck('EF',data)
       set_data({ ...data })
     }} />,
-    <Form.Check key='ed' disabled={data.static_sankey} checked={data.accordeonToShow.includes('ED')} type="checkbox" label={t('Menu.ED')} onChange={() => {
+    <Form.Check key='ed' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('ED')} type="checkbox" label={t('Menu.ED')} onChange={() => {
       preferenceCheck('ED',data)
       set_data({ ...data })
     }} />,
 
-    <Form.Check key='leg' disabled={data.static_sankey} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label={t('Menu.Leg')} onChange={() => {
+    <Form.Check key='leg' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label={t('Menu.Leg')} onChange={() => {
       preferenceCheck('Leg',data)
       set_data({ ...data })
     }} />]

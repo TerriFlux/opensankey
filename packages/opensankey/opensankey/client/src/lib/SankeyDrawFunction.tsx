@@ -4,8 +4,7 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color,get_vertical_marfin_for_sankey_zone} from './SankeyUtils'
-import { desagregation, agregation } from './SankeyLayout'
+import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color,get_vertical_marfin_for_sankey_zone,node_displayed,return_value_node,return_value_link, assign_link_local_attribute} from './SankeyUtils'
 import { BaseType } from 'd3'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
 
@@ -45,7 +44,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
                  data.show_structure !== 'free_value' &&
                  data.show_structure !== 'free_interval'  &&
                  !link_values.extension?.free_visible
-  if (d.dashed || is_free || link_values.extension?.display_thin) {
+  if (return_value_link(data,d,'dashed') || is_free || link_values.extension?.display_thin) {
     return '5, 5'
   } else {
     return ''
@@ -56,13 +55,14 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
 export const textLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
-  if (l.orthogonal_label_position === 'middle') {
+  const orth_pos=return_value_link(data,l,'orthogonal_label_position')
+  if (orth_pos === 'middle') {
     return '0.3em'
-  } else if (l.orthogonal_label_position === 'below') {
+  } else if (orth_pos === 'below') {
     const tmp=getLinkValue(data, l.idLink).value
 
     return scale((tmp)?tmp:0) / 2 + 10 + 'px'
-  } else if (l.orthogonal_label_position === 'above') {
+  } else if (orth_pos === 'above') {
     const tmp=getLinkValue(data, l.idLink).value
 
     return -scale((tmp)?tmp:0) / 2 + 'px'
@@ -71,10 +71,14 @@ export const textLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>numbe
 }
 // Function that return the side of link label
 export const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
-  if (link.recycling) {
+  const recy=return_value_link(data,link,'recycling')
+  const ori=return_value_link(data,link,'label_position')
+  const lab_pos=return_value_link(data,link,'orientation')
+
+  if (recy) {
     if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
       return 'left'
-    } else if (link.label_position === 'middle' && link.orientation === 'hh') {
+    } else if (lab_pos === 'middle' && ori === 'hh') {
       return 'right'
     }
     return 'left'
@@ -141,24 +145,24 @@ export const compute_end_points = (
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
   res = compute_total_offsets(inv_scale,target_node, data, selected_tags, test_link_value,undefined,getLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
-  let node_size_s_width = inv_scale(source_node.node_width)
-  let node_size_t_width = inv_scale(target_node.node_width)
+  let node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
+  let node_size_t_width = inv_scale(return_value_node(data,target_node,'node_width') as number)
   if (data.show_structure !== 'structure') {
     node_size_s_width = Math.max(
-      inv_scale(source_node.node_width), s_total_offset_width_bottom, s_total_offset_width_top
+      inv_scale((return_value_node(data,source_node,'node_width') as number)), s_total_offset_width_bottom, s_total_offset_width_top
     )
     node_size_t_width = Math.max(
-      inv_scale(target_node.node_width), t_total_offset_width_bottom, t_total_offset_width_top
+      inv_scale(return_value_node(data,target_node,'node_width') as number), t_total_offset_width_bottom, t_total_offset_width_top
     )
   }
-  let node_size_s_height = inv_scale(source_node.node_height)
-  let node_size_t_height = inv_scale(target_node.node_height)
+  let node_size_s_height = inv_scale((return_value_node(data,source_node,'node_height') as number))
+  let node_size_t_height = inv_scale((return_value_node(data,target_node,'node_height') as number))
   if (data.show_structure !== 'structure') {
     node_size_s_height = Math.max(
-      inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
+      inv_scale((return_value_node(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
     )
     node_size_t_height = Math.max(
-      inv_scale(target_node.node_height), t_total_offset_height_left, t_total_offset_height_right
+      inv_scale((return_value_node(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
     )
   }
   res = compute_total_offsets(inv_scale,source_node, data, selected_tags, test_link_value, link,getLinkValue)
@@ -182,16 +186,20 @@ export const compute_end_points = (
   let xt = target_node_x
   let yt = target_node_y
   const tmp=getLinkValue(data, link.idLink).value
-  if (link.orientation === 'hh') {
+  const ori=return_value_link(data,link,'orientation')
+  const recy=return_value_link(data,link,'recycling')
+  const l_arrow=return_value_link(data,link,'arrow')
+
+  if (ori === 'hh') {
     //side to side
-    if (source_node_x > target_node_x && !link.recycling || source_node_x < target_node_x && link.recycling) {
+    if (source_node_x > target_node_x && !recy || source_node_x < target_node_x && recy) {
       // source is after target arrow point leftward. Start is on the left of side of source
       // source -> left
       ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
       // target -> right
       xt += scale(node_size_t_width)
       yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-      if (link.arrow && tmp !== ''  && tmp!=0) {
+      if (l_arrow && tmp !== ''  && tmp!=0) {
         xt = xt + 10
       }
     } else {
@@ -200,12 +208,12 @@ export const compute_end_points = (
       xs += scale(node_size_s_width)
       ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
       yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-      if (link.arrow && tmp !== ''  && tmp!=0 ) {
+      if (l_arrow && tmp !== ''  && tmp!=0 ) {
         xt = xt - 10
       }
     }
   }
-  if (link.orientation === 'vv') {
+  if (ori === 'vv') {
     //side to side
     if (source_node_y > target_node_y) {
       // source is bottom target. Flux goes up
@@ -213,7 +221,7 @@ export const compute_end_points = (
       //ys = ys
       xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
       yt += scale(node_size_t_height)
-      if (link.arrow && tmp !== ''  && tmp!=0) {
+      if (l_arrow && tmp !== ''  && tmp!=0) {
         yt = yt + 10
       }
     } else {
@@ -221,12 +229,12 @@ export const compute_end_points = (
       xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
       ys += scale(node_size_s_height)
       xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
-      if (link.arrow && tmp !== ''  && tmp!=0) {
+      if (l_arrow && tmp !== ''  && tmp!=0) {
         yt = yt - 10
       }
     }
   }
-  if (link.orientation === 'hv') {
+  if (ori === 'hv') {
     //vertical to horizontal
     if (source_node_x > target_node_x) {
       if (source_node_y > target_node_y) {
@@ -234,14 +242,14 @@ export const compute_end_points = (
         ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
         xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
         yt += scale(node_size_t_height)
-        if (link.arrow && tmp !== ''  && tmp!=0) {
+        if (l_arrow && tmp !== ''  && tmp!=0) {
           yt = yt + 10
         }
       } else {
         //source is top right target. left and down
         ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
-        if (link.arrow && tmp !== ''  && tmp!=0) {
+        if (l_arrow && tmp !== ''  && tmp!=0) {
           yt = yt - 10
         }
       }
@@ -252,7 +260,7 @@ export const compute_end_points = (
         ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
         xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
         yt += scale(node_size_t_height)
-        if (link.arrow && tmp !== ''  && tmp!=0) {
+        if (l_arrow && tmp !== ''  && tmp!=0) {
           yt = yt + 10
         }
       } else {
@@ -260,13 +268,13 @@ export const compute_end_points = (
         xs += scale(node_size_s_width)
         ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
-        if (link.arrow && tmp !== ''  && tmp!=0) {
+        if (l_arrow && tmp !== ''  && tmp!=0) {
           yt = yt - 10
         }
       }
     }
   }
-  if (link.orientation === 'vh') {
+  if (ori === 'vh') {
     //vertical to horizontal
     if (source_node_x > target_node_x) {
       if (source_node_y > target_node_y) {
@@ -274,7 +282,7 @@ export const compute_end_points = (
         xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
         xt += scale(node_size_t_width)
         yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-        if (link.arrow && tmp !== ''  && tmp!=0) {
+        if (l_arrow && tmp !== ''  && tmp!=0) {
           xt += 10
         }
       } else {
@@ -283,7 +291,7 @@ export const compute_end_points = (
         ys += scale(node_size_s_height)
         xt += scale(node_size_t_width)
         yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
-        if (link.arrow && tmp !== ''  && tmp!=0) {
+        if (l_arrow && tmp !== ''  && tmp!=0) {
           xt += 10
         }
       }
@@ -292,7 +300,7 @@ export const compute_end_points = (
         //source is bottom left target. Arrow goes left and go down to the top side
         xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-        if (link.arrow && tmp !== ''  && tmp!=0) {
+        if (l_arrow && tmp !== ''  && tmp!=0) {
           xt = xt - 10
         }
       } else {
@@ -300,7 +308,7 @@ export const compute_end_points = (
         xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
         ys += scale(node_size_s_height)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
-        if (link.arrow && tmp !== ''  && tmp!=0) {
+        if (l_arrow && tmp !== ''  && tmp!=0) {
           xt = xt - 10
         }
       }
@@ -341,19 +349,18 @@ export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyN
 }
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
-export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,mode_visualisation:boolean,
+export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   multi_selected_nodes:{current: SankeyNode[] },
   nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   select_node:(n: SankeyNode) => void,
-  static_sankey:boolean,
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   mode_selection:{current:string}
 )=>{
-  if (!static_sankey && !mode_visualisation &&  (event.ctrlKey || event.metaKey)) {
+  if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  (event.ctrlKey || event.metaKey)) {
     mode_selection.current='s'
     d3.select(' .opensankey #svg').attr('class','mode_selection')
     sankeyTooltip.style('opacity', 0)
@@ -365,9 +372,11 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
       deselect_visualy_nodes(d)
     } else {
-      multi_selected_nodes.current.push(d)
       d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
-      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      multi_selected_nodes.current.push(d)
+      if(multi_selected_nodes.current.length==1){
+        d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      }
     }
     select_node(d)
     if ( accordion_ref && accordion_ref.current) {
@@ -382,7 +391,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }
-  }else if(!static_sankey &&  !event.ctrlKey){
+  }else if(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  !event.ctrlKey){
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
@@ -390,81 +399,152 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
     } else {
       multi_selected_nodes.current.push(d)
       d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
-      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      if(multi_selected_nodes.current.length==1){
+        d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+      } 
     }
     set_data({...data})
   }
 }
 
-export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,data:SankeyData,set_agregation_node:React.Dispatch<React.SetStateAction<string>>,set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_data:React.Dispatch<React.SetStateAction<SankeyData>>)=>{
+export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
+  set_contextualised_node:(n:SankeyNode)=>void,pointer_pos:{current:number[]},
+  multi_selected_nodes:{current: SankeyNode[] },              
+)=>{
   ev.preventDefault()
-  if (!n.dimensions) {
-    return
+  pointer_pos.current=[ev.pageX,ev.pageY]
+  if(multi_selected_nodes.current.includes(n)){
+    set_contextualised_node(n)
+  }else{
+    multi_selected_nodes.current.forEach(nn=>deselect_visualy_nodes(nn))
+    multi_selected_nodes.current=[]
+    select_visualy_nodes(n)
+    multi_selected_nodes.current.push(n)
+    set_contextualised_node(n)
   }
-  if (ev.altKey) {
-    const child_names: string[] = []
-    const dim_names: string[] = []
-    Object.values(data.nodes).forEach(n2 => {
-      for (const dim in n2.dimensions) {
-        if ( dim === 'Primaire') {
-          if ( data.nodeTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
-            child_names.push(n2.idNode)
-            dim_names.push(dim)
-          }
-        } else if (!data.nodeTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
-          if (dim_names.indexOf(dim) === -1) {
-            child_names.push(n2.idNode)
-            dim_names.push(dim)
-          }
-        }
-      }
-      return false
-    })
-    if (child_names.length === 0) {
-      return
-    }
-    if (child_names.length > 1) {
-      set_agregation_node(n.idNode)
-      set_is_agregation(false)
-      set_show_agregation(true)
-    } else {
-      desagregation(data, n.idNode, dim_names[0])
-    }
-  } else {
-    const parent_names: string[] = []
-    const dim_names: string[] = []
-    Object.keys(n.dimensions).forEach(
-      dim => {
-        if (dim === 'Primaire') {
-          if (data.nodeTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
-            parent_names.push(n.idNode)
-            dim_names.push(dim)
-          }
-        } else if (!data.nodeTags['Primaire'].activated && n.dimensions[dim].parent_name) {
-          parent_names.push(n.dimensions[dim].parent_name as string)
-          dim_names.push(dim)
-        }
-      }
-    )
-    if (parent_names.length === 0) {
-      return
-    }
-    if (parent_names.length > 1) {
-      set_agregation_node(n.idNode)
-      set_is_agregation(true)
-      set_show_agregation(true)
-    } else {
-      agregation(data, n.idNode, dim_names[0])
-    }
-  }
-  set_data({ ...data })
-
 }
+
+export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:SankeyLink,set_contextualised_link:(l:SankeyLink)=>void,pointer_pos:{current:number[]},
+  data:SankeyData,set_data:(d:SankeyData)=>void,
+  multi_selected_links:{current:SankeyLink[]},
+  set_displayed_input_link_value:(s:string)=>void,
+  tags_selected:{[k: string]: string},
+  set_tags_selected:(o:{[k: string]: string})=>void,
+  set_display_link_opacity:(s:string)=>void,
+
+)=>{
+  ev.preventDefault()
+  pointer_pos.current=[ev.pageX,ev.pageY]
+  if(multi_selected_links.current.includes(l)){
+    set_contextualised_link(l)
+  }else{
+    multi_selected_links.current.forEach(ll=>deselect_visualy_links(ll))
+    multi_selected_links.current=[]
+    select_visualy_links(l)
+    multi_selected_links.current.push(l)
+    set_contextualised_link(l)
+  }
+  const link_data_ref=l.idLink
+  let new_tags_selected=tags_selected
+  if(link_data_ref.includes('_')){
+    const index_grp_tag=link_data_ref.split('_')
+    // Supprime le première élément du tableau qui ne contient que l'id du flux
+    index_grp_tag.shift()
+    new_tags_selected={}
+    // On fabrique un tags_selected pour récupérer la bonne valeur pour value_selected_parameter
+    for(const i in index_grp_tag){
+      const key=Object.keys(data.dataTags)[Number(i)]
+      new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
+    }
+    set_tags_selected(new_tags_selected)
+    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+  }else if(Object.values(data.dataTags).length>0){
+    // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
+    const tmp=[] as string[]
+    Object.values(data.dataTags).forEach(dt=>{
+      tmp.push(Object.entries(dt.tags).filter(t=>t[1].selected)[0][0])
+    })
+    const n_t_s={} as {[x:string]:string}
+    Object.keys(data.dataTags).forEach((dt,i)=>{
+      n_t_s[dt]=tmp[i]
+    })
+    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
+  }else{
+    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+  }
+
+
+  set_display_link_opacity(return_value_link(data,l,'opacity') as string)
+  set_data({...data})
+}
+// export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,data:SankeyData,set_agregation_node:React.Dispatch<React.SetStateAction<string>>,set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_data:(d:SankeyData)=>void)=>{
+//   ev.preventDefault()
+//   if (!n.dimensions) {
+//     return
+//   }
+//   if (ev.altKey) {
+//     const child_names: string[] = []
+//     const dim_names: string[] = []
+//     Object.values(data.nodes).forEach(n2 => {
+//       for (const dim in n2.dimensions) {
+//         if ( dim === 'Primaire') {
+//           if ( data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+//             child_names.push(n2.idNode)
+//             dim_names.push(dim)
+//           }
+//         } else if (!data.levelTags['Primaire'].activated && n2.dimensions[dim].parent_name == n.idNode) {
+//           if (dim_names.indexOf(dim) === -1) {
+//             child_names.push(n2.idNode)
+//             dim_names.push(dim)
+//           }
+//         }
+//       }
+//       return false
+//     })
+//     if (child_names.length === 0) {
+//       return
+//     }
+//     if (child_names.length > 1) {
+//       set_agregation_node(n.idNode)
+//       set_is_agregation(false)
+//       set_show_agregation(true)
+//     } else {
+//       desagregation(data, n.idNode, dim_names[0])
+//     }
+//   } else {
+//     const parent_names: string[] = []
+//     const dim_names: string[] = []
+//     Object.keys(n.dimensions).forEach(
+//       dim => {
+//         if (dim === 'Primaire') {
+//           if (data.levelTags['Primaire'].activated && dim_names.indexOf(dim) === -1) {
+//             parent_names.push(n.idNode)
+//             dim_names.push(dim)
+//           }
+//         } else if (!data.levelTags['Primaire'].activated && n.dimensions[dim].parent_name) {
+//           parent_names.push(n.dimensions[dim].parent_name as string)
+//           dim_names.push(dim)
+//         }
+//       }
+//     )
+//     if (parent_names.length === 0) {
+//       return
+//     }
+//     if (parent_names.length > 1) {
+//       set_agregation_node(n.idNode)
+//       set_is_agregation(true)
+//       set_show_agregation(true)
+//     } else {
+//       agregation(data, n.idNode, dim_names[0])
+//     }
+//   }
+//   set_data({ ...data })
+
+// }
 // Function that wrap node text when the length of the label exceed the limit
 export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
-
   const wrap = textwrap()
-    .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
+    .bounds({ height: 100, width: ((return_value_node(data,d,'label_box_width') as number) != 0) ? (return_value_node(data,d,'label_box_width') as number) : 110 })
     .method('tspans')
   d3.select(' .opensankey #ggg_' + d.idNode + ' text')
     .call(wrap)
@@ -472,10 +552,10 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
       const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
 
-      if (d.display_style.label_horiz == 'middle') {
+      if (return_value_node(data,d,'label_horiz')  == 'middle') {
         return width / 2
-      } else if (d.display_style.label_horiz == 'right') {
-        return d.display_style.label_vert == 'middle' ? width : 0
+      } else if (return_value_node(data,d,'label_horiz')  == 'right') {
+        return return_value_node(data,d,'label_vert')  == 'middle' ? width : 0
       } else {
         return 0
       }
@@ -486,9 +566,9 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
     if (d.x_label) {
       return d.x_label
-    } else if (d.display_style.label_horiz == 'middle') {
+    } else if (return_value_node(data,d,'label_horiz')  == 'middle') {
       return width / 2
-    } else if (d.display_style.label_horiz == 'right') {
+    } else if (return_value_node(data,d,'label_horiz')  == 'right') {
       return width
     } else {
       return 0
@@ -497,15 +577,15 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   //Nombre de tspan dans la balise text
   const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
   const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
-  if (d.display_style.label_vert == 'middle') {
+  if (return_value_node(data,d,'label_vert')  == 'middle') {
     d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> {
-      const size_text=(n as SankeyNode).display_style.font_size
+      const size_text=(return_value_node(data,(n as SankeyNode),'font_size') as number)
       const shift=(0.25 *(size_text))
       return'translate(0,' +(shift+(nb_tspan-1)*(-size_text/2)) + ')'})
-  } else if (d.display_style.label_vert == 'bottom') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,'+((n as SankeyNode).display_style.font_size*(1-ts_span_void))+')')
-  } else if (d.display_style.label_vert == 'top') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,' + ((n as SankeyNode).display_style.font_size*(-(nb_tspan - 1))) + ')')
+  } else if (return_value_node(data,d,'label_vert')  == 'bottom') {
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,'+((return_value_node(data,(n as SankeyNode),'font_size') as number)*(1-ts_span_void))+')')
+  } else if (return_value_node(data,d,'label_vert')  == 'top') {
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,' + ((return_value_node(data,(n as SankeyNode),'font_size') as number)*(-(nb_tspan - 1))) + ')')
   }
 
 }
@@ -527,16 +607,16 @@ export const setNodeHeight = (
   const res = compute_total_offsets(inv_scale,n, data, selected_tags, test_link_value,undefined,getLinkValue)
   const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
   let node_size_s_height = Math.max(
-    inv_scale(n.node_height), total_offset_height_left, total_offset_height_right
+    inv_scale((return_value_node(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale(n.node_width), total_offset_width_top, total_offset_width_bottom
+    inv_scale((return_value_node(data,n,'node_width') as number)), total_offset_width_top, total_offset_width_bottom
   )
   //Hauteur des noeuds
   if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
     // Hauteur des noeuds
-    node_size_s_height = inv_scale(n.node_height)
-    node_size_s_width = inv_scale(n.node_width)
+    node_size_s_height = inv_scale((return_value_node(data,n,'node_height') as number))
+    node_size_s_width = inv_scale((return_value_node(data,n,'node_width') as number))
   }
   d3.select(' .opensankey #' + n.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #' + n.idNode).attr('height', scale(node_size_s_height))
@@ -629,10 +709,13 @@ export const drawArrows = (
 
   for (let i = 0; i < n.inputLinksId.length; i++) {
     const l = data.links[n.inputLinksId[i]]
+    const ori=return_value_link(data,l,'orientation')
+    const recy=return_value_link(data,l,'recycling')
+    const l_arrow=return_value_link(data,l,'arrow')
     if (!link_visible(l, data,getLinkValue)) {
       continue
     }
-    if(!l.arrow){
+    if(!l_arrow){
       continue
     }
     let link_value = test_link_value(data,data.nodes, l, getLinkValue)
@@ -660,7 +743,7 @@ export const drawArrows = (
     }
 
     const source_node = data.nodes[l.idSource]
-    if (l.orientation === 'hh' || l.orientation === 'vh') {
+    if (ori === 'hh' || ori === 'vh') {
       is_v = true
     } else {
       is_v = false
@@ -678,8 +761,8 @@ export const drawArrows = (
           let xt
           let yt
           let p5
-          if (l.orientation === 'hh' || l.orientation === 'vh') {
-            if (n.x <= source_node.x && l.recycling || n.x > source_node.x && !l.recycling) {
+          if (ori === 'hh' || ori === 'vh') {
+            if (n.x <= source_node.x && recy || n.x > source_node.x && !recy) {
               xt = +n.x
               yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
@@ -692,7 +775,7 @@ export const drawArrows = (
               is_v = true
               return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
             }
-          } else if (l.orientation === 'vv' || l.orientation === 'hv') {
+          } else if (ori === 'vv' || ori === 'hv') {
             if (n.y > source_node.y) {
               xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
               yt = +n.y
@@ -709,20 +792,20 @@ export const drawArrows = (
           }
           return ''
         })
-        // .attr('transform', () => 'translate(' + -(n.x) + ', ' + -(n.y) + ')')
         .attr('fill', () => link_color(l, data,getLinkValue)??'none')
         .attr('fill-opacity', () => {
-          //const opacity = String(l.display_value[value_index]).includes('[') ? 0.3 : 0.95
-          return l.opacity //opacity
+          // return l.opacity //opacity
+          return return_value_link(data,l,'opacity')
+
         })
     }
-    if ((is_v && !l.recycling && n.x > source_node.x ) || (is_v && l.recycling && n.x < source_node.x) ) {
+    if ((is_v && !recy && n.x > source_node.x ) || (is_v && recy && n.x < source_node.x) ) {
       cum_v_left += link_value
-    } else if ((is_v && !l.recycling &&n.x < source_node.x) || (is_v && l.recycling && n.x > source_node.x)) {
+    } else if ((is_v && !recy &&n.x < source_node.x) || (is_v && recy && n.x > source_node.x)) {
       cum_v_right += link_value
-    } else if ((!is_v && !l.recycling && n.y > source_node.y) || (!is_v && l.recycling && n.y < source_node.y)) {
+    } else if ((!is_v && !recy && n.y > source_node.y) || (!is_v && recy && n.y < source_node.y)) {
       cum_h_top += link_value
-    } else if ((!is_v && !l.recycling && n.y < source_node.y) || (!is_v && l.recycling && n.y > source_node.y)) {
+    } else if ((!is_v && !recy && n.y < source_node.y) || (!is_v && recy && n.y > source_node.y)) {
       cum_h_bottom += link_value
     }
   }
@@ -730,28 +813,30 @@ export const drawArrows = (
 
 
 
-// Function that is triggered when some event occure on the sankey zone like :
-// - a simple click on the sankey zone (not on link or node) deselect all elements
-// - if we are in mouse mode add node + link : on mousedown add a node, while we dragg the mouse after clicking on the sankey zone a line will appear between the first added node and the mouse
-// until the mouse is released wich add a second node and add a link between these 2 nodes
-export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTMLElement,unknown>,
+export const eventOnSankeyZoneMouseDown=(
   mode_selection:{current:string},
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
-  multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_links:{current:SankeyLink[]},
-  first_selected_node:object,
+  set_data:(d:SankeyData)=>void,
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
   token:boolean,
-  set_show_toast_limit_node:(b:boolean)=>void
+  set_show_toast_limit_node:(b:boolean)=>void,
+  evt2:unknown,
+  // set_start_point:React.Dispatch<React.SetStateAction<number[]>>
+  start_point:{current:number[]},
+  set_contextualised_node:(n:SankeyNode|undefined)=>void,
+  set_contextualised_link:(l:SankeyLink|undefined)=>void,
+  set_show_context_zdd:(b:boolean)=>void
 )=>{
+  set_contextualised_node(undefined)
+  set_contextualised_link(undefined)
+  set_show_context_zdd(false)
+  const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
+  //si le mode de souris est noeud+flux alors crée le premier noeuds
+  if(evt.which==1){
 
-  svgSankey.on('mousedown', evt => {
-    //si le mode de souris est noeud+flux alors crée le premier noeuds
+    if(d3.select(evt.target).attr('class')!='node node_shape' && mode_selection.current == 'ln'){
 
-    if(d3.select(evt.target).attr('class')!='node node_shape'){
-
-      if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln') {
+      if ((!evt.ctrlKey && !evt.metaKey) ) {
         if(!token && Object.keys(data.nodes).length>15){
           set_show_toast_limit_node(true)
           setTimeout(function () {
@@ -761,174 +846,292 @@ export const eventOnSankeyZone =(svgSankey:d3.Selection<d3.BaseType,unknown,HTML
           // isDown = true
           // creation nouveau noeud
           const new_node1 = default_node(data)
-          const listId: number[] = []
-          Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-          const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+          let idNode = Object.keys(data.nodes).length
+          while (data.nodes['node'+idNode]) {
+            idNode = idNode+1
+          }
           new_node1.idNode = 'node' + idNode
           new_node1.name = 'node_tmp'
           data.nodes[new_node1.idNode] = new_node1
           const pos = d3.pointer(event)
-          new_node1.x = pos[0]-(new_node1.node_width/2)
-          new_node1.y = pos[1]-(new_node1.node_height/2)
+          new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
+          new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
           set_first_selected_node(new_node1)
           set_data({ ...data })
         }
       }
+    }else if(mode_selection.current=='s' && !evt.ctrlKey){
+      const pos = d3.pointer(evt)
+      start_point.current=pos
+      d3.select('#svg').append('g').attr('class','selection_zone')
+        .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
     }
-  })
-    .on('mousemove', evt => {
-      //Empêche lors du drag de la souris d'avoir
-      // l'effet sélection de texte sur les labels des éléments de diagramme
+  }
+ 
 
-      //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
-      // alors crée une droite entre le premier noeud clické et le pointeur du curseur
-      window.event?.stopPropagation()
-      window.event?.preventDefault()
+}
+export const eventOnSankeyZoneMouseMove=(
+  mode_selection:{current:string},
+  data:SankeyData,
+  first_selected_node:object,
+  set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
+  evt:MouseEvent,
+  start_point:{current:number[]}
+  
+)=>{
+  //Empêche lors du drag de la souris d'avoir
+  // l'effet sélection de texte sur les labels des éléments de diagramme
 
-      if(mode_selection.current=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
-        data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
-        set_first_selected_node({})
+  //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
+  // alors crée une droite entre le premier noeud clické et le pointeur du curseur
+  window.event?.stopPropagation()
+  window.event?.preventDefault()
+
+  if(mode_selection.current=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
+    data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
+    set_first_selected_node({})
+  }
+  if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
+    d3.selectAll(' .opensankey #svg #path-flux').remove()
+  }
+  if(mode_selection.current=='s' && d3.selectAll('.selection_zone').nodes().length>0){
+    // Create change the size of the selection zone according to the mouse
+    const pos = d3.pointer(evt)
+    const new_x=(pos[0]>start_point.current[0])?start_point.current[0]:pos[0]
+    const new_w=(pos[0]>start_point.current[0])?(pos[0]-start_point.current[0]):start_point.current[0]-pos[0]
+
+    const new_y=(pos[1]>start_point.current[1])?start_point.current[1]:pos[1]
+    const new_h=(pos[1]>start_point.current[1])?(pos[1]-start_point.current[1]):start_point.current[1]-pos[1]
+
+    d3.select('.selection_zone rect').attr('x',new_x)
+    d3.select('.selection_zone rect').attr('y',new_y)
+    d3.select('.selection_zone rect').attr('width',Math.abs(new_w))
+    d3.select('.selection_zone rect').attr('height',Math.abs(new_h))
+  }else if( mode_selection.current == 'ln'){
+    if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
+      // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris
+      // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison
+      set_first_selected_node({})
+      Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].name=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].idNode
+    }else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
+      const pos = d3.pointer(evt)
+      const node_keys = Object.keys(data.nodes)
+      const last_node = data.nodes[node_keys[node_keys.length - 1]]
+      // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
+      if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
+        d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
+          .attr('x1', last_node.x + (return_value_node(data,last_node,'node_width') as number / 2))
+          .attr('y1', last_node.y + (return_value_node(data,last_node,'node_height') as number / 2))
+          .attr('x2', pos[0])
+          .attr('y2', pos[1])
+          .style('stroke', '#d9af58')
+          .style('stroke-width', '2px')
+      } else {
+        d3.selectAll(' .opensankey #svg #path-flux')
+          .attr('x2', pos[0])
+          .attr('y2', pos[1])
       }
-      if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
-        d3.selectAll(' .opensankey #svg #path-flux').remove()
-      }
-      if( mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
-        // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris
-        // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison
-        set_first_selected_node({})
-        Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].name=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].idNode
-      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
-        const pos = d3.pointer(event)
-        const node_keys = Object.keys(data.nodes)
-        const last_node = data.nodes[node_keys[node_keys.length - 1]]
-        // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
-        if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
-          d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
-            .attr('x1', last_node.x + last_node.node_width / 2)
-            .attr('y1', last_node.y + last_node.node_height / 2)
-            .attr('x2', pos[0])
-            .attr('y2', pos[1])
-            .style('stroke', '#d9af58')
-            .style('stroke-width', '2px')
-        } else {
-          d3.selectAll(' .opensankey #svg #path-flux')
-            .attr('x2', pos[0])
-            .attr('y2', pos[1])
+    }
+  }
+  
+  if (Object.keys(first_selected_node).length != 0) {
+    const pos = d3.pointer(event)
+    const fsn = (first_selected_node as SankeyNode)
+    if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
+      // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
+      d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
+        .attr('x1', fsn.x + (return_value_node(data,fsn,'node_width') as number / 2))
+        .attr('y1', fsn.y + (return_value_node(data,fsn,'node_height') as number / 2))
+        .attr('x2', pos[0])
+        .attr('y2', pos[1])
+        .style('stroke', 'red')
+        .style('stroke-width', '2px')
+    } else {
+      d3.selectAll(' .opensankey #svg #path-flux')
+        .attr('x2', pos[0]-5)
+        .attr('y2', pos[1]-5)
+    }
+  }
+}
+export const eventOnSankeyZoneMouseUp=(
+  mode_selection:{current:string},
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
+  multi_selected_links:{current:SankeyLink[]},
+  first_selected_node:object,
+  set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
+  token:boolean,
+  set_show_toast_limit_node:(b:boolean)=>void,
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
+  set_displayed_input_link_value:(s:string)=>void,
+  evt:MouseEvent,
+  // set_start_point:React.Dispatch<React.SetStateAction<number[]>>,
+  start_point:{current:number[]}
+
+)=>{
+  const open_links_menu=()=>{
+    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+      button_ref.current.click()
+    }
+    if ( accordion_ref && accordion_ref.current) {
+      for ( const child in accordion_ref.current.children) {
+        if (accordion_ref.current.children[child].id === 'Flux') {
+          (accordion_ref.current.children[0] as HTMLLabelElement).click();
+          (accordion_ref.current.children[child] as HTMLLabelElement).click()
         }
       }
-      if (Object.keys(first_selected_node).length != 0) {
-        const pos = d3.pointer(event)
-        const fsn = (first_selected_node as SankeyNode)
-        if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
-          // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
-          d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
-            .attr('x1', fsn.x + fsn.node_width / 2)
-            .attr('y1', fsn.y + fsn.node_height / 2)
-            .attr('x2', pos[0])
-            .attr('y2', pos[1])
-            .style('stroke', 'red')
-            .style('stroke-width', '2px')
-        } else {
-          d3.selectAll(' .opensankey #svg #path-flux')
-            .attr('x2', pos[0]-5)
-            .attr('y2', pos[1]-5)
-        }
+    }
+    if ( links_accordion_ref && links_accordion_ref.current) {
+      (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
+      (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+    }
+  }
+
+  const evt_recast=((evt as unknown) as {target:string}).target
+
+  if(mode_selection.current=='s' && d3.selectAll('.selection_zone').nodes().length>0){
+    const z_x=Number(d3.select('.selection_zone rect').attr('x'))
+    const z_y=Number(d3.select('.selection_zone rect').attr('y'))
+    const z_w=Number(d3.select('.selection_zone rect').attr('width'))
+    const z_h=Number(d3.select('.selection_zone rect').attr('height'))
+    if(evt.shiftKey){
+      Object.values(data.nodes).filter(n=>!multi_selected_nodes.current.includes(n) && node_displayed(data,n) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h)).forEach(n=>multi_selected_nodes.current.push(n))
+    }else{
+      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
+    }
+    
+    multi_selected_links.current=[]
+    // set_start_point([0,0])
+    start_point.current=[0,0]
+
+    d3.selectAll('.selection_zone').remove()
+    set_data({...data})
+  }
+  // si le token de connexion est à false alors ne crée pas de second noeud
+  //si le mode de souris est noeud+flux alors crée un second noeud au relachement
+  //et crée un lien entre le premier noeud crée lors du click et ce dernier
+  if(mode_selection.current=='ln'){
+    if(!token && Object.keys(data.nodes).length>15 ){
+      Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
+      d3.selectAll(' .opensankey #svg #path-flux').remove()
+      set_first_selected_node({})
+      set_show_toast_limit_node(true)
+      setTimeout(function () {
+        set_show_toast_limit_node(false)
+      }, 3000)
+    }else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt_recast).attr('class')!='node node_shape') {
+      // isDown = false
+      d3.selectAll(' .opensankey #svg #path-flux').remove()
+      Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
+      //Création second noeud
+      const new_node1 = default_node(data)
+      let idNode = Object.keys(data.nodes).length
+      while (data.nodes['node'+idNode]) {
+        idNode = idNode+1
       }
-
-    })
-    .on('mouseup', evt => {
-      // si le token de connexion est à false alors ne crée pas de second noeud
-      //si le mode de souris est noeud+flux alors crée un second noeud au relachement
-      //et crée un lien entre le premier noeud crée lors du click et ce dernier
-      if(!token && Object.keys(data.nodes).length>15 && mode_selection.current == 'ln'){
-        Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
-        d3.selectAll(' .opensankey #svg #path-flux').remove()
-        set_first_selected_node({})
-        set_show_toast_limit_node(true)
-        setTimeout(function () {
-          set_show_toast_limit_node(false)
-        }, 3000)
-      }else if ((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt.target).attr('class')!='node node_shape') {
-        // isDown = false
-        d3.selectAll(' .opensankey #svg #path-flux').remove()
-        Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
-        //Création second noeud
-        const new_node1 = default_node(data)
-        const listId: number[] = []
-        Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-        const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
-        new_node1.idNode = 'node' + idNode
-        new_node1.name = new_node1.idNode
-        if (Object.keys(data.nodes).length < 5) {
-          new_node1.x = Object.keys(data.nodes).length * 200 + 200
-        } else {
-          new_node1.x = 200
-        }
-        data.nodes[new_node1.idNode] = new_node1
-        const pos = d3.pointer(event)
-        new_node1.x = pos[0]-(new_node1.node_width/2)
-        new_node1.y = pos[1]-(new_node1.node_height/2)
-        //Ajout du lien entre les deux noeuds créés
-        const new_link = default_link(data)
-        const listIdLink: number[] = []
-        Object.keys(data.links).forEach(elt => listIdLink.push(Number(elt.replace('link', ''))))
-        const idLink = listIdLink.length > 0 ? Math.max(...listIdLink) + 1 : 0
-        new_link.idLink = 'link' + idLink
-        data.links[new_link.idLink] = new_link
-        const node_keys = Object.keys(data.nodes)
-        new_link.idSource = data.nodes[node_keys[node_keys.length - 2]].idNode
-        new_link.idTarget = data.nodes[node_keys[node_keys.length - 1]].idNode
-        if (new_link.idSource === new_link.idTarget) {
-          new_link.recycling = true
-        }
-        data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
-        data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
-        set_first_selected_node({})
-        set_data({...data})
-      }else if((!evt.ctrlKey && !evt.metaKey) && mode_selection.current == 'ln' && Object.keys(first_selected_node).length > 0 && d3.select(evt.target).attr('class')!='node node_shape'){
+      new_node1.idNode = 'node' + idNode
+      new_node1.name = new_node1.idNode
+      if (Object.keys(data.nodes).length < 5) {
+        new_node1.x = Object.keys(data.nodes).length * 200 + 200
+      } else {
+        new_node1.x = 200
+      }
+      data.nodes[new_node1.idNode] = new_node1
+      const pos = d3.pointer(evt)
+      new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
+      new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+      //Ajout du lien entre les deux noeuds créés
+      const new_link = default_link(data)
+      let idLink = Object.keys(data.links).length
+      while (data.links['link'+idLink]) {
+        idLink = idLink+1
+      }
+      new_link.idLink = 'link' + idLink
+      data.links[new_link.idLink] = new_link
+      const node_keys = Object.keys(data.nodes)
+      new_link.idSource = data.nodes[node_keys[node_keys.length - 2]].idNode
+      new_link.idTarget = data.nodes[node_keys[node_keys.length - 1]].idNode
+      if (new_link.idSource === new_link.idTarget) {
+        // new_link.recycling = true
+        assign_link_local_attribute(new_link,'recycling',true)
+        
+      }
+      data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
+      data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
+      multi_selected_links.current=[new_link]
+      set_displayed_input_link_value('')
+      open_links_menu()
+      set_first_selected_node({})
+      set_data({...data})
+    }else if((!evt.ctrlKey && !evt.metaKey) && Object.keys(first_selected_node).length > 0 && d3.select(evt_recast).attr('class')!='node node_shape'){
 
 
-        const n_link = default_link(data)
-        const n_node = default_node(data)
-        const listIdN: number[] = []
-        Object.keys(data.nodes).forEach(elt => listIdN.push(Number(elt.replace('node', ''))))
-        const idNode = listIdN.length > 0 ? Math.max(...listIdN) + 1 : 0
-        n_node.idNode = 'node' + idNode
-        n_node.name = 'node'+idNode
-        data.nodes[n_node.idNode] = n_node
-        const pos = d3.pointer(event)
-        n_node.x = pos[0]-(n_node.node_width/2)
-        n_node.y = pos[1]-(n_node.node_height/2)
+      const n_link = default_link(data)
+      const n_node = default_node(data)
+      let idNode = Object.keys(data.nodes).length
+      while (data.nodes['node'+idNode]) {
+        idNode = idNode+1
+      }
+      n_node.idNode = 'node' + idNode
+      n_node.name = 'node'+idNode
+      data.nodes[n_node.idNode] = n_node
+      const pos = d3.pointer(event)
+      n_node.x = pos[0]-(return_value_node(data,n_node,'node_width') as number/2)
+      n_node.y = pos[1]-(return_value_node(data,n_node,'node_height') as number/2)
 
-        const { links } = data
-        const fsn = (first_selected_node as SankeyNode)
-        const listId: number[] = []
-        Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-        const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
-        n_link.idLink = 'link' + idLink
-        links[n_link.idLink] = n_link
-        n_link.idSource = fsn.idNode
-        n_link.idTarget = n_node.idNode
-        if (n_link.idSource === n_link.idTarget) {
-          n_link.recycling = true
-        }
-        fsn.outputLinksId.push(n_link.idLink)
-        n_node.inputLinksId.push(n_link.idLink)
-        multi_selected_links.current=[n_link]
-        set_first_selected_node({})
-        set_data({ ...data })
+      const { links } = data
+      const fsn = (first_selected_node as SankeyNode)
+      let idLink = Object.keys(data.links).length
+      while (data.links['link'+idLink]) {
+        idLink = idLink+1
+      }
+      n_link.idLink = 'link' + idLink
+      links[n_link.idLink] = n_link
+      n_link.idSource = fsn.idNode
+      n_link.idTarget = n_node.idNode
+      if (n_link.idSource === n_link.idTarget) {
+        // n_link.recycling = true
+        assign_link_local_attribute(n_link,'recycling',true)
 
       }
+      fsn.outputLinksId.push(n_link.idLink)
+      fsn.outputLinksId=sort_outputLinksId_by_YPos(data,fsn)
+      n_node.inputLinksId.push(n_link.idLink)
+      set_displayed_input_link_value('')
+      multi_selected_links.current=[n_link]
+      open_links_menu()
 
+      set_first_selected_node({})
+      set_data({ ...data })
 
-    })
+    }
+  }
+}
 
-
+// Sort the outputLinksId tab of the node by using position of output node
+export const sort_outputLinksId_by_YPos=(data:SankeyData,n:SankeyNode)=>{
+  return n.outputLinksId.filter(idL=>data.nodes[data.links[idL].idTarget].position!=='relative')
+    .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y 
+    )
+  
 }
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes,
 // or creating a nodes at first click then linking it to a already existing one or the opposite
-export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,data:SankeyData,set_data:React.Dispatch<React.SetStateAction<SankeyData>>,first_selected_node:object,set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,multi_selected_links:{current:SankeyLink[]},accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null)=>{
+export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,
+  d:SankeyNode,data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  first_selected_node:object,
+  set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
+  multi_selected_links:{current:SankeyLink[]},
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  set_displayed_input_link_value:(s:string)=>void,
+)=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
 
     if(d.name.includes('_tmp')){
@@ -940,22 +1143,24 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
       const n_link = default_link(data)
       const { links } = data
       const fsn = (first_selected_node as SankeyNode)
-      const listId: number[] = []
-      Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-
-      const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+      let idLink = Object.keys(data.links).length
+      while (data.links['link'+idLink]) {
+        idLink = idLink+1
+      }
       n_link.idLink = 'link' + idLink
       links[n_link.idLink] = n_link
 
       n_link.idSource = fsn.idNode
       n_link.idTarget = d.idNode
       if (n_link.idSource === n_link.idTarget) {
-        n_link.recycling = true
+        // n_link.recycling = true
+        assign_link_local_attribute(n_link,'recycling',true)
+
       }
       fsn.outputLinksId.push(n_link.idLink)
       d.inputLinksId.push(n_link.idLink)
 
-
+      set_displayed_input_link_value('')
       multi_selected_links.current=[n_link]
 
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
@@ -986,15 +1191,18 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
     const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
     //Ajout du lien entre les deux noeuds créés
     const new_link = default_link(data)
-    const listIdLink: number[] = []
-    Object.keys(data.links).forEach(elt => listIdLink.push(Number(elt.replace('link', ''))))
-    const idLink = listIdLink.length > 0 ? Math.max(...listIdLink) + 1 : 0
+    let idLink = Object.keys(data.links).length
+    while (data.links['link'+idLink]) {
+      idLink = idLink+1
+    }
     new_link.idLink = 'link' + idLink
     data.links[new_link.idLink] = new_link
     new_link.idSource = tmp.idNode
     new_link.idTarget = d.idNode
     if (new_link.idSource === new_link.idTarget) {
-      new_link.recycling = true
+      // new_link.recycling = true
+      assign_link_local_attribute(new_link,'recycling',true)
+
     }
     tmp.name='node_'+Object.keys(data.nodes).length
     tmp.outputLinksId.push(new_link.idLink)
@@ -1015,7 +1223,7 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
 )=>{
   const display_nodes=data.nodes
   const display_links=data.links
-  Object.values(display_nodes).filter(n=>n.not_to_scale).map(n=>{
+  Object.values(display_nodes).filter(n=>return_value_node(data,n,'not_to_scale')).map(n=>{
     setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale,getLinkValue)
     d3.select(' .opensankey #' + n.idNode)
       .attr('fill-opacity',0)
@@ -1026,39 +1234,39 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .classed('node_sub_shape', true)
     .attr('x',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
-      return (n.not_to_scale_direction=='left')?width_node-(width_node/50):0
+      return (return_value_node(data,n,'not_to_scale_direction')=='left')?width_node-(width_node/50):0
     })
     .attr('y',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
-      return (n.not_to_scale_direction=='top')?(height_node-height_node/50):0})
+      return (return_value_node(data,n,'not_to_scale_direction')=='top')?(height_node-height_node/50):0})
     .attr('width',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/50})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/50})
     .attr('height',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/50:height_node})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/50:height_node})
     .attr('fill',d => node_color(d as SankeyNode,data) as string)
 
   // 2
@@ -1067,15 +1275,15 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .classed('node_sub_shape', true)
     .attr('x',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      if(n.not_to_scale_direction=='right'){
+      if(return_value_node(data,n,'not_to_scale_direction')=='right'){
         return width_node/25
-      }else if(n.not_to_scale_direction=='left'){
+      }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
         return width_node-width_node/10
       }else{
         return 0
@@ -1083,15 +1291,15 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     })
     .attr('y',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      if(n.not_to_scale_direction=='bottom'){
+      if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
         return height_node/25
-      }else if(n.not_to_scale_direction=='top'){
+      }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
         return height_node-height_node/10
       }else{
         return 0
@@ -1099,22 +1307,22 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     })
     .attr('height',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/20:height_node})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/20:height_node})
     .attr('width',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/20})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/20})
     .attr('fill',d => node_color(d as SankeyNode,data) as string)
 
   // 3
@@ -1123,15 +1331,15 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .classed('node_sub_shape', true)
     .attr('x',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      if(n.not_to_scale_direction=='right'){
+      if(return_value_node(data,n,'not_to_scale_direction')=='right'){
         return width_node/8.5
-      }else if(n.not_to_scale_direction=='left'){
+      }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
         return width_node-width_node/4.3
       }else{
         return 0
@@ -1139,15 +1347,15 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     })
     .attr('y',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      if(n.not_to_scale_direction=='bottom'){
+      if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
         return height_node/8.5
-      }else if(n.not_to_scale_direction=='top'){
+      }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
         return height_node-height_node/4.3
       }else{
         return 0
@@ -1155,22 +1363,22 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     })
     .attr('height',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/9:height_node})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/9:height_node})
     .attr('width',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/9})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/9})
     .attr('fill',d => node_color(d as SankeyNode,data) as string)
 
   // 4
@@ -1179,15 +1387,15 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .classed('node_sub_shape', true)
     .attr('x',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      if(n.not_to_scale_direction=='right'){
+      if(return_value_node(data,n,'not_to_scale_direction')=='right'){
         return width_node/4
-      }else if(n.not_to_scale_direction=='left'){
+      }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
         return width_node-width_node/2.1
       }else{
         return 0
@@ -1195,15 +1403,15 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     })
     .attr('y',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      if(n.not_to_scale_direction=='bottom'){
+      if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
         return height_node/4
-      }else if(n.not_to_scale_direction=='top'){
+      }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
         return height_node-height_node/2.1
       }else{
         return 0
@@ -1211,22 +1419,22 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     })
     .attr('width',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/4.5})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/4.5})
     .attr('height',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/4.5:height_node})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/4.5:height_node})
     .attr('fill',d => node_color(d as SankeyNode,data) as string)
 
   // 5
@@ -1235,40 +1443,40 @@ export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,San
     .classed('node_sub_shape', true)
     .attr('x',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      return (n.not_to_scale_direction=='right')?(width_node/2):0})
+      return (return_value_node(data,n,'not_to_scale_direction')=='right')?(width_node/2):0})
     .attr('y',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      return (n.not_to_scale_direction=='bottom')?(height_node/2):0})
+      return (return_value_node(data,n,'not_to_scale_direction')=='bottom')?(height_node/2):0})
     .attr('width',n=>{
       let width_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
       }else{
         width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?width_node:width_node/2})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/2})
     .attr('height',n=>{
       let height_node=0
-      if(n.shape=='rect'){
+      if(return_value_node(data,n,'shape')=='rect'){
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
       }else{
         height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
       }
 
-      return ['top','bottom'].includes(n.not_to_scale_direction)?height_node/2:height_node})
+      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/2:height_node})
     .attr('fill',d => node_color(d as SankeyNode,data) as string)
 }
 
@@ -1307,30 +1515,30 @@ export const setNodesHeight = (
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
   let node_size_s_height = Math.max(
-    inv_scale(source_node.node_height), s_total_offset_height_left, s_total_offset_height_right
+    inv_scale((return_value_node(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
   )
   let node_size_t_height = Math.max(
-    inv_scale(target_node.node_height), t_total_offset_height_left, t_total_offset_height_right
+    inv_scale((return_value_node(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale(source_node.node_width), s_total_offset_width_top, s_total_offset_width_bottom
+    inv_scale((return_value_node(data,source_node,'node_width') as number)), s_total_offset_width_top, s_total_offset_width_bottom
   )
   let node_size_t_width = Math.max(
-    inv_scale(target_node.node_width), t_total_offset_width_top, t_total_offset_width_bottom
+    inv_scale(return_value_node(data,target_node,'node_width') as number), t_total_offset_width_top, t_total_offset_width_bottom
   )
   // Hauteur des noeuds
   if ((res_source[0] === 0 && res_source[1] === 0 && res_source[2] === 0 && res_source[3] === 0) || data.show_structure == 'structure') {
-    node_size_s_height = inv_scale(source_node.node_height)
-    node_size_s_width = inv_scale(source_node.node_width)
+    node_size_s_height = inv_scale((return_value_node(data,source_node,'node_height') as number))
+    node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
   }
   if ((res_target[0] === 0 && res_target[1] === 0 && res_target[2] === 0 && res_target[3] === 0) || data.show_structure == 'structure') {
-    node_size_t_height = inv_scale(target_node.node_height)
-    node_size_t_width = inv_scale(target_node.node_width)
+    node_size_t_height = inv_scale((return_value_node(data,target_node,'node_height') as number))
+    node_size_t_width = inv_scale(return_value_node(data,target_node,'node_width') as number)
   }
 
   d3.select(' .opensankey #' + source_node.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #' + source_node.idNode).attr('height', scale(node_size_s_height))
-  if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse' || !source_node.tags['Type de noeud'] && source_node.shape=='ellipse' ) {
+  if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse' || !source_node.tags['Type de noeud'] && return_value_node(data,source_node,'shape')=='ellipse' ) {
     d3.select(' .opensankey #' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1339,7 +1547,7 @@ export const setNodesHeight = (
 
   d3.select(' .opensankey #' + target_node.idNode).attr('width', scale(node_size_t_width))
   d3.select(' .opensankey #' + target_node.idNode).attr('height', scale(node_size_t_height))
-  if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse'|| !target_node.tags['Type de noeud'] && target_node.shape=='ellipse') {
+  if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse'|| !target_node.tags['Type de noeud'] && return_value_node(data,target_node,'shape')=='ellipse') {
     d3.select(' .opensankey #' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
     d3.select(' .opensankey #' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
     d3.select(' .opensankey #' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
@@ -1366,16 +1574,22 @@ const drawLinkText = (
 ) => {
   let x_pos = 0
   let y_pos = 0
+  const lab_pos=return_value_link(data,link,'label_position') as string
+  const orth_lab_pos=return_value_link(data,link,'orthogonal_label_position')
+  const label_on_path=return_value_link(data,link,'label_on_path')
+  const label_visible=return_value_link(data,link,'label_visible')
 
   // middle : valeur par défault
   // est-ce necessaire car on force l'option middle à la création du flux
-  if (!link.label_position) {
-    link.label_position = 'middle'
+  if (!lab_pos) {
+    // lab_pos = 'middle'
+    assign_link_local_attribute(link,'label_position','middle')
+
   }
 
-  if (link.label_position === 'beginning') {
+  if (lab_pos === 'beginning') {
     x_pos = xs + (xt - xs) / 10
-  } else if (link.label_position === 'middle') {
+  } else if (lab_pos === 'middle') {
     const handles = handles_positions(data,links, link, xs, ys, xt, yt,getLinkValue)
     if (handles.length >= 2) {
       const left_xpos = +handles[0].split(',')[0].substring(10)
@@ -1384,13 +1598,13 @@ const drawLinkText = (
     } else {
       x_pos = +handles[0].split(',')[0].substring(10)
     }
-  } else if (link.label_position === 'end') {//end
+  } else if (lab_pos === 'end') {//end
     x_pos = xt - (xt - xs) / 10
   }
 
-  if (link.label_position === 'beginning') {
+  if (lab_pos === 'beginning') {
     y_pos = ys - 6
-  } else if (link.label_position === 'middle') {
+  } else if (lab_pos === 'middle') {
     const handles = handles_positions(data,links, link, xs, ys, xt, yt,getLinkValue)
     if (handles.length >= 2) {
       const left_y_pos_str = handles[0].split(',')[1]
@@ -1402,34 +1616,34 @@ const drawLinkText = (
       const y_pos_str = handles[0].split(',')[1]
       y_pos = +y_pos_str.substring(0, y_pos_str.length - 1)
     }
-  } else if (link.label_position === 'end') { //end
+  } else if (lab_pos === 'end') { //end
     y_pos = yt - 6
   }
-  if (link.label_position !== 'frozen') {
+  if (lab_pos !== 'frozen') {
     link.x_label = x_pos
     link.y_label = y_pos
   }
 
   scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
-  if(link.orthogonal_label_position=='above'){
+  if(orth_lab_pos=='above'){
     y_pos-=scale(link_value)/2
-  }else if(link.orthogonal_label_position=='below'){
+  }else if(orth_lab_pos=='below'){
     y_pos+=scale(link_value)/2
   }
 
-  if (link.label_position === 'frozen' && link.x_label ||
-      !link.label_on_path || link.label_on_path === undefined) {
+  if (lab_pos === 'frozen' && link.x_label ||
+      !label_on_path || label_on_path === undefined) {
 
     (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
-      .attr('x', () => link.label_position === 'frozen' && link.x_label ? link.x_label : x_pos)
-    // .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
-      .attr('y', () => link.label_position === 'frozen' && link.y_label ? link.y_label : y_pos)
+      .attr('x', () => lab_pos === 'frozen' && link.x_label ? link.x_label : x_pos)
+    // .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
+      .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label : y_pos)
       .text(d => link_text(data, d,getLinkValue ))
-      .attr('visibility', link.label_visible ? 'visible' : 'hidden');
+      .attr('visibility', label_visible ? 'visible' : 'hidden');
     (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
-      if(link.orthogonal_label_position=='above'){
+      if(orth_lab_pos=='above'){
         return '-1em'
-      }else if(link.orthogonal_label_position=='below'){
+      }else if(orth_lab_pos=='below'){
         return '0.3em'
       }
       return '0em'
@@ -1443,10 +1657,10 @@ const drawLinkText = (
     };
 
     (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
-      .attr('startOffset', positions[link.label_position][0])
-      .attr('text-anchor', positions[link.label_position][1])
+      .attr('startOffset', positions[lab_pos][0])
+      .attr('text-anchor', positions[lab_pos][1])
       .text(d => link_text(data, d,getLinkValue))
-      .attr('visibility', link.label_visible ? 'visible' : 'hidden')
+      .attr('visibility', label_visible ? 'visible' : 'hidden')
   }
 }
 
@@ -1462,8 +1676,11 @@ const add_center_handle=(
   min_width_and_height:(d:SankeyData)=>number[],
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
+  const recy=return_value_link(data,link,'recycling') as boolean
+  const ori=return_value_link(data,link,'orientation')
+
   d3.selectAll(' .opensankey #center_handle_' + link.idLink).remove()
-  if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)  && !link.recycling ) {
+  if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)  && !recy ) {
 
     const source_node=data.nodes[link.idSource]
     const target_node=data.nodes[link.idTarget]
@@ -1483,20 +1700,20 @@ const add_center_handle=(
     const [, ys, xt, ] = res
     let [xs, , , yt] = res
     if (data.show_structure == 'structure') {
-      [xs, yt] = [source_node.x + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
+      [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
     }
     const pos_d=center_handle_position(data,link,xs,ys,xt,yt,getLinkValue)
-    d3.select(' .opensankey #gg_' + link.idLink)
+    d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('circle')
       .attr('id', 'center_handle_' + link.idLink)
       .attr('class','center_handle')
-      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !data.static_sankey)?1:0)
+      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?1:0)
       .attr('r','5')
       .attr('stroke','black')
       .attr('stroke-opacity',(multi_selected_links.current.includes(link))?1:0)
       .attr('fill','black')
       .attr('transform',pos_d[0])
-      .attr('cursor',(multi_selected_links.current.includes(link) && (link.orientation=='vv' ||link.orientation=='hh'))?'ew-resize':'pointer')
+      .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
       .call(dragLinkCenterHandleEvent(multi_selected_links,link,data,set_data,selected_tags,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
       )
   }
@@ -1515,19 +1732,20 @@ const center_handle_position=(data:SankeyData,link:SankeyLink,
   const center_handle = 1/2
 
   const handle_pos = handles_positions(data,data.links, link, xs, ys, xt, yt,getLinkValue)
+  const ori=return_value_link(data,link,'orientation')
 
-  if((link.orientation=='hh' || link.orientation=='vv')){
+  if((ori=='hh' || ori=='vv')){
     const [xs2,ys2]=handle_pos[0].replace('translate(','').replace(')','').split(',')
     const [xt2,yt2]=(handle_pos[1].replace('translate(','').replace(')','').split(','))
     const sx=Number(xs2)
     const sy=Number(ys2)
     const tx=Number(xt2)
     const ty=Number(yt2)
-    if (link.orientation === 'hh') {
+    if (ori === 'hh') {
 
       const shift_left = 'translate(' + (sx + (tx - sx) * center_handle) + ', ' + (sy + (ty - sy) * center_handle+default_handle_size/2) + ')'
       return [shift_left]
-    } else if (link.orientation === 'vv') {
+    } else if (ori === 'vv') {
 
       const shift_left = 'translate(' + (sx + (tx - sx) * center_handle+default_handle_size/2) + ', ' + (sy + (ty - sy) * center_handle) + ')'
       return [shift_left]
@@ -1565,15 +1783,15 @@ const add_shift_handle = (
 
 ) => {
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)) {
-    d3.select(' .opensankey #gg_' + link.idLink)
+    d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
       .attr('id', shift_name + link.idLink)
       .attr('class','handle')
-      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !data.static_sankey)?1:0)
+      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?1:0)
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
-      .attr('cursor',(multi_selected_links.current.includes(link)&& !data.static_sankey)?'ew-resize':'pointer')
-      .call(dragLinkShiftHandleEvent(multi_selected_links,link,data.static_sankey,nodes,links,display_style,selected_tags,position,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
+      .attr('cursor',(multi_selected_links.current.includes(link)&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'ew-resize':'pointer')
+      .call(dragLinkShiftHandleEvent(multi_selected_links,link,nodes,links,display_style,selected_tags,position,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
       )
   }
 
@@ -1605,8 +1823,10 @@ const add_shift_handles = (
 
 
 ) => {
+  const recy=return_value_link(data,link,'recycling') as boolean
+  d3.select('.opensankey #g_link_handles').append('g').attr('class','gg_link_handles').attr('id','gg_link_handle_'+link.idLink)
   let shift_handles
-  if (link.recycling) {
+  if (recy) {
     shift_handles = [
       ['vert_shift', 'vert'],
       ['left_horiz_shift', 'left'],
@@ -1666,6 +1886,13 @@ const drawCurve = (
   //   const total=getTotalInputLink(data,data.nodes[link.idSource])
   //   link_value=total*(val.percent/100)
   // }
+  const recy=return_value_link(data,link,'recycling') as boolean
+  const curved=return_value_link(data,link,'curved') as boolean
+  const ori=return_value_link(data,link,'orientation')
+  const curvature=return_value_link(data,link,'curvature') as number
+  const l_h_s=return_value_link(data,link,'left_horiz_shift') as number
+  const r_h_s=return_value_link(data,link,'right_horiz_shift') as number
+  const v_s=return_value_link(data,link,'vert_shift') as number
 
   const source_node = nodes[link.idSource]
   const target_node = nodes[link.idTarget]
@@ -1690,20 +1917,20 @@ const drawCurve = (
 
   let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, nodeTags,data,scale,inv_scale,getLinkValue)
   // handles_positions(links, link, xs, ys, xt, yt)
-  if(link.orientation=='vv' ||link.orientation=='hh'){
+  if(ori=='vv' ||ori=='hh'){
     add_shift_handles(data,set_data,link,multi_selected_links, nodes, links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height,getLinkValue)
-    add_drag_link_zone(link,nodes,data,set_data,multi_selected_links,data.static_sankey,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
+    add_drag_link_zone(link,nodes,data,set_data,multi_selected_links,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
+    add_center_handle(data,set_data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
   }
-  add_center_handle(data,set_data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
 
 
   if (link_value > display_style.filter_label || val.extension?.free_visible) {
     drawLinkText(data, link, links, link_value, display_style, xs, ys, xt, yt,link_text,getLinkValue)
   }
 
-  if (link.orientation === 'vh' && !link.recycling) {
+  if (ori === 'vh' && !recy) {
     if (data.show_structure == 'structure') {
-      [xs, yt] = [source_node.x + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
+      [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
       if (source_node.x > target_node.x) {
         xt = xt + 30
       }
@@ -1711,12 +1938,12 @@ const drawCurve = (
     return SankeyShapes.bezier_link_classic_hv(
       link.idSource, link.idTarget,
       [xs, ys], [xt, yt],
-      link.curvature !== undefined ? link.curvature : 0.5,
-      link.curved,
+      curvature !== undefined ? curvature : 0.5,
+      curved,
       error_msg
     )
   }
-  if (link.orientation === 'hv' && !link.recycling) {
+  if (ori === 'hv' && !recy) {
     if (data.show_structure == 'structure') {
       [ys, xt] = [source_node.y + 5, target_node.x + 5]
       if (source_node.y > target_node.y) {
@@ -1726,54 +1953,54 @@ const drawCurve = (
     return SankeyShapes.bezier_link_classic_vh(
       link.idSource, link.idTarget,
       [xs, ys], [xt, yt],
-      link.curvature !== undefined ? link.curvature : 0.5,
-      link.curved,
+      curvature !== undefined ? curvature : 0.5,
+      curved,
       error_msg
     )
   }
-  if (link.orientation === 'hh' && !link.recycling) {
+  if (ori === 'hh' && !recy) {
     if (data.show_structure == 'structure' ) {
-      [ys, yt] = [source_node.y + source_node.node_height / 2, target_node.y + target_node.node_height / 2]
+      [ys, yt] = [source_node.y + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
       if (source_node.x > target_node.x) {
-        xt = xt + target_node.node_width
+        xt = xt + (return_value_node(data,target_node,'node_width') as number)
       }
     }
-    const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
-    const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
+    const left_horiz_shift = l_h_s ? l_h_s : 0
+    const right_horiz_shift = r_h_s ? r_h_s : 0
     return SankeyShapes.bezier_link_classic_vv(
       link.idSource, link.idTarget,
       [xs, ys], [xt, yt],
       left_horiz_shift,
       right_horiz_shift,
-      link.curvature !== undefined ? link.curvature : 0.5,
+      curvature !== undefined ? curvature : 0.5,
       false,
-      link.curved,
+      curved,
       error_msg
     )
   }
-  if (link.orientation === 'vv' && !link.recycling) {
+  if (ori === 'vv' && !recy) {
     if (data.show_structure == 'structure' ) {
-      [xs, xt] = [source_node.x + source_node.node_width / 2, target_node.x + target_node.node_width / 2]
+      [xs, xt] = [source_node.x + (return_value_node(data,source_node,'node_width') as number) / 2, target_node.x + (return_value_node(data,target_node,'node_width') as number / 2)]
       if (source_node.y > target_node.y) {
         yt = yt + 30
       }
     }
-    const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
-    const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
+    const left_horiz_shift = l_h_s ? l_h_s : 0
+    const right_horiz_shift = r_h_s ? r_h_s : 0
     return SankeyShapes.bezier_link_classic_vv(
       link.idSource, link.idTarget,
       [xs, ys], [xt, yt],
       left_horiz_shift, right_horiz_shift,
-      link.curvature !== undefined ? link.curvature : 0.5,
+      curvature !== undefined ? curvature : 0.5,
       true,
-      link.curved,
+      curved,
       error_msg
     )
   }
-  if (link.recycling) {
-    const left_horiz_shift = link.left_horiz_shift ? link.left_horiz_shift : 0
-    const right_horiz_shift = link.right_horiz_shift ? link.right_horiz_shift : 0
-    const vert_shift = link.vert_shift ? link.vert_shift : 0
+  if (recy) {
+    const left_horiz_shift = l_h_s ? l_h_s : 0
+    const right_horiz_shift = r_h_s ? r_h_s : 0
+    const vert_shift = v_s ? v_s : 0
     if (data.show_structure == 'structure' ) {
       [ys, yt] = [source_node.y + 5, target_node.y + 5]
     }
@@ -1782,8 +2009,8 @@ const drawCurve = (
       link_value,
       [xs, ys], [xt, yt],
       left_horiz_shift, right_horiz_shift, vert_shift,
-      data.show_structure == 'structure' ? false : link.curved,
-      link.orientation === 'vv',
+      data.show_structure == 'structure' ? false : curved,
+      ori === 'vv',
       error_msg, scale
     )
   }
@@ -1806,80 +2033,86 @@ const handles_positions = (
 ) => {
   let tmp=getLinkValue(data, link.idLink).value
   tmp=(tmp)?tmp:0
+  const recy=return_value_link(data,link,'recycling') as boolean
+  const ori=return_value_link(data,link,'orientation')
+  const l_h_s=return_value_link(data,link,'left_horiz_shift') as number
+  const r_h_s=return_value_link(data,link,'right_horiz_shift') as number
+  const v_s=return_value_link(data,link,'vert_shift') as number
 
-  if (link.orientation === 'hh' && link.recycling) {
+  if (ori === 'hh' && recy) {
     // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
-    if (!link.left_horiz_shift) {
-      link.left_horiz_shift = 0
+    if (!l_h_s) {
+      assign_link_local_attribute(link,'left_horiz_shift',0)
     }
-    if (!link.right_horiz_shift) {
-      link.right_horiz_shift = 0
+    if (!r_h_s) {
+      assign_link_local_attribute(link,'right_horiz_shift',0)
     }
-    if (!link.vert_shift) {
-      link.vert_shift = 0
+    if (!v_s) {
+      assign_link_local_attribute(link,'vert_shift',0)
+
     }
 
     if (xt < xs) {
-      const x_left = xt - default_horiz_shift + link.left_horiz_shift // x14
-      const x_right = xs + default_horiz_shift + link.right_horiz_shift  // x2
-      const y_vert = Math.max(ys, yt) + scale(2 * tmp) + link.vert_shift // y8
+      const x_left = xt - default_horiz_shift + l_h_s // x14
+      const x_right = xs + default_horiz_shift + r_h_s  // x2
+      const y_vert = Math.max(ys, yt) + scale(2 * tmp) + v_s // y8
       const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
       const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
       const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
       return [vert, left, right]
     } else {
-      const x_right = xt + default_horiz_shift + link.right_horiz_shift  // x14
-      const x_left = xs - default_horiz_shift + link.left_horiz_shift // x2
-      const y_vert = Math.max(ys, yt) + scale(2 * tmp) + link.vert_shift // y8
+      const x_right = xt + default_horiz_shift + r_h_s  // x14
+      const x_left = xs - default_horiz_shift + l_h_s // x2
+      const y_vert = Math.max(ys, yt) + scale(2 * tmp) + v_s // y8
       const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
       const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
       const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
       return [vert, left, right]
     }
-  } else if (link.orientation === 'vv' && link.recycling) {
+  } else if (ori === 'vv' && recy) {
     // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
-    if (!link.left_horiz_shift) {
-      link.left_horiz_shift = 0
+    if (!l_h_s) {
+      assign_link_local_attribute(link,'left_horiz_shift',0)
     }
-    if (!link.right_horiz_shift) {
-      link.right_horiz_shift = 0
+    if (!r_h_s) {
+      assign_link_local_attribute(link,'right_horiz_shift',0)
     }
-    if (!link.vert_shift) {
-      link.vert_shift = 0
+    if (!v_s) {
+      assign_link_local_attribute(link,'vert_shift',0)
     }
-    const y_left = yt - default_horiz_shift + link.left_horiz_shift - scale(tmp) // x14
-    const y_right = ys + default_horiz_shift + link.right_horiz_shift + scale(tmp) // x2
-    const x_vert = Math.max(xs, xt) + scale(2 * tmp) + link.vert_shift // y8
+    const y_left = yt - default_horiz_shift + l_h_s - scale(tmp) // x14
+    const y_right = ys + default_horiz_shift + r_h_s + scale(tmp) // x2
+    const x_vert = Math.max(xs, xt) + scale(2 * tmp) + v_s // y8
     const vert = 'translate(' + (x_vert - default_handle_size / 2) + ', ' + (y_left + (y_right - y_left) / 2 - default_handle_size / 2) + ')'
     const left = 'translate(' + (xt + (x_vert - xt) / 2 - default_handle_size / 2) + ' ,' + (y_left - default_handle_size / 2) + ')'
     const right = 'translate(' + (xs + (x_vert - xs) / 2 - default_handle_size / 2) + ' ,' + (y_right - default_handle_size / 2) + ')'
     return [vert, left, right]
-  } else if (link.orientation === 'hh') {
-    if (link.left_horiz_shift === undefined) {
-      link.left_horiz_shift = 0
+  } else if (ori === 'hh') {
+    if (l_h_s === undefined) {
+      assign_link_local_attribute(link,'left_horiz_shift',0)
     }
-    if (!link.right_horiz_shift) {
-      link.right_horiz_shift = 1
+    if (!r_h_s) {
+      assign_link_local_attribute(link,'right_horiz_shift',1)
     }
-    const shift_left = 'translate(' + (xs + (xt - xs) * link.left_horiz_shift) + ', ' + (ys - default_handle_size / 2) + ')'
-    const shift_right = 'translate(' + (xs + (xt - xs) * link.right_horiz_shift) + ', ' + (yt - default_handle_size / 2) + ')'
+    const shift_left = 'translate(' + (xs + (xt - xs) * l_h_s) + ', ' + (ys - default_handle_size / 2) + ')'
+    const shift_right = 'translate(' + (xs + (xt - xs) * r_h_s) + ', ' + (yt - default_handle_size / 2) + ')'
     return [shift_left, shift_right]
-  } else if (link.orientation === 'vv') {
-    if (link.left_horiz_shift === undefined) {
-      link.left_horiz_shift = 0
+  } else if (ori === 'vv') {
+    if (l_h_s === undefined) {
+      assign_link_local_attribute(link,'left_horiz_shift',0)
     }
-    if (!link.right_horiz_shift) {
-      link.right_horiz_shift = 1
+    if (!r_h_s) {
+      assign_link_local_attribute(link,'right_horiz_shift',1)
     }
-    const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * link.left_horiz_shift) + ')'
-    const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * link.right_horiz_shift) + ')'
+    const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * l_h_s) + ')'
+    const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * r_h_s) + ')'
     return [shift_left, shift_right]
 
-  } else if (link.orientation === 'vh') {
+  } else if (ori === 'vh') {
     const x_center_draw = xs
     const y_center_draw = yt
     return ['translate(' + x_center_draw + ', ' + y_center_draw + ')']
-  } else if (link.orientation === 'hv') {
+  } else if (ori === 'hv') {
     const x_center_draw = xt
     const y_center_draw = ys
     return ['translate(' + x_center_draw + ', ' + y_center_draw + ')']
@@ -1891,12 +2124,12 @@ const handles_positions = (
 export const min_width_and_height = (data:SankeyData) => {
   let height = 0
   let width = 0
-  Object.values(data.nodes).filter(n => n.node_visible).forEach(n => {
+  Object.values(data.nodes).filter(n => node_displayed(data,n)).forEach(n => {
     // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
     let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width??0
-    if(n.display_style.label_horiz=='left'){
+    if((return_value_node(data,n,'label_horiz') as string)=='left'){
       width_label/=2
-    }else if(n.display_style.label_horiz=='middle'){
+    }else if((return_value_node(data,n,'label_horiz') as string)=='middle'){
       width_label=0
     }
     let node_height = 0
@@ -1906,29 +2139,33 @@ export const min_width_and_height = (data:SankeyData) => {
       node_width = +d3.select(' .opensankey #' + n.idNode).attr('width')
     }
 
-    height = (n.y && n.node_visible) ? Math.max(height, n.y + node_height) : height
-    width = (n.x && n.node_visible) ? Math.max(width, n.x+node_width+width_label) : width
+    height = (n.y ) ? Math.max(height, n.y + node_height) : height
+    width = (n.x ) ? Math.max(width, n.x+node_width+width_label) : width
   })
 
 
   height = height + 100
   width = width + 100
   Object.values(data.links).forEach(l => {
-    if (l.recycling) {
-      height = (l.vert_shift && data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible) ? Math.max(data.nodes[l.idSource].y + l.vert_shift + 100, data.nodes[l.idTarget].y + l.vert_shift + 100, height) : height
+    const recy=return_value_link(data,l,'recycling') as boolean
+    if (recy) {
+      const v_s=return_value_link(data,l,'vert_shift') as number
+      const r_h_s=return_value_link(data,l,'right_horiz_shift') as number
+      height = (v_s && node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]) ) ? Math.max(data.nodes[l.idSource].y + v_s + 100, data.nodes[l.idTarget].y + v_s + 100, height) : height
+      width = (data.nodes[l.idTarget].x && node_displayed(data,data.nodes[l.idTarget]) && r_h_s) ? Math.max(width, data.nodes[l.idSource].x + r_h_s + default_horiz_shift + 150) : width
     }
   })
 
-  Object.values(data.links).forEach(l => {
-    if (l.recycling) {
-      width = (data.nodes[l.idTarget].x && data.nodes[l.idTarget].node_visible && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
-    }
-  })
+  // Object.values(data.links).forEach(l => {
+  //   if (l.recycling) {
+  //     width = (data.nodes[l.idTarget].x && node_displayed(data,data.nodes[l.idTarget]) && l.right_horiz_shift) ? Math.max(width, data.nodes[l.idSource].x + l.right_horiz_shift + default_horiz_shift + 150) : width
+  //   }
+  // })
   const vertical_shift=  get_vertical_marfin_for_sankey_zone()
 
+  const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
 
-
-  return [Math.max(width, window.innerWidth - 40), Math.max(height, window.innerHeight - 40 - (vertical_shift))]
+  return [Math.max(width, window.innerWidth - 60 - has_scroll_bar), Math.max(height, window.innerHeight - 20 - (vertical_shift))]
 }
 
 // Function that draw the grid in the background of the sankey zone
@@ -1979,7 +2216,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
 )=>{
   let total = 0
 
-  if (d.show_value) {
+  if (return_value_node(data,d,'show_value')) {
     if (d.outputLinksId.length > 0) {
       for (let i = 0; i < d.outputLinksId.length; i++) {
         const link = display_links[d.outputLinksId[i]]
@@ -1989,7 +2226,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
         }
         let tmp=getLinkValue(data, link.idLink).value
         tmp=(tmp)?tmp:0
-        if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+        if (node_displayed(data,display_nodes[link.idSource]) && node_displayed(data,display_nodes[link.idTarget]) ) {
           total += tmp
         }
       }
@@ -2004,7 +2241,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
           }
           let tmp=getLinkValue(data, link.idLink).value
           tmp=(tmp)?tmp:0
-          if (display_nodes[link.idSource].node_visible && display_nodes[link.idTarget].node_visible) {
+          if (node_displayed(data,display_nodes[link.idSource]) && node_displayed(data,display_nodes[link.idTarget]) ) {
             total += tmp
           }
         }
@@ -2018,67 +2255,83 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
 
 
 
-export const node_label_posX=(n:SankeyNode)=>{
+export const node_label_posX=(data:SankeyData,n:SankeyNode)=>{
+  if (d3.select(' .opensankey #' + n.idNode).empty()) {
+    return 0
+  }
   const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
   if (n.x_label) {
     return n.x_label
-  } else if (n.display_style.label_horiz == 'middle') {
+  } else if ((return_value_node(data,n,'label_horiz') as string) == 'middle') {
     return width / 2
-  } else if (n.display_style.label_horiz == 'left') {
+  } else if ((return_value_node(data,n,'label_horiz') as string) == 'left') {
     return 0
-  } else if (n.display_style.label_horiz == 'right') {
-    return n.display_style.label_vert == 'middle' ? width : 0
+  } else if ((return_value_node(data,n,'label_horiz') as string) == 'right') {
+    return (return_value_node(data,n,'label_vert') as string) == 'middle' ? width : 0
   } else {
     return 0
   }
 }
 export const node_label_posY=(n:SankeyNode,data:SankeyData)=>{
+  if (d3.select(' .opensankey #' + n.idNode).empty()) {
+    return 0
+  }
   const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
   if (n.y_label && data.show_structure !== 'structure') {
     return n.y_label
-  } else if (n.display_style.label_vert == 'middle') {
+  } else if ((return_value_node(data,n,'label_vert') as string) == 'middle') {
     return height / 2
-  } else if (n.display_style.label_vert == 'top') {
+  } else if ((return_value_node(data,n,'label_vert') as string) == 'top') {
     return -4
-  } else if (n.display_style.label_vert == 'bottom') {
+  } else if ((return_value_node(data,n,'label_vert') as string) == 'bottom') {
     return height
   } else {
     return 0
   }
 }
-export const node_value_posX=(n:SankeyNode)=>{
+export const node_value_posX=(data:SankeyData,n:SankeyNode)=>{
   const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
   // const _text = document.getElementById(n.idNode + '_text')
   // const width_text = (_text) ? _text.getBoundingClientRect().width : 0
-  if (n.display_style.label_horiz_valeur == 'middle') {
+  const val=(return_value_node(data,n,'label_horiz_valeur') as string)
+  if (val== 'middle') {
     return width / 2
-  } else if (n.display_style.label_horiz_valeur == 'left') {
+  } else if (val == 'left') {
     return 0
-  } else if (n.display_style.label_horiz_valeur == 'right') {
+  } else if (val == 'right') {
     return width 
   } else {
     return 0
   }
 }
 
-export const node_value_posY=(n:SankeyNode)=>{
+export const node_value_posY=(data:SankeyData,n:SankeyNode)=>{
   const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
   const _text = document.getElementById(n.idNode + '_text')
   const height_text = (_text) ? _text.getBoundingClientRect().height : 0
-  if (n.display_style.label_vert_valeur == 'middle') {
+  const val=(return_value_node(data,n,'label_vert_valeur') as string)
+  const val_font_size=(return_value_node(data,n,'font_size') as number)
+  const is_same_pos=node_value_and_text_same_pos(data,n)
+  if (val == 'middle') {
     // return height / 2 + height_text / 2
-    return height / 2 + ((node_value_and_text_same_pos(n))?n.display_style.font_size:0)
-  } else if (n.display_style.label_vert_valeur == 'top') {
-    return 0+ ((node_value_and_text_same_pos(n))?-height_text*1.5:0)
-  } else if (n.display_style.label_vert_valeur == 'bottom') {
-    return height+((node_value_and_text_same_pos(n))?height_text*1.8:n.display_style.font_size)
+    return height / 2 + ((is_same_pos)?val_font_size:0)
+  } else if (val == 'top') {
+    return 0+ ((is_same_pos)?-height_text*1.5:0)
+  } else if (val == 'bottom') {
+    return height+((is_same_pos)?height_text*1.8:val_font_size)
   } else {
     return 0
   }
 }
 
-const node_value_and_text_same_pos=(node :SankeyNode)=>{
-  return (node.label_visible && node.display_style.label_horiz_valeur==node.display_style.label_horiz && node.display_style.label_vert_valeur==node.display_style.label_vert)
+const node_value_and_text_same_pos=(data:SankeyData,node :SankeyNode)=>{
+  const val_visible=(return_value_node(data,node,'label_visible') as number)
+  const val_l_h_v=(return_value_node(data,node,'label_horiz_valeur') as string)
+  const val_l_h=(return_value_node(data,node,'label_horiz') as string)
+  const val_l_v_v=(return_value_node(data,node,'label_vert_valeur') as string)
+  const val_l_v=(return_value_node(data,node,'label_vert') as string)
+
+  return (val_visible && val_l_h_v==val_l_h && val_l_v_v==val_l_v)
 }
 
 
@@ -2093,7 +2346,6 @@ export const node_label_text=(
   if (!isNaN(parseInt(d.name.split(' - ')[0]))) {
     return d.name
   }
-  // console.log((d.name.split(' - ')[0].replace('-', ' '))[0])
   return d.name.split(' - ')[0]
 }
 
@@ -2127,22 +2379,203 @@ export const value_selected_parameter = (data:SankeyData,
 }
 
 export const deselect_visualy_links=(d:SankeyLink)=>{
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('fill-opacity', '0')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' rect.handle').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '0')
   
+}
+export const select_visualy_links=(d:SankeyLink)=>{
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '1')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '1')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '1')
 }
 
 export const deselect_visualy_nodes=(n:SankeyNode)=>{
   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
   d3.select(' .opensankey #ggg_' + n.idNode+' .box_width_threshold').attr('visibility','hidden')
 }
+export const select_visualy_nodes=(n:SankeyNode)=>{
+  d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
+}
 
 export const repositionne_sidebar=()=>{
   const has_scrollbar_shift=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
   const menu_open=d3.select('.offcanvas-body').node()
   d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?540:0))+'px')  
+}
+
+// Function that compute the link width
+export const linkStrokeWidth=(l:SankeyLink,
+  data:SankeyData,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  min_thickness:number,
+  display_nodes:{ [node_id: string]: SankeyNode},
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+)=>{
+  const node = data.nodes[l.idSource]
+  // const links = data.links
+  const nodes = data.nodes
+  // const stream_io = node.inputLinksId.concat(node.outputLinksId)
+  //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
+  //position noeud source ou target
+  let pos_x_src, pos_y_src
+  if (node.idNode == nodes[l.idSource].idNode) {
+    pos_x_src = nodes[l.idTarget].x
+    pos_y_src = nodes[l.idTarget].y
+  } else {
+    pos_x_src = nodes[l.idSource].x
+    pos_y_src = nodes[l.idSource].y
+  }
+  const link_values = getLinkValue(data, l.idLink)
+  const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
+  if (display_free_as_dashed) {
+    // Generale settings: free link value are displayed dashed without text without witdh
+    const link_value_is_free = link_values.extension && link_values.extension?.free_mini !== undefined
+    if (link_value_is_free) {
+      if (link_values.extension?.free_visible && link_values.value === 0 ) {
+        // zero value of free variables are displayed when free_visible is set to true
+        return 5
+      } else if (link_values.extension?.free_visible && link_values.value !== 0 ) {
+        // Not treated as free
+      } else if (!link_values.extension?.free_visible) {
+        // Link value is free should be displayed dashed without text without witdh
+        return 5
+      }
+    }
+  }
+  if (link_values.extension && link_values.extension?.display_thin) {
+    // if flux is displayed thin
+    return 5
+  }
+  let link_value = test_link_value(data, nodes, l,getLinkValue)
+  link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
+  //Zones limite à ne pas êtres
+  // const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
+  const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + (return_value_node(data,node,'node_width') as number) + scale(link_value / 2)]
+  const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]
+  let draw_warning = false
+  //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
+  //si partie gauche du noeud ne se situe pas dans les coord du noeud source
+  const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
+  //si partie droite du noeud ne se situe pas dans le noeud source
+  // const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
+  const right_in_src = node.x + (return_value_node(data,node,'node_width') as number) > limit_x[0] && node.x + (return_value_node(data,node,'node_width') as number) < limit_x[1]
+  //si partie haute du noeud ne se situe pas dans le noeud source
+  const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
+  // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
+  if (return_value_link(data,l,'orientation') == 'hh') {
+    //orientation hh
+    draw_warning = left_in_src || right_in_src
+  } else if (return_value_link(data,l,'orientation') == 'vv') {
+    //orientation vv
+    draw_warning = top_in_src
+  } else if (return_value_link(data,l,'orientation') == 'vh') {
+    draw_warning = left_in_src || right_in_src || top_in_src
+  } else {
+    //orientation hv
+    //draw_warning = node_in_src_hh || node_in_src_vv
+    draw_warning = left_in_src || right_in_src || top_in_src
+  }
+  if (draw_warning && !return_value_link(data,l,'recycling')) {
+    return '1px'
+  } else {
+    const link_value = test_link_value(data, display_nodes, l,getLinkValue)
+    const tmp =(link_value=='')?1:link_value
+    return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
+  }
+}
+
+export const svgDragMiddleMouseStart=()=>{
+  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('fill-opacity', '0')
+}
+
+export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unknown>,data:SankeyData)=>{
+  d3.selectAll('.ggg_nodes').filter(n=>(n as SankeyNode).position!=='relative').attr('transform',(d)=>{
+    const n=d as SankeyNode
+    n.x+=event.dx
+    n.y+=event.dy
+    return 'translate('+n.x+','+n.y+')'
+  })
+  d3.selectAll('.link').attr('d',(d)=>{
+    const l=d as SankeyLink
+    // Get the path of each displayed link
+    const path=d3.select('#'+l.idLink).attr('d').split(' ')
+
+    // Each path is splitted into small part of the path then depending on the small part :
+    //  - If it's a letter then do nothing
+    //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
+    //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
+    //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
+    //
+    // Then once the subpart of the path are modified, we join the array to reform the path
+    const new_path=path.map((p,i)=>{
+      // Case when it's a [x,y] coordinates
+      if(p.includes(',')){
+        const pos=p.split(',')
+        const newPosX=Number(pos[0])+event.dx
+        const newPosY=Number(pos[1])+event.dy
+        p=''+newPosX+','+newPosY
+      }
+      // Case when it's a number alone so we search the previous element to know wich shift
+      if(Number(p)){
+        if(path[i-1]=='H'){
+          p=String(Number(p)+event.x)
+        }else if(path[i-1]=='V'){
+          p=String(Number(p)+event.y)
+        }
+      }
+      return p
+    })
+    return new_path.join(' ')
+  })
+  d3.selectAll('.arrow').attr('d',(d)=>{
+    const l=d as SankeyLink
+    // Get the path of each displayed link
+    const path=d3.select('#'+l.idLink+'_arrow').attr('d').split(' ')
+
+    // Each path is splitted into small part of the path then depending on the small part :
+    //  - If it's a letter then do nothing
+    //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
+    //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
+    //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
+    //
+    // Then once the subpart of the path are modified, we join the array to reform the path
+    const new_path=path.map((p,i)=>{
+    // Case when it's a [x,y] coordinates
+      if(p.includes(',')){
+        const pos=p.split(',')
+        const newPosX=Number(pos[0])+event.dx
+        const newPosY=Number(pos[1])+event.dy
+        p=''+newPosX+','+newPosY
+      }
+      // Case when it's a number alone so we search the previous element to know wich shift
+      if(Number(p)){
+        if(path[i-1]=='H'){
+          p=String(Number(p)+event.x)
+        }else if(path[i-1]=='V'){
+          p=String(Number(p)+event.y)
+        }
+      }
+      return p
+    })
+    return new_path.join(' ')
+  })
+
+  const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+  const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+  const scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+  data.legend_position[0]+=event.dx
+  data.legend_position[1]+=event.dy
+  d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
+  
 }

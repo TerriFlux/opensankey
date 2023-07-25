@@ -1,11 +1,11 @@
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes} from './types'
-import { findMaxLinkValue,set_nodes_level } from './SankeyUtils'
+import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_value_link } from './SankeyUtils'
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
-import { SankeyPlusLabel } from 'sankeyanimation/src/types'
 
 export const reorganize_node_inputLinksId = (
+  data:SankeyData,
   node: SankeyNode,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
@@ -16,6 +16,13 @@ export const reorganize_node_inputLinksId = (
   input_links.sort((l1, l2) => {
     const n1Id = l1.idSource
     const n2Id = l2.idSource
+    const l1_recy=return_value_link(data,l1,'recycling')
+    const l2_recy=return_value_link(data,l2,'recycling')
+    const l1_v_s=return_value_link(data,l1,'vert_shift') as number
+    const l2_v_s=return_value_link(data,l2,'vert_shift') as number
+    const l1_ori=return_value_link(data,l1,'orientation')
+    const l2_ori=return_value_link(data,l2,'orientation')
+
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
@@ -25,19 +32,19 @@ export const reorganize_node_inputLinksId = (
       if (n1.position == 'relative') {
         return -1
       }
-      if ( l1.recycling && !l2.recycling) {
-        if (l1.vert_shift && l1.vert_shift < 0) {
+      if ( l1_recy && !l2_recy) {
+        if (l1_v_s && l1_v_s < 0) {
           return -1
         }
         return 1        
       }
-      if ( !l1.recycling && l2.recycling) {
-        if (l2.vert_shift && l2.vert_shift < 0) {
+      if ( !l1_recy && l2_recy) {
+        if (l2_v_s && l2_v_s < 0) {
           return 1
         }
         return -1       
       } 
-      if (l1.orientation === 'vh' && l2.orientation === 'vh' || l1.orientation === 'vv' && l2.orientation === 'vv') {
+      if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
         if (n1 && n2 && n1.x < n2.x) {
           return -1
         }
@@ -68,6 +75,7 @@ export const reorganize_node_inputLinksId = (
 }
 
 export const reorganize_node_outputLinksId = (
+  data:SankeyData,
   node: SankeyNode,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
@@ -78,6 +86,13 @@ export const reorganize_node_outputLinksId = (
   output_links.sort((l1, l2) => {
     const n1Id = l1.idTarget
     const n2Id = l2.idTarget
+    const l1_recy=return_value_link(data,l1,'recycling')
+    const l2_recy=return_value_link(data,l2,'recycling')
+    const l1_v_s=return_value_link(data,l1,'vert_shift') as number
+    const l2_v_s=return_value_link(data,l2,'vert_shift') as number
+    const l1_ori=return_value_link(data,l1,'orientation')
+    const l2_ori=return_value_link(data,l2,'orientation')
+
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
       const n2 = nodes[n2Id]
@@ -87,19 +102,19 @@ export const reorganize_node_outputLinksId = (
       if (n1.position == 'relative') {
         return 1
       }
-      if ( l1.recycling && !l2.recycling) {
-        if (l1.vert_shift && l1.vert_shift < 0) {
+      if ( l1_recy && !l2_recy) {
+        if (l1_v_s && l1_v_s < 0) {
           return 1
         }
         return -1        
       }
-      if ( !l1.recycling && l2.recycling) {
-        if (l2.vert_shift && l2.vert_shift < 0) {
+      if ( !l1_recy && l2_recy) {
+        if (l2_v_s && l2_v_s < 0) {
           return 1
         }
         return -1       
       }      
-      if (l1.orientation === 'vh' && l2.orientation === 'vh' || l1.orientation === 'vv' && l2.orientation === 'vv') {
+      if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
         if (n1 && n2 && n1.x < n2.x) {
           return -1
         }
@@ -130,6 +145,7 @@ export const reorganize_node_outputLinksId = (
 }
 
 export const reorganize_inputLinksId = (
+  data:SankeyData,
   node: SankeyNode,
   input: boolean,
   output: boolean,
@@ -138,10 +154,10 @@ export const reorganize_inputLinksId = (
 ) => {
 
   if (input) {
-    reorganize_node_inputLinksId(node, nodes, links)
+    reorganize_node_inputLinksId(data,node, nodes, links)
   }
   if (output) {
-    reorganize_node_outputLinksId(node, nodes, links)
+    reorganize_node_outputLinksId(data,node, nodes, links)
   }
 }
 
@@ -204,15 +220,17 @@ export const explore_branch = (
   current_length: number,
   visited_nodes: string[],
   links: { [link_id : string]:SankeyLink},
-  nodes: { [node_id : string]:SankeyNode}
+  nodes: { [node_id : string]:SankeyNode},
+  data:SankeyData
 ) => {
   let no_input_link = true
   let highest_branch_length = current_length
   Object.values(links).forEach(link => {
-    if (link.idTarget === idNode && nodes[link.idSource].node_visible && nodes[link.idSource].display ) {
+    if (link.idTarget === idNode && node_displayed(data,nodes[link.idSource]) ) {
       if (visited_nodes.indexOf(idNode) === -1) {
         no_input_link = false
-        const branch_length = explore_branch(link.idSource, current_length + 1, [...visited_nodes,idNode], links,nodes)
+        visited_nodes.push(idNode)
+        const branch_length = explore_branch(link.idSource, current_length + 1, visited_nodes, links,nodes,data)
         if (branch_length > highest_branch_length) {
           highest_branch_length = branch_length
         }
@@ -231,7 +249,7 @@ export const arrangeNodes = (
   data: SankeyData
 ) => {
   Object.values(data.nodes).forEach(node => {
-    if ( !node.node_visible || node.position === 'relative' ) {
+    if ( !node_displayed(data,node) || node.position === 'relative' ) {
       return
     }
     const x = Math.round(node.x / data.grid_square_size) * data.grid_square_size
@@ -262,23 +280,25 @@ export const compute_auto_sankey = (
 
   const vspace = data.v_space
   const horizontal_indices: { [node_id:string]:number} = {}
-  Object.values(data.nodes).filter(n=>n.node_visible).forEach(node => {
-    const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes)
+  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(node => {
+    const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes,data)
     horizontal_indices[node.idNode] = horizontal_index
     if (horizontal_index > max_horizontal_index) {
       max_horizontal_index = horizontal_index
     }
   })
-  Object.values(data.links).filter(l=>data.nodes[l.idSource].node_visible && data.nodes[l.idTarget].node_visible && data.nodes[l.idSource].display && data.nodes[l.idTarget].display).forEach(l => {
+  Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).forEach(l => {
     if (horizontal_indices[l.idSource] >= horizontal_indices[l.idTarget]) {
-      l.recycling = true
+      // l.recycling = true
+      assign_link_local_attribute(l,'recycling',true)
+
     }
   })
 
   const width = max_horizontal_index* h_space 
 
   Object.values(data.nodes).forEach(node => {
-    if (!node.node_visible || !node.display) {
+    if (!node_displayed(data,node)) {
       return
     }
     node.x = max_horizontal_index !== 0 ? 50 + horizontal_indices[node.idNode] / max_horizontal_index * width : 50 //* 0.9
@@ -286,7 +306,7 @@ export const compute_auto_sankey = (
 
   // Reorder links using the x of source name as criteria 
   // Compute input_outputLinksId
-  Object.values(data.nodes).filter(n=>n.node_visible && n.display).forEach(n => data.nodes[n.idNode] = {...n})
+  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n => data.nodes[n.idNode] = {...n})
   compute_default_input_outputLinksId(data.nodes, data.links)
 
   // Vertical position of vertical nodes
@@ -295,7 +315,7 @@ export const compute_auto_sankey = (
   for (let i = 0; i <= max_horizontal_index; i++) {
     let vertical_space: number
     let vertical_offset = 0
-    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && n.display && horizontal_indices[n.idNode] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && horizontal_indices[n.idNode] === i)
     if (the_nodes.length > 1) {
       vertical_space = vspace //(200 - total_height) / (total_nb - 1)
     }
@@ -319,13 +339,13 @@ export const compute_auto_sankey = (
     }
   }
   for (let i = 0; i <= max_horizontal_index; i++) {
-    const the_nodes = Object.values(data.nodes).filter(n => n.node_visible && n.display && horizontal_indices[n.idNode] === i)
+    const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && horizontal_indices[n.idNode] === i)
     let total_nb_outputLinksId_up = 0
     let total_nb_outputLinksId_down = 0
     the_nodes.forEach((node) => {
       node.outputLinksId.forEach(
         (idLink) => {
-          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible && data.nodes[data.links[idLink].idSource].display && data.nodes[data.links[idLink].idTarget].display) {
+          if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
               return
@@ -344,18 +364,22 @@ export const compute_auto_sankey = (
     the_nodes.forEach(node => {
       node.outputLinksId.forEach(
         (idLink) => {
-          if ( data.nodes[data.links[idLink].idSource].node_visible && data.nodes[data.links[idLink].idTarget].node_visible && data.nodes[data.links[idLink].idSource].display && data.nodes[data.links[idLink].idTarget].display) {
+          if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget]) ) {
             const target_node = data.nodes[data.links[idLink].idTarget]
             if (target_node === undefined ) {
               return
             }
             if ( target_node.y < node.y ) {
-              data.links[idLink].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
-              data.links[idLink].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
+              assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
+              assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
+              // data.links[idLink].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
+              // data.links[idLink].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
               current_output_link_up += 1
             } else {
-              data.links[idLink].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
-              data.links[idLink].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
+              assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
+              assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
+              // data.links[idLink].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
+              // data.links[idLink].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
               current_output_link_down += 1
             }
 
@@ -368,18 +392,19 @@ export const compute_auto_sankey = (
 
   data.width = width + h_space
   
-  reorganize_all_input_outputLinksId(data.nodes, data.links)
+  reorganize_all_input_outputLinksId(data,data.nodes, data.links)
 
   return []
 }
 
 export const reorganize_all_input_outputLinksId = (
+  data:SankeyData,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
 ) => {
   Object.values(nodes).forEach( node => {
-    reorganize_node_inputLinksId(node, nodes, links)
-    reorganize_node_outputLinksId(node, nodes, links)
+    reorganize_node_inputLinksId(data,node, nodes, links)
+    reorganize_node_outputLinksId(data,node, nodes, links)
   })
 }
 
@@ -390,7 +415,7 @@ export const updateLayout = (
 ) => {
   let max_vertical_offset = 0
   const compute_offset = (node: SankeyNode) => {
-    if (!node.node_visible) {
+    if (!node_displayed(data,node)) {
       return
     }
     max_vertical_offset = Math.max(node.y, max_vertical_offset)
@@ -398,18 +423,18 @@ export const updateLayout = (
   Object.values(data.nodes).forEach(compute_offset)
   max_vertical_offset = max_vertical_offset + 200
 
-  let listId = [] as number[]
-  Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-  Object.keys(new_layout.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-  let maxIdNode = listId.length > 0 ? Math.max(...listId) : 0
+  let idNode = Object.keys(data.nodes).length
+  while (data.nodes['node'+idNode]) {
+    idNode = idNode+1
+  }
 
   //- Stores a mapping between idNode of initial data and layout idNodes
   const idNodesMap: {[s:string]:string} = {}
   Object.values(data.nodes).forEach( n => {
     const layout_nodes = Object.values(new_layout.nodes).filter(node_layout=>normalize_name(n.name) === normalize_name(node_layout.name))
     if (layout_nodes.length === 0) {
-      maxIdNode = maxIdNode+1
-      idNodesMap[n.idNode] = 'node'+maxIdNode
+      idNode = idNode+1
+      idNodesMap[n.idNode] = 'node'+idNode
       return
     }
     const layout_node = layout_nodes[0]
@@ -429,10 +454,10 @@ export const updateLayout = (
     l.idTarget=idNodesMap[l.idTarget]    
   })
 
-  listId = []
-  Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-  Object.keys(new_layout.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-  let maxIdLink = listId.length > 0 ? Math.max(...listId) : 0
+  //let idLink = Object.keys(data.links).length
+  // while (data.links[idLink]) {
+  //   idLink = idLink+1
+  // }
   //- Stores a mapping between idLink of initial data and layout idLinks
   const idLinksMap: {[s:string]:string} = {}
   const links_with_no_match : SankeyLink [] = []
@@ -449,8 +474,8 @@ export const updateLayout = (
       l.idSource === link_layout.idSource && l.idTarget === link_layout.idTarget
     )
     if (layout_links.length === 0) {
-      maxIdLink = maxIdLink+1
-      idLinksMap[l.idLink] = 'link'+maxIdLink
+      //idLink = idLink+1
+      idLinksMap[l.idLink] = l.idSource+'---'+l.idTarget
       return
     }
     const layout_link = layout_links[0]
@@ -473,9 +498,10 @@ export const updateLayout = (
     //     // Case of not a label
     //     node = {...node_layout}
     //     // Méthode pour incrementer idNode
-    //     const listId : number[] = []
-    //     Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-    //     const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    // let idLink = Object.keys(data.links).length
+    // while (data.links['link'+idLink]) {
+    //   idLink = idLink+1
+    // }
     //     node.idNode = 'idNode'+idNode
     //     data.nodes[node.idNode]
     //   } else {
@@ -489,11 +515,14 @@ export const updateLayout = (
     const node_layout = new_layout.nodes[node_layout_key]
     if(mode.includes('posNode')){
       node.name = node_layout.name
+      if(node.local===undefined || node.local===null){
+        node.local={}
+      }
       node.position = node_layout.position
-      node.node_width = node_layout.node_width
-      node.node_height = node_layout.node_height
-      node.show_value = node_layout.show_value
-      node.shape = node_layout.shape
+      node.local.node_width = node_layout.local?.node_width
+      node.local.node_height = node_layout.local?.node_height
+      node.local.show_value = node_layout.local?.show_value
+      node.local.shape = node_layout.local?.shape
       if (node_layout.x !== 0 && node_layout.y != 0) { 
         node.x = node_layout.x
         node.y = node_layout.y
@@ -505,7 +534,7 @@ export const updateLayout = (
       node.y_label = node_layout.y_label
     }
     if(mode.includes('attrNode')){
-      node.display_style = {...node_layout.display_style}
+      node.local=node_layout?.local
 
       // node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
       // node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
@@ -514,12 +543,11 @@ export const updateLayout = (
   
       node.colorTag = node_layout.colorTag
       node.colorParameter = node_layout.colorParameter
-      node.color = node_layout.color
+      // node.color = node_layout.color
 
       
-      node.shape_visible = node_layout.shape_visible
-      node.node_visible = node_layout.node_visible
-      node.label_visible = node_layout.label_visible
+      // node.shape_visible = node_layout.shape_visible
+      // node.label_visible = node_layout.label_visible
     }
     // if(mode.includes('tagNode')){
     //   for (const node_tag_key in node_layout.tags) {
@@ -528,11 +556,11 @@ export const updateLayout = (
     // }    
   }
   
-  (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
-  for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {
-    (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label] = 
-      (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label]
-  }
+  // (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
+  // for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {
+  //   (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label] = 
+  //     (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label]
+  // }
 
   if (mode.includes('attrFlux')){
     apply_input_outputLinksId(
@@ -545,31 +573,33 @@ export const updateLayout = (
       if (!link) {
         continue
       }
-  
-      const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,label_font_size } = link_layout
-      link.curvature = curvature
-      link.curved = curved
-      link.arrow = arrow
-      link.text_color = link_layout.text_color
-      link.label_position = label_position
-      link.label_visible = label_visible
-      link.label_font_size = label_font_size
-      link.x_label = x_label
-      link.y_label = y_label
-      link.left_horiz_shift = link_layout.left_horiz_shift
-      link.right_horiz_shift = link_layout.right_horiz_shift
-      link.orientation = link_layout.orientation
-      link.recycling = recycling
-      link.orthogonal_label_position = orthogonal_label_position
+      if(link.local===undefined || link.local===null){
+        link.local={}
+      }
+      // const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,label_font_size } = link_layout
+      link.local.curvature = link_layout.local?.curvature
+      link.local.curved = link_layout.local?.curved
+      link.local.arrow = link_layout.local?.arrow
+      link.local.text_color = link_layout.local?.text_color
+      link.local.label_position = link_layout.local?.label_position
+      link.local.label_visible = link_layout.local?.label_visible
+      link.local.label_font_size = link_layout.local?.label_font_size
+      link.x_label = link_layout.x_label
+      link.y_label = link_layout.y_label
+      link.local.left_horiz_shift = link_layout.local?.left_horiz_shift
+      link.local.right_horiz_shift = link_layout.local?.right_horiz_shift
+      link.local.orientation = link_layout.local?.orientation
+      link.local.recycling = link_layout.local?.recycling
+      link.local.orthogonal_label_position = link_layout.local?.orthogonal_label_position
   
       link.colorTag = link_layout.colorTag
       link.colorParameter = link_layout.colorParameter
-      link.color = link_layout.color
+      link.local.color = link_layout.local?.color
   
-      if (link_layout.vert_shift) {
-        link.left_horiz_shift = link_layout.left_horiz_shift
-        link.right_horiz_shift = link_layout.right_horiz_shift
-        link.vert_shift = link_layout.vert_shift
+      if (link_layout.local?.vert_shift) {
+        link.local.left_horiz_shift = link_layout.local?.left_horiz_shift
+        link.local.right_horiz_shift = link_layout.local?.right_horiz_shift
+        link.local.vert_shift = link_layout.local?.vert_shift
       }
     }
     
@@ -585,6 +615,33 @@ export const updateLayout = (
       )
     }
   }
+
+
+  // Always assign level tag from new layout
+  const new_layout_level_tag=Object.fromEntries(Object.entries(new_layout.levelTags))
+  for (const tag_group_key in new_layout_level_tag) {
+    if (tag_group_key in data.levelTags) {
+      continue
+    }
+    data.levelTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout_level_tag[tag_group_key]))
+  }
+  for (const tag_group_key in data.levelTags) {
+    if (!(tag_group_key in new_layout_level_tag)) {
+      continue
+    }
+    data.levelTags[tag_group_key].show_legend = new_layout_level_tag[tag_group_key].show_legend
+    data.levelTags[tag_group_key].banner = new_layout_level_tag[tag_group_key].banner
+    for (const tag in data.levelTags[tag_group_key].tags) {
+      if (!(tag in new_layout_level_tag[tag_group_key].tags)) {
+        continue
+      }
+      data.levelTags[tag_group_key].tags[tag].color = new_layout_level_tag[tag_group_key].tags[tag].color
+      if (tag !== 'échange') {
+        data.levelTags[tag_group_key].tags[tag].selected = new_layout_level_tag[tag_group_key].tags[tag].selected
+      }
+    }
+  }
+
 
   if(mode.includes('tagNode')){
     for (const tag_group_key in new_layout.nodeTags) {
@@ -630,6 +687,26 @@ export const updateLayout = (
       }
     }
   }
+
+  if(mode.includes('tagData')){
+    for (const tag_group_key in new_layout.dataTags) {
+      data.dataTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.dataTags[tag_group_key]))
+    }
+    for (const tag_group_key in data.dataTags) {
+      if (!(tag_group_key in new_layout.dataTags)) {
+        continue
+      }
+      data.dataTags[tag_group_key].show_legend = new_layout.dataTags[tag_group_key].show_legend
+      data.dataTags[tag_group_key].banner = new_layout.dataTags[tag_group_key].banner
+      for (const tag in data.dataTags[tag_group_key].tags) {
+        if (!(tag in new_layout.dataTags[tag_group_key].tags)) {
+          continue
+        }
+        data.dataTags[tag_group_key].tags[tag].color = new_layout.dataTags[tag_group_key].tags[tag].color
+        data.dataTags[tag_group_key].tags[tag].selected = new_layout.dataTags[tag_group_key].tags[tag].selected
+      }
+    }
+  }
   
   
 
@@ -662,7 +739,6 @@ export const updateLayout = (
       data.display_style.filter_label = 0
     }
   }
-  set_nodes_level(data)
   
 }
 
@@ -670,17 +746,10 @@ export const desagregation = (
   data: SankeyData,   
   idNode: string, 
   cur_dimension: string,
-  control_display = true
 ) => {
   const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
   if (dim_desagregate_nodes.length == 0) {
     return
-  }
-  if (control_display) {
-    dim_desagregate_nodes.forEach( n => {
-      n.display = true
-      n.node_visible = true
-    })
   }
   const nb_desagregated = dim_desagregate_nodes.length
   let current_y = data.v_space/2
@@ -691,11 +760,22 @@ export const desagregation = (
       n.y = data.nodes[idNode].y - current_y
     }
     current_y = current_y - delta_y
+
+    if(n.local==undefined || n.local==null){
+      n.local={local_aggregation:true}
+    }else{
+      if(n.local){
+        n.local.local_aggregation=true
+      }
+    }
   })
-  if (control_display) {
-    // Hides agregated nodes
-    data.nodes[idNode].display = false
-    data.nodes[idNode].node_visible = false
+  const clicked_node=data.nodes[idNode]
+  if(clicked_node.local==undefined || clicked_node.local==null){
+    clicked_node.local={local_aggregation:false}
+  }else{
+    if(clicked_node.local){
+      clicked_node.local.local_aggregation=false
+    }
   }
 }
 
@@ -703,7 +783,6 @@ export const agregation = (
   data : SankeyData, 
   idNode: string,
   cur_dimension: string,
-  control_display = true
 ) =>  {
   if ( !(cur_dimension in data.nodes[idNode].dimensions)) {
     return
@@ -723,11 +802,6 @@ export const agregation = (
   })
 
 
-  if (control_display) {
-    // show agregated node
-    parent_node.display = true
-    parent_node.node_visible = true
-  }
   if (dim_desagregated_nodes.length === 0) {
     return
   }
@@ -735,14 +809,18 @@ export const agregation = (
   let mean_x = 0
   let mean_y = 0
   dim_desagregated_nodes.forEach(n => {
-    if (control_display) {
-      data.nodes[n.idNode].display = false
-      data.nodes[n.idNode].node_visible = false
-    }
     if (n.x) {
       mean_x += n.x  
       mean_y += n.y
     }
+    if(n.local==undefined || n.local==null){
+      n.local={local_aggregation:false}
+    }else{
+      if(n.local){
+        n.local.local_aggregation=false
+      }
+    }
+
   })
   mean_x = mean_x/dim_desagregated_nodes.length
   mean_y = mean_y/dim_desagregated_nodes.length
@@ -750,6 +828,13 @@ export const agregation = (
   if (parent_node.x === undefined || (parent_node.x === 0 && parent_node.y === 0) ) {
     parent_node.x = mean_x
     parent_node.y = mean_y
+  }
+  if(parent_node.local==undefined || parent_node.local==null){
+    parent_node.local={local_aggregation:true}
+  }else{
+    if(parent_node.local){
+      parent_node.local.local_aggregation=true
+    }
   }
 }
 

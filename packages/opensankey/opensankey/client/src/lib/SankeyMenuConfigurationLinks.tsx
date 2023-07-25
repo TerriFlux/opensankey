@@ -3,8 +3,7 @@ import { Row, Form, Col, FormLabel, Tabs,  Button, ButtonGroup, Dropdown, FormGr
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { cut_name, default_link, delete_link } from './SankeyUtils'
-import * as d3 from 'd3'
+import { cut_name, default_link, delete_link,node_displayed,return_value_link,assign_link_value_to_correct_var,return_correct_link_attribute_value } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH, FaMinus, FaPlus } from 'react-icons/fa'
@@ -25,7 +24,7 @@ const SankeyMenuConfigurationLinksPropTypes = {
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   style_editable:PropTypes.bool.isRequired,
-  set_displayed_value:PropTypes.func.isRequired,
+  set_displayed_input_link_value:PropTypes.func.isRequired,
   tags_selected:PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
   set_tags_selected:PropTypes.func.isRequired,
   set_display_link_opacity:PropTypes.func.isRequired,
@@ -34,7 +33,7 @@ const SankeyMenuConfigurationLinksPropTypes = {
 type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
 export const OpenSankeyMenuConfigurationLinks = (
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
@@ -43,15 +42,15 @@ export const OpenSankeyMenuConfigurationLinks = (
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
   additional_data_element:JSX.Element[],
-  displayed_value:string,
-  set_displayed_value:(s:string)=>void,
+  displayed_input_link_value:string,
+  set_displayed_input_link_value:(s:string)=>void,
   additional_link_appearence_items:JSX.Element[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
 ) => {
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
-    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,additional_data_element,displayed_value,set_displayed_value),
+    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,additional_data_element,displayed_input_link_value,set_displayed_input_link_value),
     'appearence': SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity),
     'label': SankeyMenuConfigurationLinksLabel(data,multi_selected_links,set_data,t,false,'default'),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,selected_link,t)
@@ -65,10 +64,10 @@ export const OpenSankeyMenuConfigurationLinks = (
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_value,tags_selected,set_tags_selected,set_display_link_opacity}
+  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity}
 ) => {
   const { fluxTags, dataTags } = data
-  const [style_to_apply_to_link, set_style_to_apply_to_link] = useState('default')
+  const [, set_style_to_apply_to_link] = useState('default')
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
   const set_show_link = useState(true)[1]
 
@@ -97,7 +96,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_tags_selected(dataTagsSelected)
   }
 
-  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(data.nodes[l.idSource].display && data.nodes[l.idTarget].display):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
+  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
   const selected_links = multi_selected_links.current.map((d) => {
     if (data.nodes[d.idSource] == undefined || data.nodes[d.idTarget] == undefined) {
       return
@@ -121,16 +120,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
             multi_selected_links.current = m_s
-            set_display_link_opacity(m_s[0].opacity)
-            Object.values(data.links).forEach( l => {
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '0')
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-            })
-            multi_selected_links.current.forEach( l => {
-              const sel = d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect')
-              sel.attr('fill-opacity', '1')
-              d3.selectAll(' .opensankey #gg_' + l.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-            })
+            if(m_s.length>0){
+              set_display_link_opacity(return_value_link(data,m_s[0],'opacity'))
+            }           
 
             if(multi_selected_links.current.length>0){
               let new_tags_selected=tags_selected
@@ -146,7 +138,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
                 set_tags_selected(new_tags_selected)
-                set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
 
               }else if(Object.values(data.dataTags).length>0){
                 // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -158,9 +150,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 Object.keys(data.dataTags).forEach((dt,i)=>{
                   n_t_s[dt]=tmp[i]
                 })
-                set_displayed_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
+                set_tags_selected(n_t_s)
+                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
               }else{
-                set_displayed_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
               }
             }
            
@@ -173,39 +166,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     return DD
   }
 
-  //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
-  //Permet donc de les déssiner avant
-  const handleUpLink = (i: string) => {
-    const { links } = data
-    const listElmt = Object.keys(links)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt - 1, 0, i)
-    const new_cat: { [key: string]: SankeyLink } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = links[elt]
-    })
-    for (const member in links) delete links[member]
-    Object.assign(links, new_cat)
-    set_data({ ...data })
-  }
 
-  //Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
-  //Permet donc de les déssiner après
-  const handleDownLink = (i: string) => {
-    const { links } = data
-    const listElmt = Object.keys(links)
-    const posElemt = listElmt.indexOf(i)
-    listElmt.splice(posElemt, 1)
-    listElmt.splice(posElemt + 1, 0, i)
-    const new_cat: { [key: string]: SankeyLink } = {}
-    listElmt.forEach(elt => {
-      new_cat[elt] = links[elt]
-    })
-    for (const member in links) delete links[member]
-    Object.assign(links, new_cat)
-    set_data({ ...data })
-  }
 
   //Add new link and selection it
   const add_new_link = () => {
@@ -216,16 +177,19 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     }
     const link: SankeyLink = default_link(data)
     // Méthode pour incrementer idNode
-    const listId: number[] = []
-    Object.keys(data.links).forEach(elt => listId.push(Number(elt.replace('link', ''))))
-    const idLink = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    let idLink = Object.keys(data.links).length
+    while (data.links['link'+idLink]) {
+      idLink = idLink+1
+    }
     link.idLink = 'link' + idLink
     links[link.idLink] = link
     const node_keys = Object.keys(nodes)
     link.idSource = nodes[node_keys[0]].idNode
     link.idTarget = nodes[node_keys[1]].idNode
     if (link.idSource === link.idTarget) {
-      link.recycling = true
+      // link.recycling = true
+      assign_link_value_to_correct_var(link,'recycling',true,false)
+
     }
 
     nodes[node_keys[0]].outputLinksId.push(link.idLink)
@@ -233,7 +197,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     selected_link.current = link
     multi_selected_links.current = [link]
-    set_display_link_opacity(link.opacity)
+    set_display_link_opacity(return_correct_link_attribute_value(data,link,'opacity',false))
+    
     set_data({ ...data })
     set_show_link(true)
   }
@@ -248,7 +213,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     const source_node = data.nodes[changeEvent.target.value]
     link.idSource = source_node.idNode
     if (link.idSource === link.idTarget) {
-      link.recycling = true
+      assign_link_value_to_correct_var(link,'recycling',true,false)
     }
     source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
 
@@ -281,7 +246,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     const target_node = nodes[changeEvent.target.value]
     link.idTarget = target_node.idNode
     if (link.idSource === link.idTarget) {
-      link.recycling = true
+      // link.recycling = true
+      assign_link_value_to_correct_var(link,'recycling',true,false)
+
     }
 
     target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
@@ -290,28 +257,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   }
 
   const apply_style_to_selected_links = () => {
-    const style = data.style_link[style_to_apply_to_link]
-
     multi_selected_links.current.map(d => {
-      // type of link
-      d.recycling = style.recycling
-      d.orientation = style.orientation
-      d.arrow = style.arrow
-
-      // display_attribute
-      d.label_position = style.label_position
-      d.orthogonal_label_position = style.orthogonal_label_position
-      d.label_on_path = style.label_on_path
-      d.label_visible = style.label_visible
-      d.text_color = style.text_color
-      d.color = style.color
-      d.opacity=style.opacity
-      d.left_horiz_shift = style.left_horiz_shift
-      d.right_horiz_shift = style.right_horiz_shift
-
-
-      d.curvature = style.curvature
-      d.curved = style.curved
+      delete d.local
     })
   }
 
@@ -510,7 +457,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 nodes_to_reorganize.push(target_node)
               })
               nodes_to_reorganize.forEach(n => {
-                reorganize_inputLinksId(n, true, true, data.nodes, data.links)
+                reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
               })
               set_data({ ...data })
             }}>
@@ -535,8 +482,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             <Button variant='info' disabled={multi_selected_links.current.length != 1}
               onClick={() => {
                 multi_selected_links.current.map(l => {
-                  handleDownLink(l.idLink)
+                  handleDownLink(data,l.idLink)
                 })
+                set_data({ ...data })
               }}>
               <FaAngleUp/>
             </Button>
@@ -578,8 +526,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             <Button variant='warning' disabled={multi_selected_links.current.length != 1}
               onClick={() => {
                 multi_selected_links.current.map(l => {
-                  handleUpLink(l.idLink)
+                  handleUpLink(data,l.idLink)
                 })
+                set_data({ ...data })
+
               }}>
               <FaAngleDown />
             </Button>
@@ -682,3 +632,36 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 SankeyMenuConfigurationLinks.propTypes = SankeyMenuConfigurationLinksPropTypes
 
 export default SankeyMenuConfigurationLinks
+
+
+//Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
+//Permet donc de les déssiner avant
+export const handleUpLink = (data:SankeyData,i: string) => {
+  const { links } = data
+  const listElmt = Object.keys(links)
+  const posElemt = listElmt.indexOf(i)
+  listElmt.splice(posElemt, 1)
+  listElmt.splice(posElemt - 1, 0, i)
+  const new_cat: { [key: string]: SankeyLink } = {}
+  listElmt.forEach(elt => {
+    new_cat[elt] = links[elt]
+  })
+  for (const member in links) delete links[member]
+  Object.assign(links, new_cat)
+}
+
+//Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
+//Permet donc de les déssiner après
+export const handleDownLink = (data:SankeyData,i: string) => {
+  const { links } = data
+  const listElmt = Object.keys(links)
+  const posElemt = listElmt.indexOf(i)
+  listElmt.splice(posElemt, 1)
+  listElmt.splice(posElemt + 1, 0, i)
+  const new_cat: { [key: string]: SankeyLink } = {}
+  listElmt.forEach(elt => {
+    new_cat[elt] = links[elt]
+  })
+  for (const member in links) delete links[member]
+  Object.assign(links, new_cat)
+}

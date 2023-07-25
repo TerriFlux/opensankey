@@ -38,7 +38,7 @@ export const OpenSankeyConfigurationsMenus = (
   set_sub_nav_item_active:(s:string)=>void,
   style_editable:boolean,
   token:boolean,
-  set_displayed_value:(s:string)=>void,
+  set_displayed_input_link_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
   set_display_link_opacity:(s:string)=>void,
@@ -137,13 +137,12 @@ export const OpenSankeyConfigurationsMenus = (
                 t={t}
                 data={data}
                 set_data={set_data}
-                style_to_apply={style_to_apply}
+                // style_to_apply={style_to_apply}
                 set_style_to_apply={set_style_to_apply}
                 selected_node={selected_node}
                 multi_selected_nodes={multi_selected_nodes}
                 multi_selected_links={multi_selected_links}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
-                style_editable={style_editable}
                 token={token}
                 set_display_link_opacity={set_display_link_opacity}
               />
@@ -213,7 +212,7 @@ export const OpenSankeyConfigurationsMenus = (
                 multi_selected_links={multi_selected_links}
                 menu_configuration_links={Object.values(menu_configuration_links)}
                 style_editable={style_editable}
-                set_displayed_value={set_displayed_value}
+                set_displayed_input_link_value={set_displayed_input_link_value}
                 tags_selected={tags_selected}
                 set_tags_selected={set_tags_selected}
                 set_display_link_opacity={set_display_link_opacity}

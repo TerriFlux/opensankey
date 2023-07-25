@@ -3,7 +3,7 @@ import { Row, Tabs, Button, ButtonGroup, Col, Dropdown, Form, FormControl, FormC
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNode, SankeyNodePropTypes,SankeyLinkValue } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
-import { cut_name,default_node,delete_node } from './SankeyUtils'
+import { cut_name,default_node,delete_node,node_displayed,return_value_node, return_value_link} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -23,10 +23,9 @@ const SankeyNodeEditionPropTypes = {
   selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-  style_to_apply: PropTypes.string.isRequired,
+  // style_to_apply: PropTypes.string.isRequired,
   set_style_to_apply: PropTypes.func.isRequired,
   menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  style_editable:PropTypes.bool.isRequired,
   token:PropTypes.bool.isRequired,
   set_display_link_opacity:PropTypes.func.isRequired,
 }
@@ -62,12 +61,12 @@ export const OpenSankeyMenuConfigurationNodes = (
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,style_to_apply,set_style_to_apply, menu_configuration_nodes,style_editable,token,set_display_link_opacity }
+  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,set_style_to_apply, menu_configuration_nodes,token,set_display_link_opacity }
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
 
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?d.display:true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?node_displayed(data,d):true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
 
   const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
 
@@ -107,9 +106,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     const node: SankeyNode = default_node(data)
 
     // Méthode pour incrementer idNode
-    const listId: number[] = []
-    Object.keys(data.nodes).forEach(elt => listId.push(Number(elt.replace('node', ''))))
-    const idNode = listId.length > 0 ? Math.max(...listId) + 1 : 0
+    let idNode = Object.keys(data.nodes).length
+    while (data.nodes['node'+idNode]) {
+      idNode = idNode+1
+    }
     node.idNode = 'node' + idNode
     node.name = node.idNode
     if (Object.keys(nodes).length < 5) {
@@ -124,32 +124,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
     //set_multi_selected_nodes([node])
     multi_selected_nodes.current = [node]
-    style_to_apply = 'default'
+    // style_to_apply = 'default'
     apply_style_to_nodes()
     set_data({...data})
   }
 
   const apply_style_to_nodes = () => {
-    const style = data.style_node[style_to_apply]
     multi_selected_nodes.current.map(d => {
-      //Style Noeud
-      d.shape_visible = style.shape_visible
-      d.color = style.color
-      d.shape = style.shape
-      d.node_width = style.node_width
-      d.node_height = style.node_height
-
-      //Syle label
-      d.label_visible = style.label_visible
-      d.show_value = style.show_value
-      d.display_style.font_size = style.display_style.font_size
-      d.display_style.bold = style.display_style.bold
-      d.display_style.uppercase = style.display_style.uppercase
-      d.display_style.italic = style.display_style.italic
-      d.display_style.label_box_width = style.display_style.label_box_width
-      d.display_style.label_vert = style.display_style.label_vert
-      d.display_style.label_horiz = style.display_style.label_horiz
-      d.display_style.font_family = style.display_style.font_family
+      // Delete local value so the used value come from the style
+      delete d.local
     })
     set_data({ ...data })
   }
@@ -229,7 +212,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             onClick={() => {
               set_style_to_apply('default')
               add_new_node()
-              style_to_apply = 'default'
               apply_style_to_nodes()
             }}>
             <FaPlus/>
@@ -308,32 +290,32 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       </Col>
 
       <Col xs={5}>
-        {(style_editable)?(
-          <Dropdown>
-            <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item onClick={() => {
-                set_style_to_apply('')
-                multi_selected_nodes.current.map(n => {
-                  n.style = ''
-                })
-                set_data({ ...data })
-              }}>{'Aucun'}</Dropdown.Item>
-              {Object.keys(data.style_node).map((d,i) => {
-                return (<Dropdown.Item
-                  key={i}
-                  onClick={() => {
-                    set_style_to_apply(d)
-                    multi_selected_nodes.current.map(n => {
-                      n.style = d
-                    })
-                    set_data({ ...data })
-                  }}
-                >{data.style_node[d].name}</Dropdown.Item>)
-              })}
-            </Dropdown.Menu>
-          </Dropdown>
-        ):(<Form.Label>{style_of_selected_nodes()}</Form.Label>)}
+        
+        <Dropdown>
+          <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={() => {
+              set_style_to_apply('')
+              multi_selected_nodes.current.map(n => {
+                n.style = ''
+              })
+              set_data({ ...data })
+            }}>{'Aucun'}</Dropdown.Item>
+            {Object.keys(data.style_node).map((d,i) => {
+              return (<Dropdown.Item
+                key={i}
+                onClick={() => {
+                  set_style_to_apply(d)
+                  multi_selected_nodes.current.map(n => {
+                    n.style = d
+                  })
+                  set_data({ ...data })
+                }}
+              >{data.style_node[d].name}</Dropdown.Item>)
+            })}
+          </Dropdown.Menu>
+        </Dropdown>
+  
       </Col>
 
       <Col xs={5}>
@@ -380,17 +362,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               const d = multi_selected_nodes.current[0]
               d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)
               const wrap = textwrap()
-                .bounds({ height: 100, width: (d.display_style.label_box_width != 0) ? d.display_style.label_box_width : 110 })
+                .bounds({ height: 100, width: (return_value_node(data,d,'label_box_width') as number != 0) ? return_value_node(data,d,'label_box_width') as number : 110 })
                 .method('tspans')
               d3.select(' .opensankey #ggg_' + d.idNode + ' text')
                 .call(wrap)
               if (!d.x_label || data.show_structure === 'structure') {
                 d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
                   const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
-                  if (d.display_style.label_horiz == 'middle') {
+                  if (return_value_node(data,d,'label_horiz') == 'middle') {
                     return width / 2
-                  } else if (d.display_style.label_horiz == 'right') {
-                    return d.display_style.label_vert == 'middle' ? width : 0
+                  } else if (return_value_node(data,d,'label_horiz') == 'right') {
+                    return return_value_node(data,d,'label_vert') == 'middle' ? width : 0
                   } else {
                     return 0
                   }
@@ -400,9 +382,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
                 if (d.x_label) {
                   return d.x_label
-                } else if (d.display_style.label_horiz == 'middle') {
+                } else if (return_value_node(data,d,'label_horiz') == 'middle') {
                   return width / 2
-                } else if (d.display_style.label_horiz == 'right') {
+                } else if (return_value_node(data,d,'label_horiz') == 'right') {
                   return width
                 } else {
                   return 0
@@ -437,8 +419,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                   style={{ 'marginBottom': '3px', 'marginRight': '3px', 'width': '100%', 'height': '50px' }}
                   onClick={() => {
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                      reorganize_node_inputLinksId(d, data.nodes, data.links)
-                      reorganize_node_outputLinksId(d, data.nodes, data.links)
+                      reorganize_node_inputLinksId(data,d, data.nodes, data.links)
+                      reorganize_node_outputLinksId(data,d, data.nodes, data.links)
                     })
                     set_data({ ...data })
                   }}>
@@ -459,7 +441,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     multi_selected_links.current = []
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-                      set_display_link_opacity(String(multi_selected_links.current[0].opacity))
+                      const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as number
+                      set_display_link_opacity(opacity)
                     })
                     multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }}>
@@ -480,7 +463,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                     multi_selected_links.current = []
                     Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                       multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-                      set_display_link_opacity(String(multi_selected_links.current[0].opacity))
+                      const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as number
+                      set_display_link_opacity(opacity)
                     })
                     multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
                   }}>
