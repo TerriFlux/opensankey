@@ -6,8 +6,7 @@ import { textwrap } from 'd3-textwrap'
 import { SankeyLinkValue} from 'open-sankey/src/lib/types'
 
 import {drawGrid,min_width_and_height} from 'open-sankey/dist/SankeyDrawFunction'
-import {return_out_of_bound_element,opposing_drag_elements,drag_elements} from 'open-sankey/dist/SankeyDrag'
-
+import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -275,18 +274,24 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   inv_scale:(t:number)=>number,
 
 )=>{
+  const node_visible=[] as string[]
   return (d3.drag<SVGGElement, unknown>()
+    .on('start',()=>{
+      d3.selectAll('.node_shape').nodes().forEach(element => {
+        node_visible.push(d3.select(element).attr('id')) 
+      })
+    })
     .subject(Object).on('drag', function (event) {
 
       // Drag zdt
       // Cherche si des element seront hors zone si on les drag 
       // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-      const out_of_zone_item=return_out_of_bound_element(d,data,event,multi_selected_nodes)
+      const out_of_zone_item=return_out_of_bound_element_plus(d,data,event,multi_selected_nodes,node_visible)
       // Pousse les element non sélectionnés dans la direction opposé
       if(out_of_zone_item.length>0){
-        opposing_drag_elements(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
+        opposing_drag_elements_plus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
       }
-      drag_elements(d,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+      drag_elements_plus(d,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
     
 
     })
