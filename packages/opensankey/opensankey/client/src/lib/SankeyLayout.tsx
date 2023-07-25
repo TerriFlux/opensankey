@@ -3,7 +3,6 @@ import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_valu
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
-import { SankeyPlusLabel } from 'sankeyanimation/src/types'
 
 export const reorganize_node_inputLinksId = (
   data:SankeyData,
@@ -556,11 +555,11 @@ export const updateLayout = (
     // }    
   }
   
-  (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
-  for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {
-    (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label] = 
-      (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label]
-  }
+  // (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
+  // for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {
+  //   (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label] = 
+  //     (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label]
+  // }
 
   if (mode.includes('attrFlux')){
     apply_input_outputLinksId(
