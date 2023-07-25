@@ -2481,3 +2481,93 @@ export const linkStrokeWidth=(l:SankeyLink,
     return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
   }
 }
+
+export const svgDragMiddleMouseStart=()=>{
+  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('fill-opacity', '0')
+}
+
+export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unknown>,data:SankeyData)=>{
+  d3.selectAll('.ggg_nodes').filter(n=>(n as SankeyNode).position!=='relative').attr('transform',(d)=>{
+    const n=d as SankeyNode
+    n.x+=event.dx
+    n.y+=event.dy
+    return 'translate('+n.x+','+n.y+')'
+  })
+  d3.selectAll('.link').attr('d',(d)=>{
+    const l=d as SankeyLink
+    // Get the path of each displayed link
+    const path=d3.select('#'+l.idLink).attr('d').split(' ')
+
+    // Each path is splitted into small part of the path then depending on the small part :
+    //  - If it's a letter then do nothing
+    //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
+    //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
+    //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
+    //
+    // Then once the subpart of the path are modified, we join the array to reform the path
+    const new_path=path.map((p,i)=>{
+      // Case when it's a [x,y] coordinates
+      if(p.includes(',')){
+        const pos=p.split(',')
+        const newPosX=Number(pos[0])+event.dx
+        const newPosY=Number(pos[1])+event.dy
+        p=''+newPosX+','+newPosY
+      }
+      // Case when it's a number alone so we search the previous element to know wich shift
+      if(Number(p)){
+        if(path[i-1]=='H'){
+          p=String(Number(p)+event.x)
+        }else if(path[i-1]=='V'){
+          p=String(Number(p)+event.y)
+        }
+      }
+      return p
+    })
+    return new_path.join(' ')
+  })
+  d3.selectAll('.arrow').attr('d',(d)=>{
+    const l=d as SankeyLink
+    // Get the path of each displayed link
+    const path=d3.select('#'+l.idLink+'_arrow').attr('d').split(' ')
+
+    // Each path is splitted into small part of the path then depending on the small part :
+    //  - If it's a letter then do nothing
+    //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
+    //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
+    //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
+    //
+    // Then once the subpart of the path are modified, we join the array to reform the path
+    const new_path=path.map((p,i)=>{
+    // Case when it's a [x,y] coordinates
+      if(p.includes(',')){
+        const pos=p.split(',')
+        const newPosX=Number(pos[0])+event.dx
+        const newPosY=Number(pos[1])+event.dy
+        p=''+newPosX+','+newPosY
+      }
+      // Case when it's a number alone so we search the previous element to know wich shift
+      if(Number(p)){
+        if(path[i-1]=='H'){
+          p=String(Number(p)+event.x)
+        }else if(path[i-1]=='V'){
+          p=String(Number(p)+event.y)
+        }
+      }
+      return p
+    })
+    return new_path.join(' ')
+  })
+
+  const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+  const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+  const scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+  data.legend_position[0]+=event.dx
+  data.legend_position[1]+=event.dy
+  d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
+  
+}

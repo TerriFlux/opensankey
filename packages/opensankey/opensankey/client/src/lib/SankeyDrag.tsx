@@ -2,7 +2,6 @@ import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,SankeyLinkValue,drawArrowsType } from './types'
 import {removeAnimate,compute_end_points, min_width_and_height,drawCurveFunction, drawArrows,linkStrokeWidth} from './SankeyDrawFunction'
 import {   link_visible,test_link_value,return_value_node,assign_node_local_attribute,return_value_link,assign_link_local_attribute} from './SankeyUtils'
-import {SankeyPlusLabel}  from 'sankeyanimation/src/types'
 
 
 
@@ -267,7 +266,6 @@ export const dragGNodeEvent=(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   multi_selected_nodes:{current: SankeyNode[] },
-  multi_selected_label:{current:SankeyPlusLabel[]},
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   set_data:(d:SankeyData)=>void,
@@ -277,17 +275,28 @@ export const dragGNodeEvent=(
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
 )=>{
+  const node_visible=[] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
-    .subject(Object).on('drag', function (event,node) {
+    .subject(Object)
+    .on('start',()=>{
+      d3.selectAll('.node_shape').nodes().forEach(element => {
+        node_visible.push(d3.select(element).attr('id')) 
+      })
+    })
+    .on('drag', function (event,node) {
       if(mode_selection.current=='s'){
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
-          drag_nodes(node,event,multi_selected_nodes,data,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale
+          drag_nodes(node,event,multi_selected_nodes,data,
+            // multi_selected_label,
+            set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,node_visible
           )
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
-          drag_nodes(node,event,multi_selected_nodes,data,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale
+          drag_nodes(node,event,multi_selected_nodes,data,
+            // multi_selected_label,
+            set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,node_visible
           )
         }
       }
@@ -349,7 +358,6 @@ export  const drag_nodes = (node:SankeyNode,
   event: { dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current: SankeyNode[] },
   data:SankeyData,
-  multi_selected_label:{current:SankeyPlusLabel[]},
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current: SankeyLink[] },
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
@@ -358,19 +366,19 @@ export  const drag_nodes = (node:SankeyNode,
   drawArrows:drawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-
+  node_visible:string[]
 ) => {
   removeAnimate()
 
   // Cherche si des element seront hors zone si on les drag 
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-  const out_of_zone_item=return_out_of_bound_element(node,data,event,multi_selected_nodes)
+  const out_of_zone_item=return_out_of_bound_element(node,data,event,multi_selected_nodes,node_visible)
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
-    opposing_drag_elements(out_of_zone_item,event,node,data,multi_selected_nodes,multi_selected_label)
+    opposing_drag_elements(out_of_zone_item,event,node,data,multi_selected_nodes)
   }
 
-  drag_elements(node,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+  drag_elements(node,data,event,multi_selected_nodes,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
     
 }
 
@@ -1002,8 +1010,8 @@ export const drag_node_text = (
 
 
 
-export const return_out_of_bound_element=(dragged:SankeyNode|SankeyPlusLabel,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current:SankeyNode[]}
+export const return_out_of_bound_element=(dragged:SankeyNode,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
+  multi_selected_nodes:{current:SankeyNode[]},node_visible:string[]
 )=>{
 
   
@@ -1011,9 +1019,13 @@ export const return_out_of_bound_element=(dragged:SankeyNode|SankeyPlusLabel,dat
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
 
   const node=Object.keys(dragged).includes('idNode')?dragged as SankeyNode:{} as SankeyNode
-
-  const out_of_zone_item:(SankeyNode|SankeyPlusLabel)[]=Object.values(data.nodes).filter(d=>{
+  
+  const out_of_zone_item:(SankeyNode)[]=Object.values(data.nodes).filter(d=>{
     const n=d as SankeyNode
+    // Don't take into account node with relative position because they aren't reliable  
+    if(n.position=='relative' || !node_visible.includes(n.idNode)){
+      return false
+    }
     if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
       return (n.x<=0 && event.dx<0) || (n.y<=0 && event.dy<0) || (n.x<=0 && event.x<0) || (n.y<=0 && event.y<0) 
     }else if( Object.keys(node).length>0 && node.position!=='relative'){
@@ -1023,22 +1035,20 @@ export const return_out_of_bound_element=(dragged:SankeyNode|SankeyPlusLabel,dat
     }
   })
 
-  Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).filter(lb=>{
-    return (lb.x<=0 && event.dx<0) || (lb.y<=0 && event.dy<0) || (lb.x<=0 && event.x<0) || (lb.y<=0 && event.y<0) 
-  }).forEach(lb=>out_of_zone_item.push(lb))
-
+  // Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).filter(lb=>{
+  //   return (lb.x<=0 && event.dx<0) || (lb.y<=0 && event.dy<0) || (lb.x<=0 && event.x<0) || (lb.y<=0 && event.y<0) 
+  // }).forEach(lb=>out_of_zone_item.push(lb))
   return out_of_zone_item
 
 }
-export const opposing_drag_elements=(out_of_zone_item:(SankeyNode|SankeyPlusLabel)[],
+export const opposing_drag_elements=(out_of_zone_item:(SankeyNode)[],
   event:{ dx: number; dy: number,x:number,y:number },
-  dragged:SankeyNode|SankeyPlusLabel,
+  dragged:SankeyNode,
   data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
 )=>{
   const node=Object.keys(dragged).includes('idNode')?dragged as SankeyNode:{} as SankeyNode
-  const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
+  // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
 
   if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
     // Shift not selected nodes to opposing direction
@@ -1047,14 +1057,7 @@ export const opposing_drag_elements=(out_of_zone_item:(SankeyNode|SankeyPlusLabe
       d3.selectAll('#ggg_'+n_shift.idNode).attr('transform','translate('+n_shift.x+','+n_shift.y+')')
     })
 
-    // Shift not selected zdt to opposing direction
-    Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
-      if(!multi_selected_label.current.includes(lb) &&  lb.idLabel!==zdt.idLabel){
-        const new_pos_x = lb.x + 5
-        lb.x = new_pos_x
-        d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
-      }
-    })
+    
 
     // Shift legend x 
     const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
@@ -1073,15 +1076,6 @@ export const opposing_drag_elements=(out_of_zone_item:(SankeyNode|SankeyPlusLabe
       d3.selectAll('#ggg_'+n_shift.idNode).attr('transform','translate('+n_shift.x+','+n_shift.y+')')
     })
 
-    // Shift zdt to opposing direction
-    Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
-      if(!multi_selected_label.current.includes(lb)  && lb.idLabel!==zdt.idLabel ){
-        const new_pos_y = lb.y + 5
-        lb.y = new_pos_y
-        d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
-      }
-    })
-
     // Shift legend y 
     const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
     const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
@@ -1093,8 +1087,8 @@ export const opposing_drag_elements=(out_of_zone_item:(SankeyNode|SankeyPlusLabe
 
   }
 }
-export const drag_elements=(dragged:SankeyNode|SankeyPlusLabel,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current:SankeyNode[]},multi_selected_label:{current:SankeyPlusLabel[]},
+export const drag_elements=(dragged:SankeyNode,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
+  multi_selected_nodes:{current:SankeyNode[]},
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current: SankeyLink[] },
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
@@ -1108,8 +1102,6 @@ export const drag_elements=(dragged:SankeyNode|SankeyPlusLabel,data:SankeyData,e
 )=>{
   let error_msg: { text: string | undefined } | undefined
   const node=Object.keys(dragged).includes('idNode')?dragged as SankeyNode:{} as SankeyNode
-  const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
-
   d3.selectAll('.ggg_nodes').filter((d)=>{
     const n=d as SankeyNode
     // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
@@ -1158,19 +1150,5 @@ export const drag_elements=(dragged:SankeyNode|SankeyPlusLabel,data:SankeyData,e
     })
   }
 
-  // Drag zdt too
-  multi_selected_label.current.map(l=>{
-    const new_pos_x = l.x + event.dx
-    const new_pos_y = l.y + event.dy
-    l.x = (new_pos_x>=0)?new_pos_x:0
-    l.y = (new_pos_y>0)?new_pos_y:0
-    d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')')
-  })
-  if(multi_selected_label.current.length==0 && Object.keys(zdt).length>0){
-    const new_pos_x = zdt.x + event.dx
-    const new_pos_y = zdt.y + event.dy
-    zdt.x = (new_pos_x>=0)?new_pos_x:0
-    zdt.y = (new_pos_y>0)?new_pos_y:0
-    d3.select(' .opensankey #' + zdt.idLabel).attr('transform', 'translate(' + zdt.x + ',' + zdt.y + ')')
-  }
+  
 }
