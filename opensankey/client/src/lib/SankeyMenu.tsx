@@ -120,7 +120,7 @@ const MenuPropTypes = {
   set_contextualised_node:PropTypes.func.isRequired,
   set_contextualised_link:PropTypes.func.isRequired,
   set_show_context_zdd:PropTypes.func.isRequired,
-
+  updateLayout:PropTypes.func.isRequired,
 
 }
 
@@ -1001,7 +1001,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     additional_nav_item,
     set_contextualised_node,
     set_contextualised_link,
-    set_show_context_zdd
+    set_show_context_zdd,
+    updateLayout,
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1033,7 +1034,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
           }
 
-          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data))
+          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout))
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
           set_data({ ...new_data })
@@ -1338,6 +1339,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_show_apply_layout={set_show_apply_layout}
         sankey_data={data}
         set_sankey_data={set_data}
+        updateLayout={updateLayout}
       />
 
       <ExcelModal

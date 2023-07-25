@@ -23,12 +23,11 @@ import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
 import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
 import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
-//import {SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from 'sankeyanimation/dist/SankeyPlusStyle'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
 import {linkStroke, min_width_and_height,drawArrows,eventOnSankeyZoneMouseDown,eventOnSankeyZoneMouseMove,eventOnSankeyZoneMouseUp} from './SankeyDrawFunction'
 import i18next from './traduction'
-
+import { updateLayout } from './SankeyLayout'
 import {SankeyMenuConfigurationNodesLabel} from './SankeyMenuConfigurationNodesLabel'
 import {SankeyMenuConfigurationNodesIO} from './SankeyMenuConfigurationNodesIO'
 
@@ -88,11 +87,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_nav,set_show_nav] = useState(false)
   const [show_modal_welcome,set_show_modal_welcome]=useState(true)
   const [never_see_again,set_never_see_again]=useState((localStorage.getItem('dontSeeAggainWelcome')==='1'))
-  const multi_selected_label = useRef([])
   const [show_modale_tuto,set_show_modale_tuto]=useState(false)
   const [show_modale_support,set_show_modale_support]=useState(false)
   const set_data=(ndata:SankeyData)=>{
-    console.log('set_data')
     set_user_scale(ndata.user_scale)
     if(ndata.legend_position!==legend_position){
       set_legend_position(ndata.legend_position)
@@ -396,7 +393,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       set_agregation_node,set_is_agregation,set_show_agregation,
       select_node,
       alt_key_pressed,
-      position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,multi_selected_label,set_displayed_input_link_value,accept_simple_click,set_contextualised_node,pointer_pos)
+      position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,
+      // multi_selected_label,
+      set_displayed_input_link_value,accept_simple_click,set_contextualised_node,pointer_pos)
 
     OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue,accept_simple_click)
 
@@ -550,6 +549,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_contextualised_node={set_contextualised_node}
             set_contextualised_link={set_contextualised_link}
             set_show_context_zdd={set_show_context_zdd}
+            updateLayout={updateLayout}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw

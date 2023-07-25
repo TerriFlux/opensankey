@@ -1,1 +1,0 @@
-declare module 'sankeyanimation/dist/types';
