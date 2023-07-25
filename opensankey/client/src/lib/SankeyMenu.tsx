@@ -1100,7 +1100,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     }
   })
 
-
   // Pré-traitement du menu tuto pour trier les groupes
   const n_a=new Array(50)
 
@@ -1201,7 +1200,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       </Row>
     </Modal.Body>
   </Modal>
-
   // Create the menu nav that can be slightly different if it in static
   const menu_nav=(!window.SankeyToolsStatic)?(<Col>
     <Row>
@@ -1265,6 +1263,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
           <Navbar.Brand /*onClick={()=>set_welcome_text(window.sankey.welcome_text)}*/><img src={logo} width={logo_width ? logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
           {menu_nav}
+          {Object.keys(menus).includes('unité')?<>
+            {menus['unité']}
+          </>:<></>}
           {additional_nav_item}
           
         </Container>
@@ -1610,19 +1611,20 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   } 
 
   // Dropdown to change some pararmeter concerning the appearence of the node  
-  const dropdown_c_n_tag=contextualised_node!==undefined ?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
+  const has_node_tags=Object.values(data.nodeTags).filter(nt=>nt.group_name!=='Type de noeud').length>0
+  const dropdown_c_n_tag=(contextualised_node!==undefined && has_node_tags) ?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Menu.tagNode_assign')}
     </Dropdown.Toggle>
     <Dropdown.Menu  variant='light'>
       {Object.entries(data.nodeTags).filter(nt=>Object.keys(nt[1].tags).length>0).map(nt=>{
-        return <Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
+        return <Dropdown autoClose='outside' drop='end'>
           <Dropdown.Toggle variant="light" id="dropdown-basic">
             {nt[1].group_name}
           </Dropdown.Toggle>
           <Dropdown.Menu  variant='light'>
             {Object.keys(nt[1].tags).map(t=>{
-              return <Dropdown.Item onClick={()=>{
+              return <Dropdown.Item as={Button} variant='light' onClick={()=>{
                 // Contextualised node
                 if(!Object.keys(contextualised_node.tags).includes(nt[0])){
                   contextualised_node.tags[nt[0]]=[]
@@ -1656,128 +1658,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     </Dropdown.Menu>
   </Dropdown>:<></>
 
-  // const dropdown_c_n_label_position_horiz=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
-  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
-  //     {t('Noeud.labels.ph')}
-  //   </Dropdown.Toggle>
-
-  //   <Dropdown.Menu  variant='light'>
-  //     {['left','middle','right'].map(lab=>{
-  //       return <Dropdown.Item onClick={()=>{
-  //         assign_value_to_contextualised_node('label_horiz',lab)
-  //         set_data({...data})
-  //       }}>
-  //         {t('Noeud.labels.'+lab)}{checked(SankeyUtils.return_value_node(data,contextualised_node,'label_horiz')==lab)}
-  //       </Dropdown.Item>
-  //     })}
-
-  //   </Dropdown.Menu>
-  // </Dropdown>:<></>
-
-  // const dropdown_c_n_label_position_vert=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
-  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
-  //     {t('Noeud.labels.pv')}
-  //   </Dropdown.Toggle>
   
-  //   <Dropdown.Menu  variant='light'>
-  //     {['top','middle','bottom'].map(lab=>{
-  //       return <Dropdown.Item onClick={()=>{
-  //         assign_value_to_contextualised_node('label_vert',lab)
-  //         set_data({...data})
-  //       }}>
-  //         {t('Noeud.labels.'+lab)}{checked(SankeyUtils.return_value_node(data,contextualised_node,'label_vert')==lab)}
-  //       </Dropdown.Item>
-  //     })}
-  
-  //   </Dropdown.Menu>
-  // </Dropdown>:<></>
-  
-  // const dropdown_c_n_label_position=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
-  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
-  //     {t('Noeud.labels.pos')}
-  //   </Dropdown.Toggle>
-
-  //   <Dropdown.Menu  variant='light'>
-  //     {dropdown_c_n_label_position_horiz}
-  //     {dropdown_c_n_label_position_vert}
-
-  //   </Dropdown.Menu>
-  // </Dropdown>:<></>
-
-  
-  // Position of node value label 
-  // const dropdown_c_n_label_value_position_horiz=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
-  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
-  //     {t('Noeud.labels.ph')}
-  //   </Dropdown.Toggle>
-
-  //   <Dropdown.Menu  variant='light'>
-  //     {['left','middle','right'].map(lab=>{
-  //       return <Dropdown.Item onClick={()=>{
-  //         assign_value_to_contextualised_node('label_horiz_valeur',lab)
-  //         set_data({...data})
-  //       }}>
-  //         {t('Noeud.labels.'+lab)}{checked(SankeyUtils.return_value_node(data,contextualised_node,'label_horiz_valeur')==lab)}
-  //       </Dropdown.Item>
-  //     })}
-
-  //   </Dropdown.Menu>
-  // </Dropdown>:<></>
-
-  // const dropdown_c_n_label_value_position_vert=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
-  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
-  //     {t('Noeud.labels.pv')}
-  //   </Dropdown.Toggle>
-  
-  //   <Dropdown.Menu  variant='light'>
-  //     {['top','middle','bottom'].map(lab=>{
-  //       return <Dropdown.Item onClick={()=>{
-  //         assign_value_to_contextualised_node('label_vert_valeur',lab)
-  //         set_data({...data})
-  //       }}>
-  //         {t('Noeud.labels.'+lab)}{checked(SankeyUtils.return_value_node(data,contextualised_node,'label_vert_valeur')==lab)}
-  //       </Dropdown.Item>
-  //     })}
-  
-  //   </Dropdown.Menu>
-  // </Dropdown>:<></>
-  
-  // const dropdown_c_n_label_value_position=contextualised_node!==undefined?<Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
-  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
-  //     {t('Noeud.labels.pos_v')}
-  //   </Dropdown.Toggle>
-
-  //   <Dropdown.Menu  variant='light'>
-  //     {dropdown_c_n_label_value_position_horiz}
-  //     {dropdown_c_n_label_value_position_vert}
-
-  //   </Dropdown.Menu>
-  // </Dropdown>:<></>
-
-
-
-  // Context menu for label
-  // const dropdown_c_n_label=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-  //   <Dropdown.Toggle variant="light" id="dropdown-basic">
-  //     {t('Noeud.labels.labels')}
-  //   </Dropdown.Toggle>
-  //   <Dropdown.Menu variant='light'>
-  //     <Dropdown.Item onClick={()=>{
-  //       assign_value_to_contextualised_node('label_visible',!SankeyUtils.return_value_node(data,contextualised_node,'label_visible'))
-  //       set_data({...data})
-  //     }}>
-  //       {t('Noeud.labels.vdb')}{checked(Boolean(SankeyUtils.return_value_node(data,contextualised_node,'label_visible')))}
-  //     </Dropdown.Item>
-  //     {SankeyUtils.return_value_node(data,contextualised_node,'label_visible')?dropdown_c_n_label_position:<></>}
-  //     <Dropdown.Item onClick={()=>{
-  //       assign_value_to_contextualised_node('show_value',!SankeyUtils.return_value_node(data,contextualised_node,'show_value'))
-  //       set_data({...data})
-  //     }}>
-  //       {t('Noeud.labels.vdv')}{checked(Boolean(SankeyUtils.return_value_node(data,contextualised_node,'show_value')))}
-  //     </Dropdown.Item>
-  //     {SankeyUtils.return_value_node(data,contextualised_node,'show_value')?dropdown_c_n_label_value_position:<></>}
-  //   </Dropdown.Menu>
-  // </Dropdown>:<></>
   const dropdown_c_n_label=contextualised_node!==undefined?<Button onClick={()=>{
     set_show_menu_node_label(true)
     set_contextualised_node(undefined)
@@ -1792,7 +1673,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
 
 
   // Dropdown to change some pararmeter concerning the style of the node  
-  const dropdown_c_n_style_select=contextualised_node!==undefined?<Dropdown autoClose='outside' as={Button} variant='light' drop='end'>
+  const dropdown_c_n_style_select=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.SelectStyle')}
     </Dropdown.Toggle>
@@ -1815,10 +1696,9 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
       {t('Noeud.Style')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
+      <Dropdown.Item  as={Button} variant='light' onClick={()=>{
         delete contextualised_node.local
         multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>delete n.local)
-
         set_data({...data})
       }}>{t('Noeud.AS')}</Dropdown.Item>
       {dropdown_c_n_style_select}
@@ -1884,7 +1764,8 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           {t('Noeud.Reorg')}
         </Button>
         {multi_selected_nodes.current.length==1?dropdown_c_n_io:<></>}
-        {sep}
+
+        {has_node_tags?sep:<></>}
         {dropdown_c_n_tag}
         {sep}
 
@@ -1958,9 +1839,9 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
     }
     
   }
-
-  // // Dropdown to change some pararmeter concerning the appearence of the node  
-  const dropdown_c_l_tag=contextualised_link!==undefined && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
+  const has_flux_tags=Object.values(data.fluxTags).length>0
+  // Dropdown to change some pararmeter concerning the appearence of the node  
+  const dropdown_c_l_tag=(contextualised_link!==undefined && has_flux_tags) && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Menu.tagFlux_assign')}
     </Dropdown.Toggle>
@@ -2020,7 +1901,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
   }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
   // Dropdown to change some pararmeter concerning the style of the node  
-  const dropdown_c_l_style_select=contextualised_link!==undefined?<Dropdown autoClose='outside' as={Button} variant='light' drop='end'>
+  const dropdown_c_l_style_select=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.SelectStyle')}
     </Dropdown.Toggle>
@@ -2042,7 +1923,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
       {t('Noeud.Style')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
+      <Dropdown.Item as={Button} variant='light' onClick={()=>{
         delete contextualised_link.local
         multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>delete n.local)
         set_data({...data})
@@ -2131,7 +2012,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
 
         {sep}
         {dropdown_c_l_layout}
-        {sep}
+        {has_flux_tags && sep}
         {dropdown_c_l_tag}
         {sep}
         {button_open_link_data}
@@ -2221,44 +2102,40 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
     <Dropdown.Menu variant='light'>
 
       {/* Set vertical value for automatic positionning */}
-      <Dropdown.Item as={Button} variant='light'>
-        <Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-          <Dropdown.Toggle variant="light" id="dropdown-basic">
-            {t('MEP.Horizontal')}
-          </Dropdown.Toggle>
-          <Dropdown.Menu variant='light'>
-            <Dropdown.Item as={Button} variant='light'>
-              <Form.Control
-                type="text"
-                value={node_hspace}
-                onChange={evt => {
-                  set_node_hspace(+evt.target.value)
-                  data.h_space = +evt.target.value
-                }}
-              /></Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-      </Dropdown.Item>
+      <Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+        <Dropdown.Toggle variant="light" id="dropdown-basic">
+          {t('MEP.Horizontal')}
+        </Dropdown.Toggle>
+        <Dropdown.Menu variant='light'>
+          <Dropdown.Item as={Button} variant='light'>
+            <Form.Control
+              type="text"
+              value={node_hspace}
+              onChange={evt => {
+                set_node_hspace(+evt.target.value)
+                data.h_space = +evt.target.value
+              }}
+            /></Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
 
       {/* Set vertical value for automatic positionning */}
-      <Dropdown.Item as={Button} variant='light'>
-        <Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-          <Dropdown.Toggle variant="light" id="dropdown-basic">
-            {t('MEP.Vertical')}
-          </Dropdown.Toggle>
-          <Dropdown.Menu variant='light'>
-            <Dropdown.Item as={Button} variant='light'>
-              <Form.Control
-                type="text"
-                value={node_vspace}
-                onChange={evt => {
-                  set_node_vspace(+evt.target.value)
-                  data.h_space = +evt.target.value
-                }}
-              /></Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-      </Dropdown.Item>
+      <Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+        <Dropdown.Toggle variant="light" id="dropdown-basic">
+          {t('MEP.Vertical')}
+        </Dropdown.Toggle>
+        <Dropdown.Menu variant='light'>
+          <Dropdown.Item as={Button} variant='light'>
+            <Form.Control
+              type="text"
+              value={node_vspace}
+              onChange={evt => {
+                set_node_vspace(+evt.target.value)
+                data.h_space = +evt.target.value
+              }}
+            /></Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
     
       <Dropdown.Item as={Button} variant='light' onClick={() => {
         compute_auto_sankey(data, node_hspace)
