@@ -26,19 +26,14 @@ export const OpenSankeyDrawNodes = (
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
-  set_agregation_node:React.Dispatch<React.SetStateAction<string>>,
-  set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,
-  set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,
+
   select_node:(n: SankeyNode) => void,
   alt_key_pressed:boolean,
-  position:'absolute' | 'relative',
   nodeTooltipsContent: (data: SankeyData, d: SankeyNode,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   link_text:(data: SankeyData, d: SankeyLink,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  min_width_and_height:(d:SankeyData)=>number[],
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  // multi_selected_label:{current:SankeyPlusLabel[]},
   set_displayed_input_link_value:(s:string)=>void,
   accept_simple_click:{current:boolean},
   set_contextualised_node:(n:SankeyNode)=>void,
@@ -48,7 +43,6 @@ export const OpenSankeyDrawNodes = (
   const display_nodes=data.nodes
   const display_links=data.links
   
-        
   // Function to draw nodes with a particular shape
   const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,SankeyNode,BaseType,unknown>,
     data:SankeyData,

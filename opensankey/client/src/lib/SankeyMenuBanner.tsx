@@ -26,29 +26,35 @@ export const addSimpleLevelDropDown = (
   set_data:(d:SankeyData)=>void
 ) => {
   const {levelTags} = data
-  if (Object.keys(levelTags['Primaire'].tags).length < 2) {
+  if(Object.keys(levelTags).includes('Primaire')){
+
+    if (Object.keys(levelTags['Primaire'].tags).length < 2) {
+      return <></>
+    }
+    const tmp = Object.entries(levelTags['Primaire'].tags).filter(tag=>tag[1].selected)
+    const selected = tmp.length > 0 ? tmp[0][0] : ''
+    return (
+      <>
+        <tr>
+          <td >
+            {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
+            
+              delete_local_aggregation(data)
+              handleSimpleDropdown(evt, levelTags['Primaire'], data, set_data) 
+          
+            }}>{
+                Object.entries(levelTags['Primaire'].tags).map(([tag_key, tag],i) => {
+                  return (<option key={i} value={tag_key}>{tag.name}</option>)
+                })}
+            </Form.Select>}
+          </td>
+        </tr>
+      </>)
+  // return (<><tr><th >{t('Banner.ndd_lst')}</th></tr>{allDD}</>)
+  }else{
     return <></>
   }
-  const tmp = Object.entries(levelTags['Primaire'].tags).filter(tag=>tag[1].selected)
-  const selected = tmp.length > 0 ? tmp[0][0] : ''
-  return (
-    <>
-      <tr>
-        <td >
-          {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
-            
-            delete_local_aggregation(data)
-            handleSimpleDropdown(evt, levelTags['Primaire'], data, set_data) 
-          
-          }}>{
-              Object.entries(levelTags['Primaire'].tags).map(([tag_key, tag],i) => {
-                return (<option key={i} value={tag_key}>{tag.name}</option>)
-              })}
-          </Form.Select>}
-        </td>
-      </tr>
-    </>)
-  // return (<><tr><th >{t('Banner.ndd_lst')}</th></tr>{allDD}</>)
+
 }
 
 export const addAllDropDownNode = (

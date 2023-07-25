@@ -413,11 +413,15 @@ export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:Sank
 )=>{
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
-  if(!multi_selected_nodes.current.includes(n)){
-    multi_selected_nodes.current.push(n)
+  if(multi_selected_nodes.current.includes(n)){
+    set_contextualised_node(n)
+  }else{
+    multi_selected_nodes.current.forEach(nn=>deselect_visualy_nodes(nn))
+    multi_selected_nodes.current=[]
     select_visualy_nodes(n)
+    multi_selected_nodes.current.push(n)
+    set_contextualised_node(n)
   }
-  set_contextualised_node(n)
 }
 
 export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:SankeyLink,set_contextualised_link:(l:SankeyLink)=>void,pointer_pos:{current:number[]},
@@ -431,9 +435,14 @@ export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:Sank
 )=>{
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
-  if(!multi_selected_links.current.includes(l)){
-    multi_selected_links.current.push(l)
+  if(multi_selected_links.current.includes(l)){
+    set_contextualised_link(l)
+  }else{
+    multi_selected_links.current.forEach(ll=>deselect_visualy_links(ll))
+    multi_selected_links.current=[]
     select_visualy_links(l)
+    multi_selected_links.current.push(l)
+    set_contextualised_link(l)
   }
   const link_data_ref=l.idLink
   let new_tags_selected=tags_selected
@@ -466,7 +475,6 @@ export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:Sank
 
 
   set_display_link_opacity(return_value_link(data,l,'opacity') as string)
-  set_contextualised_link(l)
   set_data({...data})
 }
 // export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,data:SankeyData,set_agregation_node:React.Dispatch<React.SetStateAction<string>>,set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,set_data:(d:SankeyData)=>void)=>{
