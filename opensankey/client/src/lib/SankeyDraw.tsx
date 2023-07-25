@@ -1,12 +1,13 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect,Requireable } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes} from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData} from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { setSelectedTags,  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
+import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,eventOnSankeyZone,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar} from './SankeyDrawFunction'
+import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar,svgDragMiddleMouseStart,svgDragMiddleMouseMove} from './SankeyDrawFunction'
 import LZString from 'lz-string'
+
 
 window.d3 = d3
 declare const window: Window &
@@ -19,14 +20,8 @@ const SankeyDrawPropTypes = {
   set_data: PropTypes.func.isRequired,
   animation:PropTypes.bool.isRequired,
 
-  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-
-
   mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
 
-  first_selected_node:PropTypes.object.isRequired,
-  set_first_selected_node:PropTypes.func.isRequired,
 
   show_agregation:PropTypes.bool.isRequired, set_show_agregation:PropTypes.func.isRequired,
   agregation_node:PropTypes.string.isRequired,
@@ -35,10 +30,9 @@ const SankeyDrawPropTypes = {
   set_alt_key_pressed:PropTypes.func.isRequired,
 
   min_width_and_height:PropTypes.func.isRequired,
-  getLinkValue:PropTypes.func.isRequired,
-  token:PropTypes.bool.isRequired,
-  set_show_toast_limit_node:PropTypes.func.isRequired
-
+  additional_draw_element:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  pointer_pos:PropTypes.shape({current:PropTypes.arrayOf(PropTypes.number.isRequired).isRequired}).isRequired,
+  set_show_context_zdd:PropTypes.func.isRequired
 
 }
 
@@ -46,13 +40,8 @@ export const SankeyDrawDefaultProps = {
   set_data: () => null,
   animation: false,
 
-  multi_selected_nodes: {current : []},
-  multi_selected_links: {current : []},
   multi_selected_label: {current : []},
   mode_selection: {current:'s'},
-
-  first_selected_node:{},
-  set_first_selected_node:()=>null,
 
   show_agregation:false, set_show_agregation:()=>false,
   agregation_node:'',
@@ -60,9 +49,10 @@ export const SankeyDrawDefaultProps = {
 
   set_alt_key_pressed:()=>false,
   min_width_and_height:()=>[],
-  getLinkValue:()=>[],
-  token:false,
-  set_show_toast_limit_node:()=>false
+  set_show_toast_limit_node:()=>false,
+  additional_draw_element:[],
+  pointer_pos:{current:[]},
+  set_show_context_zdd:()=>false
 
 }
 
@@ -72,14 +62,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
   set_data = SankeyDrawDefaultProps.set_data,
   animation,
-  multi_selected_nodes = SankeyDrawDefaultProps.multi_selected_nodes,
-  multi_selected_links = SankeyDrawDefaultProps.multi_selected_links,
-  mode_selection,first_selected_node,set_first_selected_node,
+  mode_selection,
   show_agregation, set_show_agregation,
   agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
-  getLinkValue,token,set_show_toast_limit_node
+  additional_draw_element,
+  pointer_pos,
+  set_show_context_zdd
 }) => {
 
   // const [first_selected_node,set_first_selected_node] = useState({})
@@ -92,9 +82,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     .append('div')
     .style('opacity', 0)
     .attr('class', 'sankey-tooltip')
-
-
-  setSelectedTags(data,getLinkValue,false)
 
 
   sankeyTooltip
@@ -116,7 +103,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   })
 
 
-  const position = data.static_sankey ? 'relative' : 'absolute'
+  const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
   //const node_font = data.display_style.node_font_family_selected
   // const link_font = data.display_style.link_font_family_selected
   // const test = document.getElementsByClassName('navbar')
@@ -191,7 +178,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       .on('dblclick.zoom', null)
 
 
-    const svgSankey = d3.select(' .opensankey #svg')
+    const svgSankey = d3.select('.opensankey #svg')
 
     svgSankey.attr('viewBox', null)
     svgSankey.style('width', data.width + 'px')
@@ -211,10 +198,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           d3.select(' .opensankey #svg')
             .attr('transform', evt.transform).attr('transform-origin', '0 0')
           svgSankey.attr('viewBox', null)
+          // Change the width of scrollable zone if the menu is open so we can scroll until the menu is not on the sankey zone
+          if(d3.select('.offcanvas-body').node()){
+            d3.select('.scroll_zone').style('width',((data.width+600)*evt.transform.k-(600*(evt.transform.k-1.1)))+'px')
+          }
+          //Compensate the scale of the legend when we dezoom so the legend has alway a readable size 
           const scale_legend=1/((evt.transform.k<1)?evt.transform.k:1)
           d3.select(' .opensankey #svg')
             .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
-          d3.select(' .opensankey #svg #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(scale_legend)+')')
+          d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(scale_legend)+')')
           d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)*scale_legend)))
 
           repositionne_sidebar()
@@ -234,93 +226,23 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         .on('start',()=>{
         // Cache les handles des liens
-          d3.selectAll(' .opensankey .gg_links rect.handle').attr('fill-opacity', '0')
-          d3.selectAll(' .opensankey .gg_links rect.handle').attr('cursor', 'pointer')
-          d3.selectAll(' .opensankey .gg_links .drag_zone').attr('cursor', 'pointer')
-          d3.selectAll(' .opensankey .gg_links .drag_zone').attr('stroke-opacity', '0')
-          d3.selectAll(' .opensankey .gg_links .center_handle').attr('stroke-opacity', '0')
-          d3.selectAll(' .opensankey .gg_links .center_handle').attr('fill-opacity', '0')
+          svgDragMiddleMouseStart()
         })
         .on('drag', function (event) {
-          d3.selectAll('.ggg_nodes').filter(n=>(n as SankeyNode).position!=='relative').attr('transform',(d)=>{
-            const n=d as SankeyNode
-            n.x+=event.dx
-            n.y+=event.dy
-            return 'translate('+n.x+','+n.y+')'
-          })
-          d3.selectAll('.link').attr('d',(d)=>{
-            const l=d as SankeyLink
-            // Get the path of each displayed link
-            const path=d3.select('#'+l.idLink).attr('d').split(' ')
-
-            // Each path is splitted into small part of the path then depending on the small part :
-            //  - If it's a letter then do nothing
-            //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
-            //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
-            //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
-            //
-            // Then once the subpart of the path are modified, we join the array to reform the path
-            const new_path=path.map((p,i)=>{
-            // Case when it's a [x,y] coordinates
-              if(p.includes(',')){
-                const pos=p.split(',')
-                const newPosX=Number(pos[0])+event.dx
-                const newPosY=Number(pos[1])+event.dy
-                p=''+newPosX+','+newPosY
-              }
-              // Case when it's a number alone so we search the previous element to know wich shift
-              if(Number(p)){
-                if(path[i-1]=='H'){
-                  p=Number(p)+event.x
-                }else if(path[i-1]=='V'){
-                  p=Number(p)+event.y
-                }
-              }
-              return p
-            })
-            return new_path.join(' ')
-          })
-          d3.selectAll('.arrow').attr('d',(d)=>{
-            const l=d as SankeyLink
-            // Get the path of each displayed link
-            const path=d3.select('#'+l.idLink+'_arrow').attr('d').split(' ')
-
-            // Each path is splitted into small part of the path then depending on the small part :
-            //  - If it's a letter then do nothing
-            //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
-            //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
-            //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
-            //
-            // Then once the subpart of the path are modified, we join the array to reform the path
-            const new_path=path.map((p,i)=>{
-            // Case when it's a [x,y] coordinates
-              if(p.includes(',')){
-                const pos=p.split(',')
-                const newPosX=Number(pos[0])+event.dx
-                const newPosY=Number(pos[1])+event.dy
-                p=''+newPosX+','+newPosY
-              }
-              // Case when it's a number alone so we search the previous element to know wich shift
-              if(Number(p)){
-                if(path[i-1]=='H'){
-                  p=Number(p)+event.x
-                }else if(path[i-1]=='V'){
-                  p=Number(p)+event.y
-                }
-              }
-              return p
-            })
-            return new_path.join(' ')
-          })
-
+          svgDragMiddleMouseMove(event,data)
         })
         .on('end',()=>{
           set_data({...data})
         })
 
       )
-    //Ajout des events sur les l'ajout des noeuds aux click
-    eventOnSankeyZone(svgSankey,mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,token,set_show_toast_limit_node)
+    svgSankey.on('contextmenu',(evt)=>{
+      evt.preventDefault()
+      pointer_pos.current=[evt.pageX,evt.pageY]
+      if(d3.select(evt.target).attr('class')=='mode_selection'){
+        set_show_context_zdd(true)
+      }
+    })
 
     drawGrid(data)
 
@@ -332,6 +254,19 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
+    d3.select('.div-Menu').on('mouseup',()=>{
+      if(mode_selection.current=='ln'){
+        mode_selection.current='s'
+        set_data({...data})
+      }
+    })
+    d3.select('.sankey-menu').on('click',e=>{
+      if(mode_selection.current=='ln' && d3.select(e.target).attr('class')!=='accordion-item'){
+        mode_selection.current='s'
+        set_data({...data})
+      }
+    })
+    // d3.select('body')
 
 
     // try {
@@ -348,62 +283,26 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   })
   let border = '0px'
-  if (!data.static_sankey) {
+  if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     border = '2px solid #d3d3d3'
   }
 
-  // // Call the function that add nodes to the sankey
-  // const draw_nodes=OpenSankeyDrawNodes(data,set_data,
-  //   nodes_accordion_ref,links_accordion_ref,
-  //   multi_selected_nodes,multi_selected_links,
-  //   mode_selection,
-  //   first_selected_node,set_first_selected_node,
-  //   accordion_ref,button_ref,
-  //   set_agregation_node,set_is_agregation,set_show_agregation,
-  //   select_node,
-
-  //   alt_key_pressed,
-  //   data.static_sankey,
-  //   position,removeAnimate)
-
-  // // Call the function that add links to the sankey
-  // const draw_links=OpenSankeyDrawLinks(
-  //   data,links_accordion_ref,
-  //   multi_selected_links,
-  //   mode_selection,
-  //   accordion_ref,
-  //   button_ref,
-  //   select_link,
-  //   alt_key_pressed,
-  //   data.static_sankey,position,node_arrow_visible
-  // )
 
   const width_to_display=((data.width) ? data.width : window.innerWidth*0.975)
   return (
     <>
-      <div className="span12" style={{ 'color': 'black', 'marginLeft': '10px', 'display': 'inline' }} id='visualization_div' >
+      <div className="span12" style={{ 'color': 'black','display': 'inline' }} id='visualization_div' >
+        {additional_draw_element}
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
-          <svg id='svg' transform-origin='0 0' style={{ 'margin': '20px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet" onClick={(ev) => {
-            if ((!ev.ctrlKey && !ev.metaKey) && !ev.shiftKey && mode_selection.current=='s') {
-              removeAnimate()
-              multi_selected_nodes.current = []
-              multi_selected_links.current = []
-              // multi_selected_label.current = []
-              Object.values(data.nodes).filter(n=>n.node_visible).forEach(n=>d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0))
-              const visible_links = Object.values(data.links)
-              visible_links.forEach(l=> {
-                const sel = d3.selectAll(' .opensankey #gg_' + l.idLink+ ' rect')
-                sel.attr('fill-opacity', '0')
-              })
-              set_data({...data})
-
-            }
-          }}>
-            <g className='grid' id='grid'></g>
-            <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
-            <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
-            <g className='g_legend' id='g_legend'></g>
-          </svg>
+          <div className='scroll_zone' >
+            <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
+              <g className='grid' id='grid'></g>
+              <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
+              <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
+              <g className='g_link_handles' id='g_link_handles'></g>
+              <g className='g_legend' id='g_legend'></g>
+            </svg>
+          </div>
         </div>
       </div>
       { agregation_node !== '' && data.nodes[agregation_node] ?
@@ -427,11 +326,18 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // Delete key allow us to delete selected elments (nodes,links, free label)
 export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   set_show_nav:React.Dispatch<React.SetStateAction<boolean>>,
-  mode_selection:{current : string}
+  mode_selection:{current : string},
+  set_show_menu_node_apparence:(b:boolean)=>void,
+  set_show_menu_node_label:(b:boolean)=>void,
+  set_show_menu_node_io:(b:boolean)=>void,
+  set_show_menu_link_data:(b:boolean)=>void,
+  set_show_menu_link_appearence:(b:boolean)=>void,
+  set_show_menu_link_label:(b:boolean)=>void,
+
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
@@ -487,7 +393,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
         d.x = d.x - data.grid_square_size
 
         //Diminue largeur svg si le noeud est près du bord
-        if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
+        if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 50) {
           data.width -= 50
         }
       })
@@ -527,6 +433,12 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     multi_selected_links.current=[]
 
     set_show_nav(false)
+    set_show_menu_node_apparence(false)
+    set_show_menu_node_label(false)
+    set_show_menu_node_io(false)
+    set_show_menu_link_data(false)
+    set_show_menu_link_appearence(false)
+    set_show_menu_link_label(false)
     // set_mode_selection('s')
     // if ( button_ref && button_ref.current && accordion_ref ) {
     //   button_ref.current.click()

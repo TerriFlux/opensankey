@@ -3,7 +3,7 @@ import { Row, Col, Form, FormLabel, Button,  FormGroup, OverlayTrigger, Tooltip,
 import {  SankeyData, TagsGroup} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { convert_data } from './SankeyConvert'
-import { findMaxLinkValue, set_nodes_level,adjust_sankey_zone } from './SankeyUtils'
+import { findMaxLinkValue,adjust_sankey_zone } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -11,30 +11,50 @@ import { faShareNodes, faArrowPointer,faFilter,faCodeBranch,faFolderTree, faDiag
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
+// Delete all local node variable : local_aggregation when we switch general aggregation 
+const delete_local_aggregation=(data:SankeyData)=>{
+  Object.values(data.nodes).filter(n=>n.local!==undefined).forEach(n=>{
+    if(n.local){
+      delete n.local.local_aggregation
+    }
+  })
+}
+
 export const addSimpleLevelDropDown = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void
 ) => {
-  const {nodeTags} = data
-  if (Object.keys(nodeTags['Primaire'].tags).length < 2) {
+  const {levelTags} = data
+  if(Object.keys(levelTags).includes('Primaire')){
+
+    if (Object.keys(levelTags['Primaire'].tags).length < 2) {
+      return <></>
+    }
+    const tmp = Object.entries(levelTags['Primaire'].tags).filter(tag=>tag[1].selected)
+    const selected = tmp.length > 0 ? tmp[0][0] : ''
+    return (
+      <>
+        <tr>
+          <td >
+            {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
+            
+              delete_local_aggregation(data)
+              handleSimpleDropdown(evt, levelTags['Primaire'], data, set_data) 
+          
+            }}>{
+                Object.entries(levelTags['Primaire'].tags).map(([tag_key, tag],i) => {
+                  return (<option key={i} value={tag_key}>{tag.name}</option>)
+                })}
+            </Form.Select>}
+          </td>
+        </tr>
+      </>)
+  // return (<><tr><th >{t('Banner.ndd_lst')}</th></tr>{allDD}</>)
+  }else{
     return <></>
   }
-  const tmp = Object.entries(nodeTags['Primaire'].tags).filter(tag=>tag[1].selected)
-  const selected = tmp.length > 0 ? tmp[0][0] : ''
-  return (
-    <>
-      <tr>
-        <td >
-          {<Form.Select style={{ width: '200px', color: 'black' }} key={nodeTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { handleSimpleDropdown(evt, nodeTags['Primaire'], data, set_data) }}>{
-            Object.entries(nodeTags['Primaire'].tags).map(([tag_key, tag],i) => {
-              return (<option key={i} value={tag_key}>{tag.name}</option>)
-            })}
-          </Form.Select>}
-        </td>
-      </tr>
-    </>)
-  // return (<><tr><th >{t('Banner.ndd_lst')}</th></tr>{allDD}</>)
+
 }
 
 export const addAllDropDownNode = (
@@ -44,14 +64,14 @@ export const addAllDropDownNode = (
   level:boolean
 ) => {
   const color = 'black'
-  const {nodeTags} = data
-  let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none' && tags_group.banner !== 'level')
+  const {nodeTags,levelTags} = data
+  let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
   if (level) {
-    const nb_level_tag = Object.values(nodeTags).filter(tags_group=>tags_group.banner === 'level' && (Object.keys(tags_group.tags).length > 0 )).length
+    const nb_level_tag = Object.values(levelTags).filter(tags_group=>(Object.keys(tags_group.tags).length > 0 )).length
     if (nb_level_tag > 1) {
-      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
+      banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
     } else {
-      banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner === 'level' && Object.keys(tags_group.tags).length > 1)
+      banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => Object.keys(tags_group.tags).length > 1)
     }
   }
   const allDD = banner_grouptag.map(([, tags_group]) => {
@@ -153,7 +173,10 @@ export const addAllDropDownNode = (
                   value={selected}
                   placeholder='all'
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
+                    delete_local_aggregation(data)
+                    handleSimpleDropdown(evt, tags_group, data, set_data) 
+                    
+                  }}>{
                     Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
                       return (<option key={i} value={tag_key}>{tag.name}</option>)
                     })}
@@ -173,7 +196,6 @@ export const addAllDropDownNode = (
                     onChange={evt => {
                       tags_group.activated = evt.target.checked
                       tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
-                      set_nodes_level(data)
                       set_data({ ...data })
                     }}
                   />
@@ -285,9 +307,6 @@ export const addAllDropDownNode = (
 const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const val = evt.target.value
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
-  if (tags_group.banner === 'level' ) {
-    set_nodes_level(data)
-  }
   set_data({ ...data })
 }
 
@@ -341,16 +360,11 @@ export const setDiagram = (
   ) as SankeyData
   //Object.assign(sankey_data, new_data)
   convert_data(new_data)
-  new_data.static_sankey = true
   // if (!is_split) {
   //   set_diagram(the_diagram)
   // }
 
-  Object.values(data.nodes).forEach(node => {
-    node.node_visible = true
-    node.display = true
-  })
-  set_nodes_level(data)
+
   // new_data.fit_screen = true
   d3.select(' .opensankey #svg').on('.zoom', null)
   set_data({ ...new_data })
@@ -371,9 +385,10 @@ export const toolbar_builder = (
   set_first_selected_node:(o:object)=>void,
   min_width_and_height:(d:SankeyData)=>number[],
   setDiagram : (the_diagram : string,data : SankeyData,set_data : (d:SankeyData)=>void)=>void,
-  set_show_modal_welcome:(b:boolean)=>void
+  set_show_modal_welcome:(b:boolean)=>void,
+  set_never_see_again:(b:boolean)=>void
 ) => {
-  const level_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner === 'level').length > 0
+  const level_filter = Object.entries(data.levelTags).length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
   const target_link_threshold=useRef(null)
   const [show_detail_level,set_show_detail_level]=useState(false)
@@ -425,7 +440,6 @@ export const toolbar_builder = (
   const [diagram2, set_diagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
 
-  const diagram_label = 'Diagrammes'
 
 
   let max_link_value = 0
@@ -555,9 +569,6 @@ export const toolbar_builder = (
   let diagrams_element = <React.Fragment key={'1'}></React.Fragment>
   if (window.SankeyToolsStatic && sous_filieres && !is_split) {
     diagrams_element =
-    <Popover id='popover-diagram' style={{maxWidth:'100%'}}>
-      <Popover.Header as="h3">{diagram_label}</Popover.Header>
-      <Popover.Body>
         <Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
           <Form.Select style={{ width: '200px', color:'black' }}
             onChange={evt=> {
@@ -568,13 +579,11 @@ export const toolbar_builder = (
             {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
           </Form.Select>
         </Form.Group>
-      </Popover.Body>
-    </Popover>
   }
   if (window.SankeyToolsStatic && sous_filieres && is_split) {
     diagrams_element =
       <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
-        <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel>
+        {/* <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel> */}
         <Form.Select style={{ width: '200px', color:'black' }}
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             set_diagram(evt.target.value)
@@ -630,19 +639,8 @@ export const toolbar_builder = (
 
   const ui :{[s:string]:JSX.Element}= {}
   if ((Object.keys(diagrams).length > 0)) {
-    ui['diagramme']=(
-      <Col>
-        <OverlayTrigger
-          key={'tooltip-diagrams'}
-          placement={'left'}
-          trigger={'click'}
-          rootClose
-          overlay={diagrams_element}>
-          <Button variant='dark' id='button-diagrams' >
-            {'Diagramme: ' + diagram}
-          </Button>
-        </OverlayTrigger>
-      </Col>)}
+    ui['diagramme']=diagrams_element
+  }
   if (window.sankey && window.sankey.excel) {
     ui['excel']=(excel_element)
   }
@@ -660,7 +658,6 @@ export const toolbar_builder = (
         overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
         <Button  variant={(!(mode_selection.current == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
           <Col><FontAwesomeIcon icon={faArrowPointer} /></Col>
-          {/* <Col className='textIcon'>Select.</Col> */}
         </Button>
       </OverlayTrigger>
       <OverlayTrigger
@@ -738,26 +735,7 @@ export const toolbar_builder = (
       </Overlay>
 
 
-      <OverlayTrigger
-        key={'tooltip-adjust-h'}
-        placement={'left'}
-        delay={500}
-        overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-        <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
-          <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
-          {/* <Col className='textIcon'>{t('Menu.ajustH')}</Col> */}
-        </Button>
-      </OverlayTrigger>
-      <OverlayTrigger
-        key={'tooltip-adjust-v'}
-        placement={'left'}
-        delay={500}
-        overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-        <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
-          <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
-          {/* <Col className='textIcon'>{t('Menu.ajustV')}</Col> */}
-        </Button>
-      </OverlayTrigger>
+      {stretchButtons(data,min_width_and_height,t)}
 
       { url_prefix !== '' ?
         <OverlayTrigger
@@ -794,7 +772,7 @@ export const toolbar_builder = (
         overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
         }
       >
-        <Button variant='info' onClick={() => { set_show_modal_welcome(true) }} >
+        <Button variant='info' onClick={() => { set_never_see_again(false);localStorage.removeItem('dontSeeAggainWelcome'),set_show_modal_welcome(true) }} >
           <Col> ? </Col>
         </Button>
       </OverlayTrigger> : <></>}
@@ -805,3 +783,25 @@ export const toolbar_builder = (
 }
 
 
+export const stretchButtons=(data:SankeyData,min_width_and_height:(d:SankeyData)=>number[],t:TFunction)=>{
+  return <> <OverlayTrigger
+    key={'tooltip-adjust-h'}
+    placement={'left'}
+    delay={500}
+    overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+    <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
+      <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
+      {/* <Col className='textIcon'>{t('Menu.ajustH')}</Col> */}
+    </Button>
+  </OverlayTrigger>
+  <OverlayTrigger
+    key={'tooltip-adjust-v'}
+    placement={'left'}
+    delay={500}
+    overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+    <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
+      <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
+      {/* <Col className='textIcon'>{t('Menu.ajustV')}</Col> */}
+    </Button>
+  </OverlayTrigger></>
+}

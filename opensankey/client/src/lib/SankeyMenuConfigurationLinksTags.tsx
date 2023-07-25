@@ -7,7 +7,7 @@ import { TFunction } from 'i18next'
 export const SankeyMenuConfigurationLinksTags = (
   data:SankeyData,
   multi_selected_links:{current:SankeyLink[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   tags_group_key:string,
   set_tags_group_key:React.Dispatch<React.SetStateAction<string>>,
   tags_selected:{[k: string]: string},

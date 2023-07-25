@@ -2,8 +2,7 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, FormGroup } from 'react-bootstrap'
-import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
-import { updateLayout } from './SankeyLayout'
+import { SankeyDataPropTypes, SankeyLink, } from './types'
 import { complete_sankey_data, convert_data } from './SankeyConvert'
 import { default_link, default_node, default_sankey_data,clickSaveDiagram } from './SankeyUtils'
 
@@ -17,7 +16,8 @@ const ApplyLayoutDialogPropTypes = {
   show_apply_layout : PropTypes.bool.isRequired,
   set_show_apply_layout: PropTypes.func.isRequired,
   sankey_data : SankeyDataPropTypes,
-  set_sankey_data : PropTypes.func.isRequired
+  set_sankey_data : PropTypes.func.isRequired,
+  updateLayout:PropTypes.func.isRequired,
 }
 
 /**
@@ -31,7 +31,7 @@ type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
  * @param {ApplyLayoutDialogTypes} { show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
-export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }: ApplyLayoutDialogTypes) => {
+export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data,updateLayout }: ApplyLayoutDialogTypes) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   const [elementToDispose, ] = useState([''])
   const [forceUpdate,setForceUpdate] = useState(true)
@@ -262,7 +262,6 @@ type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
  */
 export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelImpl, handleCloseDialog, set_data, data,show_excel_dialog, set_show_excel_dialog,url_prefix,callback,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
-  const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
 
   return (
     <Modal
@@ -283,17 +282,6 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelIm
               }}
             />
           </Form.Group>
-          <Form.Group as={Row}>
-            <Form.Label>Diagramme de mise en page</Form.Label>
-            <Form.Control
-              type="file"
-              //ref={layout_file_}
-              name=""
-              onChange={(evt: ChangeEvent) => {
-                set_layout_file((evt.target as HTMLFormElement).files[0])
-              }}
-            />
-          </Form.Group>
         </Form>
       </Modal.Body>
       <Modal.Footer>
@@ -301,42 +289,8 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelIm
           variant="secondary"
           onClick={
             () => {
-              if (layout_file !== undefined) {
-                const reader = new FileReader()
-                reader.onload = (() => {
-                  return (
-                    (e: ProgressEvent<FileReader>) => {
-                      let result = (e.target as FileReader).result
-                      if (result) {
-                        result = String(result)//.split('<br>').join('\\\\n')
-                        const layout : SankeyData = JSON.parse(result);
-                        (data as SankeyData & { layout?: SankeyData }).layout = layout
-                        launch('')
-                        uploadExcelImpl(
-                          data,
-                          set_data,
-                          set_show_excel_dialog,
-                          input_file_name,
-                          url_prefix,
-                          callback
-                        )
-                      }
-                    }
-                  )
-                })()
-                reader.readAsText(layout_file)
-              } else {
-                launch('')
-                uploadExcelImpl(
-                  data,
-                  set_data,
-                  set_show_excel_dialog,
-                  input_file_name,
-                  url_prefix,
-                  callback
-                )
-              }
-
+              launch('')
+              uploadExcelImpl(data,set_data,set_show_excel_dialog,input_file_name,url_prefix,callback)
             }
           }
         >Ouvrir</Button>

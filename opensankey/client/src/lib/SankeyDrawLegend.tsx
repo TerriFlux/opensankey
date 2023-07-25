@@ -1,20 +1,42 @@
-import { SankeyData,SankeyLinkValue } from './types'
+import { SankeyData,SankeyLinkValue, SankeyNode } from './types'
 import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
-import { link_visible} from './SankeyUtils'
+import { link_visible,node_displayed} from './SankeyUtils'
 import { TFunction } from 'i18next'
+import { opposing_drag_elements } from './SankeyDrag'
+
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+  sankey: {
+    sankey_data_file:RequestInfo
+    sous_filieres : { [ key : string ] : string }
+    units: string[]
+    flask_logo? : string
+    flask_header? : string
+    logo_width? : number
+    legend_average : string
+    legend_uncert : string
+    help_text : string
+    welcome_text: string
+    excel : string
+    logo: string,
+    advanced: boolean
+  }
+}
 
 export const OpenSankeyDrawLegend = (
-  data:SankeyData, 
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   t:TFunction
 ) => {
   // Function that add legend of tags
   // In the legend it draw the legend (color of the tag and it name) that are visually reprensented on the graph
   const drawLegend = () => {
-    // Dans le menu tags, les éléments affichés dans la légende sont :
+  // Dans le menu tags, les éléments affichés dans la légende sont :
     // les tagGroup pour lesquelles Legend est à true 
     // le selected du tags à true
     // dx permet de faire en décalage vers la gauche lorsque l'on change de groupTags
@@ -25,15 +47,34 @@ export const OpenSankeyDrawLegend = (
       // prevent crash at the line .bounds({ height: 100, width: pas - 40 }) below
       return
     }
-
     d3.select(' .opensankey #g_legend').selectAll('*').remove()
+
+    // Draw the draggable zone at first so it doesn't overlaps over legend element that are interactive 
+    d3.select('.opensankey #g_legend').append('rect')
+      .attr('class','drag_zone_leg')
+      .attr('width',data.legend_width)
+      .attr('height','5px')
+      .attr('stroke','none')
+      .attr('stroke-dasharray','6,6')
+      .attr('fill','grey')
+      .attr('fill-opacity','0')
+      .on('mouseover',()=>{
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke','grey')
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('fill-opacity','0.05')
+      })
+      .on('mouseleave',()=>{
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke','none')
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('fill-opacity','0')
+      })
+
+
     let scale_for_legend=1
     if(d3.select('.opensankey #svg').nodes().length>0){
       const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
       const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
       scale_for_legend=(scale_svg<1?(1/scale_svg):1)
     }
-    const legend = d3.select(' .opensankey #g_legend').style('transform', 'translate(' + (data.legend_position[0]) + 'px,' + data.legend_position[1] + 'px) scale('+(scale_for_legend)+')').append('g')
+    const legend = d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(scale_for_legend)+')').append('g')
 
     const wrap = textwrap()
       .bounds({ height: 100, width: pas - 40 })
@@ -66,7 +107,7 @@ export const OpenSankeyDrawLegend = (
               return t>0
             }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
               const t2=Object.values(data.nodes).filter(n=>{
-                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && (n.node_visible ) && n.display && n.position !== 'relative'
+                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && node_displayed(data,n) && n.position !== 'relative'
               }).length
               return t2>0
             }else if(data.colorMap && data.colorMap.includes('dataTags_')){
@@ -260,6 +301,34 @@ export const OpenSankeyDrawLegend = (
       .subject(Object).on('drag', function (event) {
         d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
       }))
+
+    
+    let h=document.getElementById('g_legend')?.getBoundingClientRect().height
+    h=h?h:50
+    d3.select('#g_legend .drag_zone_leg').attr('height',h)
+  
+    const drag_legend=()=>d3.drag<SVGGElement, unknown>()
+      .subject(Object).on('drag', function (event) {
+
+        if(d3.select('.opensankey #svg').nodes().length>0){
+          const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+          const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+          scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+          data.legend_position[0]+=(event.dx)
+          data.legend_position[1]+=(event.dy)
+          data.legend_position[0]=(data.legend_position[0]>=0?data.legend_position[0]:0)
+          data.legend_position[1]=(data.legend_position[1]>=0?data.legend_position[1]:0)
+          d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
+          if(data.legend_position[0]==0 ||data.legend_position[1]==0){
+            opposing_drag_elements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
+          }
+        }
+      }).on('end',()=>set_data({...data}))
+
+    const g_legend=d3.select(' .opensankey #g_legend') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
+    if(!window.SankeyToolsStatic){
+      g_legend.call(drag_legend())
+    }
 
   }
 

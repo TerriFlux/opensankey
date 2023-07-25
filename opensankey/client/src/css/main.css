@@ -60,7 +60,9 @@
 
 
 /* BASIC CONFIGURATION */
-body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:14px;letter-spacing:0px;color:#555555;}
+body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:14px;letter-spacing:0px;color:#555555;
+
+}
 
 .mode_selection {
 	cursor : auto;
@@ -1128,7 +1130,7 @@ textarea {
  	position:fixed;
 	z-index:100;
 }
-.sideBar .btn .col{ 
+.sideBar .btn .col,.fullscreen_toolbar .btn .col { 
 	margin: 0px;
 	padding: 0px;
 	width: 35px;
@@ -1142,4 +1144,16 @@ textarea {
 .sideBar .openMenu svg{
 	margin-top: 25px;
 	margin-bottom: 25px;
+}
+
+#context_node_pop_over .popover-arrow,#context_link_pop_over .popover-arrow,#context_zdd_pop_over .popover-arrow{
+	top:10px;
+}
+/* #context_node_pop_over .popover-arrow:after,#context_link_pop_over .popover-arrow:after{
+	border-right-color:#343a40
+} */
+#context_node_pop_over .btn,#context_link_pop_over .btn,#context_zdd_pop_over .btn{
+	background-color: #fff;
+	border: none;
+	text-align: left;
 }

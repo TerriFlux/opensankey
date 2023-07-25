@@ -5,7 +5,7 @@ import { TFunction } from 'i18next'
 
 export const SankeyMenuConfigurationLinksTooltip = (
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   selected_link:{current:SankeyLink},
   t:TFunction
 )=>{
