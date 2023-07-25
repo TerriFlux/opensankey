@@ -390,10 +390,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       mode_selection,
       first_selected_node,set_first_selected_node,
       accordion_ref,button_ref,
-      set_agregation_node,set_is_agregation,set_show_agregation,
       select_node,
       alt_key_pressed,
-      position,nodeTooltipsContent,SankeyUtils.link_text,min_width_and_height,SankeyUtils.getLinkValue,
+      nodeTooltipsContent,SankeyUtils.link_text,SankeyUtils.getLinkValue,
       // multi_selected_label,
       set_displayed_input_link_value,accept_simple_click,set_contextualised_node,pointer_pos)
 
