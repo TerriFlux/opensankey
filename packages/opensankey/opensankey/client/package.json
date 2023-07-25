@@ -53,7 +53,7 @@
     "cpr": "^3.0.1",
     "cross-conf-env": "^1.2.1",
     "cross-env": "^7.0.3",
-    "d3": "^6.7.0",
+    "d3": "^7.8.5",
     "d3-textwrap": "^3.0.0",
     "deep-diff": "^1.0.2",
     "extract-zip": "^2.0.1",
@@ -74,7 +74,7 @@
     "react-i18next": "^12.0.0",
     "react-icons": "^4.3.1",
     "react-multi-select-component": "^4.2.3",
-    "react-scripts": "^5.0.0",
+    "react-scripts": "^5.0.1",
     "react-test-renderer": "^17.0.2",
     "shx": "^0.3.4",
     "ts-jest": "^27.1.2",
@@ -84,6 +84,7 @@
     "zip-lib": "^0.7.2"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/file-saver": "^2.0.3",
     "@types/node": "^18.7.14",
     "@types/react-dom": "^17.0.13",
