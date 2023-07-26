@@ -2051,22 +2051,23 @@ const handles_positions = (
       assign_link_local_attribute(link,'vert_shift',0)
 
     }
-
+    const thick=linkStrokeWidth(link,data,scale,inv_scale,min_thickness,data.nodes,getLinkValue)
+    const thickness=(thick === '1px')?1:thick
     if (xt < xs) {
-      const x_left = xt - default_horiz_shift + l_h_s // x14
-      const x_right = xs + default_horiz_shift + r_h_s  // x2
+      const x_left = xt - default_horiz_shift + l_h_s - (thickness) // x14
+      const x_right = xs + default_horiz_shift + r_h_s  + (thickness) // x2
       const y_vert = Math.max(ys, yt) + scale(2 * tmp) + v_s // y8
       const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
-      const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
-      const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
+      const left = 'translate(' + (x_left - (default_handle_size / 2) ) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
+      const right = 'translate(' + (x_right + (default_handle_size / 2) ) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
       return [vert, left, right]
     } else {
-      const x_right = xt + default_horiz_shift + r_h_s  // x14
-      const x_left = xs - default_horiz_shift + l_h_s // x2
+      const x_right = xt + default_horiz_shift + r_h_s  + (thickness)// x14
+      const x_left = xs - default_horiz_shift + l_h_s - (thickness) // x2
       const y_vert = Math.max(ys, yt) + scale(2 * tmp) + v_s // y8
       const vert = 'translate(' + (x_left + (x_right - x_left) / 2 - default_handle_size / 2) + ', ' + (y_vert - default_handle_size / 2) + ')'
-      const left = 'translate(' + (x_left - default_handle_size / 2) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
-      const right = 'translate(' + (x_right - default_handle_size / 2) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
+      const left = 'translate(' + (x_left ) + ' ,' + (ys + (y_vert - ys) / 2 - default_handle_size / 2) + ')'
+      const right = 'translate(' + (x_right ) + ' ,' + (yt + (y_vert - yt) / 2 - default_handle_size / 2) + ')'
       return [vert, left, right]
     }
   } else if (ori === 'vv' && recy) {
