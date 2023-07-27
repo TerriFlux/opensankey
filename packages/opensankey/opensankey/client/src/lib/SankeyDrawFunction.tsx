@@ -993,22 +993,25 @@ export const eventOnSankeyZoneMouseUp=(
   const evt_recast=((evt as unknown) as {target:string}).target
 
   if(mode_selection.current=='s' && d3.selectAll('.selection_zone').nodes().length>0){
+    node_visible_on_svg().forEach(k=>deselect_visualy_nodes(data.nodes[k]))
+
     const z_x=Number(d3.select('.selection_zone rect').attr('x'))
     const z_y=Number(d3.select('.selection_zone rect').attr('y'))
     const z_w=Number(d3.select('.selection_zone rect').attr('width'))
     const z_h=Number(d3.select('.selection_zone rect').attr('height'))
+    const node_visible=node_visible_on_svg()
     if(evt.shiftKey){
-      Object.values(data.nodes).filter(n=>!multi_selected_nodes.current.includes(n) && node_displayed(data,n) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h)).forEach(n=>multi_selected_nodes.current.push(n))
+      Object.values(data.nodes).filter(n=>!multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h)).forEach(n=>multi_selected_nodes.current.push(n))
     }else{
-      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
+      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
     }
-    
+    multi_selected_nodes.current.forEach(n=>select_visualy_nodes(n))
+    multi_selected_links.current.forEach(l=>deselect_visualy_links(l))
     multi_selected_links.current=[]
-    // set_start_point([0,0])
     start_point.current=[0,0]
-
+    
     d3.selectAll('.selection_zone').remove()
-    set_data({...data})
+    set_data(data)
   }
   // si le token de connexion est à false alors ne crée pas de second noeud
   //si le mode de souris est noeud+flux alors crée un second noeud au relachement
@@ -2216,7 +2219,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
   let total = 0
-
+  const node_visible=node_visible_on_svg()
   if (return_value_node(data,d,'show_value')) {
     if (d.outputLinksId.length > 0) {
       for (let i = 0; i < d.outputLinksId.length; i++) {
@@ -2227,7 +2230,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
         }
         let tmp=getLinkValue(data, link.idLink).value
         tmp=(tmp)?tmp:0
-        if (node_displayed(data,display_nodes[link.idSource]) && node_displayed(data,display_nodes[link.idTarget]) ) {
+        if (node_visible.includes(link.idSource) && node_visible.includes(link.idTarget) ) {
           total += tmp
         }
       }
@@ -2242,7 +2245,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
           }
           let tmp=getLinkValue(data, link.idLink).value
           tmp=(tmp)?tmp:0
-          if (node_displayed(data,display_nodes[link.idSource]) && node_displayed(data,display_nodes[link.idTarget]) ) {
+          if (node_visible.includes(link.idSource) && node_visible.includes(link.idTarget) ) {
             total += tmp
           }
         }
@@ -2580,3 +2583,6 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
   d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
   
 }
+export const node_visible_on_svg=()=>d3.selectAll('.node_shape').nodes().map(element => {
+  return d3.select(element).attr('id')
+})

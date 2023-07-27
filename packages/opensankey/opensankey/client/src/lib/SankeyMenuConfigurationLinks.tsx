@@ -3,7 +3,7 @@ import { Row, Form, Col, FormLabel, Tabs,  Button, ButtonGroup, Dropdown, FormGr
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import { cut_name, default_link, delete_link,node_displayed,return_value_link,assign_link_value_to_correct_var,return_correct_link_attribute_value } from './SankeyUtils'
+import { cut_name, default_link, delete_link,return_value_link,assign_link_value_to_correct_var,return_correct_link_attribute_value } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH, FaMinus, FaPlus } from 'react-icons/fa'
@@ -12,7 +12,7 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import {SankeyMenuConfigurationLinksLabel} from './SankeyMenuConfigurationLinksLabel'
 import {SankeyMenuConfigurationLinksTags} from './SankeyMenuConfigurationLinksTags'
 import {SankeyMenuConfigurationLinksTooltip} from './SankeyMenuConfigurationLinksTooltip'
-import {value_selected_parameter} from './SankeyDrawFunction'
+import {value_selected_parameter,node_visible_on_svg} from './SankeyDrawFunction'
 
 import { TFunction } from 'i18next'
 
@@ -70,6 +70,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const [, set_style_to_apply_to_link] = useState('default')
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
   const set_show_link = useState(true)[1]
+  const node_visible=node_visible_on_svg()
 
   if ((tags_group_key == '' && Object.keys(fluxTags).length > 0) || (!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length > 0)) {
     set_tags_group_key(Object.keys(fluxTags)[0])
@@ -96,7 +97,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_tags_selected(dataTagsSelected)
   }
 
-  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
+  const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_visible.includes(l.idSource) && node_visible.includes(l.idTarget) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
   const selected_links = multi_selected_links.current.map((d) => {
     if (data.nodes[d.idSource] == undefined || data.nodes[d.idTarget] == undefined) {
       return
