@@ -3,8 +3,7 @@ import { Button, Row, FormControl, Form, Col, FormLabel, FormCheck, OverlayTrigg
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { SankeyData } from './types'
 import { TFunction } from 'i18next'
-import { node_displayed } from './SankeyUtils'
-
+import { node_visible_on_svg } from './SankeyDrawFunction'
 export const OpenSankeyMenuConfigurationLayout = (
   t:TFunction,
   data: SankeyData,
@@ -21,20 +20,20 @@ export const OpenSankeyMenuConfigurationLayout = (
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
 
-
+  const node_visible=node_visible_on_svg()
 
   const applyStretch=(param:string)=>{
     const attr=param=='h'?'x':'y'
     const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
     let min=Object.values(data.nodes)[0][attr]
     // Cheche la position en y du noeud le plus en haut à gauche
-    Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.position!='relative').forEach(n=>{
+    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
       min=(n[attr]<min)?n[attr]:min
     })
 
     // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
     // applique le delta mutiplié par le facteur au noeud
-    Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.position!='relative').forEach(n=>{
+    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
       const delta=n[attr]-min
       n[attr]=min+(delta*stretchFactor)
     })

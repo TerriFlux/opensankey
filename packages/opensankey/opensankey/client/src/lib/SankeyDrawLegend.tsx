@@ -3,9 +3,10 @@ import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
-import { link_visible,node_displayed} from './SankeyUtils'
+import { link_visible} from './SankeyUtils'
 import { TFunction } from 'i18next'
 import { opposing_drag_elements } from './SankeyDrag'
+import { node_visible_on_svg } from './SankeyDrawFunction'
 
 declare const window: Window &
 typeof globalThis & {
@@ -106,8 +107,9 @@ export const OpenSankeyDrawLegend = (
               }).length
               return t>0
             }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
+              const node_visible=node_visible_on_svg()
               const t2=Object.values(data.nodes).filter(n=>{
-                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && node_displayed(data,n) && n.position !== 'relative'
+                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && node_visible.includes(n.idNode) && n.position !== 'relative'
               }).length
               return t2>0
             }else if(data.colorMap && data.colorMap.includes('dataTags_')){
