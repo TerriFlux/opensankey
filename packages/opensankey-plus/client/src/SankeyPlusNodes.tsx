@@ -2,11 +2,11 @@ import React from 'react'
 import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button } from 'react-bootstrap'
 import {  SankeyLinkValue} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
-import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove} from 'open-sankey/dist/SankeyDrawFunction'
+import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
-import {  getLinkValue,node_color,link_color,node_displayed,is_all_node_attr_same_value,return_correct_node_attribute_value,assign_node_value_to_correct_var,return_value_node,is_node_diplaying_value_local,return_value_link, } from 'open-sankey/dist/SankeyUtils'
+import {  getLinkValue,node_color,link_color,is_all_node_attr_same_value,return_correct_node_attribute_value,assign_node_value_to_correct_var,return_value_node,is_node_diplaying_value_local,return_value_link, } from 'open-sankey/dist/SankeyUtils'
 import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
@@ -319,8 +319,8 @@ const node_mouse_click=(
     const dd=(d as SankeyPlusNode)
     const nodeDisplay = [(d as SankeyPlusNode).idNode]
     branchAnimate(data,dd,nodeDisplay)
-
-    const visible_links = Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]) ).map(l=>l.idLink)
+    const node_visible=node_visible_on_svg()
+    const visible_links = Object.values(data.links).filter(l=>node_visible.includes(l.idSource) && node_visible.includes(l.idTarget)).map(l=>l.idLink)
     const start_point = Object.values(data.nodes).filter(f => (f.inputLinksId.filter(i => visible_links.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0))
     let time_to_animate = 500
     Object.values(data.nodes).filter(f => {
@@ -708,7 +708,7 @@ export const SankeyPlusdragGNodeEvent=(
         }
       }
     }).on('end',()=>{
-      set_data({...data})
+      set_data(data)
     })
 }
 
