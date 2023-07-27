@@ -2,10 +2,10 @@ import  { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyLinkValue,drawArrowsType} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
-import {  link_color,link_visible,node_displayed,return_value_node,return_value_link} from './SankeyUtils'
+import {  link_color,link_visible,return_value_node,return_value_link} from './SankeyUtils'
 import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height, deselect_visualy_links,eventLinkContextMenu} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
-import {value_selected_parameter,linkStrokeWidth} from './SankeyDrawFunction'
+import {value_selected_parameter,linkStrokeWidth,node_visible_on_svg} from './SankeyDrawFunction'
 
 declare const window: Window &
 typeof globalThis & {
@@ -209,10 +209,11 @@ export const OpenSankeyDrawLinks = (
     if (display_links === undefined) {
       return
     }
+    const node_visible=node_visible_on_svg()
     const gg_links = d3
       .select('.opensankey #g_links')
       .selectAll('.gg_links')
-      .data(Object.values(display_links).filter(l=>data.nodes[l.idSource] && node_displayed(data,data.nodes[l.idSource]) && data.nodes[l.idTarget] && node_displayed(data,data.nodes[l.idTarget]) ))
+      .data(Object.values(display_links).filter(l=>data.nodes[l.idSource] && data.nodes[l.idTarget] && node_visible.includes(l.idSource) && node_visible.includes(l.idTarget) ))
       .enter()
       .append('g')
       .attr('id', d => 'gg_' + d.idLink)
@@ -311,7 +312,7 @@ export const OpenSankeyDrawLinks = (
       .attr('stroke-opacity', d => {
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
-        return node_displayed(data,data.nodes[d.idSource]) && node_displayed(data,data.nodes[d.idTarget]) && tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data, d.idLink).display_value).includes('[')) ? return_value_link(data,d,'opacity') : return_value_link(data,d,'opacity')) : 0})
+        return  tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(getLinkValue(data, d.idLink).display_value).includes('[')) ? return_value_link(data,d,'opacity') : return_value_link(data,d,'opacity')) : 0})
       .attr('stroke-width', l =>linkStrokeWidth(l,data,scale,inv_scale,min_thickness,display_nodes,getLinkValue))
 
       .attr('stroke', l => linkStroke(l,data,getLinkValue)
@@ -332,7 +333,7 @@ export const OpenSankeyDrawLinks = (
 
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
-        if (node_displayed(data,data.nodes[d.idSource]) && node_displayed(data,data.nodes[d.idTarget])  && tmp >= display_style.filter) {
+        if (tmp >= display_style.filter) {
           d3.select(' .opensankey #arrow_'+d.idLink).attr('opacity','0.5')
           return d3.select(this).attr('stroke-opacity', '0.5')
         }
@@ -357,7 +358,7 @@ export const OpenSankeyDrawLinks = (
         sankeyTooltip.style('opacity', 0)
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
-        if (node_displayed(data,data.nodes[d.idSource]) && node_displayed(data,data.nodes[d.idTarget]) && tmp >= display_style.filter) {
+        if (tmp >= display_style.filter) {
           // const opacity = String(getLinkValue(data, d.idLink).display_value).includes('[') ? 0.85 : 0.85
           const opacity = return_value_link(data,d,'opacity')
           d3.select(' .opensankey #'+d.idLink+'_arrow').attr('opacity','1')
