@@ -5,7 +5,7 @@ import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData} from './types
 import PropTypes, { InferProps } from 'prop-types'
 import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar,svgDragMiddleMouseStart,svgDragMiddleMouseMove} from './SankeyDrawFunction'
+import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar,svgDragMiddleMouseStart,svgDragMiddleMouseMove, select_visualy_nodes,node_visible_on_svg} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 
 
@@ -555,8 +555,10 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
   }else if(e.key=='a' && e.ctrlKey){
     e.preventDefault()
-    multi_selected_nodes.current=Object.values(data.nodes)
-    set_data({...data})
+    multi_selected_nodes.current=Object.values(data.nodes).filter(n=>node_visible_on_svg().includes(n.idNode))
+    multi_selected_nodes.current.forEach(n=>{
+      select_visualy_nodes(n)
+    })
 
   }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && document.activeElement?.className.includes('form-control')){
     for(const item of document.getElementsByTagName('input')){

@@ -3,7 +3,7 @@ import { Row, Tabs, Button, ButtonGroup, Col, Dropdown, Form, FormControl, FormC
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNode, SankeyNodePropTypes,SankeyLinkValue } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
-import { cut_name,default_node,delete_node,node_displayed,return_value_node, return_value_link} from './SankeyUtils'
+import { cut_name,default_node,delete_node,return_value_node, return_value_link} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -15,6 +15,7 @@ import {SankeyMenuConfigurationNodesTags} from './SankeyMenuConfigurationNodesTa
 import {SankeyMenuConfigurationNodesTooltip} from './SankeyMenuConfigurationNodesTooltip'
 import { textwrap } from 'd3-textwrap'
 import { TFunction } from 'i18next'
+import { node_visible_on_svg } from './SankeyDrawFunction'
 
 const SankeyNodeEditionPropTypes = {
   t:PropTypes.func.isRequired,
@@ -64,9 +65,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,set_style_to_apply, menu_configuration_nodes,token,set_display_link_opacity }
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
-
+  const node_visible=node_visible_on_svg()
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?node_displayed(data,d):true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?node_visible.includes(d.idNode):true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
 
   const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
 

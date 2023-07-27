@@ -24,8 +24,8 @@ export const draw_arrow = (
   // Donc on assume que ca vaut 0
   const pre_ratio_cum = cum / w
   const pre_ratio_cur = v / w
-  const ratio_cum=(pre_ratio_cum)?pre_ratio_cum:0
-  const ratio_cur=(pre_ratio_cur)?pre_ratio_cur:0
+  const ratio_cum=(isFinite(pre_ratio_cum))?pre_ratio_cum:1
+  const ratio_cur=(isFinite(pre_ratio_cur))?pre_ratio_cur:1
 
   const coeff = revert ? -1 : 1
   let d

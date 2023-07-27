@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 
 import { dragNodeTextEventWidthBoxEvent} from './SankeyDrag'
 import {textNodeValue,node_label_posX,node_label_posY,node_value_posX,node_value_posY,node_label_text,textNodeWrap} from './SankeyDrawFunction'
-import { node_displayed,return_value_node } from './SankeyUtils'
+import { return_value_node } from './SankeyUtils'
 
 declare const window: Window &
 typeof globalThis & {
@@ -59,6 +59,7 @@ export const OpenSankeyDrawNodesLabel = (
     // Add node label and apply parameter
     const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
     const text_node=ggg_nodes
+      .filter(n=>(return_value_node(data,n,'label_visible') as boolean))
       .append('text')
       .attr('fill',n=>(return_value_node(data,n,'label_color') )?'white':'black')
       .classed('node', true)
@@ -78,7 +79,7 @@ export const OpenSankeyDrawNodesLabel = (
           return 'start'
         }
       })
-      .attr('visibility', n => node_displayed(data,(n as SankeyNode)) && return_value_node(data,n,'label_visible')? 'visible' : 'hidden')
+      // .attr('visibility', n => return_value_node(data,n,'label_visible')? 'visible' : 'hidden')
       .style('text-align', 'center')
       .style('font-weight', n => (return_value_node(data,n,'bold')) ? 'bold' : 'normal')
       .style('font-style', n => (return_value_node(data,n,'italic')) ? 'italic' : 'normal')
@@ -121,7 +122,9 @@ export const OpenSankeyDrawNodesLabel = (
 
     // Display value of nodes
     // Value of nodes are the maximum between the sum of input links and the sum of output links
-    ggg_nodes.append('text')
+    ggg_nodes
+      .filter(n=>(return_value_node(data,n,'show_value') as boolean))
+      .append('text')
       .attr('fill',n=>(return_value_node(data,n,'label_color'))?'white':'black')
       .classed('node', true)
       .classed('node_text_value', true)
@@ -129,7 +132,7 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('x', n =>node_value_posX(data,n as SankeyNode))
       .attr('y', n => node_value_posY(data,n as SankeyNode))
       .attr('text-anchor', (n) => (return_value_node(data,n,'label_horiz_valeur') as string).replace('left','end').replace('right','start'))
-      .attr('visibility', n => node_displayed(data,(n as SankeyNode)) && return_value_node(data,n,'show_value') ? 'visible' : 'hidden')
+      // .attr('visibility', n => return_value_node(data,n,'show_value') ? 'visible' : 'hidden')
     // .style('text-align', 'center')
     // .style('font-weight', n => (return_value_node(data,n,'bold) ? 'bold' : 'normal')
     // .style('font-style', n => (return_value_node(data,n,'italic) ? 'italic' : 'normal')
@@ -143,6 +146,7 @@ export const OpenSankeyDrawNodesLabel = (
     // (if the label length exceed a certian length the text is wrapped, the box visually represent the length to not exceed)
     ggg_nodes
       .filter(n=>n.x_label==undefined)
+      .filter(n=>(return_value_node(data,n,'label_visible') as boolean))
       .append('rect')
       .attr('class','box_width_threshold')
       .attr('x',n=>{
