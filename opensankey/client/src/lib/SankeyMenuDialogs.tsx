@@ -3,7 +3,7 @@ import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, FormGroup } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink, } from './types'
-import { complete_sankey_data, convert_data } from './SankeyConvert'
+import { complete_sankey_data } from './SankeyConvert'
 import { default_link, default_node, default_sankey_data,clickSaveDiagram } from './SankeyUtils'
 
 /**
@@ -18,6 +18,7 @@ const ApplyLayoutDialogPropTypes = {
   sankey_data : SankeyDataPropTypes,
   set_sankey_data : PropTypes.func.isRequired,
   updateLayout:PropTypes.func.isRequired,
+  convert_data:PropTypes.func.isRequired
 }
 
 /**
@@ -31,7 +32,7 @@ type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
  * @param {ApplyLayoutDialogTypes} { show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
-export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data,updateLayout }: ApplyLayoutDialogTypes) => {
+export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data,updateLayout,convert_data }: ApplyLayoutDialogTypes) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   const [elementToDispose, ] = useState([''])
   const [forceUpdate,setForceUpdate] = useState(true)

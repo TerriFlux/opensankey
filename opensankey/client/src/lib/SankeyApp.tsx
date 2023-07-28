@@ -39,6 +39,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faFilter,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { FaAngleDoubleLeft} from 'react-icons/fa'
 import { return_value_link } from './SankeyUtils'
+import { convert_data } from './SankeyConvert'
 
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
@@ -311,7 +312,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,SankeyUtils.default_sankey_data,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    set_show_modal_welcome,set_never_see_again,data,set_data,set_show_modalTemplate,set_show_modale_support,[],[],set_tags_selected
+    set_show_modal_welcome,set_never_see_again,data,set_data,set_show_modalTemplate,set_show_modale_support,[],[],set_tags_selected,convert_data
   )
 
   sankey_menus['formation']=<>{()=>set_show_modale_tuto(true)}</>
@@ -356,7 +357,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       </Popover.Body>
     </Popover>
   const {filter}=data.display_style
-  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate,set_never_see_again)
+  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate,set_never_see_again,convert_data)
   Object.keys(toolbar).forEach(k=>{
     sankey_menus[k]=toolbar[k]
   })
@@ -549,6 +550,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_contextualised_link={set_contextualised_link}
             set_show_context_zdd={set_show_context_zdd}
             updateLayout={updateLayout}
+            convert_data={convert_data}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw

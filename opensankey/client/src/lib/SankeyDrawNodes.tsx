@@ -354,8 +354,8 @@ export const OpenSankeyDrawNodes = (
     // The majority of data used to design the node are located in data['nodes']
     // Or if you want information about the type of these variable, you can find them in file types.tsx
     d3.selectAll(' .opensankey .gg_nodes').remove()
-
-    const gg_nodes = d3.select(' .opensankey #g_nodes').selectAll('.gg_nodes').data(Object.values(display_nodes).filter(n=>node_displayed(data,n))).enter().append('g')
+    const filtered_data=Object.values(display_nodes).filter(n=>node_displayed(data,n))
+    const gg_nodes = d3.select(' .opensankey #g_nodes').selectAll('.gg_nodes').data(filtered_data).enter().append('g')
       .attr('id', d => {
         return 'gg_' + d.idNode
       })

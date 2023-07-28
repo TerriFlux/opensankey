@@ -5,7 +5,7 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card} from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink,SankeyNode,SankeyLinkValue} from './types'
 
-import { convert_data,complete_sankey_data } from './SankeyConvert'
+import { complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
 import * as SankeyUtils from './SankeyUtils'
@@ -121,6 +121,7 @@ const MenuPropTypes = {
   set_contextualised_link:PropTypes.func.isRequired,
   set_show_context_zdd:PropTypes.func.isRequired,
   updateLayout:PropTypes.func.isRequired,
+  convert_data:PropTypes.func.isRequired,
 
 }
 
@@ -539,7 +540,8 @@ export const OpenSankeyMenus = (
   set_show_modale_support:(b:boolean)=>void,
   external_edition_item:JSX.Element[],
   externale_save_item:JSX.Element[],
-  set_tags_selected:(o:{[x:string]:string})=>void
+  set_tags_selected:(o:{[x:string]:string})=>void,
+  convert_data:(d:SankeyData)=>void
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
@@ -1003,6 +1005,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_contextualised_link,
     set_show_context_zdd,
     updateLayout,
+    convert_data
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1034,7 +1037,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
           }
 
-          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout))
+          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data))
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
           set_data({ ...new_data })
@@ -1132,7 +1135,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Button variant='primary'
                 onClick={() => {
                   SankeyUtils.uploadExemple(
-                    ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,reinitialization
+                    ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,reinitialization,convert_data
                   )
                   set_data({...data})
                   set_show_modale_tuto(false)
@@ -1146,7 +1149,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
 
                     SankeyUtils.uploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,reinitialization
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,reinitialization,convert_data
                     )
                     set_show_modale_tuto(false)
 
@@ -1162,7 +1165,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
 
                     SankeyUtils.uploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,reinitialization
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,reinitialization,convert_data
                     )
                     set_show_modale_tuto(false)
 
@@ -1341,6 +1344,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         sankey_data={data}
         set_sankey_data={set_data}
         updateLayout={updateLayout}
+        convert_data={convert_data}
       />
 
       <ExcelModal
