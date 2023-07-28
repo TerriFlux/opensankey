@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,differenceType,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal } from './types'
+import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal } from './types'
 import colormap from 'colormap'
 import { default_sankey_data, default_node,assign_link_local_attribute, return_value_link, default_link_style,default_node_style} from './SankeyUtils'
 
@@ -642,6 +642,7 @@ export const convert_tags = (
   if(has_not_converted_nodeTags_as_levelTags(data)){
     data.levelTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner==='level'))
     data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
+    console.log(data.nodeTags)
   }
 
 
@@ -1465,36 +1466,7 @@ export const convert_data = (
 
 
 
-  if (!data_to_convert.view) {
-    return
-  }
-
-  const deep_diff = require('deep-diff')
-  data_to_convert.view.forEach(v=>{
-    if((v.view_data as unknown as SankeyData ).version){
-      convert_tags(v.view_data as unknown as SankeyData)
-      convert_nodes(v.view_data as unknown as SankeyData)
-      convert_links(v.view_data as unknown as SankeyData)
-
-      let difference = deep_diff.diff(data, v.view_data)
-      difference=(difference!==undefined)?difference:[]
-      difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
-        if(d.kind=='D'){
-          delete ((d as unknown) as differenceType).lhs
-        }
-        if(d.kind=='A' && d.item.kind=='D'){
-          delete ((d as unknown) as differenceType).item.lhs
-        }
-        if(d.kind=='E'){
-          delete ((d as unknown) as differenceType).lhs
-        }
-        return d
-      })
-      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      v.view_data={} as object
-      (v.view_data as {diff:object[]}).diff=difference
-    }
-  })
+  
 
   // data_to_convert.view.forEach(v=>{
   //   convert_tags(v.view_data as unknown as SankeyData)
