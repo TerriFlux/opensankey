@@ -2,7 +2,6 @@ import React, {  useRef, useState } from 'react'
 import { Row, Col, Form, FormLabel, Button,  FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Overlay } from 'react-bootstrap'
 import {  SankeyData, TagsGroup} from './types'
 import { MultiSelect } from 'react-multi-select-component'
-import { convert_data } from './SankeyConvert'
 import { findMaxLinkValue,adjust_sankey_zone } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
@@ -348,7 +347,8 @@ declare const window: Window &
 export const setDiagram = (
   the_diagram : string,
   data : SankeyData,
-  set_data : (d:SankeyData)=>void
+  set_data : (d:SankeyData)=>void,
+  convert_data:(d:SankeyData)=>void
 ) => {
   //const the_diagram = evt.target.value as string
   const sous_filieres = window.sankey.sous_filieres
@@ -384,9 +384,10 @@ export const toolbar_builder = (
   first_selected_node:object,
   set_first_selected_node:(o:object)=>void,
   min_width_and_height:(d:SankeyData)=>number[],
-  setDiagram : (the_diagram : string,data : SankeyData,set_data : (d:SankeyData)=>void)=>void,
+  setDiagram : (the_diagram : string,data : SankeyData,set_data : (d:SankeyData)=>void,convert_data:(d:SankeyData)=>void)=>void,
   set_show_modal_welcome:(b:boolean)=>void,
-  set_never_see_again:(b:boolean)=>void
+  set_never_see_again:(b:boolean)=>void,
+  convert_data:(d:SankeyData)=>void,
 ) => {
   const level_filter = Object.entries(data.levelTags).length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
@@ -573,7 +574,7 @@ export const toolbar_builder = (
           <Form.Select style={{ width: '200px', color:'black' }}
             onChange={evt=> {
               set_diagram(evt.target.value)
-              setDiagram(evt.target.value, data, set_data)
+              setDiagram(evt.target.value, data, set_data,convert_data)
             }}
             value={diagram}>
             {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -588,7 +589,7 @@ export const toolbar_builder = (
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             set_diagram(evt.target.value)
             const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path, data, set_data)
+            setDiagram(diagram_path, data, set_data,convert_data)
           }}
           value={diagram}>
           {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -598,7 +599,7 @@ export const toolbar_builder = (
             onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
               set_diagram2(evt.target.value)
               const diagram_path = diagram+'/'+evt.target.value
-              setDiagram(diagram_path, data, set_data)
+              setDiagram(diagram_path, data, set_data,convert_data)
             }}
             value={diagram2}>
             {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
