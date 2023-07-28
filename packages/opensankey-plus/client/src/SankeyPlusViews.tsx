@@ -1,12 +1,11 @@
 import { InferProps} from 'prop-types'
 import React, { ChangeEvent, Requireable,useRef } from 'react'
-import {SankeyLinkValue, SankeyLinkValueDict, TagsGroup,differenceType} from 'open-sankey/src/lib/types'
+import {SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
-import { convert_data } from 'open-sankey/dist/SankeyConvert'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel} from './types'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,differenceType} from './types'
 import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
 import {  clickSaveDiagram,adjust_sankey_zone,node_displayed } from 'open-sankey/dist/SankeyUtils'
 import { updateLayout, compute_default_input_outputLinksId, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
@@ -46,7 +45,8 @@ const deep_diff = require('deep-diff')
 
 export const setDiagram = (
   set_master_data: (d:SankeyPlusData)=>void,
-  set_view: (s:string)=>void
+  set_view: (s:string)=>void,
+  convert_data:(d:SankeyPlusData)=>void
 ) => {
   return (
     the_diagram : string,
@@ -1563,8 +1563,8 @@ export const viewsAccordion = (
   _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
-  set_view_not_saved:(s:string)=>void
-
+  set_view_not_saved:(s:string)=>void,
+  convert_data:(d:SankeyPlusData)=>void
 
 ) => {
 
