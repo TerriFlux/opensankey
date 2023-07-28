@@ -95,3 +95,10 @@ export type plusDrawArrowsType = (
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
     display_style: {filter: number},
   ) => void
+
+export interface differenceType{
+    kind:string,
+    path:string[],
+    lhs?:object,
+    item:{kind:string,lhs?:object}
+  } 
