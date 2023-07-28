@@ -341,10 +341,3 @@ export type drawArrowsType = (
 ) => void
 
 
-export interface differenceType{
-  kind:string,
-  path:string[],
-  lhs?:object,
-  item:{kind:string,lhs?:object}
-}
-

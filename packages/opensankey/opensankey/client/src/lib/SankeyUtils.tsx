@@ -1,6 +1,6 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup,SankeyNodeAttrLocal,SankeyNodeStyle,SankeyLinkAttrLocal,SankeyLinkStyle } from './types'
 import FileSaver from 'file-saver'
-import { complete_sankey_data, convert_data } from './SankeyConvert'
+import { complete_sankey_data } from './SankeyConvert'
 import {  compute_auto_sankey,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
 import * as d3 from 'd3'
 import colormap from 'colormap'
@@ -1120,7 +1120,9 @@ export const downloadExamples = (
  * @param {SankeyData} server_data
  * @returns {*}
  */
-export const processExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[])=>void ) => {
+export const processExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[])=>void,
+  convert_data:(d:SankeyData)=>void
+) => {
   const data = default_sankey_data()
   Object.assign(data, server_data)
   complete_sankey_data(data,default_sankey_data,default_node,default_link)
@@ -1183,7 +1185,7 @@ export const uploadExemple = (
   data: SankeyData,
   set_data: (data: SankeyData) => void,
   reinitialization: ()=>void,
-
+  convert_data:(d:SankeyData)=>void
 ) => {
   let root = window.location.href
   if (root.includes('dashboard')) {
@@ -1509,7 +1511,22 @@ export const node_displayed=(data:SankeyData,n:SankeyNode)=>{
   if(has_local_level!==undefined && has_local_level!==null){
     local_level=has_local_level
   }
-  return node_has_displayed_tags(data,n) && ( local_level ) && has_links_zero(data,n)
+  const data_t_s=(data as unknown as {trade_sectors:string[]})
+  const is_export_import:string[]=[]
+  if(data_t_s.trade_sectors){
+    data_t_s.trade_sectors.forEach(ts=>{
+      if(n.name.includes(ts)){
+        is_export_import.push(ts)
+      }
+    })
+  }
+  if (is_export_import.length==1){
+    const fitlered_name=n.name.split(' - '+is_export_import[0])[0]
+    const node_connected=Object.values(data.nodes).filter(nn=>nn.name===fitlered_name)[0]
+    return node_has_displayed_tags(data,node_connected) && ( node_has_displayed_level(data,node_connected) ) && has_links_zero(data,node_connected)
+  }else{
+    return node_has_displayed_tags(data,n) && ( local_level ) && has_links_zero(data,n)
+  }
 }
 
 export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
@@ -1523,8 +1540,10 @@ export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
     if(node_tags_attr.length!=0){
       // If the node has at least 1 tag from the selected tag of the group then we display it
       // If the node has tag from the group attribued to it but are not selected then we don't display it
+      
       const tags_from_grp_to_display=Object.entries(nt[1].tags).filter(t=>t[1].selected).map(t=>t[0])
       to_display=(node_tags_attr.filter(t=>tags_from_grp_to_display.includes(t)).length>0)?to_display:false
+      
     }
   })
   return to_display
