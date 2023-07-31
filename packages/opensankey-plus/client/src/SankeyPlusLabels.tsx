@@ -49,7 +49,9 @@ export const SankeyPlusDrawLabels = (
         .attr('stroke-width', ((multi_selected_label.current.includes(d))?3:1))
         .attr('rx', 5)
 
+      
 
+      draw_text_zone_handles(data,d,multi_selected_label,set_data)
 
       gg_label.on('click', (event) => eventLabelClick(event,d,data,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
 
@@ -151,14 +153,14 @@ export const SankeyPlusDrawLabels = (
         .attr('stroke-opacity', 0)
         .attr('stroke-width', (3))
         .attr('rx', 5)
-        .attr('cursor','all-scroll')
-        .call(dragLabelWidthHeightEvent(d,data,set_data))
     })
   }
   d3.selectAll(' .opensankey #svg #g_label').remove()
+  d3.selectAll(' .opensankey #svg #g_label_handles').remove()
 
   // Insert la balise qui contient tous les lables libres avant la balise de la légende
   d3.select('.opensankey #svg').insert('g','#g_nodes').attr('class','g_label').attr('id','g_label')
+  d3.select('.opensankey #svg').append('g').attr('class','g_label_handles').attr('id','g_label_handles')
   // Ajoute l'event au click sur la zone du dessin qui désélectionne tous les labels libres sélectionné
   d3.select('.opensankey #svg').on('click',evt=>{
     if(!evt.ctrlKey && d3.select(evt.srcElement).attr('id') === 'svg'){
@@ -212,6 +214,12 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
     } else {
       multi_selected_label.current.push(d)
     }
+
+
+    multi_selected_label.current.forEach(zdt=>{
+      d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display',null)
+    })   
+
     set_data({ ...data })
 
     if ( accordion_ref && accordion_ref.current) {
@@ -253,6 +261,7 @@ export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)
         d.x_label = new_x
         d.y_label = new_y
         d3.select(' .opensankey #' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
+        
       }
     })
 }
@@ -357,5 +366,127 @@ export const zone_selection_label=(data:SankeyPlusData,
     }else{
       multi_selected_label.current=Object.values(data.labels).filter(n=>n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
     }
+  }
+}
+
+const draw_text_zone_handles=(data:SankeyPlusData,zdt:SankeyPlusLabel,multi_selected_label:{current:SankeyPlusLabel[]},set_data:(d:SankeyPlusData)=>void)=>{
+  d3.select('.opensankey #g_label_handles').append('g').attr('id','gg_zdt_handles_'+zdt.idLabel);
+  ['top','bottom','left','right'].forEach(pos=>{
+    add_zdt_handle(zdt,pos,multi_selected_label,data,set_data)
+  })
+}
+
+const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{current:SankeyPlusLabel[]},data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void)=>{
+  // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
+  let  svg_k_factor=1
+  if(d3.select('.opensankey #svg').nodes().length>0){
+    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+    svg_k_factor=(scale_svg<1?(1/scale_svg):1)
+  }
+
+  const gg_zdt=d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display',multi_selected_label.current.includes(zdt)?'inline':'none')
+
+  // Draw the circle with parameter commont to all the handles
+  const gg_zdt_h_circle=gg_zdt
+    .append('circle')
+    .attr('class','zdt_handles zdt_handle_'+pos)
+    .attr('r',10*svg_k_factor)
+    .attr('fill','blue')
+    .call(drag_text_zone_hande(zdt,pos,data,set_data))
+  // Position the handle 
+  switch (pos){
+  case 'top':
+    gg_zdt_h_circle
+      .attr('cx',zdt.x+zdt.label_width/2)
+      .attr('cy',zdt.y+ 0)
+    break
+
+  case 'bottom':
+    gg_zdt_h_circle
+      .attr('cx',zdt.x+zdt.label_width/2)
+      .attr('cy',zdt.y+ zdt.label_height)
+    break
+
+  case 'left':
+    gg_zdt_h_circle
+      .attr('cx',zdt.x+0)
+      .attr('cy',zdt.y+ zdt.label_height/2)
+    break
+
+  case 'right':
+    gg_zdt_h_circle
+      .attr('cx',zdt.x+zdt.label_width)
+      .attr('cy',zdt.y+ zdt.label_height/2)
+    break
+  }
+}
+
+const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void)=>{
+  const g_zdt_h=d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_'+pos)
+  const text_zone_shape=d3.select('#'+zdt.idLabel+' rect')
+  const g_text_zone=d3.select('#'+zdt.idLabel)
+  return d3.drag<SVGCircleElement, unknown, HTMLElement>()
+    .subject(Object)
+        
+    .on('drag', function (event) {
+      // The handles change the width and height of the text_zone
+      // The top and left handles also shift the x/y of text zone
+      switch(pos){
+      case 'top':
+        zdt.label_height-=event.dy
+        zdt.y+=event.dy
+        g_text_zone.attr('transform','translate('+zdt.x+','+zdt.y+')')
+        g_zdt_h.attr('cy',zdt.y)
+        text_zone_shape.attr('height',zdt.label_height)
+
+        // Reposition lateral handles
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_left').attr('cy',zdt.y+ zdt.label_height/2)
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('cy',zdt.y+ zdt.label_height/2)
+        break
+
+      case 'bottom':
+        zdt.label_height+=event.dy
+        g_zdt_h.attr('cy',zdt.y+zdt.label_height)
+        text_zone_shape.attr('height',zdt.label_height)
+
+        // Reposition lateral handles
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_left').attr('cy',zdt.y+ zdt.label_height/2)
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('cy',zdt.y+ zdt.label_height/2)
+        break
+
+      case 'left':
+        zdt.label_width-=event.dx
+        zdt.x+=event.dx
+        g_text_zone.attr('transform','translate('+zdt.x+','+zdt.y+')')
+        g_zdt_h.attr('cx',zdt.x)
+        text_zone_shape.attr('width',zdt.label_width)
+
+        // Reposition vertical handles
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('cx',zdt.x+zdt.label_width/2)
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('cx',zdt.x+zdt.label_width/2)
+        break
+
+      case 'right':
+        zdt.label_width+=event.dx
+        g_zdt_h.attr('cx',zdt.x+zdt.label_width)
+        text_zone_shape.attr('width',zdt.label_width)
+
+        // Reposition vertical handles
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('cx',zdt.x+zdt.label_width/2)
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('cx',zdt.x+zdt.label_width/2)
+        break
+      }
+    })
+    .on('end',()=>set_data(data))
+
+        
+}
+
+
+export const sankey_plus_zoom_text_zone=(evt:d3.D3ZoomEvent<SVGElement,unknown>)=>{
+  const k_factor=evt.transform.k
+  if(k_factor<1){
+    d3.selectAll('.opensankey .zdt_handles').attr('r',10*(1/k_factor))
   }
 }

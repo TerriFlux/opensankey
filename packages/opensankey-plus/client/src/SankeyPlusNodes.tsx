@@ -765,6 +765,14 @@ export const drag_elements_plus=(dragged:SankeyPlusNode|SankeyPlusLabel,data:San
     l.x = (new_pos_x>=0)?new_pos_x:0
     l.y = (new_pos_y>0)?new_pos_y:0
     d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')')
+
+    d3.selectAll('.opensankey #gg_zdt_handles_'+l.idLabel+' .zdt_handles').nodes().forEach(el=>{
+      const new_cx=Number(d3.select(el).attr('cx'))
+      const new_cy=Number(d3.select(el).attr('cy'))
+      d3.select(el).attr('cx',(l.x<=0)?new_cx:(new_cx+event.dx))
+      d3.select(el).attr('cy',(l.y<=0)?new_cy:(new_cy+event.dy))
+    })
+
   })
   if(multi_selected_label.current.length===0 && Object.keys(zdt).length>0){
     const new_pos_x = zdt.x + event.dx
