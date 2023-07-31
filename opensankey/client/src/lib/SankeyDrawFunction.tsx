@@ -2586,3 +2586,23 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
 export const node_visible_on_svg=()=>d3.selectAll('.node_shape').nodes().map(element => {
   return d3.select(element).attr('id')
 })
+
+export const zoom_function=(evt:d3.D3ZoomEvent<SVGElement,unknown>,data:SankeyData)=>{
+
+  const t='translate(0,0) scale('+evt.transform.k+')'
+  const svgSankey = d3.select('.opensankey #svg')
+  svgSankey
+    .attr('transform', t)
+  // Change the width of scrollable zone if the menu is open so we can scroll until the menu is not on the sankey zone
+  if(d3.select('.offcanvas-body').node()){
+    d3.select('.scroll_zone').style('width',((data.width+600)*evt.transform.k-(600*(evt.transform.k-1.1)))+'px')
+  }
+  //Compensate the scale of the legend when we dezoom so the legend has alway a readable size 
+  const scale_legend=1/((evt.transform.k<1)?evt.transform.k:1)
+  svgSankey
+    .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
+  d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(scale_legend)+')')
+  d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)*scale_legend)))
+
+  repositionne_sidebar()
+}
