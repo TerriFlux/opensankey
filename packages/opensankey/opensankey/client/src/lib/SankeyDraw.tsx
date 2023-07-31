@@ -5,7 +5,7 @@ import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData} from './types
 import PropTypes, { InferProps } from 'prop-types'
 import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,repositionne_sidebar,svgDragMiddleMouseStart,svgDragMiddleMouseMove, select_visualy_nodes,node_visible_on_svg} from './SankeyDrawFunction'
+import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,svgDragMiddleMouseStart,svgDragMiddleMouseMove, select_visualy_nodes,node_visible_on_svg} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 
 
@@ -180,38 +180,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const svgSankey = d3.select('.opensankey #svg')
 
-    svgSankey.attr('viewBox', null)
     svgSankey.style('width', data.width + 'px')
 
     svgSankey.style('height', data.height + 'px');
-    (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
-      .call(d3.zoom()
-        .filter(ev => { // Permet d'obliger Crtl pour activer le zoom
-          return (ev.ctrlKey || ev.metaKey) && ev.buttons == 0
-        })
-        .wheelDelta(ev => { // Permet de regler la vitesse du zoom
-          return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
-        })
-        .on('zoom', function (evt) {
-          evt.transform.x = 0
-          evt.transform.y = 0
-          d3.select(' .opensankey #svg')
-            .attr('transform', evt.transform).attr('transform-origin', '0 0')
-          svgSankey.attr('viewBox', null)
-          // Change the width of scrollable zone if the menu is open so we can scroll until the menu is not on the sankey zone
-          if(d3.select('.offcanvas-body').node()){
-            d3.select('.scroll_zone').style('width',((data.width+600)*evt.transform.k-(600*(evt.transform.k-1.1)))+'px')
-          }
-          //Compensate the scale of the legend when we dezoom so the legend has alway a readable size 
-          const scale_legend=1/((evt.transform.k<1)?evt.transform.k:1)
-          d3.select(' .opensankey #svg')
-            .style('border', Math.max(1,Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
-          d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(scale_legend)+')')
-          d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)*scale_legend)))
 
-          repositionne_sidebar()
-        }))
-      .on('dblclick.zoom', null);
+    
 
 
     // Fonction permettant de déplacer les éléments dans la zone de dessin, seulement quand on drag avec le boutons du milieu de la souris
