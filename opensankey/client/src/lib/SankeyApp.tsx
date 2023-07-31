@@ -25,7 +25,7 @@ import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
-import {linkStroke, min_width_and_height,drawArrows,eventOnSankeyZoneMouseDown,eventOnSankeyZoneMouseMove,eventOnSankeyZoneMouseUp} from './SankeyDrawFunction'
+import {linkStroke, min_width_and_height,drawArrows,eventOnSankeyZoneMouseDown,eventOnSankeyZoneMouseMove,eventOnSankeyZoneMouseUp,zoom_function} from './SankeyDrawFunction'
 import i18next from './traduction'
 import { updateLayout } from './SankeyLayout'
 import {SankeyMenuConfigurationNodesLabel} from './SankeyMenuConfigurationNodesLabel'
@@ -556,6 +556,21 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
         }
         {useEffect(() => {
+          // Zoom Behavior
+          const svgSankey = d3.select('.opensankey #svg');
+          (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
+            .call(d3.zoom()
+              .filter(ev => { // Permet d'obliger Crtl pour activer le zoom
+                return (ev.ctrlKey || ev.metaKey) && ev.buttons == 0
+              })
+              .wheelDelta(ev => { // Permet de regler la vitesse du zoom
+                return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
+              })
+              .on('zoom', function (evt) {
+                zoom_function(evt,data)
+              }))
+            .on('dblclick.zoom', null)
+
           
           const timer = setTimeout(() => {
             // set_show_draw(true)
