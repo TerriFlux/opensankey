@@ -1184,7 +1184,7 @@ export const convert_links = (
       }
       delete l.tooltip_text
     }
-    if (!('text_color' in l) || l_convert.text_same_color === false) {
+    if (l_convert.text_same_color === false) {
       // l.text_color = 'black'
       assign_link_local_attribute(l,'text_color','black')
 
