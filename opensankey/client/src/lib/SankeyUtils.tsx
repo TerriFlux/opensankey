@@ -1003,6 +1003,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
     colorParameter: 'local',
     style:'default',
     to_precision:true,
+    local:{dashed:true}
   }
 }
 /**
