@@ -598,12 +598,12 @@ export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyPlusNode|Sanke
 
   opposing_drag_elements(out_of_zone_item,event,dragged,data,multi_selected_nodes)
 
-  const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
+  // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
 
   if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
     // Shift not selected zdt to opposing direction
     Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
-      if(!multi_selected_label.current.includes(lb) &&  lb.idLabel!==zdt.idLabel){
+      if(!multi_selected_label.current.includes(lb)){
         const new_pos_x = lb.x + 5
         lb.x = new_pos_x
         d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
@@ -616,7 +616,7 @@ export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyPlusNode|Sanke
     
     // Shift zdt to opposing direction
     Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
-      if(!multi_selected_label.current.includes(lb)  && lb.idLabel!==zdt.idLabel ){
+      if(!multi_selected_label.current.includes(lb)){
         const new_pos_y = lb.y + 5
         lb.y = new_pos_y
         d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
@@ -754,7 +754,7 @@ export const drag_elements_plus=(dragged:SankeyPlusNode|SankeyPlusLabel,data:San
   inv_scale:(t:number)=>number,
 )=>{
   // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
-  const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
+  // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
   drag_elements(dragged,data,event,multi_selected_nodes,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
 
 
@@ -767,20 +767,20 @@ export const drag_elements_plus=(dragged:SankeyPlusNode|SankeyPlusLabel,data:San
     d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')')
 
     d3.selectAll('.opensankey #gg_zdt_handles_'+l.idLabel+' .zdt_handles').nodes().forEach(el=>{
-      const new_cx=Number(d3.select(el).attr('cx'))
-      const new_cy=Number(d3.select(el).attr('cy'))
-      d3.select(el).attr('cx',(l.x<=0)?new_cx:(new_cx+event.dx))
-      d3.select(el).attr('cy',(l.y<=0)?new_cy:(new_cy+event.dy))
+      const new_cx=Number(d3.select(el).attr('x'))
+      const new_cy=Number(d3.select(el).attr('y'))
+      d3.select(el).attr('x',(l.x<=0)?new_cx:(new_cx+event.dx))
+      d3.select(el).attr('y',(l.y<=0)?new_cy:(new_cy+event.dy))
     })
 
   })
-  if(multi_selected_label.current.length===0 && Object.keys(zdt).length>0){
-    const new_pos_x = zdt.x + event.dx
-    const new_pos_y = zdt.y + event.dy
-    zdt.x = (new_pos_x>=0)?new_pos_x:0
-    zdt.y = (new_pos_y>0)?new_pos_y:0
-    d3.select(' .opensankey #' + zdt.idLabel).attr('transform', 'translate(' + zdt.x + ',' + zdt.y + ')')
-  }
+  // if(multi_selected_label.current.length===0 && Object.keys(zdt).length>0){
+  //   const new_pos_x = zdt.x + event.dx
+  //   const new_pos_y = zdt.y + event.dy
+  //   zdt.x = (new_pos_x>=0)?new_pos_x:0
+  //   zdt.y = (new_pos_y>0)?new_pos_y:0
+  //   d3.select(' .opensankey #' + zdt.idLabel).attr('transform', 'translate(' + zdt.x + ',' + zdt.y + ')')
+  // }
 }
 
 export const return_out_of_bound_element_plus=(dragged:SankeyPlusNode|SankeyPlusLabel,data:SankeyPlusData,event:{ dx: number; dy: number,x:number,y:number },

@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
 import LZString from 'lz-string'
 import { FaPlus } from 'react-icons/fa'
-
+import {sankey_plus_min_width_and_height} from './SankeyPlusLabels'
 /* eslint-disable */
 // @ts-ignore
 const deep_diff = require('deep-diff')
@@ -1296,6 +1296,10 @@ export const keyHandler = (
     if(saved){
       set_view('none')
       set_data({ ...JSON.parse(JSON.stringify(master_data)) })
+      setTimeout(()=>{
+        adjust_sankey_zone(master_data,sankey_plus_min_width_and_height)
+      },100)
+
     }
   }
   // Changing view to next or previous
@@ -1329,7 +1333,9 @@ export const keyHandler = (
         set_data({...data_view as SankeyPlusData})
         set_view(master_data.view[ind-1].id)
         // adjust_sankey_zone(master_data.view[ind-1].view_data as SankeyPlusData,min_width_and_height)
-        adjust_sankey_zone(get_data_from_view(master_data,master_data.view[ind-1].id),min_width_and_height)
+        setTimeout(()=>{
+          adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+        },100)
       }
 
     } else if (e.key === 'F9') {
@@ -1370,9 +1376,10 @@ export const keyHandler = (
       const data_view=get_data_from_view(master_data,master_data.view[ind+1].id) as SankeyPlusData
       if(saved){
         set_data({...data_view as SankeyPlusData})
-        // adjust_sankey_zone(master_data.view[ind+1].view_data as SankeyPlusData,min_width_and_height)
-        adjust_sankey_zone(get_data_from_view(master_data,master_data.view[ind+1].id),min_width_and_height)
         set_view(master_data.view[ind+1].id)
+        setTimeout(()=>{
+          adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+        },100)
       }
       //}
     }
@@ -1533,10 +1540,16 @@ const selecteur_view=(data:SankeyPlusData,
               set_master_data({...JSON.parse(JSON.stringify(data))})
             }
             set_data({...data_view as SankeyPlusData})
+            setTimeout(()=>{
+              adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+            },100)
 
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
             set_data({...JSON.parse(JSON.stringify(master_data))})
+            setTimeout(()=>{
+              adjust_sankey_zone(master_data,sankey_plus_min_width_and_height)
+            },100)
           }
         }
       }
@@ -2131,8 +2144,14 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
             if(view !== 'none'){
               const data_view=get_data_from_view(master_data,view)
               set_data({...data_view as SankeyPlusData})
+              setTimeout(()=>{
+                adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+              },100)
             } else if(view === 'none'){
               set_data({...JSON.parse(JSON.stringify(master_data))})
+              setTimeout(()=>{
+                adjust_sankey_zone(master_data,sankey_plus_min_width_and_height)
+              },100)
             }
             set_view_not_saved('')
           }}
@@ -2150,9 +2169,15 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
               const data_view=get_data_from_view(master_data,view)
               set_master_data({...JSON.parse(JSON.stringify(master_data))})
               set_data({...data_view as SankeyPlusData})
+              setTimeout(()=>{
+                adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+              },100)
 
             } else if(view === 'none'){
               set_data({...JSON.parse(JSON.stringify(master_data))})
+              setTimeout(()=>{
+                adjust_sankey_zone(master_data,sankey_plus_min_width_and_height)
+              },100)
             }
             set_view_not_saved('')
           }}

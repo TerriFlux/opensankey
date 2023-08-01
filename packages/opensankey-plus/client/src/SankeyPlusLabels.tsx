@@ -5,7 +5,7 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import { SankeyLinkValue} from 'open-sankey/src/lib/types'
 
-import {drawGrid,min_width_and_height} from 'open-sankey/dist/SankeyDrawFunction'
+import {drawGrid,min_width_and_height,node_visible_on_svg,deselect_visualy_nodes,select_visualy_nodes,deselect_visualy_links} from 'open-sankey/dist/SankeyDrawFunction'
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
 declare const window: Window &
 typeof globalThis & {
@@ -28,6 +28,8 @@ export const SankeyPlusDrawLabels = (
   drawArrows:plusDrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
+  mode_selection:{current:string},
+  start_point:{current:number[]}
 ) => {
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
@@ -143,7 +145,7 @@ export const SankeyPlusDrawLabels = (
         })
 
 
-      gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,min_width_and_height,drawGrid,multi_selected_nodes,multi_selected_links,link_text,getLinkValue,drawArrows,scale,inv_scale))
+      gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,min_width_and_height,drawGrid,multi_selected_nodes,multi_selected_links,link_text,getLinkValue,drawArrows,scale,inv_scale,mode_selection,start_point))
       gg_label.append('rect')
         .attr('id','drag_zone_'+d.idLabel)
         .attr('width', d.label_width).attr('height', d.label_height)
@@ -281,62 +283,94 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   drawArrows:plusDrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-
+  mode_selection:{current:string},
+  start_point:{current:number[]}
 )=>{
   const node_visible=[] as string[]
   return (d3.drag<SVGGElement, unknown>()
-    .on('start',()=>{
-      d3.selectAll('.node_shape').nodes().forEach(element => {
-        node_visible.push(d3.select(element).attr('id')) 
-      })
+    .on('start',(evt)=>{
+
+      if(multi_selected_label.current.includes(d)){
+        d3.selectAll('.node_shape').nodes().forEach(element => {
+          node_visible.push(d3.select(element).attr('id')) 
+        })
+      }else if(mode_selection.current==='s' && !evt.ctrlKey){
+        // const pos = d3.pointer(evt)
+        const pos =[evt.x,evt.y]
+        console.log(pos)
+        console.log(evt)
+        start_point.current=pos
+        d3.select('#svg').append('g').attr('class','selection_zone')
+          .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
+      }
+      
     })
     .subject(Object).on('drag', function (event) {
-
-      // Drag zdt
-      // Cherche si des element seront hors zone si on les drag 
-      // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-      const out_of_zone_item=return_out_of_bound_element_plus(d,data,event,multi_selected_nodes,node_visible)
-      // Pousse les element non sélectionnés dans la direction opposé
-      if(out_of_zone_item.length>0){
-        opposing_drag_elements_plus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
-      }
-      drag_elements_plus(d,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+      if(mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
+        // Create change the size of the selection zone according to the mouse
+        const pos = [event.x,event.y]
+        const new_x=(pos[0]>start_point.current[0])?start_point.current[0]:pos[0]
+        const new_w=(pos[0]>start_point.current[0])?(pos[0]-start_point.current[0]):start_point.current[0]-pos[0]
     
+        const new_y=(pos[1]>start_point.current[1])?start_point.current[1]:pos[1]
+        const new_h=(pos[1]>start_point.current[1])?(pos[1]-start_point.current[1]):start_point.current[1]-pos[1]
+    
+        d3.select('.selection_zone rect').attr('x',new_x)
+        d3.select('.selection_zone rect').attr('y',new_y)
+        d3.select('.selection_zone rect').attr('width',Math.abs(new_w))
+        d3.select('.selection_zone rect').attr('height',Math.abs(new_h))
+      }else{
+        // Drag zdt
+        // Cherche si des element seront hors zone si on les drag 
+        // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
+        const out_of_zone_item=return_out_of_bound_element_plus(d,data,event,multi_selected_nodes,node_visible)
+        // Pousse les element non sélectionnés dans la direction opposé
+        if(out_of_zone_item.length>0){
+          opposing_drag_elements_plus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
+        }
+        drag_elements_plus(d,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+        
+      }
+      
 
     })
-    .on('end',()=>set_data({...data}))
+    .on('end',(evt)=>{
+      if(mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
+        zone_selection_label(data,multi_selected_label,evt)
+
+        node_visible_on_svg().forEach((k : string)=>deselect_visualy_nodes(data.nodes[k]))
+    
+        const z_x=Number(d3.select('.selection_zone rect').attr('x'))
+        const z_y=Number(d3.select('.selection_zone rect').attr('y'))
+        const z_w=Number(d3.select('.selection_zone rect').attr('width'))
+        const z_h=Number(d3.select('.selection_zone rect').attr('height'))
+        const node_visible=node_visible_on_svg()
+        if(evt.shiftKey){
+          Object.values(data.nodes).filter(n=>!multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h)).forEach(n=>multi_selected_nodes.current.push(n))
+        }else{
+          multi_selected_nodes.current=Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
+        }
+        multi_selected_nodes.current.forEach(n=>select_visualy_nodes(n))
+        multi_selected_links.current.forEach(l=>deselect_visualy_links(l))
+        multi_selected_links.current=[]
+        start_point.current=[0,0]
+        
+        d3.selectAll('.selection_zone').remove()
+        set_data(data)
+
+      }else if (multi_selected_label.current.length>0){
+        set_data(data)
+      }
+      
+      
+    })
   )
 }
-/**
-   * Function to change the width and height of free label
-   * To do that select a free label then dragg the border of it (the visual clue is the multi-direction pointer when hovering the border)
-   *
-   * @param {SankeyPlusLabel} d
-   * @param {SankeyPlusData} data
-   * @param {React.Dispatch<React.SetStateAction<SankeyPlusData>>} set_data
-   * @returns {*}
-   */
-export const dragLabelWidthHeightEvent=(d:SankeyPlusLabel,
-  data:SankeyPlusData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>
-)=>{
-  return d3.drag<SVGRectElement, unknown>()
-    .subject(Object).on('drag', function (event) {
-      if(event.dx<100 && event.dy<100){
-        data.labels[d.idLabel].label_width+=event.dx
-        data.labels[d.idLabel].label_height+=event.dy
 
-        d3.select('.opensankey #svg #'+d.idLabel+' rect').attr('width',data.labels[d.idLabel].label_width)
-        d3.select('.opensankey #svg #'+d.idLabel+' rect').attr('height',data.labels[d.idLabel].label_height)
-      }
-    }).on('end',()=>{
-      set_data({...data})
-    })
-}
+
 
 export const sankey_plus_min_width_and_height = (data:SankeyPlusData) => {
   let [width,height]=min_width_and_height(data)
-
 
   Object.values(data.labels).forEach(n => {
     height =  Math.max(height, n.y+n.label_height)
@@ -375,7 +409,7 @@ const draw_text_zone_handles=(data:SankeyPlusData,zdt:SankeyPlusLabel,multi_sele
     add_zdt_handle(zdt,pos,multi_selected_label,data,set_data)
   })
 }
-
+const size_zdt_handle=10
 const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{current:SankeyPlusLabel[]},data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void)=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
@@ -389,35 +423,36 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{curre
 
   // Draw the circle with parameter commont to all the handles
   const gg_zdt_h_circle=gg_zdt
-    .append('circle')
+    .append('rect')
     .attr('class','zdt_handles zdt_handle_'+pos)
-    .attr('r',10*svg_k_factor)
-    .attr('fill','blue')
+    .attr('width',size_zdt_handle*svg_k_factor)
+    .attr('height',size_zdt_handle*svg_k_factor)
+    .attr('fill','black')
     .call(drag_text_zone_hande(zdt,pos,data,set_data))
   // Position the handle 
   switch (pos){
   case 'top':
     gg_zdt_h_circle
-      .attr('cx',zdt.x+zdt.label_width/2)
-      .attr('cy',zdt.y+ 0)
+      .attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
+      .attr('y',zdt.y+ 0-(size_zdt_handle/2))
     break
 
   case 'bottom':
     gg_zdt_h_circle
-      .attr('cx',zdt.x+zdt.label_width/2)
-      .attr('cy',zdt.y+ zdt.label_height)
+      .attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
+      .attr('y',zdt.y+ zdt.label_height-(size_zdt_handle/2))
     break
 
   case 'left':
     gg_zdt_h_circle
-      .attr('cx',zdt.x+0)
-      .attr('cy',zdt.y+ zdt.label_height/2)
+      .attr('x',zdt.x+0-(size_zdt_handle/2))
+      .attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
     break
 
   case 'right':
     gg_zdt_h_circle
-      .attr('cx',zdt.x+zdt.label_width)
-      .attr('cy',zdt.y+ zdt.label_height/2)
+      .attr('x',zdt.x+zdt.label_width-(size_zdt_handle/2))
+      .attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
     break
   }
 }
@@ -426,7 +461,7 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,s
   const g_zdt_h=d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_'+pos)
   const text_zone_shape=d3.select('#'+zdt.idLabel+' rect')
   const g_text_zone=d3.select('#'+zdt.idLabel)
-  return d3.drag<SVGCircleElement, unknown, HTMLElement>()
+  return d3.drag<SVGRectElement, unknown, HTMLElement>()
     .subject(Object)
         
     .on('drag', function (event) {
@@ -437,44 +472,44 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,s
         zdt.label_height-=event.dy
         zdt.y+=event.dy
         g_text_zone.attr('transform','translate('+zdt.x+','+zdt.y+')')
-        g_zdt_h.attr('cy',zdt.y)
+        g_zdt_h.attr('y',zdt.y-(size_zdt_handle/2))
         text_zone_shape.attr('height',zdt.label_height)
 
         // Reposition lateral handles
-        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_left').attr('cy',zdt.y+ zdt.label_height/2)
-        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('cy',zdt.y+ zdt.label_height/2)
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_left').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
         break
 
       case 'bottom':
         zdt.label_height+=event.dy
-        g_zdt_h.attr('cy',zdt.y+zdt.label_height)
+        g_zdt_h.attr('y',zdt.y+zdt.label_height-(size_zdt_handle/2))
         text_zone_shape.attr('height',zdt.label_height)
 
         // Reposition lateral handles
-        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_left').attr('cy',zdt.y+ zdt.label_height/2)
-        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('cy',zdt.y+ zdt.label_height/2)
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_left').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
         break
 
       case 'left':
         zdt.label_width-=event.dx
         zdt.x+=event.dx
         g_text_zone.attr('transform','translate('+zdt.x+','+zdt.y+')')
-        g_zdt_h.attr('cx',zdt.x)
+        g_zdt_h.attr('x',zdt.x-(size_zdt_handle/2))
         text_zone_shape.attr('width',zdt.label_width)
 
         // Reposition vertical handles
-        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('cx',zdt.x+zdt.label_width/2)
-        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('cx',zdt.x+zdt.label_width/2)
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
         break
 
       case 'right':
         zdt.label_width+=event.dx
-        g_zdt_h.attr('cx',zdt.x+zdt.label_width)
+        g_zdt_h.attr('x',zdt.x+zdt.label_width-(size_zdt_handle/2))
         text_zone_shape.attr('width',zdt.label_width)
 
         // Reposition vertical handles
-        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('cx',zdt.x+zdt.label_width/2)
-        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('cx',zdt.x+zdt.label_width/2)
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
+        d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
         break
       }
     })
