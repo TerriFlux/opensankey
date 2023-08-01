@@ -428,6 +428,7 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{curre
     .attr('width',size_zdt_handle*svg_k_factor)
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
+    .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
     .call(drag_text_zone_hande(zdt,pos,data,set_data))
   // Position the handle 
   switch (pos){
