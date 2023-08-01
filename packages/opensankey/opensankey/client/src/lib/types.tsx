@@ -150,6 +150,8 @@ export const SankeyLinkAttrLocalTypes ={
   label_visible:PropTypes.bool,
   label_font_size:PropTypes.number,
   text_color:PropTypes.string,
+  to_precision:PropTypes.bool,
+  scientific_precision:PropTypes.number,
 }
 export type SankeyLinkAttrLocal = InferProps<typeof SankeyLinkAttrLocalTypes>
 
@@ -177,6 +179,8 @@ export const SankeyLinkStyleTypes ={
   label_visible: PropTypes.bool.isRequired,
   label_font_size: PropTypes.number.isRequired,
   text_color: PropTypes.string.isRequired,
+  to_precision:PropTypes.bool.isRequired,
+  scientific_precision:PropTypes.number.isRequired,
 }
 export type SankeyLinkStyle = InferProps<typeof SankeyLinkStyleTypes>
 
@@ -189,7 +193,6 @@ export const SankeyLinkPropTypes = {
   colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
   
-  to_precision:PropTypes.bool.isRequired,
 
   value: PropTypes.oneOfType([SankeyLinkValueDictTypes, PropTypes.shape(SankeyLinkValueTypes).isRequired]).isRequired,
 

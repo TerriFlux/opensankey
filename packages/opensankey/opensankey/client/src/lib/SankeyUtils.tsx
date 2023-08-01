@@ -463,13 +463,14 @@ export const compute_total_offsets = (
  * @returns {*}
  */
 export const toPrecision = (
-  v: number
+  v: number,
+  nb_scientific=3
 ) => {
   if (v < 1) {
     return String(v.toFixed(1).replace(/\.0+$/, ''))
   }
-  let new_v = v.toPrecision(3).replace(/\.0+$/, '')
-  if (new_v.includes('e+3')) {
+  let new_v = v.toPrecision(nb_scientific).replace(/\.0+$/, '')
+  if (new_v.includes('e+'+nb_scientific)) {
     new_v = String(parseFloat(new_v))
   }
   return new_v
@@ -505,7 +506,7 @@ export const link_text = (
       return
     }
   }
-  the_link_value = (d.to_precision)?toPrecision(the_link_value):the_link_value
+  the_link_value = (return_value_link(data,d,'to_precision'))?toPrecision(the_link_value,(return_value_link(data,d,'scientific_precision') as number)):the_link_value
   return the_link_value
 }
 
@@ -937,7 +938,9 @@ export const default_link_style=()=>{
     right_horiz_shift: 1,
     vert_shift: 0,
     dashed:false,
-    opacity:0.85
+    opacity:0.85,
+    to_precision:true,
+    scientific_precision:5
 
   }
 }
@@ -1002,7 +1005,6 @@ export const default_link = (data: SankeyData): SankeyLink => {
     colorTag: '',
     colorParameter: 'local',
     style:'default',
-    to_precision:true,
     local:{dashed:true}
   }
 }
