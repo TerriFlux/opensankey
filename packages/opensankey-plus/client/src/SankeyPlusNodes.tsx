@@ -293,7 +293,7 @@ const calcPath = (
     long += 1
     links_present.forEach(d => {
       const n = nodes[data.links[d].idTarget]
-      const lng = calcPath(data,nodes, n, new_links) as number
+      const lng = calcPath(data,nodes, n, new_links.filter(i=>!return_value_link(data,data.links[i],'recycling'))) as number
       long += isNaN(lng) ? 0 : lng
 
     })
@@ -327,7 +327,7 @@ const node_mouse_click=(
       return (f.inputLinksId.filter(i => visible_links.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0)})
     //calcul la profondeur max de nouveau flux (le nombre de nouveau flux consecutif ) afin de calculer le temps qu'il faut avant de changer la variable set_view
     if (start_point.length > 0) {
-      let nb_animation = calcPath(data,data.nodes, start_point[0], visible_links)
+      let nb_animation = calcPath(data,data.nodes, dd, visible_links)
       nb_animation = (nb_animation !== undefined) ? nb_animation : 0
       time_to_animate += nb_animation * 2000
     }
