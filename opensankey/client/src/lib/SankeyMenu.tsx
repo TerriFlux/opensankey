@@ -1621,7 +1621,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     const wORh=(attr=='x')?'width':'height'
     const wORh_ref=(document.getElementById(node_ref.idNode)?.getBoundingClientRect()[wORh]??0)
     const center_ref=pos_ref+(wORh_ref/2)
-    multi_selected_nodes.current.filter(n=>n!=node_ref).forEach(n=>{
+    multi_selected_nodes.current.filter(n=>n!=node_ref && n.position!='relative').forEach(n=>{
       const wORh_to_shift=(document.getElementById(n.idNode)?.getBoundingClientRect()[wORh]??0)
       n[attr]=center_ref-((wORh_to_shift)/2)
     })
