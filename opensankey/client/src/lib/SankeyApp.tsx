@@ -381,7 +381,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // let alt_key_pressed = false
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
-    keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_show_nav,mode_selection,set_show_menu_node_apparence,set_show_menu_node_label,set_show_menu_node_io,set_show_menu_link_data,set_show_menu_link_appearence,set_show_menu_link_label)
+    keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_show_nav,mode_selection,
+      set_show_menu_node_apparence,set_show_menu_node_label,set_show_menu_node_io,set_show_menu_link_data,set_show_menu_link_appearence,set_show_menu_link_label,
+      set_contextualised_node,set_contextualised_link,set_show_context_zdd
+      )
   }
   useEffect(()=>{
   // Call the function that add nodes to the sankey

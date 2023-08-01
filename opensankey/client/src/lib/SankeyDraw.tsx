@@ -310,6 +310,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   set_show_menu_link_data:(b:boolean)=>void,
   set_show_menu_link_appearence:(b:boolean)=>void,
   set_show_menu_link_label:(b:boolean)=>void,
+  set_contextualised_node:(t:SankeyNode| undefined)=>void,
+  set_contextualised_link:(t:SankeyLink| undefined)=>void,
+  set_show_context_zdd:(t:boolean)=>void
 
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
@@ -412,6 +415,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     set_show_menu_link_data(false)
     set_show_menu_link_appearence(false)
     set_show_menu_link_label(false)
+    set_contextualised_node(undefined),
+    set_contextualised_link(undefined),
+    set_show_context_zdd(false)
     // set_mode_selection('s')
     // if ( button_ref && button_ref.current && accordion_ref ) {
     //   button_ref.current.click()
