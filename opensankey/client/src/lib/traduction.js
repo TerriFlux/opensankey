@@ -372,10 +372,8 @@ const resources = {
           'données':'Data',
           'vpp':'Value for given parameters',
           'affichage':'Display',
-          'toPrecision':'Display the value in scientific notation',
           tooltips: {
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
-            toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram'
           }
         },
@@ -423,6 +421,8 @@ const resources = {
           'dessous':'Above',
           'dessus':'Below',
           'pls':'Position the label with the mouse',
+          'toPrecision':'Display the value in scientific notation',
+          'NbPrecision':'Number of significant figures',
           tooltips: {
             label: 'Display or not the label (data / text) associated to the selected link(s)',
             len: 'Display the label in black, for the selected stream(s)',
@@ -435,7 +435,10 @@ const resources = {
             below: 'For the selected stream(s), allows to position the label below the stream',
             milieu_v: 'For the selected link(s), allows to position the label inside the link',
             top: 'For the selected stream(s), allows to position the label above the stream',
-            pls: 'Activates the possibility to move the label of the selected stream(s) with the mouse'
+            pls: 'Activates the possibility to move the label of the selected stream(s) with the mouse',
+            toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
+            NbPrecision:'Choose the number of significant figures when the value is diplayed in scientific notation',
+
           }
         },
         'layout':'Disposition',
@@ -895,10 +898,8 @@ const resources = {
           'données':'Données',
           'vpp':'Valeur pour ces paramètres',
           'affichage':'Affichage',
-          'toPrecision':'Afficher la valeur en notation scientifique',
           tooltips: {
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
-            toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
             affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey'
           }
         },
@@ -946,6 +947,8 @@ const resources = {
           'dessous':'Dessous',
           'dessus':'Dessus',
           'pls':'Positionner le label à la souris',
+          'toPrecision':'Afficher la valeur en notation scientifique',
+          'NbPrecision':'Nombre de signe significatif',
           tooltips: {
             label: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)',
             len: 'Afficher le texte du label en noir, pour le(s) flux sélectionné(s)',
@@ -958,7 +961,9 @@ const resources = {
             dessous: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label en dessous du flux',
             milieu_v: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label dans le flux',
             dessus: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label au dessus du flux',
-            pls: 'Active la possibilité de déplacer avec la souris le label du/des flux sélectionné(s)'
+            pls: 'Active la possibilité de déplacer avec la souris le label du/des flux sélectionné(s)',
+            toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
+            NbPrecision:'Choisi le nombre de chiffre significatif à afficher quand la valeur est en notation scientifique ',
           }
         },
         'layout':'Disposition',
