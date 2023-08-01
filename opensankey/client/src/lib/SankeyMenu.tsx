@@ -1823,7 +1823,6 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
         {sep}
         {dropdown_c_n_align_h}
         {dropdown_c_n_align_v}
-        {sep}
         {has_node_tags?sep:<></>}
         {dropdown_c_n_tag}
         {sep}
