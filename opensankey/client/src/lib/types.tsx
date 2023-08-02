@@ -140,6 +140,7 @@ export const SankeyLinkAttrLocalTypes ={
   curvature: PropTypes.number,
   curved: PropTypes.bool,
   recycling: PropTypes.bool,
+  arrow_size:PropTypes.number,
 
 
 
@@ -169,6 +170,7 @@ export const SankeyLinkStyleTypes ={
   curvature: PropTypes.number.isRequired,
   curved: PropTypes.bool.isRequired,
   recycling: PropTypes.bool.isRequired,
+  arrow_size:PropTypes.number.isRequired,
 
 
 

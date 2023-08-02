@@ -189,6 +189,7 @@ export const compute_end_points = (
   const ori=return_value_link(data,link,'orientation')
   const recy=return_value_link(data,link,'recycling')
   const l_arrow=return_value_link(data,link,'arrow')
+  const l_arrow_size=return_value_link(data,link,'arrow_size') as number 
 
   if (ori === 'hh') {
     //side to side
@@ -209,7 +210,7 @@ export const compute_end_points = (
       ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
       yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
       if (l_arrow && tmp !== ''  && tmp!=0 ) {
-        xt = xt - 10
+        xt = xt - l_arrow_size
       }
     }
   }
@@ -230,7 +231,7 @@ export const compute_end_points = (
       ys += scale(node_size_s_height)
       xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
       if (l_arrow && tmp !== ''  && tmp!=0) {
-        yt = yt - 10
+        yt = yt - l_arrow_size
       }
     }
   }
@@ -250,7 +251,7 @@ export const compute_end_points = (
         ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          yt = yt - 10
+          yt = yt - 30
         }
       }
     } else {
@@ -269,7 +270,7 @@ export const compute_end_points = (
         ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          yt = yt - 10
+          yt = yt - l_arrow_size
         }
       }
     }
@@ -301,7 +302,7 @@ export const compute_end_points = (
         xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          xt = xt - 10
+          xt = xt - l_arrow_size
         }
       } else {
         //source is top left target. Arrow goes left and go down to the top side
@@ -309,7 +310,7 @@ export const compute_end_points = (
         ys += scale(node_size_s_height)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          xt = xt - 10
+          xt = xt - l_arrow_size
         }
       }
     }
@@ -761,19 +762,20 @@ export const drawArrows = (
           let xt
           let yt
           let p5
+          const arrow_length=return_value_link(data,l,'arrow_size') as number
           if (ori === 'hh' || ori === 'vh') {
             if (n.x <= source_node.x && recy || n.x > source_node.x && !recy) {
               xt = +n.x
               yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
-              return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
+              return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false,arrow_length)
             } else {
               xt = +n.x + +d3.select('#' + n.idNode).attr('width')
               yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
-              return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
+              return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true,arrow_length)
             }
           } else if (ori === 'vv' || ori === 'hv') {
             if (n.y > source_node.y) {
@@ -781,13 +783,13 @@ export const drawArrows = (
               yt = +n.y
               p5 = [xt, yt]
               is_v = false
-              return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false)
+              return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false,arrow_length)
             } else {
               xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
               yt = +n.y + +d3.select('#' + n.idNode).attr('height')
               p5 = [xt, yt]
               is_v = false
-              return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(link_value), scale(cum_h_bottom), false, true)
+              return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(link_value), scale(cum_h_bottom), false, true,arrow_length)
             }
           }
           return ''

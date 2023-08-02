@@ -94,6 +94,19 @@ export const SankeyMenuConfigurationLinksAppearence = (
     return (display_courbe) ? courbe : 0
   }
 
+  const arrow_size = () => {
+    let display_arrow_size = true
+    let courbe = 10
+    if (selected_parameter.length != 0) {
+      courbe=return_correct_link_attribute_value(data,selected_parameter[0],'arrow_size',menu_for_style) as number
+    }
+    selected_parameter.map((d) => {
+      display_arrow_size = (return_correct_link_attribute_value(data,d,'arrow_size',menu_for_style)  == courbe) ? display_arrow_size : false
+    })
+    
+    return (display_arrow_size) ? courbe : 0
+  }
+
   const linkType = (param: 'recycling'|'curved'|'arrow') => {
     return is_all_link_attr_same_value(data,selected_parameter,param,menu_for_style) as boolean
   }
@@ -469,6 +482,35 @@ export const SankeyMenuConfigurationLinksAppearence = (
         </OverlayTrigger>
       </Col>
       <Col xs={2}>{(selected_parameter.length>0)?return_correct_link_attribute_value(data,selected_parameter[0],'curvature',menu_for_style):0}</Col>
+    </Form.Group>
+    <Form.Group as={Row} >
+      <Col xs={5}>
+        <FormLabel >{t('Flux.apparence.arrow_size')+(is_link_diplaying_value_local(multi_selected_links,'arrow_size',menu_for_style)?'*':'')}</FormLabel>
+      </Col>
+      <Col xs={5}>
+        <OverlayTrigger
+          key={'flux.apparence.tooltips.13'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'flux.apparence.tooltips.13'}>{t('Flux.apparence.tooltips.arrow_size')} </Tooltip>}>
+          <FormControl
+            min={1}  step={1}
+            type={'number'}
+            value={arrow_size()}
+            onChange={
+              evt => {
+                const val=+evt.target.value
+                const value=isNaN(val) || val<=0?10:val
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  assign_link_value_to_correct_var(d,'arrow_size',value,menu_for_style)
+
+                })
+                set_data({ ...data })
+              }}/>
+        </OverlayTrigger>
+      </Col>
+      <Col xs={2}>{(selected_parameter.length>0)?return_correct_link_attribute_value(data,selected_parameter[0],'arrow_size',menu_for_style):0}</Col>
     </Form.Group>
     {additional_link_appearence_items}
 
