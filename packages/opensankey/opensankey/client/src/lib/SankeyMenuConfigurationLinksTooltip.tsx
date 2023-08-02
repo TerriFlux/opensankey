@@ -6,7 +6,8 @@ import { TFunction } from 'i18next'
 export const SankeyMenuConfigurationLinksTooltip = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  selected_link:{current:SankeyLink},
+  // selected_link:{current:SankeyLink},
+  multi_selected_links:{current:SankeyLink[]},
   t:TFunction
 )=>{
 
@@ -22,9 +23,9 @@ export const SankeyMenuConfigurationLinksTooltip = (
           <Form.Control
             as="textarea"
             rows={10}
-            value={selected_link.current.tooltip_text ? selected_link.current.tooltip_text : ''}
+            value={multi_selected_links.current.length>0 && multi_selected_links.current[0].tooltip_text ? multi_selected_links.current[0].tooltip_text : ''}
             onChange={evt => {
-              selected_link.current.tooltip_text = evt.target.value
+              multi_selected_links.current.forEach(l=>l.tooltip_text = evt.target.value)
               set_data({ ...data })
             }}/>
         </OverlayTrigger>

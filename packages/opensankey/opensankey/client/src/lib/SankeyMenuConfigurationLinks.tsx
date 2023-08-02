@@ -20,7 +20,7 @@ const SankeyMenuConfigurationLinksPropTypes = {
   t: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
+  // selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   style_editable:PropTypes.bool.isRequired,
@@ -34,7 +34,7 @@ type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurati
 export const OpenSankeyMenuConfigurationLinks = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  selected_link:{current:SankeyLink},
+  // selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   tags_group_key:string,
@@ -50,10 +50,10 @@ export const OpenSankeyMenuConfigurationLinks = (
 ) => {
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
-    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,additional_data_element,displayed_input_link_value,set_displayed_input_link_value),
-    'appearence': SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity),
+    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,multi_selected_links,set_data,t,additional_data_element,displayed_input_link_value,set_displayed_input_link_value),
+    'appearence': SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity),
     'label': SankeyMenuConfigurationLinksLabel(data,multi_selected_links,set_data,t,false,'default'),
-    'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,selected_link,t)
+    'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t)
   }
 
   if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')){
@@ -64,7 +64,7 @@ export const OpenSankeyMenuConfigurationLinks = (
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, selected_link, multi_selected_links,menu_configuration_links,style_editable,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity}
+  { t,data, set_data, multi_selected_links,menu_configuration_links,style_editable,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity}
 ) => {
   const { fluxTags, dataTags } = data
   const [, set_style_to_apply_to_link] = useState('default')
@@ -76,10 +76,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
 
-  let link = selected_link.current
-  if (link === undefined) {
-    link = default_link(data)
-  }
+  // let link = selected_link.current
+  // if (link === undefined) {
+  //   link = default_link(data)
+  // }
 
   const newEntries = new Map(Object.entries(dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
@@ -196,7 +196,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     nodes[node_keys[0]].outputLinksId.push(link.idLink)
     nodes[node_keys[1]].inputLinksId.push(link.idLink)
 
-    selected_link.current = link
+    // selected_link.current = link
     multi_selected_links.current = [link]
     set_display_link_opacity(return_correct_link_attribute_value(data,link,'opacity',false))
     

@@ -76,7 +76,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [style_to_apply, set_style_to_apply] = useState('default')
   const mode_selection= useRef('s')
-  const selected_link = useRef(SankeyUtils.default_link(initial_sankey_data))
+  // const selected_link = useRef(SankeyUtils.default_link(initial_sankey_data))
   const selected_node = useRef(SankeyUtils.default_node(initial_sankey_data))
   const multi_selected_nodes = useRef([])
   const multi_selected_links = useRef([])
@@ -277,7 +277,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 1.3 Builds Configuration Menus Links
   //- 1.3.1 Builds Configuration Menus Link Attributes
-  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,selected_link,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,[],displayed_input_link_value,set_displayed_input_link_value,[],display_link_opacity,set_display_link_opacity)
+  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,[],displayed_input_link_value,set_displayed_input_link_value,[],display_link_opacity,set_display_link_opacity)
   //- 1.3.2 Builds Configuration Menus Link tags
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -301,7 +301,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     data, set_data,
     nav_item_active,set_nav_item_active,
     nodes_accordion_ref,links_accordion_ref,
-    selected_node,multi_selected_nodes,multi_selected_links,selected_link,
+    selected_node,multi_selected_nodes,multi_selected_links,
     style_to_apply,set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
     menu_configuration_nodes,menu_configuration_links,<></>,menu_configuration_legends,sub_nav_item_active,set_sub_nav_item_active,
@@ -371,9 +371,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     selected_node.current = n
   }
 
-  const select_link=(l: SankeyLink) => {
-    selected_link.current = l
-  }
+  // const select_link=(l: SankeyLink) => {
+  //   selected_link.current = l
+  // }
   const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !SankeyUtils.node_displayed(data,n) || (n.inputLinksId.length === 0) || (!(return_value_link(data,data.links[n.inputLinksId[0]],'arrow'))) ? false : true
   const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
 
@@ -409,7 +409,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       mode_selection,
       accordion_ref,
       button_ref,
-      select_link,
+      
       alt_key_pressed,
       position,node_arrow_visible,
       linkTooltipsContent,
@@ -467,12 +467,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
   // MENU DRAGGABLE LINK DATA
-  const menu_link_data=SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,selected_link,multi_selected_links,set_data,t,[],displayed_input_link_value,set_displayed_input_link_value,true)
+  const menu_link_data=SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,multi_selected_links,set_data,t,[],displayed_input_link_value,set_displayed_input_link_value,true)
   const dragLink_data=show_menu_link_data?menu_draggable(menu_link_data,pointer_pos,t('Menu.flux')+' '+t('Flux.data.données'),set_show_menu_link_data):<></>
 
 
   // MENU DRAGGABLE LINK APPEARENCE
-  const menu_link_appearence=SankeyMenuConfigurationLinksAppearence(data,selected_link,multi_selected_links,set_data,t,[],false,'default',display_link_opacity,set_display_link_opacity,true)
+  const menu_link_appearence=SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,[],false,'default',display_link_opacity,set_display_link_opacity,true)
   const dragLink_appearence=show_menu_link_appearence?menu_draggable(menu_link_appearence,pointer_pos,t('Menu.flux')+' '+t('Flux.apparence.apparence'),set_show_menu_link_appearence):<></>
 
   // MENU DRAGGABLE LINK LABEL

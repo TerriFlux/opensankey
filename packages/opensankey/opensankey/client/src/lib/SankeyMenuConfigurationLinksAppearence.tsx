@@ -8,7 +8,7 @@ import { return_correct_link_attribute_value,assign_link_value_to_correct_var,is
 
 export const SankeyMenuConfigurationLinksAppearence = (
   data:SankeyData,
-  selected_link:{current:SankeyLink},
+  // // selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
   t:TFunction,
