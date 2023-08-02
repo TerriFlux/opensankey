@@ -940,7 +940,8 @@ export const default_link_style=()=>{
     dashed:false,
     opacity:0.85,
     to_precision:true,
-    scientific_precision:5
+    scientific_precision:5,
+    arrow_size:10
 
   }
 }

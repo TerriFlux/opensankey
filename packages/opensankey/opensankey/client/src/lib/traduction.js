@@ -396,6 +396,7 @@ const resources = {
           'fleche':'Arrow',
           'recy':'Recycling',
           'courbure':'Curvature',
+          'arrow_size':'Size of arrow',
           tooltips: {
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
@@ -409,7 +410,8 @@ const resources = {
             courbe: 'Represents the selected link(s) as a Bezier curve',
             fleche: 'Represents the selected link(s) with an arrow tip at the end',
             recy: 'Represents the selected link(s) as a recycle, i.e. with a backward turn',
-            courbure: 'Setting the radius of curvature in case the selected link(s) are represented as Bezier curve(s)'
+            courbure: 'Setting the radius of curvature in case the selected link(s) are represented as Bezier curve(s)',
+            arrow_size:'Change the size of the arrow (from the end of the link to the node)'
           }
         },
         label:{
@@ -928,6 +930,7 @@ const resources = {
           'fleche':'Flèche',
           'recy':'Recyclage',
           'courbure':'Courbure',
+          'arrow_size':'Taile de la flêche',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
@@ -941,7 +944,8 @@ const resources = {
             courbe: 'Représente le/les flux sélectionné(s) sous forme de courbe(s) de Bezier.',
             fleche: 'Représente le/les flux sélectionné(s) avec une pointe de flèche à la fin.',
             recy: 'Représente le/les flux sélectionné(s) sous forme de recyclage, ie. avec un retour vers l\'arrière.',
-            courbure: 'Paramétrage du rayon de courbure dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier'
+            courbure: 'Paramétrage du rayon de courbure dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
+            arrow_size:'Modifie la taille de la flêche (largeur entre la fin du flux et le noeud'
           }
         },
         label:{
