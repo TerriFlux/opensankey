@@ -2213,11 +2213,33 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   </Button>
 
 
+  let full=t('fullscreen')
+  if (!document.fullscreenElement) {
+    full=t('fullscreen')
+  } else {
+    full=t('exitFullscreen')
+  }
+
+  const button_fullscreen=<Button variant='light'
+    onClick={()=>{
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+      set_show_context_zdd(false)
+    }}
+  >
+    {full}
+
+  </Button>
 
 
   return show_context_zdd?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
+        {button_fullscreen}
+        {sep}
         {button_bg_color}
         {button_bg_grid}
         {dropdown_c_zdd_scale}

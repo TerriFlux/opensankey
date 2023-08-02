@@ -539,7 +539,8 @@ const resources = {
       'desire_to_know_more':'About',
       'legal':'Legal information',
       'tdr':'All right reserved',
-
+      'fullscreen':'Activate fullscreen',
+      'exitFullscreen':'Exit fullscreen',
     }
   },
   //=======================================================
@@ -1071,7 +1072,8 @@ const resources = {
       'desire_to_know_more':'En savoir +',
       'legal':'Mention légales',
       'tdr':'Tous droits réservées',
-
+      'fullscreen':'Activer le mode pleine écran',
+      'exitFullscreen':'Quitter le mode pleine écran',
 
 
     }

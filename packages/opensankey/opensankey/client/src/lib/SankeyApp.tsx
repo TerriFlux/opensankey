@@ -593,7 +593,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           is_agregation={is_agregation}
           set_alt_key_pressed={set_alt_key_pressed}
           min_width_and_height={min_width_and_height}
-          additional_draw_element={[]}
+          // additional_draw_element={[]}
           pointer_pos={pointer_pos}
           set_show_context_zdd={set_show_context_zdd}
         />
