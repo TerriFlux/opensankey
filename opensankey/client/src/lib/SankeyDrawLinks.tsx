@@ -21,7 +21,7 @@ export const OpenSankeyDrawLinks = (
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
 
-  select_link:(l: SankeyLink) => void,
+  // select_link:(l: SankeyLink) => void,
 
   alt_key_pressed:boolean,
   position:'absolute' | 'relative',
@@ -60,7 +60,7 @@ export const OpenSankeyDrawLinks = (
     button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
     multi_selected_links:{current: SankeyLink[] },
     links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-    select_link:(n: SankeyLink) => void,
+    // select_link:(n: SankeyLink) => void,
     set_data:(d:SankeyData)=>void
   )=>{
     mode_selection.current='s'
@@ -133,8 +133,6 @@ export const OpenSankeyDrawLinks = (
       }else{
         set_displayed_input_link_value('')
       }
-
-      select_link(d)
       set_data({...data})
     }
   }
@@ -293,7 +291,7 @@ export const OpenSankeyDrawLinks = (
         .on('click', (event, d) => {
           const source_node = display_nodes[d.idSource]
           const target_node = display_nodes[d.idTarget]
-          select_link(d)
+          // select_link(d)
           // if classic link
           if (return_value_link(data,d,'orientation') === 'hh' && source_node.x < target_node.x) {
             d3.select(' .opensankey #link_center' + d.idLink).attr('fill-opacity', 0.7)
@@ -366,7 +364,7 @@ export const OpenSankeyDrawLinks = (
         }
       })
 
-    paths.on('click', (event, d) =>eventLinkClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,select_link,set_data))
+    paths.on('click', (event, d) =>eventLinkClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,set_data))
     // const arrowVisible=(l :SankeyLink)=>{
     //   return  data.nodes[l.idSource].display && data.nodes[l.idTarget].display && l.arrow
 

@@ -11,7 +11,7 @@ export const SankeyMenuConfigurationLinksData = (
   data:SankeyData,
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
-  selected_link:{current:SankeyLink},
+  // selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
   t:TFunction,
@@ -94,7 +94,7 @@ export const SankeyMenuConfigurationLinksData = (
                   const formatedValue=evt.target.value.replace(',','.')
                   if(formatedValue!=='' && !isNaN(+formatedValue )){
                     const was_empty=value_selected_parameter(data,multi_selected_links,tags_selected).value===''
-                    let val = Object(selected_link.current.value)
+                    let val = Object(multi_selected_links.current[0].value)
                     multi_selected_links.current.map(d => {
                       const dashed=return_value_link(data,multi_selected_links.current[0],'dashed') as boolean
                       assign_link_local_attribute(d,'dashed',(was_empty)?false:dashed)
@@ -117,7 +117,7 @@ export const SankeyMenuConfigurationLinksData = (
                     set_data({ ...data })
                   }
                   else if(formatedValue=='') {
-                    let val = Object(selected_link.current.value)
+                    let val = Object(multi_selected_links.current[0].value)
                     multi_selected_links.current.map(d => {
                       val = d.value
                       // d.dashed=true
@@ -157,7 +157,7 @@ export const SankeyMenuConfigurationLinksData = (
             value={value_selected_parameter(data,multi_selected_links,tags_selected).display_value}
             onChange={
               evt => {
-                let val = Object(selected_link.current.value)
+                let val = Object(multi_selected_links.current[0].value)
                 multi_selected_links.current.map(d => {
                   val = d.value
                   Object.values(tags_selected).forEach(tag => {

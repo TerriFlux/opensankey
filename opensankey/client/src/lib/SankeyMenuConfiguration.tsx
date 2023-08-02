@@ -18,7 +18,7 @@ export const OpenSankeyConfigurationsMenus = (
   selected_node:{current:SankeyNode},
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
-  selected_link:{current:SankeyLink},
+  // // selected_link:{current:SankeyLink},
   style_to_apply:string,
   set_style_to_apply:(s:string)=>void,
   set_show_nav:(d:boolean)=>void,
@@ -208,7 +208,6 @@ export const OpenSankeyConfigurationsMenus = (
                 t={t}
                 data={data}
                 set_data={set_data}
-                selected_link={selected_link}
                 multi_selected_links={multi_selected_links}
                 menu_configuration_links={Object.values(menu_configuration_links)}
                 style_editable={style_editable}

@@ -9,7 +9,7 @@ import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttri
 import {SankeyMenuConfigurationNodesLabel} from './SankeyMenuConfigurationNodesLabel'
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
 import {SankeyMenuConfigurationLinksLabel} from './SankeyMenuConfigurationLinksLabel'
-import { SankeyData, SankeyLink } from './types'
+import { SankeyData } from './types'
 
 
 // /**
@@ -166,7 +166,7 @@ export const SankeyPlusModalStyleLink = (
   set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
   showStyleLink:boolean,
   setShowStyleLink:React.Dispatch<React.SetStateAction<boolean>>,
-  selected_link:{current:SankeyLink},
+  // selected_link:{current:SankeyLink},
   selected_style_link:string,
   set_selected_style_link:React.Dispatch<React.SetStateAction<string>>,
   additional_link_appearence_items:JSX.Element[],
@@ -266,7 +266,7 @@ export const SankeyPlusModalStyleLink = (
           <Col md={12}>
             <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
 
-              {SankeyMenuConfigurationLinksAppearence(data,selected_link,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link,display_link_opacity,set_display_link_opacity)}
+              {SankeyMenuConfigurationLinksAppearence(data,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link,display_link_opacity,set_display_link_opacity)}
               {SankeyMenuConfigurationLinksLabel(data,{current:[]},set_data,t,true,selected_style_link)}
 
             </Tabs>
