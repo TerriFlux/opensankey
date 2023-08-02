@@ -350,10 +350,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
       <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
       
-        <table>{(Object.entries(data.levelTags).length > 0) ? (<>
+        <>{(Object.entries(data.levelTags).length > 0) ? (<>
           {addSimpleLevelDropDown(t,data,set_data)}</>
         ) : (<>
-          <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</table>
+          <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</>
       </Popover.Body>
     </Popover>
   const {filter}=data.display_style
