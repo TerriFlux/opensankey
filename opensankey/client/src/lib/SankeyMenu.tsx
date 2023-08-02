@@ -697,11 +697,11 @@ export const OpenSankeyMenus = (
   <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-      <table>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+      <>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
         {addAllDropDownNode(t,data,set_data,false)}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-      }</table>
+      }</>
     </Popover.Body>
   </Popover>
 
