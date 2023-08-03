@@ -7,7 +7,7 @@ import { complete_sankey_data } from './SankeyConvert'
 import { default_link, default_node, default_sankey_data,clickSaveDiagram } from './SankeyUtils'
 import { node_visible_on_svg } from './SankeyDrawFunction'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
-
+import { menu_draggable } from './SankeyMenu'
 /**
  * Define ApplyLayoutDialog
  *
@@ -66,293 +66,276 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
     })
     set_data({...data})
   }
-  return (
-    <Modal
-      size="xl"
-      show={show_apply_layout}
-      onHide={() => set_show_apply_layout(false)}
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-      <Modal.Header closeButton>
-        <Modal.Title>{t('Menu.amp')}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Tabs 
-          defaultActiveKey={'import'}
-        >
+  const content_modal_layout=  <Tabs defaultActiveKey={'import'} >
 
-          <Tab eventKey='import' title={t('Menu.amp_import')}>
-            <Form >
-              <Form.Group as={Row} >
-                <Col xs={3}>
-                  <FormLabel>{t('Menu.fmep')}</FormLabel>
-                </Col>
-                <Col xs={5}>
-                  <Form.Control
-                    type="file"
-                    onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)}
-                  />
-                </Col>
-                <Col xs={4}>
-                  <Button
-                    size="sm"
-                    onClick={
-                      () => {
-                        if (file_layout === undefined) {
-                          return
+    <Tab eventKey='import' title={t('Menu.amp_import')} style={{marginBottom:'10px'}}>
+      <Form >
+        <Form.Group as={Row} >
+          <Col xs={3}>
+            <FormLabel>{t('Menu.fmep')}</FormLabel>
+          </Col>
+          <Col xs={5}>
+            <Form.Control
+              type="file"
+              onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)}
+            />
+          </Col>
+          <Col xs={4}>
+            <Button
+              size="sm"
+              onClick={
+                () => {
+                  if (file_layout === undefined) {
+                    return
+                  }
+                  const reader = new FileReader()
+                  reader.onload = (() => {
+                    return (
+                      (e: ProgressEvent<FileReader>) => {
+                        let result = (e.target as FileReader).result
+                        if (result) {
+                          result = String(result)//.split('<br>').join('\\\\n')
+                          const new_layout = JSON.parse(result)
+                          convert_data(new_layout)
+                          complete_sankey_data(new_layout,default_sankey_data,default_node,default_link)
+                          updateLayout(sankey_data, new_layout,elementToDispose)
+                          set_sankey_data({ ...sankey_data })
                         }
-                        const reader = new FileReader()
-                        reader.onload = (() => {
-                          return (
-                            (e: ProgressEvent<FileReader>) => {
-                              let result = (e.target as FileReader).result
-                              if (result) {
-                                result = String(result)//.split('<br>').join('\\\\n')
-                                const new_layout = JSON.parse(result)
-                                convert_data(new_layout)
-                                complete_sankey_data(new_layout,default_sankey_data,default_node,default_link)
-                                updateLayout(sankey_data, new_layout,elementToDispose)
-                                set_sankey_data({ ...sankey_data })
-                              }
-                            }
-                          )
-                        })()
-                        reader.readAsText(file_layout[0])
                       }
-                    }>{t('Menu.ad')}
-                  </Button>
-                </Col>
-              </Form.Group>
-            </Form>
-            <Form.Label>{t('Menu.textDisposition')}</Form.Label>
-            <FormGroup as={Row}>
-              <Col xs={2}>
-                <Form.Check inline checked={ elementToDispose.includes('posNode')} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => {
-                  if(evt.target.checked){
-                    elementToDispose.push('posNode')
-                    setForceUpdate(!forceUpdate)
-                  }else{
-                    elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
-                    setForceUpdate(!forceUpdate)
-                  }}}/>
-              </Col>
-              <Col xs={2}>
-                <Form.Check inline checked={elementToDispose.includes('attrNode')} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => {
-                  if(evt.target.checked){
-                    elementToDispose.push('attrNode')
-                    setForceUpdate(!forceUpdate)
+                    )
+                  })()
+                  reader.readAsText(file_layout[0])
+                }
+              }>{t('Menu.ad')}
+            </Button>
+          </Col>
+        </Form.Group>
+      </Form>
+      <Form.Label>{t('Menu.textDisposition')}</Form.Label>
+      <FormGroup as={Row}>
+        <Col xs={2}>
+          <Form.Check inline checked={ elementToDispose.includes('posNode')} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => {
+            if(evt.target.checked){
+              elementToDispose.push('posNode')
+              setForceUpdate(!forceUpdate)
+            }else{
+              elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
+              setForceUpdate(!forceUpdate)
+            }}}/>
+        </Col>
+        <Col xs={2}>
+          <Form.Check inline checked={elementToDispose.includes('attrNode')} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => {
+            if(evt.target.checked){
+              elementToDispose.push('attrNode')
+              setForceUpdate(!forceUpdate)
 
-                  }else{
-                    elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
-                    setForceUpdate(!forceUpdate)
-                  }}}/>
-              </Col>
-              <Col xs={2}>
-                <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{
-                  if(evt.target.checked){
-                    elementToDispose.push('attrFlux')
-                    setForceUpdate(!forceUpdate)
-                  }else{
-                    elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
-                    setForceUpdate(!forceUpdate)
-                  }}}/>
-              </Col>
-              <Col xs={2}>
-                <Form.Check inline checked={elementToDispose.includes('tagNode')} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) =>{
-                  if(evt.target.checked){
-                    elementToDispose.push('tagNode')
-                    setForceUpdate(!forceUpdate)
-                  }else{
-                    elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
-                    setForceUpdate(!forceUpdate)
+            }else{
+              elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
+              setForceUpdate(!forceUpdate)
+            }}}/>
+        </Col>
+        <Col xs={2}>
+          <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{
+            if(evt.target.checked){
+              elementToDispose.push('attrFlux')
+              setForceUpdate(!forceUpdate)
+            }else{
+              elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
+              setForceUpdate(!forceUpdate)
+            }}}/>
+        </Col>
+        <Col xs={2}>
+          <Form.Check inline checked={elementToDispose.includes('tagNode')} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) =>{
+            if(evt.target.checked){
+              elementToDispose.push('tagNode')
+              setForceUpdate(!forceUpdate)
+            }else{
+              elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
+              setForceUpdate(!forceUpdate)
 
-                  }}}/>
-              </Col>
-              <Col xs={2}>
-                <Form.Check inline checked={elementToDispose.includes('tagFlux')} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => {
-                  if(evt.target.checked){
-                    elementToDispose.push('tagFlux')
-                    setForceUpdate(!forceUpdate)
-                  }else{
-                    elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
-                    setForceUpdate(!forceUpdate)
-                  }}}/>
-              </Col>
-              <Col xs={2}>
-                <Form.Check inline checked={elementToDispose.includes('attrGeneral')} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) =>{
-                  if(evt.target.checked){
-                    elementToDispose.push('attrGeneral')
-                    setForceUpdate(!forceUpdate)
+            }}}/>
+        </Col>
+        <Col xs={2}>
+          <Form.Check inline checked={elementToDispose.includes('tagFlux')} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => {
+            if(evt.target.checked){
+              elementToDispose.push('tagFlux')
+              setForceUpdate(!forceUpdate)
+            }else{
+              elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
+              setForceUpdate(!forceUpdate)
+            }}}/>
+        </Col>
+        <Col xs={2}>
+          <Form.Check inline checked={elementToDispose.includes('attrGeneral')} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) =>{
+            if(evt.target.checked){
+              elementToDispose.push('attrGeneral')
+              setForceUpdate(!forceUpdate)
 
-                  }else{
-                    elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
-                    setForceUpdate(!forceUpdate)
-                  }}}/>
-              </Col>
-            </FormGroup>
-          </Tab>
+            }else{
+              elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
+              setForceUpdate(!forceUpdate)
+            }}}/>
+        </Col>
+      </FormGroup>
+    </Tab>
 
-          <Tab eventKey={'manuelle'} title={t('Menu.amp_manuelle')}>
-            {/* Ecart horizontal */}
-            <Form.Group as={Row} >
-              <Col xs={7}>
-                <FormLabel>{t('MEP.Horizontal')}</FormLabel>
-              </Col>
-              <Col xs={5}>
-                <OverlayTrigger
-                  key={'MEP.tooltips.EEN_h'}
-                  placement={'top'}
-                  delay={500}
-                  rootClose
-                  overlay={<Tooltip id={'tooltip-adjust'}>{t('MEP.tooltips.EEN_h')} </Tooltip>}>
-                  <FormControl
-                    type="text"
-                    value={node_hspace}
-                    onChange={evt => {
-                      set_node_hspace(+evt.target.value)
-                      data.h_space = +evt.target.value
-                    }}/>
-                </OverlayTrigger>
-              </Col>
-            </Form.Group>
-            {/* Ecart Vertical */}
-            <Form.Group as={Row}>
-              <Col xs={7}>
-                <FormLabel>{t('MEP.Vertical')}</FormLabel>
-              </Col>
-              <Col xs={5}>
-                <OverlayTrigger
-                  key={'MEP.tooltips.EEN_v'}
-                  placement={'top'}
-                  delay={500}
-                  rootClose
-                  overlay={<Tooltip id={'MEP.tooltips.EEN_v'}>{t('MEP.tooltips.EEN_v')} </Tooltip>}>
-                  <FormControl
-                    type="text"
-                    value={node_vspace}
-                    onChange={evt => {
-                      set_node_vspace(+evt.target.value)
-                      data.v_space = +evt.target.value
-                    }}/>
-                </OverlayTrigger>
-              </Col>
-            </Form.Group>
-            <OverlayTrigger
-              key={'MEP.tooltips.factExpH'}
-              placement={'top'}
-              delay={500}
-              rootClose
-              overlay={<Tooltip id={'MEP.tooltips.factExpH'}>{t('MEP.tooltips.factExpH')} </Tooltip>}>
-              <Form.Group as={Row}>
-                <Col xs={7}>
+    <Tab eventKey={'manuelle'} title={t('Menu.amp_manuelle')} style={{marginBottom:'10px'}}>
+      {/* Ecart horizontal */}
+      <Form.Group as={Row} >
+        <Col xs={7}>
+          <FormLabel>{t('MEP.Horizontal')}</FormLabel>
+        </Col>
+        <Col xs={5}>
+          <OverlayTrigger
+            key={'MEP.tooltips.EEN_h'}
+            placement={'top'}
+            delay={500}
+            rootClose
+            overlay={<Tooltip id={'tooltip-adjust'}>{t('MEP.tooltips.EEN_h')} </Tooltip>}>
+            <FormControl
+              type="text"
+              value={node_hspace}
+              onChange={evt => {
+                set_node_hspace(+evt.target.value)
+                data.h_space = +evt.target.value
+              }}/>
+          </OverlayTrigger>
+        </Col>
+      </Form.Group>
+      {/* Ecart Vertical */}
+      <Form.Group as={Row}>
+        <Col xs={7}>
+          <FormLabel>{t('MEP.Vertical')}</FormLabel>
+        </Col>
+        <Col xs={5}>
+          <OverlayTrigger
+            key={'MEP.tooltips.EEN_v'}
+            placement={'top'}
+            delay={500}
+            rootClose
+            overlay={<Tooltip id={'MEP.tooltips.EEN_v'}>{t('MEP.tooltips.EEN_v')} </Tooltip>}>
+            <FormControl
+              type="text"
+              value={node_vspace}
+              onChange={evt => {
+                set_node_vspace(+evt.target.value)
+                data.v_space = +evt.target.value
+              }}/>
+          </OverlayTrigger>
+        </Col>
+      </Form.Group>
+      <OverlayTrigger
+        key={'MEP.tooltips.factExpH'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'MEP.tooltips.factExpH'}>{t('MEP.tooltips.factExpH')} </Tooltip>}>
+        <Form.Group as={Row}>
+          <Col xs={7}>
 
-                  <Form.Label>
-                    {t('MEP.factExpH')}
-                  </Form.Label>
-                </Col>
-                <Col xs={5}>
-                  <InputGroup>
-                    <Form.Control
-                      type='number'
-                      min={0}
-                      step={0.1}
-                      value={stretchFactorH}
-                      onChange={evt=>{
-                        set_stretchFactorH(+evt.target.value)
-                      }}
-                    />
-                    <Button
-                      variant='outline-primary'
-                      onClick={()=>applyStretch('h')}>
-                      {t('MEP.stretchH')}
-                    </Button>
-                  </InputGroup>
-                </Col>
-              </Form.Group>
-            </OverlayTrigger>
-            <OverlayTrigger
-              key={'MEP.tooltips.factExpV'}
-              placement={'top'}
-              delay={500}
-              rootClose
-              overlay={<Tooltip id={'MEP.tooltips.factExpV'}>{t('MEP.tooltips.factExpV')} </Tooltip>}>
-                
-              <Form.Group as={Row}>
-                <Col xs={7}>
-                  <Form.Label>
-                    {t('MEP.factExpV')}
-                  </Form.Label>
-                </Col>
-                <Col xs={5}>
-                  <InputGroup>
-                    <Form.Control
-                      type='number'
-                      min={0}
-                      step={0.1}
-                      value={stretchFactorV}
-                      onChange={evt=>{
-                        set_stretchFactorV(+evt.target.value)
-                      }}
-                    />
-                    <Button
-                      variant='outline-primary'
-                      onClick={()=>applyStretch('v')}>
-                      {t('MEP.stretchV')}
-                    </Button>
-                  </InputGroup>
-                </Col>
-              </Form.Group>
-            </OverlayTrigger>
+            <Form.Label>
+              {t('MEP.factExpH')}
+            </Form.Label>
+          </Col>
+          <Col xs={5}>
+            <InputGroup>
+              <Form.Control
+                type='number'
+                min={0}
+                step={0.1}
+                value={stretchFactorH}
+                onChange={evt=>{
+                  set_stretchFactorH(+evt.target.value)
+                }}
+              />
+              <Button
+                variant='outline-primary'
+                onClick={()=>applyStretch('h')}>
+                {t('MEP.stretchH')}
+              </Button>
+            </InputGroup>
+          </Col>
+        </Form.Group>
+      </OverlayTrigger>
+      <OverlayTrigger
+        key={'MEP.tooltips.factExpV'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'MEP.tooltips.factExpV'}>{t('MEP.tooltips.factExpV')} </Tooltip>}>
+        
+        <Form.Group as={Row}>
+          <Col xs={7}>
+            <Form.Label>
+              {t('MEP.factExpV')}
+            </Form.Label>
+          </Col>
+          <Col xs={5}>
+            <InputGroup>
+              <Form.Control
+                type='number'
+                min={0}
+                step={0.1}
+                value={stretchFactorV}
+                onChange={evt=>{
+                  set_stretchFactorV(+evt.target.value)
+                }}
+              />
+              <Button
+                variant='outline-primary'
+                onClick={()=>applyStretch('v')}>
+                {t('MEP.stretchV')}
+              </Button>
+            </InputGroup>
+          </Col>
+        </Form.Group>
+      </OverlayTrigger>
 
-            { /* Positionnement des noeuds */}
-            <Form.Group as={Row}>
-              { /* Mise en forme automatique */}
-              <Col xs={6}>
-                <OverlayTrigger
-                  key={'MEP.tooltips.PA'}
-                  placement={'top'}
-                  delay={500}
-                  rootClose
-                  overlay={<Tooltip id={'MEP.tooltips.PA'}>{t('MEP.tooltips.PA')} </Tooltip>}>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      compute_auto_sankey(data, node_hspace)
-                      set_data({ ...data })
-                    }}>
-                    {t('MEP.PA')}
-                  </Button>
-                </OverlayTrigger>
-              </Col>
-              {/* Arranger les noeud */}
-              <Col xs={6}>
-                <OverlayTrigger
-                  key={'MEP.tooltips.AN'}
-                  placement={'top'}
-                  delay={500}
-                  rootClose
-                  overlay={<Tooltip id={'MEP.tooltips.AN'}>{t('MEP.tooltips.AN')} </Tooltip>}>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      arrangeNodes(data)
-                      set_data({ ...data })
-                    }}>
-                    {t('MEP.AN')}
-                  </Button>
-                </OverlayTrigger>
-              </Col>
-            </Form.Group>
-          </Tab>
-        </Tabs>
+      { /* Positionnement des noeuds */}
+      <Form.Group as={Row}>
+        { /* Mise en forme automatique */}
+        <Col xs={6}>
+          <OverlayTrigger
+            key={'MEP.tooltips.PA'}
+            placement={'top'}
+            delay={500}
+            rootClose
+            overlay={<Tooltip id={'MEP.tooltips.PA'}>{t('MEP.tooltips.PA')} </Tooltip>}>
+            <Button
+              size="sm"
+              onClick={() => {
+                compute_auto_sankey(data, node_hspace)
+                set_data({ ...data })
+              }}>
+              {t('MEP.PA')}
+            </Button>
+          </OverlayTrigger>
+        </Col>
+        {/* Arranger les noeud */}
+        <Col xs={6}>
+          <OverlayTrigger
+            key={'MEP.tooltips.AN'}
+            placement={'top'}
+            delay={500}
+            rootClose
+            overlay={<Tooltip id={'MEP.tooltips.AN'}>{t('MEP.tooltips.AN')} </Tooltip>}>
+            <Button
+              size="sm"
+              onClick={() => {
+                arrangeNodes(data)
+                set_data({ ...data })
+              }}>
+              {t('MEP.AN')}
+            </Button>
+          </OverlayTrigger>
+        </Col>
+      </Form.Group>
+    </Tab>
+  </Tabs>
 
+  const dragLayout=show_apply_layout?menu_draggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.MEP'),set_show_apply_layout,60):<></>
+  return dragLayout
 
-      </Modal.Body>
-    </Modal>
-  )
 }
 
 /**
