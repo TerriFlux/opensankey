@@ -1,5 +1,4 @@
-import { InferProps} from 'prop-types'
-import React, { ChangeEvent, Requireable,useRef } from 'react'
+import React, { ChangeEvent, useRef } from 'react'
 import {SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
 import * as d3 from 'd3'
@@ -2017,8 +2016,8 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </OverlayTrigger>
   
     {/* <>{!window.SankeyToolsStatic&&!fullscreen?<> */}
-      {buttonCreateView}
-      {buttonUpdateView}
+    {buttonCreateView}
+    {buttonUpdateView}
     {/* </>:<></>}</> */}
 
     <OverlayTrigger

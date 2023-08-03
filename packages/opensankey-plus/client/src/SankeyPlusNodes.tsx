@@ -642,7 +642,9 @@ export const SankeyPlusNodeDragEvent=(
   min_width_and_height:(d:SankeyPlusData)=>number[],
 
 )=>{
-  (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(SankeyPlusdragGNodeEvent(data,display_nodes,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale,multi_selected_label,min_width_and_height));
+  if(mode_selection.current==='s'){
+    (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(SankeyPlusdragGNodeEvent(data,display_nodes,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale,multi_selected_label,min_width_and_height))
+  }
   (d3.select('.opensankey #svg') as d3.Selection<Element, unknown, HTMLElement, unknown>).call(d3.drag<Element, unknown, HTMLElement>()
     .subject(Object)
     .filter(evt=>{
