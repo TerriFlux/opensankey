@@ -1032,23 +1032,36 @@ export const convert_links = (
       }
       const col_tag = (v as unknown as ConvertSankeyValue).color_tag
       if ( col_tag) {
-        v.tags = {...col_tag}
-        if ( Array.isArray(v.tags['Uncert']) ) {
-          v.tags['Uncert'] = v.tags['Uncert'][0]
-        }
+        Object.keys(col_tag).forEach(tags_group_key=>{
+          if (!(tags_group_key in v.tags)) {
+            v.tags[tags_group_key] = []
+          }
+          v.tags[tags_group_key].push(col_tag[tags_group_key])
+        })
+        // if ( Array.isArray(v.tags['Uncert']) ) {
+        //   if (!('Uncert' in v.tags)) {
+        //     v.tags['Uncert'] = []
+        //   }
+        //   v.tags['Uncert'] = v.tags['Uncert'][0]
+        // }
         delete (v as unknown as ConvertSankeyValue).color_tag
       }
       if (v.tags === undefined ) {
         v.tags = {}
       }
+      Object.keys(v.tags).forEach(key=> {
+        if ( !Array.isArray(v.tags['key']) ) {
+          v.tags[key] = [v.tags[key] as unknown as string]
+        }
+      })
       if ( !v.extension) {
         v.extension = {}
       }
       if (data_to_convert.fluxTags['flux_types'] && !('flux_types' in v['tags'])) {
         if ( v.extension.data_value ) {
-          v['tags']['flux_types'] = 'initial_data'
+          v['tags']['flux_types'] = ['initial_data']
         } else {
-          v['tags']['flux_types'] = 'computed_data'
+          v['tags']['flux_types'] = ['computed_data']
         }
       }
       return
@@ -1272,17 +1285,17 @@ export const convert_links = (
               //sankey_link_value['tags']['Uncert'] = ''
               const p = ((editable_link.maxi as number[])[value_index] - (editable_link.mini as number[])[value_index])/(editable_link.value as number[])[value_index]
               if (p <= 0.1) {
-                sankey_link_value['tags']['Uncert'] ='10_percent'
+                sankey_link_value['tags']['Uncert'] = ['10_percent']
               } else if (p <= 0.25) {
-                sankey_link_value['tags']['Uncert'] ='25_percent'
+                sankey_link_value['tags']['Uncert'] = ['25_percent']
               } else if (p <= 0.5) {
-                sankey_link_value['tags']['Uncert'] ='50_percent'
+                sankey_link_value['tags']['Uncert'] = ['50_percent']
               } else {
-                sankey_link_value['tags']['Uncert'] ='50+_percent'
+                sankey_link_value['tags']['Uncert'] = ['50+_percent']
               }
             }
             if (data_to_convert.dataTags['flux_types']) {
-              sankey_link_value['tags']['flux_types'] = 'computed_data'
+              sankey_link_value['tags']['flux_types'] = ['computed_data']
             }
             if (editable_link.data_value !== undefined && editable_link.data_value !== null && sankey_link_value.extension) {
               sankey_link_value.extension.data_value  = (editable_link.data_value as number[])[value_index] as unknown as string
@@ -1292,7 +1305,7 @@ export const convert_links = (
               if ( 'data_period' in editable_link) {
                 sankey_link_value.extension.data_period = (editable_link.data_period as string[])[value_index]
               }
-              sankey_link_value['tags']['flux_types'] = 'initial_data'
+              sankey_link_value['tags']['flux_types'] = ['initial_data']
             }
           }
         )
@@ -1351,21 +1364,21 @@ export const convert_links = (
             //editable_link.value2['tags']['Uncert'] = {}
             const p = (the_maxi - the_mini)/(the_value as number)
             if (p <= 0.1) {
-              sankey_link_value['tags']['Uncert'] ='10_percent'
+              sankey_link_value['tags']['Uncert'] = ['10_percent']
             } else if (p <= 0.25) {
-              sankey_link_value['tags']['Uncert'] ='25_percent'
+              sankey_link_value['tags']['Uncert'] = ['25_percent']
             } else if (p <= 0.5) {
-              sankey_link_value['tags']['Uncert'] ='50_percent'
+              sankey_link_value['tags']['Uncert'] = ['50_percent']
             } else {
-              sankey_link_value['tags']['Uncert'] ='50+_percent'
+              sankey_link_value['tags']['Uncert'] = ['50+_percent']
             }
           }
           if (data_to_convert.dataTags['flux_types']) {
-            sankey_link_value['tags']['flux_types'] = 'computed_data'
+            sankey_link_value['tags']['flux_types'] = ['computed_data']
           }
           if (editable_link.data_value !== undefined && editable_link.data_value !== null && sankey_link_value.extension) {
             sankey_link_value.extension.data_value  = (editable_link.data_value as number[])[0] as unknown as string
-            sankey_link_value['tags']['flux_types'] = 'initial_data'
+            sankey_link_value['tags']['flux_types'] = ['initial_data']
           }
           if ( 'data_source' in editable_link && sankey_link_value.extension) {
             sankey_link_value.extension.data_source = (editable_link.data_source as string[])[0]
