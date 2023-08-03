@@ -126,7 +126,7 @@ export const SankeyMenuConfigurationLinksTags = (
                   <td>
                     <FormCheck
                       name={'element_visible' + tag_key}
-                      checked={value_selected_parameter().tags[tags_group_key] === tag_key}
+                      checked={value_selected_parameter().tags[tags_group_key].includes(tag_key) }
                       id={tag_key}
                       type='checkbox'
                       onChange={
@@ -142,7 +142,11 @@ export const SankeyMenuConfigurationLinksTags = (
                               }
                               val = val[tag]
                             })
-                            val.tags[tags_group_key] = visible ? new_tag_key : ''
+                            if (visible) {
+                              val.tags[tags_group_key].push(new_tag_key)
+                            } else {
+                              val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
+                            }
                           })
                           set_data({ ...data })
                         }

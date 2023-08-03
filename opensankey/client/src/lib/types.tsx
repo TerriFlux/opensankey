@@ -117,7 +117,7 @@ export const SankeyLinkValueTypes =
   // is_percent:PropTypes.bool.isRequired,
   // percent:PropTypes.number.isRequired,
   display_value: PropTypes.string.isRequired,
-  tags: PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
+  tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
   // for previous_value, data_value, data_source, data_period, mini, maxi ...
   extension: PropTypes.objectOf(PropTypes.string.isRequired)
 }

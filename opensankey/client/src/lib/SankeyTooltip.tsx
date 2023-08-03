@@ -95,7 +95,11 @@ export const  linkTooltipsContent = (
   t += '<td>' + toPrecision((the_value)?the_value:0) +'</td>'
   t += '</td>'
   t += '</tr>'
-  Object.entries(link_info.tags).forEach(([tag_group,tag])=> t+='<tr><th>'+data.fluxTags[tag_group].group_name+'</th><td>'+data.fluxTags[tag_group].tags[tag].name+'</td><tr>')
+  Object.entries(link_info.tags).forEach(([tag_group_key,tags])=> {
+    const names : string[]= []
+    tags.forEach(link_info_tag=> names.push(data.fluxTags[tag_group_key].tags[link_info_tag].name))
+    t+='<tr><th>'+data.fluxTags[tag_group_key].group_name+'</th><td>'+names.join()+'</td><tr>'
+  })
   t += '</tbody></table>'
 
   const source_node = data.nodes[l.idSource]
@@ -230,7 +234,13 @@ export const nodeTooltipsContent = (
         if (n.inputLinksId.length>1) {
           const percent = Math.round(((the_value)?the_value:0)*100/total)
           t += '<td>'+ percent + '%</td>'
-          Object.keys(data.fluxTags).forEach(tag=> t += (tag in link_info.tags) ? '<td style="white-space: nowrap;">'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td></tr>' : '<td></td></tr>')
+          Object.keys(data.fluxTags).forEach(tag_group_key=> {
+            const names : string[]= []
+            link_info.tags[tag_group_key].forEach(tag=> 
+              names.push(data.fluxTags[tag_group_key].tags[tag].name)
+            )
+            t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
+          })
         } else {
           t += '<td></td></tr>'          
         }
@@ -293,7 +303,13 @@ export const nodeTooltipsContent = (
           if (n.outputLinksId.length>1) {
             const percent = Math.round(((the_value)?the_value:0)*100/total)
             t += '<td>'+ percent + '%</td>'
-            Object.keys(data.fluxTags).forEach(tag=> t += (tag in link_info.tags) ? '<td style="white-space: nowrap;">'+data.fluxTags[tag].tags[link_info.tags[tag]].name+'</td></tr>' : '<td></td></tr>')
+            Object.keys(data.fluxTags).forEach(tag_group_key=> {
+              const names : string[]= []
+              link_info.tags[tag_group_key].forEach(tag=>
+                names.push(data.fluxTags[tag_group_key].tags[tag].name)
+              )
+              t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
+            })
           } else {
             t += '<td></td></tr>'          
           }
