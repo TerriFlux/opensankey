@@ -469,11 +469,16 @@ export const toPrecision = (
   if (v < 1) {
     return String(v.toFixed(1).replace(/\.0+$/, ''))
   }
-  let new_v = v.toPrecision(nb_scientific).replace(/\.0+$/, '')
-  if (new_v.includes('e+'+nb_scientific)) {
-    new_v = String(parseFloat(new_v))
+  if(!isNaN(v)){
+    let new_v = v.toPrecision(nb_scientific).replace(/\.0+$/, '')
+    if (new_v.includes('e+'+nb_scientific)) {
+      new_v = String(parseFloat(new_v))
+    }
+    return new_v
+  }else{
+    return v
   }
-  return new_v
+  
 }
 /**
  * Return the value of the link if the display value is empty either way it return display_value
