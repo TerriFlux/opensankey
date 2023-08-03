@@ -1868,7 +1868,15 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
                     }
                     val = val[tag]
                   })
-                  val.tags[nt[0]] = !(value_selected_parameter_contextualised_link().tags[nt[0]] === t)? t : ''
+                  if(!Object.keys(val.tags).includes(nt[0])){
+                    val.tags[nt[0]]=[]
+                  }
+                  if(!val.tags[nt[0]].includes(t)){
+                    val.tags[nt[0]].push(t)
+                  }else{
+                    val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
+                  }
+                  //val.tags[nt[0]] = !(value_selected_parameter_contextualised_link().tags[nt[0]] === t)? t : ''
                 })
 
                 // Assign tag to contextualised link
@@ -1879,12 +1887,20 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
                   }
                   val = val[tag]
                 })
-                val.tags[nt[0]] = !(value_selected_parameter_contextualised_link().tags[nt[0]] === t)? t : ''
+                if(!Object.keys(val.tags).includes(nt[0])){
+                  val.tags[nt[0]]=[]
+                }
+                if(!val.tags[nt[0]].includes(t)){
+                  val.tags[nt[0]].push(t)
+                }else{
+                  val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
+                }
+                //val.tags[nt[0]] = !(value_selected_parameter_contextualised_link().tags[nt[0]] === t)? t : ''
 
                 
                 set_data({...data})
               }}>
-                {nt[1].tags[t].name}{checked(value_selected_parameter_contextualised_link().tags[nt[0]] === t)}
+                {nt[1].tags[t].name}{checked(value_selected_parameter_contextualised_link().tags[nt[0]].includes(t))}
               </Dropdown.Item>
             })}
           </Dropdown.Menu>

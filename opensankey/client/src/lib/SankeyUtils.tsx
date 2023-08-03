@@ -666,8 +666,9 @@ export const link_color = (l: SankeyLink,data:SankeyData,
         if (v === undefined) {
           return return_value_link(data,l,'color')
         }
-        if (tagGroup in data.fluxTags && v.tags[tagGroup] in data.fluxTags[tagGroup].tags) {
-          colorLink = data.fluxTags[tagGroup].tags[v.tags[tagGroup]].color
+        
+        if (tagGroup in data.fluxTags && v.tags[tagGroup].filter(tag=>tag in data.fluxTags[tagGroup].tags).length > 0) {
+          colorLink = data.fluxTags[tagGroup].tags[v.tags[tagGroup].filter(tag=>tag in data.fluxTags[tagGroup].tags)[0]].color
         } else {
           colorLink = 'grey'
         }
@@ -830,8 +831,9 @@ export const link_visible = (l: SankeyLink, data: SankeyData,
   const v = (val as unknown) as SankeyLinkValue
   let visible = true
   Object.keys(data.fluxTags).forEach(tag_group => {
-    const selected_tag = v.tags[tag_group]
-    if (selected_tag && selected_tag in fluxTags[tag_group].tags  && !fluxTags[tag_group].tags[selected_tag].selected) {
+    const v_tags = v.tags[tag_group]
+    const selected_tags = v_tags.filter(tag=>tag in fluxTags[tag_group].tags)
+    if (v_tags.length > 0 && selected_tags.length>0  && selected_tags.filter(selected_tag => fluxTags[tag_group].tags[selected_tag].selected).length == 0) {
       visible = false
     }
   })
