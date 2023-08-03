@@ -1145,7 +1145,6 @@ export const keyHandler = (
   set_show_toast_updated_view:React.Dispatch<React.SetStateAction<boolean>>,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
-  set_show_menu_node_icon:(b:boolean)=>void,
 ) => {
   // Applique le control de touche issu de opensankey (pour eviter de copier/coller et avoir de potentiel différence)
   // Apply keyHandling from opensankey (to avoid copy/paste that can generate error)
@@ -1432,8 +1431,6 @@ export const keyHandler = (
     })
     multi_selected_labels.current=[]
     
-    // set_fullscreen(false)
-    set_show_menu_node_icon(false)
   }
 
   if(e.key==='Delete'){

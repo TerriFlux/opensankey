@@ -29,7 +29,9 @@ export const SankeyPlusDrawLabels = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   mode_selection:{current:string},
-  start_point:{current:number[]}
+  start_point:{current:number[]},
+  closeAllMenuContext:()=>void
+
 ) => {
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
@@ -56,7 +58,7 @@ export const SankeyPlusDrawLabels = (
       draw_text_zone_handles(data,d,multi_selected_label,set_data)
 
       gg_label.on('click', (event) => eventLabelClick(event,d,data,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
-
+      gg_label.on('mousedown',()=>closeAllMenuContext())
       // Traite les labels qui sont dans des foreignObject
       gg_label.filter(()=>{
         return d.isTextHTML
@@ -297,8 +299,6 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
       }else if(mode_selection.current==='s' && !evt.ctrlKey){
         // const pos = d3.pointer(evt)
         const pos =[evt.x,evt.y]
-        console.log(pos)
-        console.log(evt)
         start_point.current=pos
         d3.select('#svg').append('g').attr('class','selection_zone')
           .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
