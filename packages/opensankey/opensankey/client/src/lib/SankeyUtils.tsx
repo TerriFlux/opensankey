@@ -579,6 +579,9 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   if ( data.maximum_flux && ((val as unknown) as SankeyLinkValue).value > data.maximum_flux) {
     return data.maximum_flux
   }
+  if ( data.minimum_flux && ((val as unknown) as SankeyLinkValue).value < data.minimum_flux) {
+    return data.minimum_flux
+  }
   return ((val as unknown) as SankeyLinkValue).value
 }
 /**
@@ -612,6 +615,9 @@ export const default_sankey_data = (): SankeyData => {
     left_shift: 0.4,
     right_shift: 0.5,
     max_shift: 0.2,
+
+    node_width:20,
+    node_height:20,
 
     display_style: {
       filter: 0,

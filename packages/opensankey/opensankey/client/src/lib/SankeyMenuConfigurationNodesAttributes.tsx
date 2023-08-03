@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import React from 'react'
-import { Row, Form, FormControl, FormLabel, Col, FormCheck, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Row, Form,  FormLabel, Col, FormCheck, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyNode } from './types'
 import { return_correct_node_attribute_value,assign_node_value_to_correct_var,is_node_diplaying_value_local,is_all_node_attr_same_value} from './SankeyUtils'
 export const OpenSankeyConfigurationNodesAttributes = (
@@ -88,7 +88,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
   //   return (display_width) ? width : 0
   // }
 
-  const displayedValueNodeWidth=is_all_node_attr_same_value(data,selected_parameter,'node_width',menu_for_style) as number
+  // const displayedValueNodeWidth=is_all_node_attr_same_value(data,selected_parameter,'node_width',menu_for_style) as number
 
 
   // const displayedValueNodeHeight = () => {
@@ -106,7 +106,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
   //   })
   //   return (display_height) ? height : 0
   // }
-  const displayedValueNodeHeight=is_all_node_attr_same_value(data,selected_parameter,'node_height',menu_for_style) as number
+  // const displayedValueNodeHeight=is_all_node_attr_same_value(data,selected_parameter,'node_height',menu_for_style) as number
 
 
   // Tableau d'elements de sous-menu attribut de noeuds
@@ -236,63 +236,63 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </Col>
     </Form.Group>,
 
-    /* Largeur minimale du noeud */
-    <Form.Group as={Row} >
-      <Col xs={4}>
-        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.apparence.TML')+(is_node_diplaying_value_local(multi_selected_nodes,'node_width',menu_for_style)?'*':'')}</FormLabel>
-      </Col>
-      <Col>
-        <OverlayTrigger
-          key={'noeud.apparence.tooltips.6'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'noeud.apparence.tooltips.6'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
-          <FormControl
-            min={0} max={100}
-            type={'number'}
-            value={displayedValueNodeWidth}
-            disabled={menu_for_style?false:!isAllNodeVisible}
-            onChange={
-              evt => {
-                selected_parameter.map(d=>assign_node_value_to_correct_var(d,'node_width',+evt.target.value,menu_for_style))
-                // selected_parameter.map(d => d.node_width = +evt.target.value,menu_for_style)
-                //set_multi_selected_nodes(multi_selected_nodes)
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'node_width',evt.target.value,menu_for_style))
-                set_data({ ...data })
-              }}/>
-        </OverlayTrigger>
-      </Col>
-      <Col style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>px</Col>
-    </Form.Group>,
+    // /* Largeur minimale du noeud */
+    // <Form.Group as={Row} >
+    //   <Col xs={4}>
+    //     <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.apparence.TML')+(is_node_diplaying_value_local(multi_selected_nodes,'node_width',menu_for_style)?'*':'')}</FormLabel>
+    //   </Col>
+    //   <Col>
+    //     <OverlayTrigger
+    //       key={'noeud.apparence.tooltips.6'}
+    //       placement={'top'}
+    //       delay={500}
+    //       rootClose
+    //       overlay={<Tooltip id={'noeud.apparence.tooltips.6'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
+    //       <FormControl
+    //         min={0} max={100}
+    //         type={'number'}
+    //         value={displayedValueNodeWidth}
+    //         disabled={menu_for_style?false:!isAllNodeVisible}
+    //         onChange={
+    //           evt => {
+    //             selected_parameter.map(d=>assign_node_value_to_correct_var(d,'node_width',+evt.target.value,menu_for_style))
+    //             // selected_parameter.map(d => d.node_width = +evt.target.value,menu_for_style)
+    //             //set_multi_selected_nodes(multi_selected_nodes)
+    //             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'node_width',evt.target.value,menu_for_style))
+    //             set_data({ ...data })
+    //           }}/>
+    //     </OverlayTrigger>
+    //   </Col>
+    //   <Col style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>px</Col>
+    // </Form.Group>,
 
-    /* Hauteur minimale du noeud */
-    <Form.Group as={Row} >
-      <Col xs={4}>
-        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.apparence.TMH')+(is_node_diplaying_value_local(multi_selected_nodes,'node_height',menu_for_style)?'*':'')}</FormLabel>
-      </Col>
-      <Col>
-        <OverlayTrigger
-          key={'noeud.apparence.tooltips.7'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'noeud.apparence.tooltips.7'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
-          <FormControl
-            min={0} max={100}
-            type={'number'}
-            value={displayedValueNodeHeight}
-            disabled={menu_for_style?false:!isAllNodeVisible}
-            onChange={
-              evt => {
-                //set_multi_selected_nodes(multi_selected_nodes)
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'node_height',evt.target.value,menu_for_style))
-                set_data({ ...data })
-              }}/>
-        </OverlayTrigger>
-      </Col>
-      <Col style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>px</Col>
-    </Form.Group>
+    // /* Hauteur minimale du noeud */
+    // <Form.Group as={Row} >
+    //   <Col xs={4}>
+    //     <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.apparence.TMH')+(is_node_diplaying_value_local(multi_selected_nodes,'node_height',menu_for_style)?'*':'')}</FormLabel>
+    //   </Col>
+    //   <Col>
+    //     <OverlayTrigger
+    //       key={'noeud.apparence.tooltips.7'}
+    //       placement={'top'}
+    //       delay={500}
+    //       rootClose
+    //       overlay={<Tooltip id={'noeud.apparence.tooltips.7'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
+    //       <FormControl
+    //         min={0} max={100}
+    //         type={'number'}
+    //         value={displayedValueNodeHeight}
+    //         disabled={menu_for_style?false:!isAllNodeVisible}
+    //         onChange={
+    //           evt => {
+    //             //set_multi_selected_nodes(multi_selected_nodes)
+    //             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'node_height',evt.target.value,menu_for_style))
+    //             set_data({ ...data })
+    //           }}/>
+    //     </OverlayTrigger>
+    //   </Col>
+    //   <Col style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>px</Col>
+    // </Form.Group>
   ]
 }
 

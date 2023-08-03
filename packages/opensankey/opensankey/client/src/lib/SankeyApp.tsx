@@ -95,6 +95,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     if(ndata.legend_position!==legend_position){
       set_legend_position(ndata.legend_position)
     }
+
+    if(data.maximum_flux && data.minimum_flux && data.minimum_flux>data.maximum_flux){
+      data.maximum_flux=data.minimum_flux
+      set_maximum_flux(data.minimum_flux)
+    }
     pre_set_data({...ndata})
   }
   const [contextualised_node,set_contextualised_node]=useState<SankeyNode>()
@@ -131,6 +136,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // For OpenSankeyMenuConfigurationLayout
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
+  const [minimum_flux, set_minimum_flux] = useState(data.minimum_flux)
   const [node_hspace, set_node_hspace] = useState(data.h_space)
   const [node_vspace, set_node_vspace] = useState(data.v_space)
 
@@ -264,7 +270,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
-  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale,maximum_flux,set_maximum_flux)
+  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale)
   //- 1.2 Builds Configuration Menus Node
   //- 1.2.1 Builds Configuration Menus Node Attributes
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes,false,selected_style_node)
@@ -359,7 +365,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       </Popover.Body>
     </Popover>
   const {filter}=data.display_style
-  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate,set_never_see_again,convert_data)
+  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate,set_never_see_again,convert_data,maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux)
   Object.keys(toolbar).forEach(k=>{
     sankey_menus[k]=toolbar[k]
   })

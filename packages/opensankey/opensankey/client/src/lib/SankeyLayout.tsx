@@ -519,8 +519,8 @@ export const updateLayout = (
         node.local={}
       }
       node.position = node_layout.position
-      node.local.node_width = node_layout.local?.node_width
-      node.local.node_height = node_layout.local?.node_height
+      // node.local.node_width = node_layout.local?.node_width
+      // node.local.node_height = node_layout.local?.node_height
       node.local.show_value = node_layout.local?.show_value
       node.local.shape = node_layout.local?.shape
       if (node_layout.x !== 0 && node_layout.y != 0) { 
@@ -728,6 +728,9 @@ export const updateLayout = (
     }
     if (new_layout.maximum_flux) {
       data.maximum_flux = new_layout.maximum_flux
+    }
+    if (new_layout.minimum_flux) {
+      data.minimum_flux= new_layout.minimum_flux
     }
     Object.keys(new_layout.display_style).forEach(
       key => ((data.display_style as unknown) as Record<string, unknown>)[key] = ((new_layout.display_style as unknown) as Record<string, unknown>)[key]

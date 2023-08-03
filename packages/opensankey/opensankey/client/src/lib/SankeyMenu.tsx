@@ -2164,6 +2164,26 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
     </Dropdown.Menu>
   </Dropdown>
 
+  const dropdown_c_zdd_min_size_link=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('MEP.MinFlux')}
+    </Dropdown.Toggle>
+
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item as={Button} variant='light'>
+        <Form.Control
+          type="text"
+          value={data.minimum_flux == null ? undefined :data.minimum_flux}
+          onChange={(evt) => {
+            const minimum_flux =isNaN(+evt.target.value)?null:+evt.target.value
+            data.minimum_flux = minimum_flux
+            set_data({ ...data })
+          }}
+        />
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>
+
   const button_pa=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('MEP.PA')}
@@ -2260,6 +2280,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
         {button_bg_color}
         {button_bg_grid}
         {dropdown_c_zdd_scale}
+        {dropdown_c_zdd_min_size_link}
         {dropdown_c_zdd_max_size_link}
         {sep}
         {button_pa}
