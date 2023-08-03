@@ -122,7 +122,10 @@ const MenuPropTypes = {
   set_show_context_zdd:PropTypes.func.isRequired,
   updateLayout:PropTypes.func.isRequired,
   convert_data:PropTypes.func.isRequired,
-
+  node_hspace:PropTypes.number.isRequired,
+  set_node_hspace:PropTypes.func.isRequired,
+  node_vspace:PropTypes.number.isRequired,
+  set_node_vspace:PropTypes.func.isRequired,
 }
 
 const pre_process_export_svg=()=>{
@@ -697,11 +700,11 @@ export const OpenSankeyMenus = (
   <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
-      <table>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
+      <>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
         {addAllDropDownNode(t,data,set_data,false)}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-      }</table>
+      }</>
     </Popover.Body>
   </Popover>
 
@@ -1005,7 +1008,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_contextualised_link,
     set_show_context_zdd,
     updateLayout,
-    convert_data
+    convert_data,
+    node_hspace,set_node_hspace,
+    node_vspace,set_node_vspace
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1345,6 +1350,12 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_sankey_data={set_data}
         updateLayout={updateLayout}
         convert_data={convert_data}
+        node_hspace={node_hspace}
+        set_node_hspace={set_node_hspace}
+        node_vspace={node_vspace}
+        set_node_vspace={set_node_vspace}
+        data={data}
+        set_data={set_data}
       />
 
       <ExcelModal
@@ -1569,8 +1580,10 @@ const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem
   overflowY:'auto'
 } as CSSProperties
 
-export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{current:number[]},title:string,set_display_menu:(b:boolean)=>void)=>{
+export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{current:number[]},title:string,set_display_menu:(b:boolean)=>void,width_menu=25)=>{
   const class_name=title.replaceAll('/','').replaceAll('.','').split(' ').join('_')
+  const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
+  n_style_menu_draggable.width=width_menu+'%'
   return <Draggable  handle='.title_menu' 
     defaultPosition={{x:pointer_pos.current[0],y:pointer_pos.current[1]}}
     onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
@@ -1578,7 +1591,7 @@ export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{curr
     }} 
   >
     <div className={'menu_conf '+class_name}
-      style={style_menu_draggable}       
+      style={n_style_menu_draggable}       
     >
       <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'1','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
         <Col><h3>{title}</h3></Col>
@@ -1613,6 +1626,19 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   if(contextualised_node!==undefined){
     style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   } 
+  const align_node=(ref:'min'|'max',attr:'x'|'y')=>{
+    const node_ref=multi_selected_nodes.current.filter(nf=>nf.position!='relative').sort((n1,n2)=>{
+      return ref=='min'?n1[attr]-n2[attr]:n2[attr]-n1[attr]
+    })[0]
+    const pos_ref=node_ref[attr]
+    const wORh=(attr=='x')?'width':'height'
+    const wORh_ref=(document.getElementById(node_ref.idNode)?.getBoundingClientRect()[wORh]??0)
+    const center_ref=pos_ref+(wORh_ref/2)
+    multi_selected_nodes.current.filter(n=>n!=node_ref && n.position!='relative').forEach(n=>{
+      const wORh_to_shift=(document.getElementById(n.idNode)?.getBoundingClientRect()[wORh]??0)
+      n[attr]=center_ref-((wORh_to_shift)/2)
+    })
+  }
 
   // Dropdown to change some pararmeter concerning the appearence of the node  
   const has_node_tags=Object.values(data.nodeTags).filter(nt=>nt.group_name!=='Type de noeud').length>0
@@ -1714,6 +1740,45 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     set_contextualised_node(undefined)
   }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>:<></>
 
+
+
+  
+  const dropdown_c_n_align_h=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.align_horiz')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item onClick={()=>{
+        align_node('min','x')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_min')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('max','x')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_max')}
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>:<></> 
+
+  const dropdown_c_n_align_v=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.align_vert')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item onClick={()=>{
+        align_node('min','y')
+        set_data({...data})
+      }}>{t('Noeud.align_vert_min')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('max','y')
+        set_data({...data})
+      }}>{t('Noeud.align_vert_max')}
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>:<></> 
+
   // Pop over that serve as context menu 
   return contextualised_node!==undefined?<Popover  id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
     <Popover.Body>
@@ -1768,7 +1833,9 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           {t('Noeud.Reorg')}
         </Button>
         {multi_selected_nodes.current.length==1?dropdown_c_n_io:<></>}
-
+        {sep}
+        {dropdown_c_n_align_h}
+        {dropdown_c_n_align_v}
         {has_node_tags?sep:<></>}
         {dropdown_c_n_tag}
         {sep}
@@ -2053,7 +2120,8 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   set_node_hspace:(n:number)=>void,
   node_vspace:number,
   set_node_vspace:(n:number)=>void,
-  t:TFunction
+  t:TFunction,
+  set_show_menu_layout:(b:boolean)=>void
 )=>{
 
   let style_c_zdd='0px 0px auto auto'
@@ -2107,6 +2175,26 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
           onChange={(evt) => {
             const maximum_flux =isNaN(+evt.target.value)?null:+evt.target.value
             data.maximum_flux = maximum_flux
+            set_data({ ...data })
+          }}
+        />
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>
+
+  const dropdown_c_zdd_min_size_link=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('MEP.MinFlux')}
+    </Dropdown.Toggle>
+
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item as={Button} variant='light'>
+        <Form.Control
+          type="text"
+          value={data.minimum_flux == null ? undefined :data.minimum_flux}
+          onChange={(evt) => {
+            const minimum_flux =isNaN(+evt.target.value)?null:+evt.target.value
+            data.minimum_flux = minimum_flux
             set_data({ ...data })
           }}
         />
@@ -2175,14 +2263,42 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   </Button>
 
 
+  let full=t('fullscreen')
+  if (!document.fullscreenElement) {
+    full=t('fullscreen')
+  } else {
+    full=t('exitFullscreen')
+  }
 
+  const button_fullscreen=<Button variant='light'
+    onClick={()=>{
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+      set_show_context_zdd(false)
+    }}
+  >
+    {full}
+  </Button>
 
+  const button_open_layout=<Button onClick={()=>{
+    set_show_menu_layout(true)
+    set_show_context_zdd(false)
+
+  }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>
   return show_context_zdd?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
+        {button_fullscreen}
+        {sep}
+        {button_open_layout}
+        {sep}
         {button_bg_color}
         {button_bg_grid}
         {dropdown_c_zdd_scale}
+        {dropdown_c_zdd_min_size_link}
         {dropdown_c_zdd_max_size_link}
         {sep}
         {button_pa}

@@ -2,7 +2,7 @@ import  { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,TagsCatalog,SankeyLinkValue,drawArrowsType} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
-import {  link_color,link_visible,return_value_node,return_value_link} from './SankeyUtils'
+import {  link_color,link_visible,return_value_link} from './SankeyUtils'
 import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height, deselect_visualy_links,eventLinkContextMenu} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 import {value_selected_parameter,linkStrokeWidth,node_visible_on_svg} from './SankeyDrawFunction'
@@ -21,7 +21,7 @@ export const OpenSankeyDrawLinks = (
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
 
-  select_link:(l: SankeyLink) => void,
+  // select_link:(l: SankeyLink) => void,
 
   alt_key_pressed:boolean,
   position:'absolute' | 'relative',
@@ -60,7 +60,7 @@ export const OpenSankeyDrawLinks = (
     button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
     multi_selected_links:{current: SankeyLink[] },
     links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-    select_link:(n: SankeyLink) => void,
+    // select_link:(n: SankeyLink) => void,
     set_data:(d:SankeyData)=>void
   )=>{
     mode_selection.current='s'
@@ -133,8 +133,6 @@ export const OpenSankeyDrawLinks = (
       }else{
         set_displayed_input_link_value('')
       }
-
-      select_link(d)
       set_data({...data})
     }
   }
@@ -293,7 +291,7 @@ export const OpenSankeyDrawLinks = (
         .on('click', (event, d) => {
           const source_node = display_nodes[d.idSource]
           const target_node = display_nodes[d.idTarget]
-          select_link(d)
+          // select_link(d)
           // if classic link
           if (return_value_link(data,d,'orientation') === 'hh' && source_node.x < target_node.x) {
             d3.select(' .opensankey #link_center' + d.idLink).attr('fill-opacity', 0.7)
@@ -366,7 +364,7 @@ export const OpenSankeyDrawLinks = (
         }
       })
 
-    paths.on('click', (event, d) =>eventLinkClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,select_link,set_data))
+    paths.on('click', (event, d) =>eventLinkClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,set_data))
     // const arrowVisible=(l :SankeyLink)=>{
     //   return  data.nodes[l.idSource].display && data.nodes[l.idTarget].display && l.arrow
 
@@ -502,7 +500,8 @@ export const OpenSankeyDrawLinks = (
     const target_y_min = target_node.y
     const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #' + target_node.idNode).attr('height'))
     // const tolerance = 3 * source_node.node_width
-    const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
+    // const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
+    const tolerance = 3 * data.node_width
     const link_orientation=return_value_link(data,link,'orientation')
     if ((link_orientation === 'hh' || link_orientation === 'hv') && mouse_coord[1] >= source_y_min && mouse_coord[1] <= source_y_max && (mouse_coord[0] <= source_x_max + tolerance)) {
       return { 'node_id': source_node.idNode, 'type': 'source', 'origin': source_y_min }

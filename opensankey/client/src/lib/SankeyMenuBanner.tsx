@@ -6,7 +6,7 @@ import { findMaxLinkValue,adjust_sankey_zone } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faFilter,faCodeBranch,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faCodeBranch,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown, faSliders} from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
@@ -388,6 +388,10 @@ export const toolbar_builder = (
   set_show_modal_welcome:(b:boolean)=>void,
   set_never_see_again:(b:boolean)=>void,
   convert_data:(d:SankeyData)=>void,
+  maximum_flux:number | null | undefined,
+  set_maximum_flux:(n:number)=>void,
+  minimum_flux:number | null | undefined,
+  set_minimum_flux:(n:number)=>void,
 ) => {
   const level_filter = Object.entries(data.levelTags).length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
@@ -461,15 +465,16 @@ export const toolbar_builder = (
   // - filter on link label
   // - filter on null link (if link value is null (0), we can display it or not)
   const link_filter=
-  <Popover id="popover-link-filter" style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">{t('Banner.ff')}</Popover.Header>
+  <Popover id="popover-link-filter" style={{maxWidth:'100%',maxHeight:'600px','overflowY':'auto'}}>
+    <Popover.Header as="h3">{t('Banner.p_aff')}</Popover.Header>
     <Popover.Body >
-      <Form style={{width:'600px'}}>
+      <Form>
+        <h5>{t('Banner.p_aff_aff_links')}</h5>
         <Form.Group as={Row} >
-          <Col xs={3}>
+          <Col xs={7}>
             <FormLabel >{t('MEP.Echelle')}</FormLabel>
           </Col>
-          <Col>
+          <Col xs={5}>
             <FormControl
               type="text"
               value={user_scale}
@@ -487,6 +492,66 @@ export const toolbar_builder = (
             <Form.Text>    ({t('MEP.vp100')})</Form.Text>
           </Col>
         </Form.Group>
+
+        {/* Taille maximale du flux */}
+        <Form.Group as={Row} >
+          <Col xs={7}>
+            <FormLabel >{t('MEP.MaxFlux')}</FormLabel>
+          </Col>
+          <Col xs={5}>
+            <OverlayTrigger
+              key={'MEP.tooltips.MaxFlux'}
+              placement={'top'}
+              delay={500}
+              rootClose
+              overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
+              <FormControl
+                type="text"
+                value={maximum_flux == null ? undefined : maximum_flux}
+                onChange={evt => {
+                  set_maximum_flux(+evt.target.value)
+                }}
+                onBlur={() => {
+                  data.maximum_flux = isNaN(Number(maximum_flux))?undefined:maximum_flux
+                  set_data({ ...data })
+                }}/>
+            </OverlayTrigger>
+          </Col>
+        </Form.Group>
+
+        {/* Taille maximale du flux */}
+        <Form.Group as={Row} >
+          <Col xs={7}>
+            <FormLabel >{t('MEP.MinFlux')}</FormLabel>
+          </Col>
+          <Col xs={5}>
+            <OverlayTrigger
+              key={'MEP.tooltips.MinFlux'}
+              placement={'top'}
+              delay={500}
+              rootClose
+              overlay={<Tooltip id={'MEP.tooltips.MinFlux'}>{t('MEP.tooltips.MinFlux')} </Tooltip>}>
+              <FormControl
+                type="text"
+                value={minimum_flux == null ? undefined : minimum_flux}
+                onChange={evt => {
+                  set_minimum_flux(+evt.target.value)
+                }}
+                onBlur={() => {
+                  data.minimum_flux = isNaN(Number(minimum_flux))?undefined:minimum_flux
+                  set_data({ ...data })
+                }}/>
+            </OverlayTrigger>
+          </Col>
+        </Form.Group>
+
+
+        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+        <h5>{t('Banner.p_aff_filtre_links')}</h5>
+
+
+
+
         <Form.Group as={Row} >
           <Col>
             <FormLabel >{t('Banner.filtre')}</FormLabel>
@@ -562,6 +627,73 @@ export const toolbar_builder = (
               }}
             />
           </Col>
+        </Form.Group>
+
+        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+        <h5>{t('Banner.p_aff_aff_node')}</h5>
+
+
+        {/* Largeur minimale du noeud */}
+        <Form.Group as={Row} >
+          <Col xs={4}>
+            <FormLabel >{t('Noeud.apparence.TML')}</FormLabel>
+          </Col>
+          <Col>
+            <OverlayTrigger
+              key={'noeud.apparence.tooltips.6'}
+              placement={'top'}
+              delay={500}
+              rootClose
+              overlay={<Tooltip id={'noeud.apparence.tooltips.6'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
+              <FormControl
+                min={0}
+                step={1}
+                type={'number'}
+                value={data.node_width}
+                onChange={
+                  evt => {
+                    const val=evt.target.value
+                    let value=40
+                    if(!isNaN(+val)){
+                      value=Math.abs(Math.round(+val))
+                    }
+                    data.node_width=value
+                    set_data({ ...data })
+                  }}/>
+            </OverlayTrigger>
+          </Col>
+          <Col>px</Col>
+        </Form.Group>
+
+        {/* Hauteur minimale du noeud */}
+        <Form.Group as={Row} >
+          <Col xs={4}>
+            <FormLabel >{t('Noeud.apparence.TMH')}</FormLabel>
+          </Col>
+          <Col>
+            <OverlayTrigger
+              key={'noeud.apparence.tooltips.7'}
+              placement={'top'}
+              delay={500}
+              rootClose
+              overlay={<Tooltip id={'noeud.apparence.tooltips.7'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
+              <FormControl
+                min={0} max={100}
+                type={'number'}
+                value={data.node_height}
+                onChange={
+                  evt => {
+                    const val=evt.target.value
+                    let value=40
+                    if(!isNaN(+val)){
+                      value=Math.abs(Math.round(+val))
+                    }
+                    data.node_height=value
+                    set_data({ ...data })
+                  }}/>
+            </OverlayTrigger>
+          </Col>
+          <Col>px</Col>
         </Form.Group>
       </Form>
     </Popover.Body>
@@ -718,7 +850,7 @@ export const toolbar_builder = (
             set_show_link_threshold(!show_link_threshold)
           }}
         >
-          <Col><FontAwesomeIcon icon={faFilter} /></Col>
+          <Col><FontAwesomeIcon icon={faSliders} /></Col>
           {/* <Col className='textIcon'>{t('Menu.filter')}</Col> */}
         </Button>
       </OverlayTrigger>

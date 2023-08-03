@@ -30,7 +30,7 @@ const SankeyDrawPropTypes = {
   set_alt_key_pressed:PropTypes.func.isRequired,
 
   min_width_and_height:PropTypes.func.isRequired,
-  additional_draw_element:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  // additional_draw_element:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   pointer_pos:PropTypes.shape({current:PropTypes.arrayOf(PropTypes.number.isRequired).isRequired}).isRequired,
   set_show_context_zdd:PropTypes.func.isRequired
 
@@ -50,7 +50,7 @@ export const SankeyDrawDefaultProps = {
   set_alt_key_pressed:()=>false,
   min_width_and_height:()=>[],
   set_show_toast_limit_node:()=>false,
-  additional_draw_element:[],
+  // additional_draw_element:[],
   pointer_pos:{current:[]},
   set_show_context_zdd:()=>false
 
@@ -67,7 +67,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
-  additional_draw_element,
+  // additional_draw_element,
   pointer_pos,
   set_show_context_zdd
 }) => {
@@ -265,7 +265,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   return (
     <>
       <div className="span12" style={{ 'color': 'black','display': 'inline' }} id='visualization_div' >
-        {additional_draw_element}
+        {/* {additional_draw_element} */}
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <div className='scroll_zone' >
             <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
@@ -302,14 +302,8 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   set_data:(d:SankeyData)=>void,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
-  set_show_nav:React.Dispatch<React.SetStateAction<boolean>>,
   mode_selection:{current : string},
-  set_show_menu_node_apparence:(b:boolean)=>void,
-  set_show_menu_node_label:(b:boolean)=>void,
-  set_show_menu_node_io:(b:boolean)=>void,
-  set_show_menu_link_data:(b:boolean)=>void,
-  set_show_menu_link_appearence:(b:boolean)=>void,
-  set_show_menu_link_label:(b:boolean)=>void,
+  closeAllMenu:()=>void
 
 ) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
@@ -405,13 +399,8 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     })
     multi_selected_links.current=[]
 
-    set_show_nav(false)
-    set_show_menu_node_apparence(false)
-    set_show_menu_node_label(false)
-    set_show_menu_node_io(false)
-    set_show_menu_link_data(false)
-    set_show_menu_link_appearence(false)
-    set_show_menu_link_label(false)
+    closeAllMenu()
+
     // set_mode_selection('s')
     // if ( button_ref && button_ref.current && accordion_ref ) {
     //   button_ref.current.click()
@@ -546,6 +535,14 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     e.preventDefault()
     set_data({...data})
     clickSaveDiagram(data)
+  }else  if((e.key==='f') && e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
+    e.preventDefault()
+
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen()
+    }
   }
 }
 
