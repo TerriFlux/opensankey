@@ -31,7 +31,9 @@ const resources = {
         'enregistrer':'DL',
         'exporter':'Export',
         'preference':'Settings',
-        'amp':'Import a layout',
+        'amp':'Modify the layout',
+        'amp_import':'Import a layout',
+        'amp_manuelle':'Modify manualy',
         'esn':'Edit nodes style',
         'esf':'Edit links style',
         'rc':'Keyboard Shortcuts',
@@ -160,7 +162,8 @@ const resources = {
       MEP:{
         'onBlur':'Value is applied when we leave the input',
         'Echelle':'Scale of diagram',
-        'MaxFlux':'Maximal value for links (px)',
+        'MaxFlux':'Maximal thickness for links (px)',
+        'MinFlux':'Minimal thickness for links (px)',
         'vp100':'value for 100px',
         'TCG':'Background grid',
         'AN':'Arrange the nodes on the grid',
@@ -175,6 +178,7 @@ const resources = {
         tooltips: {
           Echelle: 'Change the scale of the links and nodes',
           MaxFlux: 'Change the maximum size (in pixels) for the display of the links',
+          MinFlux: 'Change the minimum size (in pixels) for the display of the links',
           TCG: 'Size of the background grid tiles (in pixels)',
           GV: 'Enable or disable the display of the background grid',
           AN: 'Automatically arrange nodes: ie come and paste the upper left corner of the nodes on the nearest grid corner',
@@ -230,6 +234,12 @@ const resources = {
         'SlctOutLink':'Select outgoing links',
         'SlctInLink':'Select incoming links',
         'IB':'Tooltip',
+        'align_horiz': 'Align nodes horizontally',
+        'align_horiz_min':'Relative to the selected node furthest to the left',
+        'align_horiz_max': 'Relative to the selected node furthest to the right',
+        'align_vert': 'Align nodes vertically',
+        'align_vert_min': 'Relative to the selected topmost node',
+        'align_vert_max': 'Relative to the selected node furthest down',
         tooltips:{
           Nom: 'Change the name of the selected node. If several nodes are selected, this field is disabled',
           AS: 'Allow to apply a predefined style in the preference menu to the selected node(s)',
@@ -372,10 +382,8 @@ const resources = {
           'données':'Data',
           'vpp':'Value for given parameters',
           'affichage':'Display',
-          'toPrecision':'Display the value in scientific notation',
           tooltips: {
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
-            toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram'
           }
         },
@@ -392,6 +400,7 @@ const resources = {
           'fleche':'Arrow',
           'recy':'Recycling',
           'courbure':'Curvature',
+          'arrow_size':'Size of arrow',
           tooltips: {
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
@@ -405,7 +414,8 @@ const resources = {
             courbe: 'Represents the selected link(s) as a Bezier curve',
             fleche: 'Represents the selected link(s) with an arrow tip at the end',
             recy: 'Represents the selected link(s) as a recycle, i.e. with a backward turn',
-            courbure: 'Setting the radius of curvature in case the selected link(s) are represented as Bezier curve(s)'
+            courbure: 'Setting the radius of curvature in case the selected link(s) are represented as Bezier curve(s)',
+            arrow_size:'Change the size of the arrow (from the end of the link to the node)'
           }
         },
         label:{
@@ -423,6 +433,8 @@ const resources = {
           'dessous':'Above',
           'dessus':'Below',
           'pls':'Position the label with the mouse',
+          'toPrecision':'Display the value in scientific notation',
+          'NbPrecision':'Number of significant figures',
           tooltips: {
             label: 'Display or not the label (data / text) associated to the selected link(s)',
             len: 'Display the label in black, for the selected stream(s)',
@@ -435,7 +447,10 @@ const resources = {
             below: 'For the selected stream(s), allows to position the label below the stream',
             milieu_v: 'For the selected link(s), allows to position the label inside the link',
             top: 'For the selected stream(s), allows to position the label above the stream',
-            pls: 'Activates the possibility to move the label of the selected stream(s) with the mouse'
+            pls: 'Activates the possibility to move the label of the selected stream(s) with the mouse',
+            toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
+            NbPrecision:'Choose the number of significant figures when the value is diplayed in scientific notation',
+
           }
         },
         'layout':'Disposition',
@@ -474,7 +489,11 @@ const resources = {
         'sdd':'Data selection',
         'tl':'Download',
         'rslt': 'Download results',
-        'ff':'Links visual filtering',
+        'p_aff':'Display settings',
+        'p_aff_aff_links':'Links display settings',
+        'p_aff_aff_node':'Nodes display settings',
+        'p_aff_filtre_links':'Links display filter',
+        
         'filtre':'Threshold value for links dislay',
         'fl':'Threshold value for labels display',
         'fn':'Null Link',
@@ -488,7 +507,7 @@ const resources = {
         'hlp_1_txt_5':'The diagram structure (without link thickness) can be displayed by checking Diagram structure',
         'hlp_1_txt_6':'The diagram can be adjusted on screen by checking Adjust on screen',
         'hlp_1_txt_7':'To get information about each link, press shift and move the mouse over the link',
-        'hlp_1_txt_8':'To hide link/link\'s label when their value is under a threshold.',
+        'hlp_1_txt_8':'Setting setting some visual parameters for the elements of the sankey ',
         'hlp_1_txt_9':'Dropdown to filter node/link/data according to their group tag or to choose to display the diagram with color palette from a tag group.',
         'tooltipAdjust':'Readjust the drawing area to the screen size',
         'tooltipStructure':'Allows to display the structure of the diagram without proportion of the flows according to their value',
@@ -528,7 +547,8 @@ const resources = {
       'desire_to_know_more':'About',
       'legal':'Legal information',
       'tdr':'All right reserved',
-
+      'fullscreen':'Activate fullscreen',
+      'exitFullscreen':'Exit fullscreen',
     }
   },
   //=======================================================
@@ -562,7 +582,9 @@ const resources = {
         'preference':'Réglage',
         'reinit':'Réinitialiser',
         'pub':'Publier',
-        'amp':'Importer une mise en page',
+        'amp':'Modifier la mise en page',
+        'amp_import':'Importer une mise en page',
+        'amp_manuelle':'Modifier manuellement',
         'amp_short':'M.e.p',
 
         'esn':'Editer le style des noeuds',
@@ -685,6 +707,7 @@ const resources = {
         'onBlur':'La valeur sera appliqué dès que l\'on quitte l\'input',
         'Echelle': 'Echelle du diagramme',
         'MaxFlux': 'Taille maximale des flux (px)',
+        'MinFlux': 'Taille minimale des flux (px)',
         'vp100':'valeur pour 100px',
         'TCG':'Quadrillage en fond',
         'AN':'Arranger les noeuds sur le quadrillage',
@@ -699,6 +722,7 @@ const resources = {
         tooltips: {
           Echelle: 'Modifier l\'échelle des flux et noeuds',
           MaxFlux: 'Modifier la taille maximale (en pixel) pour l\'affichage des flux',
+          MinFlux: 'Modifier la taille minimale (en pixel) pour l\'affichage des flux',
           TCG: 'Taille des carreaux de la grille de fond (en pixel)',
           GV: 'Activer ou désactiver l\'affichage de la grille de fond',
           AN: 'Arrangement automatiquement les noeuds : ie venir coller le coin supérieur gauche des noeuds sur le coin de grille le plus proche',
@@ -754,6 +778,12 @@ const resources = {
         'SlctOutLink':'Sélectionner flux sortants',
         'SlctInLink':'Sélectionner flux entrants',
         'IB':'Info-bulle',
+        'align_horiz':'Aligner les noeuds horizontalement',
+        'align_horiz_min':'Par rapport au noeud sélectionné le + à gauche',
+        'align_horiz_max':'Par rapport au noeud sélectionné le + à droite',
+        'align_vert':'Aligner les noeuds verticalement',
+        'align_vert_min':'Par rapport au noeud sélectionné le + en haut',
+        'align_vert_max':'Par rapport au noeud sélectionné le + en bas',
         tooltips:{
           Nom: 'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
           AS: 'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
@@ -895,10 +925,8 @@ const resources = {
           'données':'Données',
           'vpp':'Valeur pour ces paramètres',
           'affichage':'Affichage',
-          'toPrecision':'Afficher la valeur en notation scientifique',
           tooltips: {
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
-            toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
             affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey'
           }
         },
@@ -915,6 +943,7 @@ const resources = {
           'fleche':'Flèche',
           'recy':'Recyclage',
           'courbure':'Courbure',
+          'arrow_size':'Taile de la flêche',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
@@ -928,7 +957,8 @@ const resources = {
             courbe: 'Représente le/les flux sélectionné(s) sous forme de courbe(s) de Bezier.',
             fleche: 'Représente le/les flux sélectionné(s) avec une pointe de flèche à la fin.',
             recy: 'Représente le/les flux sélectionné(s) sous forme de recyclage, ie. avec un retour vers l\'arrière.',
-            courbure: 'Paramétrage du rayon de courbure dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier'
+            courbure: 'Paramétrage du rayon de courbure dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
+            arrow_size:'Modifie la taille de la flêche (largeur entre la fin du flux et le noeud'
           }
         },
         label:{
@@ -946,6 +976,8 @@ const resources = {
           'dessous':'Dessous',
           'dessus':'Dessus',
           'pls':'Positionner le label à la souris',
+          'toPrecision':'Afficher la valeur en notation scientifique',
+          'NbPrecision':'Nombre de signe significatif',
           tooltips: {
             label: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)',
             len: 'Afficher le texte du label en noir, pour le(s) flux sélectionné(s)',
@@ -958,7 +990,9 @@ const resources = {
             dessous: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label en dessous du flux',
             milieu_v: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label dans le flux',
             dessus: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label au dessus du flux',
-            pls: 'Active la possibilité de déplacer avec la souris le label du/des flux sélectionné(s)'
+            pls: 'Active la possibilité de déplacer avec la souris le label du/des flux sélectionné(s)',
+            toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
+            NbPrecision:'Choisi le nombre de chiffre significatif à afficher quand la valeur est en notation scientifique ',
           }
         },
         'layout':'Disposition',
@@ -997,7 +1031,10 @@ const resources = {
         'sdd':'Sélection des données',
         'tl':'Téléchargements',
         'rslt':'Téléchargement résultats',
-        'ff':'Filtrage visuel des flux',
+        'p_aff':'Paramètres d\'affichage',
+        'p_aff_aff_links':'Paramètres d\'affichage des flux',
+        'p_aff_aff_node':'Paramètres d\'affichage des noeuds',
+        'p_aff_filtre_links':'Paramètres de filtrage visuel des flux',
         'filtre':'Valeur seuil pour l\'affichage des flux',
         'fl':'Valeur seuil pour l\'affichage des labels',
         'fn':'Flux nuls',
@@ -1011,7 +1048,7 @@ const resources = {
         'hlp_1_txt_5':'La structure du diagramme (sans épaisseur de flux) peut être affiché en cochant Structure du diagramme',
         'hlp_1_txt_6':'Le diagramme peut être ajusté à l\'écran en cochant Ajuster à l\'écran',
         'hlp_1_txt_7':'Pour obtenir des informations sur chaque flux, appuyer sur shift et passer la souris sur le flux.',
-        'hlp_1_txt_8':'Pour masquer les flux/label de flux  qui sont en dessous d\'un seuil.',
+        'hlp_1_txt_8':'Pour gérer des paramètres sur les éléments visibles du sankey',
         'hlp_1_txt_9':'Menu déroulant pour filtrer les noeuds/flux/données selon leur groupe d\'étiquette associée ou bien pour appliquer des couleurs au diagramme avec la palette de couleurs du groupe d\'étiquette.',
         'tooltipAdjust':'Permet de réajuster la zone de dessin à la taille de l\'écran',
         'tooltipStructure':'Permet d\'afficher la structure du diagramme sans proportion des flux selon leur valeur',
@@ -1034,7 +1071,7 @@ const resources = {
         4:'Bouton permettant de filtrer la visibilité des flux en fonction de leurs valeurs, ce bouton permet aussi de modifier l\'échelle du diagramme (l\'épaisseur des flux)',
         5:'Bouton permettant de réajuster la taille de la zone de dessin pour que tous les éléments soient visibles',
         6:'Bouton permettant d\'afficher le diagramme sans prendre en compte la valeur des flux',
-        7:'Bouton permettant d`\'afficher de l\'aide supplémentaire',
+        7:'Bouton permettant d\'afficher de l\'aide supplémentaire',
         8:'Menu de navigation permettant d\'ouvrir, enregistrer, éditer des sankeys ',
         9:'Bouton permettant de se connecter avec un compte opensankey et activer des modules supplémentaires',
         10:'Bouton permettant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
@@ -1050,7 +1087,8 @@ const resources = {
       'desire_to_know_more':'En savoir +',
       'legal':'Mention légales',
       'tdr':'Tous droits réservées',
-
+      'fullscreen':'Activer le mode pleine écran',
+      'exitFullscreen':'Quitter le mode pleine écran',
 
 
     }

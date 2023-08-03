@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyLink } from './types'
 import {value_selected_parameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
@@ -11,7 +11,7 @@ export const SankeyMenuConfigurationLinksData = (
   data:SankeyData,
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
-  selected_link:{current:SankeyLink},
+  // selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
   t:TFunction,
@@ -21,13 +21,7 @@ export const SankeyMenuConfigurationLinksData = (
   menu_for_modal=false
 )=>{
 
-  const isAllLinkToPrecision=(multi_selected_links:{current:SankeyLink[]},)=>{
-    let toPrecision = true
-    multi_selected_links.current.map(d => {
-      toPrecision = (d.to_precision) ? toPrecision : false
-    })
-    return toPrecision
-  }
+  
   const content=<Form >
     {
       //Définition des valeurs selon les paramètre dataTags
@@ -100,7 +94,7 @@ export const SankeyMenuConfigurationLinksData = (
                   const formatedValue=evt.target.value.replace(',','.')
                   if(formatedValue!=='' && !isNaN(+formatedValue )){
                     const was_empty=value_selected_parameter(data,multi_selected_links,tags_selected).value===''
-                    let val = Object(selected_link.current.value)
+                    let val = Object(multi_selected_links.current[0].value)
                     multi_selected_links.current.map(d => {
                       const dashed=return_value_link(data,multi_selected_links.current[0],'dashed') as boolean
                       assign_link_local_attribute(d,'dashed',(was_empty)?false:dashed)
@@ -123,7 +117,7 @@ export const SankeyMenuConfigurationLinksData = (
                     set_data({ ...data })
                   }
                   else if(formatedValue=='') {
-                    let val = Object(selected_link.current.value)
+                    let val = Object(multi_selected_links.current[0].value)
                     multi_selected_links.current.map(d => {
                       val = d.value
                       // d.dashed=true
@@ -142,28 +136,7 @@ export const SankeyMenuConfigurationLinksData = (
             </OverlayTrigger>
           </Col>
         </Row>
-        {/* Choix d'affichage en notation scientifique  */}
-        <Row>
-          <Col xs={2}>
-            <OverlayTrigger
-              key={'flux.data.tooltips.2'}
-              placement={'top'}
-              delay={500}
-              overlay={<Tooltip id={'flux.data.tooltips.2'}>{t('Flux.data.tooltips.toPrecision')} </Tooltip>}>
-              <FormCheck
-                inline
-                type='switch'
-                checked={isAllLinkToPrecision(multi_selected_links)}
-                onChange={evt=>{
-                  Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => d.to_precision = evt.target.checked)
-                  set_data({...data})
-                }}/>
-            </OverlayTrigger>
-          </Col>
-          <Col xs={10}>
-            <Form.Label >{t('Flux.data.toPrecision')}</Form.Label>
-          </Col>
-        </Row>
+        
       </Col>
     </Row>
 
@@ -184,7 +157,7 @@ export const SankeyMenuConfigurationLinksData = (
             value={value_selected_parameter(data,multi_selected_links,tags_selected).display_value}
             onChange={
               evt => {
-                let val = Object(selected_link.current.value)
+                let val = Object(multi_selected_links.current[0].value)
                 multi_selected_links.current.map(d => {
                   val = d.value
                   Object.values(tags_selected).forEach(tag => {

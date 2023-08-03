@@ -1,4 +1,3 @@
-const arrow_length = 10
 const default_horiz_shift = 50
 
 /**
@@ -18,7 +17,8 @@ export const draw_arrow = (
   v: number,
   cum: number,
   vertical: boolean,
-  revert: boolean
+  revert: boolean,
+  arrow_length:number
 ) => {
   // Il est possible que cum,v et w soit à 0 ce qui entraine => 0/0 qui retourne NaN et cause des problème àl'export png/pdf
   // Donc on assume que ca vaut 0

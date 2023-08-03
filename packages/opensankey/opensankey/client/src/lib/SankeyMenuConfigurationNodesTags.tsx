@@ -83,7 +83,7 @@ export const SankeyMenuConfigurationNodesTags = (
                               }
                               d.tags[tags_group_key].push(tag_key)
                             } else {
-                              d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tag_key))
+                              d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tag_key),1)
                             }
                           })
                           set_data({ ...data })

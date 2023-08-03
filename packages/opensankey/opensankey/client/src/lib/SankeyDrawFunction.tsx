@@ -145,24 +145,32 @@ export const compute_end_points = (
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
   res = compute_total_offsets(inv_scale,target_node, data, selected_tags, test_link_value,undefined,getLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
-  let node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
-  let node_size_t_width = inv_scale(return_value_node(data,target_node,'node_width') as number)
+  // let node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
+  let node_size_s_width = inv_scale(data.node_width)
+  // let node_size_t_width = inv_scale(return_value_node(data,target_node,'node_width') as number)
+  let node_size_t_width = inv_scale(data.node_width)
   if (data.show_structure !== 'structure') {
     node_size_s_width = Math.max(
-      inv_scale((return_value_node(data,source_node,'node_width') as number)), s_total_offset_width_bottom, s_total_offset_width_top
+      // inv_scale((return_value_node(data,source_node,'node_width') as number)), s_total_offset_width_bottom, s_total_offset_width_top
+      inv_scale(data.node_width), s_total_offset_width_bottom, s_total_offset_width_top
     )
     node_size_t_width = Math.max(
-      inv_scale(return_value_node(data,target_node,'node_width') as number), t_total_offset_width_bottom, t_total_offset_width_top
+      // inv_scale(return_value_node(data,target_node,'node_width') as number), t_total_offset_width_bottom, t_total_offset_width_top
+      inv_scale(data.node_width), t_total_offset_width_bottom, t_total_offset_width_top
     )
   }
-  let node_size_s_height = inv_scale((return_value_node(data,source_node,'node_height') as number))
-  let node_size_t_height = inv_scale((return_value_node(data,target_node,'node_height') as number))
+  // let node_size_s_height = inv_scale((return_value_node(data,source_node,'node_height') as number))
+  let node_size_s_height = inv_scale(data.node_height)
+  // let node_size_t_height = inv_scale((return_value_node(data,target_node,'node_height') as number))
+  let node_size_t_height = inv_scale(data.node_height)
   if (data.show_structure !== 'structure') {
     node_size_s_height = Math.max(
-      inv_scale((return_value_node(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+      // inv_scale((return_value_node(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+      inv_scale(data.node_height), s_total_offset_height_left, s_total_offset_height_right
     )
     node_size_t_height = Math.max(
-      inv_scale((return_value_node(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+      // inv_scale((return_value_node(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+      inv_scale(data.node_height), t_total_offset_height_left, t_total_offset_height_right
     )
   }
   res = compute_total_offsets(inv_scale,source_node, data, selected_tags, test_link_value, link,getLinkValue)
@@ -189,6 +197,7 @@ export const compute_end_points = (
   const ori=return_value_link(data,link,'orientation')
   const recy=return_value_link(data,link,'recycling')
   const l_arrow=return_value_link(data,link,'arrow')
+  const l_arrow_size=return_value_link(data,link,'arrow_size') as number 
 
   if (ori === 'hh') {
     //side to side
@@ -209,7 +218,7 @@ export const compute_end_points = (
       ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
       yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
       if (l_arrow && tmp !== ''  && tmp!=0 ) {
-        xt = xt - 10
+        xt = xt - l_arrow_size
       }
     }
   }
@@ -230,7 +239,7 @@ export const compute_end_points = (
       ys += scale(node_size_s_height)
       xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
       if (l_arrow && tmp !== ''  && tmp!=0) {
-        yt = yt - 10
+        yt = yt - l_arrow_size
       }
     }
   }
@@ -250,7 +259,7 @@ export const compute_end_points = (
         ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          yt = yt - 10
+          yt = yt - 30
         }
       }
     } else {
@@ -269,7 +278,7 @@ export const compute_end_points = (
         ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
         xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          yt = yt - 10
+          yt = yt - l_arrow_size
         }
       }
     }
@@ -301,7 +310,7 @@ export const compute_end_points = (
         xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          xt = xt - 10
+          xt = xt - l_arrow_size
         }
       } else {
         //source is top left target. Arrow goes left and go down to the top side
@@ -309,7 +318,7 @@ export const compute_end_points = (
         ys += scale(node_size_s_height)
         yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          xt = xt - 10
+          xt = xt - l_arrow_size
         }
       }
     }
@@ -607,16 +616,20 @@ export const setNodeHeight = (
   const res = compute_total_offsets(inv_scale,n, data, selected_tags, test_link_value,undefined,getLinkValue)
   const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
   let node_size_s_height = Math.max(
-    inv_scale((return_value_node(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
+    // inv_scale((return_value_node(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
+    inv_scale(data.node_height), total_offset_height_left, total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale((return_value_node(data,n,'node_width') as number)), total_offset_width_top, total_offset_width_bottom
+    // inv_scale((return_value_node(data,n,'node_width') as number)), total_offset_width_top, total_offset_width_bottom
+    inv_scale(data.node_width), total_offset_width_top, total_offset_width_bottom
   )
   //Hauteur des noeuds
   if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
     // Hauteur des noeuds
-    node_size_s_height = inv_scale((return_value_node(data,n,'node_height') as number))
-    node_size_s_width = inv_scale((return_value_node(data,n,'node_width') as number))
+    // node_size_s_height = inv_scale((return_value_node(data,n,'node_height') as number))
+    node_size_s_height = inv_scale(data.node_height)
+    // node_size_s_width = inv_scale((return_value_node(data,n,'node_width') as number))
+    node_size_s_width = inv_scale(data.node_width)
   }
   d3.select(' .opensankey #' + n.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #' + n.idNode).attr('height', scale(node_size_s_height))
@@ -761,19 +774,20 @@ export const drawArrows = (
           let xt
           let yt
           let p5
+          const arrow_length=return_value_link(data,l,'arrow_size') as number
           if (ori === 'hh' || ori === 'vh') {
             if (n.x <= source_node.x && recy || n.x > source_node.x && !recy) {
               xt = +n.x
               yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
-              return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false)
+              return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false,arrow_length)
             } else {
               xt = +n.x + +d3.select('#' + n.idNode).attr('width')
               yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
-              return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true)
+              return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true,arrow_length)
             }
           } else if (ori === 'vv' || ori === 'hv') {
             if (n.y > source_node.y) {
@@ -781,13 +795,13 @@ export const drawArrows = (
               yt = +n.y
               p5 = [xt, yt]
               is_v = false
-              return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false)
+              return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false,arrow_length)
             } else {
               xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
               yt = +n.y + +d3.select('#' + n.idNode).attr('height')
               p5 = [xt, yt]
               is_v = false
-              return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(link_value), scale(cum_h_bottom), false, true)
+              return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(link_value), scale(cum_h_bottom), false, true,arrow_length)
             }
           }
           return ''
@@ -823,13 +837,9 @@ export const eventOnSankeyZoneMouseDown=(
   evt2:unknown,
   // set_start_point:React.Dispatch<React.SetStateAction<number[]>>
   start_point:{current:number[]},
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  set_contextualised_link:(l:SankeyLink|undefined)=>void,
-  set_show_context_zdd:(b:boolean)=>void
+  closeAllMenuContext:()=>void
 )=>{
-  set_contextualised_node(undefined)
-  set_contextualised_link(undefined)
-  set_show_context_zdd(false)
+  closeAllMenuContext()
   const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
   if(evt.which==1){
@@ -854,8 +864,10 @@ export const eventOnSankeyZoneMouseDown=(
           new_node1.name = 'node_tmp'
           data.nodes[new_node1.idNode] = new_node1
           const pos = d3.pointer(event)
-          new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
-          new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+          // new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
+          new_node1.x = pos[0]-(data.node_width/2)
+          // new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+          new_node1.y = pos[1]-(data.node_height/2)
           set_first_selected_node(new_node1)
           set_data({ ...data })
         }
@@ -920,8 +932,10 @@ export const eventOnSankeyZoneMouseMove=(
       // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
       if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
         d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
-          .attr('x1', last_node.x + (return_value_node(data,last_node,'node_width') as number / 2))
-          .attr('y1', last_node.y + (return_value_node(data,last_node,'node_height') as number / 2))
+          // .attr('x1', last_node.x + (return_value_node(data,last_node,'node_width') as number / 2))
+          .attr('x1', last_node.x + (data.node_width / 2))
+          // .attr('y1', last_node.y + (return_value_node(data,last_node,'node_height') as number / 2))
+          .attr('y1', last_node.y + (data.node_height / 2))
           .attr('x2', pos[0])
           .attr('y2', pos[1])
           .style('stroke', '#d9af58')
@@ -940,8 +954,10 @@ export const eventOnSankeyZoneMouseMove=(
     if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
       // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
       d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
-        .attr('x1', fsn.x + (return_value_node(data,fsn,'node_width') as number / 2))
-        .attr('y1', fsn.y + (return_value_node(data,fsn,'node_height') as number / 2))
+        // .attr('x1', fsn.x + (return_value_node(data,fsn,'node_width') as number / 2))
+        // .attr('y1', fsn.y + (return_value_node(data,fsn,'node_height') as number / 2))
+        .attr('x1', fsn.x + (data.node_width / 2))
+        .attr('y1', fsn.y + (data.node_height / 2))
         .attr('x2', pos[0])
         .attr('y2', pos[1])
         .style('stroke', 'red')
@@ -1044,8 +1060,10 @@ export const eventOnSankeyZoneMouseUp=(
       }
       data.nodes[new_node1.idNode] = new_node1
       const pos = d3.pointer(evt)
-      new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
-      new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+      // new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
+      // new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+      new_node1.x = pos[0]-(data.node_width/2)
+      new_node1.y = pos[1]-(data.node_height/2)
       //Ajout du lien entre les deux noeuds créés
       const new_link = default_link(data)
       let idLink = Object.keys(data.links).length
@@ -1082,8 +1100,10 @@ export const eventOnSankeyZoneMouseUp=(
       n_node.name = 'node'+idNode
       data.nodes[n_node.idNode] = n_node
       const pos = d3.pointer(event)
-      n_node.x = pos[0]-(return_value_node(data,n_node,'node_width') as number/2)
-      n_node.y = pos[1]-(return_value_node(data,n_node,'node_height') as number/2)
+      // n_node.x = pos[0]-(return_value_node(data,n_node,'node_width') as number/2)
+      // n_node.y = pos[1]-(return_value_node(data,n_node,'node_height') as number/2)
+      n_node.x = pos[0]-(data.node_width/2)
+      n_node.y = pos[1]-(data.node_height/2)
 
       const { links } = data
       const fsn = (first_selected_node as SankeyNode)
@@ -1518,25 +1538,33 @@ export const setNodesHeight = (
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
   let node_size_s_height = Math.max(
-    inv_scale((return_value_node(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+    // // inv_scale((return_value_node(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+    inv_scale(data.node_height), s_total_offset_height_left, s_total_offset_height_right
   )
   let node_size_t_height = Math.max(
-    inv_scale((return_value_node(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+    // // inv_scale((return_value_node(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+    inv_scale(data.node_height), t_total_offset_height_left, t_total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale((return_value_node(data,source_node,'node_width') as number)), s_total_offset_width_top, s_total_offset_width_bottom
+    // inv_scale((return_value_node(data,source_node,'node_width') as number)), s_total_offset_width_top, s_total_offset_width_bottom
+    inv_scale(data.node_width), s_total_offset_width_top, s_total_offset_width_bottom
   )
   let node_size_t_width = Math.max(
-    inv_scale(return_value_node(data,target_node,'node_width') as number), t_total_offset_width_top, t_total_offset_width_bottom
+    // inv_scale(return_value_node(data,target_node,'node_width') as number), t_total_offset_width_top, t_total_offset_width_bottom
+    inv_scale(data.node_width), t_total_offset_width_top, t_total_offset_width_bottom
   )
   // Hauteur des noeuds
   if ((res_source[0] === 0 && res_source[1] === 0 && res_source[2] === 0 && res_source[3] === 0) || data.show_structure == 'structure') {
-    node_size_s_height = inv_scale((return_value_node(data,source_node,'node_height') as number))
-    node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
+    // node_size_s_height = inv_scale((return_value_node(data,source_node,'node_height') as number))
+    node_size_s_height = inv_scale(data.node_height)
+    // node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
+    node_size_s_width = inv_scale(data.node_width)
   }
   if ((res_target[0] === 0 && res_target[1] === 0 && res_target[2] === 0 && res_target[3] === 0) || data.show_structure == 'structure') {
-    node_size_t_height = inv_scale((return_value_node(data,target_node,'node_height') as number))
-    node_size_t_width = inv_scale(return_value_node(data,target_node,'node_width') as number)
+    // node_size_t_height = inv_scale((return_value_node(data,target_node,'node_height') as number))
+    // node_size_t_width = inv_scale(return_value_node(data,target_node,'node_width') as number)
+    node_size_t_height = inv_scale(data.node_height)
+    node_size_t_width = inv_scale(data.node_width)
   }
 
   d3.select(' .opensankey #' + source_node.idNode).attr('width', scale(node_size_s_width))
@@ -1703,7 +1731,8 @@ const add_center_handle=(
     const [, ys, xt, ] = res
     let [xs, , , yt] = res
     if (data.show_structure == 'structure') {
-      [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      // [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      [xs, yt] = [source_node.x + (data.node_width) / 2, target_node.y + (data.node_height) / 2]
     }
     const pos_d=center_handle_position(data,link,xs,ys,xt,yt,getLinkValue)
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
@@ -1933,7 +1962,9 @@ const drawCurve = (
 
   if (ori === 'vh' && !recy) {
     if (data.show_structure == 'structure') {
-      [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      // [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      [xs, yt] = [source_node.x + (data.node_width) / 2, target_node.y + (data.node_height) / 2]
+
       if (source_node.x > target_node.x) {
         xt = xt + 30
       }
@@ -1963,9 +1994,11 @@ const drawCurve = (
   }
   if (ori === 'hh' && !recy) {
     if (data.show_structure == 'structure' ) {
-      [ys, yt] = [source_node.y + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      // [ys, yt] = [source_node.y + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      [ys, yt] = [source_node.y + (data.node_width) / 2, target_node.y + (data.node_height) / 2]
       if (source_node.x > target_node.x) {
-        xt = xt + (return_value_node(data,target_node,'node_width') as number)
+        // xt = xt + (return_value_node(data,target_node,'node_width') as number)
+        xt = xt + (data.node_width)
       }
     }
     const left_horiz_shift = l_h_s ? l_h_s : 0
@@ -1983,7 +2016,8 @@ const drawCurve = (
   }
   if (ori === 'vv' && !recy) {
     if (data.show_structure == 'structure' ) {
-      [xs, xt] = [source_node.x + (return_value_node(data,source_node,'node_width') as number) / 2, target_node.x + (return_value_node(data,target_node,'node_width') as number / 2)]
+      // [xs, xt] = [source_node.x + (return_value_node(data,source_node,'node_width') as number) / 2, target_node.x + (return_value_node(data,target_node,'node_width') as number / 2)]
+      [xs, xt] = [source_node.x + (data.node_width) / 2, target_node.x + (data.node_width/ 2)]
       if (source_node.y > target_node.y) {
         yt = yt + 30
       }
@@ -2460,7 +2494,8 @@ export const linkStrokeWidth=(l:SankeyLink,
   link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
   //Zones limite à ne pas êtres
   // const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + node.node_width + scale(link_value / 2)]
-  const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + (return_value_node(data,node,'node_width') as number) + scale(link_value / 2)]
+  // const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + (return_value_node(data,node,'node_width') as number) + scale(link_value / 2)]
+  const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + data.node_width + scale(link_value / 2)]
   const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]
   let draw_warning = false
   //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
@@ -2468,7 +2503,8 @@ export const linkStrokeWidth=(l:SankeyLink,
   const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
   //si partie droite du noeud ne se situe pas dans le noeud source
   // const right_in_src = node.x + node.node_width > limit_x[0] && node.x + node.node_width < limit_x[1]
-  const right_in_src = node.x + (return_value_node(data,node,'node_width') as number) > limit_x[0] && node.x + (return_value_node(data,node,'node_width') as number) < limit_x[1]
+  // const right_in_src = node.x + (return_value_node(data,node,'node_width') as number) > limit_x[0] && node.x + (return_value_node(data,node,'node_width') as number) < limit_x[1]
+  const right_in_src = node.x + (data.node_width) > limit_x[0] && node.x + (data.node_width) < limit_x[1]
   //si partie haute du noeud ne se situe pas dans le noeud source
   const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
   // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
