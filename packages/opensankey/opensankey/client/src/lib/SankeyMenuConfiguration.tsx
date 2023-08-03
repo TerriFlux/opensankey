@@ -33,7 +33,6 @@ export const OpenSankeyConfigurationsMenus = (
     [s: string]: JSX.Element;
   },
   menu_configuration_free_labels:JSX.Element,
-  menu_configuration_legends:JSX.Element[],
   sub_nav_item_active:string,
   set_sub_nav_item_active:(s:string)=>void,
   style_editable:boolean,
@@ -251,11 +250,6 @@ export const OpenSankeyConfigurationsMenus = (
           }
         }
       }>
-      <Accordion.Header>{t('Menu.Leg')}</Accordion.Header>
-      <Accordion.Body>
-        {menu_configuration_legends.map((c,i)=>{
-          return <React.Fragment key={i}>{c}</React.Fragment>})}
-      </Accordion.Body>
     </Accordion.Item>,
     <>{menu_configuration_free_labels}</>,
   ]
