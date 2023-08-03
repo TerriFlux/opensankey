@@ -8,8 +8,6 @@ export const OpenSankeyMenuConfigurationLayout = (
   set_data:(d:SankeyData)=>void,
   user_scale:number,
   set_user_scale:(n:number)=>void,
-  maximum_flux:number | null | undefined,
-  set_maximum_flux:(n:number)=>void,
 ) => {
 
 
@@ -113,31 +111,7 @@ export const OpenSankeyMenuConfigurationLayout = (
       </Col>
     </Form.Group>,
 
-    /* Taille maximale du flux */
-    <Form.Group as={Row} >
-      <Col xs={7}>
-        <FormLabel >{t('MEP.MaxFlux')}</FormLabel>
-      </Col>
-      <Col xs={5}>
-        <OverlayTrigger
-          key={'MEP.tooltips.MaxFlux'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
-          <FormControl
-            type="text"
-            value={maximum_flux == null ? undefined : maximum_flux}
-            onChange={evt => {
-              set_maximum_flux(+evt.target.value)
-            }}
-            onBlur={() => {
-              data.maximum_flux = maximum_flux
-              set_data({ ...data })
-            }}/>
-        </OverlayTrigger>
-      </Col>
-    </Form.Group>,
+
 
    
   ]
