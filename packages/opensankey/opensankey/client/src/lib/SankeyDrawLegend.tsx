@@ -103,7 +103,7 @@ export const OpenSankeyDrawLegend = (
             if(Object.keys(data.fluxTags).includes(data.colorMap)){
               const t=Object.values(data.links).filter(l=>{
                 const tmp=getLinkValue(data,l.idLink)
-                return link_visible(l,data,getLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap]==tag[0]
+                return link_visible(l,data,getLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag[0])
               }).length
               return t>0
             }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
@@ -135,7 +135,7 @@ export const OpenSankeyDrawLegend = (
           const nodes_tied_to_link_hovered=([] as string [])
           Object.values(data.links).filter(l=>{
             const tmp=getLinkValue(data,l.idLink)
-            return tmp.tags[tag_group[0]]==d[0]
+            return tmp.tags[tag_group[0]].includes(d[0])
           }).forEach(el=>{
             nodes_tied_to_link_hovered.push(el.idSource)
             nodes_tied_to_link_hovered.push(el.idTarget)
@@ -143,7 +143,7 @@ export const OpenSankeyDrawLegend = (
           //Reduit l'opacité de tous les flux qui n'ont pas l'étiquette survolé
           Object.values(data.links).filter(l=>{
             const tmp=getLinkValue(data,l.idLink)
-            return tmp.tags[tag_group[0]]!=d[0]
+            return !tmp.tags[tag_group[0]].includes(d[0])
           }).forEach(el=>{
             d3.selectAll(' .opensankey #'+el.idLink).attr('stroke-opacity',0.1)
             d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',0.1)
