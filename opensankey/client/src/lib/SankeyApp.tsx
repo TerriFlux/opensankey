@@ -402,6 +402,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_show_menu_link_appearence(false)
     set_show_menu_link_label(false)
     set_show_menu_layout(false)
+    set_show_apply_layout(false)
 
 
     closeAllMenuContext()

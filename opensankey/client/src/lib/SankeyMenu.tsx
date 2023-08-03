@@ -1580,8 +1580,10 @@ const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem
   overflowY:'auto'
 } as CSSProperties
 
-export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{current:number[]},title:string,set_display_menu:(b:boolean)=>void)=>{
+export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{current:number[]},title:string,set_display_menu:(b:boolean)=>void,width_menu=25)=>{
   const class_name=title.replaceAll('/','').replaceAll('.','').split(' ').join('_')
+  const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
+  n_style_menu_draggable.width=width_menu+'%'
   return <Draggable  handle='.title_menu' 
     defaultPosition={{x:pointer_pos.current[0],y:pointer_pos.current[1]}}
     onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
@@ -1589,7 +1591,7 @@ export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{curr
     }} 
   >
     <div className={'menu_conf '+class_name}
-      style={style_menu_draggable}       
+      style={n_style_menu_draggable}       
     >
       <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'1','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
         <Col><h3>{title}</h3></Col>
