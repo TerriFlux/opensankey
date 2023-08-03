@@ -825,13 +825,9 @@ export const eventOnSankeyZoneMouseDown=(
   evt2:unknown,
   // set_start_point:React.Dispatch<React.SetStateAction<number[]>>
   start_point:{current:number[]},
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  set_contextualised_link:(l:SankeyLink|undefined)=>void,
-  set_show_context_zdd:(b:boolean)=>void
+  closeAllMenuContext:()=>void
 )=>{
-  set_contextualised_node(undefined)
-  set_contextualised_link(undefined)
-  set_show_context_zdd(false)
+  closeAllMenuContext()
   const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
   if(evt.which==1){

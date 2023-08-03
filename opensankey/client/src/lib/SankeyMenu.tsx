@@ -122,7 +122,10 @@ const MenuPropTypes = {
   set_show_context_zdd:PropTypes.func.isRequired,
   updateLayout:PropTypes.func.isRequired,
   convert_data:PropTypes.func.isRequired,
-
+  node_hspace:PropTypes.number.isRequired,
+  set_node_hspace:PropTypes.func.isRequired,
+  node_vspace:PropTypes.number.isRequired,
+  set_node_vspace:PropTypes.func.isRequired,
 }
 
 const pre_process_export_svg=()=>{
@@ -1005,7 +1008,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_contextualised_link,
     set_show_context_zdd,
     updateLayout,
-    convert_data
+    convert_data,
+    node_hspace,set_node_hspace,
+    node_vspace,set_node_vspace
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1345,6 +1350,12 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_sankey_data={set_data}
         updateLayout={updateLayout}
         convert_data={convert_data}
+        node_hspace={node_hspace}
+        set_node_hspace={set_node_hspace}
+        node_vspace={node_vspace}
+        set_node_vspace={set_node_vspace}
+        data={data}
+        set_data={set_data}
       />
 
       <ExcelModal
@@ -2091,7 +2102,8 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   set_node_hspace:(n:number)=>void,
   node_vspace:number,
   set_node_vspace:(n:number)=>void,
-  t:TFunction
+  t:TFunction,
+  set_show_menu_layout:(b:boolean)=>void
 )=>{
 
   let style_c_zdd='0px 0px auto auto'
@@ -2231,14 +2243,19 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
     }}
   >
     {full}
-
   </Button>
 
+  const button_open_layout=<Button onClick={()=>{
+    set_show_menu_layout(true)
+    set_show_context_zdd(false)
 
+  }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>
   return show_context_zdd?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
         {button_fullscreen}
+        {sep}
+        {button_open_layout}
         {sep}
         {button_bg_color}
         {button_bg_grid}
