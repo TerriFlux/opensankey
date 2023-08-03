@@ -13,7 +13,6 @@ import {OpenSankeyConfigurationsMenus} from './SankeyMenuConfiguration'
 import {OpenSankeyConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {OpenSankeyMenuConfigurationNodes} from './SankeyMenuConfigurationNodes'
 import {OpenSankeyMenuConfigurationLinks} from './SankeyMenuConfigurationLinks'
-import {OpenSankeyMenuConfigurationLegend} from './SankeyMenuConfigurationLegend'
 import { linkTooltipsContent, nodeTooltipsContent } from './SankeyTooltip'
 import { useTranslation } from 'react-i18next'
 import { SankeyData, SankeyLink, SankeyNode } from './types'
@@ -302,7 +301,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     elementNameProp='links' />
   //- 1.6 Builds Configuration Menus Legend
 
-  const menu_configuration_legends=  OpenSankeyMenuConfigurationLegend(data,set_data,t,legend_position,set_legend_position)
   //- End of 1.
   const configurations_menus =  OpenSankeyConfigurationsMenus(
     t,
@@ -312,7 +310,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     selected_node,multi_selected_nodes,multi_selected_links,
     style_to_apply,set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
-    menu_configuration_nodes,menu_configuration_links,<></>,menu_configuration_legends,sub_nav_item_active,set_sub_nav_item_active,
+    menu_configuration_nodes,menu_configuration_links,<></>,sub_nav_item_active,set_sub_nav_item_active,
     false,true,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
   )
 
