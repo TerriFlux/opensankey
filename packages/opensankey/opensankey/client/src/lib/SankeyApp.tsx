@@ -123,6 +123,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_menu_link_appearence,set_show_menu_link_appearence]=useState(false)
   const [show_menu_link_label,set_show_menu_link_label]=useState(false)
 
+  const [show_menu_layout,set_show_menu_layout]=useState(false)
+
   //For OpenSankeyMenuConfigurationLegend
   const [legend_position, set_legend_position] = useState(data.legend_position)
 
@@ -262,7 +264,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
-  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale,maximum_flux,set_maximum_flux,node_hspace,set_node_hspace,node_vspace,set_node_vspace)
+  const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale,maximum_flux,set_maximum_flux)
   //- 1.2 Builds Configuration Menus Node
   //- 1.2.1 Builds Configuration Menus Node Attributes
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes,false,selected_style_node)
@@ -378,12 +380,30 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
 
 
-  // let alt_key_pressed = false
+  const closeAllMenuContext=()=>{
+    set_contextualised_node(undefined)
+    set_contextualised_link(undefined)
+    set_show_context_zdd(false)
+  }
+  // Function to close all menu : menu confugartion, menu context (nodes,links, drawZone), an menu dragggable
+  // Called when we press escape   
+  const closeAllMenu=()=>{
+    set_show_nav(false)
+    set_show_menu_node_apparence(false)
+    set_show_menu_node_label(false)
+    set_show_menu_node_io(false)
+    set_show_menu_link_data(false)
+    set_show_menu_link_appearence(false)
+    set_show_menu_link_label(false)
+    set_show_menu_layout(false)
 
+
+    closeAllMenuContext()
+
+  }
   const formatKeyHandler=(e:KeyboardEvent)=>{
-    keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,set_show_nav,mode_selection,
-      set_show_menu_node_apparence,set_show_menu_node_label,set_show_menu_node_io,set_show_menu_link_data,set_show_menu_link_appearence,set_show_menu_link_label,
-      set_contextualised_node,set_contextualised_link,set_show_context_zdd
+    keyHandler(e,data,multi_selected_nodes,multi_selected_links,set_data,accordion_ref,button_ref,mode_selection,
+      closeAllMenu
     )
   }
   useEffect(()=>{
@@ -483,7 +503,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_show_menu_link_data,set_show_menu_link_appearence,set_show_menu_link_label
     ,data,set_data,tags_selected,multi_selected_links,t,pointer_pos)
 
-  const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t)
+  // MENU DRAGGABLE LAYOUT
+  menu_configuration_layout
+  const drag_menu_layout=show_menu_layout?menu_draggable(menu_configuration_layout,pointer_pos,t('Menu.MEP'),set_show_menu_layout):<></>
+    
+
+  const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout)
 
 
 
@@ -554,6 +579,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_show_context_zdd={set_show_context_zdd}
             updateLayout={updateLayout}
             convert_data={convert_data}
+            node_hspace={node_hspace}
+            set_node_hspace={set_node_hspace}
+            node_vspace={node_vspace}
+            set_node_vspace={set_node_vspace}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
@@ -605,6 +634,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         {dragLink_appearence}
         {dragLink_label}
 
+        {drag_menu_layout}
+
         {context_n}
         {context_l}
         {context_for_zdd}
@@ -617,7 +648,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     //Ajout des events sur les l'ajout des noeuds aux click
     const svgSankey=d3.select('.opensankey #svg')
     svgSankey.on('mousedown',evt=>{
-      eventOnSankeyZoneMouseDown(mode_selection,data,set_data,set_first_selected_node,true,()=>false,evt,start_point,set_contextualised_node,set_contextualised_link,set_show_context_zdd)
+      eventOnSankeyZoneMouseDown(mode_selection,data,set_data,set_first_selected_node,true,()=>false,evt,start_point,closeAllMenuContext)
     })
     svgSankey.on('mousemove',evt=>{
       eventOnSankeyZoneMouseMove(mode_selection,data,first_selected_node,set_first_selected_node,evt,start_point)
