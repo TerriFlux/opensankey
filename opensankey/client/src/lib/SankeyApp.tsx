@@ -623,6 +623,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           show_agregation={show_agregation}
           set_show_agregation={set_show_agregation}
           agregation_node={agregation_node}
+          set_agregation_node={set_agregation_node}
           is_agregation={is_agregation}
           set_alt_key_pressed={set_alt_key_pressed}
           min_width_and_height={min_width_and_height}
