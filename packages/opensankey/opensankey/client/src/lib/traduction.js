@@ -9,7 +9,8 @@ const resources = {
     translation: {
       Menu:{
         'confSankey': 'Sankey\'s configuration',
-        'MEP':'Global layout',
+        'MEP':'Drawing zone',
+        'background':'Background',
         'Noeuds':'Nodes',
         'EN':'Nodes\' tags',
         'EdN':'Editing nodes',
@@ -558,7 +559,8 @@ const resources = {
     translation: {
       Menu:{
         'confSankey': 'Configuration du Sankey',
-        'MEP':'Mise en page',
+        'MEP':'Zone de dessin',
+        'background':'Arrière plan',
         'Noeuds':'Noeuds',
         'EN':'Étiquettes des noeuds',
         'EdN':'Édition des noeuds',
