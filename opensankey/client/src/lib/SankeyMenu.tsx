@@ -1576,7 +1576,7 @@ const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem
   'backgroundClip': 'padding-box',
   'border': '1px solid rgba(0, 0, 0, 0.2)',
   'borderRadius':' 0.6rem',
-  'zIndex':'1',
+  'zIndex':'1031',
   overflowY:'auto'
 } as CSSProperties
 
@@ -1586,8 +1586,9 @@ export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{curr
   n_style_menu_draggable.width=width_menu+'%'
   return <Draggable  handle='.title_menu' 
     defaultPosition={{x:pointer_pos.current[0],y:pointer_pos.current[1]}}
+    bounds={{left:0,top:0}}
     onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
-      d3.select('.menu_conf.'+class_name).style('z-index','2')
+      d3.select('.menu_conf.'+class_name).style('z-index','1031')
     }} 
   >
     <div className={'menu_conf '+class_name}
