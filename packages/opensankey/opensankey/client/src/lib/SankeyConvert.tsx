@@ -1050,7 +1050,7 @@ export const convert_links = (
         v.tags = {}
       }
       Object.keys(v.tags).forEach(key=> {
-        if ( !Array.isArray(v.tags['key']) ) {
+        if ( !Array.isArray(v.tags[key]) ) {
           v.tags[key] = [v.tags[key] as unknown as string]
         }
       })
