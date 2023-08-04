@@ -249,7 +249,7 @@ class SankeyToJson(object):
             if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
                 tagg_name = "flux_types"
             # Update fluxtags struct
-            default_data_strct['tags'][tagg_name] = ""  # tag_name
+            default_data_strct['tags'][tagg_name] = []  # tag_name
         # Create the links json struct
         self._create_links_with_datas_json(sankey, default_data_strct, links_with_datas_json)
 
@@ -389,8 +389,8 @@ class SankeyToJson(object):
                         'value': <float>,
                         'display_value': <str>,
                         'tags': {
-                            'fluxTagGroup1': 'fluxTagX_fluxTagGroup1',
-                            'fluxTagGroup2': 'fluxTagY_fluxTagGroup2',
+                            'fluxTagGroup1': ['fluxTagX1_fluxTagGroup1','fluxTagY1_fluxTagGroup1'],
+                            'fluxTagGroup2': ['fluxTagY1_fluxTagGroup2'],
                             ...
                         },
                         extensions: {<reserved>}
@@ -472,14 +472,15 @@ class SankeyToJson(object):
             if tags is not None:
                 # Replace specific names for tags and tagggroup
                 tagg_name = tagg.name_unformatted
-                tag_name = tags[0].name_unformatted
-                if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
-                    tagg_name = "flux_types"
-                    tag_name = tag_name \
-                        .replace(CONST_IO_XL.DATA_COLLECTED, "initial_data") \
-                        .replace(CONST_IO_XL.DATA_COMPUTED, "computed_data")
-                # Update fluxtags struct
-                data_json["tags"][tagg_name] = tag_name
+                for tag in tags:
+                    tag_name = tag.name_unformatted
+                    if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
+                        tagg_name = "flux_types"
+                        tag_name = tag_name \
+                            .replace(CONST_IO_XL.DATA_COLLECTED, "initial_data") \
+                            .replace(CONST_IO_XL.DATA_COMPUTED, "computed_data")
+                    # Update fluxtags struct
+                    data_json["tags"][tagg_name].append(tag_name)
         return data_json
 
     def parse_nodes(
