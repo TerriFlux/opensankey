@@ -56,7 +56,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       <Button variant='dark'
         disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
         onClick={() => {
-          data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis', 'Leg']
+          data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
           set_data({ ...data })
         }}
       >Expert</Button>
@@ -80,10 +80,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       set_data({ ...data })
     }} />,
 
-    <Form.Check key='leg' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('Leg')} type="checkbox" label={t('Menu.Leg')} onChange={() => {
-      preferenceCheck('Leg',data)
-      set_data({ ...data })
-    }} />]
+    ]
 
 
   }

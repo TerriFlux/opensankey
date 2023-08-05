@@ -236,21 +236,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
       <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
     </Accordion.Item>,
-    <Accordion.Item
-      key='10'
-      id="Legend"
-      style={{ 'display': (data.accordeonToShow.includes('Leg')) ? 'block' : 'none' }}
-      eventKey="legend"
-      onClick={
-        evt => {
-          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'legend') {
-            set_nav_item_active('')
-          } else {
-            set_nav_item_active('legend')
-          }
-        }
-      }>
-    </Accordion.Item>,
+    
     <>{menu_configuration_free_labels}</>,
   ]
 }

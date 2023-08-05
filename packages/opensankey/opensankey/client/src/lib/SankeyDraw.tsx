@@ -25,6 +25,7 @@ const SankeyDrawPropTypes = {
 
   show_agregation:PropTypes.bool.isRequired, set_show_agregation:PropTypes.func.isRequired,
   agregation_node:PropTypes.string.isRequired,
+  set_agregation_node:PropTypes.func.isRequired,
   is_agregation:PropTypes.bool.isRequired,
 
   set_alt_key_pressed:PropTypes.func.isRequired,
@@ -45,6 +46,7 @@ export const SankeyDrawDefaultProps = {
 
   show_agregation:false, set_show_agregation:()=>false,
   agregation_node:'',
+  set_agregation_node:()=>false,
   is_agregation:false,
 
   set_alt_key_pressed:()=>false,
@@ -65,6 +67,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   mode_selection,
   show_agregation, set_show_agregation,
   agregation_node,
+  set_agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
   // additional_draw_element,
@@ -284,6 +287,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           data={data}
           set_data={set_data}
           agregation_node={agregation_node}
+          set_agregation_node={set_agregation_node}
           set_show_agregation={set_show_agregation}
           is_agregation={is_agregation}
         /> : <></>}

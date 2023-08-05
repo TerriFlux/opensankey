@@ -1495,6 +1495,16 @@ export const convert_data = (
   if(Object.keys(data_to_convert.style_node['default'])!== Object.keys(SankeyNodeStyleTypes) ){
     data.style_node={'default':default_node_style()}
   }
+
+  if(!data.accordeonToShow.includes('EN') && Object.keys(data.nodeTags).length>0){
+    data.accordeonToShow.push('EN')
+  }
+  if(!data.accordeonToShow.includes('EF') && Object.keys(data.fluxTags).length>0){
+    data.accordeonToShow.push('EF')
+  }
+  if(!data.accordeonToShow.includes('ED') && Object.keys(data.dataTags).length>0){
+    data.accordeonToShow.push('ED')
+  }
 }
 const has_not_converted_nodeTags_as_levelTags=(data:SankeyData)=>{
   return Object.values(data.nodeTags).filter(nt=>nt.banner=='level').length>0
