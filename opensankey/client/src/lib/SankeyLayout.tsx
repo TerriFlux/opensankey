@@ -845,6 +845,7 @@ const AgregationModalPropTypes = {
   data : PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data : PropTypes.func.isRequired,
   agregation_node : PropTypes.string.isRequired,
+  set_agregation_node : PropTypes.func.isRequired,
   set_show_agregation : PropTypes.func.isRequired,
   show_agregation : PropTypes.bool.isRequired,
   is_agregation: PropTypes.bool.isRequired
@@ -853,7 +854,7 @@ const AgregationModalPropTypes = {
 type  AgregationModalTypes = InferProps<typeof  AgregationModalPropTypes>
 
 export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
-  {data, set_data, agregation_node, set_show_agregation,show_agregation,is_agregation}
+  {data, set_data, agregation_node,set_agregation_node, set_show_agregation,show_agregation,is_agregation}
 ) => {
   const n = data.nodes[agregation_node]
   const [dim_name,set_dim_name] = useState('')
@@ -952,6 +953,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
         show={show_agregation} 
         onHide={ () => {
           set_show_agregation(false)
+          set_agregation_node('')
           set_dim_name('')
         }} >
         <Modal.Header closeButton>
