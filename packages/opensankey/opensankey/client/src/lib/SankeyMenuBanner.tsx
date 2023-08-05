@@ -194,7 +194,7 @@ export const addAllDropDownNode = (
                     checked={tags_group.activated}
                     onChange={evt => {
                       tags_group.activated = evt.target.checked
-                      tags_group.siblings.forEach(sibling=>data.nodeTags[sibling].activated = false)
+                      tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = false)
                       set_data({ ...data })
                     }}
                   />
