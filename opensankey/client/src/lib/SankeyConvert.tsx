@@ -1110,7 +1110,7 @@ export const convert_links = (
     if (!source_node || !target_node) {
       return
     }
-    if (!('orientation' in l)) {
+    if (l && l.local && !('orientation' in l.local)) {
       assign_link_local_attribute(l,'orientation','hh')
       if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
         assign_link_local_attribute(l,'orientation','vh')

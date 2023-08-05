@@ -580,7 +580,7 @@ class SankeyToJson(object):
                 node_json['tags'][tag_group_name] = []
             # Add the tag
             node_json['tags'][tag_group_name].append(tag.name_unformatted)
-            node_json['tags'][tag_group_name].sort()
+            #node_json['tags'][tag_group_name].sort()
         # Parents relations -> TODO duplicate node for each parent
         if (node.has_parents()):
             node_json['dimensions']['Primaire']['parent_name'] = node.parents[0].id
