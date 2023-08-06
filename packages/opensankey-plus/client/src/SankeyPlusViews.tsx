@@ -44,13 +44,12 @@ const deep_diff = require('deep-diff')
 
 export const setDiagram = (
   set_master_data: (d:SankeyPlusData)=>void,
-  set_view: (s:string)=>void,
-  convert_data:(d:SankeyPlusData)=>void
+  set_view: (s:string)=>void
 ) => {
   return (
     the_diagram : string,
-    data : SankeyPlusData,
-    set_data : (d:SankeyPlusData)=>void
+    set_data : (d:SankeyPlusData)=>void,
+    convert_data:(d:SankeyPlusData)=>void
   ) => {
   //const the_diagram = evt.target.value as string
     const sous_filieres = window.sankey.sous_filieres
