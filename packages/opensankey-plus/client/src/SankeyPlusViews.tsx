@@ -43,7 +43,7 @@ const deep_diff = require('deep-diff')
 // }
 
 export const setDiagram = (
-  set_master_data: (d:SankeyPlusData)=>void,
+  set_master_data: (d:SankeyPlusData | undefined)=>void,
   set_view: (s:string)=>void
 ) => {
   return (
@@ -72,13 +72,15 @@ export const setDiagram = (
     // set_nodes_level(new_data)
     // new_data.fit_screen = true
     d3.select(' .opensankey #svg').on('.zoom', null)
-    set_master_data({...new_data })
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
+      set_master_data({...new_data })
       set_view(new_data.view[0].id)
       // set_data({...new_data.view[0].view_data as SankeyPlusData})
       set_data({...get_data_from_view(new_data,new_data.view[0].id)})
     } else {
+      set_master_data(undefined)
       set_data({ ...new_data })
+      set_view('none')
     }
   }
 }
@@ -1100,6 +1102,7 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
     .filter((d :{path:string[],kind:string}) => (d.kind === 'N' && d.path.length===2) || d.path[0] !== 'nodes' || master_data.nodes[d.path[1]] !== undefined)
     .filter((d :{path:string[],kind:string}) => (d.kind === 'N' && d.path.length===2) || d.path[0] !== 'links' || master_data.links[d.path[1]] !== undefined)
     .filter((d :{path:string[],kind:string}) => (d.path[0] !== 'links' || d.kind !== 'D'))
+    .filter((d :{path:string[],kind:string}) => !(d.path[0] === 'nodeTags' && d.kind !== 'E' && d.path.length===5 && d.path[4] === 'color'))
     .filter((d :{path:string[],kind:string}) => !(d.kind === 'E' && d.path[0] ==='links' && d.path.length > 3 && d.path[2]==='value'))
     .forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d))
   if (ignore_changes.length > 0 || ignore_changes2.length > 0 || ignore_changes3.length > 0) {
