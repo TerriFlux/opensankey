@@ -764,22 +764,16 @@ export const desagregation = (
     }
     current_y = current_y - delta_y
 
-    if(n.local==undefined || n.local==null){
-      n.local={local_aggregation:true}
-    }else{
-      if(n.local){
-        n.local.local_aggregation=true
+    if(n.local==undefined || n.local==null) {
+      n.local = {}
       }
-    }
+    setLocalAgregation(n, data, true)
   })
   const clicked_node=data.nodes[idNode]
-  if(clicked_node.local==undefined || clicked_node.local==null){
-    clicked_node.local={local_aggregation:false}
-  }else{
-    if(clicked_node.local){
-      clicked_node.local.local_aggregation=false
+  if(clicked_node.local==undefined || clicked_node.local==null) {
+    clicked_node.local = {}
     }
-  }
+  setLocalAgregation(clicked_node, data, false)
 }
 
 export const agregation = (
@@ -816,14 +810,10 @@ export const agregation = (
       mean_x += n.x  
       mean_y += n.y
     }
-    if(n.local==undefined || n.local==null){
-      n.local={local_aggregation:false}
-    }else{
-      if(n.local){
-        n.local.local_aggregation=false
+    if(n.local==undefined || n.local==null) {
+      n.local = {}
       }
-    }
-
+    setLocalAgregation(n, data, false)
   })
   mean_x = mean_x/dim_desagregated_nodes.length
   mean_y = mean_y/dim_desagregated_nodes.length
@@ -833,12 +823,9 @@ export const agregation = (
     parent_node.y = mean_y
   }
   if(parent_node.local==undefined || parent_node.local==null){
-    parent_node.local={local_aggregation:true}
-  }else{
-    if(parent_node.local){
-      parent_node.local.local_aggregation=true
+    parent_node.local={}
     }
-  }
+  setLocalAgregation(parent_node, data, true)
 }
 
 const AgregationModalPropTypes = {
@@ -1005,4 +992,24 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
       </Modal>
     )
   }
+}
+
+const setLocalAgregation = (
+  n: SankeyNode, 
+  data: SankeyData,
+  local_aggregation: boolean
+) => {
+  n.local = { local_aggregation: local_aggregation }
+  n.inputLinksId.forEach(linkId => {
+    const node_types = data.nodes[data.links[linkId].idSource].tags['Type de noeud']
+    if (node_types.includes('échange')) {
+      data.nodes[data.links[linkId].idSource].local = { local_aggregation: local_aggregation }
+    }
+  })
+  n.outputLinksId.forEach(linkId => {
+    const node_types = data.nodes[data.links[linkId].idTarget].tags['Type de noeud']
+    if (node_types.includes('échange')) {
+      data.nodes[data.links[linkId].idTarget].local = { local_aggregation: local_aggregation }
+    }
+  })
 }

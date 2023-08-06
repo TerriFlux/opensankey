@@ -1528,22 +1528,22 @@ export const node_displayed=(data:SankeyData,n:SankeyNode)=>{
   if(has_local_level!==undefined && has_local_level!==null){
     local_level=has_local_level
   }
-  const data_t_s=(data as unknown as {trade_sectors:string[]})
-  const is_export_import:string[]=[]
-  if(data_t_s.trade_sectors){
-    data_t_s.trade_sectors.forEach(ts=>{
-      if(n.name.includes(ts)){
-        is_export_import.push(ts)
-      }
-    })
-  }
-  if (is_export_import.length==1){
-    const fitlered_name=n.name.split(' - '+is_export_import[0])[0]
-    const node_connected=Object.values(data.nodes).filter(nn=>nn.name===fitlered_name)[0]
-    return node_has_displayed_tags(data,node_connected) && ( node_has_displayed_level(data,node_connected) ) && has_links_zero(data,node_connected)
-  }else{
-    return node_has_displayed_tags(data,n) && ( local_level ) && has_links_zero(data,n)
-  }
+  // const data_t_s=(data as unknown as {trade_sectors:string[]})
+  // const is_export_import:string[]=[]
+  // if(data_t_s.trade_sectors){
+  //   data_t_s.trade_sectors.forEach(ts=>{
+  //     if(n.name.includes(ts)){
+  //       is_export_import.push(ts)
+  //     }
+  //   })
+  // }
+  // if (is_export_import.length==1){
+  //   const fitlered_name=n.name.split(' - '+is_export_import[0])[0]
+  //   const node_connected=Object.values(data.nodes).filter(nn=>nn.name===fitlered_name)[0]
+  //   return node_has_displayed_tags(data,node_connected) && ( node_has_displayed_level(data,node_connected) ) && has_links_zero(data,node_connected)
+  // }else{
+  return node_has_displayed_tags(data,n) && ( local_level ) && has_links_zero(data,n)
+  //}
 }
 
 export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
