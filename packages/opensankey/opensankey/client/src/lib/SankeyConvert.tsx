@@ -611,8 +611,11 @@ export const convert_tags = (
       data.fluxTags['flux_types'].tags.computed_data.color = '#D3D3D3' //LightGray
     }
   }
+  if (!data.levelTags) {
+    data.levelTags = {}
+  }
   if (!('Primaire' in data.nodeTags) && !('Primaire' in data.levelTags)) {
-    data.nodeTags['Primaire'] = {
+    data.levelTags['Primaire'] = {
       group_name: 'Primaire',
       show_legend: false,
       color_map: 'custom',
