@@ -614,7 +614,7 @@ export const convert_tags = (
   if (!data.levelTags) {
     data.levelTags = {}
   }
-  if (!('Primaire' in data.nodeTags) && !('Primaire' in data.levelTags)) {
+  if (!('Primaire' in data.levelTags) && !('Primaire' in data.levelTags)) {
     data.levelTags['Primaire'] = {
       group_name: 'Primaire',
       show_legend: false,
@@ -643,7 +643,7 @@ export const convert_tags = (
 
   // Convertie les nodeTags avec pour bannière 'level' en levelTags 
   if(has_not_converted_nodeTags_as_levelTags(data)){
-    data.levelTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner==='level'))
+    data.levelTags = Object.assign({},data.levelTags,Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level')))
     data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
     console.log(data.nodeTags)
   }
