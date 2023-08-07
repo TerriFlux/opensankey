@@ -1002,13 +1002,13 @@ const setLocalAgregation = (
   n.local = { local_aggregation: local_aggregation }
   n.inputLinksId.forEach(linkId => {
     const node_types = data.nodes[data.links[linkId].idSource].tags['Type de noeud']
-    if (node_types.includes('échange')) {
+    if (node_types && node_types.includes('échange')) {
       data.nodes[data.links[linkId].idSource].local = { local_aggregation: local_aggregation }
     }
   })
   n.outputLinksId.forEach(linkId => {
     const node_types = data.nodes[data.links[linkId].idTarget].tags['Type de noeud']
-    if (node_types.includes('échange')) {
+    if (node_types && node_types.includes('échange')) {
       data.nodes[data.links[linkId].idTarget].local = { local_aggregation: local_aggregation }
     }
   })
