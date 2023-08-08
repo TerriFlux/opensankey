@@ -182,8 +182,8 @@ primary:not(:disabled):not(.disabled).active, .btn-outline-primary:not(:disabled
 }
 
 .sankey-menu .level2 button {
-	padding-left: 50px;
-	font-size: 0.95rem;
+	padding-left: 25px;
+	font-size: 12px;
 }
 
 h2,h3,h4,h5,h6{font-family:'Open Sans',sans-serif;color:#666;}
@@ -1156,4 +1156,11 @@ textarea {
 	background-color: #fff;
 	border: none;
 	text-align: left;
+}
+.sankey-menu *{
+	font-size:12px;
+}
+.btn_menu_config{
+	border-radius: 5px;
+	font-size: 12px;
 }

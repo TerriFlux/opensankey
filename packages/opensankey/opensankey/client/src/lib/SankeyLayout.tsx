@@ -882,9 +882,10 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
                 <Col>    
                   <Form.Select
                     onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> set_dim_name(evt.target.value)}
+                    value={dim_name}
                   >
                     {dim_names.map(
-                      (cur_dir_name, i) => <option key={i} value={cur_dir_name} selected={dim_name === cur_dir_name} >{cur_dir_name}</option>
+                      (cur_dir_name, i) => <option key={i} value={cur_dir_name}>{cur_dir_name}</option>
                     )}
                   </Form.Select>
                   <Form.Label>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name??0] ? data.nodes[n.dimensions[dim_name].parent_name??0].name : ''}</Form.Label>
@@ -963,9 +964,10 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
                       )
                       set_child_names(the_child_names)
                     }}
+                    value={dim_name}
                   >
                     {dim_names.map(
-                      (cur_dim_name, i) => <option key={i} value={cur_dim_name} selected={dim_name === cur_dim_name} >{cur_dim_name}</option>
+                      (cur_dim_name, i) => <option key={i} value={cur_dim_name} >{cur_dim_name}</option>
                     )}
                   </Form.Select>
                   {child_names.map(child_name=><Form.Label>{child_name}</Form.Label>)}

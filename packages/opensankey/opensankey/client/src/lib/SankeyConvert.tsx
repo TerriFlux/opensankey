@@ -1409,7 +1409,7 @@ export const convert_data = (
   data: SankeyData
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
-
+  console.log('hello')
   // let recompute_input_output_links = true
   // Object.values(data.nodes).forEach(n => {
   //   if (n.inputLinksId || n.outputLinksId) {
@@ -1428,8 +1428,9 @@ export const convert_data = (
   const { display_style,units_names } = data_to_convert
 
   if (display_style.font_family_selected) {
-    display_style.node_font_family_selected = display_style.font_family_selected
-    display_style.link_font_family_selected = display_style.font_family_selected
+    // display_style.node_font_family_selected = display_style.font_family_selected
+    // display_style.link_font_family_selected = display_style.font_family_selected
+    
   }
 
   display_style.font_family=['Arial,sans-serif','Helvetica,sans-serif','Verdana,sans-serif','Calibri,sans-serif','Noto,sans-serif','Lucida Sans,sans-serif','Gill Sans,sans-serif','Century Gothic,sans-serif','Candara,sans-serif','Futara,sans-serif','Franklin Gothic Medium,sans-serif','Trebuchet MS,sans-serif','Geneva,sans-serif','Segoe UI,sans-serif','Optima,sans-serif','Avanta Garde,sans-serif',
@@ -1483,12 +1484,6 @@ export const convert_data = (
 
 
   
-
-  // data_to_convert.view.forEach(v=>{
-  //   convert_tags(v.view_data as unknown as SankeyData)
-  //   convert_nodes(v.view_data as unknown as SankeyData)
-  //   convert_links(v.view_data as unknown as SankeyData)
-  // })
 
   // Convert style of node and link
   // Previously tehy were object identical to SankeyNode or SankeyLink, now they are like local attribute  
