@@ -417,7 +417,7 @@ export const OpenSankeyDrawLinks = (
    * @param {{ [node_id: string]: SankeyNode }} display_nodes
    * @param {{ [link_id: string]: SankeyLink }} display_links
    * @param {({ text: string | undefined } | undefined)} error_msg
-   * @param {{node_font_size: number,sector_uppercase: boolean,sector_bold: boolean,sector_italic: boolean,product_uppercase: boolean,product_bold: boolean,product_italic: boolean,unit: boolean,filter: number,filter_label: number,global_curvature: number,null_flux: boolean,font_family: string[],node_font_family_selected: string,link_font_family_selected: string}} display_style
+   * @param {{node_font_size: number,sector_uppercase: boolean,sector_bold: boolean,sector_italic: boolean,product_uppercase: boolean,product_bold: boolean,product_italic: boolean,unit: boolean,filter: number,filter_label: number,global_curvature: number,null_flux: boolean,font_family: string[],link_font_family_selected: string}} display_style
    * @param {SankeyDrawCurve} drawCurveFunction
    * @param {(t:number)=>number} scale
    * @param {(t:number)=>number} inv_scale
@@ -429,7 +429,7 @@ export const OpenSankeyDrawLinks = (
     display_nodes:{ [node_id: string]: SankeyNode },
     display_links:{ [link_id: string]: SankeyLink },
     error_msg: { text: string | undefined } | undefined,
-    display_style: {filter: number,filter_label: number,font_family: string[],node_font_family_selected: string,link_font_family_selected: string},
+    display_style: {filter: number,filter_label: number,font_family: string[],link_font_family_selected: string},
     drawCurveFunction : SankeyDrawCurve,
     scale:(t:number)=>number,
     inv_scale:(t:number)=>number

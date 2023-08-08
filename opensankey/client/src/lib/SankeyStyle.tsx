@@ -6,7 +6,6 @@ import {  cut_name,default_node_style,default_link_style } from './SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
-import {SankeyMenuConfigurationNodesLabel} from './SankeyMenuConfigurationNodesLabel'
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
 import {SankeyMenuConfigurationLinksLabel} from './SankeyMenuConfigurationLinksLabel'
 import { SankeyData } from './types'
@@ -43,6 +42,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
   set_selected_style_node:React.Dispatch<React.SetStateAction<string>>,
   additional_node_attribute:JSX.Element[],
   // additional_node_label_attribute:JSX.Element[],
+  set_style_to_apply:(s:string)=>void,
 ) => {
 
   if(!Object.keys(data.style_node).includes(selected_style_node)){
@@ -53,7 +53,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
   const closeStyleEdition = () => {
     setShowStyle(false)
   }
-  const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(t,data,set_data,{current:[]},true,selected_style_node)
+  const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(t,data,set_data,{current:[]},true,selected_style_node,set_style_to_apply,[],[],[])
   additional_node_attribute.forEach(el=>tab_node_style_attribute.push(el))
   const applyStyleToNodes = () => {
     Object.values(data.nodes).filter(d => d.style !== '' && d.style === selected_style_node).map(d => {
@@ -145,8 +145,6 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
         <Col md={12}>
           <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
             {SankeyMenuConfigurationNodesAttributes(t,tab_node_style_attribute)}
-
-            {SankeyMenuConfigurationNodesLabel(t,data,set_data,{current:[]},true,'default')}
           </Tabs>
         </Col>
 

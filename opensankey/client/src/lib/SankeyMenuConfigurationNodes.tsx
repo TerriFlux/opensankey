@@ -1,16 +1,14 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Tabs, Button, ButtonGroup, Col, Dropdown, Form, FormControl, FormCheck, FormGroup, FormLabel, OverlayTrigger, Tooltip} from 'react-bootstrap'
+import { Row, Tabs, Button,  Col,  Form, FormControl,  FormGroup, FormLabel, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
-import { SankeyData, SankeyDataPropTypes, SankeyLinkPropTypes, SankeyNode, SankeyNodePropTypes,SankeyLinkValue } from './types'
-import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
-import { cut_name,default_node,delete_node,return_value_node, return_value_link} from './SankeyUtils'
+import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLinkValue,SankeyLink } from './types'
+import { default_node,delete_node,return_value_node} from './SankeyUtils'
 import * as d3 from 'd3'
-import { FaPlus, FaMinus} from 'react-icons/fa'
+import { FaPlus, FaMinus, FaEye} from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import {SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
-import {SankeyMenuConfigurationNodesLabel} from './SankeyMenuConfigurationNodesLabel'
 import {SankeyMenuConfigurationNodesTags} from './SankeyMenuConfigurationNodesTags'
 import {SankeyMenuConfigurationNodesTooltip} from './SankeyMenuConfigurationNodesTooltip'
 import { textwrap } from 'd3-textwrap'
@@ -21,14 +19,11 @@ const SankeyNodeEditionPropTypes = {
   t:PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   // style_to_apply: PropTypes.string.isRequired,
   set_style_to_apply: PropTypes.func.isRequired,
   menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   token:PropTypes.bool.isRequired,
-  set_display_link_opacity:PropTypes.func.isRequired,
 }
 
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
@@ -42,13 +37,14 @@ export const OpenSankeyMenuConfigurationNodes = (
   link_io:string,set_link_io:React.Dispatch<React.SetStateAction<string>>,
   link_pos:string,set_link_pos:React.Dispatch<React.SetStateAction<string>>,
   tab_colored:boolean,set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  multi_selected_links: {current:SankeyLink[]},
+  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
 ) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
 
   const ui : {[s:string] : JSX.Element}= {
     'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
-    'Labels'          : SankeyMenuConfigurationNodesLabel(t,data,set_data,multi_selected_nodes,false,'default'),
     'Tooltip'         : SankeyMenuConfigurationNodesTooltip(t,data,set_data,multi_selected_nodes),
   }
 
@@ -56,13 +52,13 @@ export const OpenSankeyMenuConfigurationNodes = (
     ui['Tags'] = SankeyMenuConfigurationNodesTags(t,data,set_data,multi_selected_nodes,tags_group_key,set_tags_group_key)
   }
   if (multi_selected_nodes.current.length == 1) {
-    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue)
+    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue,multi_selected_links,set_display_link_opacity)
   }
   return ui
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,data, set_data,selected_node, multi_selected_nodes,multi_selected_links,set_style_to_apply, menu_configuration_nodes,token,set_display_link_opacity }
+  {t,data, set_data, multi_selected_nodes,set_style_to_apply, menu_configuration_nodes,token }
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=node_visible_on_svg()
@@ -74,7 +70,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   //Renvoie le menu déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
     const DD = (
-      <div id='DD_multi_node'>
+      <div id='DD_multi_node' style={{width:'70%'}}>
         <MultiSelect
           valueRenderer={(selected: selected_type[]) => {
             return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
@@ -138,56 +134,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     set_data({ ...data })
   }
 
-  const style_of_selected_nodes = () => {
-    let style_to_display = 'Aucun'
-    if (multi_selected_nodes.current.length != 0) {
-      style_to_display = multi_selected_nodes.current[0].style
-      let inchangee = true
-      multi_selected_nodes.current.map(d => {
-        inchangee = (d.style == style_to_display) ? inchangee : false
-      })
-      if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? cut_name(data.style_node[style_to_display].name, 20) : 'Multiple style parmi les noeuds sélectionnés'
 
-      } else {
-        return 'Aucun'
-      }
-    } else {
-      return style_to_display
-    }
-  }
 
   return (<>
-
-    <FormLabel style={{ justifyContent: 'center', marginBottom: '5px' }} ><b>{t('Flux.pg')}</b></FormLabel>
-
-    {/* Police des labels de noeud  */}
-    <Form.Group as={Row} >
-      <Col xs={4}>
-        <FormLabel>{t('Flux.pdl')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <Form.Select
-          value={data.display_style.node_font_family_selected}
-          onChange={
-            (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              data.display_style.node_font_family_selected = evt.target.value
-              set_data({ ...data })
-            }}>
-          {data.display_style.font_family.map((d) => {
-            return <option
-              style={{fontFamily:d}}
-              key={'ff-' + d}
-              value={d}
-              // selected={d == data.display_style.link_font_family_selected}
-            >{d}</option>
-          })}
-        </Form.Select>
-      </Col>
-    </Form.Group>
-
-    <FormLabel style={{ justifyContent: 'center', marginTop: '20px', marginBottom: '5px' }} ><b>{t('Noeud.plns')}</b></FormLabel>
-
     {
       (token==false && Object.keys(data.nodes).length>15)?
         <>
@@ -199,145 +148,86 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <></>
     }
 
-    <FormGroup as={Row}>
+    <FormGroup as={Row} >
       {/* Boutton pour ajouter un noeud */}
-      <Col xs={1}>
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.1'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
-          <Button
-            size="sm"
-            disabled={token==false && Object.keys(data.nodes).length>15}
-            onClick={() => {
-              set_style_to_apply('default')
-              add_new_node()
-              apply_style_to_nodes()
-            }}>
-            <FaPlus/>
-          </Button>
-        </OverlayTrigger>
-      </Col>
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.1'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
+        <Button
+          style={{width:'10%'}}
+          size="sm"
+          variant='light'
+          disabled={token==false && Object.keys(data.nodes).length>15}
+          onClick={() => {
+            set_style_to_apply('default')
+            add_new_node()
+            apply_style_to_nodes()
+          }}>
+          <FaPlus/>
+        </Button>
+      </OverlayTrigger>
 
       {/* Liste déroulante pour selectionner un noeud */}
-      <Col xs={10}>
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.2'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
-          {dropdownMultiNode()}
-        </OverlayTrigger>
-      </Col>
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.2'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
+        {dropdownMultiNode()}
+      </OverlayTrigger>
 
       {/* Boutton pour supprimer le noeud selectionné */}
-      <Col xs={1}>
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.3'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
-          <Button
-            size="sm"
-            variant='danger-right'
-            // style={{marginRight: "-1em"}}
-            disabled={multi_selected_nodes.current.length == 0}
-            onClick={
-              () => {
-                multi_selected_nodes.current.map(d => delete_node(data, d))
-                selected_node.current = default_node(data)
-                multi_selected_nodes.current = []
-                // Object.values(data.nodes).forEach( n =>
-                //   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
-                // )
-                // setForceUpdate(!forceUpdate)
-                set_data({ ...data })
-              }}>
-            <FaMinus />
-          </Button>
-        </OverlayTrigger>
-      </Col>
-    </FormGroup>
-
-    {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
-    <FormGroup as={Row}>
-      <Col xs={1}>
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.4'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
-          <FormCheck
-            inline
-            type='switch'
-            checked={data.displayed_node_selector}
-            onChange={evt=>{
-              // const c=evt.target.checkeds
-              data.displayed_node_selector=evt.target.checked
-              set_data({...data})
-            }}/>
-        </OverlayTrigger>
-      </Col>
-      <Col xs={11}>
-        <FormLabel >{t('Menu.dns')}</FormLabel>
-      </Col>
-    </FormGroup>
-
-    {/* Styles par défaut */}
-    <FormGroup as={Row}>
-      <Col xs={2}>
-        <FormLabel>{t('Noeud.Style')}:</FormLabel>
-      </Col>
-
-      <Col xs={5}>
-        
-        <Dropdown>
-          <Dropdown.Toggle variant="success" id="dropdown-basic">{style_of_selected_nodes()}</Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item onClick={() => {
-              set_style_to_apply('')
-              multi_selected_nodes.current.map(n => {
-                n.style = ''
-              })
-              set_data({ ...data })
-            }}>{'Aucun'}</Dropdown.Item>
-            {Object.keys(data.style_node).map((d,i) => {
-              return (<Dropdown.Item
-                key={i}
-                onClick={() => {
-                  set_style_to_apply(d)
-                  multi_selected_nodes.current.map(n => {
-                    n.style = d
-                  })
-                  set_data({ ...data })
-                }}
-              >{data.style_node[d].name}</Dropdown.Item>)
-            })}
-          </Dropdown.Menu>
-        </Dropdown>
-  
-      </Col>
-
-      <Col xs={5}>
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.5'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.5'}>{t('Noeud.tooltips.AS')} </Tooltip>}>
-          <Button
-            size="sm"
-            variant='info'
-            style={{'width': '100%'}}
-            onClick={() => {
-              apply_style_to_nodes()
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.3'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
+        <Button
+          style={{width:'10%'}}
+          size="sm"
+          variant='light'
+          // style={{marginRight: "-1em"}}
+          disabled={multi_selected_nodes.current.length == 0}
+          onClick={
+            () => {
+              multi_selected_nodes.current.map(d => delete_node(data, d))
+              multi_selected_nodes.current = []
+              // Object.values(data.nodes).forEach( n =>
+              //   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
+              // )
+              // setForceUpdate(!forceUpdate)
               set_data({ ...data })
             }}>
-            {t('Noeud.AS')}
-          </Button>
-        </OverlayTrigger>
-      </Col>
+          <FaMinus />
+        </Button>
+      </OverlayTrigger>
+
+      {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.4'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
+        <Button
+          style={{width:'10%'}}
+          size="sm"
+          variant={data.displayed_node_selector?'dark':'outline-dark'}
+          className='btn_menu_config'
+          onClick={
+            () => {
+              data.displayed_node_selector=!data.displayed_node_selector
+              set_data({...data})
+            }}>
+          <FaEye />
+        </Button>
+      </OverlayTrigger>
     </FormGroup>
+
+    
+
+
 
     {/* Affichage du nom des noeuds selectionnés */}
     <Form.Group as={Row} >
@@ -400,82 +290,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
     {/* Declenché si des neouds sont selectionnées */}
     {(multi_selected_nodes.current.length !== 0) ? (
-      <FormGroup as={Row}>
-        <Col xs={12}>
-          <Tabs defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
-            {menu_configuration_nodes.map((c:JSX.Element)=>{
-              return c})}
-          </Tabs>
+      <>
+      
+        <Tabs defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
+          {menu_configuration_nodes.map((c:JSX.Element)=>{
+            return c})}
+        </Tabs>
 
-          {/* Boutons de rérrangement / selection des flux  */}
-          <ButtonGroup as={Row}>
-            <Col xs={4}>
-              <OverlayTrigger
-                key={'menu.tooltips.noeud.7'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
-                <Button
-                  size="sm"
-                  style={{ 'marginBottom': '3px', 'marginRight': '3px', 'width': '100%', 'height': '50px' }}
-                  onClick={() => {
-                    Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                      reorganize_node_inputLinksId(data,d, data.nodes, data.links)
-                      reorganize_node_outputLinksId(data,d, data.nodes, data.links)
-                    })
-                    set_data({ ...data })
-                  }}>
-                  {t('Noeud.Reorg')}
-                </Button>
-              </OverlayTrigger>
-            </Col>
-            <Col xs={4}>
-              <OverlayTrigger
-                key={'menu.tooltips.noeud.8'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
-                <Button
-                  size="sm"
-                  style={{ 'marginBottom': '3px', 'marginRight': '3px', 'width': '100%','height': '50px' }}
-                  onClick={() => {
-                    multi_selected_links.current = []
-                    Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                      multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-                      const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as number
-                      set_display_link_opacity(opacity)
-                    })
-                    multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
-                  }}>
-                  {t('Noeud.SlctOutLink')}
-                </Button>
-              </OverlayTrigger>
-            </Col>
-            <Col xs={4}>
-              <OverlayTrigger
-                key={'menu.tooltips.noeud.9'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
-                <Button
-                  size="sm"
-                  style={{ 'marginBottom': '3px', 'marginRight': '3px', 'width': '100%', 'height': '50px'}}
-                  onClick={() => {
-                    multi_selected_links.current = []
-                    Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                      multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-                      const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as number
-                      set_display_link_opacity(opacity)
-                    })
-                    multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
-                  }}>
-                  {t('Noeud.SlctInLink')}
-                </Button>
-              </OverlayTrigger>
-            </Col>
-          </ButtonGroup>
-        </Col>
-      </FormGroup >) : (<></>)}</>
+        
+      </>) : (<></>)}</>
   )
 }
 

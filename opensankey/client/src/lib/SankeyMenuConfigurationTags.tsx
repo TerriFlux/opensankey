@@ -362,26 +362,29 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                         }}/>
                   </OverlayTrigger>
                 </td>
-                {/* Chosir la forme du noeud  */}
-                { elementNameProp === 'nodes' ? (
-                  <OverlayTrigger
-                    key={'tags.tooltips.9'}
-                    placement={'top'}
-                    delay={500}
-                    overlay={<Tooltip id={'tags.tooltips.9'}>{t('Tags.tooltips.forme')} </Tooltip>}>
-                    <Form.Select
-                      onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                        data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
-                        set_data({ ...data })
-                      }}
-                      value={data[elementTagName][tags_group_key].tags[tag_key].shape as string}
-                    >
-                      <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
-                      <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
-                    </Form.Select>
-                  </OverlayTrigger>) :
-                  (<></>)
-                }
+                <td>
+                  {/* Chosir la forme du noeud  */}
+                  { elementNameProp === 'nodes' ? (
+                    <OverlayTrigger
+                      key={'tags.tooltips.9'}
+                      placement={'top'}
+                      delay={500}
+                      overlay={<Tooltip id={'tags.tooltips.9'}>{t('Tags.tooltips.forme')} </Tooltip>}>
+                      <Form.Select
+                        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                          data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
+                          set_data({ ...data })
+                        }}
+                        value={data[elementTagName][tags_group_key].tags[tag_key].shape as string}
+                      >
+                        <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
+                        <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
+                      </Form.Select>
+                    </OverlayTrigger>) :
+                    (<></>)
+                
+                  }
+                </td>
               </tr>
             )
           }) : (<></>)}

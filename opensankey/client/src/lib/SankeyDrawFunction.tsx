@@ -364,7 +364,6 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   multi_selected_nodes:{current: SankeyNode[] },
   nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-  select_node:(n: SankeyNode) => void,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   mode_selection:{current:string}
@@ -387,7 +386,6 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
         d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
       }
     }
-    select_node(d)
     if ( accordion_ref && accordion_ref.current) {
       for ( const child in accordion_ref.current.children) {
         if (accordion_ref.current.children[child].id === 'Nodes') {
@@ -2443,7 +2441,7 @@ export const select_visualy_nodes=(n:SankeyNode)=>{
 export const repositionne_sidebar=()=>{
   const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
   const menu_open=d3.select('.offcanvas-body').node()
-  d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?540:0))+'px')  
+  d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?380:0))+'px')  
 }
 
 // Function that compute the link width
