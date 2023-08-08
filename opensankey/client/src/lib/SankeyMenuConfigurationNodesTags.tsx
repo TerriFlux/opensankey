@@ -33,13 +33,13 @@ export const SankeyMenuConfigurationNodesTags = (
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
           }
+          value={tags_group_key}
         >
           {Object.entries(data.nodeTags).map(
             (tags_group, i) =>
               <option
                 key={i}
-                value={tags_group[0]}
-                selected={tags_group_key === tags_group[0]} >
+                value={tags_group[0]} >
                 {tags_group[1].group_name}
               </option>)}
         </Form.Select>
