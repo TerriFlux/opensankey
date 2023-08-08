@@ -15,7 +15,6 @@ export const OpenSankeyConfigurationsMenus = (
   set_nav_item_active:(d:string)=>void,
   nodes_accordion_ref:Ref<HTMLDivElement>,
   links_accordion_ref:Ref<HTMLDivElement>,
-  selected_node:{current:SankeyNode},
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
   // // selected_link:{current:SankeyLink},
@@ -138,12 +137,9 @@ export const OpenSankeyConfigurationsMenus = (
                 set_data={set_data}
                 // style_to_apply={style_to_apply}
                 set_style_to_apply={set_style_to_apply}
-                selected_node={selected_node}
                 multi_selected_nodes={multi_selected_nodes}
-                multi_selected_links={multi_selected_links}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
                 token={token}
-                set_display_link_opacity={set_display_link_opacity}
               />
             </Accordion.Body>
           </Accordion.Item>

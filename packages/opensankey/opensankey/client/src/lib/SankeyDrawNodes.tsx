@@ -27,7 +27,6 @@ export const OpenSankeyDrawNodes = (
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
 
-  select_node:(n: SankeyNode) => void,
   alt_key_pressed:boolean,
   nodeTooltipsContent: (data: SankeyData, d: SankeyNode,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
@@ -384,7 +383,7 @@ export const OpenSankeyDrawNodes = (
       const simpleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
         setTimeout(()=>{
           if(accept_simple_click.current){
-            eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,select_node,data,set_data,mode_selection)
+            eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
           }
         },200)
       }

@@ -628,7 +628,7 @@ export const default_sankey_data = (): SankeyData => {
         'Consolas,monospace','Courier,monospace','Courier New,monospace','Lucida Console,monospace','Lucidatypewriter,monospace','Lucida Sans Typewriter,monospace','Monaco,monospace','Andale Mono,monospace',
         'Comic Sans,cursive','Comic Sans MS,cursive','Apple Chancery,cursive','Zapf Chancery,cursive','Bradley Hand,cursive','Brush Script MT,cursive','Brush Script Std,cursive','Snell Roundhan,cursive','URW Chancery,cursive','Coronet script,cursive','Florence,cursive','Parkavenue,cursive'
       ],
-      node_font_family_selected: 'Arial,serif',
+      // node_font_family_selected: 'Arial,serif',
       link_font_family_selected: 'Arial,serif'
     },
     grid_square_size: 50,
@@ -1344,7 +1344,7 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   [data.width, data.height] = min_width_and_height(data)
   let size_menu=0
   if(show_nav){
-    size_menu=540
+    size_menu=380
   }
   // Width of the screen minus the margin of the sankey zone minus the width of the configuration menu if it's open
   const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight

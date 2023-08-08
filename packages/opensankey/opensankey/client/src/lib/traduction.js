@@ -136,6 +136,7 @@ const resources = {
         'c_support':'Contact the support',
         'rth_support':'We are here to help you',
         'support_explication':'If you encounter a technical problem, write to us at [] and we will deal with your request as quickly as possible.',
+        'suppr':'Delete',
         tooltips:{
           noeud:{
             slct: 'Choose one / some / all nodes to select via a drop-down list',
@@ -278,6 +279,7 @@ const resources = {
         },
         labels:{
           'labels':'Labels',
+          'node_value':'Value',
           'vdb':'Label visibility',
           'lb':'White label',
           'pv':'Vertical position',
@@ -682,6 +684,7 @@ const resources = {
         'c_support':'Contacter le support',
         'rth_support':'Nous sommes là pour vous aidez',
         'support_explication':'Si vous rencontrez un problème technique, écrivez-nous à [], nous traiterons votre demande dans les meilleurs délais.',
+        'suppr':'Supprimer',
         tooltips:{
           noeud:{
             slct: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante',
@@ -823,6 +826,7 @@ const resources = {
         },
         labels:{
           'labels':'Labels',
+          'node_value':'Valeur',
           'vdb':'Visibilité du label',
           'lb':'Label blanc',
           'pv':'Position verticale',
@@ -840,7 +844,7 @@ const resources = {
           'maj':'Majuscule',
           'ita':'Italique',
           'cl':'Largeur zone de texte',
-          'vdv':'Afficher la valeur',
+          'vdv':'Afficher la valeur totale des flux',
           tooltips: {
             vdb: 'Permet d\'afficher ou non le label accolé au(x) noeud(s) sélectionné(s)',
             lb: 'Permet d\'afficher le texte du label en blanc ou en noir (utile si label positionné sur noeud(s))',
