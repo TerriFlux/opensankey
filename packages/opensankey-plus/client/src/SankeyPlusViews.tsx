@@ -1508,10 +1508,11 @@ const selecteur_view=(data:SankeyPlusData,
         }
       }
     }
+    value={view}
   >
-    <option hidden selected={view === 'none'} value={'none'}>{t('view.actual')}</option>
+    <option hidden value={'none'}>{t('view.actual')}</option>
     {master_data ? master_data.view.map(d => {
-      return <option key={d.id} selected={view === d.id} value={d.id}>{d.nom}</option>
+      return <option key={d.id} value={d.id}>{d.nom}</option>
     }) : <></>}
   </Form.Select>
 }
@@ -1566,10 +1567,11 @@ export const viewsAccordion = (
             }
           }
         }
+        value={view}
       >
-        {view !== 'none'}<option disabled={view === 'none'} selected={view === 'none'} value={'none'}>{t('view.actual')}</option>
+        {view !== 'none'}<option disabled={view === 'none'} value={'none'}>{t('view.actual')}</option>
         {master_data ? master_data.view.map(d => {
-          return <option key={d.id} disabled={view === d.id} selected={view === d.id} value={d.id}>{d.nom}</option>
+          return <option key={d.id} disabled={view === d.id} value={d.id}>{d.nom}</option>
         }) : <></>}
       </Form.Select>
     </Popover.Body>

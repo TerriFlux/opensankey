@@ -1,5 +1,5 @@
 import React from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button } from 'react-bootstrap'
+import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button, ButtonGroup } from 'react-bootstrap'
 import {  SankeyLinkValue} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
@@ -11,6 +11,7 @@ import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
+import { FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp } from 'react-icons/fa'
 
 declare const window: Window &
 typeof globalThis & {
@@ -54,10 +55,10 @@ export const SankeyPlusNodesAttributes = (
   }
   const form_elements= [
     <Form.Group as={Row} >
-      <Col xs={4}>
+      <Col xs={6}>
         <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.toScale')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale',menu_for_style)?'*':'')}</FormLabel>
       </Col>
-      <Col xs={1}>
+      <Col xs={6}>
         <FormCheck inline
           type='switch'
           checked={isAllNodeToScale}
@@ -71,67 +72,49 @@ export const SankeyPlusNodesAttributes = (
       </Col>
 
     </Form.Group>,
-    <Col xs={5}>
-      <FormLabel style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale_direction',menu_for_style)?'*':'')}</FormLabel>
-    </Col>,
+    
     <Form.Group as={Row} >
-      <Col  xs={3}>
-        <FormCheck
-          value="left"
-          type='radio'
-          label={t('Noeud.apparence.toScaleLeft')}
-          disabled={(!is_activated)?true:!isAllNodeToScale}
-          checked={isAllNodeNotToScaleOrientation('left')}
-          onChange={evt => {
-            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
+      <Col xs={6}>
+        <FormLabel style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale_direction',menu_for_style)?'*':'')}</FormLabel>
+      </Col>
+      <Col  xs={6}>
+        <ButtonGroup>
+          <Button
+            disabled={(!is_activated)?true:!isAllNodeToScale}
+            variant={isAllNodeNotToScaleOrientation('left')?'dark':'outline-dark'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','left',menu_for_style))
+              set_data({ ...data })
+            }}
+          ><FaArrowLeft/></Button>
 
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-      <Col xs={3}>
-        <FormCheck
-          value="right"
-          type='radio'
-          label={t('Noeud.apparence.toScaleRight')}
-          disabled={(!is_activated)?true:!isAllNodeToScale}
-          checked={isAllNodeNotToScaleOrientation('right')}
-          onChange={evt => {
-            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-      <Col xs={3}>
-        <FormCheck
-          value="top"
-          type='radio'
-          label={t('Noeud.apparence.toScaleTop')}
-          disabled={(!is_activated)?true:!isAllNodeToScale}
-          checked={isAllNodeNotToScaleOrientation('top')}
-          onChange={evt => {
-            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
+          <Button
+            disabled={(!is_activated)?true:!isAllNodeToScale}
+            variant={isAllNodeNotToScaleOrientation('right')?'dark':'outline-dark'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','right',menu_for_style))
+              set_data({ ...data })
+            }}
+          ><FaArrowRight/></Button>
 
-            set_data({ ...data })
-          }}
-        />
-      </Col>
-      <Col xs={3}>
-        <FormCheck
-          value="bottom"
-          type='radio'
-          label={t('Noeud.apparence.toScaleBottom')}
-          disabled={(!is_activated)?true:!isAllNodeToScale}
-          checked={isAllNodeNotToScaleOrientation('bottom')}
-          onChange={evt => {
-            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale_direction = evt.target.value)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction',evt.target.value,menu_for_style))
-            set_data({ ...data })
-          }}
-        />
+          <Button
+            disabled={(!is_activated)?true:!isAllNodeToScale}
+            variant={isAllNodeNotToScaleOrientation('top')?'dark':'outline-dark'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','top',menu_for_style))
+              set_data({ ...data })
+            }}
+          ><FaArrowUp/></Button>
+
+          <Button
+            disabled={(!is_activated)?true:!isAllNodeToScale}
+            variant={isAllNodeNotToScaleOrientation('bottom')?'dark':'outline-dark'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','bottom',menu_for_style))
+              set_data({ ...data })
+            }}
+          ><FaArrowDown/></Button>
+        </ButtonGroup>
       </Col>
     </Form.Group>]
 
@@ -159,13 +142,13 @@ export const SankeyPlusNodeIcon = (
   menu_for_modal=false
 )=> {
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
-  const isAllIconSame = (param: string) => {
-    let icon = true
-    multi_selected_nodes.current.map(d => {
-      icon = (d.iconName === param) ? icon : false
-    })
-    return icon
-  }
+  // const isAllIconSame = (param: string) => {
+  //   let icon = true
+  //   multi_selected_nodes.current.map(d => {
+  //     icon = (d.iconName === param) ? icon : false
+  //   })
+  //   return icon
+  // }
   const valueAllIconRatio = () => {
     let display_ratio = true
     let ratio = 100
@@ -223,12 +206,13 @@ export const SankeyPlusNodeIcon = (
               })
               set_data({ ...data })
             }}
+            value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].iconName:'None'}
           >
-            <option key={0} value={'none'} selected={isAllIconSame('none')}>{t('Noeud.icon.Aucun')}</option>
+            <option key={0} value={'none'}>{t('Noeud.icon.Aucun')}</option>
 
             {Object.keys(data.icon_catalog).map((n, i) => {
 
-              return <option key={i + 1} value={n} selected={isAllIconSame(n)}>{n}</option>
+              return <option key={i + 1} value={n}>{n}</option>
             })}
           </Form.Select>
         </Col>
