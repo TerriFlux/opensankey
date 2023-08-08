@@ -278,7 +278,7 @@ export const SankeyDataPropTypes = {
     filter_label: PropTypes.number.isRequired,
     null_flux: PropTypes.bool.isRequired,
     font_family: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    node_font_family_selected: PropTypes.string.isRequired,
+    // node_font_family_selected: PropTypes.string.isRequired,
     link_font_family_selected: PropTypes.string.isRequired
   }).isRequired,
 

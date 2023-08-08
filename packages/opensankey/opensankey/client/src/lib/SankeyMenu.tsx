@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card} from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyData,TagsGroup,TagsCatalog,SankeyLink,SankeyNode,SankeyLinkValue} from './types'
+import { SankeyDataPropTypes,  SankeyData,TagsGroup,TagsCatalog,SankeyLink,SankeyNode,SankeyLinkValue} from './types'
 
 import { complete_sankey_data } from './SankeyConvert'
 import FileSaver from 'file-saver'
@@ -60,7 +60,6 @@ const MenuPropTypes = {
 
   button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
-  selected_node: PropTypes.shape({current:PropTypes.shape(SankeyNodePropTypes).isRequired}).isRequired,
 
   example_menu: PropTypes.element,
   // portfolio_menu: PropTypes.element,
@@ -979,7 +978,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     logo,logo_terriflux, logo_width,app_name,
     button_ref,
     accordion_ref,
-    selected_node,
     url_prefix,
     callback,
     show_load,
@@ -1076,10 +1074,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
   const setChecked = useState(false)[1]
 
-  let node = data.nodes[selected_node.current.idNode]
-  if (node === undefined) {
-    node = SankeyUtils.default_node(data)
-  }
 
   const props = {
     scroll: true,
@@ -1297,7 +1291,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
 
-      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
+      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '380px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
             nav_item_active={nav_item_active}
@@ -1309,7 +1303,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
       <ButtonGroup vertical
         className='sideBar'
-        style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?540+has_scrollbar_shift:has_scrollbar_shift)}}
+        style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?380+has_scrollbar_shift:has_scrollbar_shift)}}
       >
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
@@ -1614,7 +1608,6 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   set_show_menu_node_apparence:React.Dispatch<React.SetStateAction<boolean>>,
-  set_show_menu_node_label:React.Dispatch<React.SetStateAction<boolean>>,
   set_show_menu_node_io:React.Dispatch<React.SetStateAction<boolean>>,
   set_agregation_node:React.Dispatch<React.SetStateAction<string>>,
   set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,
@@ -1690,10 +1683,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   </Dropdown>:<></>
 
   
-  const dropdown_c_n_label=contextualised_node!==undefined?<Button onClick={()=>{
-    set_show_menu_node_label(true)
-    set_contextualised_node(undefined)
-  }} variant='light'>{t('Noeud.labels.labels')} {icon_open_modal}</Button>:<></>
+
 
 
 
@@ -1780,6 +1770,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     </Dropdown.Menu>
   </Dropdown>:<></> 
 
+
   // Pop over that serve as context menu 
   return contextualised_node!==undefined?<Popover  id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
     <Popover.Body>
@@ -1794,7 +1785,19 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           set_data({...data})
           set_contextualised_node(undefined)
         }}>Desaggregation</Button>:<></>}
-        {sep}        
+        {sep}
+        <Button
+          variant='light'
+          onClick={() => {
+            multi_selected_nodes.current.map(d => SankeyUtils.delete_node(data, d))
+            multi_selected_nodes.current = []
+            set_contextualised_node(undefined)
+            set_data({ ...data })
+
+          }}>
+          {t('Menu.suppr')}
+        </Button>
+        {sep}   
         <Button
           variant='light'
           onClick={() => {
@@ -1842,7 +1845,6 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
         {sep}
 
         {dropdown_c_n_apparence}
-        {dropdown_c_n_label}
         {additional_context_element}
         {sep}
         {dropdown_c_n_style}

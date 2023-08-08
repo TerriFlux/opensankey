@@ -1,9 +1,11 @@
 import React from 'react'
 import { Row, Form, FormLabel, Col, FormCheck,Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip } from 'react-bootstrap'
-import { SankeyData, SankeyNode,SankeyLinkValue } from './types'
+import { SankeyData, SankeyNode,SankeyLinkValue,SankeyLink } from './types'
 import { link_visible,link_color,return_value_link} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
+import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
+import * as d3 from 'd3'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them
 const getIOLink=(
@@ -11,7 +13,9 @@ const getIOLink=(
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,
   io:string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+
+
 )=>{
   const n=multi_selected_nodes.current[0]
 
@@ -454,6 +458,8 @@ export const SankeyMenuConfigurationNodesIO = (
   tab_colored:boolean,
   set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  multi_selected_links: {current:SankeyLink[]},
+  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
   menu_for_modal=false
 ) => {
   // const [link_io,set_link_io]=useState<string>('output')
@@ -515,14 +521,12 @@ export const SankeyMenuConfigurationNodesIO = (
         </ButtonGroup>
       </Col>
     </Form.Group>
-
     <Form.Group as={Row}>
-      <Col xs={2}>
-        <FormLabel >{t('Noeud.PF.FRN')}</FormLabel>
-      </Col>
-
+      <FormLabel >{t('Noeud.PF.FRN')}:</FormLabel>
+    </Form.Group>
+    <Form.Group as={Row}>
       {/* Choisir un lien situé à gauche */}
-      <Col xs={2}>
+      <Col xs={3}>
         <OverlayTrigger
           key={'noeud.pf.tooltips.3'}
           placement={'top'}
@@ -541,7 +545,7 @@ export const SankeyMenuConfigurationNodesIO = (
       </Col>
 
       {/* Choisir un lien situé à droite */}
-      <Col xs={2}>
+      <Col xs={3}>
         <OverlayTrigger
           key={'noeud.pf.tooltips.4'}
           placement={'top'}
@@ -621,6 +625,69 @@ export const SankeyMenuConfigurationNodesIO = (
         </OverlayTrigger>
       </Col>
     </Form.Group>
+    {/* Boutons de rérrangement / selection des flux  */}
+    <ButtonGroup>
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.7'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
+        <Button
+          variant='outline-dark'
+          className='btn_menu_config'
+          onClick={() => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+              reorganize_node_inputLinksId(data,d, data.nodes, data.links)
+              reorganize_node_outputLinksId(data,d, data.nodes, data.links)
+            })
+            set_data({ ...data })
+          }}>
+          {t('Noeud.Reorg')}
+        </Button>
+      </OverlayTrigger>
+
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.8'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
+        <Button
+          variant='outline-dark'
+          className='btn_menu_config'
+          onClick={() => {
+            multi_selected_links.current = []
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
+              const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              set_display_link_opacity(opacity)
+            })
+            multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+          }}>
+          {t('Noeud.SlctOutLink')}
+        </Button>
+      </OverlayTrigger>
+
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.9'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
+        <Button
+          variant='outline-dark'
+          className='btn_menu_config'
+          onClick={() => {
+            multi_selected_links.current = []
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
+              const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              set_display_link_opacity(opacity)
+            })
+            multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+          }}>
+          {t('Noeud.SlctInLink')}
+        </Button>
+      </OverlayTrigger>
+    </ButtonGroup>
   </Form>
   {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored,getLinkValue)}
   </>
