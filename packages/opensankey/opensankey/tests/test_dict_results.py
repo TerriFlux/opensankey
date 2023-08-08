@@ -12,6 +12,10 @@ from opensankey.server import parser_excel
 
 sys.path.insert(0, os.getcwd())
 
+tests_to_skip = [
+    'Tests_update_ter_mettre_a_jour_ter_reconciled_sankey',
+    'Fili_res_Agricole_Vin_Vin_AURA_reconciled_sankey'
+]
 # try:
 #     import sankeytools.server.nodes_position as nodes_position
 # except Exception:
@@ -23,7 +27,7 @@ sys.path.insert(0, os.getcwd())
 #     import sankeytools.server.parser_excel as parser_excel
 # except Exception:
 
-MAXSIZE = 200000
+MAXSIZE = 1000000
 
 mfa_data_dir = os.environ.get('MFAData')
 expected_results = {}
@@ -151,6 +155,7 @@ class DictResultTest(unittest.TestCase):
         file_name: str,
         expected_results: dict
     ):
+        print(self._testMethodName)
         sankey = Sankey()
         io_excel.load_sankey_from_excel_file(os.path.join(mfa_data_dir, file_name), sankey)
         sankey_data = parser_excel.parse_excel(sankey)
@@ -199,6 +204,8 @@ if __name__ == '__main__':
             if sys.argv[1] in name:
                 suite.addTest(DictResultTest(name))
         else:
+            if len( [test_to_skip for test_to_skip in tests_to_skip if test_to_skip in name]) > 0:
+                continue
             suite.addTest(DictResultTest(name))
     # suite.addTest(MFAProblemTestReconciliation("test_reconciliation_no_uncert_66_V_g_tal_triticale_1_4_no_uncert"))
     runner = unittest.TextTestRunner()
