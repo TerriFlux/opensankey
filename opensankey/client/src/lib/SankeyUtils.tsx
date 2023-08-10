@@ -629,7 +629,7 @@ export const default_sankey_data = (): SankeyData => {
         'Comic Sans,cursive','Comic Sans MS,cursive','Apple Chancery,cursive','Zapf Chancery,cursive','Bradley Hand,cursive','Brush Script MT,cursive','Brush Script Std,cursive','Snell Roundhan,cursive','URW Chancery,cursive','Coronet script,cursive','Florence,cursive','Parkavenue,cursive'
       ],
       // node_font_family_selected: 'Arial,serif',
-      link_font_family_selected: 'Arial,serif'
+      // link_font_family_selected: 'Arial,serif'
     },
     grid_square_size: 50,
     grid_visible: true,
@@ -954,7 +954,9 @@ export const default_link_style=()=>{
     opacity:0.85,
     to_precision:true,
     scientific_precision:5,
-    arrow_size:10
+    arrow_size:10,
+    font_family: 'Arial,serif',
+
 
   }
 }
