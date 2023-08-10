@@ -1,11 +1,12 @@
 import React from 'react'
 import { SankeyLinkValue} from 'open-sankey/src/lib/types'
 import * as d3 from 'd3'
-import {  Col, Form, FormLabel, Row, OverlayTrigger, Tooltip} from 'react-bootstrap'
+import { OverlayTrigger, Tooltip, InputGroup,Button} from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
 import { TFunction } from 'i18next'
 import * as OpensankeyDrawFunction  from 'open-sankey/dist/SankeyDrawFunction'
 import * as OpensankeyUtils from 'open-sankey/dist/SankeyUtils'
+import { FaEye, FaEyeSlash} from 'react-icons/fa'
 
 export const menu_conf_link_apparence_gradient=(t:TFunction,
   multi_selected_links:{current:SankeyPlusLink[]},
@@ -30,38 +31,29 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
   //   return gradChecked
   // }
   const gradChecked=OpensankeyUtils.is_all_link_attr_same_value(data,selected_parameter,'gradient',menu_for_style)
-  return <OverlayTrigger
-    key={'gradiantDisabled'}
-    placement={'top'}
-    delay={500}
-    overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-  >
-    <Form.Group as={Row} >
-      <Col>
-        <FormLabel style={{color:(!is_activated)?'grey':'#555555'}} >{t('Flux.apparence.grad')+(OpensankeyUtils.is_link_diplaying_value_local(multi_selected_links,'gradient',menu_for_style)?'*':'')}:</FormLabel>
-      </Col>
-      <Col>
-        <Form.Check
-          inline
-          disabled={!is_activated}
-          type="checkbox"
-          checked={
-            gradChecked
+  return <InputGroup>
+    <InputGroup.Text style={{color:(!is_activated)?'grey':'#555555',width:'30%'}} >{t('Flux.apparence.grad')+(OpensankeyUtils.is_link_diplaying_value_local(multi_selected_links,'gradient',menu_for_style)?'*':'')}:</InputGroup.Text>
+    <OverlayTrigger
+      key={'gradiantDisabled'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >      
+      <Button
+        style={{width:'70%'}} 
+        className='btn_menu_config'
+        disabled={!is_activated}
+        variant={gradChecked?'dark':'outline-dark'}
+        onClick={
+          () => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+              OpensankeyUtils.assign_link_value_to_correct_var(d,'gradient',!gradChecked,menu_for_style)
+            })
+            set_data({ ...data })
           }
-          onChange={
-            evt => {
-              // selected_link.gradient = evt.target.checked
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                // d.gradient = evt.target.checked
-                OpensankeyUtils.assign_link_value_to_correct_var(d,'gradient',evt.target.checked,menu_for_style)
-                
-              })
-              set_data({ ...data })
-            }
-          }
-        />
-      </Col>
-    </Form.Group></OverlayTrigger>
+        }
+      >{gradChecked?<FaEye/>:<FaEyeSlash/>}</Button>
+    </OverlayTrigger></InputGroup>
 }
 
 export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue)=>{

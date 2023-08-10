@@ -1,5 +1,5 @@
 import React from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button, ButtonGroup } from 'react-bootstrap'
+import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button,  InputGroup } from 'react-bootstrap'
 import {  SankeyLinkValue} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
@@ -11,7 +11,7 @@ import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
-import { FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp } from 'react-icons/fa'
+import { FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp,FaEye,FaEyeSlash } from 'react-icons/fa'
 
 declare const window: Window &
 typeof globalThis & {
@@ -54,69 +54,67 @@ export const SankeyPlusNodesAttributes = (
     return same_orientation
   }
   const form_elements= [
-    <Form.Group as={Row} >
-      <Col xs={6}>
-        <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.toScale')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale',menu_for_style)?'*':'')}</FormLabel>
-      </Col>
-      <Col xs={6}>
-        <FormCheck inline
-          type='switch'
-          checked={isAllNodeToScale}
-          disabled={!is_activated}
-          onChange={evt => {
-            // Object.values(data.nodes).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => d.not_to_scale = evt.target.checked)
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale',evt.target.checked,menu_for_style))
-            set_data({ ...data })
-          }}
-        />
-      </Col>
+    <InputGroup >
+      <InputGroup.Text style={{color:(is_activated)?'#555555':'#DADADA',width:'40%'}}>{t('Noeud.apparence.toScale')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale',menu_for_style)?'*':'')}</InputGroup.Text>
+      <Button
+        className='btn_menu_config'
+        disabled={!is_activated}
+        style={{width:'60%'}}
+        //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+        variant={isAllNodeToScale?'dark':'outline-dark'}
+        onClick={() => {
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'not_to_scale',!isAllNodeToScale,menu_for_style))
+          set_data({ ...data })
+        }}>{isAllNodeToScale?<FaEye/>:<FaEyeSlash/>}</Button>
 
-    </Form.Group>,
-    
-    <Form.Group as={Row} >
-      <Col xs={6}>
-        <FormLabel style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Orientation')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale_direction',menu_for_style)?'*':'')}</FormLabel>
-      </Col>
-      <Col  xs={6}>
-        <ButtonGroup>
-          <Button
-            disabled={(!is_activated)?true:!isAllNodeToScale}
-            variant={isAllNodeNotToScaleOrientation('left')?'dark':'outline-dark'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','left',menu_for_style))
-              set_data({ ...data })
-            }}
-          ><FaArrowLeft/></Button>
+    </InputGroup>,
+    <>{isAllNodeToScale?<InputGroup >
+      <InputGroup.Text style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA',width:'30%'}}>{t('Noeud.apparence.Orientation')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale_direction',menu_for_style)?'*':'')}</InputGroup.Text>
 
-          <Button
-            disabled={(!is_activated)?true:!isAllNodeToScale}
-            variant={isAllNodeNotToScaleOrientation('right')?'dark':'outline-dark'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','right',menu_for_style))
-              set_data({ ...data })
-            }}
-          ><FaArrowRight/></Button>
+      <Button
+        className='btn_menu_config'
+        style={{width:'17.5%'}}
+        disabled={(!is_activated)?true:!isAllNodeToScale}
+        variant={isAllNodeNotToScaleOrientation('left')?'dark':'outline-dark'}
+        onClick={() => {
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','left',menu_for_style))
+          set_data({ ...data })
+        }}
+      ><FaArrowLeft/></Button>
 
-          <Button
-            disabled={(!is_activated)?true:!isAllNodeToScale}
-            variant={isAllNodeNotToScaleOrientation('top')?'dark':'outline-dark'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','top',menu_for_style))
-              set_data({ ...data })
-            }}
-          ><FaArrowUp/></Button>
+      <Button
+        className='btn_menu_config'
+        style={{width:'17.5%'}}
+        disabled={(!is_activated)?true:!isAllNodeToScale}
+        variant={isAllNodeNotToScaleOrientation('right')?'dark':'outline-dark'}
+        onClick={() => {
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','right',menu_for_style))
+          set_data({ ...data })
+        }}
+      ><FaArrowRight/></Button>
 
-          <Button
-            disabled={(!is_activated)?true:!isAllNodeToScale}
-            variant={isAllNodeNotToScaleOrientation('bottom')?'dark':'outline-dark'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','bottom',menu_for_style))
-              set_data({ ...data })
-            }}
-          ><FaArrowDown/></Button>
-        </ButtonGroup>
-      </Col>
-    </Form.Group>]
+      <Button
+        className='btn_menu_config'
+        style={{width:'17.5%'}}
+        disabled={(!is_activated)?true:!isAllNodeToScale}
+        variant={isAllNodeNotToScaleOrientation('top')?'dark':'outline-dark'}
+        onClick={() => {
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','top',menu_for_style))
+          set_data({ ...data })
+        }}
+      ><FaArrowUp/></Button>
+
+      <Button
+        className='btn_menu_config'
+        style={{width:'17.5%'}}
+        disabled={(!is_activated)?true:!isAllNodeToScale}
+        variant={isAllNodeNotToScaleOrientation('bottom')?'dark':'outline-dark'}
+        onClick={() => {
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','bottom',menu_for_style))
+          set_data({ ...data })
+        }}
+      ><FaArrowDown/></Button>
+    </InputGroup>:<></>}</>]
 
   if(is_activated){
     return form_elements
