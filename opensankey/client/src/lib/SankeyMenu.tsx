@@ -2121,6 +2121,14 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   t:TFunction,
   set_show_menu_layout:(b:boolean)=>void
 )=>{
+  const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
+    d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
+    d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
+    d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
+
+  const getRandomInt=(max:number) =>{
+    return Math.floor(Math.random() * max)
+  }
 
   let style_c_zdd='0px 0px auto auto'
   if(show_context_zdd){
@@ -2138,6 +2146,18 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
     data.grid_visible = !data.grid_visible
     set_data({...data})
   }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
+  </>
+  const button_assgn_rand_link_color=<><Button variant='light' onClick={()=>{
+    const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
+    const l_keys=Object.keys(data.links)
+    const size_color=l_keys.length
+      
+    for(const i in d3.range(size_color)){
+      // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
+      SankeyUtils.assign_link_local_attribute(data.links[l_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
+    }
+    set_data({...data})
+  }}>{t('Menu.rand_link_color')}</Button>
   </>
 
 
@@ -2293,6 +2313,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
         {sep}
         {button_open_layout}
         {sep}
+        {button_assgn_rand_link_color}
         {button_bg_color}
         {button_bg_grid}
         {dropdown_c_zdd_scale}
