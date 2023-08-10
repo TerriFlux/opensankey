@@ -7,7 +7,6 @@ import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
-import {SankeyMenuConfigurationLinksLabel} from './SankeyMenuConfigurationLinksLabel'
 import { SankeyData } from './types'
 
 
@@ -265,7 +264,6 @@ export const SankeyPlusModalStyleLink = (
             <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
 
               {SankeyMenuConfigurationLinksAppearence(data,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link,display_link_opacity,set_display_link_opacity)}
-              {SankeyMenuConfigurationLinksLabel(data,{current:[]},set_data,t,true,selected_style_link)}
 
             </Tabs>
           </Col>

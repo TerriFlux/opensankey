@@ -1,9 +1,9 @@
 import { TFunction } from 'i18next'
 import React from 'react'
-import { Row, Form,  FormLabel, Col, FormCheck, Tab, OverlayTrigger, Tooltip,FormControl,Accordion, Button, ButtonGroup, InputGroup,Dropdown } from 'react-bootstrap'
+import { Row, Form,Col,  Tab, OverlayTrigger, Tooltip,FormControl, Button, ButtonGroup, InputGroup,Dropdown } from 'react-bootstrap'
 import { SankeyData, SankeyNode } from './types'
 import { return_correct_node_attribute_value,assign_node_value_to_correct_var,is_node_diplaying_value_local,is_all_node_attr_same_value,cut_name} from './SankeyUtils'
-import { FaAlignLeft,FaAlignCenter,FaAlignRight,FaBold,FaItalic, FaLock, FaLockOpen} from 'react-icons/fa'
+import { FaAlignLeft,FaAlignCenter,FaAlignRight,FaBold,FaItalic, FaLock, FaLockOpen, FaEye, FaEyeSlash,FaCheck} from 'react-icons/fa'
 
 export const OpenSankeyConfigurationNodesAttributes = (
   t:TFunction,
@@ -200,122 +200,115 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
   const content_appearence=<Form.Group>
     {/* Visibilite du noeud */}
-    <Form.Group as={Row} key={'node_visibility'} >
-      <Col xs={6}>
-        <FormLabel >{t('Noeud.apparence.Visibilité')+(is_node_diplaying_value_local(multi_selected_nodes,'shape_visible',menu_for_style)?'*':'')}</FormLabel>
-      </Col>
-      <Col xs={6}>
-        <OverlayTrigger
-          key={'noeud.apparence.tooltips.1'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
-          <FormCheck inline
-            type='switch'
-            checked={isAllNodeVisible}
-            onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape_visible',evt.target.checked,menu_for_style))
-              set_data({ ...data })
-            }}/>
-        </OverlayTrigger>
-      </Col>
-    </Form.Group>
+    <InputGroup key={'node_visibility'} >
+      
+      <InputGroup.Text style={{width:'30%'}} >{t('Noeud.apparence.Visibilité')+(is_node_diplaying_value_local(multi_selected_nodes,'shape_visible',menu_for_style)?'*':'')}</InputGroup.Text>
+      
+      
+      <OverlayTrigger
+        key={'noeud.apparence.tooltips.1'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'70%'}}
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllNodeVisible?'dark':'outline-dark'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'shape_visible',!isAllNodeVisible,menu_for_style))
+            set_data({ ...data })
+          }}>{isAllNodeVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+      </OverlayTrigger>
+      
+    </InputGroup>
 
     {/* Couleur du noeud */}
-    <Form.Group as={Row}>
-      <Col xs={6}>
-        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Couleur')+(is_node_diplaying_value_local(multi_selected_nodes,'color',menu_for_style)?'*':'')}</FormLabel>
-      </Col>
-      <Col xs={6}>
-        <InputGroup>
-          <OverlayTrigger
-            key={'noeud.apparence.tooltips.2'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.apparence.tooltips.2'}>{t('Noeud.apparence.tooltips.Couleur')} </Tooltip>}>
-            {(getBrowserName()==='Firefox')?<Form.Control
-              type='color'
-              disabled={ menu_for_style?false:!isAllNodeVisible}
-              value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
-              onChange={evt=>{
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
-                set_data({ ...data })
+    <InputGroup>
+      <InputGroup.Text style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA',width:'30%'}}>{t('Noeud.apparence.Couleur')+(is_node_diplaying_value_local(multi_selected_nodes,'color',menu_for_style)?'*':'')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'noeud.apparence.tooltips.2'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.apparence.tooltips.2'}>{t('Noeud.apparence.tooltips.Couleur')} </Tooltip>}>
+        {(getBrowserName()==='Firefox')?<Form.Control
+          style={{width:'60%'}}
+          type='color'
+          disabled={ menu_for_style?false:!isAllNodeVisible}
+          value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+          onChange={evt=>{
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
+            set_data({ ...data })
             
-              }}
-            />:<Form.Control
-              type='color'
-              disabled={ menu_for_style?false:!isAllNodeVisible}
-              value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
-              onChange={evt=>{
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
-                // set_data({ ...data })
-              }}
-              onBlurCapture={()=>{
-                set_data({ ...data })
-              }}
-            />}  
-          </OverlayTrigger>
-          <OverlayTrigger
-            key={'noeud.apparence.tooltips.3'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.apparence.tooltips.3'}>{t('Noeud.apparence.tooltips.CouleurPérenne')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-              variant={isAllNodeColorSustainable?'dark':'outline-dark'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'colorSustainable',!isAllNodeColorSustainable,menu_for_style))
-                set_data({ ...data })
-              }}>{isAllNodeColorSustainable?<FaLock/>:<FaLockOpen/>}</Button>
-          </OverlayTrigger>
-        </InputGroup>
-      </Col>
-    </Form.Group>
+          }}
+        />:<Form.Control
+          style={{width:'60%'}}
+          type='color'
+          disabled={ menu_for_style?false:!isAllNodeVisible}
+          value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+          onChange={evt=>{
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
+            // set_data({ ...data })
+          }}
+          onBlurCapture={()=>{
+            set_data({ ...data })
+          }}
+        />}  
+      </OverlayTrigger>
+      <OverlayTrigger
+        key={'noeud.apparence.tooltips.3'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.apparence.tooltips.3'}>{t('Noeud.apparence.tooltips.CouleurPérenne')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'10%'}}
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllNodeColorSustainable?'dark':'outline-dark'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'colorSustainable',!isAllNodeColorSustainable,menu_for_style))
+            set_data({ ...data })
+          }}>{isAllNodeColorSustainable?<FaLock/>:<FaLockOpen/>}</Button>
+      </OverlayTrigger>
+      
+    </InputGroup>
 
 
     {/* Forme du noeud */}
-    <Form.Group as={Row} >
-      <Col xs={6}>
-        <FormLabel style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Forme')+(is_node_diplaying_value_local(multi_selected_nodes,'shape',menu_for_style)?'*':'')}</FormLabel>
-      </Col>
-      <Col xs={3}>
-        <OverlayTrigger
-          key={'noeud.apparence.tooltips.4'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
-          <FormCheck
-            value="ellipse"
-            type='radio'
-            label={t('Noeud.apparence.Cercle')}
-            disabled={menu_for_style?false:!isAllNodeVisible}
-            checked={isAllNodeCircle()}
-            onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape',evt.target.value,menu_for_style))
-              set_data({ ...data })
-            }}/>
-        </OverlayTrigger>
-      </Col>
-      <Col xs={3}>
-        <OverlayTrigger
-          key={'noeud.apparence.tooltips.5'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.apparence.tooltips.5'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
-          <FormCheck
-            value="rect"
-            type='radio'
-            label={t('Noeud.apparence.Rectangle')}
-            disabled={menu_for_style?false:!isAllNodeVisible}
-            checked={isAllNodeRect()}
-            onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape',evt.target.value,menu_for_style))
-              set_data({ ...data })
-            }}/>
-        </OverlayTrigger>
-      </Col>
-    </Form.Group>
+    <InputGroup >
+      <InputGroup.Text style={{color:(isAllNodeVisible || menu_for_style)?'#555555':'#DADADA','width':'30%'}}>{t('Noeud.apparence.Forme')+(is_node_diplaying_value_local(multi_selected_nodes,'shape',menu_for_style)?'*':'')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'noeud.apparence.tooltips.4'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
+        <Button className='btn_menu_config'
+          style={{width:'35%'}}
+          value="ellipse"
+          disabled={menu_for_style?false:!isAllNodeVisible}
+          variant={isAllNodeCircle()?'dark':'outline-dark'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape','ellipse',menu_for_style))
+            set_data({ ...data })
+          }}>{t('Noeud.apparence.Cercle')}</Button>
+      </OverlayTrigger>
+      
+      <OverlayTrigger
+        key={'noeud.apparence.tooltips.5'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.apparence.tooltips.5'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
+        <Button className='btn_menu_config'
+          style={{width:'35%'}}
+          disabled={menu_for_style?false:!isAllNodeVisible}
+          variant={isAllNodeRect()?'dark':'outline-dark'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape','rect',menu_for_style))
+            set_data({ ...data })
+          }}>{t('Noeud.apparence.Rectangle')}</Button>
+      </OverlayTrigger>
+      
+    </InputGroup>
     {advanced_appearence_content}
   </Form.Group>
 
@@ -331,46 +324,46 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
   const content_label= <Form.Group>
     {/* Checkbox visibilité noeud */}
-    <Form.Group as={Row} >
-      <Col xs={4}>{t('Noeud.labels.vdb')}</Col>
-      <Col xs={1}>
-        <OverlayTrigger
-          key={'noeud.labels.tooltips.1'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.labels.tooltips.1'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
-          <FormCheck inline
-            type='switch'
-            checked={isAllLabelVisible}
-            onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'label_visible',evt.target.checked,menu_for_style))
-              set_data({ ...data })
-            }}/>
-        </OverlayTrigger>
-      </Col>
-    </Form.Group>
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>{t('Noeud.labels.vdb')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'noeud.labels.tooltips.1'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.labels.tooltips.1'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'60%'}}
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllLabelVisible?'dark':'outline-dark'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_visible',!isAllNodeVisible,menu_for_style))
+            set_data({ ...data })
+          }}>{isAllLabelVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+      </OverlayTrigger>
+    </InputGroup>
 
     {/* Label en blanc ou noir */}
-    <Form.Group as={Row} >
-      <Col xs={4}>
-        <FormLabel style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA'}} >{t('Noeud.labels.lb')+(is_node_diplaying_value_local(multi_selected_nodes,'label_color',menu_for_style)?'*':'')}</FormLabel>
-      </Col>
-      <Col xs={1}>
-        <OverlayTrigger
-          key={'noeud.labels.tooltips.2'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
-          <FormCheck inline
-            type='switch'
-            checked={isAllLabelWhite}
-            onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_color',evt.target.checked,menu_for_style))
-              set_data({ ...data })
-            }}/>
-        </OverlayTrigger>
-      </Col>
-    </Form.Group>
+    <InputGroup>
+      <InputGroup.Text style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA', width:'30%'}} >{t('Noeud.labels.lb')+(is_node_diplaying_value_local(multi_selected_nodes,'label_color',menu_for_style)?'*':'')}</InputGroup.Text>
+
+      <OverlayTrigger
+        key={'noeud.labels.tooltips.2'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'70%'}}
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllLabelWhite?'dark':'outline-dark'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_color',!isAllNodeVisible,menu_for_style))
+            set_data({ ...data })
+          }}>{isAllLabelWhite?<FaEye/>:<FaEyeSlash/>}</Button>
+      </OverlayTrigger>
+
+    </InputGroup>
 
     {/* Position  du label par rapport au noeud */}
     <Form.Group as={Row}>
@@ -526,8 +519,8 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
 
     {/* Police et taille du texte de label */}
-    <Form.Group as={Row} >
-      <Col xs={8}>
+    <Form.Group as={Row}>
+      <InputGroup>
         <Form.Select
           value={allNodeFF?(return_correct_node_attribute_value(data,selected_parameter[0],'font_family',menu_for_style) as string):''}
           onChange={
@@ -545,22 +538,19 @@ export const OpenSankeyConfigurationNodesAttributes = (
             >{d}</option>
           })}
         </Form.Select>
-      </Col>
-      <Col xs={4}>
-        <InputGroup>
-          <FormControl
-            min={11}
-            type={'number'}
-            disabled={!isAllLabelVisible && !menu_for_style}
-            value={allNodeLabelFontSize}
-            onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'font_size',+evt.target.value,menu_for_style))
-              set_data({ ...data })
-            }}
-          />
-          <InputGroup.Text>px</InputGroup.Text>
-        </InputGroup>
-      </Col>
+
+        <FormControl
+          min={11}
+          type={'number'}
+          disabled={!isAllLabelVisible && !menu_for_style}
+          value={allNodeLabelFontSize}
+          onChange={evt => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'font_size',+evt.target.value,menu_for_style))
+            set_data({ ...data })
+          }}
+        />
+        <InputGroup.Text>px</InputGroup.Text>
+      </InputGroup>
     </Form.Group>
 
 
@@ -596,31 +586,28 @@ export const OpenSankeyConfigurationNodesAttributes = (
   </Form.Group>
 
   const content_label_value=<Form.Group>
-    <Form.Group as={Row} >
-      <Col xs={6}>
-        <FormLabel>{t('Noeud.labels.vdv')} </FormLabel>
-      </Col>
-      <Col xs={6}>
-        <OverlayTrigger
-          key={'noeud.labels.tooltips.10'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.labels.tooltips.10'}>{t('Noeud.labels.tooltips.vdv')} </Tooltip>}>
-          <FormCheck inline
-            type='switch'
-            checked={isAllNodeTotal}
-            onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'show_value',evt.target.checked,menu_for_style))
-              set_data({ ...data })
-            }}/>
-        </OverlayTrigger>
-      </Col>
-    </Form.Group>
+    <InputGroup>
+      <InputGroup.Text style={{width:'60%'}}>{t('Noeud.labels.vdv')} </InputGroup.Text>
+      <OverlayTrigger
+        key={'noeud.labels.tooltips.10'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.labels.tooltips.10'}>{t('Noeud.labels.tooltips.vdv')} </Tooltip>}>
 
-    {/* Position de l'affichage des données par rapport au noeud */}
-    <Form.Group as={Row} >
-      {/* Horizontale */}
-      <Col xs={6}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'40%'}}
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllNodeTotal?'dark':'outline-dark'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'show_value',!isAllNodeTotal,menu_for_style))
+            set_data({ ...data })
+          }}><FaCheck/></Button>
+      </OverlayTrigger>
+    </InputGroup>
+    {isAllNodeTotal?<>    {/* Position de l'affichage des données par rapport au noeud */}
+      <Form.Group as={Row} >
+        {/* Horizontale */}
         <ButtonGroup>
           {/* A gauche */}
           <OverlayTrigger
@@ -670,9 +657,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
               }}><FaAlignRight/></Button>
           </OverlayTrigger>
         </ButtonGroup>
-      </Col>
-      {/* Verticale */}
-      <Col xs={6}>
+        {/* Verticale */}
         <ButtonGroup>
           {/* en haut */}
 
@@ -723,25 +708,25 @@ export const OpenSankeyConfigurationNodesAttributes = (
               }}>{svg_label_bottom}</Button>
           </OverlayTrigger>
         </ButtonGroup>
-      </Col>
-    </Form.Group>
+      </Form.Group>
 
-    {/* Taille de la police du texte de la valeur */}
+      {/* Taille de la police du texte de la valeur */}
     
-    <InputGroup>
-      <InputGroup.Text>{t('Noeud.labels.tp')}</InputGroup.Text>
-      <FormControl
-        min={11}
-        type={'number'}
-        disabled={!isAllNodeTotal&& !menu_for_style}
-        value={allNodeValueFontSize}
-        onChange={evt => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'value_font_size',+evt.target.value,menu_for_style))
-          set_data({ ...data })
-        }}
-      />
-      <InputGroup.Text>px</InputGroup.Text>
-    </InputGroup>
+      <InputGroup>
+        <InputGroup.Text>{t('Noeud.labels.tp')}</InputGroup.Text>
+        <FormControl
+          min={11}
+          type={'number'}
+          disabled={!isAllNodeTotal&& !menu_for_style}
+          value={allNodeValueFontSize}
+          onChange={evt => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'value_font_size',+evt.target.value,menu_for_style))
+            set_data({ ...data })
+          }}
+        />
+        <InputGroup.Text>px</InputGroup.Text>
+      </InputGroup></>:<></>}
+
     {advanced_label_value_content}
   </Form.Group>
 
@@ -795,26 +780,19 @@ export const OpenSankeyConfigurationNodesAttributes = (
   // Tableau d'elements de sous-menu attribut de noeuds
   return [
     <React.Fragment key={'style_node'}>{style_node}</React.Fragment>,
-    <Accordion key={'accordion-appearence'}>
-      <Accordion.Item eventKey='appearance'>
-        <Accordion.Header>{t('Noeud.apparence.apparence')}</Accordion.Header>
-        <Accordion.Body>
-          {content_appearence}
-        </Accordion.Body>
-      </Accordion.Item>
-      <Accordion.Item eventKey='label'>
-        <Accordion.Header>{t('Noeud.labels.labels')}</Accordion.Header>
-        <Accordion.Body>
-          {content_label}
-        </Accordion.Body>
-      </Accordion.Item>
-      <Accordion.Item eventKey='value'>
-        <Accordion.Header>{t('Noeud.labels.node_value')}</Accordion.Header>
-        <Accordion.Body>
-          {content_label_value}
-        </Accordion.Body>
-      </Accordion.Item>
-    </Accordion>
+    
+    <React.Fragment key={'sep_1'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
+    <h4 style={{fontSize:'14px' ,fontWeight:'bold'}}>{t('Noeud.apparence.apparence')}</h4>,
+    <React.Fragment key={'app'}>{content_appearence}</React.Fragment>,
+
+    <React.Fragment key={'sep_2'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
+    <h4 style={{fontSize:'14px' ,fontWeight:'bold'}}>{t('Noeud.labels.labels')}</h4>,
+    <React.Fragment key={'lab'}>{content_label}</React.Fragment>,
+
+    <React.Fragment key={'sep_3'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
+    <h4 style={{fontSize:'14px' ,fontWeight:'bold'}}>{t('Noeud.labels.node_value')}</h4>,
+    <React.Fragment key={'val'}>{content_label_value}</React.Fragment>
+
   ]
 }
 

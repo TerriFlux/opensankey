@@ -31,7 +31,6 @@ import {SankeyMenuConfigurationNodesIO} from './SankeyMenuConfigurationNodesIO'
 
 import {SankeyMenuConfigurationLinksData} from './SankeyMenuConfigurationLinksData'
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
-import {SankeyMenuConfigurationLinksLabel} from './SankeyMenuConfigurationLinksLabel'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faFilter,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
@@ -122,7 +121,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   const [show_menu_link_data,set_show_menu_link_data]=useState(false)
   const [show_menu_link_appearence,set_show_menu_link_appearence]=useState(false)
-  const [show_menu_link_label,set_show_menu_link_label]=useState(false)
 
   const [show_menu_layout,set_show_menu_layout]=useState(false)
 
@@ -307,7 +305,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     style_to_apply,set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
     menu_configuration_nodes,menu_configuration_links,<></>,sub_nav_item_active,set_sub_nav_item_active,
-    false,true,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
+    true,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
   )
 
   //- 2. Build Menus
@@ -390,7 +388,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_show_menu_node_io(false)
     set_show_menu_link_data(false)
     set_show_menu_link_appearence(false)
-    set_show_menu_link_label(false)
     set_show_menu_layout(false)
     set_show_apply_layout(false)
 
@@ -487,12 +484,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const menu_link_appearence=SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,[],false,'default',display_link_opacity,set_display_link_opacity,true)
   const dragLink_appearence=show_menu_link_appearence?menu_draggable(menu_link_appearence,pointer_pos,t('Menu.flux')+' '+t('Flux.apparence.apparence'),set_show_menu_link_appearence):<></>
 
-  // MENU DRAGGABLE LINK LABEL
-  const menu_link_label=SankeyMenuConfigurationLinksLabel(data,multi_selected_links,set_data,t,false,'default',true)
-  const dragLink_label=show_menu_link_label?menu_draggable(menu_link_label,pointer_pos,t('Menu.flux')+' '+t('Flux.label.label'),set_show_menu_link_label):<></>
-
   const context_l=context_menu_link(contextualised_link,set_contextualised_link,
-    set_show_menu_link_data,set_show_menu_link_appearence,set_show_menu_link_label
+    set_show_menu_link_data,set_show_menu_link_appearence
     ,data,set_data,tags_selected,multi_selected_links,t,pointer_pos)
 
   // MENU DRAGGABLE LAYOUT
@@ -623,8 +616,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
         {dragLink_data}
         {dragLink_appearence}
-        {dragLink_label}
-
+        
         {drag_menu_layout}
 
         {context_n}
