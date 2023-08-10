@@ -766,13 +766,13 @@ export const desagregation = (
 
     if(n.local==undefined || n.local==null) {
       n.local = {}
-      }
+    }
     setLocalAgregation(n, data, true)
   })
   const clicked_node=data.nodes[idNode]
   if(clicked_node.local==undefined || clicked_node.local==null) {
     clicked_node.local = {}
-    }
+  }
   setLocalAgregation(clicked_node, data, false)
 }
 
@@ -812,7 +812,7 @@ export const agregation = (
     }
     if(n.local==undefined || n.local==null) {
       n.local = {}
-      }
+    }
     setLocalAgregation(n, data, false)
   })
   mean_x = mean_x/dim_desagregated_nodes.length
@@ -824,7 +824,7 @@ export const agregation = (
   }
   if(parent_node.local==undefined || parent_node.local==null){
     parent_node.local={}
-    }
+  }
   setLocalAgregation(parent_node, data, true)
 }
 

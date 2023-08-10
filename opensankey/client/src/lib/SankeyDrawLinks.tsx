@@ -245,7 +245,7 @@ export const OpenSankeyDrawLinks = (
       .append('text')
       .attr('pointer-events', 'none')
       // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
-      .attr('style',d=> 'font-weight: bold; font-size:' + return_value_link(data,d,'label_font_size') + 'px;'+'font-family:'+data.display_style.link_font_family_selected)
+      .attr('style',d=> 'font-weight: bold; font-size:' + return_value_link(data,d,'label_font_size') + 'px;'+'font-family:'+return_value_link(data,d,'font_family'))
       .attr('fill', l => {
         if (return_value_link(data,l,'text_color') === return_value_link(data,l,'color')) {
           return link_color(l,data,getLinkValue) as string
@@ -270,7 +270,7 @@ export const OpenSankeyDrawLinks = (
       .attr('id', d => d.idLink + '_text')
       .attr('pointer-events',d=>(return_value_link(data,d,'label_position')!=='frozen')?'none':'auto')
       .attr('class', 'link_value')
-      .attr('style',d=> 'font-weight: bold;font-size:' + return_value_link(data,d,'label_font_size') + 'px;'+'font-family'+data.display_style.link_font_family_selected)
+      .attr('style',d=> 'font-weight: bold;font-size:' + return_value_link(data,d,'label_font_size') + 'px;'+'font-family:'+return_value_link(data,d,'font_family'))
       .attr('fill', l => {
         if (return_value_link(data,l,'text_color') === return_value_link(data,l,'color') && return_value_link(data,l,'orthogonal_label_position') === 'middle') {
           return 'white'
@@ -429,7 +429,7 @@ export const OpenSankeyDrawLinks = (
     display_nodes:{ [node_id: string]: SankeyNode },
     display_links:{ [link_id: string]: SankeyLink },
     error_msg: { text: string | undefined } | undefined,
-    display_style: {filter: number,filter_label: number,font_family: string[],link_font_family_selected: string},
+    display_style: {filter: number,filter_label: number,font_family: string[]},
     drawCurveFunction : SankeyDrawCurve,
     scale:(t:number)=>number,
     inv_scale:(t:number)=>number

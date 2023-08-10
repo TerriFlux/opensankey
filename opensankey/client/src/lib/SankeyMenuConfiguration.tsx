@@ -34,7 +34,6 @@ export const OpenSankeyConfigurationsMenus = (
   menu_configuration_free_labels:JSX.Element,
   sub_nav_item_active:string,
   set_sub_nav_item_active:(s:string)=>void,
-  style_editable:boolean,
   token:boolean,
   set_displayed_input_link_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
@@ -205,7 +204,6 @@ export const OpenSankeyConfigurationsMenus = (
                 set_data={set_data}
                 multi_selected_links={multi_selected_links}
                 menu_configuration_links={Object.values(menu_configuration_links)}
-                style_editable={style_editable}
                 set_displayed_input_link_value={set_displayed_input_link_value}
                 tags_selected={tags_selected}
                 set_tags_selected={set_tags_selected}
