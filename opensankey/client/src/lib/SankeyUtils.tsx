@@ -470,7 +470,7 @@ export const toPrecision = (
     return String(v.toFixed(1).replace(/\.0+$/, ''))
   }
   if(!isNaN(v)){
-    let new_v = v.toPrecision(nb_scientific).replace(/\.0+$/, '')
+    let new_v = (+v).toPrecision(nb_scientific).replace(/\.0+$/, '')
     if (new_v.includes('e+'+nb_scientific)) {
       new_v = String(parseFloat(new_v))
     }
@@ -612,9 +612,9 @@ export const default_sankey_data = (): SankeyData => {
 
     // icon_catalog: {},
 
-    left_shift: 0.4,
-    right_shift: 0.5,
-    max_shift: 0.2,
+    left_shift: 0,
+    right_shift: 1,
+    //max_shift: 0.2,
 
     node_width:20,
     node_height:20,
