@@ -1164,3 +1164,13 @@ textarea {
 	border-radius: 5px;
 	font-size: 12px;
 }
+.sankey-menu .input-group {
+	margin-top: 4px;
+	margin-bottom: 4px;
+}
+.sankey-menu .input-group .input-group-text  {
+	color:#555555
+}
+.btn_menu_config:hover svg,.btn_menu_config.btn-dark svg{
+	fill:white
+}

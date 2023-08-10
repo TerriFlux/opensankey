@@ -1571,6 +1571,7 @@ const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem
   'border': '1px solid rgba(0, 0, 0, 0.2)',
   'borderRadius':' 0.6rem',
   'zIndex':'1031',
+  maxHeight:'700px',
   overflowY:'auto'
 } as CSSProperties
 
@@ -1857,7 +1858,6 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
 export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_contextualised_node:(n:SankeyLink|undefined)=>void,
   set_show_menu_link_data:(b:boolean)=>void,
   set_show_menu_link_appearence:(b:boolean)=>void,
-  set_show_menu_link_label:(b:boolean)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   tags_selected:{[k: string]: string},
   multi_selected_links:{current:SankeyLink[]},
@@ -1980,11 +1980,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
     </Dropdown.Menu>
   </Dropdown>:<></>
 
-  const button_open_link_label=contextualised_link!==undefined?<Button onClick={()=>{
-    set_show_menu_link_label(true)
-    set_contextualised_node(undefined)
-  }} variant='light'>{t('Flux.label.label')} {icon_open_modal}</Button>:<></>
- 
+
   const button_open_link_appearence=contextualised_link!==undefined?<Button onClick={()=>{
     set_show_menu_link_appearence(true)
     set_contextualised_node(undefined)
@@ -2107,7 +2103,6 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
         {sep}
         {button_open_link_data}
         {button_open_link_appearence}
-        {button_open_link_label}
         {sep}
         {dropdown_c_l_style}
 

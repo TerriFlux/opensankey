@@ -914,7 +914,7 @@ const resources = {
         'if':'Inverser la direction',
         'dzf':'Superposition à l\'affichage',
         'style':'Style',
-        'as':'Appliquer le style au(x) flux selectionné(s)',
+        'as':'Appliquer le style',
         'IB':'Info-bulle',
         tooltips: {
           src: 'Choix du noeud de départ pour le/les flux sélectionné(s)',
