@@ -199,7 +199,7 @@ export const SankeyLinkPropTypes = {
   idSource: PropTypes.string.isRequired,
   idTarget: PropTypes.string.isRequired,
 
-  colorParameter: PropTypes.string.isRequired,
+  //colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
   
 
@@ -272,7 +272,7 @@ export const SankeyDataPropTypes = {
   v_space: PropTypes.number.isRequired,
   left_shift: PropTypes.number.isRequired,
   right_shift: PropTypes.number.isRequired,
-  max_shift: PropTypes.number.isRequired,
+  //max_shift: PropTypes.number.isRequired,
 
   legend_position: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   display_legend_scale:PropTypes.bool.isRequired,

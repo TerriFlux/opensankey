@@ -817,11 +817,6 @@ export const convert_nodes = (
         n.y = 0
       }
 
-    
-    
-      delete n_convert.visible
-    
-    
       delete n_convert.visible
 
       n.name = n.name.split('\\n').join(' ')
@@ -1094,10 +1089,10 @@ export const convert_links = (
     }
 
     const l_convert = (l as unknown) as ConvertSankeyLink
-    if (l.colorParameter === undefined) {
-      l.colorParameter = 'groupTag'
-      l.colorTag = 'no_colormap'
-    }
+    // if (l.colorParameter === undefined) {
+    //   l.colorParameter = 'groupTag'
+    //   l.colorTag = 'no_colormap'
+    // }
     if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {
       // if ( Array.isArray(l_convert.value) ) {
       //   (l_convert.value as number[]).forEach(v => {
@@ -1237,8 +1232,9 @@ export const convert_links = (
         delete l[(k as keyof SankeyLink)] 
       }
     })
-
-
+    if (l.local && l.local.color === '#808080') {
+      delete l.local.color
+    }
 
   })
 
