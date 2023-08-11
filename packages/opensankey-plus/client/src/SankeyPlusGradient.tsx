@@ -312,7 +312,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
     }
     )
   }
-  return (l_grad && l.colorParameter==='local') ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : OpensankeyDrawFunction.linkStroke(l,data,getLinkValue)
+  return (l_grad && l.local && l.local.color) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : OpensankeyDrawFunction.linkStroke(l,data,getLinkValue)
 }
 
 // Function used to create gradient for each link, but are used only if the link has the gradient varibale at true
