@@ -408,7 +408,7 @@ export const addAllDropDownFlux = (
                     })
 
                     Object.values(data.links).forEach(el => {
-                      el.colorParameter = 'local'
+                      //el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
                     data.colorMap = 'no_colormap'
@@ -419,7 +419,7 @@ export const addAllDropDownFlux = (
                         el.colorTag = tags_selected[0]
                       })
                       Object.values(data.links).forEach(el => {
-                        el.colorParameter = 'groupTag'
+                        //el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
                       data.colorMap = tags_selected[0]
@@ -495,7 +495,7 @@ export const addAllDropDownFlux = (
                     })
 
                     Object.values(data.links).forEach(el => {
-                      el.colorParameter = 'local'
+                      //el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
                     data.colorMap = 'no_colormap'
@@ -505,7 +505,7 @@ export const addAllDropDownFlux = (
                         el.colorTag = tags_selected[0]
                       })
                       Object.values(data['links']).forEach(el => {
-                        el.colorParameter = 'groupTag'
+                        //el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
                       data.colorMap = tags_selected[0]
@@ -742,7 +742,7 @@ export const OpenSankeyMenus = (
               })
 
               Object.values(data.links).forEach(el => {
-                el.colorParameter = 'local'
+                //el.colorParameter = 'local'
                 el.colorTag = 'no_colormap'
               })
 
@@ -755,7 +755,7 @@ export const OpenSankeyMenus = (
                   el.colorTag = 'no_colormap'
                 })
                 Object.values(data.links).forEach(el => {
-                  el.colorParameter = 'groupTag'
+                  //el.colorParameter = 'groupTag'
                   el.colorTag = 'no_colormap'
                 })
                 data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
@@ -2147,17 +2147,17 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
     set_data({...data})
   }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
   </>
-  const button_assgn_rand_link_color=<><Button variant='light' onClick={()=>{
+  const button_assgn_rand_node_color=<><Button variant='light' onClick={()=>{
     const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
-    const l_keys=Object.keys(data.links)
-    const size_color=l_keys.length
+    const n_keys=Object.keys(data.nodes)
+    const size_color=n_keys.length
       
     for(const i in d3.range(size_color)){
       // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
-      SankeyUtils.assign_link_local_attribute(data.links[l_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
+      SankeyUtils.assign_node_local_attribute(data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
     }
     set_data({...data})
-  }}>{t('Menu.rand_link_color')}</Button>
+  }}>{t('Menu.rand_node_color')}</Button>
   </>
 
 
@@ -2313,7 +2313,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
         {sep}
         {button_open_layout}
         {sep}
-        {button_assgn_rand_link_color}
+        {button_assgn_rand_node_color}
         {button_bg_color}
         {button_bg_grid}
         {dropdown_c_zdd_scale}
