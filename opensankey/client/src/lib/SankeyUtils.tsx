@@ -680,7 +680,7 @@ export const link_color = (l: SankeyLink,data:SankeyData,
     return colorLink
   }
       
-  if (l.local && l.local.color ) {
+  if (l.local && l.local.color && l.local.color != '#808080') {
     return return_value_link(data,l,'color')
   }
 
@@ -695,10 +695,8 @@ export const link_color = (l: SankeyLink,data:SankeyData,
       colorLink = data.fluxTags[tagGroup].tags[v.tags[tagGroup].filter(
         tag=>tag in data.fluxTags[tagGroup].tags
       )[0]].color
-    } else {
-      colorLink = 'grey'
-    }
-    return colorLink
+      return colorLink
+    } 
   }
 
   const source_node = data.nodes[l.idSource]
