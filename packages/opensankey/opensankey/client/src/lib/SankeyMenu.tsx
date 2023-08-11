@@ -1291,7 +1291,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
 
-      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '380px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
+      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '540px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
             nav_item_active={nav_item_active}
@@ -1303,7 +1303,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
       <ButtonGroup vertical
         className='sideBar'
-        style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?380+has_scrollbar_shift:has_scrollbar_shift)}}
+        style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?540+has_scrollbar_shift:has_scrollbar_shift)}}
       >
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (

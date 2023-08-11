@@ -283,6 +283,7 @@ const resources = {
           'node_value':'Value',
           'vdb':'Label visibility',
           'lb':'White label',
+          'l_bg':'Background visibility',
           'pv':'Vertical position',
           'pos':'Position',
           'pos_v':'Value position',
@@ -303,6 +304,7 @@ const resources = {
           tooltips: {
             vdb: 'Displays or not the label(s) attached to the selected node(s)',
             lb: 'Displays the text of the label(s) in white or black (useful if label is positioned on node(s))',
+            'l_bg':'Add a background to the label for a better visibility in case the label is in front of a link',
             top: 'Displays the label(s) above the selected node(s)',
             Milieu_pv: 'Displays the label(s) in the middle (vertically) of the selected node(s)',
             Bas: 'Displays the label(s) below the selected node(s)',
@@ -832,6 +834,7 @@ const resources = {
           'node_value':'Valeur',
           'vdb':'Visibilité du label',
           'lb':'Label blanc',
+          'l_bg':'Fond de label',
           'pv':'Position verticale',
           'pos':'Position',
           'pos_v':'Position de la valeur',
@@ -851,6 +854,7 @@ const resources = {
           tooltips: {
             vdb: 'Permet d\'afficher ou non le label accolé au(x) noeud(s) sélectionné(s)',
             lb: 'Permet d\'afficher le texte du label en blanc ou en noir (utile si label positionné sur noeud(s))',
+            'l_bg':'Permet d\'ajouter un fond au label pour qu\'il soit plus visible quand il est par-dessus un flux',
             haut: 'Positionner le label au dessus du/des noeud(s) sélectionné(s)',
             Milieu_pv: 'Positionner le label au milieu (verticalement) du/des noeud(s) sélectionné(s)',
             Bas: 'Positionner le label en dessous du/des noeud(s) sélectionné(s)',
@@ -1096,8 +1100,8 @@ const resources = {
       'desire_to_know_more':'En savoir +',
       'legal':'Mention légales',
       'tdr':'Tous droits réservées',
-      'fullscreen':'Activer le mode pleine écran',
-      'exitFullscreen':'Quitter le mode pleine écran',
+      'fullscreen':'Activer le mode plein écran',
+      'exitFullscreen':'Quitter le mode plein écran',
 
 
     }

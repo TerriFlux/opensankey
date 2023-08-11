@@ -2441,7 +2441,7 @@ export const select_visualy_nodes=(n:SankeyNode)=>{
 export const repositionne_sidebar=()=>{
   const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
   const menu_open=d3.select('.offcanvas-body').node()
-  d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?380:0))+'px')  
+  d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?540:0))+'px')  
 }
 
 // Function that compute the link width

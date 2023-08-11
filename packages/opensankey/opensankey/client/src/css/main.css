@@ -1171,6 +1171,13 @@ textarea {
 .sankey-menu .input-group .input-group-text  {
 	color:#555555
 }
-.btn_menu_config:hover svg,.btn_menu_config.btn-dark svg{
+.btn_menu_config:hover svg,.btn_menu_config.btn-primary svg,.btn_menu_config.btn-outline-primary:hover svg{
 	fill:white
+}
+.btn_menu_config.btn-outline-primary svg{
+	fill:#78c2ad
+}
+
+.sankey-menu .row{
+	margin-top: 0px;
 }

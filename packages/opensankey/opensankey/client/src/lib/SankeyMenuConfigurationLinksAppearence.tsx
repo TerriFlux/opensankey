@@ -339,7 +339,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           className='btn_menu_config'
           style={{width:'60%'}}
           //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={dashChecked?'dark':'outline-dark'}
+          variant={dashChecked?'primary':'outline-primary'}
           onClick={() => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'dashed',!dashChecked,menu_for_style))
             set_data({ ...data })
@@ -360,7 +360,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button 
           className='btn_menu_config' style={{width:'17.5%'}}
           value='hh'
-          variant={linkOrientation('hh')?'dark':'outline-dark'}
+          variant={linkOrientation('hh')?'primary':'outline-primary'}
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -380,7 +380,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button 
           className='btn_menu_config' style={{width:'17.5%'}}
           value='vv'
-          variant={linkOrientation('vv')?'dark':'outline-dark'}
+          variant={linkOrientation('vv')?'primary':'outline-primary'}
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -400,7 +400,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button 
           className='btn_menu_config' style={{width:'17.5%'}}
           value='vh'
-          variant={linkOrientation('vh')?'dark':'outline-dark'}
+          variant={linkOrientation('vh')?'primary':'outline-primary'}
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -419,7 +419,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button 
           className='btn_menu_config' style={{width:'17.5%'}}
           value='hv'
-          variant={linkOrientation('hv')?'dark':'outline-dark'}
+          variant={linkOrientation('hv')?'primary':'outline-primary'}
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -521,7 +521,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button 
           style={{width:'25%'}} 
           className='btn_menu_config'
-          variant={linkType('curved')?'dark':'otuline-dark'}
+          variant={linkType('curved')?'primary':'otuline-primary'}
           onClick={
             () => {
               const val=linkType('curved')
@@ -538,7 +538,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button 
           style={{width:'25%'}} 
           className='btn_menu_config'
-          variant={linkType('arrow')?'dark':'outline-dark'}
+          variant={linkType('arrow')?'primary':'outline-primary'}
           onClick={
             () => {
               const val=linkType('arrow')
@@ -556,7 +556,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button 
           style={{width:'25%'}} 
           className='btn_menu_config'
-          variant={linkType('recycling')?'dark':'outline-dark'}
+          variant={linkType('recycling')?'primary':'outline-primary'}
           onChange={
             () => {
               const val=linkType('arrow')
@@ -643,7 +643,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={labelVisibleChecked?'dark':'outline-dark'}
+          variant={labelVisibleChecked?'primary':'outline-primary'}
           onClick={
             () => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -665,7 +665,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={isAllLinkToPrecision()?'dark':'outline-dark'}
+          variant={isAllLinkToPrecision()?'primary':'outline-primary'}
           onClick={
             () => {
               const val=isAllLinkToPrecision()
@@ -714,7 +714,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={linkLabelColor('black')?'dark':'outline-dark'}
+            variant={linkLabelColor('black')?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -733,7 +733,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={linkLabelColor('white')?'dark':'outline-dark'}
+            variant={linkLabelColor('white')?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -753,7 +753,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={linkLabelColor('color')?'dark':'outline-dark'}
+            variant={linkLabelColor('color')?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -862,7 +862,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={labelPositionVert('beginning')?'dark':'outline-dark'}
+            variant={labelPositionVert('beginning')?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -883,7 +883,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={labelPositionVert('middle')?'dark':'outline-dark'}
+            variant={labelPositionVert('middle')?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -904,7 +904,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={labelPositionVert('end')?'dark':'outline-dark'}
+            variant={labelPositionVert('end')?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -936,7 +936,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={labelPositionOrtho('below')?'dark':'outline-dark'}
+            variant={labelPositionOrtho('below')?'primary':'outline-primary'}
             onChange={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -956,7 +956,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={labelPositionOrtho('middle')?'dark':'outline-dark'}
+            variant={labelPositionOrtho('middle')?'primary':'outline-primary'}
             onChange={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -976,7 +976,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button 
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
-            variant={labelPositionOrtho('above')?'dark':'outline-dark'}
+            variant={labelPositionOrtho('above')?'primary':'outline-primary'}
             onChange={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -1029,7 +1029,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
     {/* Choxi du style  */}
     <Dropdown>
-      <Dropdown.Toggle style={{width:'50%'}} variant="outline-dark" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
+      <Dropdown.Toggle style={{width:'50%'}} variant="outline-primary" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
       <Dropdown.Menu>
         <Dropdown.Item onClick={() => {
           set_style_to_apply_to_link('')
@@ -1059,7 +1059,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
       <Button
         style={{width:'30%'}}
         size="sm"
-        variant="outline-dark"
+        variant="outline-primary"
         className='btn_menu_config'
         onClick={
           () => {
@@ -1071,7 +1071,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </OverlayTrigger>
   </InputGroup>:<></>
 
-  const content= <>
+  const content= <div className='apparence_config'>
     {content_style}
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -1081,7 +1081,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
     <h4 style={{fontSize:'14px' ,fontWeight:'bold'}}>{t('Flux.label.label')}</h4>
-    {content_label}</>
+    {content_label}</div>
 
 
   /* Formattage de l'affichage du menu attribut de flux */

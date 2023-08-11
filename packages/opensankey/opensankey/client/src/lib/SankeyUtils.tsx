@@ -881,6 +881,7 @@ export const default_node_style=()=>{
     italic: false,
     label_vert: 'bottom',
     label_horiz: 'middle',
+    label_background:false,
 
     show_value: false,
     label_vert_valeur: 'middle',
@@ -1306,7 +1307,7 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   [data.width, data.height] = min_width_and_height(data)
   let size_menu=0
   if(show_nav){
-    size_menu=380
+    size_menu=540
   }
   // Width of the screen minus the margin of the sankey zone minus the width of the configuration menu if it's open
   const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
