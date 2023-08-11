@@ -273,8 +273,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           <div className='scroll_zone' >
             <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
               <g className='grid' id='grid'></g>
-              <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
               <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
+              <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
               <g className='g_link_handles' id='g_link_handles'></g>
               <g className='g_legend' id='g_legend'></g>
             </svg>

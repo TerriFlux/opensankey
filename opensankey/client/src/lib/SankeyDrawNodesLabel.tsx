@@ -58,6 +58,13 @@ export const OpenSankeyDrawNodesLabel = (
     //------------------LABEL------------------------
     // Add node label and apply parameter
     const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
+    const bg_text_node=ggg_nodes
+      .filter(n=>(return_value_node(data,n,'label_visible') as boolean) && (return_value_node(data,n,'label_background') as boolean))
+      .append('rect')
+      .attr('fill','white')
+      .attr('fill-opacity',0.55)
+      .attr('rx',4)
+
     const text_node=ggg_nodes
       .filter(n=>(return_value_node(data,n,'label_visible') as boolean))
       .append('text')
@@ -88,6 +95,7 @@ export const OpenSankeyDrawNodesLabel = (
       .style('text-transform', n => (return_value_node(data,n,'uppercase')) ? 'uppercase' : 'none')
       .text(n => node_label_text(data,n as SankeyNode))
       .each(n => textNodeWrap((n as SankeyNode),data))
+      
     
     if(!window.SankeyToolsStatic){
       // Add an input to change the name of the node 
@@ -119,6 +127,39 @@ export const OpenSankeyDrawNodesLabel = (
       text_node.on('dblclick',(event, d)=>DoubleGNodeClick(event,d))
 
     }
+    
+
+   
+    if(d3.select('.opensankey #svg').node()){
+      const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+      const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+
+      bg_text_node.attr('x',n=>{
+        const box_zdd=document.getElementById('ggg_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0,width:0}
+        const box_text=document.getElementById(n.idNode+'_text')?.getBoundingClientRect()??{x:0,y:0,width:0}
+        let horiz_shift=0
+        if(return_value_node(data,n,'label_horiz')=='left'){
+          horiz_shift=box_text.width
+        }
+
+        return ((box_text.x)-box_zdd.x-horiz_shift)/scale_svg
+      })
+        .attr('y',n=>{
+          const box_zdd=document.getElementById('ggg_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0}
+
+          //Nombre de tspan dans la balise text
+          const nb_tspan = d3.selectAll(' .opensankey #ggg_' + n.idNode + ' text tspan').nodes().length
+          const shift_if_above=return_value_node(data,n,'label_vert')=='top'?(nb_tspan*(return_value_node(data,n,'font_size') as number)):0
+          return ((document.getElementById(n.idNode+'_text')?.getBoundingClientRect().y??0)-box_zdd.y)/scale_svg-shift_if_above
+        })
+        .attr('width',n=>{
+          return ((document.getElementById(n.idNode+'_text')?.getBoundingClientRect().width??0))/scale_svg+4
+        })
+        .attr('height',n=>{
+          return ((document.getElementById(n.idNode+'_text')?.getBoundingClientRect().height??0))/scale_svg+4
+        })
+    }
+    
 
     // Display value of nodes
     // Value of nodes are the maximum between the sum of input links and the sum of output links
@@ -199,4 +240,3 @@ export const OpenSankeyDrawNodesLabel = (
   add_nodes_label()
 
 }
-
