@@ -271,7 +271,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           overlay={<Tooltip id={'Menu.tooltips.flux.plus'}>{t('Menu.tooltips.flux.plus')} </Tooltip>}>
           <Button
             size="sm"
-            variant="outline-dark"
+            variant="outline-primary"
             style={{width:'10%'}}
             className='btn_menu_config'
             onClick={
@@ -299,7 +299,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           overlay={<Tooltip id={'Menu.tooltips.flux.rm'}>{t('Menu.tooltips.flux.rm')} </Tooltip>}>
           <Button
             size="sm"
-            variant="outline-dark"
+            variant="outline-primary"
+            className='btn_menu_config'
             style={{width:'10%'}}
             onClick={
               () => {
@@ -318,7 +319,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           <Button
             style={{width:'10%'}}
             size="sm"
-            variant={data.displayed_link_selector?'dark':'outline-dark'}
+            variant={data.displayed_link_selector?'primary':'outline-primary'}
             className='btn_menu_config'
             onClick={
               () => {
@@ -376,7 +377,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.if')} </Tooltip>}>
-          <Button variant="outline-dark"
+          <Button variant="outline-primary"
+            className='btn_menu_config'
             onClick={() => {
               const nodes_to_reorganize: SankeyNode[] = []
               multi_selected_links.current.forEach(l => {
@@ -417,7 +419,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'Menu.tooltips.flux.up'}>{t('Flux.tooltips.up')} </Tooltip>}>
-            <Button variant="outline-dark" disabled={multi_selected_links.current.length != 1}
+            <Button variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+              className='btn_menu_config'
               onClick={() => {
                 multi_selected_links.current.map(l => {
                   handleDownLink(data,l.idLink)
@@ -433,7 +436,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'Menu.tooltips.flux.upup'}>{t('Flux.tooltips.upup')} </Tooltip>}>
-            <Button variant="outline-dark" disabled={multi_selected_links.current.length != 1}
+            <Button variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+              className='btn_menu_config'
               onClick={() => {
                 multi_selected_links.current.map(l => {
                   const i = l.idLink
@@ -461,7 +465,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'Menu.tooltips.flux.dwn'}>{t('Flux.tooltips.dwn')} </Tooltip>}>
-            <Button variant="outline-dark" disabled={multi_selected_links.current.length != 1}
+            <Button variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+              className='btn_menu_config'
               onClick={() => {
                 multi_selected_links.current.map(l => {
                   handleUpLink(data,l.idLink)
@@ -478,7 +483,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'Menu.tooltips.flux.dwndwn'}>{t('Flux.tooltips.dwndwn')} </Tooltip>}>
-            <Button variant="outline-dark" disabled={multi_selected_links.current.length != 1}
+            <Button variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+              className='btn_menu_config'
               onClick={() => {
                 multi_selected_links.current.map(l => {
                   const i = l.idLink

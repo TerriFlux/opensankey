@@ -788,7 +788,7 @@ export const toolbar_builder = (
         placement={'left'}
         delay={500}
         overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
-        <Button  variant={(!(mode_selection.current == 's')) ? 'outline-info' : 'info'} onClick={() => { setSelectionMode('s') }} >
+        <Button  variant={(!(mode_selection.current == 's')) ? 'info' : 'info'} onClick={() => { setSelectionMode('s') }} >
           <Col><FontAwesomeIcon icon={faArrowPointer} /></Col>
         </Button>
       </OverlayTrigger>
@@ -797,7 +797,7 @@ export const toolbar_builder = (
         placement={'left'}
         delay={500}
         overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
-        <Button variant={(!(mode_selection.current == 'ln')) ? 'outline-secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
+        <Button variant={(!(mode_selection.current == 'ln')) ? 'secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
           {/* Ajout liaison entre noeud */}
           <Col><FontAwesomeIcon icon={faShareNodes}/></Col>
           {/* <Col className='textIcon'>Création</Col> */}
@@ -819,7 +819,7 @@ export const toolbar_builder = (
           placement={'left'}
           rootClose
           overlay={<Tooltip id={'tooltip-nodes-level'}>{t('Banner.hlp_1_txt_2')} </Tooltip>}>
-          <Button ref={target_detail_level} variant='outline-warning' id='button-details-level' onClick={()=>{set_show_detail_level(!show_detail_level)}} >
+          <Button ref={target_detail_level} variant='warning' id='button-details-level' onClick={()=>{set_show_detail_level(!show_detail_level)}} >
             <Col><FontAwesomeIcon icon={faFolderTree} /></Col>
             {/* <Col className='textIcon'>Agréga.</Col> */}
           </Button>
@@ -844,7 +844,7 @@ export const toolbar_builder = (
         delay={500}
         overlay={<Tooltip id={'tooltip-link-filter2'}>{t('Banner.hlp_1_txt_8')} </Tooltip>}
       >
-        <Button ref={target_link_threshold} variant='outline-danger' id='button-filter-link'
+        <Button ref={target_link_threshold} variant='danger' id='button-filter-link'
           onClick={()=>{
             set_show_link_threshold(!show_link_threshold)
           }}
@@ -876,7 +876,7 @@ export const toolbar_builder = (
           trigger={'click'}
           rootClose
           overlay={struc_data_reconciled}>
-          <Button variant='outline-success'>
+          <Button variant='success'>
             <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
             {/* <Col className='textIcon'>Struct.</Col> */}
 
@@ -888,7 +888,7 @@ export const toolbar_builder = (
           placement={'left'}
           delay={500}
           overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
-          <Button variant={'outline-success'} onClick={() => {
+          <Button variant={'success'} onClick={() => {
             data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
             //data.show_data = false
             set_data({ ...data })
@@ -921,7 +921,7 @@ export const stretchButtons=(data:SankeyData,min_width_and_height:(d:SankeyData)
     placement={'left'}
     delay={500}
     overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-    <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
+    <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
       {/* <Col className='textIcon'>{t('Menu.ajustH')}</Col> */}
     </Button>
@@ -931,7 +931,7 @@ export const stretchButtons=(data:SankeyData,min_width_and_height:(d:SankeyData)
     placement={'left'}
     delay={500}
     overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-    <Button variant='outline-dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
+    <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
       <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
       {/* <Col className='textIcon'>{t('Menu.ajustV')}</Col> */}
     </Button>
