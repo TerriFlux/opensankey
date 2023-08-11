@@ -801,6 +801,9 @@ export const link_visible = (l: SankeyLink, data: SankeyData,
   let visible = true
   Object.keys(data.fluxTags).forEach(tag_group => {
     const v_tags = v.tags[tag_group]
+    if (!v_tags) {
+      return
+    }
     const selected_tags = v_tags.filter(tag=>tag in fluxTags[tag_group].tags)
     if (v_tags.length > 0 && selected_tags.length>0  && selected_tags.filter(selected_tag => fluxTags[tag_group].tags[selected_tag].selected).length == 0) {
       visible = false
