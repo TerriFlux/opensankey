@@ -11,8 +11,8 @@ import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
-import { FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp,FaEye,FaEyeSlash } from 'react-icons/fa'
-
+import { FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp,FaCheck } from 'react-icons/fa'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -61,11 +61,11 @@ export const SankeyPlusNodesAttributes = (
         disabled={!is_activated}
         style={{width:'60%'}}
         //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-        variant={isAllNodeToScale?'dark':'outline-dark'}
+        variant={isAllNodeToScale?'primary':'outline-primary'}
         onClick={() => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'not_to_scale',!isAllNodeToScale,menu_for_style))
           set_data({ ...data })
-        }}>{isAllNodeToScale?<FaEye/>:<FaEyeSlash/>}</Button>
+        }}>{isAllNodeToScale?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
 
     </InputGroup>,
     <>{isAllNodeToScale?<InputGroup >
@@ -75,7 +75,7 @@ export const SankeyPlusNodesAttributes = (
         className='btn_menu_config'
         style={{width:'17.5%'}}
         disabled={(!is_activated)?true:!isAllNodeToScale}
-        variant={isAllNodeNotToScaleOrientation('left')?'dark':'outline-dark'}
+        variant={isAllNodeNotToScaleOrientation('left')?'primary':'outline-primary'}
         onClick={() => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','left',menu_for_style))
           set_data({ ...data })
@@ -86,7 +86,7 @@ export const SankeyPlusNodesAttributes = (
         className='btn_menu_config'
         style={{width:'17.5%'}}
         disabled={(!is_activated)?true:!isAllNodeToScale}
-        variant={isAllNodeNotToScaleOrientation('right')?'dark':'outline-dark'}
+        variant={isAllNodeNotToScaleOrientation('right')?'primary':'outline-primary'}
         onClick={() => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','right',menu_for_style))
           set_data({ ...data })
@@ -97,7 +97,7 @@ export const SankeyPlusNodesAttributes = (
         className='btn_menu_config'
         style={{width:'17.5%'}}
         disabled={(!is_activated)?true:!isAllNodeToScale}
-        variant={isAllNodeNotToScaleOrientation('top')?'dark':'outline-dark'}
+        variant={isAllNodeNotToScaleOrientation('top')?'primary':'outline-primary'}
         onClick={() => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','top',menu_for_style))
           set_data({ ...data })
@@ -108,7 +108,7 @@ export const SankeyPlusNodesAttributes = (
         className='btn_menu_config'
         style={{width:'17.5%'}}
         disabled={(!is_activated)?true:!isAllNodeToScale}
-        variant={isAllNodeNotToScaleOrientation('bottom')?'dark':'outline-dark'}
+        variant={isAllNodeNotToScaleOrientation('bottom')?'primary':'outline-primary'}
         onClick={() => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','bottom',menu_for_style))
           set_data({ ...data })
