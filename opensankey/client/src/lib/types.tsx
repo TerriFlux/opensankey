@@ -24,6 +24,7 @@ export const SankeyNodeAttrLocalTypes ={
   label_color: PropTypes.bool,
   label_vert: PropTypes.string,
   label_horiz: PropTypes.string,
+  label_background:PropTypes.bool,
 
   // Parameter of node value label
   show_value: PropTypes.bool,
@@ -62,6 +63,7 @@ export const SankeyNodeStyleTypes ={
   label_color: PropTypes.bool.isRequired,
   label_vert: PropTypes.string.isRequired,
   label_horiz: PropTypes.string.isRequired,
+  label_background:PropTypes.bool.isRequired,
 
   // Parameter of node value label
   show_value: PropTypes.bool.isRequired,

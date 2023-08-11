@@ -159,7 +159,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           <Button
             style={{width:'10%'}}
             size="sm"
-            variant='outline-dark'
+            variant='outline-primary'
             className='btn_menu_config'
             disabled={token==false && Object.keys(data.nodes).length>15}
             onClick={() => {
@@ -189,8 +189,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           <Button
             style={{width:'10%'}}
             size="sm"
-            variant='outline-dark'
-            // style={{marginRight: "-1em"}}
+            variant='outline-primary'
+            className='btn_menu_config'
             disabled={multi_selected_nodes.current.length == 0}
             onClick={
               () => {
@@ -215,7 +215,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           <Button
             style={{width:'10%'}}
             size="sm"
-            variant={data.displayed_node_selector?'dark':'outline-dark'}
+            variant={data.displayed_node_selector?'primary':'outline-primary'}
             className='btn_menu_config'
             onClick={
               () => {
