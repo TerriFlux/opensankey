@@ -1,7 +1,8 @@
 
 import {SankeyPlusData,SankeyPlusLabel,differenceType} from './types'
-import {convert_tags,convert_links,convert_nodes,convert_data} from 'open-sankey/dist/SankeyConvert'
+import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { get_data_from_view } from './SankeyPlusViews'
+import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
 interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
   transparent?:boolean
 }
@@ -52,6 +53,7 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
   // Convert old view (when we copied the entire data)
   data.view.forEach((v)=>{
     if((v.view_data as unknown as SankeyPlusData ).version){
+      complete_sankey_data(v.view_data,default_sankey_data,default_node,default_link)
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
