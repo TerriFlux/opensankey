@@ -124,7 +124,7 @@ export const addAllDropDownNode = (
                       el.colorTag = 'no_colormap'
                     })
                     Object.values(data.links).forEach(el => {
-                      el.colorParameter = 'local'
+                      //el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
                     data.colorMap = 'no_colormap'
@@ -134,7 +134,7 @@ export const addAllDropDownNode = (
                         el.colorTag = tags_selected[0]
                       })
                       Object.values(data.links).forEach(el => {
-                        el.colorParameter = 'groupTag'
+                        //el.colorParameter = 'groupTag'
                         el.colorTag = 'no_colormap'
                       })
                       data.colorMap = tags_selected[0]
@@ -261,7 +261,7 @@ export const addAllDropDownNode = (
                       el.colorTag = 'no_colormap'
                     })
                     Object.values(data.links).forEach(el => {
-                      el.colorParameter = 'local'
+                      //el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
                     data.colorMap = 'no_colormap'
@@ -271,7 +271,7 @@ export const addAllDropDownNode = (
                         el.colorTag = tags_selected[0]
                       })
                       Object.values(data.links).forEach(el => {
-                        el.colorParameter = 'groupTag'
+                        //el.colorParameter = 'groupTag'
                         el.colorTag = 'no_colormap'
                       })
                       data.colorMap = tags_selected[0]

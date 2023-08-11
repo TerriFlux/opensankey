@@ -311,16 +311,15 @@ class SankeyToJson(object):
             default_data_json,
             datas_json)
         # Color of link : default = color of source node
-        color = flux.orig.color_in_hex
-        if flux.dest.has_specific_tag(CONST_IO_XL.NODE_TYPE, CONST_IO_XL.NODE_TYPE_PRODUCT):
-            color = flux.dest.color_in_hex
+        # color = flux.orig.color_in_hex
+        # if flux.dest.has_specific_tag(CONST_IO_XL.NODE_TYPE, CONST_IO_XL.NODE_TYPE_PRODUCT):
+        #     color = flux.dest.color_in_hex
         # Then create link struct
         return {
             'idLink': flux.id,
             'idSource': flux.orig.id,
             'idTarget': flux.dest.id,
             'value': datas_json,
-            'color': color,
             'dashed': (not has_data)
         }
 

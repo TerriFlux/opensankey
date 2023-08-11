@@ -1,5 +1,6 @@
-import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes} from './types'
-import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_value_link } from './SankeyUtils'
+import * as d3 from 'd3'
+import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, TagsCatalog, SankeyLinkValue} from './types'
+import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_value_link, assign_node_local_attribute, compute_total_offsets, test_link_value, getLinkValue } from './SankeyUtils'
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
@@ -229,8 +230,8 @@ export const explore_branch = (
     if (link.idTarget === idNode && node_displayed(data,nodes[link.idSource]) ) {
       if (visited_nodes.indexOf(idNode) === -1) {
         no_input_link = false
-        visited_nodes.push(idNode)
-        const branch_length = explore_branch(link.idSource, current_length + 1, visited_nodes, links,nodes,data)
+        //visited_nodes.push(idNode)
+        const branch_length = explore_branch(link.idSource, current_length + 1, [...visited_nodes,idNode], links,nodes,data)
         if (branch_length > highest_branch_length) {
           highest_branch_length = branch_length
         }
@@ -259,6 +260,26 @@ export const arrangeNodes = (
   })
 }
 
+export const nodeHeight = (
+  n: SankeyNode,
+  selected_tags: TagsCatalog,
+  data:SankeyData,
+  inv_scale:(t:number)=>number,
+  scale:(t:number)=>number,
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+
+) => {
+  const res = compute_total_offsets(inv_scale,n, data, selected_tags, test_link_value,undefined,getLinkValue)
+  const [total_offset_height_left, total_offset_height_right] = res
+  const node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right)
+  //Hauteur des noeuds
+  if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
+    // Hauteur des noeuds
+    return data.node_height
+  }
+  return scale(node_size_s_height)
+}
+
 export const compute_auto_sankey = (
   data: SankeyData,
   h_space : number
@@ -279,16 +300,25 @@ export const compute_auto_sankey = (
   }
 
   const vspace = data.v_space
-  const horizontal_indices: { [node_id:string]:number} = {}
+  let max_nodes_on_vertical = 0
+  const nodes2horizontal_indices: { [node_id:string] : number   } = {}
+  const horizontal_indices2nodes: { [i      :number] : SankeyNode[] } = {}
   Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(node => {
     const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes,data)
-    horizontal_indices[node.idNode] = horizontal_index
+    nodes2horizontal_indices[node.idNode] = horizontal_index
+    if (!horizontal_indices2nodes[horizontal_index]) {
+      horizontal_indices2nodes[horizontal_index] = []
+    }
+    horizontal_indices2nodes[horizontal_index].push(node)
+    if (horizontal_indices2nodes[horizontal_index].length > max_nodes_on_vertical ) {
+      max_nodes_on_vertical = horizontal_indices2nodes[horizontal_index].length
+    }
     if (horizontal_index > max_horizontal_index) {
       max_horizontal_index = horizontal_index
     }
   })
   Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).forEach(l => {
-    if (horizontal_indices[l.idSource] >= horizontal_indices[l.idTarget]) {
+    if (nodes2horizontal_indices[l.idSource] >= nodes2horizontal_indices[l.idTarget]) {
       // l.recycling = true
       assign_link_local_attribute(l,'recycling',true)
 
@@ -297,17 +327,42 @@ export const compute_auto_sankey = (
 
   const width = max_horizontal_index* h_space 
 
+  // Reorder links using the x of source name as criteria
+  // Compute input_outputLinksId
+  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n => data.nodes[n.idNode] = {...n})
+  compute_default_input_outputLinksId(data.nodes, data.links)
+
   Object.values(data.nodes).forEach(node => {
     if (!node_displayed(data,node)) {
       return
     }
-    node.x = max_horizontal_index !== 0 ? 50 + horizontal_indices[node.idNode] / max_horizontal_index * width : 50 //* 0.9
+    if (node.outputLinksId.length === 0) {
+      assign_node_local_attribute(node,'label_horiz', 'right')
+      assign_node_local_attribute(node,'label_vert', 'middle')
+    }
+    if (node.inputLinksId.length === 0) {
+      assign_node_local_attribute(node,'label_horiz', 'left')
+      assign_node_local_attribute(node,'label_vert', 'middle')
+    }
+    let min_next_horizontal_index = max_horizontal_index+1
+    node.outputLinksId.forEach(
+      (idLink) => {
+        if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
+          const target_node = data.nodes[data.links[idLink].idTarget]
+          if (target_node === undefined ) {
+            return
+          }
+          if (nodes2horizontal_indices[target_node.idNode] < nodes2horizontal_indices[node.idNode]) {
+            return
+          }
+          if (nodes2horizontal_indices[target_node.idNode]<min_next_horizontal_index) {
+            min_next_horizontal_index = nodes2horizontal_indices[target_node.idNode]
+          }
+        }
+      })
+    nodes2horizontal_indices[node.idNode] = min_next_horizontal_index - 1
+    node.x = max_horizontal_index !== 0 ? 50 + nodes2horizontal_indices[node.idNode] / max_horizontal_index * width : 50 //* 0.9
   })
-
-  // Reorder links using the x of source name as criteria 
-  // Compute input_outputLinksId
-  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n => data.nodes[n.idNode] = {...n})
-  compute_default_input_outputLinksId(data.nodes, data.links)
 
   // Vertical position of vertical nodes
   // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
@@ -315,80 +370,95 @@ export const compute_auto_sankey = (
   for (let i = 0; i <= max_horizontal_index; i++) {
     let vertical_space: number
     let vertical_offset = 0
-    const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && horizontal_indices[n.idNode] === i)
-    if (the_nodes.length > 1) {
+    //const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && nodes2horizontal_indices[n.idNode] === i)
+    if (horizontal_indices2nodes[i].length > 0) {
       vertical_space = vspace //(200 - total_height) / (total_nb - 1)
     }
     else {
       vertical_space = 0
     }
 
-    the_nodes.forEach((node, node_id) => {
-  
+    const diff_nb_nodes = (max_nodes_on_vertical - horizontal_indices2nodes[i].length)/2
+    const inv_scale = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, data.user_scale])
+    const scale = d3.scaleLinear()
+      .range([0, 100])
+      .domain([0, data.user_scale])
+    horizontal_indices2nodes[i].forEach((node, node_id) => {
       if (node_id === 0) {
-        node.y = 200//0.2 * height;
-        vertical_offset = 200 + vertical_space
+        data.nodes[node.idNode].y = 200 + diff_nb_nodes*vertical_space//0.2 * height;
+        const node_h = nodeHeight(data.nodes[node.idNode],data.nodeTags,data,inv_scale,scale,getLinkValue)
+        vertical_offset = 200 + node_h + diff_nb_nodes*vertical_space + vertical_space
       }
       else {
-        node.y = vertical_offset
-        vertical_offset += vertical_space
+        data.nodes[node.idNode].y = vertical_offset
+        const node_h = nodeHeight(data.nodes[node.idNode],data.nodeTags,data,inv_scale,scale,getLinkValue)
+        vertical_offset += vertical_space + node_h
       }
     })
     if (max_vertical_offset < vertical_offset) {
       max_vertical_offset = vertical_offset
     }
   }
-  for (let i = 0; i <= max_horizontal_index; i++) {
-    const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && horizontal_indices[n.idNode] === i)
-    let total_nb_outputLinksId_up = 0
-    let total_nb_outputLinksId_down = 0
-    the_nodes.forEach((node) => {
-      node.outputLinksId.forEach(
-        (idLink) => {
-          if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
-            const target_node = data.nodes[data.links[idLink].idTarget]
-            if (target_node === undefined ) {
-              return
-            }
-            if ( target_node.y < node.y ) {
-              total_nb_outputLinksId_up += 1
-            } else {
-              total_nb_outputLinksId_down += 1              
-            }
-          }
-        }
-      )
-    })
-    let current_output_link_up = 0
-    let current_output_link_down = 0
-    the_nodes.forEach(node => {
-      node.outputLinksId.forEach(
-        (idLink) => {
-          if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget]) ) {
-            const target_node = data.nodes[data.links[idLink].idTarget]
-            if (target_node === undefined ) {
-              return
-            }
-            if ( target_node.y < node.y ) {
-              assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
-              assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
-              // data.links[idLink].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
-              // data.links[idLink].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
-              current_output_link_up += 1
-            } else {
-              assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
-              assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
-              // data.links[idLink].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
-              // data.links[idLink].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
-              current_output_link_down += 1
-            }
+  // const visible_links = Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]))
+  // visible_links.forEach(l=> {
+  //   if (l.local && l.local.recycling) {
+  //     l.local.vert_shift = max_vertical_offset
+  //   }
+  // })
 
-          }
-        }
-      )
-    })
-  }
+  // for (let i = 0; i <= max_horizontal_index; i++) {
+  //   //const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && horizontal_indices[n.idNode] === i)
+  //   let total_nb_outputLinksId_up = 0
+  //   let total_nb_outputLinksId_down = 0
+  //   horizontal_indices2nodes[i].forEach((node) => {
+  //     data.nodes[node.idNode].outputLinksId.forEach(
+  //       (idLink) => {
+  //         if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
+  //           const target_node = data.nodes[data.links[idLink].idTarget]
+  //           if (target_node === undefined ) {
+  //             return
+  //           }
+  //           if ( target_node.y < node.y ) {
+  //             total_nb_outputLinksId_up += 1
+  //           } else {
+  //             total_nb_outputLinksId_down += 1
+  //           }
+  //         }
+  //       }
+  //     )
+  //   })
+  //   let current_output_link_up = 0
+  //   let current_output_link_down = 0
+  //   horizontal_indices2nodes[i].forEach(node => {
+  //     data.nodes[node.idNode].outputLinksId.forEach(
+  //       (idLink) => {
+  //         if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget]) ) {
+  //           const target_node = data.nodes[data.links[idLink].idTarget]
+  //           if (target_node === undefined ) {
+  //             return
+  //           }
+  //           if ( target_node.y < node.y ) {
+  //             assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
+  //             assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
+  //             // data.links[idLink].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
+  //             // data.links[idLink].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
+  //             current_output_link_up += 1
+  //           } else {
+  //             assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
+  //             assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
+  //             // data.links[idLink].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
+  //             // data.links[idLink].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
+  //             current_output_link_down += 1
+  //           }
   
+  //         }
+  //       }
+  //     )
+  //   })
+  // }
+
 
   data.width = width + h_space
   
@@ -593,7 +663,7 @@ export const updateLayout = (
       link.local.orthogonal_label_position = link_layout.local?.orthogonal_label_position
   
       link.colorTag = link_layout.colorTag
-      link.colorParameter = link_layout.colorParameter
+      //link.colorParameter = link_layout.colorParameter
       link.local.color = link_layout.local?.color
   
       if (link_layout.local?.vert_shift) {
