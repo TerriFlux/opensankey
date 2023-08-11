@@ -926,14 +926,16 @@ export const default_link_style=()=>{
  * @returns {*}
  */
 const create_object = (data: SankeyData, l: string[]) => {
-  const { dataTags } = data
+  const { dataTags,fluxTags } = data
   if (l.length == 0) {
     const obj = Object.create({})
     obj['value'] = ''
     obj['display_value'] = ''
     obj['tags'] = {}
     obj['extension'] = {}
-
+    Object.entries(fluxTags).forEach(ft=>{
+      obj.tags[ft[0]]=[]
+    })
     return obj
   } else {
     const i = l[0]
