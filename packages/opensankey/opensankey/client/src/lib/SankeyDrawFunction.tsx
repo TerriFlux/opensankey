@@ -4,7 +4,7 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,get_vertical_marfin_for_sankey_zone,node_displayed,return_value_node,return_value_link, assign_link_local_attribute} from './SankeyUtils'
+import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,get_vertical_marfin_for_sankey_zone,node_displayed,return_value_node,return_value_link, assign_link_local_attribute, toPrecision} from './SankeyUtils'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
 
 import * as SankeyShapes from './SankeyShapes'
@@ -1986,12 +1986,16 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
   let total = 0
   const node_visible=node_visible_on_svg()
   if (return_value_node(data,d,'show_value')) {
+    let scientific_precision = 0
     if (d.outputLinksId.length > 0) {
       for (let i = 0; i < d.outputLinksId.length; i++) {
         const link = display_links[d.outputLinksId[i]]
         if (link === undefined) {
           //alert('Corruption du diagramme')
           return ''
+        }
+        if (scientific_precision === 0 && return_value_link(data,link,'to_precision')) {
+          scientific_precision = return_value_link(data,link,'scientific_precision') as number
         }
         let tmp=getLinkValue(data, link.idLink).value
         tmp=(tmp)?tmp:0
@@ -2008,6 +2012,9 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
             //alert('Corruption du diagramme')
             return ''
           }
+          if (scientific_precision === 0 && return_value_link(data,link,'to_precision')) {
+            scientific_precision = return_value_link(data,link,'scientific_precision') as number
+          }
           let tmp=getLinkValue(data, link.idLink).value
           tmp=(tmp)?tmp:0
           if (node_visible.includes(link.idSource) && node_visible.includes(link.idTarget) ) {
@@ -2015,6 +2022,9 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
           }
         }
       }
+    }
+    if (scientific_precision !==0) {
+      return toPrecision(total,scientific_precision)
     }
     return total
   } else {
