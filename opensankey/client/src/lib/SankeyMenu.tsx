@@ -1023,7 +1023,14 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
+  const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
+    d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
+    d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
+    d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
 
+  const getRandomInt=(max:number) =>{
+    return Math.floor(Math.random() * max)
+  }
   if (not_started == false && processing == false) {
     const path = window.location.href
     const url = path + url_prefix + 'loads_retrieves_result'
@@ -1040,9 +1047,19 @@ const Menu: FunctionComponent<MenuTypes> = (
             server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
           }
 
-          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data))
+          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data)) as SankeyData
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
+          if (Object.keys(data.nodeTags).length == 0 && Object.keys(data.fluxTags).length == 0 && Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0) {
+            const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
+            const n_keys=Object.keys(data.nodes)
+            const size_color=n_keys.length
+              
+            for(const i in d3.range(size_color)){
+              // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
+              SankeyUtils.assign_node_local_attribute(new_data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
+            }            
+          }
           set_data({ ...new_data })
           //set_show_load(false)
         } catch(err) {

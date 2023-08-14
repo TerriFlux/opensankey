@@ -565,7 +565,6 @@ class SankeyToJson(object):
             'node_visible': True,
             'label_visible': True,
             'shape_visible': True,
-            'color': node.color_in_hex,
             'tags': {},
             'dimensions': {
                 'Primaire': {}
