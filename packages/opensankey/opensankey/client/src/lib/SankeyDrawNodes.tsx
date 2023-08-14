@@ -186,7 +186,7 @@ export const OpenSankeyDrawNodes = (
         
     // Apply node's parameters to each node
     d3.selectAll(' .opensankey .node')
-      .attr('id', d => (d as SankeyNode).idNode)
+      .attr('id', d => 'shape_'+(d as SankeyNode).idNode)
       .attr('fill-opacity', d => return_value_node(data,(d as SankeyNode),'shape_visible') ? '1' : '0')
       .attr('fill', d => node_color(d as SankeyNode,data) as string)
       .attr('stroke', 'black')

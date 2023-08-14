@@ -405,13 +405,13 @@ const identify_node = (
   const source_node = nodes[link.idSource]
   const target_node = nodes[link.idTarget]
   const source_x_min = source_node.x
-  const source_x_max = source_x_min + parseInt(d3.select(' .opensankey #' + source_node.idNode).attr('width'))
+  const source_x_max = source_x_min + parseInt(d3.select(' .opensankey #shape_' + source_node.idNode).attr('width'))
   const source_y_min = source_node.y
-  const source_y_max = source_y_min + parseInt(d3.select(' .opensankey #' + source_node.idNode).attr('height'))
+  const source_y_max = source_y_min + parseInt(d3.select(' .opensankey #shape_' + source_node.idNode).attr('height'))
   const target_x_min = target_node.x
-  const target_x_max = target_x_min + parseInt(d3.select(' .opensankey #' + target_node.idNode).attr('width'))
+  const target_x_max = target_x_min + parseInt(d3.select(' .opensankey #shape_' + target_node.idNode).attr('width'))
   const target_y_min = target_node.y
-  const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #' + target_node.idNode).attr('height'))
+  const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #shape_' + target_node.idNode).attr('height'))
   // const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
   const tolerance = 3 * data.node_width
   const l_ori=return_value_link(data,link,'orientation')
@@ -998,15 +998,15 @@ export const drag_node_text = (
   node: SankeyNode,
   event: d3.D3DragEvent<Element, unknown, unknown>
 ) => {
-  const old_x = +d3.select(' .opensankey #' + node.idNode + '_text').attr('x'),
-    old_y = +d3.select(' .opensankey #' + node.idNode + '_text').attr('y'),
+  const old_x = +d3.select(' .opensankey #text_' + node.idNode ).attr('x'),
+    old_y = +d3.select(' .opensankey #text_' + node.idNode ).attr('y'),
     new_x = old_x + event.dx,
     new_y = old_y + event.dy
-  d3.select(' .opensankey #' + node.idNode + '_text').attr('x', new_x)
-  d3.select(' .opensankey #' + node.idNode + '_text').attr('y', new_y)  
+  d3.select(' .opensankey #text_' + node.idNode ).attr('x', new_x)
+  d3.select(' .opensankey #text_' + node.idNode ).attr('y', new_y)  
   node.x_label = new_x
   node.y_label = new_y
-  d3.select(' .opensankey #' + node.idNode + '_text').selectAll('tspan').attr('x', new_x)
+  d3.select(' .opensankey #text_' + node.idNode ).selectAll('tspan').attr('x', new_x)
 }
 
 

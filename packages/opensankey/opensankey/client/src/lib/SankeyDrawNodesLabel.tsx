@@ -38,15 +38,15 @@ export const OpenSankeyDrawNodesLabel = (
   const DoubleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
     accept_simple_click.current=false
     
-    const label_x=document.getElementById(d.idNode+'_text')?.getBoundingClientRect().x??0
-    const label_y=document.getElementById(d.idNode+'_text')?.getBoundingClientRect().y??0
-    const node_x=document.getElementById(d.idNode)?.getBoundingClientRect().x??0
-    const node_y=document.getElementById(d.idNode)?.getBoundingClientRect().y??0
+    const label_x=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().x??0
+    const label_y=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().y??0
+    const node_x=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().x??0
+    const node_y=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().y??0
     
-    d3.select('#'+d.idNode+'_fo_input_label').style('display','inline-block')
-    d3.select('#'+d.idNode+'_fo_input_label').attr('x',(label_x-node_x)).attr('y',label_y-node_y)
-    d3.select('#'+d.idNode+'_text').style('display','none')
-    document.getElementById(d.idNode+'_input_label')?.focus()
+    d3.select('#fo_input_label_'+d.idNode).style('display','inline-block')
+    d3.select('#fo_input_label_'+d.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
+    d3.select('#'+'text_'+d.idNode).style('display','none')
+    document.getElementById('input_label_'+d.idNode)?.focus()
     setTimeout(()=>{
       accept_simple_click.current=true
     },200)
@@ -72,7 +72,7 @@ export const OpenSankeyDrawNodesLabel = (
       .classed('node', true)
       .classed('node_text', true)
       .classed('test_new_file',true)
-      .attr('id', n => (n as SankeyNode).idNode + '_text')
+      .attr('id', n => 'text_' + (n as SankeyNode).idNode)
       .attr('x',n => node_label_posX(data,n as SankeyNode))
       .attr('y', n => node_label_posY((n as SankeyNode),data))
       .attr('text-anchor', n => {
@@ -102,7 +102,7 @@ export const OpenSankeyDrawNodesLabel = (
       // The input appear when we double click on the label
       (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
         .append('foreignObject')
-        .attr('id',d=>d.idNode+'_fo_input_label')
+        .attr('id',d=>'fo_input_label_'+d.idNode)
         .attr('x',(n)=>node_label_posX(data,n as SankeyNode))
         .attr('y',(n)=>node_label_posY(n as SankeyNode,data))
         .attr('width',d=>Number(return_value_node(data,d,'label_box_width'))+5)
@@ -111,7 +111,7 @@ export const OpenSankeyDrawNodesLabel = (
         .style('display','none')
         .append('xhtml:div')
         .append('input')
-        .attr('id',d=>d.idNode+'_input_label')
+        .attr('id',d=>'input_label_'+d.idNode)
         .attr('class','input_label')
         .attr('type','text')
         .attr('value',d=>d.name)
@@ -136,7 +136,7 @@ export const OpenSankeyDrawNodesLabel = (
 
       bg_text_node.attr('x',n=>{
         const box_zdd=document.getElementById('ggg_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0,width:0}
-        const box_text=document.getElementById(n.idNode+'_text')?.getBoundingClientRect()??{x:0,y:0,width:0}
+        const box_text=document.getElementById('text_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0,width:0}
         let horiz_shift=0
         if(return_value_node(data,n,'label_horiz')=='left'){
           horiz_shift=box_text.width
@@ -150,13 +150,13 @@ export const OpenSankeyDrawNodesLabel = (
           //Nombre de tspan dans la balise text
           const nb_tspan = d3.selectAll(' .opensankey #ggg_' + n.idNode + ' text tspan').nodes().length
           const shift_if_above=return_value_node(data,n,'label_vert')=='top'?(nb_tspan*(return_value_node(data,n,'font_size') as number)):0
-          return ((document.getElementById(n.idNode+'_text')?.getBoundingClientRect().y??0)-box_zdd.y)/scale_svg-shift_if_above
+          return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().y??0)-box_zdd.y)/scale_svg-shift_if_above
         })
         .attr('width',n=>{
-          return ((document.getElementById(n.idNode+'_text')?.getBoundingClientRect().width??0))/scale_svg+4
+          return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0))/scale_svg+4
         })
         .attr('height',n=>{
-          return ((document.getElementById(n.idNode+'_text')?.getBoundingClientRect().height??0))/scale_svg+4
+          return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().height??0))/scale_svg+4
         })
     }
     
@@ -169,7 +169,7 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('fill',n=>(return_value_node(data,n,'label_color'))?'white':'black')
       .classed('node', true)
       .classed('node_text_value', true)
-      .attr('id', n => (n as SankeyNode).idNode + '_text_value')
+      .attr('id', n => 'text_value_'+(n as SankeyNode).idNode )
       .attr('x', n =>node_value_posX(data,n as SankeyNode))
       .attr('y', n => node_value_posY(data,n as SankeyNode))
       .attr('text-anchor', (n) => (return_value_node(data,n,'label_horiz_valeur') as string).replace('left','end').replace('right','start'))
@@ -192,7 +192,7 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('class','box_width_threshold')
       .attr('x',n=>{
         const nn=n as SankeyNode
-        const width = +d3.select(' .opensankey #' + nn.idNode).attr('width')
+        const width = +d3.select(' .opensankey #shape_' + nn.idNode).attr('width')
         if (nn.x_label) {
           return nn.x_label
         } else if (return_value_node(data,nn,'label_horiz') == 'middle') {
@@ -208,7 +208,7 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('y', n => {
         const nn=n as SankeyNode
 
-        const height = +d3.select(' .opensankey #' + nn.idNode).attr('height')
+        const height = +d3.select(' .opensankey #shape_' + nn.idNode).attr('height')
         if (nn.y_label && data.show_structure !== 'structure') {
           return nn.y_label
         } else if (return_value_node(data,nn,'label_vert') == 'middle') {
@@ -223,7 +223,7 @@ export const OpenSankeyDrawNodesLabel = (
       })
       .attr('width',n=>return_value_node(data,n,'label_box_width') as number)
       .attr('height',n=>{
-        const h=document.getElementById((n as SankeyNode).idNode+'_text')?.getBoundingClientRect().height
+        const h=document.getElementById('text_'+(n as SankeyNode).idNode)?.getBoundingClientRect().height
         return (h!=undefined)?h:25
             
       })
