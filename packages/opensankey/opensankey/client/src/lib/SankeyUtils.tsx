@@ -680,7 +680,7 @@ export const link_color = (l: SankeyLink,data:SankeyData,
     return colorLink
   }
       
-  if (l.local && l.local.color && l.local.color != '#808080') {
+  if (l.local && l.local.color && l.local.color !== '#808080' && l.local.color !== default_link_style().color) {
     return return_value_link(data,l,'color')
   }
 
