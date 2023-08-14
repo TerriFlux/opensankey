@@ -299,6 +299,8 @@ export const compute_auto_sankey = (
     data.user_scale = Math.min(data.maximum_flux ? data.maximum_flux : max_link_value ,max_link_value)
   }
 
+  compute_default_input_outputLinksId(data.nodes, data.links)
+  
   const vspace = data.v_space
   let max_nodes_on_vertical = 0
   const nodes2horizontal_indices: { [node_id:string] : number   } = {}
@@ -320,11 +322,6 @@ export const compute_auto_sankey = (
 
 
   const width = max_horizontal_index* h_space 
-
-  // Reorder links using the x of source name as criteria
-  // Compute input_outputLinksId
-  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n => data.nodes[n.idNode] = {...n})
-  compute_default_input_outputLinksId(data.nodes, data.links)
   
   for (let i = max_horizontal_index; i >= 0; i--) {
     if (!horizontal_indices2nodes[i]) {
