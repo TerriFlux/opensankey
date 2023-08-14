@@ -441,6 +441,8 @@ const resources = {
           'pls':'Position the label with the mouse',
           'toPrecision':'Display the value in scientific notation',
           'NbPrecision':'Number of significant figures',
+          l_u_v:'Display unit',
+          l_u:'Unit\'s name',    
           tooltips: {
             label: 'Display or not the label (data / text) associated to the selected link(s)',
             len: 'Display the label in black, for the selected stream(s)',
@@ -456,7 +458,8 @@ const resources = {
             pls: 'Activates the possibility to move the label of the selected stream(s) with the mouse',
             toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             NbPrecision:'Choose the number of significant figures when the value is diplayed in scientific notation',
-
+            l_u_v:'Display the unit of the links',
+            l_u:'Choose the name of the unit',  
           }
         },
         'layout':'Disposition',
@@ -991,6 +994,9 @@ const resources = {
           'pls':'Positionner le label à la souris',
           'toPrecision':'Afficher la valeur en notation scientifique',
           'NbPrecision':'Nombre de signe significatif',
+          'l_u_v':'Unité du flux visible',
+          'l_u':'Nom de l\'unité',
+
           tooltips: {
             label: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)',
             len: 'Afficher le texte du label en noir, pour le(s) flux sélectionné(s)',
@@ -1006,6 +1012,8 @@ const resources = {
             pls: 'Active la possibilité de déplacer avec la souris le label du/des flux sélectionné(s)',
             toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
             NbPrecision:'Choisi le nombre de chiffre significatif à afficher quand la valeur est en notation scientifique ',
+            l_u_v:'Permet d\'afficher ou non l\'unité du flux',
+            l_u:'Permet de choisir le nom de l\'unité',
           }
         },
         'layout':'Disposition',

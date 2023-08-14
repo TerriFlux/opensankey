@@ -1062,10 +1062,10 @@ const Menu: FunctionComponent<MenuTypes> = (
 
     if(!show_nav){
       [data.width, data.height] = min_width_and_height(data)
-      const transform=d3.select('.opensankey #svg').attr('transform').split('scale(')
+      const transform=d3.select('.opensankey #svg').attr('transform')
       let scale_svg=1
       if(transform!==undefined){
-        scale_svg=Number(transform[1].replace(')',''))
+        scale_svg=Number(transform.split('scale(')[1].replace(')',''))
       }
       d3.select('.scroll_zone').style('width',((data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
     }else{
@@ -1627,10 +1627,10 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     })[0]
     const pos_ref=node_ref[attr]
     const wORh=(attr=='x')?'width':'height'
-    const wORh_ref=(document.getElementById(node_ref.idNode)?.getBoundingClientRect()[wORh]??0)
+    const wORh_ref=(document.getElementById('shape_'+node_ref.idNode)?.getBoundingClientRect()[wORh]??0)
     const center_ref=pos_ref+(wORh_ref/2)
     multi_selected_nodes.current.filter(n=>n!=node_ref && n.position!='relative').forEach(n=>{
-      const wORh_to_shift=(document.getElementById(n.idNode)?.getBoundingClientRect()[wORh]??0)
+      const wORh_to_shift=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect()[wORh]??0)
       n[attr]=center_ref-((wORh_to_shift)/2)
     })
   }

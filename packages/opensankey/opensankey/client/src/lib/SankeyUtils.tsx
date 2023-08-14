@@ -470,7 +470,7 @@ export const toPrecision = (
   }
   if(!isNaN(v)){
     let new_v = (+v).toPrecision(nb_scientific).replace(/\.0+$/, '')
-    if (new_v.includes('e+'+nb_scientific)) {
+    if (!new_v.includes('e+')) {
       new_v = String(parseFloat(new_v))
     }
     return new_v
@@ -511,7 +511,8 @@ export const link_text = (
     }
   }
   the_link_value = (return_value_link(data,d,'to_precision'))?toPrecision(the_link_value,(return_value_link(data,d,'scientific_precision') as number)):the_link_value
-  return the_link_value
+  const unit=return_value_link(data,d,'label_unit_visible')?return_value_link(data,d,'label_unit'):''
+  return the_link_value+unit
 }
 
 
@@ -917,7 +918,8 @@ export const default_link_style=()=>{
     scientific_precision:5,
     arrow_size:10,
     font_family: 'Arial,serif',
-
+    label_unit_visible:false,
+    label_unit:'',
 
   }
 }

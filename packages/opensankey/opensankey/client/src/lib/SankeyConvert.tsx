@@ -645,7 +645,6 @@ export const convert_tags = (
   if(has_not_converted_nodeTags_as_levelTags(data)){
     data.levelTags = Object.assign({},data.levelTags,Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level')))
     data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
-    console.log(data.nodeTags)
   }
 
 
@@ -766,17 +765,6 @@ export const convert_nodes = (
         delete n_convert.colorSustainable
       }
 
-      if(n_convert.not_to_scale){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.not_to_scale=(n_convert.not_to_scale)
-        delete n_convert.not_to_scale
-      }
-
-      if(n_convert.not_to_scale_direction){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.not_to_scale_direction=(n_convert.not_to_scale_direction)
-        delete n_convert.not_to_scale_direction
-      }
 
       if (n_convert.type) {
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
@@ -1405,7 +1393,6 @@ export const convert_data = (
   data: SankeyData
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
-  console.log('hello')
   // let recompute_input_output_links = true
   // Object.values(data.nodes).forEach(n => {
   //   if (n.inputLinksId || n.outputLinksId) {

@@ -4,8 +4,7 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,node_color,get_vertical_marfin_for_sankey_zone,node_displayed,return_value_node,return_value_link, assign_link_local_attribute} from './SankeyUtils'
-import { BaseType } from 'd3'
+import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,get_vertical_marfin_for_sankey_zone,node_displayed,return_value_node,return_value_link, assign_link_local_attribute} from './SankeyUtils'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
 
 import * as SankeyShapes from './SankeyShapes'
@@ -185,10 +184,10 @@ export const compute_end_points = (
   const delta_t_width_top = Math.max(0, (node_size_t_width - t_total_offset_width_top) / 2)
   const delta_t_height_right = Math.max(0, (node_size_t_height - t_total_offset_height_right) / 2)
   const delta_t_height_left = Math.max(0, (node_size_t_height - t_total_offset_height_left) / 2)
-  const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select(' .opensankey #' + source_node.idNode).attr('width')
-  const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y - +d3.select(' .opensankey #' + source_node.idNode).attr('height')
-  const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select(' .opensankey #' + source_node.idNode).attr('width')
-  const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select(' .opensankey #' + source_node.idNode).attr('height')
+  const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
+  const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
+  const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
+  const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
   let xs = source_node_x
   let ys = source_node_y
   let xt = target_node_x
@@ -380,7 +379,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
       deselect_visualy_nodes(d)
     } else {
-      d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
+      d3.select(' .opensankey #shape_' + d.idNode).attr('stroke-width',2)
       multi_selected_nodes.current.push(d)
       if(multi_selected_nodes.current.length==1){
         d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
@@ -405,7 +404,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       deselect_visualy_nodes(d)
     } else {
       multi_selected_nodes.current.push(d)
-      d3.select(' .opensankey #' + d.idNode).attr('stroke-width',2)
+      d3.select(' .opensankey #shape_' + d.idNode).attr('stroke-width',2)
       if(multi_selected_nodes.current.length==1){
         d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
       } 
@@ -557,7 +556,7 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     .call(wrap)
   if (!d.x_label || data.show_structure == 'structure') {
     d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-      const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
+      const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
 
       if (return_value_node(data,d,'label_horiz')  == 'middle') {
         return width / 2
@@ -570,7 +569,7 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   }
 
   d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-    const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
+    const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
     if (d.x_label) {
       return d.x_label
     } else if (return_value_node(data,d,'label_horiz')  == 'middle') {
@@ -629,13 +628,13 @@ export const setNodeHeight = (
     // node_size_s_width = inv_scale((return_value_node(data,n,'node_width') as number))
     node_size_s_width = inv_scale(data.node_width)
   }
-  d3.select(' .opensankey #' + n.idNode).attr('width', scale(node_size_s_width))
-  d3.select(' .opensankey #' + n.idNode).attr('height', scale(node_size_s_height))
+  d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
+  d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))
   if (n.tags['Type de noeud'] && n.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[n.tags['Type de noeud'][0]].shape === 'ellipse') {
-    d3.select(' .opensankey #' + n.idNode).attr('rx', scale(node_size_s_width / 2))
-    d3.select(' .opensankey #' + n.idNode).attr('cx', scale(node_size_s_width / 2))
-    d3.select(' .opensankey #' + n.idNode).attr('ry', scale(node_size_s_height / 2))
-    d3.select(' .opensankey #' + n.idNode).attr('cy', scale(node_size_s_height / 2))
+    d3.select(' .opensankey #shape_' + n.idNode).attr('rx', scale(node_size_s_width / 2))
+    d3.select(' .opensankey #shape_' + n.idNode).attr('cx', scale(node_size_s_width / 2))
+    d3.select(' .opensankey #shape_' + n.idNode).attr('ry', scale(node_size_s_height / 2))
+    d3.select(' .opensankey #shape_' + n.idNode).attr('cy', scale(node_size_s_height / 2))
   }
 }
 
@@ -767,7 +766,7 @@ export const drawArrows = (
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'arrow')
-        .attr('id', l.idLink + '_arrow')
+        .attr('id', 'path_'+l.idLink + '_arrow')
         .attr('d', () => {
           let xt
           let yt
@@ -776,27 +775,27 @@ export const drawArrows = (
           if (ori === 'hh' || ori === 'vh') {
             if (n.x <= source_node.x && recy || n.x > source_node.x && !recy) {
               xt = +n.x
-              yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
+              yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow(scale(total_height_left) / 2, p5, scale(link_value), scale(cum_v_left), true, false,arrow_length)
             } else {
-              xt = +n.x + +d3.select('#' + n.idNode).attr('width')
-              yt = +n.y + +d3.select('#' + n.idNode).attr('height') / 2
+              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width')
+              yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
               p5 = [xt, yt]
               is_v = true
               return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true,arrow_length)
             }
           } else if (ori === 'vv' || ori === 'hv') {
             if (n.y > source_node.y) {
-              xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
+              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2
               yt = +n.y
               p5 = [xt, yt]
               is_v = false
               return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false,arrow_length)
             } else {
-              xt = +n.x + +d3.select('#' + n.idNode).attr('width') / 2
-              yt = +n.y + +d3.select('#' + n.idNode).attr('height')
+              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2
+              yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height')
               p5 = [xt, yt]
               is_v = false
               return SankeyShapes.draw_arrow(scale(total_width_bottom) / 2, p5, scale(link_value), scale(cum_h_bottom), false, true,arrow_length)
@@ -1234,272 +1233,6 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
     set_data({...data})
   }
 }
-// Function to draw nodes with a particular shape
-export const addNodesNotToScale=(nodes_not_to_scale:d3.Selection<SVGGElement,SankeyNode,BaseType,unknown>,
-  data:SankeyData,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-
-)=>{
-  const display_nodes=data.nodes
-  const display_links=data.links
-  Object.values(display_nodes).filter(n=>return_value_node(data,n,'not_to_scale')).map(n=>{
-    setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale,getLinkValue)
-    d3.select(' .opensankey #' + n.idNode)
-      .attr('fill-opacity',0)
-  })
-  // 1
-  nodes_not_to_scale.append('rect')
-    .classed('node_not_to_scale',true)
-    .classed('node_sub_shape', true)
-    .attr('x',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-      return (return_value_node(data,n,'not_to_scale_direction')=='left')?width_node-(width_node/50):0
-    })
-    .attr('y',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-      return (return_value_node(data,n,'not_to_scale_direction')=='top')?(height_node-height_node/50):0})
-    .attr('width',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/50})
-    .attr('height',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/50:height_node})
-    .attr('fill',d => node_color(d as SankeyNode,data) as string)
-
-  // 2
-  nodes_not_to_scale.append('rect')
-    .classed('node_not_to_scale',true)
-    .classed('node_sub_shape', true)
-    .attr('x',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      if(return_value_node(data,n,'not_to_scale_direction')=='right'){
-        return width_node/25
-      }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
-        return width_node-width_node/10
-      }else{
-        return 0
-      }
-    })
-    .attr('y',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
-        return height_node/25
-      }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
-        return height_node-height_node/10
-      }else{
-        return 0
-      }
-    })
-    .attr('height',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/20:height_node})
-    .attr('width',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/20})
-    .attr('fill',d => node_color(d as SankeyNode,data) as string)
-
-  // 3
-  nodes_not_to_scale.append('rect')
-    .classed('node_not_to_scale',true)
-    .classed('node_sub_shape', true)
-    .attr('x',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      if(return_value_node(data,n,'not_to_scale_direction')=='right'){
-        return width_node/8.5
-      }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
-        return width_node-width_node/4.3
-      }else{
-        return 0
-      }
-    })
-    .attr('y',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
-        return height_node/8.5
-      }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
-        return height_node-height_node/4.3
-      }else{
-        return 0
-      }
-    })
-    .attr('height',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/9:height_node})
-    .attr('width',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/9})
-    .attr('fill',d => node_color(d as SankeyNode,data) as string)
-
-  // 4
-  nodes_not_to_scale.append('rect')
-    .classed('node_not_to_scale',true)
-    .classed('node_sub_shape', true)
-    .attr('x',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      if(return_value_node(data,n,'not_to_scale_direction')=='right'){
-        return width_node/4
-      }else if(return_value_node(data,n,'not_to_scale_direction')=='left'){
-        return width_node-width_node/2.1
-      }else{
-        return 0
-      }
-    })
-    .attr('y',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      if(return_value_node(data,n,'not_to_scale_direction')=='bottom'){
-        return height_node/4
-      }else if(return_value_node(data,n,'not_to_scale_direction')=='top'){
-        return height_node-height_node/2.1
-      }else{
-        return 0
-      }
-    })
-    .attr('width',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/4.5})
-    .attr('height',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/4.5:height_node})
-    .attr('fill',d => node_color(d as SankeyNode,data) as string)
-
-  // 5
-  nodes_not_to_scale.append('rect')
-    .classed('node_not_to_scale',true)
-    .classed('node_sub_shape', true)
-    .attr('x',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      return (return_value_node(data,n,'not_to_scale_direction')=='right')?(width_node/2):0})
-    .attr('y',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      return (return_value_node(data,n,'not_to_scale_direction')=='bottom')?(height_node/2):0})
-    .attr('width',n=>{
-      let width_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('width')
-      }else{
-        width_node=+d3.select(' .opensankey #' + n.idNode).attr('rx')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?width_node:width_node/2})
-    .attr('height',n=>{
-      let height_node=0
-      if(return_value_node(data,n,'shape')=='rect'){
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('height')
-      }else{
-        height_node=+d3.select(' .opensankey #' + n.idNode).attr('ry')*2
-      }
-
-      return ['top','bottom'].includes(return_value_node(data,n,'not_to_scale_direction') as string)?height_node/2:height_node})
-    .attr('fill',d => node_color(d as SankeyNode,data) as string)
-}
 
 export const scale = d3.scaleLinear()
   .domain([0, 100])
@@ -1565,22 +1298,22 @@ export const setNodesHeight = (
     node_size_t_width = inv_scale(data.node_width)
   }
 
-  d3.select(' .opensankey #' + source_node.idNode).attr('width', scale(node_size_s_width))
-  d3.select(' .opensankey #' + source_node.idNode).attr('height', scale(node_size_s_height))
+  d3.select(' .opensankey #shape_' + source_node.idNode).attr('width', scale(node_size_s_width))
+  d3.select(' .opensankey #shape_' + source_node.idNode).attr('height', scale(node_size_s_height))
   if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse' || !source_node.tags['Type de noeud'] && return_value_node(data,source_node,'shape')=='ellipse' ) {
-    d3.select(' .opensankey #' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
-    d3.select(' .opensankey #' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
-    d3.select(' .opensankey #' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
-    d3.select(' .opensankey #' + source_node.idNode).attr('cy', scale(node_size_s_height / 2))
+    d3.select(' .opensankey #shape_' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
+    d3.select(' .opensankey #shape_' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
+    d3.select(' .opensankey #shape_' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
+    d3.select(' .opensankey #shape_' + source_node.idNode).attr('cy', scale(node_size_s_height / 2))
   }
 
-  d3.select(' .opensankey #' + target_node.idNode).attr('width', scale(node_size_t_width))
-  d3.select(' .opensankey #' + target_node.idNode).attr('height', scale(node_size_t_height))
+  d3.select(' .opensankey #shape_' + target_node.idNode).attr('width', scale(node_size_t_width))
+  d3.select(' .opensankey #shape_' + target_node.idNode).attr('height', scale(node_size_t_height))
   if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse'|| !target_node.tags['Type de noeud'] && return_value_node(data,target_node,'shape')=='ellipse') {
-    d3.select(' .opensankey #' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
-    d3.select(' .opensankey #' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
-    d3.select(' .opensankey #' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
-    d3.select(' .opensankey #' + target_node.idNode).attr('cy', scale(node_size_t_height / 2))
+    d3.select(' .opensankey #shape_' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
+    d3.select(' .opensankey #shape_' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
+    d3.select(' .opensankey #shape_' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
+    d3.select(' .opensankey #shape_' + target_node.idNode).attr('cy', scale(node_size_t_height / 2))
   }
 }
 
@@ -1663,13 +1396,13 @@ const drawLinkText = (
   if (lab_pos === 'frozen' && link.x_label ||
       !label_on_path || label_on_path === undefined) {
 
-    (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
+    (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('x', () => lab_pos === 'frozen' && link.x_label ? link.x_label : x_pos)
     // .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
       .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label : y_pos)
       .text(d => link_text(data, d,getLinkValue ))
       .attr('visibility', label_visible ? 'visible' : 'hidden');
-    (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
+    (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
       if(orth_lab_pos=='above'){
         return '-1em'
       }else if(orth_lab_pos=='below'){
@@ -1685,7 +1418,7 @@ const drawLinkText = (
       'end': ['100%', 'end']
     };
 
-    (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
+    (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('startOffset', positions[lab_pos][0])
       .attr('text-anchor', positions[lab_pos][1])
       .text(d => link_text(data, d,getLinkValue))
@@ -2170,9 +1903,9 @@ export const min_width_and_height = (data:SankeyData) => {
     }
     let node_height = 0
     let node_width = 0
-    if (!d3.select(' .opensankey #' + n.idNode).empty()) {
-      node_height = +d3.select(' .opensankey #' + n.idNode).attr('height')
-      node_width = +d3.select(' .opensankey #' + n.idNode).attr('width')
+    if (!d3.select(' .opensankey #shape_' + n.idNode).empty()) {
+      node_height = +d3.select(' .opensankey #shape_' + n.idNode).attr('height')
+      node_width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
     }
 
     height = (n.y ) ? Math.max(height, n.y + node_height) : height
@@ -2292,10 +2025,10 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
 
 
 export const node_label_posX=(data:SankeyData,n:SankeyNode)=>{
-  if (d3.select(' .opensankey #' + n.idNode).empty()) {
+  if (d3.select(' .opensankey #shape_' + n.idNode).empty()) {
     return 0
   }
-  const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
+  const width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
   if (n.x_label) {
     return n.x_label
   } else if ((return_value_node(data,n,'label_horiz') as string) == 'middle') {
@@ -2309,10 +2042,10 @@ export const node_label_posX=(data:SankeyData,n:SankeyNode)=>{
   }
 }
 export const node_label_posY=(n:SankeyNode,data:SankeyData)=>{
-  if (d3.select(' .opensankey #' + n.idNode).empty()) {
+  if (d3.select(' .opensankey #shape_' + n.idNode).empty()) {
     return 0
   }
-  const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
+  const height = +d3.select(' .opensankey #shape_' + n.idNode).attr('height')
   if (n.y_label && data.show_structure !== 'structure') {
     return n.y_label
   } else if ((return_value_node(data,n,'label_vert') as string) == 'middle') {
@@ -2326,9 +2059,7 @@ export const node_label_posY=(n:SankeyNode,data:SankeyData)=>{
   }
 }
 export const node_value_posX=(data:SankeyData,n:SankeyNode)=>{
-  const width = +d3.select(' .opensankey #' + n.idNode).attr('width')
-  // const _text = document.getElementById(n.idNode + '_text')
-  // const width_text = (_text) ? _text.getBoundingClientRect().width : 0
+  const width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
   const val=(return_value_node(data,n,'label_horiz_valeur') as string)
   if (val== 'middle') {
     return width / 2
@@ -2342,8 +2073,8 @@ export const node_value_posX=(data:SankeyData,n:SankeyNode)=>{
 }
 
 export const node_value_posY=(data:SankeyData,n:SankeyNode)=>{
-  const height = +d3.select(' .opensankey #' + n.idNode).attr('height')
-  const _text = document.getElementById(n.idNode + '_text')
+  const height = +d3.select(' .opensankey #shape_' + n.idNode).attr('height')
+  const _text = document.getElementById('text_'+n.idNode)
   const height_text = (_text) ? _text.getBoundingClientRect().height : 0
   const val=(return_value_node(data,n,'label_vert_valeur') as string)
   const val_font_size=(return_value_node(data,n,'font_size') as number)
@@ -2431,11 +2162,11 @@ export const select_visualy_links=(d:SankeyLink)=>{
 }
 
 export const deselect_visualy_nodes=(n:SankeyNode)=>{
-  d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
+  d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',0)
   d3.select(' .opensankey #ggg_' + n.idNode+' .box_width_threshold').attr('visibility','hidden')
 }
 export const select_visualy_nodes=(n:SankeyNode)=>{
-  d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
+  d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',2)
 }
 
 export const repositionne_sidebar=()=>{
@@ -2547,7 +2278,7 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
   d3.selectAll('.link').attr('d',(d)=>{
     const l=d as SankeyLink
     // Get the path of each displayed link
-    const path=d3.select('#'+l.idLink).attr('d').split(' ')
+    const path=d3.select('#path_'+l.idLink).attr('d').split(' ')
 
     // Each path is splitted into small part of the path then depending on the small part :
     //  - If it's a letter then do nothing
@@ -2579,7 +2310,7 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
   d3.selectAll('.arrow').attr('d',(d)=>{
     const l=d as SankeyLink
     // Get the path of each displayed link
-    const path=d3.select('#'+l.idLink+'_arrow').attr('d').split(' ')
+    const path=d3.select('#path_'+l.idLink+'_arrow').attr('d').split(' ')
 
     // Each path is splitted into small part of the path then depending on the small part :
     //  - If it's a letter then do nothing
@@ -2618,7 +2349,7 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
   
 }
 export const node_visible_on_svg=()=>d3.selectAll('.node_shape').nodes().map(element => {
-  return d3.select(element).attr('id')
+  return d3.select(element).attr('id').replace('shape_','')
 })
 
 export const zoom_function=(evt:d3.D3ZoomEvent<SVGElement,unknown>,data:SankeyData)=>{

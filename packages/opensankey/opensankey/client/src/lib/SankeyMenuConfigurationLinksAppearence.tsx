@@ -247,7 +247,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
       delete d.local
     })
   }
-
+  
+  const isAllLabelUnitVisible =is_all_link_attr_same_value(data,selected_parameter,'label_unit_visible',menu_for_style) as boolean
   //Change le style des flux sélectionnés
   const style_of_selected_links = () => {
     let style_to_display = 'Aucun'
@@ -557,13 +558,10 @@ export const SankeyMenuConfigurationLinksAppearence = (
           style={{width:'25%'}} 
           className='btn_menu_config'
           variant={linkType('recycling')?'primary':'outline-primary'}
-          onChange={
+          onClick={
             () => {
-              const val=linkType('arrow')
+              const val=linkType('recycling')
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                // d.recycling = evt.target.checked
-                // d.left_horiz_shift = 0
-                // d.right_horiz_shift = 0
                 assign_link_value_to_correct_var(d,'recycling',!val,menu_for_style)
                 assign_link_value_to_correct_var(d,'left_horiz_shift',0,menu_for_style)
                 assign_link_value_to_correct_var(d,'right_horiz_shift',0,menu_for_style)
@@ -654,6 +652,45 @@ export const SankeyMenuConfigurationLinksAppearence = (
       </OverlayTrigger>
     </InputGroup>
 
+    {/* Ajout une unité au label de flux */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'80%'}} >{t('Flux.label.l_u_v')+(is_link_diplaying_value_local(multi_selected_links,'label_unit_visible',menu_for_style)?'*':'')}</InputGroup.Text>
+
+      <OverlayTrigger
+        key={'Flux.label.tooltips.2'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'Flux.label.tooltips.2'}>{t('Flux.label.tooltips.l_u_v')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllLabelUnitVisible?'primary':'outline-primary'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'label_unit_visible',!isAllLabelUnitVisible,menu_for_style))
+            set_data({ ...data })
+          }}>{isAllLabelUnitVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+      </OverlayTrigger>
+    </InputGroup>
+    {isAllLabelUnitVisible?<>    {/* Modifie l'unité du label de flux */}
+      <InputGroup>
+        <InputGroup.Text style={{width:'50%'}} >{t('Flux.label.l_u')+(is_link_diplaying_value_local(multi_selected_links,'label_unit',menu_for_style)?'*':'')}</InputGroup.Text>
+        <OverlayTrigger
+          key={'Flux.label.tooltips.l_u'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Flux.label.tooltips.l_u'}>{t('Flux.label.tooltips.l_u')} </Tooltip>}>
+          <Form.Control
+            type='text'
+            style={{width:'50%'}}
+            value={return_correct_link_attribute_value(data,selected_parameter[0],'label_unit',menu_for_style) as string}
+            onChange={evt => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'label_unit',evt.target.value,menu_for_style))
+              set_data({ ...data })
+            }}/>
+        </OverlayTrigger>
+      </InputGroup></>:<></>}
+
     {/* Choix d'affichage en notation scientifique  */}
     <InputGroup>
       <InputGroup.Text style={{width:'80%'}} >{t('Flux.label.toPrecision')}</InputGroup.Text>
@@ -676,31 +713,32 @@ export const SankeyMenuConfigurationLinksAppearence = (
             }}><FaCheck/></Button>
       </OverlayTrigger>
     </InputGroup>
-
-    {/* Choose number of scientific number */}
-    <Form.Group as={Row}>
-      <InputGroup>
-        <InputGroup.Text >{t('Flux.label.NbPrecision')}</InputGroup.Text>
-        <OverlayTrigger
-          key={'flux.label.tooltips.14'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.14'}>{t('Flux.label.tooltips.NbPrecision')} </Tooltip>}>
-          <Form.Control
-            type='number'
-            min={1}
-            step={1}
-            disabled={!isAllLinkToPrecision()}
-            value={allLinkLabelScientificPrecision()}
-            onChange={evt=>{
-              const value=+evt.target.value
-              const val=isNaN(value) || value<=0?5:Math.round(value)
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'scientific_precision',val,menu_for_style))
-              set_data({...data})
-            }}/>
-        </OverlayTrigger>
-      </InputGroup>
-    </Form.Group>
+    {isAllLinkToPrecision()?<>
+      {/* Choose number of scientific number */}
+      <Form.Group as={Row}>
+        <InputGroup>
+          <InputGroup.Text >{t('Flux.label.NbPrecision')}</InputGroup.Text>
+          <OverlayTrigger
+            key={'flux.label.tooltips.14'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'flux.label.tooltips.14'}>{t('Flux.label.tooltips.NbPrecision')} </Tooltip>}>
+            <Form.Control
+              type='number'
+              min={1}
+              step={1}
+              disabled={!isAllLinkToPrecision()}
+              value={allLinkLabelScientificPrecision()}
+              onChange={evt=>{
+                const value=+evt.target.value
+                const val=isNaN(value) || value<=0?5:Math.round(value)
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'scientific_precision',val,menu_for_style))
+                set_data({...data})
+              }}/>
+          </OverlayTrigger>
+        </InputGroup>
+      </Form.Group></>:<></>}
+    
 
     {/* Couleur des Labels  */}
     <Form.Group as={Row} >
