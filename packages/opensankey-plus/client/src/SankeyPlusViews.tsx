@@ -249,12 +249,12 @@ export const view_toast_update_view = (<Toast bg='info' className='toastView' st
 //   .append('svg')
 //   .attr('viewBox', '0, 0, 1000, 1000')
 //   .attr('transform', n => {
-//     const shiftV = (+d3.select(' .opensankey #' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
-//     const shiftH = (+d3.select(' .opensankey #' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
+//     const shiftV = (+d3.select(' .opensankey #shape_' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
+//     const shiftH = (+d3.select(' .opensankey #shape_' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
 //     return 'translate(' + shiftH + ',' + shiftV + ')'
 //   })
-//   .attr('height', n => +d3.select(' .opensankey #' + n.idNode).attr('height') * (n.iconRatio) / 100)
-//   .attr('width', n => +d3.select(' .opensankey #' + n.idNode).attr('width') * (n.iconRatio) / 100)
+//   .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height') * (n.iconRatio) / 100)
+//   .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width') * (n.iconRatio) / 100)
 //   .attr('x', 0)
 //   .append('g')
 //   .append('path')
@@ -505,16 +505,16 @@ export const view_toast_update_view = (<Toast bg='info' className='toastView' st
 //   })
 
 //   .attr('stroke', l => {
-//     if (d3.select(' .opensankey #' + l.idSource).empty()) {
+//     if (d3.select(' .opensankey #shape_' + l.idSource).empty()) {
 //       return link_color(l,data_v2)
 //     }
-//     if (d3.select(' .opensankey #' + l.idTarget).empty()) {
+//     if (d3.select(' .opensankey #shape_' + l.idTarget).empty()) {
 //       return link_color(l,data_v2)
 //     }
-//     const width_src = +d3.select(' .opensankey #' + l.idSource).attr('width')
-//     const height_src = +d3.select(' .opensankey #' + l.idSource).attr('height')
-//     const width_trgt = +d3.select(' .opensankey #' + l.idTarget).attr('width')
-//     //const height_trgt = +d3.select(' .opensankey #' + l.idTarget).attr('height')
+//     const width_src = +d3.select(' .opensankey #shape_' + l.idSource).attr('width')
+//     const height_src = +d3.select(' .opensankey #shape_' + l.idSource).attr('height')
+//     const width_trgt = +d3.select(' .opensankey #shape_' + l.idTarget).attr('width')
+//     //const height_trgt = +d3.select(' .opensankey #shape_' + l.idTarget).attr('height')
 
 //     const gradient = defGradient.append('defs')
 //       .append('linearGradient')

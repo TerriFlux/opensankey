@@ -203,8 +203,8 @@ export const SankeyPlusDrawNodesFO = (
     ggg_nodes.filter((d)=>{
       return d.has_FO
     }) .append('foreignObject')
-      .attr('width',(n)=>+d3.select(' .opensankey #' + n.idNode).attr('width'))
-      .attr('height',(n)=>+d3.select(' .opensankey #' + n.idNode).attr('height'))
+      .attr('width',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
+      .attr('height',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
       .attr('id',(d)=> d.idNode + '_fo')
       .on('mouseover', function (event, d) {
         node_mouse_over(data,this,mode_selection,event,d,sankeyTooltip)
