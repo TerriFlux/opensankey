@@ -1394,7 +1394,6 @@ export const convert_data = (
   data: SankeyData
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
-  console.log('hello')
   // let recompute_input_output_links = true
   // Object.values(data.nodes).forEach(n => {
   //   if (n.inputLinksId || n.outputLinksId) {
