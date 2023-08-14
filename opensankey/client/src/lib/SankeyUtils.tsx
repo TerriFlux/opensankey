@@ -470,7 +470,7 @@ export const toPrecision = (
   }
   if(!isNaN(v)){
     let new_v = (+v).toPrecision(nb_scientific).replace(/\.0+$/, '')
-    if (new_v.includes('e+'+nb_scientific)) {
+    if (!new_v.includes('e+')) {
       new_v = String(parseFloat(new_v))
     }
     return new_v
