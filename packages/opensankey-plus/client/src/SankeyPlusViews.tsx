@@ -382,7 +382,7 @@ export const view_toast_update_view = (<Toast bg='info' className='toastView' st
 //     return '0.3em'
 //   })
 //   .append('textPath')
-//   .attr('id', d => d.idLink + '_text')
+//   .attr('id', d => 'text_' + d.idLink)
 //   .attr('side', link => {
 //     if (link.recycling) {
 //       if (data_v2.nodes[link.idSource].x < data_v2.nodes[link.idTarget].x) {
@@ -413,7 +413,7 @@ export const view_toast_update_view = (<Toast bg='info' className='toastView' st
 
 // select2
 //   .attr('href', d => '#' + d.idLink)
-//   .attr('id', d => d.idLink + '_text')
+//   .attr('id', d => 'text_' + d.idLink)
 //   .attr('class', 'link_value')
 //   .attr('style',d=> 'font-weight: bold;font-size:' + d.label_font_size + 'px;')
 //   .attr('fill', l => {

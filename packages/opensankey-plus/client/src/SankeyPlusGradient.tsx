@@ -320,9 +320,9 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
   link:SankeyPlusLink,
   data:SankeyPlusData
 )=>{
-  const width_src = +d3.select(' .opensankey #' + link.idSource).attr('width')
-  const height_src = +d3.select(' .opensankey #' + link.idSource).attr('height')
-  const width_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('width')
+  const width_src = +d3.select(' .opensankey #shape_' + link.idSource).attr('width')
+  const height_src = +d3.select(' .opensankey #shape_' + link.idSource).attr('height')
+  const width_trgt = +d3.select(' .opensankey #shape_' + link.idTarget).attr('width')
   //const height_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('height')
 
   
@@ -507,7 +507,7 @@ export const SankeyPlusDrawArrows = (
     const l_arrow=OpensankeyUtils.return_value_link(data,data.links[n.inputLinksId[i]],'arrow')
     const l_grad=OpensankeyUtils.return_value_link(data,data.links[n.inputLinksId[i]],'gradient')
     if(l_arrow && l_grad){
-      d3.selectAll(' .opensankey #'+n.inputLinksId[i]+'_arrow').attr('fill',OpensankeyUtils.node_color(n,data))
+      d3.selectAll(' .opensankey #path_'+n.inputLinksId[i]+'_arrow').attr('fill',OpensankeyUtils.node_color(n,data))
     }
   }
 }

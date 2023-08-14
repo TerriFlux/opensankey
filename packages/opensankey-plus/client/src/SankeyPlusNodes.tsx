@@ -240,7 +240,7 @@ const branchAnimate = (
       const idLink = d3.select(this).attr('id')
       const idTarget = data.links[idLink].idTarget
       // Modification des arrows après l'animation
-      const arrow=d3.selectAll(' .opensankey #'+idLink+'_arrow')
+      const arrow=d3.selectAll(' .opensankey #path_'+idLink+'_arrow')
       if(arrow!==undefined && arrow!= null){
         const colorTarget=(return_value_node(data,data.nodes[idTarget],'shape_visible'))?node_color(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
         // const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
