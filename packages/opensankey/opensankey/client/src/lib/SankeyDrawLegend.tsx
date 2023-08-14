@@ -145,10 +145,10 @@ export const OpenSankeyDrawLegend = (
             const tmp=getLinkValue(data,l.idLink)
             return !(tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(d[0]))
           }).forEach(el=>{
-            d3.selectAll(' .opensankey #'+el.idLink).attr('stroke-opacity',0.1)
+            d3.selectAll(' .opensankey #path_'+el.idLink).attr('stroke-opacity',0.1)
             d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',0.1)
-            d3.selectAll(' .opensankey #'+el.idLink+'_arrow').attr('stroke-opacity',0.1)
-            d3.selectAll(' .opensankey #'+el.idLink+'_arrow').attr('opacity',0.1)
+            d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('stroke-opacity',0.1)
+            d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('opacity',0.1)
           })
 
           //Recupère le groupTag actif, si il existe, en régardant lequel a sa légende d'afficher (pour le moment il ne peut y avoir que un groupTag de sélectionné à a fois)
@@ -172,9 +172,9 @@ export const OpenSankeyDrawLegend = (
             Object.values(data.links).filter(l=>{
               return link_tied_to_node_hovered.includes(l.idLink)
             }).forEach(el=>{
-              d3.selectAll(' .opensankey #'+el.idLink).attr('stroke-opacity',0.85)
-              d3.selectAll(' .opensankey #'+el.idLink+'_arrow').attr('stroke-opacity',0.85)
-              d3.selectAll(' .opensankey #'+el.idLink+'_arrow').attr('opacity',0.85)
+              d3.selectAll(' .opensankey #path_'+el.idLink).attr('stroke-opacity',0.85)
+              d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('stroke-opacity',0.85)
+              d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('opacity',0.85)
               d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',1)
 
             })

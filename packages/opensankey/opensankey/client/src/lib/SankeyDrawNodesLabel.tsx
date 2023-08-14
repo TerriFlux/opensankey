@@ -45,7 +45,7 @@ export const OpenSankeyDrawNodesLabel = (
     
     d3.select('#fo_input_label_'+d.idNode).style('display','inline-block')
     d3.select('#fo_input_label_'+d.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
-    d3.select('#'+'text_'+d.idNode).style('display','none')
+    d3.select('#text_'+d.idNode).style('display','none')
     document.getElementById('input_label_'+d.idNode)?.focus()
     setTimeout(()=>{
       accept_simple_click.current=true

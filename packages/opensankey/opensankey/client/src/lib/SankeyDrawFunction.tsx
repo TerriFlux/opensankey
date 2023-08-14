@@ -766,7 +766,7 @@ export const drawArrows = (
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'arrow')
-        .attr('id', l.idLink + '_arrow')
+        .attr('id', 'path_'+l.idLink + '_arrow')
         .attr('d', () => {
           let xt
           let yt
@@ -1396,13 +1396,13 @@ const drawLinkText = (
   if (lab_pos === 'frozen' && link.x_label ||
       !label_on_path || label_on_path === undefined) {
 
-    (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
+    (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('x', () => lab_pos === 'frozen' && link.x_label ? link.x_label : x_pos)
     // .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label + default_handle_size : y_pos + default_handle_size)
       .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label : y_pos)
       .text(d => link_text(data, d,getLinkValue ))
       .attr('visibility', label_visible ? 'visible' : 'hidden');
-    (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
+    (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
       if(orth_lab_pos=='above'){
         return '-1em'
       }else if(orth_lab_pos=='below'){
@@ -1418,7 +1418,7 @@ const drawLinkText = (
       'end': ['100%', 'end']
     };
 
-    (d3.select(' .opensankey #' + link.idLink + '_text') as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
+    (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('startOffset', positions[lab_pos][0])
       .attr('text-anchor', positions[lab_pos][1])
       .text(d => link_text(data, d,getLinkValue))
@@ -2278,7 +2278,7 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
   d3.selectAll('.link').attr('d',(d)=>{
     const l=d as SankeyLink
     // Get the path of each displayed link
-    const path=d3.select('#'+l.idLink).attr('d').split(' ')
+    const path=d3.select('#path_'+l.idLink).attr('d').split(' ')
 
     // Each path is splitted into small part of the path then depending on the small part :
     //  - If it's a letter then do nothing
@@ -2310,7 +2310,7 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
   d3.selectAll('.arrow').attr('d',(d)=>{
     const l=d as SankeyLink
     // Get the path of each displayed link
-    const path=d3.select('#'+l.idLink+'_arrow').attr('d').split(' ')
+    const path=d3.select('#path_'+l.idLink+'_arrow').attr('d').split(' ')
 
     // Each path is splitted into small part of the path then depending on the small part :
     //  - If it's a letter then do nothing
