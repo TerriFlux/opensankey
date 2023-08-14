@@ -558,13 +558,10 @@ export const SankeyMenuConfigurationLinksAppearence = (
           style={{width:'25%'}} 
           className='btn_menu_config'
           variant={linkType('recycling')?'primary':'outline-primary'}
-          onChange={
+          onClick={
             () => {
-              const val=linkType('arrow')
+              const val=linkType('recycling')
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                // d.recycling = evt.target.checked
-                // d.left_horiz_shift = 0
-                // d.right_horiz_shift = 0
                 assign_link_value_to_correct_var(d,'recycling',!val,menu_for_style)
                 assign_link_value_to_correct_var(d,'left_horiz_shift',0,menu_for_style)
                 assign_link_value_to_correct_var(d,'right_horiz_shift',0,menu_for_style)
