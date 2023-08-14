@@ -227,7 +227,7 @@ export const explore_branch = (
   let no_input_link = true
   let highest_branch_length = current_length
   Object.values(links).forEach(link => {
-    if (link.idTarget === idNode && node_displayed(data,nodes[link.idSource]) ) {
+    if (link.idTarget === idNode && node_displayed(data,nodes[link.idSource] ) ) {
       if (visited_nodes.indexOf(idNode) === -1) {
         no_input_link = false
         //visited_nodes.push(idNode)
@@ -296,14 +296,14 @@ export const compute_auto_sankey = (
   })
   max_link_value += 1
   if (max_link_value !== 1) {
-    data.user_scale = max_link_value
+    data.user_scale = Math.min(data.maximum_flux ? data.maximum_flux : max_link_value ,max_link_value)
   }
 
   const vspace = data.v_space
   let max_nodes_on_vertical = 0
   const nodes2horizontal_indices: { [node_id:string] : number   } = {}
   const horizontal_indices2nodes: { [i      :number] : SankeyNode[] } = {}
-  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(node => {
+  Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.position !== 'relative' ).forEach(node => {
     const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes,data)
     nodes2horizontal_indices[node.idNode] = horizontal_index
     if (!horizontal_indices2nodes[horizontal_index]) {
@@ -317,13 +317,7 @@ export const compute_auto_sankey = (
       max_horizontal_index = horizontal_index
     }
   })
-  Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).forEach(l => {
-    if (nodes2horizontal_indices[l.idSource] >= nodes2horizontal_indices[l.idTarget]) {
-      // l.recycling = true
-      assign_link_local_attribute(l,'recycling',true)
 
-    }
-  })
 
   const width = max_horizontal_index* h_space 
 
@@ -331,43 +325,87 @@ export const compute_auto_sankey = (
   // Compute input_outputLinksId
   Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n => data.nodes[n.idNode] = {...n})
   compute_default_input_outputLinksId(data.nodes, data.links)
+  
+  for (let i = max_horizontal_index; i >= 0; i--) {
+    if (!horizontal_indices2nodes[i]) {
+      continue
+    } 
+    const to_splice : SankeyNode[] = []
+    horizontal_indices2nodes[i].forEach(node => {
+      if (node.outputLinksId.length === 0) {
+        assign_node_local_attribute(node,'label_horiz', 'right')
+        assign_node_local_attribute(node,'label_vert', 'middle')
+      }
+      if (node.inputLinksId.length === 0) {
+        assign_node_local_attribute(node,'label_horiz', 'left')
+        assign_node_local_attribute(node,'label_vert', 'middle')
+      }
+      let min_next_horizontal_index = max_horizontal_index+1
+      let modified = false
 
-  Object.values(data.nodes).forEach(node => {
-    if (!node_displayed(data,node)) {
-      return
-    }
-    if (node.outputLinksId.length === 0) {
-      assign_node_local_attribute(node,'label_horiz', 'right')
-      assign_node_local_attribute(node,'label_vert', 'middle')
-    }
-    if (node.inputLinksId.length === 0) {
-      assign_node_local_attribute(node,'label_horiz', 'left')
-      assign_node_local_attribute(node,'label_vert', 'middle')
-    }
-    let min_next_horizontal_index = max_horizontal_index+1
-    node.outputLinksId.forEach(
-      (idLink) => {
-        if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
-          const target_node = data.nodes[data.links[idLink].idTarget]
-          if (target_node === undefined ) {
-            return
+      node.outputLinksId.forEach(
+        (idLink) => {
+          if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
+            const target_node = data.nodes[data.links[idLink].idTarget]
+            if (target_node === undefined ) {
+              return
+            }
+            if (nodes2horizontal_indices[target_node.idNode] < nodes2horizontal_indices[node.idNode]) {
+              return
+            }
+            if (nodes2horizontal_indices[target_node.idNode]<min_next_horizontal_index) {
+              min_next_horizontal_index = nodes2horizontal_indices[target_node.idNode]
+              modified = true
+            }
           }
-          if (nodes2horizontal_indices[target_node.idNode] < nodes2horizontal_indices[node.idNode]) {
-            return
-          }
-          if (nodes2horizontal_indices[target_node.idNode]<min_next_horizontal_index) {
-            min_next_horizontal_index = nodes2horizontal_indices[target_node.idNode]
-          }
+        })
+      if (modified) {
+        //const horizontal_index = nodes2horizontal_indices[node.idNode]
+        to_splice.push(node)
+        //horizontal_indices2nodes[horizontal_index].splice(horizontal_indices2nodes[horizontal_index].indexOf(node),1)
+        nodes2horizontal_indices[node.idNode] = min_next_horizontal_index - 1
+        if (!horizontal_indices2nodes[min_next_horizontal_index - 1]) {
+          horizontal_indices2nodes[min_next_horizontal_index - 1] = []
         }
-      })
-    nodes2horizontal_indices[node.idNode] = min_next_horizontal_index - 1
-    node.x = max_horizontal_index !== 0 ? 50 + nodes2horizontal_indices[node.idNode] / max_horizontal_index * width : 50 //* 0.9
+        horizontal_indices2nodes[min_next_horizontal_index - 1].push(node)
+      }
+    })
+    to_splice.forEach(node=>horizontal_indices2nodes[i].splice(horizontal_indices2nodes[i].indexOf(node),1))
+  }
+
+  for (let i =0 ; i <= max_horizontal_index; i++) {
+    if (!horizontal_indices2nodes[i] || (horizontal_indices2nodes[i] && horizontal_indices2nodes[i].length === 0)) {
+      for (let ii=i;ii<max_horizontal_index;ii++) {
+        if ( horizontal_indices2nodes[ii+1] && horizontal_indices2nodes[ii+1].length>0) {
+          horizontal_indices2nodes[i] = horizontal_indices2nodes[ii+1]
+          delete horizontal_indices2nodes[ii+1]
+          if (ii+1 === max_horizontal_index) {
+            max_horizontal_index = i
+          }
+          break
+        }
+      }
+    }
+  }
+  Object.entries(horizontal_indices2nodes).forEach(([key,val])=>val.forEach(n=>nodes2horizontal_indices[n.idNode]= +key))
+
+  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n =>
+    n.x = max_horizontal_index !== 0 ? 50 + nodes2horizontal_indices[n.idNode] / max_horizontal_index * width : 50
+  )
+
+  Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).forEach(l => {
+    if (nodes2horizontal_indices[l.idSource] >= nodes2horizontal_indices[l.idTarget]) {
+      assign_link_local_attribute(l,'recycling',true)
+    }
   })
 
   // Vertical position of vertical nodes
   // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
   let max_vertical_offset = 0
   for (let i = 0; i <= max_horizontal_index; i++) {
+    if (!horizontal_indices2nodes[i]) {
+      continue
+    } 
     let vertical_space: number
     let vertical_offset = 0
     //const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && nodes2horizontal_indices[n.idNode] === i)
@@ -478,107 +516,73 @@ export const reorganize_all_input_outputLinksId = (
   })
 }
 
+export const synchronizeNodesandLinksId = (
+  dataModify: SankeyData,
+  dataRef: SankeyData
+) => {
+  //- Stores a mapping between idNode of initial data and layout idNodes
+  const idNodesMap: {[s:string]:string} = {}
+  Object.values(dataModify.nodes).forEach( nodeModify => {
+    const nodesRef = Object.values(dataRef.nodes).filter(nodeRef=>normalize_name(nodeModify.name) === normalize_name(nodeRef.name))
+    if (nodesRef.length === 0) {
+      idNodesMap[nodeModify.idNode] = nodeModify.idNode
+      return
+    }
+    const nodeRef = nodesRef[0]
+    idNodesMap[nodeModify.idNode] = nodeRef.idNode
+  })
+  Object.values(dataModify.nodes).forEach(nodeModify=>{
+    nodeModify.idNode=idNodesMap[nodeModify.idNode]
+    Object.keys(nodeModify.dimensions).forEach(dim => {
+      if (nodeModify.dimensions[dim].parent_name) {
+        nodeModify.dimensions[dim].parent_name = idNodesMap[nodeModify.dimensions[dim].parent_name??0]
+      }
+    })})
+  dataModify.nodes = Object.assign({}, ...Object.values(dataModify.nodes).map(n => ({ [n.idNode]: { ...n } })))
+
+  Object.values(dataModify.links).forEach(lModify=>{
+    lModify.idSource=idNodesMap[lModify.idSource]
+    lModify.idTarget=idNodesMap[lModify.idTarget]    
+  })
+
+  //- Stores a mapping between idLink of initial data and layout idLinks
+  const idLinksMap: {[s:string]:string} = {}
+  const links_with_no_match : SankeyLink [] = []
+  Object.values(dataModify.links).forEach( lModify => {
+    const lRef = dataRef.links[lModify.idLink]
+    if (!lRef || lRef.idSource !== lModify.idSource || lRef.idTarget !== lModify.idTarget) {
+      links_with_no_match.push(lModify)
+      return
+    }
+    idLinksMap[lModify.idLink] = lRef.idLink
+  })
+  links_with_no_match.forEach( l => {       
+    const linksRef = Object.values(dataRef.links).filter(lRef => 
+      l.idSource === lRef.idSource && l.idTarget === lRef.idTarget
+    )
+    if (linksRef.length === 0) {
+      idLinksMap[l.idLink] = l.idSource+'---'+l.idTarget
+      return
+    }
+    const layout_link = linksRef[0]
+    idLinksMap[l.idLink] = layout_link.idLink
+  })
+  Object.values(dataModify.links).forEach(l=>l.idLink=idLinksMap[l.idLink])
+  dataModify.links = Object.assign({}, ...Object.values(dataModify.links).map(lModify => ({ [lModify.idLink]: { ...lModify } })))
+
+  compute_default_input_outputLinksId(dataModify.nodes, dataModify.links)
+}
+
 export const updateLayout = (
   data: SankeyData,
   new_layout: SankeyData,
   mode:string[]
 ) => {
-  let max_vertical_offset = 0
-  const compute_offset = (node: SankeyNode) => {
-    if (!node_displayed(data,node)) {
-      return
-    }
-    max_vertical_offset = Math.max(node.y, max_vertical_offset)
-  }
-  Object.values(data.nodes).forEach(compute_offset)
-  max_vertical_offset = max_vertical_offset + 200
-
-  let idNode = Object.keys(data.nodes).length
-  while (data.nodes['node'+idNode]) {
-    idNode = idNode+1
-  }
-
-  //- Stores a mapping between idNode of initial data and layout idNodes
-  const idNodesMap: {[s:string]:string} = {}
-  Object.values(data.nodes).forEach( n => {
-    const layout_nodes = Object.values(new_layout.nodes).filter(node_layout=>normalize_name(n.name) === normalize_name(node_layout.name))
-    if (layout_nodes.length === 0) {
-      idNode = idNode+1
-      idNodesMap[n.idNode] = 'node'+idNode
-      return
-    }
-    const layout_node = layout_nodes[0]
-    idNodesMap[n.idNode] = layout_node.idNode
-  })
-  Object.values(data.nodes).forEach(n=>{
-    n.idNode=idNodesMap[n.idNode]
-    Object.keys(n.dimensions).forEach(dim => {
-      if (n.dimensions[dim].parent_name) {
-        //parent_names.push(n.dimensions[dim].parent_name as string)
-        n.dimensions[dim].parent_name = idNodesMap[n.dimensions[dim].parent_name??0]
-      }
-    })})
-  data.nodes = Object.assign({}, ...Object.values(data.nodes).map(n => ({ [n.idNode]: { ...n } })))
-  Object.values(data.links).forEach(l=>{
-    l.idSource=idNodesMap[l.idSource]
-    l.idTarget=idNodesMap[l.idTarget]    
-  })
-
-  //let idLink = Object.keys(data.links).length
-  // while (data.links[idLink]) {
-  //   idLink = idLink+1
-  // }
-  //- Stores a mapping between idLink of initial data and layout idLinks
-  const idLinksMap: {[s:string]:string} = {}
-  const links_with_no_match : SankeyLink [] = []
-  Object.values(data.links).forEach( l => {
-    const layout_link = new_layout.links[l.idLink]
-    if (!layout_link || layout_link.idSource !== l.idSource || layout_link.idTarget !== l.idTarget) {
-      links_with_no_match.push(l)
-      return
-    }
-    idLinksMap[l.idLink] = layout_link.idLink
-  })
-  links_with_no_match.forEach( l => {       
-    const layout_links = Object.values(new_layout.links).filter(link_layout => 
-      l.idSource === link_layout.idSource && l.idTarget === link_layout.idTarget
-    )
-    if (layout_links.length === 0) {
-      //idLink = idLink+1
-      idLinksMap[l.idLink] = l.idSource+'---'+l.idTarget
-      return
-    }
-    const layout_link = layout_links[0]
-    idLinksMap[l.idLink] = layout_link.idLink
-  })
-  Object.values(data.links).forEach(l=>l.idLink=idLinksMap[l.idLink])
-  data.links = Object.assign({}, ...Object.values(data.links).map(l => ({ [l.idLink]: { ...l } })))
-
-  compute_default_input_outputLinksId(data.nodes, data.links)
-
-
+  synchronizeNodesandLinksId(new_layout, data)
   //data.node_width = new_layout.node_width
   // Apply nodes layout
   for (const node_layout_key in new_layout.nodes) {
     const node = data.nodes[node_layout_key]
-    //const nodes = Object.values(data.nodes).filter(n=>normalize_name(n.name) === normalize_name(node_layout.name) )
-    //let node : SankeyNode | undefined
-    // if (nodes.length === 0) {
-    //   if (node_layout.inputLinksId.length === 0 && node_layout.outputLinksId.length === 0 && node_layout.shape_visible === false && node_layout.label_visible === true) {
-    //     // Case of not a label
-    //     node = {...node_layout}
-    //     // Méthode pour incrementer idNode
-    // let idLink = Object.keys(data.links).length
-    // while (data.links['link'+idLink]) {
-    //   idLink = idLink+1
-    // }
-    //     node.idNode = 'idNode'+idNode
-    //     data.nodes[node.idNode]
-    //   } else {
-    //     continue
-    //   }
-    // }
-    //node = nodes[0]
     if (!node) {
       continue
     }
@@ -597,9 +601,9 @@ export const updateLayout = (
         node.x = node_layout.x
         node.y = node_layout.y
       }
-      if (node.y + 200 > max_vertical_offset) {
-        max_vertical_offset = node.y + 200
-      }
+      // if (node.y + 200 > max_vertical_offset) {
+      //   max_vertical_offset = node.y + 200
+      // }
       node.x_label = node_layout.x_label
       node.y_label = node_layout.y_label
     }
