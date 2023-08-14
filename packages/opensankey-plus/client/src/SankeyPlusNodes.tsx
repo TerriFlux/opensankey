@@ -1,133 +1,20 @@
 import React from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button,  InputGroup } from 'react-bootstrap'
+import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button } from 'react-bootstrap'
 import {  SankeyLinkValue} from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
-import {  getLinkValue,node_color,link_color,is_all_node_attr_same_value,return_correct_node_attribute_value,assign_node_value_to_correct_var,return_value_node,is_node_diplaying_value_local,return_value_link, } from 'open-sankey/dist/SankeyUtils'
+import {  getLinkValue,node_color,link_color,return_value_node,return_value_link, } from 'open-sankey/dist/SankeyUtils'
 import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
-import { FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp,FaCheck } from 'react-icons/fa'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
-}
-
-export const SankeyPlusNodesAttributes = (
-  t:TFunction,
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean,
-  menu_for_style:boolean,
-  selected_style_node:string
-) => {
-  const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
-  const selected_parameter=(menu_for_style)?[data.style_node[selected_style_node]]:multi_selected_nodes.current
-
-  const isAllNodeVisible = () => {
-    let visible = false
-    selected_parameter.map(d => visible = (return_correct_node_attribute_value(data,d,'shape_visible',menu_for_style) || return_correct_node_attribute_value(data,d,'not_to_scale',menu_for_style)) ? true : visible)
-    return visible
-  }
-  
-
-  // const isAllNodeToScale = () => {
-  //   let toScale = false
-  //   selected_parameter.map(d => toScale = (d.not_to_scale) ? true : toScale)
-  //   return toScale
-  // }
-  const isAllNodeToScale=is_all_node_attr_same_value(data,selected_parameter,'not_to_scale',menu_for_style) as boolean
-
-  const isAllNodeNotToScaleOrientation = (orientation:string) => {
-    let same_orientation = true
-    if (selected_parameter.length > 0) {
-      selected_parameter.map(d => same_orientation = (return_correct_node_attribute_value(data,d,'not_to_scale_direction',menu_for_style) !== orientation) ? false : same_orientation)
-    } else {
-      same_orientation = false
-    }
-    return same_orientation
-  }
-  const form_elements= [
-    <InputGroup >
-      <InputGroup.Text style={{color:(is_activated)?'#555555':'#DADADA',width:'40%'}}>{t('Noeud.apparence.toScale')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale',menu_for_style)?'*':'')}</InputGroup.Text>
-      <Button
-        className='btn_menu_config'
-        disabled={!is_activated}
-        style={{width:'60%'}}
-        //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-        variant={isAllNodeToScale?'primary':'outline-primary'}
-        onClick={() => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'not_to_scale',!isAllNodeToScale,menu_for_style))
-          set_data({ ...data })
-        }}>{isAllNodeToScale?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-
-    </InputGroup>,
-    <>{isAllNodeToScale?<InputGroup >
-      <InputGroup.Text style={{color:(isAllNodeVisible() && is_activated)?'#555555':'#DADADA',width:'30%'}}>{t('Noeud.apparence.Orientation')+(is_node_diplaying_value_local(multi_selected_nodes,'not_to_scale_direction',menu_for_style)?'*':'')}</InputGroup.Text>
-
-      <Button
-        className='btn_menu_config'
-        style={{width:'17.5%'}}
-        disabled={(!is_activated)?true:!isAllNodeToScale}
-        variant={isAllNodeNotToScaleOrientation('left')?'primary':'outline-primary'}
-        onClick={() => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','left',menu_for_style))
-          set_data({ ...data })
-        }}
-      ><FaArrowLeft/></Button>
-
-      <Button
-        className='btn_menu_config'
-        style={{width:'17.5%'}}
-        disabled={(!is_activated)?true:!isAllNodeToScale}
-        variant={isAllNodeNotToScaleOrientation('right')?'primary':'outline-primary'}
-        onClick={() => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','right',menu_for_style))
-          set_data({ ...data })
-        }}
-      ><FaArrowRight/></Button>
-
-      <Button
-        className='btn_menu_config'
-        style={{width:'17.5%'}}
-        disabled={(!is_activated)?true:!isAllNodeToScale}
-        variant={isAllNodeNotToScaleOrientation('top')?'primary':'outline-primary'}
-        onClick={() => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','top',menu_for_style))
-          set_data({ ...data })
-        }}
-      ><FaArrowUp/></Button>
-
-      <Button
-        className='btn_menu_config'
-        style={{width:'17.5%'}}
-        disabled={(!is_activated)?true:!isAllNodeToScale}
-        variant={isAllNodeNotToScaleOrientation('bottom')?'primary':'outline-primary'}
-        onClick={() => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d =>assign_node_value_to_correct_var(d,'not_to_scale_direction','bottom',menu_for_style))
-          set_data({ ...data })
-        }}
-      ><FaArrowDown/></Button>
-    </InputGroup>:<></>}</>]
-
-  if(is_activated){
-    return form_elements
-  }else{
-    return form_elements.map((e,i)=>{
-      return <React.Fragment key={i}><OverlayTrigger
-        key={'SankeyPlusNodesAttributes'+i}
-        placement={'top'}
-        delay={500}
-        overlay={(!is_activated)?(<Tooltip id={'SankeyPlusNodesAttributes'+i}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-      >{e}</OverlayTrigger></React.Fragment>
-    })
-  }
 }
 
 export const SankeyPlusNodeIcon = (
@@ -140,13 +27,7 @@ export const SankeyPlusNodeIcon = (
   menu_for_modal=false
 )=> {
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
-  // const isAllIconSame = (param: string) => {
-  //   let icon = true
-  //   multi_selected_nodes.current.map(d => {
-  //     icon = (d.iconName === param) ? icon : false
-  //   })
-  //   return icon
-  // }
+
   const valueAllIconRatio = () => {
     let display_ratio = true
     let ratio = 100
