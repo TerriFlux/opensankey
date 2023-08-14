@@ -645,7 +645,6 @@ export const convert_tags = (
   if(has_not_converted_nodeTags_as_levelTags(data)){
     data.levelTags = Object.assign({},data.levelTags,Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level')))
     data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
-    console.log(data.nodeTags)
   }
 
 

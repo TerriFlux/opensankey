@@ -85,10 +85,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
             multi_selected_nodes.current = m_s
             Object.values(data.nodes).forEach( n =>
-              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
+              d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',0)
             )
             multi_selected_nodes.current.forEach( n =>
-              d3.select(' .opensankey #' + n.idNode).attr('stroke-width',2)
+              d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',2)
             )
             setForceUpdate(!forceUpdate)
             set_data({...data})
@@ -197,7 +197,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 multi_selected_nodes.current.map(d => delete_node(data, d))
                 multi_selected_nodes.current = []
                 // Object.values(data.nodes).forEach( n =>
-                //   d3.select(' .opensankey #' + n.idNode).attr('stroke-width',0)
+                //   d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',0)
                 // )
                 // setForceUpdate(!forceUpdate)
                 set_data({ ...data })
@@ -251,7 +251,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               }
               multi_selected_nodes.current[0].name = evt.target.value
               const d = multi_selected_nodes.current[0]
-              d3.select(' .opensankey #' + d.idNode + '_text').text(evt.target.value)
+              d3.select(' .opensankey #text_' + d.idNode).text(evt.target.value)
               const wrap = textwrap()
                 .bounds({ height: 100, width: (return_value_node(data,d,'label_box_width') as number != 0) ? return_value_node(data,d,'label_box_width') as number : 110 })
                 .method('tspans')
@@ -259,7 +259,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 .call(wrap)
               if (!d.x_label || data.show_structure === 'structure') {
                 d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                  const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
+                  const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
                   if (return_value_node(data,d,'label_horiz') == 'middle') {
                     return width / 2
                   } else if (return_value_node(data,d,'label_horiz') == 'right') {
@@ -270,7 +270,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 })
               }
               d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                const width = +d3.select(' .opensankey #' + d.idNode).attr('width')
+                const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
                 if (d.x_label) {
                   return d.x_label
                 } else if (return_value_node(data,d,'label_horiz') == 'middle') {
