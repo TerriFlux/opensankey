@@ -368,7 +368,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     </InputGroup>
     {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
     <InputGroup>
-      <InputGroup.Text style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA', width:'40%'}} >{t('Noeud.labels.l_bg')+(is_node_diplaying_value_local(multi_selected_nodes,'label_color',menu_for_style)?'*':'')}</InputGroup.Text>
+      <InputGroup.Text style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA', width:'40%'}} >{t('Noeud.labels.l_bg')+(is_node_diplaying_value_local(multi_selected_nodes,'label_background',menu_for_style)?'*':'')}</InputGroup.Text>
 
       <OverlayTrigger
         key={'noeud.labels.tooltips.2'}

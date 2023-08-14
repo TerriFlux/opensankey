@@ -254,10 +254,10 @@ export const OpenSankeyDrawLinks = (
       })
       .attr('dy', l =>textLinkPosDY(l,data,scale))
       .append('textPath')
-      .attr('id', d => d.idLink + '_text')
+      .attr('id', d => 'text_' + d.idLink)
       .attr('side', link => textLinkSide(link,data))
       .attr('class', 'link_value')
-      .attr('href', d => '#' + d.idLink)
+      .attr('href', d => '#path_' + d.idLink)
 
 
     const select2 = gg_links
@@ -266,8 +266,8 @@ export const OpenSankeyDrawLinks = (
 
 
     select2
-      .attr('href', d => '#' + d.idLink)
-      .attr('id', d => d.idLink + '_text')
+      .attr('href', d => '#path_' + d.idLink)
+      .attr('id', d => 'text_' + d.idLink)
       .attr('pointer-events',d=>(return_value_link(data,d,'label_position')!=='frozen')?'none':'auto')
       .attr('class', 'link_value')
       .attr('style',d=> 'font-weight: bold;font-size:' + return_value_link(data,d,'label_font_size') + 'px;'+'font-family:'+return_value_link(data,d,'font_family'))
@@ -305,7 +305,7 @@ export const OpenSankeyDrawLinks = (
     let error_msg: { text?: string | undefined } | undefined
     paths
       .attr('class', 'link')
-      .attr('id', d => d.idLink)
+      .attr('id', d => 'path_'+d.idLink)
       .attr('fill', 'none')
       .attr('stroke-opacity', d => {
         let tmp=getLinkValue(data, d.idLink).value
@@ -318,7 +318,7 @@ export const OpenSankeyDrawLinks = (
       .on('mouseover', function (event, d) {
         // Quand on survole des flux petit : aggrandi la taille du flux pour être plus facile sélectionnable
         if(+linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,getLinkValue)<15){
-          d3.select('.link#'+d.idLink).attr('stroke-width','15')
+          d3.select('.link#path_'+d.idLink).attr('stroke-width','15')
           if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
             d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 5')
           }
@@ -332,7 +332,7 @@ export const OpenSankeyDrawLinks = (
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
         if (tmp >= display_style.filter) {
-          d3.select(' .opensankey #arrow_'+d.idLink).attr('opacity','0.5')
+          d3.select(' .opensankey #path_'+d.idLink+'_arrow').attr('opacity','0.5')
           return d3.select(this).attr('stroke-opacity', '0.5')
         }
       })
@@ -348,7 +348,7 @@ export const OpenSankeyDrawLinks = (
       .on('mouseout', function (event, d) {
         // Quand on quitte le survole des flux petit : remet la taille du flux a sa valeur originel
         if(+linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,getLinkValue)<15){
-          d3.select('.link#'+d.idLink).attr('stroke-width',linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,getLinkValue))
+          d3.select('.link#path_'+d.idLink).attr('stroke-width',linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,getLinkValue))
           if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
             d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','5, 5')
           }
@@ -359,7 +359,7 @@ export const OpenSankeyDrawLinks = (
         if (tmp >= display_style.filter) {
           // const opacity = String(getLinkValue(data, d.idLink).display_value).includes('[') ? 0.85 : 0.85
           const opacity = return_value_link(data,d,'opacity')
-          d3.select(' .opensankey #'+d.idLink+'_arrow').attr('opacity','1')
+          d3.select(' .opensankey #path_'+d.idLink+'_arrow').attr('opacity','1')
           return d3.select(this).attr('stroke-opacity', opacity)
         }
       })
@@ -397,7 +397,7 @@ export const OpenSankeyDrawLinks = (
 
     d3.selectAll(' .opensankey .gg_links')
       .filter(l=>{
-        return Number(d3.select(' .opensankey #'+(l as SankeyLink).idLink).attr('stroke-opacity'))!=0
+        return Number(d3.select(' .opensankey #path_'+(l as SankeyLink).idLink).attr('stroke-opacity'))!=0
       })
       .each(function (l) {
         if(return_value_link(data,(l as SankeyLink),'orientation')=='vv' ||return_value_link(data,(l as SankeyLink),'orientation')=='hh'){
@@ -441,7 +441,7 @@ export const OpenSankeyDrawLinks = (
           drag_link(display_nodes, display_links, display_style, data.nodeTags, this, event,data,scale,inv_scale)
           Object.values(display_links).forEach(
             (link: SankeyLink) => {
-              d3.select(' .opensankey #' + link.idLink).attr('d',
+              d3.select(' .opensankey #path_' + link.idLink).attr('d',
                 () => {
                   return drawCurveFunction.curve(data,set_data,
                     display_nodes, display_links, display_style,
@@ -492,13 +492,13 @@ export const OpenSankeyDrawLinks = (
     const source_node = nodes[link.idSource]
     const target_node = nodes[link.idTarget]
     const source_x_min = source_node.x
-    const source_x_max = source_x_min + parseInt(d3.select(' .opensankey #' + source_node.idNode).attr('width'))
+    const source_x_max = source_x_min + parseInt(d3.select(' .opensankey #shape_' + source_node.idNode).attr('width'))
     const source_y_min = source_node.y
-    const source_y_max = source_y_min + parseInt(d3.select(' .opensankey #' + source_node.idNode).attr('height'))
+    const source_y_max = source_y_min + parseInt(d3.select(' .opensankey #shape_' + source_node.idNode).attr('height'))
     const target_x_min = target_node.x
-    const target_x_max = target_x_min + parseInt(d3.select(' .opensankey #' + target_node.idNode).attr('width'))
+    const target_x_max = target_x_min + parseInt(d3.select(' .opensankey #shape_' + target_node.idNode).attr('width'))
     const target_y_min = target_node.y
-    const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #' + target_node.idNode).attr('height'))
+    const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #shape_' + target_node.idNode).attr('height'))
     // const tolerance = 3 * source_node.node_width
     // const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
     const tolerance = 3 * data.node_width
@@ -752,12 +752,12 @@ export const OpenSankeyDrawLinks = (
     link: SankeyLink,
     event: d3.D3DragEvent<Element, unknown, unknown>
   ) => {
-    const old_x = +d3.select(' .opensankey #' + link.idLink + '_text').attr('x'),
-      old_y = +d3.select(' .opensankey #' + link.idLink + '_text').attr('y'),
+    const old_x = +d3.select(' .opensankey #text_' + link.idLink).attr('x'),
+      old_y = +d3.select(' .opensankey #text_' + link.idLink).attr('y'),
       new_x = old_x + event.dx,
       new_y = old_y + event.dy
-    d3.select(' .opensankey #' + link.idLink + '_text').attr('x', new_x)
-    d3.select(' .opensankey #' + link.idLink + '_text').attr('y', new_y)
+    d3.select(' .opensankey #text_' + link.idLink).attr('x', new_x)
+    d3.select(' .opensankey #text_' + link.idLink).attr('y', new_y)
     link.x_label = new_x
     link.y_label = new_y
     link.local=(link.local!==undefined && link.local!==null)?link.local:{}
