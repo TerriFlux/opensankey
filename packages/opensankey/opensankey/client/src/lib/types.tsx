@@ -11,8 +11,7 @@ export const SankeyNodeAttrLocalTypes ={
   color: PropTypes.string,
   shape: PropTypes.oneOf(['ellipse', 'rect']),
   colorSustainable: PropTypes.bool,
-  not_to_scale:PropTypes.bool,
-  not_to_scale_direction:PropTypes.string,
+
 
   // Parameter of node label
   font_family: PropTypes.string,
@@ -50,8 +49,7 @@ export const SankeyNodeStyleTypes ={
   color: PropTypes.string.isRequired,
   shape: PropTypes.oneOf(['ellipse', 'rect']).isRequired,
   colorSustainable: PropTypes.bool.isRequired,
-  not_to_scale:PropTypes.bool.isRequired,
-  not_to_scale_direction:PropTypes.string.isRequired,
+
 
   // Parameter of node label
   font_family: PropTypes.string.isRequired,

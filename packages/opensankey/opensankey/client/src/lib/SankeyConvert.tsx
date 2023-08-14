@@ -766,17 +766,6 @@ export const convert_nodes = (
         delete n_convert.colorSustainable
       }
 
-      if(n_convert.not_to_scale){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.not_to_scale=(n_convert.not_to_scale)
-        delete n_convert.not_to_scale
-      }
-
-      if(n_convert.not_to_scale_direction){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.not_to_scale_direction=(n_convert.not_to_scale_direction)
-        delete n_convert.not_to_scale_direction
-      }
 
       if (n_convert.type) {
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
