@@ -129,7 +129,7 @@ class SankeyToJson(object):
             # tag group dict
             data_tags_json[tagg.name_unformatted] = {
                 'group_name': tagg.name_unformatted,
-                'show_legend': False,
+                'show_legend': tagg.is_palette,
                 'tags': tags,
                 'banner': 'one',
                 'activated': True,
@@ -178,7 +178,7 @@ class SankeyToJson(object):
                         break
             node_tags_json[tagg.name_unformatted] = {
                 'group_name': tagg.name_unformatted,
-                'show_legend': False,
+                'show_legend': tagg.is_palette,
                 'tags': tags,
                 'banner': banner,
                 'activated': activated,
@@ -219,7 +219,7 @@ class SankeyToJson(object):
             # tag group dict
             flux_tags_json[tagg_name] = {
                 'group_name': tagg.name_unformatted,
-                'show_legend': False,
+                'show_legend': tagg.is_palette,
                 'tags': tags,
                 'banner': 'multi',
                 'activated': True,
