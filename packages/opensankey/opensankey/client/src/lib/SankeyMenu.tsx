@@ -1802,11 +1802,13 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
       <ButtonGroup vertical>
         {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.node_context_has_aggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
           SankeyUtils.aggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
+          multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
         }}>Aggregation</Button>:<></>}
         {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.node_context_has_desaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
           SankeyUtils.desaggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
+          multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
         }}>Desaggregation</Button>:<></>}
@@ -1828,6 +1830,9 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           onClick={() => {
             multi_selected_links.current = [] as SankeyLink[]
             multi_selected_links.current = Object.values(data.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink))
+            if (multi_selected_links.current.length === 0) {
+              return
+            }
             const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
             set_display_link_opacity(opacity)
             set_contextualised_node(undefined)
@@ -1840,6 +1845,9 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           onClick={() => {
             multi_selected_links.current = [] as SankeyLink[]
             multi_selected_links.current = Object.values(data.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink))
+            if (multi_selected_links.current.length === 0) {
+              return
+            }
             const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
             set_display_link_opacity(opacity)
             set_contextualised_node(undefined)
