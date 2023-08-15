@@ -1051,10 +1051,10 @@ const Menu: FunctionComponent<MenuTypes> = (
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
           if (Object.values(new_data.nodeTags).filter(tagg=>tagg.show_legend).length>0) {
-            data.colorMap = Object.entries(new_data.nodeTags).filter(tagg=>tagg[1].show_legend)[0][0]
+            new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg=>tagg[1].show_legend)[0][0]
             Object.values(new_data.nodes).forEach(el => {
               el.colorParameter = 'groupTag'
-              el.colorTag = data.colorMap
+              el.colorTag = new_data.colorMap
             })
           }
           if (Object.keys(new_data.nodeTags).length == 0 && Object.keys(new_data.fluxTags).filter(tag=>tag !== 'flux_type').length == 0 && Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0) {
