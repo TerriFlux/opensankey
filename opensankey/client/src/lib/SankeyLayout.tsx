@@ -332,10 +332,13 @@ export const compute_auto_sankey = (
       if (node.outputLinksId.length === 0) {
         assign_node_local_attribute(node,'label_horiz', 'right')
         assign_node_local_attribute(node,'label_vert', 'middle')
-      }
-      if (node.inputLinksId.length === 0) {
+      } else if (node.inputLinksId.length === 0) {
         assign_node_local_attribute(node,'label_horiz', 'left')
         assign_node_local_attribute(node,'label_vert', 'middle')
+      } else {
+        assign_node_local_attribute(node,'label_horiz', 'left')
+        assign_node_local_attribute(node,'label_vert', 'middle')
+        assign_node_local_attribute(node,'label_background', true)        
       }
       let min_next_horizontal_index = max_horizontal_index+1
       let modified = false
