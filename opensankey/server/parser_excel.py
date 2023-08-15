@@ -174,8 +174,8 @@ class SankeyToJson(object):
             for antagonists_tagg in tagg.antagonists_taggs:
                 if antagonists_tagg.name_unformatted in node_tags_json:
                     if node_tags_json[antagonists_tagg.name_unformatted]['activated']:
-                       activated = False
-                       break
+                        activated = False
+                        break
             node_tags_json[tagg.name_unformatted] = {
                 'group_name': tagg.name_unformatted,
                 'show_legend': False,
