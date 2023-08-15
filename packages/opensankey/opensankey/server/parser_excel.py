@@ -169,12 +169,19 @@ class SankeyToJson(object):
                (tagg.name_unformatted == 'Primaire'):
                 banner = 'level'
             # tag group dict
+# if there are antagonists_taggs only one can be selected
+            activated = True
+            for antagonists_tagg in tagg.antagonists_taggs:
+                if antagonists_tagg.name_unformatted in node_tags_json:
+                    if node_tags_json[antagonists_tagg.name_unformatted]['activated']:
+                       activated = False
+                       break
             node_tags_json[tagg.name_unformatted] = {
                 'group_name': tagg.name_unformatted,
                 'show_legend': False,
                 'tags': tags,
                 'banner': banner,
-                'activated': True,
+                'activated': activated,
                 'siblings': [
                     anta_tagg.name_unformatted for anta_tagg in tagg.antagonists_taggs]
             }
