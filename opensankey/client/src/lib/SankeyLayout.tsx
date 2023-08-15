@@ -222,19 +222,18 @@ export const explore_branch = (
   visited_nodes: string[],
   links: { [link_id : string]:SankeyLink},
   nodes: { [node_id : string]:SankeyNode},
+  visible_nodes: string[],
   data:SankeyData
 ) => {
   let no_input_link = true
   let highest_branch_length = current_length
-  Object.values(links).forEach(link => {
-    if (link.idTarget === idNode && node_displayed(data,nodes[link.idSource] ) ) {
-      if (visited_nodes.indexOf(idNode) === -1) {
-        no_input_link = false
-        //visited_nodes.push(idNode)
-        const branch_length = explore_branch(link.idSource, current_length + 1, [...visited_nodes,idNode], links,nodes,data)
-        if (branch_length > highest_branch_length) {
-          highest_branch_length = branch_length
-        }
+  nodes[idNode].inputLinksId.filter(linkId =>visible_nodes.includes(links[linkId].idSource)).forEach(linkId => {
+    if (visited_nodes.indexOf(idNode) === -1) {
+      no_input_link = false
+      //visited_nodes.push(idNode)
+      const branch_length = explore_branch(links[linkId].idSource, current_length + 1, [...visited_nodes,idNode], links,nodes,visible_nodes,data)
+      if (branch_length > highest_branch_length) {
+        highest_branch_length = branch_length
       }
     }
   })
@@ -300,18 +299,19 @@ export const compute_auto_sankey = (
   }
 
   compute_default_input_outputLinksId(data.nodes, data.links)
-  
+
   const vspace = data.v_space
   let max_nodes_on_vertical = 0
   const nodes2horizontal_indices: { [node_id:string] : number   } = {}
   const horizontal_indices2nodes: { [i      :number] : SankeyNode[] } = {}
-  Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.position !== 'relative' ).forEach(node => {
-    const horizontal_index = explore_branch(node.idNode, 0, [], data.links, data.nodes,data)
-    nodes2horizontal_indices[node.idNode] = horizontal_index
+  const visible_nodes = Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.position !== 'relative' ).map(n=>n.idNode)
+  Object.values(visible_nodes).forEach(idNode => {
+    const horizontal_index = explore_branch(idNode, 0, [], data.links, data.nodes,visible_nodes, data)
+    nodes2horizontal_indices[idNode] = horizontal_index
     if (!horizontal_indices2nodes[horizontal_index]) {
       horizontal_indices2nodes[horizontal_index] = []
     }
-    horizontal_indices2nodes[horizontal_index].push(node)
+    horizontal_indices2nodes[horizontal_index].push(data.nodes[idNode])
     if (horizontal_indices2nodes[horizontal_index].length > max_nodes_on_vertical ) {
       max_nodes_on_vertical = horizontal_indices2nodes[horizontal_index].length
     }
