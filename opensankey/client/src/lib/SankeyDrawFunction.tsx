@@ -1987,6 +1987,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
   const node_visible=node_visible_on_svg()
   if (return_value_node(data,d,'show_value')) {
     let scientific_precision = 0
+    let unit = ''
     if (d.outputLinksId.length > 0) {
       for (let i = 0; i < d.outputLinksId.length; i++) {
         const link = display_links[d.outputLinksId[i]]
@@ -1996,6 +1997,9 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
         }
         if (scientific_precision === 0 && return_value_link(data,link,'to_precision')) {
           scientific_precision = return_value_link(data,link,'scientific_precision') as number
+        }
+        if (unit == '') {
+          unit=return_value_link(data,link,'label_unit_visible')?return_value_link(data,link,'label_unit') as string:''
         }
         let tmp=getLinkValue(data, link.idLink).value
         tmp=(tmp)?tmp:0
@@ -2015,6 +2019,9 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
           if (scientific_precision === 0 && return_value_link(data,link,'to_precision')) {
             scientific_precision = return_value_link(data,link,'scientific_precision') as number
           }
+          if (unit == '') {
+            unit=return_value_link(data,link,'label_unit_visible')?return_value_link(data,link,'label_unit') as string:''
+          }
           let tmp=getLinkValue(data, link.idLink).value
           tmp=(tmp)?tmp:0
           if (node_visible.includes(link.idSource) && node_visible.includes(link.idTarget) ) {
@@ -2024,9 +2031,9 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
       }
     }
     if (scientific_precision !==0) {
-      return toPrecision(total,scientific_precision)
+      return toPrecision(total,scientific_precision)+unit
     }
-    return total
+    return total+unit
   } else {
     return ''
   }
