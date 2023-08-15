@@ -1050,9 +1050,16 @@ const Menu: FunctionComponent<MenuTypes> = (
           const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data)) as SankeyData
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
-          if (Object.keys(data.nodeTags).length == 0 && Object.keys(data.fluxTags).length == 0 && Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0) {
+          if (Object.values(new_data.nodeTags).filter(tagg=>tagg.show_legend).length>0) {
+            data.colorMap = Object.entries(new_data.nodeTags).filter(tagg=>tagg[1].show_legend)[0][0]
+            Object.values(new_data.nodes).forEach(el => {
+              el.colorParameter = 'groupTag'
+              el.colorTag = data.colorMap
+            })
+          }
+          if (Object.keys(new_data.nodeTags).length == 0 && Object.keys(new_data.fluxTags).filter(tag=>tag !== 'flux_type').length == 0 && Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0) {
             const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
-            const n_keys=Object.keys(data.nodes)
+            const n_keys=Object.keys(new_data.nodes)
             const size_color=n_keys.length
               
             for(const i in d3.range(size_color)){
