@@ -137,7 +137,7 @@ const resources = {
         'rth_support':'We are here to help you',
         'support_explication':'If you encounter a technical problem, write to us at [] and we will deal with your request as quickly as possible.',
         'suppr':'Delete',
-        'rand_link_color':'Assign random color to all links',
+        'rand_node_color':'Assign random color to all nodes',
         tooltips:{
           noeud:{
             slct: 'Choose one / some / all nodes to select via a drop-down list',
@@ -691,7 +691,7 @@ const resources = {
         'rth_support':'Nous sommes là pour vous aidez',
         'support_explication':'Si vous rencontrez un problème technique, écrivez-nous à [], nous traiterons votre demande dans les meilleurs délais.',
         'suppr':'Supprimer',
-        'rand_link_color':'Assigne une couleur aléatoire à tous les flux',
+        'rand_node_color':'Assigne une couleur aléatoire à tous les noeuds',
 
         tooltips:{
           noeud:{
