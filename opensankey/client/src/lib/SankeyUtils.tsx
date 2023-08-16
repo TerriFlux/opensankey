@@ -616,8 +616,8 @@ export const default_sankey_data = (): SankeyData => {
     right_shift: 1,
     //max_shift: 0.2,
 
-    node_width:20,
-    node_height:20,
+    // node_width:20,
+    // node_height:20,
 
     display_style: {
       filter: 0,

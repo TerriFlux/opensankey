@@ -742,17 +742,17 @@ export const convert_nodes = (
         delete n_convert.shape
 
       }
-      // if(n_convert.node_width){
-      //   n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-      //   n.local.node_width=(n_convert.node_width)
-      //   delete n_convert.node_width
+      if(n_convert.node_width){
+        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+        n.local.node_width=(n_convert.node_width)
+        delete n_convert.node_width
 
-      // }
-      // if(n_convert.node_height){
-      //   n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-      //   n.local.node_height=(n_convert.node_height)
-      //   delete n_convert.node_height
-      // }
+      }
+      if(n_convert.node_height){
+        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+        n.local.node_height=(n_convert.node_height)
+        delete n_convert.node_height
+      }
 
       if(n_convert.color){
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}

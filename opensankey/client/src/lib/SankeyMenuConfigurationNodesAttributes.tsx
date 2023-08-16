@@ -95,7 +95,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
   //   return (display_width) ? width : 0
   // }
 
-  // const displayedValueNodeWidth=is_all_node_attr_same_value(data,selected_parameter,'node_width',menu_for_style) as number
+  const displayedValueNodeWidth=is_all_node_attr_same_value(data,selected_parameter,'node_width',menu_for_style) as number
 
 
   // const displayedValueNodeHeight = () => {
@@ -113,7 +113,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
   //   })
   //   return (display_height) ? height : 0
   // }
-  // const displayedValueNodeHeight=is_all_node_attr_same_value(data,selected_parameter,'node_height',menu_for_style) as number
+  const displayedValueNodeHeight=is_all_node_attr_same_value(data,selected_parameter,'node_height',menu_for_style) as number
 
   const isAllLabelVisible=is_all_node_attr_same_value(data,selected_parameter,'label_visible',menu_for_style) as boolean
 
@@ -311,6 +311,70 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </OverlayTrigger>
       
     </InputGroup>
+
+    {/* Largeur minimale du noeud */}
+    <InputGroup>
+
+      <InputGroup.Text >{t('Noeud.apparence.TML')}</InputGroup.Text>
+
+      <OverlayTrigger
+        key={'noeud.apparence.tooltips.6'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'noeud.apparence.tooltips.6'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
+        <FormControl
+          min={0}
+          step={1}
+          type={'number'}
+          value={displayedValueNodeWidth}
+          onChange={
+            evt => {
+              const val=evt.target.value
+              let value=40
+              if(!isNaN(+val)){
+                value=Math.abs(Math.round(+val))
+              }
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'node_width',value,menu_for_style))
+              set_data({ ...data })
+            }}/>
+      </OverlayTrigger>
+          
+      <InputGroup.Text>px</InputGroup.Text>
+    </InputGroup>
+
+    {/* Hauteur minimale du noeud */}
+    <InputGroup>
+          
+      <InputGroup.Text >{t('Noeud.apparence.TMH')}</InputGroup.Text>
+          
+      <OverlayTrigger
+        key={'noeud.apparence.tooltips.7'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'noeud.apparence.tooltips.7'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
+        <FormControl
+          min={0} max={100}
+          type={'number'}
+          value={displayedValueNodeHeight}
+          onChange={
+            evt => {
+              const val=evt.target.value
+              let value=40
+              if(!isNaN(+val)){
+                value=Math.abs(Math.round(+val))
+              }
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'node_height',value,menu_for_style))
+              set_data({ ...data })
+            }}/>
+      </OverlayTrigger>
+      <InputGroup.Text>px</InputGroup.Text>
+    </InputGroup>
+
+
+
+
     {advanced_appearence_content}
   </Form.Group>
 
