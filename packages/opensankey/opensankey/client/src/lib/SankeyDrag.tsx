@@ -1,9 +1,7 @@
 import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve,SankeyLinkValue,drawArrowsType } from './types'
-import {removeAnimate,compute_end_points, min_width_and_height,drawCurveFunction, drawArrows,linkStrokeWidth, node_visible_on_svg} from './SankeyDrawFunction'
+import {removeAnimate,compute_end_points, min_width_and_height,drawCurveFunction, drawArrows,linkStrokeWidth} from './SankeyDrawFunction'
 import {   link_visible,test_link_value,return_value_node,assign_node_local_attribute,return_value_link,assign_link_local_attribute} from './SankeyUtils'
-
-
 
 declare const window: Window &
 typeof globalThis & {
@@ -24,14 +22,6 @@ typeof globalThis & {
     advanced: boolean
   }
 }
-
-
-
-
-
-
-
-
 
 /**
  *  Function that allow us to change link position in target or source nodes
@@ -68,7 +58,7 @@ export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
     .subject(Object)
     .on('drag', function (event,l) {
       if(multi_selected_links.current.includes(l)){
-        drag_link(display_nodes, display_links, display_style, data.nodeTags, this, event,data,scale,inv_scale,min_thickness,getLinkValue,drawArrows)
+        drag_link(display_nodes, display_links, display_style, this, event,data,scale,inv_scale,min_thickness,getLinkValue,drawArrows)
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
             d3.select(' .opensankey #path_' + l.idLink).attr('d',        () => {
@@ -132,7 +122,7 @@ export const dragLinkIOPosition=(multi_selected_links:{current: SankeyLink[]},
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link)){
         const tmp=(this as unknown as  SVGPathElement)
-        drag_link(display_nodes, display_links, data.display_style, data.nodeTags, tmp, event,data,scale,inv_scale,min_thickness,getLinkValue,drawArrows)
+        drag_link(display_nodes, display_links, data.display_style, tmp, event,data,scale,inv_scale,min_thickness,getLinkValue,drawArrows)
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
             d3.select(' .opensankey #path_' + link.idLink).attr('d',        () => {
@@ -265,6 +255,7 @@ export const dragLinkShiftHandleEvent=(multi_selected_links:{current: SankeyLink
 export const dragGNodeEvent=(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
   multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
   alt_key_pressed:boolean,
@@ -289,13 +280,13 @@ export const dragGNodeEvent=(
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
-          drag_nodes(node,event,multi_selected_nodes,data,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,node_visible
+          drag_nodes(node,event,multi_selected_nodes,data,set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,node_visible
           )
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
           drag_nodes(node,event,multi_selected_nodes,data,
             // multi_selected_label,
-            set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,node_visible
+            set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,node_visible
           )
         }
       }
@@ -355,11 +346,14 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:(d:Sanke
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns
  */
-export  const drag_nodes = (node:SankeyNode,
+export  const drag_nodes = (
+  node:SankeyNode,
   event: { dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current: SankeyNode[] },
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
+  display_nodes: { [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink }, 
   multi_selected_links:{current: SankeyLink[] },
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
@@ -378,7 +372,7 @@ export  const drag_nodes = (node:SankeyNode,
     opposing_drag_elements(out_of_zone_item,event,node,data,multi_selected_nodes)
   }
 
-  drag_elements(node,data,event,multi_selected_nodes,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+  drag_elements(node,data,event,multi_selected_nodes,set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
     
 }
 
@@ -458,10 +452,9 @@ const swap = (array: string[], x: number, y: number) => {
  * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => void}
  */
 const drag_link = (
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
+  display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [link_id: string]: SankeyLink },
   display_style: { filter: number; filter_label: number },
-  nodeTags: TagsCatalog,
   dragged: SVGPathElement | null,
   event: d3.D3DragEvent<Element, SankeyLink, unknown>,
   data:SankeyData,
@@ -475,11 +468,11 @@ const drag_link = (
   //ou bien peut etre appelé par le rect de drag qui a l'id du link après un prefix
   const idLink = d3.select(dragged).attr('id').replace('drag_zone_s_','').replace('drag_zone_t_','')
   const p2 = d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))
-  const linked_node = identify_node(data,nodes, links, links[idLink], p2)
+  const linked_node = identify_node(data,display_nodes, display_links, display_links[idLink], p2)
   if (linked_node === undefined) {
     return
   }
-  const node = nodes[linked_node.node_id]
+  const node = display_nodes[linked_node.node_id]
   let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && link_visible(data.links[id],data,getLinkValue) })
   let id_output_filtered=node.outputLinksId.filter(id=>link_visible(data.links[id],data,getLinkValue))
   const link_dragged=data.links[idLink]
@@ -523,7 +516,7 @@ const drag_link = (
     const source_order = id_output_filtered.indexOf(idLink)
     let output_offset = 0
     for (let i = 1; i < id_output_filtered.length; i++) {
-      const link = links[id_output_filtered[i - 1]]
+      const link = display_links[id_output_filtered[i - 1]]
       if (i > source_order) {
         break
       }
@@ -631,7 +624,7 @@ const drag_link = (
       }
     }
     //const node_select = d3.select('#ggg_' + node.idNode) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-    drawArrows(node as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,display_style)
+    drawArrows(node as SankeyNode,data,display_nodes,scale,inv_scale,getLinkValue,display_style)
     //drawArrows(data, node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
   }
 }
@@ -919,7 +912,6 @@ const drag_zone_position=(link:SankeyLink,
  */
 export const add_drag_link_zone=(
   link: SankeyLink,
-  nodes: { [node_id: string]: SankeyNode },
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
@@ -941,8 +933,8 @@ export const add_drag_link_zone=(
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink) ) {  
     let error_msg: { text: string | undefined } | undefined
     
-    const source_node=nodes[link.idSource]
-    const target_node=nodes[link.idTarget]
+    const source_node=display_nodes[link.idSource]
+    const target_node=display_nodes[link.idTarget]
     if (isNaN(source_node.x)) {
       source_node.x = 100
     }
@@ -955,7 +947,7 @@ export const add_drag_link_zone=(
     if (isNaN(target_node.y)) {
       target_node.y = 100
     }
-    const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
+    const [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, display_nodes, display_links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
     const pos_d=drag_zone_position(link,xs,ys,xt,yt,data,display_nodes,default_handle_size,default_horiz_shift,scale,getLinkValue)
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
@@ -1088,9 +1080,14 @@ export const opposing_drag_elements=(out_of_zone_item:(SankeyNode)[],
 
   }
 }
-export const drag_elements=(dragged:SankeyNode,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
+export const drag_elements=(
+  dragged:SankeyNode,
+  data:SankeyData,
+  event:{ dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current:SankeyNode[]},
   set_data:(d:SankeyData)=>void,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink }, 
   multi_selected_links:{current: SankeyLink[] },
   link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyData)=>number[],
@@ -1127,34 +1124,28 @@ export const drag_elements=(dragged:SankeyNode,data:SankeyData,event:{ dx: numbe
     return 'translate('+n.x+','+n.y+')'
   })
 
-  // If there less than 50 nodes displayed then we modify the path of links attached to the nodes on the fly
-  // If there is more than 50 nodes displayed then we only shift nodes (and zdt)
-  if(node_visible_on_svg().length<50){
-    if(multi_selected_nodes.current.length>0){
-      multi_selected_nodes.current.filter(n=>n.position!=='relative').forEach(n=>[
-        drawArrows(n as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,data.display_style)
-      ])
-      multi_selected_nodes.current.forEach(n=>{
-        Object.values(data.links).filter(l=>n.outputLinksId.includes(l.idLink)||n.inputLinksId.includes(l.idLink)).forEach(l=>{
-          d3.select(' .opensankey #path_' + l.idLink).attr('d',drawCurveFunction.curve(data,set_data,
-            data.nodes, data.links, data.display_style,
-            data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
-          ))
-        })
-      })
-    }else if(Object.keys(node).length>0){
-      
-      drawArrows(node as SankeyNode,(data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue,data.display_style)
-      Object.values(data.links).filter(l=>node.outputLinksId.includes(l.idLink)||node.inputLinksId.includes(l.idLink)).forEach(l=>{
+
+  if(multi_selected_nodes.current.length>0){
+    multi_selected_nodes.current.filter(n=>n.position!=='relative').forEach(n=>[
+      drawArrows(n as SankeyNode,data,display_nodes,scale,inv_scale,getLinkValue,data.display_style)
+    ])
+    multi_selected_nodes.current.forEach(n=>{
+      Object.values(data.links).filter(l=>n.outputLinksId.includes(l.idLink)||n.inputLinksId.includes(l.idLink)).forEach(l=>{
         d3.select(' .opensankey #path_' + l.idLink).attr('d',drawCurveFunction.curve(data,set_data,
-          data.nodes, data.links, data.display_style,
+          display_nodes, display_links, data.display_style,
           data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
         ))
-        d3.select(' .opensankey #path_' + l.idLink).attr('stroke-width',linkStrokeWidth(l,data,scale,inv_scale,2,data.nodes,getLinkValue))
       })
-    }
-  }
-  
-
-  
+    })
+  }else if(Object.keys(node).length>0){
+    
+    drawArrows(node as SankeyNode,data,display_nodes,scale,inv_scale,getLinkValue,data.display_style)
+    Object.values(data.links).filter(l=>node.outputLinksId.includes(l.idLink)||node.inputLinksId.includes(l.idLink)).forEach(l=>{
+      d3.select(' .opensankey #path_' + l.idLink).attr('d',drawCurveFunction.curve(data,set_data,
+        display_nodes, display_links, data.display_style,
+        data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
+      ))
+      d3.select(' .opensankey #path_' + l.idLink).attr('stroke-width',linkStrokeWidth(l,data,scale,inv_scale,2,data.nodes,getLinkValue))
+    })
+  } 
 }

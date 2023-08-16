@@ -350,8 +350,8 @@ export type drawCurveType = (
 
 export type drawArrowsType = (
   n: SankeyNode,
-  selected_tags: { [tag_group: string]: string[] },
   data:SankeyData,
+  display_nodes: { [node_id: string]: SankeyNode },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
