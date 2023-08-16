@@ -975,7 +975,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
             variant={labelPositionOrtho('below')?'primary':'outline-primary'}
-            onChange={
+            onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
@@ -995,7 +995,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
             variant={labelPositionOrtho('middle')?'primary':'outline-primary'}
-            onChange={
+            onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
@@ -1015,7 +1015,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             className='btn_menu_config'
             disabled={!labelVisibleChecked}
             variant={labelPositionOrtho('above')?'primary':'outline-primary'}
-            onChange={
+            onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)

@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, SankeyLinkValue} from './types'
-import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_value_link, assign_node_local_attribute, compute_total_offsets, test_link_value, getLinkValue } from './SankeyUtils'
+import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_value_link, assign_node_local_attribute, compute_total_offsets, test_link_value, getLinkValue,return_value_node } from './SankeyUtils'
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
@@ -273,7 +273,8 @@ export const nodeHeight = (
   //Hauteur des noeuds
   if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
     // Hauteur des noeuds
-    return data.node_height
+    // return data.node_height
+    return return_value_node(data,n,'node_height') as number
   }
   return scale(node_size_s_height)
 }
@@ -592,8 +593,8 @@ export const updateLayout = (
         node.local={}
     }  
       node.position = node_layout.position
-      // node.local.node_width = node_layout.local?.node_width
-      // node.local.node_height = node_layout.local?.node_height
+      node.local.node_width = node_layout.local?.node_width
+      node.local.node_height = node_layout.local?.node_height
       node.local.show_value = node_layout.local?.show_value
       node.local.shape = node_layout.local?.shape
       if (node_layout.x !== 0 && node_layout.y != 0) { 
