@@ -492,6 +492,7 @@ export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyPlusNode|Sanke
 export const SankeyPlusNodeDragEvent=(
   data:SankeyPlusData,
   display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink },
   multi_selected_nodes:{current: SankeyPlusNode[] },
   mode_selection:{current:string},
   alt_key_pressed:boolean,
@@ -506,7 +507,12 @@ export const SankeyPlusNodeDragEvent=(
 
 )=>{
   if(mode_selection.current==='s'){
-    (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(SankeyPlusdragGNodeEvent(data,display_nodes,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale,multi_selected_label,min_width_and_height))
+    (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(
+      SankeyPlusdragGNodeEvent(
+        data,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,display_nodes,display_links,
+        multi_selected_links,link_text,getLinkValue,scale,inv_scale,multi_selected_label,min_width_and_height
+      )
+    )
   }
   (d3.select('.opensankey #svg') as d3.Selection<Element, unknown, HTMLElement, unknown>).call(d3.drag<Element, unknown, HTMLElement>()
     .subject(Object)
@@ -535,11 +541,12 @@ export const SankeyPlusNodeDragEvent=(
 
 export const SankeyPlusdragGNodeEvent=(
   data:SankeyPlusData,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
   multi_selected_nodes:{current: SankeyPlusNode[] },
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   set_data:(d:SankeyPlusData)=>void,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink },
   multi_selected_links:{current:SankeyPlusLink[]},
   link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
@@ -563,12 +570,12 @@ export const SankeyPlusdragGNodeEvent=(
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && !alt_key_pressed){
           drag_nodes_plus(node,event,multi_selected_nodes,data,
-            set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,multi_selected_label,node_visible
+            set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,multi_selected_label,node_visible
           )
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName==='rect' || d3.select(event.subject.sourceEvent.target).node().tagName==='ellipse'){
           drag_nodes_plus(node,event,multi_selected_nodes,data,
-            set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,multi_selected_label,node_visible
+            set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,multi_selected_label,node_visible
           )
         }
       }
@@ -582,6 +589,8 @@ export  const drag_nodes_plus = (node:SankeyPlusNode,
   multi_selected_nodes:{current: SankeyPlusNode[] },
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink }, 
   multi_selected_links:{current: SankeyPlusLink[] },
   link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyPlusData)=>number[],
@@ -602,25 +611,30 @@ export  const drag_nodes_plus = (node:SankeyPlusNode,
     opposing_drag_elements_plus(out_of_zone_item,event,node,data,multi_selected_nodes,multi_selected_label)
   }
 
-  drag_elements_plus(node,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+  drag_elements_plus(node,data,event,multi_selected_nodes,multi_selected_label,set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
     
 }
 
-export const drag_elements_plus=(dragged:SankeyPlusNode|SankeyPlusLabel,data:SankeyPlusData,event:{ dx: number; dy: number,x:number,y:number },
+export const drag_elements_plus=(
+  dragged:SankeyPlusNode|SankeyPlusLabel,
+  data:SankeyPlusData,
+  event:{ dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
   set_data:(d:SankeyPlusData)=>void,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink },
   multi_selected_links:{current: SankeyPlusLink[] },
   link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyPlusData)=>number[],
   getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
   drawArrows:plusDrawArrowsType,
   scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
+  inv_scale:(t:number)=>number
 )=>{
   // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
   // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
-  drag_elements(dragged,data,event,multi_selected_nodes,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+  drag_elements(dragged,data,event,multi_selected_nodes,set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
 
 
   // Drag zdt too
