@@ -237,7 +237,7 @@ const branchAnimate = (
     .duration(2000)
     .attr('stroke-dashoffset', 0)
     .on('end', function (this) {
-      const idLink = d3.select(this).attr('id')
+      const idLink = d3.select(this).attr('id').replace('path_','')
       const idTarget = data.links[idLink].idTarget
       // Modification des arrows après l'animation
       const arrow=d3.selectAll(' .opensankey #path_'+idLink+'_arrow')
