@@ -2,7 +2,7 @@ import  { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,SankeyLinkValue,drawArrowsType} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
-import {  link_color,link_visible,return_value_link,node_displayed} from './SankeyUtils'
+import {  link_color,link_visible,return_value_link,node_displayed,return_value_node} from './SankeyUtils'
 import { drawCurveFunction,scale,inv_scale,setNodesHeight,strokeDasharray, min_width_and_height, deselect_visualy_links,eventLinkContextMenu} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 import {value_selected_parameter,linkStrokeWidth,node_visible_on_svg} from './SankeyDrawFunction'
@@ -511,9 +511,8 @@ export const OpenSankeyDrawLinks = (
     const target_x_max = target_x_min + parseInt(d3.select(' .opensankey #shape_' + target_node.idNode).attr('width'))
     const target_y_min = target_node.y
     const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #shape_' + target_node.idNode).attr('height'))
-    // const tolerance = 3 * source_node.node_width
-    // const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
-    const tolerance = 3 * data.node_width
+    const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
+    // const tolerance = 3 * data.node_width
     const link_orientation=return_value_link(data,link,'orientation')
     if ((link_orientation === 'hh' || link_orientation === 'hv') && mouse_coord[1] >= source_y_min && mouse_coord[1] <= source_y_max && (mouse_coord[0] <= source_x_max + tolerance)) {
       return { 'node_id': source_node.idNode, 'type': 'source', 'origin': source_y_min }

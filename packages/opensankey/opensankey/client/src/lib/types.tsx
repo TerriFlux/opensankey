@@ -6,8 +6,8 @@ export const SankeyNodeAttrLocalTypes ={
   // Parameter of node shape
   shape_visible: PropTypes.bool,
   label_visible: PropTypes.bool,
-  // node_width: PropTypes.number,
-  // node_height: PropTypes.number,
+  node_width: PropTypes.number,
+  node_height: PropTypes.number,
   color: PropTypes.string,
   shape: PropTypes.oneOf(['ellipse', 'rect']),
   colorSustainable: PropTypes.bool,
@@ -44,8 +44,8 @@ export const SankeyNodeStyleTypes ={
   // Parameter of node shape
   shape_visible: PropTypes.bool.isRequired,
   label_visible: PropTypes.bool.isRequired,
-  // node_width: PropTypes.number.isRequired,
-  // node_height: PropTypes.number.isRequired,
+  node_width: PropTypes.number.isRequired,
+  node_height: PropTypes.number.isRequired,
   color: PropTypes.string.isRequired,
   shape: PropTypes.oneOf(['ellipse', 'rect']).isRequired,
   colorSustainable: PropTypes.bool.isRequired,
@@ -255,14 +255,13 @@ export const SankeyDataPropTypes = {
   maximum_flux: PropTypes.number,
   minimum_flux: PropTypes.number,
 
-  node_width: PropTypes.number.isRequired,
-  node_height: PropTypes.number.isRequired,
+  // node_width: PropTypes.number.isRequired,
+  // node_height: PropTypes.number.isRequired,
 
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodeStyleTypes).isRequired).isRequired,
   style_link:PropTypes.objectOf(PropTypes.shape(SankeyLinkStyleTypes).isRequired).isRequired,
 
-  // icon_catalog: PropTypes.objectOf(PropTypes.string).isRequired,
 
   show_structure: PropTypes.oneOf(['structure','data','reconciled','free_value','free_interval']).isRequired,
   //show_data: PropTypes.bool.isRequired,
@@ -273,7 +272,6 @@ export const SankeyDataPropTypes = {
   v_space: PropTypes.number.isRequired,
   left_shift: PropTypes.number.isRequired,
   right_shift: PropTypes.number.isRequired,
-  //max_shift: PropTypes.number.isRequired,
 
   legend_position: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   display_legend_scale:PropTypes.bool.isRequired,
@@ -286,8 +284,6 @@ export const SankeyDataPropTypes = {
     filter_label: PropTypes.number.isRequired,
     null_flux: PropTypes.bool.isRequired,
     font_family: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-    // node_font_family_selected: PropTypes.string.isRequired,
-    // link_font_family_selected: PropTypes.string.isRequired
   }).isRequired,
 
   grid_square_size: PropTypes.number.isRequired,
@@ -302,15 +298,6 @@ export const SankeyDataPropTypes = {
 
   legend_width:PropTypes.number.isRequired,
   
-  // view: PropTypes.arrayOf(
-  //   PropTypes.shape({
-  //     id: PropTypes.string.isRequired,
-  //     view_data: PropTypes.object.isRequired,
-  //     nom:PropTypes.string.isRequired,
-  //     details:PropTypes.string.isRequired
-      
-  //   }).isRequired
-  // ).isRequired
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
