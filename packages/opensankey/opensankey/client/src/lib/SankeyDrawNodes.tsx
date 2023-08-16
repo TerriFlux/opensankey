@@ -170,14 +170,14 @@ export const OpenSankeyDrawNodes = (
         .append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
-        // .attr('cx', d =>return_value_node(data,d,'node_width') as number / 2)
-        // .attr('cy', d =>return_value_node(data,d,'node_height') as number / 2)
-        // .attr('rx', d =>return_value_node(data,d,'node_width') as number / 2)
-        // .attr('ry', d =>return_value_node(data,d,'node_height') as number / 2)
-        .attr('cx',data.node_width / 2)
-        .attr('cy',data.node_height / 2)
-        .attr('rx',data.node_width / 2)
-        .attr('ry',data.node_height / 2)
+        .attr('cx', d =>return_value_node(data,d,'node_width') as number / 2)
+        .attr('cy', d =>return_value_node(data,d,'node_height') as number / 2)
+        .attr('rx', d =>return_value_node(data,d,'node_width') as number / 2)
+        .attr('ry', d =>return_value_node(data,d,'node_height') as number / 2)
+        // .attr('cx',data.node_width / 2)
+        // .attr('cy',data.node_height / 2)
+        // .attr('rx',data.node_width / 2)
+        // .attr('ry',data.node_height / 2)
             
             
     }

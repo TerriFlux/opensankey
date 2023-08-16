@@ -632,68 +632,7 @@ export const toolbar_builder = (
         <h5>{t('Banner.p_aff_aff_node')}</h5>
 
 
-        {/* Largeur minimale du noeud */}
-        <Form.Group as={Row} >
-          <Col xs={4}>
-            <FormLabel >{t('Noeud.apparence.TML')}</FormLabel>
-          </Col>
-          <Col>
-            <OverlayTrigger
-              key={'noeud.apparence.tooltips.6'}
-              placement={'top'}
-              delay={500}
-              rootClose
-              overlay={<Tooltip id={'noeud.apparence.tooltips.6'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
-              <FormControl
-                min={0}
-                step={1}
-                type={'number'}
-                value={data.node_width}
-                onChange={
-                  evt => {
-                    const val=evt.target.value
-                    let value=40
-                    if(!isNaN(+val)){
-                      value=Math.abs(Math.round(+val))
-                    }
-                    data.node_width=value
-                    set_data({ ...data })
-                  }}/>
-            </OverlayTrigger>
-          </Col>
-          <Col>px</Col>
-        </Form.Group>
 
-        {/* Hauteur minimale du noeud */}
-        <Form.Group as={Row} >
-          <Col xs={4}>
-            <FormLabel >{t('Noeud.apparence.TMH')}</FormLabel>
-          </Col>
-          <Col>
-            <OverlayTrigger
-              key={'noeud.apparence.tooltips.7'}
-              placement={'top'}
-              delay={500}
-              rootClose
-              overlay={<Tooltip id={'noeud.apparence.tooltips.7'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
-              <FormControl
-                min={0} max={100}
-                type={'number'}
-                value={data.node_height}
-                onChange={
-                  evt => {
-                    const val=evt.target.value
-                    let value=40
-                    if(!isNaN(+val)){
-                      value=Math.abs(Math.round(+val))
-                    }
-                    data.node_height=value
-                    set_data({ ...data })
-                  }}/>
-            </OverlayTrigger>
-          </Col>
-          <Col>px</Col>
-        </Form.Group>
       </Form>
     </Popover.Body>
   </Popover>
