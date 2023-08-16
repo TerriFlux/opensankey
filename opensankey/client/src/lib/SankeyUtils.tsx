@@ -195,7 +195,7 @@ export const compute_total_offsets = (
   inv_scale:(t:number)=>number,
   node: SankeyNode,
   data: SankeyData,
-  selected_tags: { [tag_group: string]: string[] },
+  display_nodes:{ [node_id: string]: SankeyNode },
   test_link_value: (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
   ) => SankeyLinkValue | object | string,
@@ -222,7 +222,7 @@ export const compute_total_offsets = (
 
         return
       }
-      if (nodes[link.idSource] && nodes[link.idTarget] && node_displayed(data,data.nodes[link.idSource]) && node_displayed(data,data.nodes[link.idTarget])) {
+      if (display_nodes[link.idSource] && display_nodes[link.idTarget]) {
         let target_node
         try {
           target_node = nodes[link.idTarget]
@@ -270,7 +270,7 @@ export const compute_total_offsets = (
 
         return
       }
-      if (nodes[link.idSource] && nodes[link.idTarget] && node_displayed(data,data.nodes[link.idSource]) && node_displayed(data,data.nodes[link.idTarget])) {
+      if (display_nodes[link.idSource] && display_nodes[link.idTarget]) {
         let source_node
         try {
           source_node = nodes[link.idSource]

@@ -38,13 +38,24 @@ export const OpenSankeyDrawNodes = (
   pointer_pos:{current:number[]}
 
 ) => {
-  const display_nodes=data.nodes
-  const display_links=data.links
-  
+  //const display_nodes=data.nodes
+  const display_links=Object.keys(data.links)
+    .filter((key) => node_displayed(data,data.nodes[data.links[key].idSource])&&node_displayed(data,data.nodes[data.links[key].idTarget]))
+    .reduce((obj, key) => {
+      return Object.assign(obj, {
+        [key]: data.links[key]
+      })
+    }, {}) as {[idLink:string]:SankeyLink}
+  const display_nodes = Object.keys(data.nodes)
+    .filter((key) => node_displayed(data,data.nodes[key]))
+    .reduce((obj, key) => {
+      return Object.assign(obj, {
+        [key]: data.nodes[key]
+      })
+    }, {}) as {[idNode:string]:SankeyNode}
+  //const display_nodes = Object.assign({}, ...Object.values(data.nodes).filter(n=>node_displayed(data,n)).map(n => ({ [n.idNode]: { n } }))) as {[idNode:string]:SankeyNode}
+  //const display_links= Object.assign({}, ...Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).map(l => ({ [l.idLink]: { l } }))) as {[idLink:string]:SankeyLink}
 
-    
- 
-    
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
     if (return_value_node(data,(d as SankeyNode),'shape_visible') && (window.SankeyToolsStatic ||event.shiftKey)) {
@@ -89,7 +100,7 @@ export const OpenSankeyDrawNodes = (
     // The majority of data used to design the node are located in data['nodes']
     // Or if you want information about the type of these variable, you can find them in file types.tsx
     d3.selectAll(' .opensankey .gg_nodes').remove()
-    const filtered_data=Object.values(display_nodes).filter(n=>node_displayed(data,n))
+    const filtered_data=Object.values(display_nodes)
     const gg_nodes = d3.select(' .opensankey #g_nodes').selectAll('.gg_nodes').data(filtered_data).enter().append('g')
       .attr('id', d => {
         return 'gg_' + d.idNode
@@ -137,7 +148,7 @@ export const OpenSankeyDrawNodes = (
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s'){
-        ggg_nodes.call(dragGNodeEvent(data,display_nodes,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
+        ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
       }
     }
     // ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
@@ -216,7 +227,7 @@ export const OpenSankeyDrawNodes = (
 
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
-    Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes, display_links, data.nodeTags,data,scale,inv_scale,getLinkValue))
+    Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes,data,scale,inv_scale,getLinkValue))
         
     // const nodes_not_to_scale=ggg_nodes
     //   .filter(d=>return_value_node(data,d,'not_to_scale') as boolean)

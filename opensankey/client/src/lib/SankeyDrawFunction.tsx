@@ -103,8 +103,8 @@ export const compute_end_points = (
   source_node: SankeyNode,
   target_node: SankeyNode,
   link: SankeyLink,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
+  display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [link_id: string]: SankeyLink },
   selected_tags: { [tag_group: string]: string[] },
   data:SankeyData,
   scale:(t:number)=>number,
@@ -112,10 +112,10 @@ export const compute_end_points = (
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
-  if (!links) {
+  if (!display_links) {
     return [0, 0, 0, 0]
   }
-  let link_value = test_link_value(data, nodes, link,getLinkValue)
+  let link_value = test_link_value(data, display_nodes, link,getLinkValue)
   if (link_value === undefined) {
     return [0, 0, 0, 0]
   }
@@ -140,9 +140,9 @@ export const compute_end_points = (
     link_value = inv_scale(5)
   }
 
-  let res = compute_total_offsets(inv_scale,source_node, data, selected_tags, test_link_value,undefined,getLinkValue)
+  let res = compute_total_offsets(inv_scale,source_node, data, display_nodes, test_link_value,undefined,getLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-  res = compute_total_offsets(inv_scale,target_node, data, selected_tags, test_link_value,undefined,getLinkValue)
+  res = compute_total_offsets(inv_scale,target_node, data,display_nodes, test_link_value,undefined,getLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
   // let node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
   let node_size_s_width = inv_scale(data.node_width)
@@ -172,9 +172,9 @@ export const compute_end_points = (
       inv_scale(data.node_height), t_total_offset_height_left, t_total_offset_height_right
     )
   }
-  res = compute_total_offsets(inv_scale,source_node, data, selected_tags, test_link_value, link,getLinkValue)
+  res = compute_total_offsets(inv_scale,source_node, data,display_nodes, test_link_value, link,getLinkValue)
   const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
-  res = compute_total_offsets(inv_scale,target_node, data, selected_tags, test_link_value, link,getLinkValue)
+  res = compute_total_offsets(inv_scale,target_node, data,display_nodes , test_link_value, link,getLinkValue)
   const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
   const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
   const delta_s_width_top = Math.max(0, (node_size_s_width - s_total_offset_width_top) / 2)
@@ -601,16 +601,14 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
 // if the sum of input/output links values is supperior to the min_height/min_width of the node then it return the maximum between the outputs and inputs link values scaled to the graph
 export const setNodeHeight = (
   n: SankeyNode,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
-  selected_tags: TagsCatalog,
+  display_nodes: { [node_id: string]: SankeyNode },
   data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
-  const res = compute_total_offsets(inv_scale,n, data, selected_tags, test_link_value,undefined,getLinkValue)
+  const res = compute_total_offsets(inv_scale,n, data, display_nodes, test_link_value,undefined,getLinkValue)
   const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
   let node_size_s_height = Math.max(
     // inv_scale((return_value_node(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
@@ -697,8 +695,8 @@ export const clip = (subjectPolygon: number[][], clipPolygon: number[][]) => {
 // Function that add marker at the end of links, those marker are arrow
 export const drawArrows = (
   n: SankeyNode,
-  selected_tags: { [tag_group: string]: string[] },
   data:SankeyData,
+  display_nodes: { [node_id: string]: SankeyNode },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
@@ -713,7 +711,7 @@ export const drawArrows = (
   // a quoi ca sert ?
   // const tmp = selection.selectAll('path')
   // tmp.remove()
-  const res = compute_total_offsets(inv_scale,n, data, selected_tags, test_link_value,undefined,getLinkValue)
+  const res = compute_total_offsets(inv_scale,n, data, display_nodes, test_link_value,undefined,getLinkValue)
   //const res = compute_total_offsets(n, nodes, links, tags_catalog, test_link_value)
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
@@ -762,7 +760,7 @@ export const drawArrows = (
       //selection
       d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
       //setNodeHeight(n, nodes, links, tags_catalog)
-      setNodeHeight(n, data.nodes, data.links, data.nodeTags,data,scale,inv_scale,getLinkValue)
+      setNodeHeight(n, display_nodes, data,scale,inv_scale,getLinkValue)
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'arrow')
@@ -1246,26 +1244,24 @@ export const inv_scale = d3.scaleLinear()
 
 export const setNodesHeight = (
   data:SankeyData,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
+  display_nodes: { [node_id: string]: SankeyNode },
   d: SankeyLink,
-  nodeTags: TagsCatalog,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
-  let source_node = nodes[d.idSource]
-  let target_node = nodes[d.idTarget]
+  let source_node = display_nodes[d.idSource]
+  let target_node = display_nodes[d.idTarget]
   if (target_node === undefined) {
-    target_node = nodes[d.idTarget]
+    target_node = display_nodes[d.idTarget]
   }
   if (source_node === undefined) {
     const filter_idSource = d.idSource
-    source_node = nodes[filter_idSource]
+    source_node = display_nodes[filter_idSource]
   }
 
-  const res_source = compute_total_offsets(inv_scale,source_node, data, nodeTags, test_link_value,undefined,getLinkValue)
+  const res_source = compute_total_offsets(inv_scale,source_node, data,display_nodes, test_link_value,undefined,getLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
-  const res_target = compute_total_offsets(inv_scale,target_node, data, nodeTags, test_link_value,undefined,getLinkValue)
+  const res_target = compute_total_offsets(inv_scale,target_node, data,display_nodes, test_link_value,undefined,getLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
   let node_size_s_height = Math.max(
@@ -1431,6 +1427,8 @@ const drawLinkText = (
 const add_center_handle=(
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
   link:SankeyLink,
   multi_selected_links:{current: SankeyLink[] },
   selected_tags: { [tag_group: string]: string[] },
@@ -1442,7 +1440,7 @@ const add_center_handle=(
   const ori=return_value_link(data,link,'orientation')
 
   d3.selectAll(' .opensankey #center_handle_' + link.idLink).remove()
-  if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)  && !recy ) {
+  if (Object.values(display_links).map(d => d.idLink).includes(link.idLink)  && !recy ) {
 
     const source_node=data.nodes[link.idSource]
     const target_node=data.nodes[link.idTarget]
@@ -1458,7 +1456,7 @@ const add_center_handle=(
     if (isNaN(target_node.y)) {
       target_node.y = 100
     }
-    const res = compute_end_points(source_node, target_node, link, data.nodes, data.links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
+    const res = compute_end_points(source_node, target_node, link, display_nodes, display_links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
     const [, ys, xt, ] = res
     let [xs, , , yt] = res
     if (data.show_structure == 'structure') {
@@ -1625,8 +1623,8 @@ const add_shift_handles = (
 const drawCurve = (
   data: SankeyData,
   set_data:(d:SankeyData)=>void,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
+  visible_nodes: { [node_id: string]: SankeyNode },
+  visible_links: { [link_id: string]: SankeyLink },
   display_style: { node_font_size: number;  filter: number; filter_label: number; italic?: boolean; bold?: boolean; uppercase?: boolean; },
   nodeTags: TagsCatalog,
   link: SankeyLink,
@@ -1643,7 +1641,7 @@ const drawCurve = (
     return ''
   }
   // const link_value = test_link_value(data, nodes, link)
-  const link_value = test_link_value(data, nodes, link,getLinkValue)
+  const link_value = test_link_value(data, visible_nodes, link,getLinkValue)
   const val=getLinkValue(data,link.idLink)
   // if(val.is_percent){
   //   const total=getTotalInputLink(data,data.nodes[link.idSource])
@@ -1657,8 +1655,8 @@ const drawCurve = (
   const r_h_s=return_value_link(data,link,'right_horiz_shift') as number
   const v_s=return_value_link(data,link,'vert_shift') as number
 
-  const source_node = nodes[link.idSource]
-  const target_node = nodes[link.idTarget]
+  const source_node = visible_nodes[link.idSource]
+  const target_node = visible_nodes[link.idTarget]
   if (isNaN(source_node.x)) {
     source_node.x = 100
   }
@@ -1678,17 +1676,17 @@ const drawCurve = (
     return ''
   }
 
-  let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, nodes, links, nodeTags,data,scale,inv_scale,getLinkValue)
+  let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, visible_nodes, visible_links, nodeTags,data,scale,inv_scale,getLinkValue)
   // handles_positions(links, link, xs, ys, xt, yt)
   if(ori=='vv' ||ori=='hh'){
-    add_shift_handles(data,set_data,link,multi_selected_links, nodes, links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height,getLinkValue)
-    add_drag_link_zone(link,nodes,data,set_data,multi_selected_links,data.nodes,data.links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
-    add_center_handle(data,set_data,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
+    add_shift_handles(data,set_data,link,multi_selected_links, visible_nodes, visible_links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height,getLinkValue)
+    add_drag_link_zone(link,data,set_data,multi_selected_links,visible_nodes, visible_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
+    add_center_handle(data,set_data,visible_nodes,visible_links,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
   }
 
 
   if (link_value > display_style.filter_label || val.extension?.free_visible) {
-    drawLinkText(data, link, links, link_value, display_style, xs, ys, xt, yt,link_text,getLinkValue)
+    drawLinkText(data, link, visible_links, link_value, display_style, xs, ys, xt, yt,link_text,getLinkValue)
   }
 
   if (ori === 'vh' && !recy) {

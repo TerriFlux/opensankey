@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, TagsCatalog, SankeyLinkValue} from './types'
+import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, SankeyLinkValue} from './types'
 import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_value_link, assign_node_local_attribute, compute_total_offsets, test_link_value, getLinkValue } from './SankeyUtils'
 import React,{ FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
@@ -261,14 +261,13 @@ export const arrangeNodes = (
 
 export const nodeHeight = (
   n: SankeyNode,
-  selected_tags: TagsCatalog,
   data:SankeyData,
   inv_scale:(t:number)=>number,
   scale:(t:number)=>number,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
-  const res = compute_total_offsets(inv_scale,n, data, selected_tags, test_link_value,undefined,getLinkValue)
+  const res = compute_total_offsets(inv_scale,n, data, data.nodes, test_link_value,undefined,getLinkValue)
   const [total_offset_height_left, total_offset_height_right] = res
   const node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right)
   //Hauteur des noeuds
@@ -426,12 +425,12 @@ export const compute_auto_sankey = (
     horizontal_indices2nodes[i].forEach((node, node_id) => {
       if (node_id === 0) {
         data.nodes[node.idNode].y = 200 + diff_nb_nodes*vertical_space//0.2 * height;
-        const node_h = nodeHeight(data.nodes[node.idNode],data.nodeTags,data,inv_scale,scale,getLinkValue)
+        const node_h = nodeHeight(data.nodes[node.idNode],data,inv_scale,scale,getLinkValue)
         vertical_offset = 200 + node_h + diff_nb_nodes*vertical_space + vertical_space
       }
       else {
         data.nodes[node.idNode].y = vertical_offset
-        const node_h = nodeHeight(data.nodes[node.idNode],data.nodeTags,data,inv_scale,scale,getLinkValue)
+        const node_h = nodeHeight(data.nodes[node.idNode],data,inv_scale,scale,getLinkValue)
         vertical_offset += vertical_space + node_h
       }
     })
@@ -587,11 +586,11 @@ export const updateLayout = (
       continue
     }
     const node_layout = new_layout.nodes[node_layout_key]
-    if(mode.includes('posNode')){
+  if(mode.includes('posNode')){
       node.name = node_layout.name
       if(node.local===undefined || node.local===null){
         node.local={}
-      }
+    }  
       node.position = node_layout.position
       // node.local.node_width = node_layout.local?.node_width
       // node.local.node_height = node_layout.local?.node_height
@@ -600,13 +599,13 @@ export const updateLayout = (
       if (node_layout.x !== 0 && node_layout.y != 0) { 
         node.x = node_layout.x
         node.y = node_layout.y
-      }
+  }
       // if (node.y + 200 > max_vertical_offset) {
       //   max_vertical_offset = node.y + 200
       // }
       node.x_label = node_layout.x_label
       node.y_label = node_layout.y_label
-    }
+      }
     if(mode.includes('attrNode')){
       node.local=node_layout?.local
 
@@ -614,20 +613,20 @@ export const updateLayout = (
       // node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
       // node.iconRatio = node_layout.iconRatio ? node_layout.iconRatio : node.iconRatio
       // node.iconVisible= node_layout.iconVisible ? node_layout.iconVisible : node.iconVisible
-  
+
       node.colorTag = node_layout.colorTag
       node.colorParameter = node_layout.colorParameter
       // node.color = node_layout.color
+  
 
-      
       // node.shape_visible = node_layout.shape_visible
       // node.label_visible = node_layout.label_visible
     }
     // if(mode.includes('tagNode')){
     //   for (const node_tag_key in node_layout.tags) {
     //     node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
-    //   }
-    // }    
+  //   }
+  // }
   }
   
   // (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
