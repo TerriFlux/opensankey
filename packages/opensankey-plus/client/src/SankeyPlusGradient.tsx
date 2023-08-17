@@ -43,7 +43,7 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
         style={{width:'70%'}} 
         className='btn_menu_config'
         disabled={!is_activated}
-        variant={gradChecked?'dark':'outline-dark'}
+        variant={gradChecked?'primary':'outline-primary'}
         onClick={
           () => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {

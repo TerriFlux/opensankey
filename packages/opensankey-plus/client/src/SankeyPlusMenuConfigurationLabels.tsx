@@ -357,10 +357,17 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       </InputGroup>
 
       <InputGroup>
-        <InputGroup.Text >{t('LL.cfl')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'40%'}}>{t('LL.cfl')}</InputGroup.Text>
+        <Form.Label for="form_color_zdt" style={{width:'20%',
+          'background':(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff',
+          border:'1px solid #ced4da',
+        }}/>
         <FormControl size='sm'
           type='color'
+          id='form_color_zdt'
+          name='form_color_zdt'
           disabled={!is_activated}
+          style={{display:'none'}}
           value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
           onChange={evt => {
             const val = evt.target.value
@@ -390,9 +397,16 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
 
         
 
-        <InputGroup.Text >{t('LL.cbl')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'40%'}}>{t('LL.cbl')}</InputGroup.Text>
+        <Form.Label for="form_color_border_zdt" style={{width:'20%',
+          'background':(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff',
+          border:'1px solid #ced4da',
+        }}/>
         <FormControl size='sm'
           type='color'
+          style={{display:'none'}}
+          id='form_color_border_zdt'
+          name='form_color_border_zdt'
           disabled={!is_activated && !valAllLabelBorderTransparent }
           value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
           onChange={evt => {
@@ -402,9 +416,10 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
           }}
         />
 
-        <InputGroup.Text >{t('LL.bt')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'30%'}}>{t('LL.bt')}</InputGroup.Text>
 
         <Button
+          style={{width:'10%'}}
           disabled={!is_activated}
           variant={valAllLabelBorderTransparent?'primary':'outline-primary'}
           onClick={() => {
