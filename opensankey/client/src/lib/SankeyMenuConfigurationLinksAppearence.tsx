@@ -522,7 +522,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button 
           style={{width:'25%'}} 
           className='btn_menu_config'
-          variant={linkType('curved')?'primary':'otuline-primary'}
+          variant={linkType('curved')?'primary':'outline-primary'}
           onClick={
             () => {
               const val=linkType('curved')
