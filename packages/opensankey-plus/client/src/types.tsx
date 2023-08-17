@@ -41,30 +41,20 @@ export interface SankeyPlusLink extends SankeyLink{
 export interface SankeyPlusLabel {
     // identification
     idLabel: string,
-    name: string,
+    title:string,
+    content: string,
     opacity:number,
     color:string,
     color_border:string,
     transparent_border:boolean,
-    position_vert:string,
-    position_horiz:string,
-    isTextHTML:boolean,
-
-    font_size:number,
-    font_weight:boolean,
-    font_style:boolean,
-    font_uppercase:boolean,
 
     label_width: number,
     label_height: number,
-
-    is_edit_raw:boolean,
 
     x: number,
     y: number,
     x_label: number,
     y_label: number,
-    underline:boolean,
 }
 
 // Recration du type drawCureType d'opensankey pour qu'il puissr être utilisé avec des variable de type de sankeyplus

@@ -4,7 +4,8 @@ import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_da
 import { get_data_from_view } from './SankeyPlusViews'
 import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
 interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
-  transparent?:boolean
+  transparent?:boolean,
+  name?:string
 }
 
 /* eslint-disable */
@@ -17,32 +18,26 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
 
   if(data.labels){
     Object.values(data.labels).forEach((l:SankeyPlusLabelToConvert)=>{
-      if(l.is_edit_raw===undefined){
-        l.is_edit_raw=true
-      }
-      if(l.isTextHTML===undefined){
-        l.isTextHTML=false
-        l.is_edit_raw=true
-      }
-      if(['haut','bas'].includes(l.position_vert)){
-        if(l.position_vert==='haut'){
-          l.position_vert='top'
-        }else if(l.position_vert==='bas'){
-          l.position_vert='bottom'
+      if(l.title===undefined){
+        let idZdt = Object.keys(data.labels).length
+        const tab_title=Object.values(data.labels).map(zdt=>zdt.title)
+        while (tab_title.includes('Zone de texte '+idZdt) ) {
+          idZdt = idZdt+1
         }
-      }
-      if(['gauche','droite'].includes(l.position_horiz)){
-        if(l.position_horiz==='gauche'){
-          l.position_horiz='left'
-        }else if(l.position_horiz==='droite'){
-          l.position_horiz='right'
-        }
+        l.title='Zone de texte '+idZdt
       }
       // CONVERT TEXT ZONE TRANSPARENT -> OPACITY (0-100)
       if(l.transparent!==undefined){
         l.opacity=l.transparent?0:100
         delete ((l as unknown) as SankeyPlusLabelToConvert ).transparent
       }
+
+      if(((l as unknown) as SankeyPlusLabelToConvert ).name!==undefined){
+        const new_content=((l as unknown) as SankeyPlusLabelToConvert).name
+        l.content=new_content?new_content:''
+        delete ((l as unknown) as SankeyPlusLabelToConvert ).name
+      }
+
     })
   }
 

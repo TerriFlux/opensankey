@@ -2,7 +2,6 @@ import  { InferProps } from 'prop-types'
 import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink,plusDrawArrowsType} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
-import { textwrap } from 'd3-textwrap'
 import { SankeyLinkValue} from 'open-sankey/src/lib/types'
 
 import {drawGrid,min_width_and_height,node_visible_on_svg,deselect_visualy_nodes,select_visualy_nodes,deselect_visualy_links} from 'open-sankey/dist/SankeyDrawFunction'
@@ -30,7 +29,9 @@ export const SankeyPlusDrawLabels = (
   inv_scale:(t:number)=>number,
   mode_selection:{current:string},
   start_point:{current:number[]},
-  closeAllMenuContext:()=>void
+  closeAllMenuContext:()=>void,
+  pointer_pos:{current:number[]},
+  set_show_context_zdt:(b:boolean)=>false
 
 ) => {
   const add_labels = () => {
@@ -59,92 +60,29 @@ export const SankeyPlusDrawLabels = (
 
       gg_label.on('click', (event) => eventLabelClick(event,d,data,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
       gg_label.on('mousedown',()=>closeAllMenuContext())
+      gg_label.on('contextmenu',evt=>{
+        evt.preventDefault()
+        console.log('here')
+        pointer_pos.current=[evt.pageX,evt.pageY]
+        if(!multi_selected_label.current.includes(d)){
+          multi_selected_label.current.forEach(nn=>deselect_visualy_nodes(nn))
+          multi_selected_label.current=[]
+          select_visualy_zdt(d)
+          multi_selected_label.current.push(d)
+          
+        }
+        set_show_context_zdt(true)
+        
+      })
       // Traite les labels qui sont dans des foreignObject
-      gg_label.filter(()=>{
-        return d.isTextHTML
-      }) .append('foreignObject')
+      gg_label
+        .append('foreignObject')
         .attr('width',d.label_width)
         .attr('height',d.label_height)
         .attr('id', d.idLabel + '_text')
         .append('xhtml:div')
-        .attr('class',d.is_edit_raw?'':'ql-editor')
-        .html(d.name)
-
-      // Traite les labels qui sont simplementdu text
-      const label_text = gg_label.filter(()=>{
-        return !d.isTextHTML
-      })
-        .append('text')
-        .attr('id', d.idLabel + '_text')
-        .attr('x', pos_zdt_x(d))
-        .attr('y', pos_zdt_y(d))
-        .style('text-anchor', 'middle')
-        .style('font-weight', () => (d.font_weight) ? 'bold' : 'normal')
-        .style('font-style', () => (d.font_style) ? 'italic' : 'normal')
-        .style('font-size', () => d.font_size + 'px')
-        .style('text-transform', () => (d.font_uppercase) ? 'uppercase' : 'none')
-        .style('text-align', 'center')
-        .style('text-decoration',d.underline?'underline':'none')
-        .text(d.name)
-
-
-      label_text.call(dragLabelEventTextEvent(alt_key_pressed,d))
-
-      const wrap = textwrap()
-        .bounds({ height: 100, width: d.label_width })
-        .method('tspans')
-
-      if(d.position_horiz !== ''&&d.position_vert!== ''){
-        //Appel wrap seulement si le label n'a pas été drag
-        //pour éviter que cela cause quelques probleme de position de label drag
-        d3.select(' .opensankey #' + d.idLabel + ' text').call(wrap)
-      }
-
-      d3.select(' .opensankey #' + d.idLabel + ' text').select('tspan')
-        .attr('dy',()=>{
-          if((d.position_vert === 'bottom') && d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
-            const tmp=d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length -1
-            return -tmp+'em'
-          }else if((d.position_vert === 'middle') && d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length >0){
-            const tmp=d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').nodes().length -1
-            return -tmp/2+'em'
-          }
-          return 0
-        })
-
-      d3.select(' .opensankey #' + d.idLabel + ' text').selectAll('tspan').attr('dx',2)
-        .attr('x',()=>{
-          let tmp=0
-
-          switch(d.position_horiz){
-          case 'left':
-            tmp= 0
-            break
-          case 'centre':
-            tmp=d.label_width/2
-            break
-          case 'right':
-            tmp=d.label_width
-            break
-          }
-          return tmp
-        })
-        .attr('text-anchor',()=>{
-          let tmp='left'
-
-          switch(d.position_horiz){
-          case 'left':
-            tmp= 'start'
-            break
-          case 'centre':
-            tmp='middle'
-            break
-          case 'right':
-            tmp='end'
-            break
-          }
-          return tmp
-        })
+        .attr('class','ql-editor')
+        .html(d.content)
 
 
       gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,min_width_and_height,drawGrid,multi_selected_nodes,multi_selected_links,link_text,getLinkValue,drawArrows,scale,inv_scale,mode_selection,start_point))
@@ -175,28 +113,6 @@ export const SankeyPlusDrawLabels = (
   add_labels()
 }
 
-const pos_zdt_x=(d:SankeyPlusLabel)=>{
-  switch(d.position_horiz){
-  case 'middle':
-    return d.label_width/2
-  case 'right':
-    return d.label_width-3
-  default:
-    return d.x_label
-  }
-}
-const pos_zdt_y=(d:SankeyPlusLabel)=>{
-  switch(d.position_vert){
-  case 'top':
-    return d.font_size + 3
-  case 'middle':
-    return d.label_height/2
-  case 'bottom':
-    return d.label_height-3
-  default:
-    return d.y_label
-  }
-}
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
 export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
@@ -245,30 +161,7 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
   }
 }
 
-/**
- * Function used to drag the text of free label
- * The 'alt' key need to be pressed and the text of the free label dragged
- *
- * @param {boolean} alt_key_pressed
- * @param {SankeyPlusLabel} d
- * @returns {*}
- */
-export const dragLabelEventTextEvent=(alt_key_pressed:boolean,d:SankeyPlusLabel)=>{
-  return d3.drag<SVGTextElement, unknown>()
-    .subject(Object).on('drag', function (event) {
-      if (alt_key_pressed) {
-        d.position_vert = ''
-        d.position_horiz = ''
-        const new_x=event.x,new_y=event.y
-        d3.select(' .opensankey #' + d.idLabel + '_text').attr('x', new_x)
-        d3.select(' .opensankey #' + d.idLabel + '_text').attr('y', new_y)
-        d.x_label = new_x
-        d.y_label = new_y
-        d3.select(' .opensankey #' + d.idLabel + '_text').selectAll('tspan').attr('x', new_x)
-        
-      }
-    })
-}
+
 // Function used to drag the free label
 // To be dragged you need to select the free label
 
@@ -525,4 +418,8 @@ export const sankey_plus_zoom_text_zone=(evt:d3.D3ZoomEvent<SVGElement,unknown>)
   if(k_factor<1){
     d3.selectAll('.opensankey .zdt_handles').attr('r',10*(1/k_factor))
   }
+}
+const select_visualy_zdt=(zdt:SankeyPlusLabel)=>{
+  d3.select('#'+zdt.idLabel)
+    .attr('stroke-width', 3)
 }
