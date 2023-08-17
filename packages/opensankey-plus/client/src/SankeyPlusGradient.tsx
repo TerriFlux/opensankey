@@ -494,15 +494,15 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
 
 export const SankeyPlusDrawArrows = (
   n: SankeyPlusNode,
-  selected_tags: { [tag_group: string]: string[] },
   data:SankeyPlusData,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
   display_style: {filter: number},
 
 ) => {
-  OpensankeyDrawFunction.drawArrows(n,selected_tags,data,scale,inv_scale,getLinkValue,display_style)
+  OpensankeyDrawFunction.drawArrows(n,data,display_nodes,scale,inv_scale,getLinkValue,display_style)
   for (let i = 0; i < n.inputLinksId.length; i++) {
     const l_arrow=OpensankeyUtils.return_value_link(data,data.links[n.inputLinksId[i]],'arrow')
     const l_grad=OpensankeyUtils.return_value_link(data,data.links[n.inputLinksId[i]],'gradient')

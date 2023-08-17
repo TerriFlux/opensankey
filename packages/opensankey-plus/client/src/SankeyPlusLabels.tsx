@@ -15,6 +15,8 @@ typeof globalThis & {
 export const SankeyPlusDrawLabels = (
   data:SankeyPlusData,
   set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink },
   multi_selected_label:{current: SankeyPlusLabel[] },
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
@@ -85,7 +87,7 @@ export const SankeyPlusDrawLabels = (
         .html(d.content)
 
 
-      gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,min_width_and_height,drawGrid,multi_selected_nodes,multi_selected_links,link_text,getLinkValue,drawArrows,scale,inv_scale,mode_selection,start_point))
+      gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,display_nodes,display_links,min_width_and_height,drawGrid,multi_selected_nodes,multi_selected_links,link_text,getLinkValue,drawArrows,scale,inv_scale,mode_selection,start_point))
       gg_label.append('rect')
         .attr('id','drag_zone_'+d.idLabel)
         .attr('width', d.label_width).attr('height', d.label_height)
@@ -169,6 +171,8 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   d:SankeyPlusLabel,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink }, 
   min_width_and_height:(d:SankeyPlusData)=>number[],
   drawGrid:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
@@ -221,7 +225,7 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
         if(out_of_zone_item.length>0){
           opposing_drag_elements_plus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
         }
-        drag_elements_plus(d,data,event,multi_selected_nodes,multi_selected_label,set_data,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
+        drag_elements_plus(d,data,event,multi_selected_nodes,multi_selected_label,set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
         
       }
       
