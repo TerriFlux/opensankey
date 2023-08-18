@@ -587,11 +587,11 @@ export const updateLayout = (
       continue
     }
     const node_layout = new_layout.nodes[node_layout_key]
-  if(mode.includes('posNode')){
+    if(mode.includes('posNode')){
       node.name = node_layout.name
       if(node.local===undefined || node.local===null){
         node.local={}
-    }  
+      }  
       node.position = node_layout.position
       node.local.node_width = node_layout.local?.node_width
       node.local.node_height = node_layout.local?.node_height
@@ -600,13 +600,13 @@ export const updateLayout = (
       if (node_layout.x !== 0 && node_layout.y != 0) { 
         node.x = node_layout.x
         node.y = node_layout.y
-  }
+      }
       // if (node.y + 200 > max_vertical_offset) {
       //   max_vertical_offset = node.y + 200
       // }
       node.x_label = node_layout.x_label
       node.y_label = node_layout.y_label
-      }
+    }
     if(mode.includes('attrNode')){
       node.local=node_layout?.local
 

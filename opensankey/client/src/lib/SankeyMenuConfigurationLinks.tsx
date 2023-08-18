@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Row, Form, Col, FormLabel, Tabs,  Button, ButtonGroup, FormGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
+import { Form, Tabs,  Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
@@ -261,264 +261,249 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   return (<>
     {/* Ajout d'un flux  */}
-    <Form.Group as={Row}>
-      <InputGroup>
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.plus'}
-          placement={'top'}
-          delay={500}
+    <InputGroup>
+      <OverlayTrigger
+        key={'Menu.tooltips.flux.plus'}
+        placement={'top'}
+        delay={500}
         
-          overlay={<Tooltip id={'Menu.tooltips.flux.plus'}>{t('Menu.tooltips.flux.plus')} </Tooltip>}>
-          <Button
-            size="sm"
-            variant="outline-primary"
-            style={{width:'10%'}}
-            className='btn_menu_config'
-            onClick={
-              () => {
-                add_new_link()
-                set_data({ ...data })
-              }}>
-            <FaPlus/>
-          </Button>
-        </OverlayTrigger>
+        overlay={<Tooltip id={'Menu.tooltips.flux.plus'}>{t('Menu.tooltips.flux.plus')} </Tooltip>}>
+        <Button
+          size="sm"
+          variant="outline-primary"
+          style={{width:'10%'}}
+          className='btn_menu_config'
+          onClick={
+            () => {
+              add_new_link()
+              set_data({ ...data })
+            }}>
+          <FaPlus/>
+        </Button>
+      </OverlayTrigger>
 
-        {/* Selection d'un flux  */}
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.slct'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.slct'}>{t('Menu.tooltips.flux.slct')} </Tooltip>}>
-          {dropdownMultiLinks()}
-        </OverlayTrigger>
-        {/* Suppression d'un flux  */}
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.rm'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.rm'}>{t('Menu.tooltips.flux.rm')} </Tooltip>}>
-          <Button
-            size="sm"
-            variant="outline-primary"
-            className='btn_menu_config'
-            style={{width:'10%'}}
-            onClick={
-              () => {
-                multi_selected_links.current.forEach(l => delete_link(data, l))
-                multi_selected_links.current = []
-                set_data({ ...data })
-              }}>
-            <FaMinus />
-          </Button>
-        </OverlayTrigger>
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.4'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
-          <Button
-            style={{width:'10%'}}
-            size="sm"
-            variant={data.displayed_link_selector?'primary':'outline-primary'}
-            className='btn_menu_config'
-            onClick={
-              () => {
-                data.displayed_link_selector=!data.displayed_link_selector
-                set_data({...data})
-              }}>
-            <FaEye />
-          </Button>
-        </OverlayTrigger>
-      </InputGroup>
-    </Form.Group>
+      {/* Selection d'un flux  */}
+      <OverlayTrigger
+        key={'Menu.tooltips.flux.slct'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'Menu.tooltips.flux.slct'}>{t('Menu.tooltips.flux.slct')} </Tooltip>}>
+        {dropdownMultiLinks()}
+      </OverlayTrigger>
+      {/* Suppression d'un flux  */}
+      <OverlayTrigger
+        key={'Menu.tooltips.flux.rm'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'Menu.tooltips.flux.rm'}>{t('Menu.tooltips.flux.rm')} </Tooltip>}>
+        <Button
+          size="sm"
+          variant="outline-primary"
+          className='btn_menu_config'
+          style={{width:'10%'}}
+          onClick={
+            () => {
+              multi_selected_links.current.forEach(l => delete_link(data, l))
+              multi_selected_links.current = []
+              set_data({ ...data })
+            }}>
+          <FaMinus />
+        </Button>
+      </OverlayTrigger>
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.4'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
+        <Button
+          style={{width:'10%'}}
+          size="sm"
+          variant={data.displayed_link_selector?'primary':'outline-primary'}
+          className='btn_menu_config'
+          onClick={
+            () => {
+              data.displayed_link_selector=!data.displayed_link_selector
+              set_data({...data})
+            }}>
+          <FaEye />
+        </Button>
+      </OverlayTrigger>
+    </InputGroup>
 
 
 
     {/* Choix du point de départ du flux  */}
-    <FormGroup as={Row}>
-      <InputGroup>
-        <InputGroup.Text>{t('Flux.src')}</InputGroup.Text>
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.src'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.src'}>{t('Flux.tooltips.src')} </Tooltip>}>
-          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change} value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:''}>
-            {addDropSource()}
-          </Form.Select>
-        </OverlayTrigger>
-      </InputGroup>
-    </FormGroup>
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>{t('Flux.src')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'Menu.tooltips.flux.src'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'Menu.tooltips.flux.src'}>{t('Flux.tooltips.src')} </Tooltip>}>
+        <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change} value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:''}>
+          {addDropSource()}
+        </Form.Select>
+      </OverlayTrigger>
+    </InputGroup>
 
     {/* Choix du point d'arrivée du flux  */}
-    <FormGroup as={Row}>
-      <InputGroup>
-        <InputGroup.Text>{t('Flux.trgt')}</InputGroup.Text>
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.trgt'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-          <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change} value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:''}>
-            {addDropCible()}
-          </Form.Select>
-        </OverlayTrigger>
-      </InputGroup>
-    </FormGroup>
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>{t('Flux.trgt')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'Menu.tooltips.flux.trgt'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
+        <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change} value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:''}>
+          {addDropCible()}
+        </Form.Select>
+      </OverlayTrigger>
+    </InputGroup>
 
     {/* Inversion du flux  */}
-    <FormGroup as={Row}>
-      <Col xs={7}>
-        <FormLabel>{t('Flux.if')}</FormLabel>
-      </Col>
-      <Col xs={5}>
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>{t('Flux.if')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'Menu.tooltips.flux.if'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.if')} </Tooltip>}>
+        <Button variant="outline-primary"
+          style={{width:'60%'}}
+          className='btn_menu_config'
+          onClick={() => {
+            const nodes_to_reorganize: SankeyNode[] = []
+            multi_selected_links.current.forEach(l => {
+              const tmp = l.idSource
+              const previous_node_s = data.nodes[l.idSource]
+              previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
+              const source_node = data.nodes[l.idTarget]
+              l.idSource = source_node.idNode
+              source_node.outputLinksId.push(l.idLink)
+              nodes_to_reorganize.push(source_node)
+              const previous_node_t = data.nodes[l.idTarget]
+              previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
+              const target_node = data.nodes[tmp]
+              l.idTarget = target_node.idNode
+              target_node.inputLinksId.push(l.idLink)
+              nodes_to_reorganize.push(target_node)
+            })
+            nodes_to_reorganize.forEach(n => {
+              reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
+            })
+            set_data({ ...data })
+          }}>
+          <FaArrowsAltH/>
+        </Button>
+      </OverlayTrigger>
+
+    </InputGroup>
+
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>{t('Flux.dzf')}</InputGroup.Text>
+      {/* Boutton pour monter le lien sélctionné */}
+      <ButtonGroup style={{width:'60%'}}>
         <OverlayTrigger
-          key={'Menu.tooltips.flux.if'}
+          key={'Menu.tooltips.flux.up'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.if')} </Tooltip>}>
-          <Button variant="outline-primary"
+          overlay={<Tooltip id={'Menu.tooltips.flux.up'}>{t('Flux.tooltips.up')} </Tooltip>}>
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length != 1}
             className='btn_menu_config'
             onClick={() => {
-              const nodes_to_reorganize: SankeyNode[] = []
-              multi_selected_links.current.forEach(l => {
-                const tmp = l.idSource
-                const previous_node_s = data.nodes[l.idSource]
-                previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-                const source_node = data.nodes[l.idTarget]
-                l.idSource = source_node.idNode
-                source_node.outputLinksId.push(l.idLink)
-                nodes_to_reorganize.push(source_node)
-                const previous_node_t = data.nodes[l.idTarget]
-                previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-                const target_node = data.nodes[tmp]
-                l.idTarget = target_node.idNode
-                target_node.inputLinksId.push(l.idLink)
-                nodes_to_reorganize.push(target_node)
-              })
-              nodes_to_reorganize.forEach(n => {
-                reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
+              multi_selected_links.current.map(l => {
+                handleDownLink(data,l.idLink)
               })
               set_data({ ...data })
             }}>
-            <FaArrowsAltH/>
+            <FaAngleUp/>
           </Button>
         </OverlayTrigger>
-      </Col>
-    </FormGroup>
 
-    <FormGroup as={Row}>
-      <Col xs={7}>
-        <FormLabel>{t('Flux.dzf')}</FormLabel>
-      </Col>
-      <Col xs={5}>
-        {/* Boutton pour monter le lien sélctionné */}
-        <ButtonGroup>
-          <OverlayTrigger
-            key={'Menu.tooltips.flux.up'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'Menu.tooltips.flux.up'}>{t('Flux.tooltips.up')} </Tooltip>}>
-            <Button variant="outline-primary" disabled={multi_selected_links.current.length != 1}
-              className='btn_menu_config'
-              onClick={() => {
-                multi_selected_links.current.map(l => {
-                  handleDownLink(data,l.idLink)
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.upup'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.upup'}>{t('Flux.tooltips.upup')} </Tooltip>}>
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+            className='btn_menu_config'
+            onClick={() => {
+              multi_selected_links.current.map(l => {
+                const i = l.idLink
+                const { links } = data
+                const listElmt = Object.keys(links)
+                const posElemt = listElmt.indexOf(i)
+                listElmt.splice(posElemt, 1)
+                listElmt.splice(listElmt.length, 0, i)
+                const new_cat: { [key: string]: SankeyLink } = {}
+                listElmt.forEach(elt => {
+                  new_cat[elt] = links[elt]
                 })
-                set_data({ ...data })
-              }}>
-              <FaAngleUp/>
-            </Button>
-          </OverlayTrigger>
+                for (const member in links) delete links[member]
+                Object.assign(links, new_cat)
+              })
+              set_data({ ...data })
+            }}>
+            <FaAngleDoubleUp />
+          </Button>
+        </OverlayTrigger>
 
-          <OverlayTrigger
-            key={'Menu.tooltips.flux.upup'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'Menu.tooltips.flux.upup'}>{t('Flux.tooltips.upup')} </Tooltip>}>
-            <Button variant="outline-primary" disabled={multi_selected_links.current.length != 1}
-              className='btn_menu_config'
-              onClick={() => {
-                multi_selected_links.current.map(l => {
-                  const i = l.idLink
-                  const { links } = data
-                  const listElmt = Object.keys(links)
-                  const posElemt = listElmt.indexOf(i)
-                  listElmt.splice(posElemt, 1)
-                  listElmt.splice(listElmt.length, 0, i)
-                  const new_cat: { [key: string]: SankeyLink } = {}
-                  listElmt.forEach(elt => {
-                    new_cat[elt] = links[elt]
-                  })
-                  for (const member in links) delete links[member]
-                  Object.assign(links, new_cat)
+        {/* Boutton pour baisser le lien sélctionné */}
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.dwn'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.dwn'}>{t('Flux.tooltips.dwn')} </Tooltip>}>
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+            className='btn_menu_config'
+            onClick={() => {
+              multi_selected_links.current.map(l => {
+                handleUpLink(data,l.idLink)
+              })
+              set_data({ ...data })
+
+            }}>
+            <FaAngleDown />
+          </Button>
+        </OverlayTrigger>
+
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.dwndwn'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.dwndwn'}>{t('Flux.tooltips.dwndwn')} </Tooltip>}>
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+            className='btn_menu_config'
+            onClick={() => {
+              multi_selected_links.current.map(l => {
+                const i = l.idLink
+                const { links } = data
+                const listElmt = Object.keys(links)
+                const posElemt = listElmt.indexOf(i)
+                listElmt.splice(posElemt, 1)
+                listElmt.splice(0, 0, i)
+                const new_cat: { [key: string]: SankeyLink } = {}
+                listElmt.forEach(elt => {
+                  new_cat[elt] = links[elt]
                 })
-                set_data({ ...data })
-              }}>
-              <FaAngleDoubleUp />
-            </Button>
-          </OverlayTrigger>
+                for (const member in links) delete links[member]
+                Object.assign(links, new_cat)
+              })
+              set_data({ ...data })
+            }}>
+            <FaAngleDoubleDown />
+          </Button>
+        </OverlayTrigger>
+      </ButtonGroup>
+    </InputGroup>
 
-          {/* Boutton pour baisser le lien sélctionné */}
-          <OverlayTrigger
-            key={'Menu.tooltips.flux.dwn'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'Menu.tooltips.flux.dwn'}>{t('Flux.tooltips.dwn')} </Tooltip>}>
-            <Button variant="outline-primary" disabled={multi_selected_links.current.length != 1}
-              className='btn_menu_config'
-              onClick={() => {
-                multi_selected_links.current.map(l => {
-                  handleUpLink(data,l.idLink)
-                })
-                set_data({ ...data })
-
-              }}>
-              <FaAngleDown />
-            </Button>
-          </OverlayTrigger>
-
-          <OverlayTrigger
-            key={'Menu.tooltips.flux.dwndwn'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'Menu.tooltips.flux.dwndwn'}>{t('Flux.tooltips.dwndwn')} </Tooltip>}>
-            <Button variant="outline-primary" disabled={multi_selected_links.current.length != 1}
-              className='btn_menu_config'
-              onClick={() => {
-                multi_selected_links.current.map(l => {
-                  const i = l.idLink
-                  const { links } = data
-                  const listElmt = Object.keys(links)
-                  const posElemt = listElmt.indexOf(i)
-                  listElmt.splice(posElemt, 1)
-                  listElmt.splice(0, 0, i)
-                  const new_cat: { [key: string]: SankeyLink } = {}
-                  listElmt.forEach(elt => {
-                    new_cat[elt] = links[elt]
-                  })
-                  for (const member in links) delete links[member]
-                  Object.assign(links, new_cat)
-                })
-                set_data({ ...data })
-              }}>
-              <FaAngleDoubleDown />
-            </Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </Col>
-    </FormGroup>
 
 
 
     { (multi_selected_links.current.length !== 0) ? (
-      <FormGroup as={Row}>
-        <Col xs={12}>
-          <Tabs defaultActiveKey="flux_data" id="settings-layout" fill={true}>
-            {menu_configuration_links}
-          </Tabs>
-        </Col>
-      </FormGroup>
+      <Tabs defaultActiveKey="flux_data" id="settings-layout" fill={true}>
+        {menu_configuration_links}
+      </Tabs>
     ):(<></>)
     }</>)
 }
