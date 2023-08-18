@@ -578,7 +578,7 @@ export const updateLayout = (
   new_layout: SankeyData,
   mode:string[]
 ) => {
-  synchronizeNodesandLinksId(new_layout, data)
+  synchronizeNodesandLinksId(data,new_layout)
   //data.node_width = new_layout.node_width
   // Apply nodes layout
   for (const node_layout_key in new_layout.nodes) {
