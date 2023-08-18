@@ -1181,3 +1181,6 @@ textarea {
 .sankey-menu .row{
 	margin-top: 0px;
 }
+.sankey-menu .ql-editor{
+	min-height: 200px;
+}
