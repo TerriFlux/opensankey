@@ -208,7 +208,7 @@ export const compute_end_points = (
       xt += scale(node_size_t_width)
       yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
       if (l_arrow && tmp !== ''  && tmp!=0) {
-        xt = xt + 10
+        xt = xt + l_arrow_size
       }
     } else {
       // source is before target arrow point rightward. Start is on the right of side of source
@@ -230,7 +230,7 @@ export const compute_end_points = (
       xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
       yt += scale(node_size_t_height)
       if (l_arrow && tmp !== ''  && tmp!=0) {
-        yt = yt + 10
+        yt = yt + l_arrow_size
       }
     } else {
       // source is top target. Flux goes down
@@ -251,7 +251,7 @@ export const compute_end_points = (
         xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
         yt += scale(node_size_t_height)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          yt = yt + 10
+          yt = yt + l_arrow_size
         }
       } else {
         //source is top right target. left and down
@@ -269,7 +269,7 @@ export const compute_end_points = (
         xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
         yt += scale(node_size_t_height)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          yt = yt + 10
+          yt = yt + l_arrow_size
         }
       } else {
         //source is top left target. right and down
@@ -291,7 +291,7 @@ export const compute_end_points = (
         xt += scale(node_size_t_width)
         yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          xt += 10
+          xt += l_arrow_size
         }
       } else {
         //source is top right target. down and left
@@ -300,7 +300,7 @@ export const compute_end_points = (
         xt += scale(node_size_t_width)
         yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
         if (l_arrow && tmp !== ''  && tmp!=0) {
-          xt += 10
+          xt += l_arrow_size
         }
       }
     } else {
