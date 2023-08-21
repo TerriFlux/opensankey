@@ -593,18 +593,32 @@ export const updateLayout = (
     }
   }
 
-  if(mode.includes('topoNoeud')) {
+  if(mode.includes('addNode')) {
     let difference = deep_diff.diff(data.nodes, new_layout.nodes)
     if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N' || d.kind === 'D') && d.path.length ===1 )
+      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
+    }
+  }
+  if(mode.includes('removeNode')) {
+    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
+    if (difference) {
+      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
     }
   }
 
-  if(mode.includes('topoFlux')) {
+  if(mode.includes('addFlux')) {
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N' || d.kind === 'D') && d.path.length ===1 )
+      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
+    }
+  }
+  if(mode.includes('removeFlux')) {
+    let difference = deep_diff.diff(data.links, new_layout.links)
+    if (difference) {
+      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
     }
   }
