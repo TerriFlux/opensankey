@@ -128,12 +128,8 @@ export type SankeyLinkValueDict = InferProps<typeof SankeyLinkValueDictTypes>
 
 
 export const SankeyLinkAttrLocalTypes ={
-  // Geometry/appearence
+  // Geometry link
   orientation:PropTypes.string,
-  arrow:PropTypes.bool,
-  color:PropTypes.string,
-  opacity:PropTypes.number,
-  dashed:PropTypes.bool,
   left_horiz_shift: PropTypes.number,
   right_horiz_shift: PropTypes.number,
   vert_shift: PropTypes.number,
@@ -141,13 +137,16 @@ export const SankeyLinkAttrLocalTypes ={
   curved: PropTypes.bool,
   recycling: PropTypes.bool,
   arrow_size:PropTypes.number,
-
-
-
-  // Label
+  // Geometry link labels
   label_position:PropTypes.string,
   orthogonal_label_position:PropTypes.string,
   label_on_path:PropTypes.bool,
+  //Attributes link
+  arrow:PropTypes.bool,
+  color:PropTypes.string,
+  opacity:PropTypes.number,
+  dashed:PropTypes.bool,
+  //Attributes link labels
   label_visible:PropTypes.bool,
   label_font_size:PropTypes.number,
   text_color:PropTypes.string,
@@ -156,7 +155,6 @@ export const SankeyLinkAttrLocalTypes ={
   font_family: PropTypes.string,
   label_unit_visible:PropTypes.bool,
   label_unit:PropTypes.string,
-
 }
 export type SankeyLinkAttrLocal = InferProps<typeof SankeyLinkAttrLocalTypes>
 

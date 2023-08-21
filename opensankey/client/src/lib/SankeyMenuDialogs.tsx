@@ -1,13 +1,17 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form, FormLabel, Row, Col, Modal, Button, FormGroup, Tabs,Tab,OverlayTrigger,Tooltip,InputGroup,FormControl} from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyLink, } from './types'
+import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
+import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { complete_sankey_data } from './SankeyConvert'
 import { default_link, default_node, default_sankey_data,clickSaveDiagram } from './SankeyUtils'
 import { node_visible_on_svg } from './SankeyDrawFunction'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { menu_draggable } from './SankeyMenu'
+import { FaCheck } from 'react-icons/fa'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { TFunction } from 'i18next'
 /**
  * Define ApplyLayoutDialog
  *
@@ -17,7 +21,7 @@ const ApplyLayoutDialogPropTypes = {
   t:PropTypes.func.isRequired,
   show_apply_layout : PropTypes.bool.isRequired,
   set_show_apply_layout: PropTypes.func.isRequired,
-  sankey_data : SankeyDataPropTypes,
+  sankey_data : PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_sankey_data : PropTypes.func.isRequired,
   updateLayout:PropTypes.func.isRequired,
   convert_data:PropTypes.func.isRequired,
@@ -25,9 +29,10 @@ const ApplyLayoutDialogPropTypes = {
   set_node_hspace:PropTypes.func.isRequired,
   node_vspace:PropTypes.number.isRequired,
   set_node_vspace:PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data:PropTypes.func.isRequired,
-
+  // data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  // set_data:PropTypes.func.isRequired,
+  diagramSelector: PropTypes.func.isRequired,
+  apply_transformation_additional_elements: PropTypes.func.isRequired
 }
 
 /**
@@ -41,149 +46,330 @@ type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
  * @param {ApplyLayoutDialogTypes} { show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
-export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data,updateLayout,convert_data,node_hspace,set_node_hspace,node_vspace,set_node_vspace,data,set_data }: ApplyLayoutDialogTypes) => {
-  const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
+export const ApplyLayoutDialog = ({ 
+  t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data,
+  updateLayout,convert_data,node_hspace,set_node_hspace,node_vspace,set_node_vspace,
+  diagramSelector,
+  apply_transformation_additional_elements 
+}: ApplyLayoutDialogTypes) => {
   const [elementToDispose, ] = useState([''])
+  const [prev_sankey_data,set_prev_sankey_data] = useState(sankey_data)
   const [forceUpdate,setForceUpdate] = useState(true)
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
   const node_visible=node_visible_on_svg()
 
+  const all_element_to_transform = [
+    'topoNoeud', 'topoFlux', 
+    'posNode', 'posFlux', 
+    'Values', 
+    'attrNode', 'attrFlux', 
+    'tagNode', 'tagFlux', 'tagData', 'tagLevel',
+    'attrGeneral'
+  ]
+  const default_element_to_transform = [
+    'posNode', 'posFlux',  
+    'attrNode', 'attrFlux',
+    'attrGeneral'
+  ]
+
   const applyStretch=(param:string)=>{
     const attr=param=='h'?'x':'y'
     const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
-    let min=Object.values(data.nodes)[0][attr]
+    let min=Object.values(sankey_data.nodes)[0][attr]
     // Cheche la position en y du noeud le plus en haut à gauche
-    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
+    Object.values(sankey_data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
       min=(n[attr]<min)?n[attr]:min
     })
 
     // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
     // applique le delta mutiplié par le facteur au noeud
-    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
+    Object.values(sankey_data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
       const delta=n[attr]-min
       n[attr]=min+(delta*stretchFactor)
     })
-    set_data({...data})
+    set_sankey_data({...sankey_data})
   }
   const content_modal_layout=  <Tabs defaultActiveKey={'import'} >
 
-    <Tab eventKey='import' title={t('Menu.amp_import')} style={{marginBottom:'10px'}}>
-      <Form >
-        <Form.Group as={Row} >
-          <Col xs={3}>
-            <FormLabel>{t('Menu.fmep')}</FormLabel>
-          </Col>
-          <Col xs={5}>
-            <Form.Control
-              type="file"
-              onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)}
-            />
-          </Col>
-          <Col xs={4}>
-            <Button
-              size="sm"
-              onClick={
-                () => {
-                  if (file_layout === undefined) {
-                    return
-                  }
-                  const reader = new FileReader()
-                  reader.onload = (() => {
-                    return (
-                      (e: ProgressEvent<FileReader>) => {
-                        let result = (e.target as FileReader).result
-                        if (result) {
-                          result = String(result)//.split('<br>').join('\\\\n')
-                          const new_layout = JSON.parse(result)
-                          convert_data(new_layout)
-                          complete_sankey_data(new_layout,default_sankey_data,default_node,default_link)
-                          updateLayout(sankey_data, new_layout,elementToDispose)
-                          set_sankey_data({ ...sankey_data })
-                        }
-                      }
-                    )
-                  })()
-                  reader.readAsText(file_layout[0])
-                }
-              }>{t('Menu.ad')}
-            </Button>
-          </Col>
-        </Form.Group>
-      </Form>
-      <Form.Label>{t('Menu.textDisposition')}</Form.Label>
-      <FormGroup as={Row}>
-        <Col xs={2}>
-          <Form.Check inline checked={ elementToDispose.includes('posNode')} value='posNode' label={t('Menu.PosNoeud')} onChange={(evt) => {
-            if(evt.target.checked){
-              elementToDispose.push('posNode')
+    <Tab eventKey='import' title={t('Menu.Transformation.amp_import')} style={{marginBottom:'10px'}}>
+      {diagramSelector(t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose)}
+      <InputGroup as={Row}>
+        <Col xs='2'>
+          <InputGroup.Text>{t('Menu.Transformation.Shortcuts')}</InputGroup.Text>
+        </Col >
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant='outline-primary' 
+            onClick={() => {
+              elementToDispose.length = 0
               setForceUpdate(!forceUpdate)
-            }else{
-              elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
+            }}
+          >{t('Menu.Transformation.unSelectAll')}</Button>
+        </Col>    
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant='outline-primary' 
+            onClick={() => {
+              elementToDispose.length = 0
+              all_element_to_transform.forEach(el=>elementToDispose.push(el))
               setForceUpdate(!forceUpdate)
-            }}}/>
+            }}
+          >{t('Menu.Transformation.selectAll')}</Button>
         </Col>
-        <Col xs={2}>
-          <Form.Check inline checked={elementToDispose.includes('attrNode')} value='attrNode' label={t('Menu.attrNode')} onChange={(evt) => {
-            if(evt.target.checked){
-              elementToDispose.push('attrNode')
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant='outline-primary' 
+            onClick={() => {
+              elementToDispose.length = 0
+              default_element_to_transform.forEach(el=>elementToDispose.push(el))
               setForceUpdate(!forceUpdate)
+            }}
+          >{t('Menu.Transformation.selectDefault')}</Button>
+        </Col>
+      </InputGroup>  
+      <InputGroup as={Row}>
+        <Col xs='2'>
+          <InputGroup.Text>{t('Menu.Transformation.Topology')}</InputGroup.Text>
+        </Col >          
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={ elementToDispose.includes('topoNoeud')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('topoNoeud')){
+                elementToDispose.push('topoNoeud')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('topoNoeud'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{t('Menu.Transformation.topoNoeud')}</Button>
+        </Col>
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={ elementToDispose.includes('topoFlux')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('topoFlux')){
+                elementToDispose.push('topoFlux')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('topoFlux'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }>{t('Menu.Transformation.topoFlux')}</Button>
+        </Col>
+      </InputGroup>           
+      <InputGroup as={Row}>
+        <Col xs='2'>
+          <InputGroup.Text>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
+        </Col >
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={ elementToDispose.includes('posNode')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('posNode')){
+                elementToDispose.push('posNode')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }>{t('Menu.Transformation.PosNoeud')}</Button>
+        </Col>
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={ elementToDispose.includes('posFlux')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('posFlux')){
+                elementToDispose.push('posFlux')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('posFlux'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }> {t('Menu.Transformation.posFlux')}</Button>
+        </Col>
+      </InputGroup>
+      <InputGroup as={Row}>
+        <Col xs='2'>
+          <InputGroup.Text>{t('Menu.Transformation.Values')}</InputGroup.Text>
+        </Col >
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config' 
+            style={{width:'100px'}}
+            variant={ elementToDispose.includes('Values')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('Values')){
+                elementToDispose.push('Values')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('Values'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{elementToDispose.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        </Col>
+      </InputGroup>
+      <InputGroup as={Row}>
+        <Col xs='2'>
+          <InputGroup.Text>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
+        </Col >
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={elementToDispose.includes('attrNode')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('attrNode')){
+                elementToDispose.push('attrNode')
+                setForceUpdate(!forceUpdate)
 
-            }else{
-              elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
-              setForceUpdate(!forceUpdate)
-            }}}/>
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{t('Menu.Transformation.attrNode')}</Button>
         </Col>
-        <Col xs={2}>
-          <Form.Check inline checked={elementToDispose.includes('attrFlux')} value='attrFlux' label={t('Menu.attrFlux')} onChange={(evt) =>{
-            if(evt.target.checked){
-              elementToDispose.push('attrFlux')
-              setForceUpdate(!forceUpdate)
-            }else{
-              elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
-              setForceUpdate(!forceUpdate)
-            }}}/>
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={elementToDispose.includes('attrFlux')?'primary':'outline-primary'} 
+            onClick={() =>{
+              if(!elementToDispose.includes('attrFlux')){
+                elementToDispose.push('attrFlux')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{t('Menu.Transformation.attrFlux')}</Button>
         </Col>
-        <Col xs={2}>
-          <Form.Check inline checked={elementToDispose.includes('tagNode')} value='tagNode' label={t('Menu.tagNode')} onChange={(evt) =>{
-            if(evt.target.checked){
-              elementToDispose.push('tagNode')
-              setForceUpdate(!forceUpdate)
-            }else{
-              elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
-              setForceUpdate(!forceUpdate)
+      </InputGroup>
+      <InputGroup as={Row}>
+        <Col xs='2'>
+          <InputGroup.Text>{t('Menu.Transformation.Tags')}</InputGroup.Text>
+        </Col >
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={elementToDispose.includes('tagNode')?'primary':'outline-primary'} 
+            onClick={() =>{
+              if(!elementToDispose.includes('tagNode')){
+                elementToDispose.push('tagNode')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
+                setForceUpdate(!forceUpdate)
 
-            }}}/>
+              }}
+            }
+          >{t('Menu.Transformation.tagNode')}</Button>
         </Col>
-        <Col xs={2}>
-          <Form.Check inline checked={elementToDispose.includes('tagFlux')} value='tagFlux' label={t('Menu.tagFlux')} onChange={(evt) => {
-            if(evt.target.checked){
-              elementToDispose.push('tagFlux')
-              setForceUpdate(!forceUpdate)
-            }else{
-              elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
-              setForceUpdate(!forceUpdate)
-            }}}/>
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={elementToDispose.includes('tagFlux')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('tagFlux')){
+                elementToDispose.push('tagFlux')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{t('Menu.Transformation.tagFlux')}</Button>
         </Col>
-        <Col xs={2}>
-          <Form.Check inline checked={elementToDispose.includes('attrGeneral')} value='attrGeneral' label={t('Menu.attrGeneral')} onChange={(evt) =>{
-            if(evt.target.checked){
-              elementToDispose.push('attrGeneral')
-              setForceUpdate(!forceUpdate)
-
-            }else{
-              elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
-              setForceUpdate(!forceUpdate)
-            }}}/>
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={elementToDispose.includes('tagData')?'primary':'outline-primary'}
+            onClick={() => {
+              if(!elementToDispose.includes('tagData')){
+                elementToDispose.push('tagData')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('tagData'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{t('Menu.Transformation.tagData')}</Button>
         </Col>
-      </FormGroup>
+      </InputGroup>
+      <InputGroup as={Row}>
+        <Col xs='2'>
+          <InputGroup.Text>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
+        </Col >
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={elementToDispose.includes('tagLevel')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('tagLevel')){
+                elementToDispose.push('tagLevel')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('tagLevel'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{elementToDispose.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        </Col>
+      </InputGroup>
+      <InputGroup as={Row}>
+        <Col xs='2'>
+          <InputGroup.Text>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
+        </Col >
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={elementToDispose.includes('attrGeneral')?'primary':'outline-primary'} 
+            onClick={() =>{
+              if(!elementToDispose.includes('attrGeneral')){
+                elementToDispose.push('attrGeneral')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }
+          >{elementToDispose.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        </Col>
+      </InputGroup>
+      {apply_transformation_additional_elements(t,forceUpdate,setForceUpdate,elementToDispose).map((c:JSX.Element,i:number)=>{
+        return <React.Fragment key={i}>{c}</React.Fragment>
+      })}
     </Tab>
 
-    <Tab eventKey={'manuelle'} title={t('Menu.amp_manuelle')} style={{marginBottom:'10px'}}>
+    <Tab eventKey={'manuelle'} title={t('Menu.Transformation.amp_manuelle')} style={{marginBottom:'10px'}}>
       {/* Ecart horizontal */}
       <Form.Group as={Row} >
         <Col xs={7}>
-          <FormLabel>{t('MEP.Horizontal')}</FormLabel>
+          <InputGroup.Text>{t('MEP.Horizontal')}</InputGroup.Text>
         </Col>
         <Col xs={5}>
           <OverlayTrigger
@@ -197,7 +383,7 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
               value={node_hspace}
               onChange={evt => {
                 set_node_hspace(+evt.target.value)
-                data.h_space = +evt.target.value
+                sankey_data.h_space = +evt.target.value
               }}/>
           </OverlayTrigger>
         </Col>
@@ -205,7 +391,7 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
       {/* Ecart Vertical */}
       <Form.Group as={Row}>
         <Col xs={7}>
-          <FormLabel>{t('MEP.Vertical')}</FormLabel>
+          <InputGroup.Text>{t('MEP.Vertical')}</InputGroup.Text>
         </Col>
         <Col xs={5}>
           <OverlayTrigger
@@ -219,7 +405,7 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
               value={node_vspace}
               onChange={evt => {
                 set_node_vspace(+evt.target.value)
-                data.v_space = +evt.target.value
+                sankey_data.v_space = +evt.target.value
               }}/>
           </OverlayTrigger>
         </Col>
@@ -304,8 +490,8 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
             <Button
               size="sm"
               onClick={() => {
-                compute_auto_sankey(data, node_hspace)
-                set_data({ ...data })
+                compute_auto_sankey(sankey_data, node_hspace)
+                set_sankey_data({ ...sankey_data })
               }}>
               {t('MEP.PA')}
             </Button>
@@ -322,8 +508,8 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
             <Button
               size="sm"
               onClick={() => {
-                arrangeNodes(data)
-                set_data({ ...data })
+                arrangeNodes(sankey_data)
+                set_sankey_data({ ...sankey_data })
               }}>
               {t('MEP.AN')}
             </Button>
@@ -331,9 +517,10 @@ export const ApplyLayoutDialog = ({ t,show_apply_layout, set_show_apply_layout, 
         </Col>
       </Form.Group>
     </Tab>
+    <Tab eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
   </Tabs>
 
-  const dragLayout=show_apply_layout?menu_draggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.MEP'),set_show_apply_layout,60):<></>
+  const dragLayout=show_apply_layout?menu_draggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.Transformation.title'),set_show_apply_layout,60):<></>
   return dragLayout
 
 }
@@ -385,7 +572,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
                 onChange={(evt)=>set_mode_save(evt.target.checked)}/>
             </Col>
             <Col xs={7}>
-              <FormLabel style={{justifyContent: 'left', marginLeft: '-2.75em'}}>{t('Menu.SaveValue')}</FormLabel>
+              <InputGroup.Text style={{justifyContent: 'left', marginLeft: '-2.75em'}}>{t('Menu.SaveValue')}</InputGroup.Text>
             </Col>
             <Col xs={4}>
               <Button
@@ -479,4 +666,65 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelIm
 }
 
 ExcelModal.propTypes = ExcelModalPropTypes
+
+export const OpenSankeyDiagramSelector = (
+  t: TFunction, 
+  convert_data: (s:SankeyData)=>null,
+  sankey_data: SankeyData,
+  set_sankey_data: (s:SankeyData)=>null,
+  prev_sankey_data: SankeyData,
+  set_prev_sankey_data: (s:SankeyData)=>void, 
+  updateLayout: (data: SankeyData,new_layout: SankeyData,mode:string[])=>void, 
+  elementToDispose : string[]
+) => {
+  const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
+  return <Form>
+    <Form.Group as={Row}>
+      <Col xs='2'>
+        <FormLabel>{t('Menu.Transformation.fmep')}</FormLabel>
+      </Col>
+      <Col xs='2'>
+        <Form.Control
+          type="file"
+          onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} />
+      </Col>
+      <Col xs={3}>
+        <Button
+          size="sm"
+          onClick={() => {
+            if (file_layout === undefined) {
+              return
+            }
+            const reader = new FileReader()
+            reader.onload = (() => {
+              return (
+                (e: ProgressEvent<FileReader>) => {
+                  let result = (e.target as FileReader).result
+                  if (result) {
+                    result = String(result) //.split('<br>').join('\\\\n')
+                    const new_layout = JSON.parse(result)
+                    convert_data(new_layout)
+                    complete_sankey_data(new_layout, default_sankey_data, default_node, default_link)
+                    set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
+                    updateLayout(sankey_data, new_layout, elementToDispose)
+                    set_sankey_data({ ...sankey_data })
+                  }
+                }
+              )
+            })()
+            reader.readAsText(file_layout[0])
+          } }>{t('Menu.Transformation.ad')}
+        </Button>
+      </Col>
+      <Col xs={3}>
+        <Button
+          size="sm"
+          onClick={() => {
+            set_sankey_data(JSON.parse(JSON.stringify(prev_sankey_data)))
+          } }>{t('Menu.Transformation.undo')}
+        </Button>
+      </Col>
+    </Form.Group>
+  </Form>
+}
 

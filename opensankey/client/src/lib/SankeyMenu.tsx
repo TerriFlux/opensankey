@@ -125,6 +125,8 @@ const MenuPropTypes = {
   set_node_hspace:PropTypes.func.isRequired,
   node_vspace:PropTypes.number.isRequired,
   set_node_vspace:PropTypes.func.isRequired,
+  apply_transformation_additional_elements: PropTypes.func.isRequired,
+  DiagramSelector: PropTypes.func.isRequired
 }
 
 const pre_process_export_svg=()=>{
@@ -914,7 +916,7 @@ export const OpenSankeyMenus = (
     ui['edition']=<>
       <Button size='sm' variant='light' onClick={reinitialization} ><><Col><FontAwesomeIcon icon={faTrashCan} /></Col><Col className='textIcon'>{t('Menu.reinit')}</Col></></Button>
       {/* <Button size='sm' variant='light' onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Button>     */}
-      <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}><><Col><FontAwesomeIcon icon={faFileInvoice} /></Col><Col className='textIcon'>{t('Menu.amp_short')}</Col></></Button>
+      <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}><><Col><FontAwesomeIcon icon={faFileInvoice} /></Col><Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></></Button>
       <Dropdown className='buttonSubNav'drop='end'  id='exporter' >
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPenToSquare} /></Col><Col className='textIcon'>{t('Menu.style')}</Col></></Dropdown.Toggle>
         <Dropdown.Menu>
@@ -1008,7 +1010,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     updateLayout,
     convert_data,
     node_hspace,set_node_hspace,
-    node_vspace,set_node_vspace
+    node_vspace,set_node_vspace,
+    apply_transformation_additional_elements,
+    DiagramSelector
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1057,7 +1061,11 @@ const Menu: FunctionComponent<MenuTypes> = (
               el.colorTag = new_data.colorMap
             })
           }
-          if (Object.keys(new_data.nodeTags).length == 0 && Object.keys(new_data.fluxTags).filter(tag=>tag !== 'flux_type').length == 0 && Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0) {
+          if (Object.keys(new_data.nodeTags).length == 0 && 
+              Object.keys(new_data.fluxTags).filter(tag=>tag !== 'flux_type').length == 0 && 
+              Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0 &&
+              Object.values(new_data.links).filter(l=>l.local && l.local.color).length == 0
+          ) {
             const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
             const n_keys=Object.keys(new_data.nodes)
             const size_color=n_keys.length
@@ -1372,8 +1380,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_node_hspace={set_node_hspace}
         node_vspace={node_vspace}
         set_node_vspace={set_node_vspace}
-        data={data}
-        set_data={set_data}
+        apply_transformation_additional_elements={apply_transformation_additional_elements}
+        diagramSelector={DiagramSelector}
       />
 
       <ExcelModal

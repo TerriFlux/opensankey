@@ -884,7 +884,7 @@ export const default_node_style=()=>{
     label_horiz: 'middle',
     label_background:false,
 
-    show_value: true,
+    show_value: false,
     label_vert_valeur: 'top',
     label_horiz_valeur: 'middle',
     value_font_size:14,
@@ -905,7 +905,7 @@ export const default_link_style=()=>{
     label_position: 'middle',
     orthogonal_label_position: 'middle',
     curvature: 0.5,
-    label_visible: false,
+    label_visible: true,
     label_on_path: true,
     label_font_size:20,
     orientation: 'hh',
@@ -1117,7 +1117,7 @@ export const processExample = (server_data: SankeyData,updateLayout:(data: Sanke
     convert_data((data as SankeyData & layout_type).layout)
     complete_sankey_data((data as SankeyData & layout_type).layout,default_sankey_data,default_node,default_link)
     compute_default_input_outputLinksId(data.nodes, data.links)
-    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','attrNode','attrFlux','tagNode','tagFlux','tagData','attrGeneral'])
+    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','posFlux','attrNode','attrFlux','tagNode','tagFlux','tagData','attrGeneral','freeLabels','Views'])
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
   d3.select('.loading_auto_compute').remove()
@@ -1199,10 +1199,10 @@ export const uploadExemple = (
         //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
       } else {
         reinitialization()
-        Object.assign(data,server_data)
-        convert_data(data)
-        complete_sankey_data(data,default_sankey_data,default_node,default_link)
-        set_data({ ...data})
+        //Object.assign(data,server_data)
+        complete_sankey_data(server_data,default_sankey_data,default_node,default_link)
+        convert_data(server_data)
+        set_data({ ...server_data})
       }
     })
   })

@@ -682,30 +682,33 @@ export const convert_nodes = (
       // CONVERSION D'ATTRIBUT OBLIGATOIRE DES NOEUDS EN VARIABLES LOCAL
       if(((n as unknown) as ConvertSankeyNode).display_style!==undefined){
         n.local=(n.local!=undefined && n.local!==null)?n.local:{}
-        if (n_convert.display_style?.label_vert === 'bottom' && n_convert.display_style?.label_horiz === 'right') {
-          n.local.label_horiz = 'middle'
-        }
+        // if (n_convert.display_style?.label_vert === 'bottom' && n_convert.display_style?.label_horiz === 'right') {
+        //   n.local.label_horiz = 'middle'
+        // }
         if (n_convert.display_style?.label_vert === 'haut' ) {
-          n.local.label_vert = 'top'
+          n_convert.display_style.label_vert = 'top'
         }
         if (n_convert.display_style?.label_vert === 'milieu' ) {
-          n.local.label_vert = 'middle'
+          n_convert.display_style.label_vert = 'middle'
         }
         if (n_convert.display_style?.label_vert === 'bas' ) {
-          n.local.label_vert = 'bottom'
+          n_convert.display_style.label_vert = 'bottom'
         }
         if (n_convert.display_style?.label_horiz === 'droite' ) {
-          n.local.label_horiz = 'right'
+          n_convert.display_style.label_horiz = 'right'
         }
         if (n_convert.display_style?.label_horiz === 'milieu' ) {
-          n.local.label_horiz = 'middle'
+          n_convert.display_style.label_horiz = 'middle'
         }
         if (n_convert.display_style?.label_horiz === 'gauche' ) {
-          n.local.label_horiz = 'left'
+          n_convert.display_style.label_horiz = 'left'
         }
-        if (n_convert.display_style?.font_family === undefined) {
-          n.local.font_family = 'Arial,serif'
+        if (n_convert.display_style && n_convert.display_style?.font_family === undefined) {
+          n_convert.display_style.font_family = 'Arial,serif'
         }
+
+        n.local.label_vert = n_convert.display_style?.label_vert
+        n.local.label_horiz = n_convert.display_style?.label_horiz
         n.local.font_size=Number(n_convert.display_style?.font_size)
         n.local.value_font_size=Number(n_convert.display_style?.value_font_size)
         n.local.bold=n_convert.display_style?.bold
@@ -778,11 +781,10 @@ export const convert_nodes = (
         delete n_convert.type
       }
 
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-      n.local.label_visible=(n_convert.label_visible as boolean)
-
-
-      
+      if (n_convert.label_visible) {
+        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+        n.local.label_visible=(n_convert.label_visible as boolean)
+      }
 
       // FIN CONVERSION EN ATTRIBUT LOCAL
       // ==================================================================
@@ -1220,10 +1222,9 @@ export const convert_links = (
         delete l[(k as keyof SankeyLink)] 
       }
     })
-    if (l.local && l.local.color === '#808080') {
+    if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === default_link_style().color) ) {
       delete l.local.color
     }
-
   })
 
   if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {

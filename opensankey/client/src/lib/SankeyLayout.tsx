@@ -578,242 +578,156 @@ export const updateLayout = (
   new_layout: SankeyData,
   mode:string[]
 ) => {
-  synchronizeNodesandLinksId(data,new_layout)
-  //data.node_width = new_layout.node_width
-  // Apply nodes layout
-  for (const node_layout_key in new_layout.nodes) {
-    const node = data.nodes[node_layout_key]
-    if (!node) {
-      continue
-    }
-    const node_layout = new_layout.nodes[node_layout_key]
-    if(mode.includes('posNode')){
-      node.name = node_layout.name
-      if(node.local===undefined || node.local===null){
-        node.local={}
-      }  
-      node.position = node_layout.position
-      node.local.node_width = node_layout.local?.node_width
-      node.local.node_height = node_layout.local?.node_height
-      node.local.show_value = node_layout.local?.show_value
-      node.local.shape = node_layout.local?.shape
-      if (node_layout.x !== 0 && node_layout.y != 0) { 
-        node.x = node_layout.x
-        node.y = node_layout.y
-      }
-      // if (node.y + 200 > max_vertical_offset) {
-      //   max_vertical_offset = node.y + 200
-      // }
-      node.x_label = node_layout.x_label
-      node.y_label = node_layout.y_label
-    }
-    if(mode.includes('attrNode')){
-      node.local=node_layout?.local
 
-      // node.iconName = node_layout.iconName ? node_layout.iconName : node.iconName
-      // node.iconColor = node_layout.iconColor ? node_layout.iconColor : node.iconColor
-      // node.iconRatio = node_layout.iconRatio ? node_layout.iconRatio : node.iconRatio
-      // node.iconVisible= node_layout.iconVisible ? node_layout.iconVisible : node.iconVisible
-
-      node.colorTag = node_layout.colorTag
-      node.colorParameter = node_layout.colorParameter
-      // node.color = node_layout.color
+  synchronizeNodesandLinksId(data, new_layout)
+  /* eslint-disable */
+  // @ts-ignore
+  const deep_diff = require('deep-diff')
+  /* eslint-enable */
   
-
-      // node.shape_visible = node_layout.shape_visible
-      // node.label_visible = node_layout.label_visible
+  if(mode.includes('attrGeneral')) {
+    let difference = deep_diff.diff(data, new_layout)
+    if (difference) {
+      difference = difference.filter((d :{path:string[],kind:string}) => d.kind === 'E' && d.path.length ===1 )
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data, {}, diff))
     }
-    // if(mode.includes('tagNode')){
-    //   for (const node_tag_key in node_layout.tags) {
-    //     node.tags[node_tag_key] = JSON.parse(JSON.stringify(node_layout.tags[node_tag_key]))
-  //   }
-  // }
-  }
-  
-  // (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
-  // for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {
-  //   (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label] = 
-  //     (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label]
-  // }
-
-  if (mode.includes('attrFlux')){
-    apply_input_outputLinksId(
-      new_layout.nodes,
-      data
-    )
-    for (const link_layout_key in new_layout.links) {
-      const link_layout = new_layout.links[link_layout_key]
-      const link = data.links[link_layout_key]  
-      if (!link) {
-        continue
-      }
-      if(link.local===undefined || link.local===null){
-        link.local={}
-      }
-      // const { x_label, y_label, label_position, label_visible, recycling, curved, curvature, arrow,orthogonal_label_position,label_font_size } = link_layout
-      link.local.curvature = link_layout.local?.curvature
-      link.local.curved = link_layout.local?.curved
-      link.local.arrow = link_layout.local?.arrow
-      link.local.text_color = link_layout.local?.text_color
-      link.local.label_position = link_layout.local?.label_position
-      link.local.label_visible = link_layout.local?.label_visible
-      link.local.label_font_size = link_layout.local?.label_font_size
-      link.x_label = link_layout.x_label
-      link.y_label = link_layout.y_label
-      link.local.left_horiz_shift = link_layout.local?.left_horiz_shift
-      link.local.right_horiz_shift = link_layout.local?.right_horiz_shift
-      link.local.orientation = link_layout.local?.orientation
-      link.local.recycling = link_layout.local?.recycling
-      link.local.orthogonal_label_position = link_layout.local?.orthogonal_label_position
-  
-      link.colorTag = link_layout.colorTag
-      //link.colorParameter = link_layout.colorParameter
-      link.local.color = link_layout.local?.color
-  
-      if (link_layout.local?.vert_shift) {
-        link.local.left_horiz_shift = link_layout.local?.left_horiz_shift
-        link.local.right_horiz_shift = link_layout.local?.right_horiz_shift
-        link.local.vert_shift = link_layout.local?.vert_shift
-      }
-    }
-    
   }
 
-  if ((new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
-    if (!(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view) {
-      (data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view = []
+  if(mode.includes('topoNoeud')) {
+    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
+    if (difference) {
+      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N' || d.kind === 'D') && d.path.length ===1 )
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
     }
-    if ((data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.length == 0) {
-      (new_layout as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view .forEach(
-        v=>(data as unknown as {view : {id: string,view_data: object,nom:string,details:string}[]}).view.push(v)
+  }
+
+  if(mode.includes('topoFlux')) {
+    let difference = deep_diff.diff(data.links, new_layout.links)
+    if (difference) {
+      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N' || d.kind === 'D') && d.path.length ===1 )
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
+    }
+  }
+
+  if(mode.includes('posNode')){
+    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
+    if (difference) {
+      difference = difference.filter((d :{path:string[],kind:string}) => d.kind === 'E' && ['x','y','x_label','y_label'].includes(d.path[1]) )
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
+    }  
+  }
+
+  if (mode.includes('posFlux')) {
+    const geometry_attributes = [    
+      'orientation',
+      'left_horiz_shift',
+      'right_horiz_shift',
+      'vert_shift',
+      'curvature',
+      'curved',
+      'recycling',
+      'arrow_size',
+      // Geometry link labels
+      'x_label',
+      'y_label',  
+      'label_position',
+      'orthogonal_label_position',
+      'label_on_path'
+    ]
+    let difference = deep_diff.diff(data.links, new_layout.links)
+    if (difference) {
+      difference = difference.filter((d :{path:string[],kind:string}) => 
+        (d.kind === 'D' || d.kind === 'N') && d.path.length === 3 && d.path[1] === 'local' && geometry_attributes.includes(d.path[2]) ||
+      (d.kind === 'E' && geometry_attributes.includes(d.path[1]))
       )
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
     }
   }
 
-
-  // Always assign level tag from new layout
-  const new_layout_level_tag=Object.fromEntries(Object.entries(new_layout.levelTags))
-  for (const tag_group_key in new_layout_level_tag) {
-    if (tag_group_key in data.levelTags) {
-      continue
-    }
-    data.levelTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout_level_tag[tag_group_key]))
+  if (mode.includes('attrNode')) {
+    Object.entries(data.nodes).forEach( ([key,node]) => {
+      const layoutNode = new_layout.nodes[key]
+      if (!layoutNode) {
+        return
+      }
+      if (!node.local) {
+        node.local = {}
+      }
+      if (!layoutNode.local) {
+        layoutNode.local = {}
+      }
+      const difference = deep_diff.diff(node.local, layoutNode.local)
+      if (difference) {
+        difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(node.local, {}, diff))
+      } 
+    })
   }
-  for (const tag_group_key in data.levelTags) {
-    if (!(tag_group_key in new_layout_level_tag)) {
-      continue
-    }
-    data.levelTags[tag_group_key].show_legend = new_layout_level_tag[tag_group_key].show_legend
-    data.levelTags[tag_group_key].banner = new_layout_level_tag[tag_group_key].banner
-    for (const tag in data.levelTags[tag_group_key].tags) {
-      if (!(tag in new_layout_level_tag[tag_group_key].tags)) {
-        continue
+  if (mode.includes('attrFlux')){
+    Object.entries(data.links).forEach( ([key,link]) => {
+      const layoutLink = new_layout.links[key]
+      if (!layoutLink) {
+        return
       }
-      data.levelTags[tag_group_key].tags[tag].color = new_layout_level_tag[tag_group_key].tags[tag].color
-      if (tag !== 'échange') {
-        data.levelTags[tag_group_key].tags[tag].selected = new_layout_level_tag[tag_group_key].tags[tag].selected
+      if (!link.local) {
+        link.local = {}
       }
-    }
+      if (!layoutLink.local) {
+        layoutLink.local = {}
+      }
+      const difference = deep_diff.diff(link.local, layoutLink.local)
+      if (difference) {
+        difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(link.local, {}, diff))
+      }  
+    })
   }
 
+  if (mode.includes('Values')){
+    Object.entries(data.links).forEach( ([key,link]) => {
+      const layoutLink = new_layout.links[key]
+      if (!layoutLink) {
+        return
+      }
+      const difference = deep_diff.diff(link.value, layoutLink.value)
+      // difference = difference.filter((d :{path:string[],kind:string}) => d.kind === 'E' && d.path[1] === 'value' )
+      if (difference) {
+        difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(link.value, {}, diff))
+      }  
+    })
+  }
 
-  if(mode.includes('tagNode')){
-    for (const tag_group_key in new_layout.nodeTags) {
-      if (tag_group_key in data.nodeTags) {
-        continue
-      }
-      data.nodeTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.nodeTags[tag_group_key]))
-    }
-    for (const tag_group_key in data.nodeTags) {
-      if (!(tag_group_key in new_layout.nodeTags)) {
-        continue
-      }
-      data.nodeTags[tag_group_key].show_legend = new_layout.nodeTags[tag_group_key].show_legend
-      data.nodeTags[tag_group_key].banner = new_layout.nodeTags[tag_group_key].banner
-      for (const tag in data.nodeTags[tag_group_key].tags) {
-        if (!(tag in new_layout.nodeTags[tag_group_key].tags)) {
-          continue
-        }
-        data.nodeTags[tag_group_key].tags[tag].color = new_layout.nodeTags[tag_group_key].tags[tag].color
-        if (tag !== 'échange') {
-          data.nodeTags[tag_group_key].tags[tag].selected = new_layout.nodeTags[tag_group_key].tags[tag].selected
-        }
-      }
+  if (mode.includes('tagLevel')) {
+    const difference = deep_diff.diff(data.levelTags, new_layout.levelTags)
+    if (difference) {
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.levelTags, {}, diff))
     }
   }
-  
+  if (mode.includes('tagNode')) {
+    const difference = deep_diff.diff(data.nodeTags, new_layout.nodeTags)
+    if (difference) {
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodeTags, {}, diff))
+    }
+    Object.entries(data.nodes).forEach( ([key,node]) => {
+      const layoutNode = new_layout.nodes[key]
+      if (!layoutNode) {
+        return
+      }
+      const difference = deep_diff.diff(node.tags, layoutNode.tags)
+      if (difference) {
+        difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(node.tags, {}, diff))
+      } 
+    })
+  }
   if(mode.includes('tagFlux')){
-    for (const tag_group_key in new_layout.fluxTags) {
-      data.fluxTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.fluxTags[tag_group_key]))
-    }
-    for (const tag_group_key in data.fluxTags) {
-      if (!(tag_group_key in new_layout.fluxTags)) {
-        continue
-      }
-      data.fluxTags[tag_group_key].show_legend = new_layout.fluxTags[tag_group_key].show_legend
-      data.fluxTags[tag_group_key].banner = new_layout.fluxTags[tag_group_key].banner
-      for (const tag in data.fluxTags[tag_group_key].tags) {
-        if (!(tag in new_layout.fluxTags[tag_group_key].tags)) {
-          continue
-        }
-        data.fluxTags[tag_group_key].tags[tag].color = new_layout.fluxTags[tag_group_key].tags[tag].color
-        data.fluxTags[tag_group_key].tags[tag].selected = new_layout.fluxTags[tag_group_key].tags[tag].selected
-      }
+    const difference = deep_diff.diff(data.fluxTags, new_layout.fluxTags)
+    if (difference) {
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.fluxTags, {}, diff))
     }
   }
 
   if(mode.includes('tagData')){
-    for (const tag_group_key in new_layout.dataTags) {
-      data.dataTags[tag_group_key] = JSON.parse(JSON.stringify(new_layout.dataTags[tag_group_key]))
-    }
-    for (const tag_group_key in data.dataTags) {
-      if (!(tag_group_key in new_layout.dataTags)) {
-        continue
-      }
-      data.dataTags[tag_group_key].show_legend = new_layout.dataTags[tag_group_key].show_legend
-      data.dataTags[tag_group_key].banner = new_layout.dataTags[tag_group_key].banner
-      for (const tag in data.dataTags[tag_group_key].tags) {
-        if (!(tag in new_layout.dataTags[tag_group_key].tags)) {
-          continue
-        }
-        data.dataTags[tag_group_key].tags[tag].color = new_layout.dataTags[tag_group_key].tags[tag].color
-        data.dataTags[tag_group_key].tags[tag].selected = new_layout.dataTags[tag_group_key].tags[tag].selected
-      }
-    }
-  }
-  
-  
-
-
-  // data.agregation.level = new_layout.agregation.level
-  // data.agregation.dimension = new_layout.agregation.dimension
-
-  if(mode.includes('attrGeneral')){
-    // data.icon_catalog = new_layout.icon_catalog
-    data.colorMap = new_layout.colorMap
-    data.user_scale = new_layout.user_scale
-    data.legend_position = new_layout.legend_position;
-    ((data as unknown) as {welcome_text:string}).welcome_text = ((new_layout as unknown)  as {welcome_text:string}).welcome_text
-  
-    data.accordeonToShow = new_layout.accordeonToShow
-  
-    if ('width' in new_layout) {
-      data.width = new_layout.width
-    }
-    if (new_layout.maximum_flux) {
-      data.maximum_flux = new_layout.maximum_flux
-    }
-    if (new_layout.minimum_flux) {
-      data.minimum_flux= new_layout.minimum_flux
-    }
-    Object.keys(new_layout.display_style).forEach(
-      key => ((data.display_style as unknown) as Record<string, unknown>)[key] = ((new_layout.display_style as unknown) as Record<string, unknown>)[key]
-    )
-    if (data.display_style.filter === undefined) {
-      data.display_style.filter = 0
-    }
-    if (data.display_style.filter_label === undefined) {
-      data.display_style.filter_label = 0
+    const difference = deep_diff.diff(data.dataTags, new_layout.dataTags)
+    if (difference) {
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.dataTags, {}, diff))
     }
   }
   
