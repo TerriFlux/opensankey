@@ -156,7 +156,7 @@ const filter_view=(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
     })
 }
 
-const recompute_views = (
+export const recompute_views = (
   new_master_data: SankeyPlusData,
   prev_master_data: SankeyPlusData,
   set_master_data: (d:SankeyPlusData)=>void

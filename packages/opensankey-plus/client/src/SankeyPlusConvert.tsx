@@ -1,7 +1,7 @@
 
 import {SankeyPlusData,SankeyPlusLabel,differenceType} from './types'
 import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
-import { get_data_from_view } from './SankeyPlusViews'
+import { get_data_from_view, recompute_views } from './SankeyPlusViews'
 import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
 import { Col, InputGroup, Row, Button, Form } from 'react-bootstrap'
 import React, { useState } from 'react'
@@ -186,11 +186,10 @@ export const OpenSankeyPlusDiagramSelector = (
                 }                
                 const data_view=get_data_from_view(master_data,view_selected)
                 updateLayout(sankey_data,data_view,elementToDispose)
-                const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
+                const copy_data = JSON.parse(JSON.stringify(sankey_data))
                 set_sankey_data(copy_data)
                 if (view === 'none' ) {
-                  // if master is being updated we need to set it.
-                  set_master_data(copy_data)
+                  recompute_views(copy_data,master_data,set_master_data)
                 }
               }
               return
