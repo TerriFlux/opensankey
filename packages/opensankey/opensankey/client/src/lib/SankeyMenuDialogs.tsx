@@ -60,7 +60,7 @@ export const ApplyLayoutDialog = ({
   const node_visible=node_visible_on_svg()
 
   const all_element_to_transform = [
-    'topoNoeud', 'topoFlux', 
+    'addNode', 'addFlux', 'removeNode', 'removeFlux',
     'posNode', 'posFlux', 
     'Values', 
     'attrNode', 'attrFlux', 
