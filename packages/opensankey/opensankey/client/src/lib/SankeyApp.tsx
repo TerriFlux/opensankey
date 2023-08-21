@@ -37,6 +37,7 @@ import { faShareNodes, faArrowPointer,faFilter,faFolderTree, faDiagramProject,fa
 import { FaAngleDoubleLeft} from 'react-icons/fa'
 import { return_value_link } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
+import { OpenSankeyDiagramSelector } from './SankeyMenuDialogs'
 
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
@@ -567,6 +568,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_node_hspace={set_node_hspace}
             node_vspace={node_vspace}
             set_node_vspace={set_node_vspace}
+            apply_transformation_additional_elements={()=>[]}
+            DiagramSelector={OpenSankeyDiagramSelector}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw

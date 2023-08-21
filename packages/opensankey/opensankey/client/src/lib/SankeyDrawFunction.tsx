@@ -1377,10 +1377,10 @@ const drawLinkText = (
   } else if (lab_pos === 'end') { //end
     y_pos = yt - 6
   }
-  if (lab_pos !== 'frozen') {
-    link.x_label = x_pos
-    link.y_label = y_pos
-  }
+  // if (lab_pos !== 'frozen') {
+  //   link.x_label = x_pos
+  //   link.y_label = y_pos
+  // }
 
   scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
   if(orth_lab_pos=='above'){
