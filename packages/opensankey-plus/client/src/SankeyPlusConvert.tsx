@@ -3,9 +3,16 @@ import {SankeyPlusData,SankeyPlusLabel,differenceType} from './types'
 import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { get_data_from_view } from './SankeyPlusViews'
 import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
+import { Col, InputGroup, Row, Button, Form } from 'react-bootstrap'
+import React, { useState } from 'react'
+import { TFunction } from 'i18next'
+import { FaCheck } from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
   transparent?:boolean,
-  name?:string
+  name?:string,
+  font_size?:number
 }
 
 /* eslint-disable */
@@ -34,10 +41,21 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
 
       if(((l as unknown) as SankeyPlusLabelToConvert ).name!==undefined){
         const new_content=((l as unknown) as SankeyPlusLabelToConvert).name
-        l.content=new_content?new_content:''
+        if (((l as unknown) as SankeyPlusLabelToConvert).font_size === 40) {
+          l.content=new_content?'<h3>'+new_content+'</h3>':''          
+        } else {
+          l.content=new_content?new_content:''
+        }
         delete ((l as unknown) as SankeyPlusLabelToConvert ).name
       }
-
+      const keys = ['idLabel','title','content','opacity','color','color_border','transparent_border','label_width','label_height','x','y','x_label','y_label']
+      const keys_to_remove : string[]=[]
+      Object.keys(l).forEach(key=>{
+        if (!keys.includes(key)) {
+          keys_to_remove.push(key)
+        }
+      })
+      keys_to_remove.forEach(key=>delete (l as unknown as {[s:string]:string})[key])
     })
   }
 
@@ -52,7 +70,7 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
-
+      plus_convert_data((v.view_data as unknown as SankeyPlusData ))
       let difference = deep_diff.diff(data, v.view_data)
       difference=(difference!==undefined)?difference:[]
       difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
@@ -68,14 +86,18 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
         return d
       })
       difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'));
-      (v.view_data as {diff:object[]}).diff=difference
-    }
-    if(v.view_data.diff){
+      (v.view_data as {diff:object[]}) = {
+        diff : difference
+      }
+    } else if(v.view_data.diff){
       const d_view=get_data_from_view(data,v.id)
       convert_data(d_view)
-      const converted_master=JSON.parse(JSON.stringify(data))
+      plus_convert_data(d_view)
+      const copy_data={...data}
+      copy_data.view=[]
+      const converted_master=JSON.parse(JSON.stringify(copy_data))
       convert_data(converted_master)
-
+      plus_convert_data(converted_master)
       let difference = deep_diff.diff(converted_master, d_view)
       difference=(difference !== undefined)?difference:[]
       v.view_data.diff=difference
@@ -83,10 +105,223 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
 
   })
 }
-export const plus_sankey_layout=(data:SankeyPlusData,new_layout:SankeyPlusData)=>{
-  (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels = {}
-  for (const layout_label in (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels) {
-    (data as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label] = 
-      (new_layout as unknown as {labels:{[x: string]:SankeyPlusLabel}}).labels[layout_label]
+
+export const OpenSankeyPlusDiagramSelector = (
+  master_data : SankeyPlusData,
+  set_master_data : (d:SankeyPlusData)=>void,
+  view : string
+) => {
+  const OpenSankeyPlusDiagramSelectorInner = (
+    t: TFunction, 
+    convert_data: (s:SankeyPlusData)=>null,
+    sankey_data: SankeyPlusData,
+    set_sankey_data: (s:SankeyPlusData)=>null,
+    prev_sankey_data: SankeyPlusData,
+    set_prev_sankey_data: (s:SankeyPlusData)=>void, 
+    updateLayout: (data: SankeyPlusData,new_layout: SankeyPlusData,mode:string[])=>void, 
+    elementToDispose : string[]
+  ) => {
+    const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
+    const [view_selected, set_view_selected] = useState('none')
+    const [diagramType, setDiagramType] = useState('File')
+    return <InputGroup as={Row}>
+      <Col xs='2'>
+        <InputGroup.Text>{t('Menu.Transformation.fmep')}</InputGroup.Text>
+      </Col>
+      <Col xs={1}>
+        <Button 
+          className='btn_menu_config' 
+          style={{width:'100px'}}
+          variant={diagramType==='File'?'primary':'outline-primary'}
+          onClick={
+            () => {
+              setDiagramType('File')
+            }}>Fichier</Button>
+      </Col>
+      <Col xs={1}>
+        <Button 
+          className='btn_menu_config'
+          style={{width:'100px'}}
+          variant={diagramType==='View'?'primary':'outline-primary'}
+          onClick={
+            () => {
+              setDiagramType('View')
+            }}>Vues</Button>
+      </Col>
+      {diagramType==='File' ? <><Col xs='3'>
+        <Form.Control
+          type="file"
+          onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} />
+      </Col></> : 
+        <Col xs='3'>
+          <Form.Select 
+            onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
+              set_view_selected(evt.target.value)
+            }}>
+            <option key='none' value='none'>{t('view.actual')}</option>
+            {master_data ? master_data.view.map(d => {
+              return <option key={d.id} value={d.id}>{d.nom}</option>
+            }) : <></>}
+          </Form.Select>
+        </Col>}
+      <Col xs={2}>
+        <Button
+          className='btn_menu_config'
+          onClick={() => {
+            if (diagramType === 'View') {
+              if (view_selected === 'none') {
+                // View selected is master data
+                if (view === 'none' ) {
+                  // No update of master data by master data
+                  return
+                }
+                //- current view is updated by master data
+                updateLayout(sankey_data,master_data,elementToDispose)
+                set_sankey_data({ ...JSON.parse(JSON.stringify(sankey_data)) })
+              } else {
+                // A view is selected to update either another view or the master data
+                if (view === view_selected ) {
+                  // No update of view by itself
+                  return
+                }                
+                const data_view=get_data_from_view(master_data,view_selected)
+                updateLayout(sankey_data,data_view,elementToDispose)
+                const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
+                set_sankey_data(copy_data)
+                if (view === 'none' ) {
+                  // if master is being updated we need to set it.
+                  set_master_data(copy_data)
+                }
+              }
+              return
+            }
+            if (file_layout === undefined) {
+              return
+            }
+            const reader = new FileReader()
+            reader.onload = (() => {
+              return (
+                (e: ProgressEvent<FileReader>) => {
+                  let result = (e.target as FileReader).result
+                  if (result) {
+                    result = String(result) //.split('<br>').join('\\\\n')
+                    const new_layout = JSON.parse(result)
+                    convert_data(new_layout)
+                    complete_sankey_data(new_layout, default_sankey_data, default_node, default_link)
+                    set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
+                    updateLayout(sankey_data, new_layout, elementToDispose)
+                    const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
+                    set_sankey_data(copy_data)
+                    if (view === 'none' ) {
+                      // if master is being updated we need to set it.
+                      set_master_data(copy_data)
+                    }
+                  }
+                }
+              )
+            })()
+            reader.readAsText(file_layout[0])
+          } }>{t('Menu.Transformation.ad')}
+        </Button>
+      </Col>
+      <Col xs={2}>
+        <Button
+          className='btn_menu_config'
+          onClick={() => {
+            const copy_data = { ...JSON.parse(JSON.stringify(prev_sankey_data)) }
+            set_sankey_data(copy_data)
+            if (view === 'none' ) {
+              // if master is being updated we need to set it.
+              set_master_data(copy_data)
+            }
+          } }>{t('Menu.Transformation.undo')}
+        </Button>
+      </Col>
+    </InputGroup>
+  }
+  return OpenSankeyPlusDiagramSelectorInner
+}
+
+export const apply_transformation_opensankey_plus_elements = (
+  t:TFunction,
+  forceUpdate: boolean,
+  setForceUpdate: (b:boolean)=>null,
+  elementToDispose: string[]
+) => {return [
+  <InputGroup as={Row}>
+    <Col xs='2'>
+      <InputGroup.Text>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
+    </Col >          
+    <Col xs='1'>
+      <Button
+        className='btn_menu_config'
+        style={{width:'100px'}}
+        variant={elementToDispose.includes('freeLabels')?'primary':'outline-primary'} 
+        onClick={() => {
+          if(!elementToDispose.includes('freeLabels')){
+            elementToDispose.push('freeLabels')
+            setForceUpdate(!forceUpdate)
+          }else{
+            elementToDispose.splice(elementToDispose.indexOf('freeLabels'),1)
+            setForceUpdate(!forceUpdate)
+          }}
+        }
+      >{elementToDispose.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+    </Col>
+  </InputGroup>,
+  <InputGroup as={Row}>
+    <Col xs='2'>
+      <InputGroup.Text>{t('Menu.Transformation.Views')}</InputGroup.Text>
+    </Col >
+    <Col xs='1'>
+      <Button
+        className='btn_menu_config'
+        style={{width:'100px'}}
+        variant={elementToDispose.includes('Views')?'primary':'outline-primary'} 
+        onClick={() => {
+          if(!elementToDispose.includes('Views')){
+            elementToDispose.push('Views')
+            setForceUpdate(!forceUpdate)
+          }else{
+            elementToDispose.splice(elementToDispose.indexOf('Views'),1)
+            setForceUpdate(!forceUpdate)
+          }}
+        }
+      >{elementToDispose.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+    </Col>
+  </InputGroup> 
+]}
+
+export const plus_sankey_layout=(
+  data:SankeyPlusData,
+  new_layout:SankeyPlusData,
+  mode:string[]
+)=>{
+  if (mode.includes('freeLabels') && new_layout.labels) {
+    if (!data.labels) {
+      data.labels = {}
+    }
+    const difference = deep_diff.diff(data.labels, new_layout.labels)
+    if (difference) {
+      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.labels, {}, diff))
+    }
+  }
+  if (mode.includes('Views') && new_layout.view) {
+    if (new_layout.view) {
+      if (!(data.view)) {
+        data.view = []
+      }
+      new_layout.view.forEach (
+        layout_view=> {
+          if (data.view.filter(d_view=>d_view.nom === layout_view.nom ).length===0) {
+            const view_data=JSON.parse(JSON.stringify(new_layout))
+            layout_view.view_data.diff.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(view_data, {}, diff))
+            const data_view_diff = deep_diff.diff(data,view_data)
+            layout_view.view_data.diff = data_view_diff.filter((d:{path:string[]}) => !d.path.includes('view'))
+            data.view.push(layout_view)
+          }
+        }
+      )
+    }
   }
 }
