@@ -142,32 +142,63 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'100px'}}
-            variant={ elementToDispose.includes('topoNoeud')?'primary':'outline-primary'} 
+            variant={ elementToDispose.includes('addNode')?'primary':'outline-primary'} 
             onClick={() => {
-              if(!elementToDispose.includes('topoNoeud')){
-                elementToDispose.push('topoNoeud')
+              if(!elementToDispose.includes('addNode')){
+                elementToDispose.push('addNode')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('topoNoeud'),1)
+                elementToDispose.splice(elementToDispose.indexOf('addNode'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
-          >{t('Menu.Transformation.topoNoeud')}</Button>
+          >{t('Menu.Transformation.addNode')}</Button>
         </Col>
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
             style={{width:'100px'}}
-            variant={ elementToDispose.includes('topoFlux')?'primary':'outline-primary'} 
+            variant={ elementToDispose.includes('removeNode')?'primary':'outline-primary'} 
             onClick={() => {
-              if(!elementToDispose.includes('topoFlux')){
-                elementToDispose.push('topoFlux')
+              if(!elementToDispose.includes('removeNode')){
+                elementToDispose.push('removeNode')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('topoFlux'),1)
+                elementToDispose.splice(elementToDispose.indexOf('removeNode'),1)
                 setForceUpdate(!forceUpdate)
               }}
-            }>{t('Menu.Transformation.topoFlux')}</Button>
+            }
+          >{t('Menu.Transformation.removeNode')}</Button>
+        </Col>
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={ elementToDispose.includes('addFlux')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('addFlux')){
+                elementToDispose.push('addFlux')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('addFlux'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }>{t('Menu.Transformation.addFlux')}</Button>
+        </Col>
+        <Col xs='1'>
+          <Button 
+            className='btn_menu_config'
+            style={{width:'100px'}}
+            variant={ elementToDispose.includes('removeFlux')?'primary':'outline-primary'} 
+            onClick={() => {
+              if(!elementToDispose.includes('removeFlux')){
+                elementToDispose.push('removeFlux')
+                setForceUpdate(!forceUpdate)
+              }else{
+                elementToDispose.splice(elementToDispose.indexOf('removeFlux'),1)
+                setForceUpdate(!forceUpdate)
+              }}
+            }>{t('Menu.Transformation.removeFlux')}</Button>
         </Col>
       </InputGroup>           
       <InputGroup as={Row}>
