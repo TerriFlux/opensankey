@@ -692,7 +692,7 @@ export const link_color = (l: SankeyLink,data:SankeyData,
       return return_value_link(data,l,'color')
     }
     
-    if (tagGroup in data.fluxTags && v.tags[tagGroup].filter(tag=>tag in data.fluxTags[tagGroup].tags).length > 0) {
+    if (tagGroup in data.fluxTags && v.tags[tagGroup] && v.tags[tagGroup].filter(tag=>tag in data.fluxTags[tagGroup].tags).length > 0) {
       colorLink = data.fluxTags[tagGroup].tags[v.tags[tagGroup].filter(
         tag=>tag in data.fluxTags[tagGroup].tags
       )[0]].color
