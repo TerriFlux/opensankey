@@ -1047,11 +1047,19 @@ const Menu: FunctionComponent<MenuTypes> = (
       response.text().then(text => {
         try {
           const server_data = JSON.parse(text)
+          let default_nstyle = data.style_node['default']
+          let default_lstyle = data.style_link['default']
+          server_data.h_space = data.h_space
+          server_data.v_space = data.v_space
           if ((data as SankeyData & { layout?: SankeyData }).layout ) {
             server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
+          } else {
+            default_nstyle = JSON.parse(JSON.stringify(data.style_node['default']))
+            default_lstyle = JSON.parse(JSON.stringify(data.style_link['default']))
           }
-
           const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data)) as SankeyData
+          new_data.style_node['default'] = default_nstyle
+          new_data.style_link['default'] = default_lstyle
           callback(new_data)
           delete (new_data as SankeyData & { layout?: SankeyData }).layout
           if (Object.values(new_data.nodeTags).filter(tagg=>tagg.show_legend).length>0) {

@@ -605,7 +605,7 @@ export const default_sankey_data = (): SankeyData => {
     height: window.innerHeight - 50,
 
     h_space: 200,
-    v_space: 100,
+    v_space: 50,
 
     show_structure: 'reconciled',
     fit_screen: window.SankeyToolsStatic,
