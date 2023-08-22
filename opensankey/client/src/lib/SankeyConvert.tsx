@@ -707,6 +707,7 @@ export const convert_nodes = (
           n_convert.display_style.font_family = 'Arial,serif'
         }
 
+        n.local.font_family = n_convert.display_style?.font_family
         n.local.label_vert = n_convert.display_style?.label_vert
         n.local.label_horiz = n_convert.display_style?.label_horiz
         n.local.font_size=Number(n_convert.display_style?.font_size)
