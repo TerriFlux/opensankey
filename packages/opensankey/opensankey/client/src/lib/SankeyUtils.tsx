@@ -864,7 +864,7 @@ export const default_node = (
 export const default_node_style=()=>{
   return {
     idNode:'default',
-    name:'new',
+    name:'Defaut',
     shape: 'rect',
     shape_visible: true,
     label_visible: true,
@@ -1408,7 +1408,7 @@ export const return_value_node=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeA
   let value=return_local_node_value(n,k as keyof SankeyNodeAttrLocal)
   if(value === undefined || value === null){
     const ks=k as keyof SankeyNodeStyle
-    value=data.style_node[n.style][ks]
+    value= n.style in data.style_node ? data.style_node[n.style][ks] : data.style_node['default'][ks]
   }
   return value
 }
