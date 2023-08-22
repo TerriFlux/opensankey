@@ -1084,7 +1084,9 @@ const Menu: FunctionComponent<MenuTypes> = (
             }            
           }
           set_data({ ...new_data })
-          //set_show_load(false)
+          setTimeout(()=>{
+            SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
+          },100)
         } catch(err) {
           alert(err)
         }
