@@ -95,13 +95,13 @@ export const ApplyLayoutDialog = ({
     <Tab eventKey='import' title={t('Menu.Transformation.amp_import')} style={{marginBottom:'10px'}}>
       {diagramSelector(t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose)}
       <InputGroup as={Row}>
-        <Col xs='2'>
+        <Col xs='3'>
           <InputGroup.Text>{t('Menu.Transformation.Shortcuts')}</InputGroup.Text>
         </Col >
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant='outline-primary' 
             onClick={() => {
               elementToDispose.length = 0
@@ -112,7 +112,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant='outline-primary' 
             onClick={() => {
               elementToDispose.length = 0
@@ -124,7 +124,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant='outline-primary' 
             onClick={() => {
               elementToDispose.length = 0
@@ -135,13 +135,13 @@ export const ApplyLayoutDialog = ({
         </Col>
       </InputGroup>  
       <InputGroup as={Row}>
-        <Col xs='2'>
+        <Col xs='3'>
           <InputGroup.Text>{t('Menu.Transformation.Topology')}</InputGroup.Text>
         </Col >          
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={ elementToDispose.includes('addNode')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('addNode')){
@@ -157,7 +157,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={ elementToDispose.includes('removeNode')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('removeNode')){
@@ -173,7 +173,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={ elementToDispose.includes('addFlux')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('addFlux')){
@@ -188,7 +188,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={ elementToDispose.includes('removeFlux')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('removeFlux')){
@@ -202,13 +202,13 @@ export const ApplyLayoutDialog = ({
         </Col>
       </InputGroup>           
       <InputGroup as={Row}>
-        <Col xs='2'>
+        <Col xs='3'>
           <InputGroup.Text>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
         </Col >
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={ elementToDispose.includes('posNode')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('posNode')){
@@ -223,7 +223,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={ elementToDispose.includes('posFlux')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('posFlux')){
@@ -237,13 +237,13 @@ export const ApplyLayoutDialog = ({
         </Col>
       </InputGroup>
       <InputGroup as={Row}>
-        <Col xs='2'>
+        <Col xs='3'>
           <InputGroup.Text>{t('Menu.Transformation.Values')}</InputGroup.Text>
         </Col >
         <Col xs='1'>
           <Button 
             className='btn_menu_config' 
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={ elementToDispose.includes('Values')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('Values')){
@@ -258,13 +258,13 @@ export const ApplyLayoutDialog = ({
         </Col>
       </InputGroup>
       <InputGroup as={Row}>
-        <Col xs='2'>
+        <Col xs='3'>
           <InputGroup.Text>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
         </Col >
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={elementToDispose.includes('attrNode')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('attrNode')){
@@ -281,7 +281,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={elementToDispose.includes('attrFlux')?'primary':'outline-primary'} 
             onClick={() =>{
               if(!elementToDispose.includes('attrFlux')){
@@ -296,13 +296,13 @@ export const ApplyLayoutDialog = ({
         </Col>
       </InputGroup>
       <InputGroup as={Row}>
-        <Col xs='2'>
+        <Col xs='3'>
           <InputGroup.Text>{t('Menu.Transformation.Tags')}</InputGroup.Text>
         </Col >
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={elementToDispose.includes('tagNode')?'primary':'outline-primary'} 
             onClick={() =>{
               if(!elementToDispose.includes('tagNode')){
@@ -319,7 +319,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={elementToDispose.includes('tagFlux')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('tagFlux')){
@@ -335,7 +335,7 @@ export const ApplyLayoutDialog = ({
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={elementToDispose.includes('tagData')?'primary':'outline-primary'}
             onClick={() => {
               if(!elementToDispose.includes('tagData')){
@@ -350,13 +350,13 @@ export const ApplyLayoutDialog = ({
         </Col>
       </InputGroup>
       <InputGroup as={Row}>
-        <Col xs='2'>
+        <Col xs='3'>
           <InputGroup.Text>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
         </Col >
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={elementToDispose.includes('tagLevel')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('tagLevel')){
@@ -371,13 +371,13 @@ export const ApplyLayoutDialog = ({
         </Col>
       </InputGroup>
       <InputGroup as={Row}>
-        <Col xs='2'>
+        <Col xs='3'>
           <InputGroup.Text>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
         </Col >
         <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'100px'}}
+            style={{width:'90px'}}
             variant={elementToDispose.includes('attrGeneral')?'primary':'outline-primary'} 
             onClick={() =>{
               if(!elementToDispose.includes('attrGeneral')){
@@ -711,7 +711,7 @@ export const OpenSankeyDiagramSelector = (
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   return <Form>
     <Form.Group as={Row}>
-      <Col xs='2'>
+      <Col xs='3'>
         <FormLabel>{t('Menu.Transformation.fmep')}</FormLabel>
       </Col>
       <Col xs='2'>
