@@ -8,7 +8,7 @@ from parameterized import parameterized
 import SankeyExcelParser.io_excel as io_excel
 from SankeyExcelParser.sankey import Sankey
 
-from opensankey.server import parser_excel
+from opensankey.server import converter
 
 sys.path.insert(0, os.getcwd())
 
@@ -25,7 +25,7 @@ tests_to_skip = [
 #     sys.path.insert(0, parentdir)
 #     from sankeytools.server import nodes_position
 # try:
-#     import sankeytools.server.parser_excel as parser_excel
+#     import sankeytools.server.converter as converter
 # except Exception:
 
 MAXSIZE = 1000000
@@ -161,11 +161,11 @@ class DictResultTest(unittest.TestCase):
             return
         sankey = Sankey()
         io_excel.load_sankey_from_excel_file(os.path.join(mfa_data_dir, file_name), sankey)
-        sankey_data = parser_excel.parse_excel(sankey)
+        sankey_json = converter.extract_json_from_sankey(sankey)
         if not self.generate_results:
-            self.check_dict(sankey_data, expected_results)
+            self.check_dict(sankey_json, expected_results)
         else:
-            self.new_results[test_name] = sankey_data
+            self.new_results[test_name] = sankey_json
 
     @classmethod
     def tearDownClass(cls):
