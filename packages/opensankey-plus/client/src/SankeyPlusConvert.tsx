@@ -127,13 +127,13 @@ export const OpenSankeyPlusDiagramSelector = (
     const [view_selected, set_view_selected] = useState('none')
     const [diagramType, setDiagramType] = useState('File')
     return <InputGroup as={Row}>
-      <Col xs='2'>
+      <Col xs='3'>
         <InputGroup.Text>{t('Menu.Transformation.fmep')}</InputGroup.Text>
       </Col>
       <Col xs={1}>
         <Button 
           className='btn_menu_config' 
-          style={{width:'100px'}}
+          style={{width:'90px'}}
           variant={diagramType==='File'?'primary':'outline-primary'}
           onClick={
             () => {
@@ -143,7 +143,7 @@ export const OpenSankeyPlusDiagramSelector = (
       <Col xs={1}>
         <Button 
           className='btn_menu_config'
-          style={{width:'100px'}}
+          style={{width:'90px'}}
           variant={diagramType==='View'?'primary':'outline-primary'}
           onClick={
             () => {
@@ -166,9 +166,10 @@ export const OpenSankeyPlusDiagramSelector = (
             }) : <></>}
           </Form.Select>
         </Col>}
-      <Col xs={2}>
+      <Col xs={1}>
         <Button
           className='btn_menu_config'
+          style={{width:'90px'}}
           onClick={() => {
             if (diagramType === 'View') {
               if (view_selected === 'none') {
@@ -225,9 +226,10 @@ export const OpenSankeyPlusDiagramSelector = (
           } }>{t('Menu.Transformation.ad')}
         </Button>
       </Col>
-      <Col xs={2}>
+      <Col xs={1}>
         <Button
           className='btn_menu_config'
+          style={{width:'90px'}}
           onClick={() => {
             const copy_data = { ...JSON.parse(JSON.stringify(prev_sankey_data)) }
             set_sankey_data(copy_data)
@@ -250,13 +252,13 @@ export const apply_transformation_opensankey_plus_elements = (
   elementToDispose: string[]
 ) => {return [
   <InputGroup as={Row}>
-    <Col xs='2'>
+    <Col xs='3'>
       <InputGroup.Text>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
     </Col >          
     <Col xs='1'>
       <Button
         className='btn_menu_config'
-        style={{width:'100px'}}
+        style={{width:'90px'}}
         variant={elementToDispose.includes('freeLabels')?'primary':'outline-primary'} 
         onClick={() => {
           if(!elementToDispose.includes('freeLabels')){
@@ -271,13 +273,13 @@ export const apply_transformation_opensankey_plus_elements = (
     </Col>
   </InputGroup>,
   <InputGroup as={Row}>
-    <Col xs='2'>
+    <Col xs='3'>
       <InputGroup.Text>{t('Menu.Transformation.Views')}</InputGroup.Text>
     </Col >
     <Col xs='1'>
       <Button
         className='btn_menu_config'
-        style={{width:'100px'}}
+        style={{width:'90px'}}
         variant={elementToDispose.includes('Views')?'primary':'outline-primary'} 
         onClick={() => {
           if(!elementToDispose.includes('Views')){
