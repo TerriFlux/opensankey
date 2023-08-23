@@ -1,6 +1,24 @@
 # coding: utf-8
 
-# Flask imports
+# ---------------------------------------------------------------
+# External libs
+import openpyxl
+import tempfile
+import os
+import json
+import imgkit
+import pdfkit
+import re
+try:
+    import pythoncom
+    pythoncom.CoInitialize()
+except Exception:
+    pass
+
+# External modules
+from threading import Thread
+
+# Flask modules imports
 from flask import abort
 from flask import Blueprint
 from flask import current_app
@@ -10,33 +28,19 @@ from flask import send_file
 from flask import render_template
 from flask import session
 
-# System imports
-import openpyxl
-import tempfile
-import os
-import json
-import imgkit
-import pdfkit
-import re
-
-try:
-    import pythoncom
-    pythoncom.CoInitialize()
-except Exception:
-    pass
-
-from threading import Thread
-
-# Sankey modules imports
+# ---------------------------------------------------------------
+# Sankey libs
 import SankeyExcelParser.io_excel as io_excel
 import SankeyExcelParser.su_trace as trace
 
+# Sankey modules
 from SankeyExcelParser.sankey import Sankey
 
-# Local imports
-from . import parser_excel
+# Local modules
+from . import converter
 
 
+# ---------------------------------------------------------------
 # Create opensankey app blueprint
 template_folder = os.path.join(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'),
@@ -66,6 +70,8 @@ image_template_folder = os.path.join(
     'images')
 
 
+# ---------------------------------------------------------------
+# Define all routes
 @opensankey.route('/sankey/save_svg', methods=['POST'])
 def save_svg():
     '''
@@ -231,33 +237,34 @@ def save_excel():
         - 401 : Error when saving sankey data
         - 402 : Error when saving mfa data
     '''
-    # Save Sankey diagram
+    # Extract Sankey structure from JSON
     try:
-        cwd = os.getcwd()
-        excel_file = os.path.join(cwd, "tutu.xlsx")
-        sankey_data = request.get_data().decode("utf-8")
-        mfa_output, _ = parser_excel.save_excel(json.loads(sankey_data), False)
+        sankey_as_data = request.get_data().decode("utf-8")
+        sankey_as_json = json.loads(sankey_as_data)
+        sankey = converter.extract_sankey_from_json(sankey_as_json)
     except Exception as excpt:
         return Response(
             response='save_excel: ' + str(excpt),
             status=401)
-    # Save MFA data
+    # Save Sankey structure in Excel
     try:
-        io_excel.write_mfa_problem_output_to_excel(excel_file, [], mfa_output, 'w', verbosity=2)
-        # AJoute le fichier json dans un onglet layout
-        wb = openpyxl.load_workbook(excel_file)
+        cwd = os.getcwd()
+        excel_filename = os.path.join(cwd, "tutu.xlsx")
+        io_excel.write_mfa_excel(excel_filename, sankey, mode='w')
+        # Ajoute le fichier json dans un onglet layout
+        wb = openpyxl.load_workbook(excel_filename)
         layout_sheet = wb.create_sheet()
         layout_sheet.title = 'layout'
-        splitted_layout = cut_layout(sankey_data)
+        splitted_layout = cut_layout(sankey_as_data)
         cpt = 1
         for i in splitted_layout:
             layout_sheet['A'+str(cpt)].value = i
             cpt = cpt + 1
         wb.save('tutu.xlsx')
-        return send_file(excel_file, as_attachment=True)
+        return send_file(excel_filename, as_attachment=True)
     except Exception as excpt:
         response = Response(
-            response='write_mfa_problem_output_to_excel' + str(excpt),
+            response='write_mfa_excel' + str(excpt),
             status=402
         )
         return response
@@ -281,8 +288,8 @@ def cut_layout(layout):
 @opensankey.route('/sankey/clean_excel', methods=['POST'])
 def clean_excel():
     cwd = os.getcwd()
-    excel_file = os.path.join(cwd, "tutu.xlsx")
-    os.remove(excel_file)
+    excel_filename = os.path.join(cwd, "tutu.xlsx")
+    os.remove(excel_filename)
     response = Response(
         status=200
     )
@@ -400,7 +407,7 @@ def upload_excel_thread(
     # Step 2 : Extract sankey data
     trace.logger.info('{:-<{w}}'.format('Extract diagram structure ', w=max_line_length))
     try:
-        sankey_data = parser_excel.parse_excel(sankey)
+        sankey_json = converter.extract_json_from_sankey(sankey)
         trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
     except Exception as expt:
         trace.logger.error('Extract Diagram Structure Failed: ' + str(expt))
@@ -417,13 +424,13 @@ def upload_excel_thread(
         layout_filename = os.path.join(sankey_folder, layout_filename)
         if os.path.exists(layout_filename):
             layout_file = open(layout_filename, encoding="utf-8", mode="r")
-            layout_data = json.load(layout_file)
-            sankey_data['layout'] = layout_data
-        sankey_data['file_name'] = layout_filename
+            layout_json = json.load(layout_file)
+            sankey_json['layout'] = layout_json
+        sankey_json['file_name'] = layout_filename
     # Step 4 : Dump everything in local json for display
     trace.logger.info('{:-<{w}}'.format('Loading diagram display ', w=max_line_length))
     try:
-        json_data = json.dumps(sankey_data)
+        json_data = json.dumps(sankey_json)
         with open(json_output_filename, "w") as outfile:
             outfile.write(json_data)
         trace.logger.info('{:->{w}}'.format(' FINISHED', w=max_line_length))
