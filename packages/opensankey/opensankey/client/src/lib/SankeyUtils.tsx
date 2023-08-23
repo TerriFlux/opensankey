@@ -864,7 +864,7 @@ export const default_node = (
 export const default_node_style=()=>{
   return {
     idNode:'default',
-    name:'Defaut',
+    name:'Style par défaut',
     shape: 'rect',
     shape_visible: true,
     label_visible: true,
@@ -897,6 +897,7 @@ export const default_node_style=()=>{
 export const default_link_style=()=>{
   return {
     idLink:'default',
+    name:'Style par défaut',
     color: '#a9a9a9',
     recycling:false,
     curved: true,

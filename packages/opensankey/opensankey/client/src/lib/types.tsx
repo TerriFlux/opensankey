@@ -160,6 +160,7 @@ export type SankeyLinkAttrLocal = InferProps<typeof SankeyLinkAttrLocalTypes>
 
 export const SankeyLinkStyleTypes ={
   idLink:PropTypes.string.isRequired,
+  name:PropTypes.string.isRequired,
   // Geometry/appearence
   orientation: PropTypes.string.isRequired,
   arrow: PropTypes.bool.isRequired,

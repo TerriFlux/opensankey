@@ -208,10 +208,10 @@ export const SankeyPlusModalStyleLink = (
 
           <Col xs={5}>
             <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link !== '') ? cut_name(data.style_link[selected_style_link].idLink, 30) : 'Choix Style'}</Dropdown.Toggle>
+              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link !== '') ? cut_name(data.style_link[selected_style_link].name, 30) : 'Choix Style'}</Dropdown.Toggle>
               <Dropdown.Menu>
                 {Object.keys(data.style_link).map((d,i) => {
-                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].idLink}</Dropdown.Item>)
+                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].name}</Dropdown.Item>)
                 })}
               </Dropdown.Menu>
             </Dropdown>
@@ -246,11 +246,11 @@ export const SankeyPlusModalStyleLink = (
 
             <FormControl
               value={
-                (selected_style_link !== '') ? data.style_link[selected_style_link].idLink : ''
+                (selected_style_link !== '') ? data.style_link[selected_style_link].name : ''
               }
 
               onChange={evt => {
-                data.style_link[selected_style_link].idLink = evt.target.value
+                data.style_link[selected_style_link].name = evt.target.value
                 set_data({ ...data })
               }}
             />
