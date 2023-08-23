@@ -399,7 +399,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
   const content_label= <Form.Group>
     {/* Checkbox visibilité noeud */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>{t('Noeud.labels.vdb')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'30%'}}>{t('Noeud.labels.vdb')}</InputGroup.Text>
       <OverlayTrigger
         key={'noeud.labels.tooltips.1'}
         placement={'top'}
@@ -407,7 +407,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         overlay={<Tooltip id={'noeud.labels.tooltips.1'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
         <Button
           className='btn_menu_config'
-          style={{width:'60%'}}
+          style={{width:'70%'}}
           //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
           variant={isAllLabelVisible?'primary':'outline-primary'}
           onClick={() => {
@@ -419,7 +419,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
     {/* Label en blanc ou noir */}
     <InputGroup>
-      <InputGroup.Text style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA', width:'40%'}} >{t('Noeud.labels.lb')+(is_node_diplaying_value_local(multi_selected_nodes,'label_color',menu_for_style)?'*':'')}</InputGroup.Text>
+      <InputGroup.Text style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA', width:'30%'}} >{t('Noeud.labels.lb')+(is_node_diplaying_value_local(multi_selected_nodes,'label_color',menu_for_style)?'*':'')}</InputGroup.Text>
 
       <OverlayTrigger
         key={'noeud.labels.tooltips.2'}
@@ -428,7 +428,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
         <Button
           className='btn_menu_config'
-          style={{width:'60%'}}
+          style={{width:'70%'}}
           //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
           variant={isAllLabelWhite?'primary':'outline-primary'}
           onClick={() => {
@@ -440,7 +440,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     </InputGroup>
     {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
     <InputGroup>
-      <InputGroup.Text style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA', width:'40%'}} >{t('Noeud.labels.l_bg')+(is_node_diplaying_value_local(multi_selected_nodes,'label_background',menu_for_style)?'*':'')}</InputGroup.Text>
+      <InputGroup.Text style={{color:(isAllLabelVisible||menu_for_style)?'#555555':'#DADADA', width:'30%'}} >{t('Noeud.labels.l_bg')+(is_node_diplaying_value_local(multi_selected_nodes,'label_background',menu_for_style)?'*':'')}</InputGroup.Text>
 
       <OverlayTrigger
         key={'noeud.labels.tooltips.2'}
@@ -449,7 +449,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.l_bg')} </Tooltip>}>
         <Button
           className='btn_menu_config'
-          style={{width:'60%'}}
+          style={{width:'70%'}}
           //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
           variant={isAllLabelBackGroundColored?'primary':'outline-primary'}
           onClick={() => {
@@ -461,9 +461,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
     </InputGroup>
 
     {/* Position  du label par rapport au noeud */}
-    <Form.Group as={Row}>
-
-      <ButtonGroup style={{width:'50%'}}>
+    <InputGroup>
+      <InputGroup.Text style={{width:'30%'}} >{'Position'}</InputGroup.Text>
+      <ButtonGroup style={{width:'35%'}}>
         {/* A gauche  */}
         <OverlayTrigger
           key={'noeud.labels.tooltips.6'}
@@ -520,7 +520,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
       </ButtonGroup>
 
       {/* En haut */}
-      <ButtonGroup style={{width:'50%'}}>
+      <ButtonGroup style={{width:'35%'}}>
         <OverlayTrigger
           key={'noeud.labels.tooltips.3'}
           placement={'top'}
@@ -574,14 +574,11 @@ export const OpenSankeyConfigurationNodesAttributes = (
             }}>{svg_label_bottom}</Button>
         </OverlayTrigger>
       </ButtonGroup>
-      
-      
-    </Form.Group>
-
-
+    </InputGroup>
 
     {/* Police et taille du texte de label */}
     <InputGroup>
+      <InputGroup.Text style={{width:'30%'}} >{'Police'}</InputGroup.Text>
       <Form.Select
         value={allNodeFF?(return_correct_node_attribute_value(data,selected_parameter[0],'font_family',menu_for_style) as string):''}
         onChange={
@@ -650,7 +647,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
     {/* Largeur de la zone de texte du label */}
     <InputGroup>
-      <InputGroup.Text>{t('Noeud.labels.cl')+(is_node_diplaying_value_local(multi_selected_nodes,'label_box_width',menu_for_style)?'*':'')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'30%'}}>{t('Noeud.labels.cl')+(is_node_diplaying_value_local(multi_selected_nodes,'label_box_width',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'noeud.labels.tooltips.9'}
         placement={'top'}
@@ -679,7 +676,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
   const content_label_value=<Form.Group>
     <InputGroup>
-      <InputGroup.Text style={{width:'60%'}}>{t('Noeud.labels.vdv')} </InputGroup.Text>
+      <InputGroup.Text style={{width:'30%'}}>{t('Noeud.labels.vdv')} </InputGroup.Text>
       <OverlayTrigger
         key={'noeud.labels.tooltips.10'}
         placement={'top'}
@@ -688,7 +685,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
         <Button
           className='btn_menu_config'
-          style={{width:'40%'}}
+          style={{width:'70%'}}
           //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
           variant={isAllNodeTotal?'primary':'outline-primary'}
           onClick={() => {
@@ -890,10 +887,14 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
 export const SankeyMenuConfigurationNodesAttributes = (
   t:TFunction,
-  menu_configuration_nodes_attributes:JSX.Element[]
+  menu_configuration_nodes_attributes:JSX.Element[],
+  for_modal = false
 ) => {
   //Function that check if all selected nodes have the same value for some parameter
-  return <Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}
+  return for_modal ? <Form >
+    {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
+      return <React.Fragment key={i}>{c}</React.Fragment>})}
+  </Form>:<Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}
     disabled={/*!(node.colorParameter == 'local')*/false}>
     <Form >
       {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
