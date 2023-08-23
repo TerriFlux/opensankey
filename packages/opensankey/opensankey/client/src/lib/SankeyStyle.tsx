@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React from 'react'
-import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, Tabs } from 'react-bootstrap'
+import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
 // import { SankeyLink } from 'open-sankey/src/lib/types'
 import {  cut_name,default_node_style,default_link_style } from './SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
@@ -65,66 +65,62 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
 
 
   return(
-    <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'} >
-      <Modal.Header closeButton>
+    <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'}  >
+      <Modal.Header>
         <Modal.Title>{t('Menu.esn')}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className='sankey-menu'>
+        <Form.Group>
+          <InputGroup >
+            <Col>
+              <Button style={{width:'20%'}} onClick={() => {
+                const new_style = default_node_style()
+                new_style.name = 'New Style'
+                const new_id = 'style_node_' + String(new Date().getTime())
+                new_style.idNode=new_id
+                data.style_node[new_id] = new_style
+                set_data({ ...data })
 
-        <Row >
-          <Col xs={1}>
-            <Button size="sm" onClick={() => {
-              const new_style = default_node_style()
-              new_style.name = 'New Style'
-              const new_id = 'style_node_' + String(new Date().getTime())
-              new_style.idNode=new_id
-              data.style_node[new_id] = new_style
-              set_data({ ...data })
-
-            }}><FaPlus /></Button>
-          </Col>
-          {
+              }}><FaPlus /></Button>
+            </Col>
+            {
             // Drodown to select the style to modify
             // The dropdown is not visible when sankey+ isn't activated
-          }
-          <Col xs={5}>
-            <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_node !== '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
-              <Dropdown.Menu>
-                {Object.keys(data.style_node).map((d,i) => {
-                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
+            }
+            <Col>
+              <Dropdown>
+                <Dropdown.Toggle style={{width:'50%'}} variant="success" id="dropdown-basic">{(selected_style_node !== '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
+                <Dropdown.Menu>
+                  {Object.keys(data.style_node).map((d,i) => {
+                    return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
 
-                })}
-              </Dropdown.Menu>
-            </Dropdown>
-          </Col>
+                  })}
+                </Dropdown.Menu>
+              </Dropdown>
+            </Col>
 
-          <Col xs={1}>
-            <Button
-              size="sm"
-              variant='danger'
-              disabled={selected_style_node === 'default'}
-              onClick={
-                () => {
-                  Object.values(data.nodes).filter(n=>n.style==selected_style_node).forEach(n=>n.style='default')
-                  delete data.style_node[selected_style_node]
-                  set_selected_style_node((Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : '')
+            <Col>
+              <Button
+                style={{width:'20%'}}
+                variant='danger'
+                disabled={selected_style_node === 'default'}
+                onClick={
+                  () => {
+                    Object.values(data.nodes).filter(n=>n.style==selected_style_node).forEach(n=>n.style='default')
+                    delete data.style_node[selected_style_node]
+                    set_selected_style_node((Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : '')
+                  }
                 }
-              }
-            ><FaMinus /></Button>
+              ><FaMinus /></Button>
 
-          </Col>
-          <Col xs={5}>
+            </Col>
+            {/* <Col xs={5}>
             <Button variant="warning" onClick={applyStyleToNodes}>{t('Noeud.apparence.asn')}</Button>
-          </Col>
-        </Row>
+          </Col> */}
+          </InputGroup>
 
-        <Form.Group as={Row} >
-          <Col xs={2} >
-            <FormLabel >{t('Menu.ns')}</FormLabel>
-          </Col>
-          <Col xs={10} >
-
+          <InputGroup>
+            <InputGroup.Text style={{width:'30%'}}>{t('Menu.ns')}</InputGroup.Text>
             <FormControl
               disabled={(selected_style_node === 'default')?true:false}
               value={
@@ -136,17 +132,9 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
                 set_data({ ...data })
               }}
             />
-          </Col>
-
+          </InputGroup>
         </Form.Group>
-
-
-        <Col md={12}>
-          <Tabs defaultActiveKey="nodes_desc" id="node_attributes">
-            {SankeyMenuConfigurationNodesAttributes(t,tab_node_style_attribute)}
-          </Tabs>
-        </Col>
-
+        {SankeyMenuConfigurationNodesAttributes(t,tab_node_style_attribute,true)}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={closeStyleEdition}>Close</Button>
@@ -197,7 +185,7 @@ export const SankeyPlusModalStyleLink = (
           <Col xs={1}>
             <Button size="sm" onClick={() => {
               const new_style = default_link_style()
-              new_style.idLink = 'New Style'
+              new_style.name = 'New Style'
               const new_id = 'style_link_' + String(new Date().getTime())
               new_style.idLink = new_id
               data.style_link[new_id] = new_style
@@ -261,11 +249,8 @@ export const SankeyPlusModalStyleLink = (
 
         <Row>
           <Col md={12}>
-            <Tabs defaultActiveKey="flux_attributes" id="settings-layout">
 
-              {SankeyMenuConfigurationLinksAppearence(data,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link,display_link_opacity,set_display_link_opacity)}
-
-            </Tabs>
+            {SankeyMenuConfigurationLinksAppearence(data,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link,display_link_opacity,set_display_link_opacity,true)}
           </Col>
         </Row>
 

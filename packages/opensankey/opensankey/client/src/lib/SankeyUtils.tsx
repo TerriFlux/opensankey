@@ -1627,7 +1627,7 @@ export const return_value_link=(data:SankeyData,l:SankeyLink,k:keyof SankeyLinkA
   let value=return_local_link_value(l,k as keyof SankeyLinkAttrLocal)
   if(value === undefined || value === null){
     const ks=k as keyof SankeyLinkStyle
-    value=data.style_link[l.style][ks]
+    value= l.style in data.style_link ? data.style_link[l.style][ks] : data.style_link['default'][ks]
   }
   return value
 }
