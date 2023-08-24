@@ -8,7 +8,7 @@ import {SankeyPlusData,SankeyPlusNode} from './types'
 import ReactQuill,{Quill} from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import ImageResize from 'quill-image-resize-module-react'
-import {node_displayed} from 'open-sankey/dist/SankeyUtils'
+import {node_displayed,return_value_node} from 'open-sankey/dist/SankeyUtils'
 
 Quill.register('modules/imageResize', ImageResize)
 declare const window: Window &
@@ -69,6 +69,8 @@ export const SankeyPlusNodeFO = (
     onChange={(evt) => {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
         d.FO_content = evt
+        const node_width = return_value_node(data,d,'node_width') as number
+        d.FO_content = d.FO_content.replace('<img src=','<img width="'+node_width+'" src=')
       })
     }}
     onBlur={()=>{set_data({ ...data })}}
