@@ -414,8 +414,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
             </th>
             {/* Autre entetes  */}
             <th>{t('Tags.Nom')}</th>
-            <th>{t('Tags.Leg')}</th>
-            <th>{t('Tags.tags')}</th>
             <th>{t('Tags.Bannière')}</th>
             {(elementTagName!='dataTags')?<th>{t('Tags.Position')}</th>:<></>}
           </tr>
@@ -458,32 +456,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                             }}/>
                       </OverlayTrigger>
                     </td>
-                    {/* Legende de groupe d'étiquette  */}
-                    <td>
-                      <OverlayTrigger
-                        key={'tags.tooltips.13'}
-                        placement={'top'}
-                        delay={500}
-                        overlay={<Tooltip id={'tags.tooltips.13'}>{t('Tags.tooltips.leg_grp')} </Tooltip>}>
-                        <Form.Check inline={true}
-                          // Permet de selection le étiquette pour l'affichage dans la légende
-                          name={'element_legend_' + tags_group_key}
-                          checked={data[elementTagName][tags_group_key].show_legend}
-                          id={tags_group_key}
-                          type='switch'
-                          style={{marginRight: '0px', marginLeft: '1.65em'}}
-                          onChange={
-                            (evt: React.ChangeEvent) => {
-                              const new_nb_element = evt.target as HTMLInputElement
-                              const tags_group_key = new_nb_element.id
-                              const visible = new_nb_element.checked
-                              data[elementTagName][tags_group_key].show_legend = visible
-                              set_data({ ...data })
-                            }}/>
-                      </OverlayTrigger>
-                    </td>
-                    {/* Nombre d'étiquettes présentes  */}
-                    <td>{Object.keys(data[elementTagName][tags_group_key].tags).length}</td>
                     {/* Banniere  */}
                     <td>
                       <OverlayTrigger
