@@ -831,7 +831,7 @@ const resources = {
           'Rectangle':'Rectangle',
           'TML':'Largeur minimale',
           'TMH':'Hauteur minimale',
-          'HideAlone':'Cacher si noeud est intermédiaire',
+          'HideAlone':'Cacher intermédiaire',
           'asn':'Appliquer le style aux noeuds',
           'toScale':'Noeud hors échelle',
           'Orientation':'Orientation : ',

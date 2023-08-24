@@ -820,10 +820,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
   </Form.Group>
 
   const style_node=!menu_for_style? <InputGroup >
-    <InputGroup.Text style={{width:'20%'}}>{t('Noeud.Style')}:</InputGroup.Text>
+    <InputGroup.Text style={{width:'30%'}}>{t('Noeud.Style')}</InputGroup.Text>
     <Dropdown  >
       <Dropdown.Toggle 
-        style={{width:'50%'}}
+        style={{width:'40%'}}
         variant='outline-primary'>{style_of_selected_nodes()}</Dropdown.Toggle>
       <Dropdown.Menu>
         <Dropdown.Item onClick={() => {
