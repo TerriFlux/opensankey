@@ -521,7 +521,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
   }else if(e.key=='a' && e.ctrlKey){
     e.preventDefault()
-    multi_selected_nodes.current=Object.values(data.nodes).filter(n=>node_visible_on_svg().includes(n.idNode))
+    multi_selected_nodes.current=Object.values(data.nodes)//.filter(n=>node_visible_on_svg().includes(n.idNode))
     multi_selected_nodes.current.forEach(n=>{
       select_visualy_nodes(n)
     })
