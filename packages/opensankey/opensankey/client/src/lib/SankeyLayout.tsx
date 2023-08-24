@@ -439,6 +439,10 @@ export const compute_auto_sankey = (
       max_vertical_offset = vertical_offset
     }
   }
+
+  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n =>
+    desagregation(data,n.idNode, Object.keys(n.dimensions).length == 1 ? 'Primaire' : Object.keys(n.dimensions).filter(dim=>dim !== 'Primaire')[0], true )
+  )
   // const visible_links = Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]))
   // visible_links.forEach(l=> {
   //   if (l.local && l.local.recycling) {
@@ -751,31 +755,56 @@ export const desagregation = (
   data: SankeyData,   
   idNode: string, 
   cur_dimension: string,
+  compute_auto_sankey=false
 ) => {
   const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
   if (dim_desagregate_nodes.length == 0) {
     return
   }
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const nb_desagregated = dim_desagregate_nodes.length
-  let current_y = data.v_space/2
-  const delta_y = data.v_space / (nb_desagregated-1)
+  let nodes_heights = 0
+  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,data,inv_scale,scale,getLinkValue))
+  const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],data,inv_scale,scale,getLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
+  let delta_y = 0
   dim_desagregate_nodes.forEach(n => {
     if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idNode].x !==0 && data.nodes[idNode].y !==0 )) {
       n.x = data.nodes[idNode].x
-      n.y = data.nodes[idNode].y - current_y
+      n.y = start_point + delta_y
     }
-    current_y = current_y - delta_y
+    delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,data,inv_scale,scale,getLinkValue)
 
     if(n.local==undefined || n.local==null) {
       n.local = {}
     }
     setLocalAgregation(n, data, true)
+    if (compute_auto_sankey) {
+      if (n.outputLinksId.length === 0) {
+        assign_node_local_attribute(n,'label_horiz', 'right')
+        assign_node_local_attribute(n,'label_vert', 'middle')
+      } else if (n.inputLinksId.length === 0) {
+        assign_node_local_attribute(n,'label_horiz', 'left')
+        assign_node_local_attribute(n,'label_vert', 'middle')
+      } else {
+        assign_node_local_attribute(n,'label_horiz', 'left')
+        assign_node_local_attribute(n,'label_vert', 'middle')
+        assign_node_local_attribute(n,'label_background', true)        
+      }
+    }
   })
   const clicked_node=data.nodes[idNode]
   if(clicked_node.local==undefined || clicked_node.local==null) {
     clicked_node.local = {}
   }
   setLocalAgregation(clicked_node, data, false)
+  if (compute_auto_sankey && nb_desagregated > 0) {
+    agregation(data,dim_desagregate_nodes[0].idNode,cur_dimension)
+  }
 }
 
 export const agregation = (
@@ -1003,7 +1032,10 @@ const setLocalAgregation = (
   data: SankeyData,
   local_aggregation: boolean
 ) => {
-  n.local = { local_aggregation: local_aggregation }
+  if (!n.local) {
+    n.local={}
+  }
+  n.local['local_aggregation'] = local_aggregation
   n.inputLinksId.forEach(linkId => {
     const node_types = data.nodes[data.links[linkId].idSource].tags['Type de noeud']
     if (node_types && node_types.includes('échange')) {
