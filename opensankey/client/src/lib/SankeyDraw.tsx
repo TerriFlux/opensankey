@@ -5,7 +5,7 @@ import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData} from './types
 import PropTypes, { InferProps } from 'prop-types'
 import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,svgDragMiddleMouseStart,svgDragMiddleMouseMove, select_visualy_nodes,node_visible_on_svg} from './SankeyDrawFunction'
+import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,svgDragMiddleMouseStart,svgDragMiddleMouseMove, select_visualy_nodes} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 
 
