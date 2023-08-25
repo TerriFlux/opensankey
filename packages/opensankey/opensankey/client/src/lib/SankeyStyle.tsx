@@ -54,14 +54,13 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
   }
   const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(t,data,set_data,{current:[]},true,selected_style_node,set_style_to_apply,[],[],[])
   additional_node_attribute.forEach(el=>tab_node_style_attribute.push(el))
-  const applyStyleToNodes = () => {
-    Object.values(data.nodes).filter(d => d.style !== '' && d.style === selected_style_node).map(d => {
-      delete d.local
-    })
 
-    set_data({ ...data })
-  }
-
+  // const applyStyleToNodes = () => {
+  //   Object.values(data.nodes).filter(d => d.style !== '' && d.style === selected_style_node).map(d => {
+  //     delete d.local
+  //   })
+  //   set_data({ ...data })
+  // }
 
 
   return(
