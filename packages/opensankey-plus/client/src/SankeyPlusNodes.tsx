@@ -1,16 +1,18 @@
 import React from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip, Button } from 'react-bootstrap'
-import {  SankeyLinkValue} from 'open-sankey/src/lib/types'
+import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge } from 'react-bootstrap'
+import { SankeyLinkValue } from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
 import {  getLinkValue,node_color,link_color,return_value_node,return_value_link, } from 'open-sankey/dist/SankeyUtils'
-import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
+
+import { FaEyeSlash, FaEye} from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 
 declare const window: Window &
 typeof globalThis & {
@@ -42,43 +44,69 @@ export const SankeyPlusNodeIcon = (
   }
   const isAllIconVisible = () => {
     let visible = false
-    multi_selected_nodes.current.map(d => visible = (d.iconVisible) ? true : visible)
+    multi_selected_nodes.current.map(
+      d => visible = (d.iconVisible) ? true : visible)
     return visible
   }
 
-  const content_tab=<OverlayTrigger
-    key={'iconDisabled'}
-    placement={'top'}
-    delay={500}
-    overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-  >
-    <Form>
-      <Form.Group as={Row}>
-        <Col xs={4}>
-          <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Visibilité')}</FormLabel>
-        </Col>
-        <Col xs={5}>
-          <FormCheck inline
-            type='switch'
-            checked={isAllIconVisible()}
-            disabled={!is_activated}
-            onChange={evt => {
+  const content_tab=<>
+    <OverlayTrigger
+      key={'iconDisabled'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(!is_activated)?'#666666':'',
+            backgroundColor:(!is_activated)?'#cccccc':'',
+            width:'75%'}}
+        >
+          {t('Noeud.apparence.Visibilité')}
+          {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+        </InputGroup.Text>
 
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconVisible = evt.target.checked)
+        <Button
+          style={{width:'25%'}}
+          className='btn_menu_config'
+          disabled={!is_activated}
+          variant={isAllIconVisible()?'primary':'outline-primary'}
+          onClick={
+            () => {
+              Object.values(data.nodes).filter(
+                f => multi_selected_nodes.current.map(
+                  d => d.idNode).includes(f.idNode)).map(
+                d => d.iconVisible = !isAllIconVisible())
               set_data({ ...data })
-            }}
-          />
-        </Col>
-      </Form.Group>
+            }
+          }
+        >
+          {isAllIconVisible()?<FaEye/>:<FaEyeSlash/>}
+        </Button>
+      </InputGroup>
+    </OverlayTrigger>
 
-
-      <Form.Group as={Row}>
-        <Col xs={4}>
-          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}}>{t('Noeud.icon.si')}</FormLabel>
-        </Col>
-        <Col xs={5}>
+    {isAllIconVisible()?<>
+      <OverlayTrigger
+        key={'iconDisabled'}
+        placement={'top'}
+        delay={500}
+        overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+      >
+        <InputGroup>
+          <InputGroup.Text
+            style={{
+              color:(!is_activated)?'#666666':'',
+              backgroundColor:(!is_activated)?'#cccccc':'',
+              width:(!is_activated)?'60%':'40%'}}
+          >
+            {t('Noeud.icon.si')}
+            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+          </InputGroup.Text>
           <Form.Select
-            disabled={!is_activated?true:!isAllIconVisible()}
+            style={{width:(!is_activated)?'40%':'60%'}}
+            disabled={!is_activated}
             onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                 d.iconName = evt.target.value
@@ -88,22 +116,34 @@ export const SankeyPlusNodeIcon = (
             value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].iconName:'None'}
           >
             <option key={0} value={'none'}>{t('Noeud.icon.Aucun')}</option>
-
             {Object.keys(data.icon_catalog).map((n, i) => {
-
               return <option key={i + 1} value={n}>{n}</option>
             })}
           </Form.Select>
-        </Col>
-      </Form.Group>
-      <Form.Group as={Row}>
-        <Col xs={4}>
-          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.apparence.Couleur')}</FormLabel>
-        </Col>
-        <Col xs={3}>
+        </InputGroup>
+      </OverlayTrigger>
+
+      <OverlayTrigger
+        key={'iconDisabled'}
+        placement={'top'}
+        delay={500}
+        overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+      >
+        <InputGroup>
+          <InputGroup.Text
+            style={{
+              color:(!is_activated)?'#666666':'',
+              backgroundColor:(!is_activated)?'#cccccc':'',
+              width:'40%'}}
+          >
+            {t('Noeud.apparence.Couleur')}
+            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+          </InputGroup.Text>
+
           <Form.Control
+            style={{width:'60%'}}
             type='color'
-            disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
+            disabled={!is_activated?true:(radio_selected !== 'local')}
             value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
             onChange={evt => {
               const color = evt.target.value
@@ -111,16 +151,28 @@ export const SankeyPlusNodeIcon = (
               set_data({ ...data })
             }}
           />
-        </Col>
-      </Form.Group>
-      <Form.Group as={Row}>
-        <Col xs={4}>
-          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >{t('Noeud.icon.rIN')}</FormLabel>
-        </Col>
-        <Col xs={3}>
+        </InputGroup>
+      </OverlayTrigger>
+
+      <OverlayTrigger
+        key={'iconDisabled'}
+        placement={'top'}
+        delay={500}
+        overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+      >
+        <InputGroup>
+          <InputGroup.Text
+            style={{
+              color:(!is_activated)?'#666666':'',
+              backgroundColor:(!is_activated)?'#cccccc':'',
+              width:(!is_activated)?'70%':'50%'}}
+          >
+            {t('Noeud.icon.rIN')}
+            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+          </InputGroup.Text>
           <Form.Control
             type='number'
-            disabled={!is_activated?true:(radio_selected !== 'local' || !isAllIconVisible())}
+            disabled={!is_activated?true:(radio_selected !== 'local')}
             value={valueAllIconRatio()}
             onChange={evt => {
               let ratio = +evt.target.value
@@ -130,17 +182,21 @@ export const SankeyPlusNodeIcon = (
               set_data({ ...data })
             }}
           />
-        </Col>
-        <Col xs={4}>
-          <FormLabel style={{color:((is_activated)?isAllIconVisible():false)?'#555555':'#DADADA'}} >%</FormLabel>
-        </Col>
-      </Form.Group>
-    </Form></OverlayTrigger>
+          <InputGroup.Text
+            style={{
+              color:(!is_activated)?'#666666':'',
+              backgroundColor:(!is_activated)?'#cccccc':'',
+              width:'10%'}}
+          >
+            %
+          </InputGroup.Text>
+        </InputGroup>
+      </OverlayTrigger>
+    </>:<></>}
+  </>
 
   return menu_for_modal?content_tab:<Tab eventKey="node_icon" title={t('Noeud.icon.icon')}>{content_tab}</Tab>
 }
-
-
 
 const calcPath = (
   data: SankeyPlusData,
@@ -251,7 +307,7 @@ const branchAnimate = (
           arrow.attr('opacity',0.85)
         }
       }
-      
+
       // reaffichage des link value après l'animation
       d3.select(((this as unknown) as { parentNode: d3.BaseType }).parentNode).select('.link_value')
         .style('display', 'inline')
@@ -333,7 +389,7 @@ export const SankeyPlusDrawNodesIcon = (
   nodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
 
 ) => {
-  
+
 
 
   const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
@@ -476,7 +532,7 @@ export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyPlusNode|Sanke
 
 
   if((out_of_zone_item[0].y<=0 && event.y<0) || (out_of_zone_item[0].y<=0 && event.dy<0)){
-    
+
     // Shift zdt to opposing direction
     Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
       if(!multi_selected_label.current.includes(lb)){
@@ -534,7 +590,7 @@ export const SankeyPlusNodeDragEvent=(
         d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
       })
     }).on('end',()=>set_data({...data}))
-  
+
   )
 
 }
@@ -561,7 +617,7 @@ export const SankeyPlusdragGNodeEvent=(
     .subject(Object)
     .on('start',()=>{
       d3.selectAll('.node_shape').nodes().forEach(element => {
-        node_visible.push(d3.select(element).attr('id')) 
+        node_visible.push(d3.select(element).attr('id'))
       })
     })
     .on('drag', function (event,node) {
@@ -590,7 +646,7 @@ export  const drag_nodes_plus = (node:SankeyPlusNode,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink }, 
+  display_links:{ [link_id: string]: SankeyPlusLink },
   multi_selected_links:{current: SankeyPlusLink[] },
   link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
   min_width_and_height:(d:SankeyPlusData)=>number[],
@@ -603,7 +659,7 @@ export  const drag_nodes_plus = (node:SankeyPlusNode,
 ) => {
   removeAnimate()
 
-  // Cherche si des element seront hors zone si on les drag 
+  // Cherche si des element seront hors zone si on les drag
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
   const out_of_zone_item=return_out_of_bound_element_plus(node,data,event,multi_selected_nodes,node_visible)
   // Pousse les element non sélectionnés dans la direction opposé
@@ -612,7 +668,7 @@ export  const drag_nodes_plus = (node:SankeyPlusNode,
   }
 
   drag_elements_plus(node,data,event,multi_selected_nodes,multi_selected_label,set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale)
-    
+
 }
 
 export const drag_elements_plus=(
@@ -666,18 +722,18 @@ export const return_out_of_bound_element_plus=(dragged:SankeyPlusNode|SankeyPlus
   multi_selected_nodes:{current:SankeyPlusNode[]},node_visible:string[]
 )=>{
 
-  // Cherche si des noeuds seront hors zone si on les drag 
+  // Cherche si des noeuds seront hors zone si on les drag
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
 
 
   const out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[]=return_out_of_bound_element(dragged,data,event,multi_selected_nodes,node_visible)
-  
+
 
   Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).filter(lb=>{
-    return (lb.x<=0 && event.dx<0) || (lb.y<=0 && event.dy<0) || (lb.x<=0 && event.x<0) || (lb.y<=0 && event.y<0) 
+    return (lb.x<=0 && event.dx<0) || (lb.y<=0 && event.dy<0) || (lb.x<=0 && event.x<0) || (lb.y<=0 && event.y<0)
   }).forEach(lb=>out_of_zone_item.push(lb))
 
-  
+
   return out_of_zone_item
 
 }

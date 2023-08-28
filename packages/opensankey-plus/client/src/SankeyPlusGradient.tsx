@@ -1,14 +1,18 @@
 import React from 'react'
 import { SankeyLinkValue} from 'open-sankey/src/lib/types'
 import * as d3 from 'd3'
-import { OverlayTrigger, Tooltip, InputGroup,Button} from 'react-bootstrap'
+import { OverlayTrigger, Tooltip, InputGroup, Button, Badge} from 'react-bootstrap'
 import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
 import { TFunction } from 'i18next'
 import * as OpensankeyDrawFunction  from 'open-sankey/dist/SankeyDrawFunction'
 import * as OpensankeyUtils from 'open-sankey/dist/SankeyUtils'
-import { FaEye, FaEyeSlash} from 'react-icons/fa'
+import { FaCheck} from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
-export const menu_conf_link_apparence_gradient=(t:TFunction,
+
+export const menu_conf_link_apparence_gradient=(
+  t:TFunction,
   multi_selected_links:{current:SankeyPlusLink[]},
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
@@ -19,28 +23,33 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
 
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
-
-
-
-  // const gradChecked = () => {
-  //   let gradChecked = true
-  //   multi_selected_links.current.map(d => {
-  //     const l_grad=OpensankeyUtils.return_value_link(data,d,'gradient')
-  //     gradChecked = (l_grad) ? gradChecked : false
-  //   })
-  //   return gradChecked
-  // }
   const gradChecked=OpensankeyUtils.is_all_link_attr_same_value(data,selected_parameter,'gradient',menu_for_style)
+
   return <InputGroup>
-    <InputGroup.Text style={{color:(!is_activated)?'grey':'#555555',width:'30%'}} >{t('Flux.apparence.grad')+(OpensankeyUtils.is_link_diplaying_value_local(multi_selected_links,'gradient',menu_for_style)?'*':'')}:</InputGroup.Text>
     <OverlayTrigger
       key={'gradiantDisabled'}
       placement={'top'}
       delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >      
+      overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
+    >
+      <InputGroup.Text
+        style={{
+          color:(!is_activated)?'#666666':'',
+          backgroundColor:(!is_activated)?'#cccccc':'',
+          width:'40%'}}
+      >
+        {t('Flux.apparence.grad')+(OpensankeyUtils.is_link_diplaying_value_local(multi_selected_links,'gradient',menu_for_style)?'*':'')}
+        {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+      </InputGroup.Text>
+    </OverlayTrigger>
+    <OverlayTrigger
+      key={'gradiantDisabled'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
+    >
       <Button
-        style={{width:'70%'}} 
+        style={{width:'60%'}}
         className='btn_menu_config'
         disabled={!is_activated}
         variant={gradChecked?'primary':'outline-primary'}
@@ -52,14 +61,14 @@ export const menu_conf_link_apparence_gradient=(t:TFunction,
             set_data({ ...data })
           }
         }
-      >{gradChecked?<FaEye/>:<FaEyeSlash/>}</Button>
-    </OverlayTrigger></InputGroup>
+      >{gradChecked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+    </OverlayTrigger>
+  </InputGroup>
 }
 
 export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue)=>{
 
   const defGradient = d3.select(' .opensankey #svg #sankey_def')
-
 
   const nodes = data.nodes
 
@@ -79,6 +88,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
     .append('linearGradient')
     .attr('id', 'gradient-' + l.idSource + '-' + l.idTarget)
     .attr('gradientUnits', 'userSpaceOnUse')
+
   gradient.append('stop')
     .attr('id', 'stop-start')
     .attr('offset', '0%')
@@ -106,6 +116,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
       }
     })
     .attr('stop-opacity', 1)
+
   gradient.append('stop')
     .attr('id', 'stop-end')
     .attr('offset', '100%')
@@ -325,7 +336,7 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
   const width_trgt = +d3.select(' .opensankey #shape_' + link.idTarget).attr('width')
   //const height_trgt = +d3.select(' .opensankey #' + link.idTarget).attr('height')
 
-  
+
   const n_source=nodes[link.idSource]
   const n_source_color=OpensankeyUtils.return_value_node(data,n_source,'color')
 
