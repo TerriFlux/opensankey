@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tab, Table, InputGroup } from 'react-bootstrap'
+import { Row, Form, FormLabel, FormCheck, Tab, Table, InputGroup } from 'react-bootstrap'
 import { SankeyData, SankeyLink,SankeyLinkValue } from './types'
 import { TFunction } from 'i18next'
 
