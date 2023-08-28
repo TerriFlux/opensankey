@@ -103,7 +103,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
     const DD = (
-      <div id='DD_multi_links' 
+      <div id='DD_multi_links'
         style={{width:'70%'}}>
         <MultiSelect
           valueRenderer={ (selected :selected_type[]) => {
@@ -120,7 +120,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             multi_selected_links.current = m_s
             if(m_s.length>0){
               set_display_link_opacity(return_value_link(data,m_s[0],'opacity'))
-            }           
+            }
 
             if(multi_selected_links.current.length>0){
               let new_tags_selected=tags_selected
@@ -154,7 +154,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
               }
             }
-           
+
 
             set_data({...data})
           }}
@@ -196,7 +196,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     // selected_link.current = link
     multi_selected_links.current = [link]
     set_display_link_opacity(return_correct_link_attribute_value(data,link,'opacity',false))
-    
+
     set_data({ ...data })
     set_show_link(true)
   }
@@ -254,11 +254,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_data({ ...data })
   }
 
-
-
-
-
-
   return (<>
     {/* Ajout d'un flux  */}
     <InputGroup>
@@ -266,7 +261,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         key={'Menu.tooltips.flux.plus'}
         placement={'top'}
         delay={500}
-        
         overlay={<Tooltip id={'Menu.tooltips.flux.plus'}>{t('Menu.tooltips.flux.plus')} </Tooltip>}>
         <Button
           size="sm"
@@ -330,17 +324,21 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       </OverlayTrigger>
     </InputGroup>
 
-
-
     {/* Choix du point de départ du flux  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>{t('Flux.src')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'45%'}}>
+        {t('Flux.src')}
+      </InputGroup.Text>
       <OverlayTrigger
         key={'Menu.tooltips.flux.src'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'Menu.tooltips.flux.src'}>{t('Flux.tooltips.src')} </Tooltip>}>
-        <Form.Select disabled={multi_selected_links.current.length != 1} onChange={source_change} value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:''}>
+        <Form.Select
+          disabled={multi_selected_links.current.length != 1}
+          style={{width:'55%'}}
+          onChange={source_change}
+          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:''}>
           {addDropSource()}
         </Form.Select>
       </OverlayTrigger>
@@ -348,13 +346,19 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     {/* Choix du point d'arrivée du flux  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>{t('Flux.trgt')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'45%'}}>
+        {t('Flux.trgt')}
+      </InputGroup.Text>
       <OverlayTrigger
         key={'Menu.tooltips.flux.trgt'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-        <Form.Select disabled={multi_selected_links.current.length != 1} onChange={target_change} value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:''}>
+        <Form.Select
+          disabled={multi_selected_links.current.length != 1}
+          style={{width:'55%'}}
+          onChange={target_change}
+          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:''}>
           {addDropCible()}
         </Form.Select>
       </OverlayTrigger>
@@ -362,14 +366,16 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     {/* Inversion du flux  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>{t('Flux.if')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'45%'}}>
+        {t('Flux.if')}
+      </InputGroup.Text>
       <OverlayTrigger
         key={'Menu.tooltips.flux.if'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.if')} </Tooltip>}>
         <Button variant="outline-primary"
-          style={{width:'60%'}}
+          style={{width:'55%'}}
           className='btn_menu_config'
           onClick={() => {
             const nodes_to_reorganize: SankeyNode[] = []
@@ -396,13 +402,17 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           <FaArrowsAltH/>
         </Button>
       </OverlayTrigger>
-
     </InputGroup>
 
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>{t('Flux.dzf')}</InputGroup.Text>
+      <InputGroup.Text style={{
+        color:(multi_selected_links.current.length != 1)?'#666666':'',
+        backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
+        width:'45%'}}>
+        {t('Flux.dzf')}
+      </InputGroup.Text>
       {/* Boutton pour monter le lien sélctionné */}
-      <ButtonGroup style={{width:'60%'}}>
+      <ButtonGroup style={{width:'55%'}}>
         <OverlayTrigger
           key={'Menu.tooltips.flux.up'}
           placement={'top'}
