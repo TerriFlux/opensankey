@@ -4,7 +4,7 @@
 /*!
  * TRY - Retina Ready Theme
  *
- * Copyright 2013 
+ * Copyright 2013
  * Licensed under the Apache License v2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  * Created by: Carlos Alvarez
@@ -137,7 +137,7 @@ body{background-color:#f2f2f2;/*font-family:'Open Sans',sans-serif;*/font-size:1
 
 primary:not(:disabled):not(.disabled).active, .btn-outline-primary:not(:disabled):not(.disabled):active, .show > .btn-outline-primary.dropdown-toggle{
 	background-color: #66a593;
-	border-color :#66a593; 
+	border-color :#66a593;
 }
 
 .btn-check:focus + .btn, .btn:focus {
@@ -330,7 +330,7 @@ td {
   -webkit-box-shadow: none;
      -moz-box-shadow: none;
           box-shadow: none;
-        
+
 }
 .navbar .nav > .active > a,
 .navbar .nav > .active > a:hover,
@@ -394,9 +394,9 @@ hr {
 	font-weight: 500;
 	border: none;
 	padding: 10px 30px 7px 30px;
-	transition:all .5s ease-in; 
-    -o-transition:all .5s ease-in; 
-    -moz-transition:all .5s ease-in; 
+	transition:all .5s ease-in;
+    -o-transition:all .5s ease-in;
+    -moz-transition:all .5s ease-in;
     -webkit-transition:all .5s ease-in;
 	text-transform:uppercase;
 	margin-left:10px;
@@ -428,9 +428,9 @@ hr {
 	border: 2px;
 	border-style:solid solid solid solid;
 	padding: 8px 31px 5px 31px;
-	transition:all .5s ease-in; 
-    -o-transition:all .5s ease-in; 
-    -moz-transition:all .5s ease-in; 
+	transition:all .5s ease-in;
+    -o-transition:all .5s ease-in;
+    -moz-transition:all .5s ease-in;
     -webkit-transition:all .5s ease-in;
 	text-transform:uppercase;
 	margin-left:10px;
@@ -449,9 +449,9 @@ hr {
 	border: 2px;
 	border-style:solid solid solid solid;
 	padding: 8px 31px 5px 31px;
-	transition:all .5s ease-in; 
-    -o-transition:all .5s ease-in; 
-    -moz-transition:all .5s ease-in; 
+	transition:all .5s ease-in;
+    -o-transition:all .5s ease-in;
+    -moz-transition:all .5s ease-in;
     -webkit-transition:all .5s ease-in;
 	text-transform:uppercase;
 	margin-left:10px;
@@ -470,9 +470,9 @@ hr {
 	border: 2px;
 	border-style:solid solid solid solid;
 	padding: 8px 31px 5px 31px;
-	transition:all .5s ease-in; 
-    -o-transition:all .5s ease-in; 
-    -moz-transition:all .5s ease-in; 
+	transition:all .5s ease-in;
+    -o-transition:all .5s ease-in;
+    -moz-transition:all .5s ease-in;
     -webkit-transition:all .5s ease-in;
 	text-transform:uppercase;
 	margin-left:10px;
@@ -507,9 +507,9 @@ hr {
 	border: 2px;
 	border-style:solid solid solid solid;
 	padding: 8px 30px 5px 30px;
-	transition:all .5s ease-in; 
-    -o-transition:all .5s ease-in; 
-    -moz-transition:all .5s ease-in; 
+	transition:all .5s ease-in;
+    -o-transition:all .5s ease-in;
+    -moz-transition:all .5s ease-in;
     -webkit-transition:all .5s ease-in;
 	border-color:#151515;
 	text-transform:uppercase;
@@ -542,9 +542,9 @@ hr {
 	border: 2px;
 	border-style:solid solid solid solid;
 	padding: 8px 30px 5px 30px;
-	transition:all .5s ease-in; 
-    -o-transition:all .5s ease-in; 
-    -moz-transition:all .5s ease-in; 
+	transition:all .5s ease-in;
+    -o-transition:all .5s ease-in;
+    -moz-transition:all .5s ease-in;
     -webkit-transition:all .5s ease-in;
 	border-color:#fff;
 	text-transform:uppercase;
@@ -824,7 +824,7 @@ hr {
 .sidebar h6 {
 	font-size:12px;
 	font-weight:bolder;
-	color:#95a5a6	
+	color:#95a5a6
 }
 
 .middle {
@@ -863,7 +863,7 @@ hr {
 	font-size:60px;
 	margin-bottom:0px;
 	padding-bottom:35px;
-	
+
 }
 
 .priceBox {
@@ -944,7 +944,7 @@ textarea {
 	line-height: 24px;
 	padding: 18px;
 	width: 100%;
-	text-indent: 0;	
+	text-indent: 0;
 }
 .textarea-container { margin: 0 18px; }
 .textarea-container textarea { margin-left: -18px; }
@@ -1130,7 +1130,7 @@ textarea {
  	position:fixed;
 	z-index:100;
 }
-.sideBar .btn .col,.fullscreen_toolbar .btn .col { 
+.sideBar .btn .col,.fullscreen_toolbar .btn .col {
 	margin: 0px;
 	padding: 0px;
 	width: 35px;
@@ -1157,12 +1157,10 @@ textarea {
 	border: none;
 	text-align: left;
 }
+
+/* Sankey menu style */
 .sankey-menu *{
 	font-size:12px;
-}
-.btn_menu_config{
-	border-radius: 5px;
-	font-size: 12px;
 }
 .sankey-menu .input-group {
 	margin-top: 4px;
@@ -1171,18 +1169,30 @@ textarea {
 .sankey-menu .input-group .input-group-text  {
 	color:#555555
 }
+.sankey-menu .row{
+	margin-top: 0px;
+}
+.sankey-menu .ql-editor{
+	min-height: 200px;
+}
+
+/* Button in Sankey menu */
+.btn_menu_config{
+	border-radius: 5px;
+	font-size: 12px;
+}
 .btn_menu_config:hover svg,.btn_menu_config.btn-primary svg,.btn_menu_config.btn-outline-primary:hover svg{
 	fill:white
 }
 .btn_menu_config.btn-outline-primary svg{
 	fill:#78c2ad
 }
-
-.sankey-menu .row{
-	margin-top: 0px;
+.btn_menu_config:disabled {
+    background-color: #cccccc;
+	border: none;
 }
-.sankey-menu .ql-editor{
-	min-height: 200px;
+.btn_menu_config:disabled svg{
+	fill:#666666;
 }
 .sankey-menu .input-group .btn {
 	z-index: 1;
