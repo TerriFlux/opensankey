@@ -259,7 +259,7 @@ const resources = {
         },
         apparence:{
           'apparence':'Appearence',
-          'Visibilité':'Visibility',
+          'Visibilité':'Visibility of nodes',
           'Couleur':'Color',
           'CouleurPérenne':'Static color',
           'Forme':'Shape',
@@ -821,7 +821,7 @@ const resources = {
         },
         apparence:{
           'apparence':'Apparence',
-          'Visibilité':'Visibilité',
+          'Visibilité':'Visibilité des noeuds',
           'Couleur':'Couleur',
           'CouleurPérenne':'Couleur fixe',
           'Forme':'Forme',

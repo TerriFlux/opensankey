@@ -224,12 +224,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
       </OverlayTrigger>
     </InputGroup>
 
-    
-
-
-
     {/* Affichage du nom des noeuds selectionnés */}
-    
     <InputGroup>
       <InputGroup.Text>{t('Noeud.Nom')}</InputGroup.Text>
       <OverlayTrigger
@@ -282,19 +277,16 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           disabled={(multi_selected_nodes.current.length == 1) ? false : true} />
       </OverlayTrigger>
     </InputGroup>
-    
 
     {/* Declenché si des neouds sont selectionnées */}
     {(multi_selected_nodes.current.length !== 0) ? (
       <>
-      
         <Tabs defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
           {menu_configuration_nodes.map((c:JSX.Element)=>{
             return c})}
         </Tabs>
-
-        
-      </>) : (<></>)}</>
+      </>) : (<></>)}
+  </>
   )
 }
 
