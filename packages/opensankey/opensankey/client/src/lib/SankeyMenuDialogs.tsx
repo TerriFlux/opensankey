@@ -566,6 +566,7 @@ const ApplySaveJSONPropTypes = {
   set_show_save_json: PropTypes.func.isRequired,
   sankey_data:SankeyDataPropTypes,
   set_sankey_data:PropTypes.func.isRequired,
+  set_view:PropTypes.func
 }
 
 
@@ -576,7 +577,7 @@ type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
  * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }
  * @returns {*}
  */
-export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,set_sankey_data }: ApplySaveJSONTypes) => {
+export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,set_sankey_data,set_view }: ApplySaveJSONTypes) => {
   const [mode_save,set_mode_save]=useState(true)
   return (
     <Modal
@@ -615,6 +616,9 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
                       (d as SankeyLink).value={}
                       return d
                     })
+                  }
+                  if(set_view){
+                    set_view('none')
                   }
                   set_sankey_data({...sankey_data})
                   clickSaveDiagram(sankey_data)
