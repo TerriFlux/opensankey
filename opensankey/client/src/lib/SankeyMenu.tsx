@@ -1631,7 +1631,7 @@ export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{curr
     <div className={'menu_conf '+class_name}
       style={n_style_menu_draggable}       
     >
-      <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'1','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
+      <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'3','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
         <Col><h3>{title}</h3></Col>
         <Col className='text-end'>{<CloseButton onClick={()=>{set_display_menu(false)}}/>}</Col>
       </Row>  
