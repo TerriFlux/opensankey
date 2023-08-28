@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import React from 'react'
-import { Row, Form, FormLabel, Col, Tab, Table,Button } from 'react-bootstrap'
+import { Row, Form, FormLabel, Tab, Table, Button, InputGroup } from 'react-bootstrap'
 import { SankeyData,SankeyNode } from './types'
 import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -25,29 +25,27 @@ export const SankeyMenuConfigurationNodesTags = (
   if ((tags_group_key == '' && Object.keys(data.nodeTags).length > 0) || (!Object.keys(data.nodeTags).includes(tags_group_key) && Object.keys(data.nodeTags).length > 0)) {
     set_tags_group_key(Object.keys(data.nodeTags)[0])
   }
-  return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}
-    disabled={/*node.colorParameter !== 'groupTag'*/false} >
-    <Form.Group as={Row} >
-      <Col xs={4}>
-        <FormLabel >{t('Tags.GE')}</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <Form.Select
-          onChange={
-            (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
-          }
-          value={tags_group_key}
-        >
-          {Object.entries(data.nodeTags).map(
-            (tags_group, i) =>
-              <option
-                key={i}
-                value={tags_group[0]} >
-                {tags_group[1].group_name}
-              </option>)}
-        </Form.Select>
-      </Col>
-    </Form.Group>
+  return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}>
+
+    {/* Groupe d'étiquettes  */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>
+        {t('Tags.GE')}
+      </InputGroup.Text>
+      <Form.Select
+        style={{width:'60%'}}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
+        value={tags_group_key}
+      >
+        {Object.entries(data.nodeTags).map(
+          (tags_group, i) =>
+            <option
+              key={i}
+              value={tags_group[0]} >
+              {tags_group[1].group_name}
+            </option>)}
+      </Form.Select>
+    </InputGroup>
 
     <Form.Group as={Row} style={{paddingTop: '15px'}} >
       <Table striped bordered hover responsive='sm' size='sm' className='node_tags_affiliation' >
