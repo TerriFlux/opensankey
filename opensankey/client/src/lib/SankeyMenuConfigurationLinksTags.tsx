@@ -1,8 +1,10 @@
 import React from 'react'
-import { Row, Form, Col, FormLabel, FormCheck, Tab, Table } from 'react-bootstrap'
+import { Row, Form, Col, FormLabel, Tab, Table,Button } from 'react-bootstrap'
 import { SankeyData, SankeyLink,SankeyLinkValue } from './types'
 import { TFunction } from 'i18next'
-
+import { FaCheck} from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 export const SankeyMenuConfigurationLinksTags = (
   data:SankeyData,
@@ -120,21 +122,21 @@ export const SankeyMenuConfigurationLinksTags = (
         <tbody>
           {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
             ([tag_key,tag]) => {
-
+const is_selected=value_selected_parameter().tags[tags_group_key].includes(tag_key) 
               return (
                 <tr key={tag_key}>
                   <td><FormLabel>{tag.name}</FormLabel></td>
                   <td>
-                    <FormCheck
+                    <Button
+                    size='sm'
                       name={'element_visible' + tag_key}
-                      checked={value_selected_parameter().tags[tags_group_key].includes(tag_key) }
+                      variant={is_selected?'primary':'outline-primary'}
                       id={tag_key}
-                      type='checkbox'
-                      onChange={
-                        (evt: React.ChangeEvent) => {
-                          const new_nb_element = evt.target as HTMLInputElement
-                          const new_tag_key = new_nb_element.id
-                          const visible = new_nb_element.checked
+                      onClick={
+                        () => {
+                          // const new_nb_element = evt.target as HTMLInputElement
+                          // const new_tag_key = new_nb_element.id
+                          const visible = !is_selected
                           Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                             let val = Object(d.value)
                             Object.values(tags_selected).forEach(tag => {
@@ -144,14 +146,14 @@ export const SankeyMenuConfigurationLinksTags = (
                               val = val[tag]
                             })
                             if (visible) {
-                              val.tags[tags_group_key].push(new_tag_key)
+                              val.tags[tags_group_key].push(tag_key)
                             } else {
                               val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
                             }
                           })
                           set_data({ ...data })
                         }
-                      } />
+                      }>{is_selected?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
                   </td>
                 </tr>
               )

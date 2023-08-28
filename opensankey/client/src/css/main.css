@@ -1184,3 +1184,6 @@ textarea {
 .sankey-menu .ql-editor{
 	min-height: 200px;
 }
+.sankey-menu .input-group .btn {
+	z-index: 1;
+}
