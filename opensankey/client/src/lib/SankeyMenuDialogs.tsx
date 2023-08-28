@@ -593,40 +593,36 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
       </Modal.Header>
       <Modal.Body>
         <Form >
-          <Form.Group as={Row} >
-            <Col xs={1}>
-              <Form.Check
-                inline
-                type='switch'
-                style={{marginTop: '-0.25em', marginBottom:'0em'}}
-                checked={mode_save}
-                onChange={(evt)=>set_mode_save(evt.target.checked)}/>
-            </Col>
-            <Col xs={7}>
-              <InputGroup.Text style={{justifyContent: 'left', marginLeft: '-2.75em'}}>{t('Menu.SaveValue')}</InputGroup.Text>
-            </Col>
-            <Col xs={4}>
-              <Button
-                size="sm"
-                onClick={
-                  () => {
-                    // Crée une copie pour d'abord enregitrer avec les changements
-                    // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-                    const cpy=JSON.parse(JSON.stringify(sankey_data))
-                    if(!mode_save){
-                      Object.values(sankey_data.links).map(d=>{
-                        (d as SankeyLink).value={}
-                        return d
-                      })
-                    }
-                    set_sankey_data({...sankey_data})
-                    clickSaveDiagram(sankey_data)
-                    set_sankey_data({...cpy})
+          <InputGroup>
+            <Button
+              style={{width:'10%'}}
+              variant={mode_save?'primary':'outline-primary'}
+              onClick={()=>set_mode_save(!mode_save)}>
+              {mode_save?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+            </Button>
+            
+            <InputGroup.Text style={{width:'70%'}}>{t('Menu.SaveValue')}</InputGroup.Text>
+            <Button
+              size="sm"
+              style={{width:'20%'}}
+              onClick={
+                () => {
+                  // Crée une copie pour d'abord enregitrer avec les changements
+                  // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
+                  const cpy=JSON.parse(JSON.stringify(sankey_data))
+                  if(!mode_save){
+                    Object.values(sankey_data.links).map(d=>{
+                      (d as SankeyLink).value={}
+                      return d
+                    })
                   }
-                }>{t('Menu.SaveJSON')}
-              </Button>
-            </Col>
-          </Form.Group>
+                  set_sankey_data({...sankey_data})
+                  clickSaveDiagram(sankey_data)
+                  set_sankey_data({...cpy})
+                }
+              }>{t('Menu.SaveJSON')}
+            </Button>
+          </InputGroup>
         </Form>
       </Modal.Body>
     </Modal>

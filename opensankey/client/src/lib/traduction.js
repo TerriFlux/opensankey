@@ -506,7 +506,6 @@ const resources = {
         'rslt': 'Download results',
         'p_aff':'Display settings',
         'p_aff_aff_links':'Links display settings',
-        'p_aff_aff_node':'Nodes display settings',
         'p_aff_filtre_links':'Links display filter',
         
         'filtre':'Threshold value for links dislay',
@@ -1070,7 +1069,6 @@ const resources = {
         'rslt':'Téléchargement résultats',
         'p_aff':'Paramètres d\'affichage',
         'p_aff_aff_links':'Paramètres d\'affichage des flux',
-        'p_aff_aff_node':'Paramètres d\'affichage des noeuds',
         'p_aff_filtre_links':'Paramètres de filtrage visuel des flux',
         'filtre':'Valeur seuil pour l\'affichage des flux',
         'fl':'Valeur seuil pour l\'affichage des labels',

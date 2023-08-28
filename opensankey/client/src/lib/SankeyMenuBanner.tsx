@@ -628,11 +628,6 @@ export const toolbar_builder = (
           </Col>
         </Form.Group>
 
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-        <h5>{t('Banner.p_aff_aff_node')}</h5>
-
-
-
       </Form>
     </Popover.Body>
   </Popover>
