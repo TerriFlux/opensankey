@@ -1,7 +1,10 @@
 import { TFunction } from 'i18next'
 import React from 'react'
-import { Row, Form, FormLabel, Col, FormCheck, Tab, Table } from 'react-bootstrap'
+import { Row, Form, FormLabel, Col, Tab, Table,Button } from 'react-bootstrap'
 import { SankeyData,SankeyNode } from './types'
+import { FaCheck} from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
@@ -66,29 +69,28 @@ export const SankeyMenuConfigurationNodesTags = (
                 <tr key={tags[0]}>
                   <td><FormLabel>{tags[1].name}</FormLabel></td>
                   <td>
-                    <FormCheck
+                    <Button
                       name={'element_visible' + tags[0]}
-                      checked={allChecked}
+                      variant={allChecked?'primary':'outline-primary'}
                       id={tags[0]}
-                      type='checkbox'
-                      onChange={
-                        (evt: React.ChangeEvent) => {
-                          const new_nb_element = evt.target as HTMLInputElement
-                          const tag_key = new_nb_element.id
-                          const visible = new_nb_element.checked
+                      onClick={
+                        () => {
+                          // const new_nb_element = evt.target as HTMLInputElement
+                          // const tag_key = new_nb_element.id
+                          const visible = !allChecked
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                             if (visible) {
                               if (!d.tags[tags_group_key]) {
                                 d.tags[tags_group_key] = []
                               }
-                              d.tags[tags_group_key].push(tag_key)
+                              d.tags[tags_group_key].push(tags[0])
                             } else {
-                              d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tag_key),1)
+                              d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[0]),1)
                             }
                           })
                           set_data({ ...data })
                         }
-                      } />
+                      } >{allChecked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
                   </td>
                 </tr>
               )
