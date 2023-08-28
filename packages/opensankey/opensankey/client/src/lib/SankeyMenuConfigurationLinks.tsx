@@ -104,7 +104,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const dropdownMultiLinks = () => {
     const DD = (
       <div id='DD_multi_links' 
-        style={{width:'70%'}}>
+        style={{width:'70%',zIndex:'3'}}>
         <MultiSelect
           valueRenderer={ (selected :selected_type[]) => {
             return selected.filter(d=>d!==undefined).length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'

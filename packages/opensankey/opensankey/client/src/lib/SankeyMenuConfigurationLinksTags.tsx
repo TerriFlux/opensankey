@@ -122,13 +122,13 @@ export const SankeyMenuConfigurationLinksTags = (
         <tbody>
           {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
             ([tag_key,tag]) => {
-const is_selected=value_selected_parameter().tags[tags_group_key].includes(tag_key) 
+              const is_selected=value_selected_parameter().tags[tags_group_key].includes(tag_key) 
               return (
                 <tr key={tag_key}>
                   <td><FormLabel>{tag.name}</FormLabel></td>
                   <td>
                     <Button
-                    size='sm'
+                      size='sm'
                       name={'element_visible' + tag_key}
                       variant={is_selected?'primary':'outline-primary'}
                       id={tag_key}
