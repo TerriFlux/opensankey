@@ -897,7 +897,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
             overlay={<Tooltip id={'flux.label.tooltips.6'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              disabled={!labelVisibleChecked}
               variant={labelPositionVert('beginning')?'primary':'outline-primary'}
               onClick={
                 () => {
@@ -918,7 +917,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
             overlay={<Tooltip id={'flux.label.tooltips.7'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              disabled={!labelVisibleChecked}
               variant={labelPositionVert('middle')?'primary':'outline-primary'}
               onClick={
                 () => {
@@ -939,7 +937,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
             overlay={<Tooltip id={'flux.label.tooltips.8'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              disabled={!labelVisibleChecked}
               variant={labelPositionVert('end')?'primary':'outline-primary'}
               onClick={
                 () => {
@@ -963,7 +960,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
             overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              disabled={!labelVisibleChecked}
               variant={labelPositionOrtho('below')?'primary':'outline-primary'}
               onClick={
                 () => {
@@ -984,7 +980,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
             overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              disabled={!labelVisibleChecked}
               variant={labelPositionOrtho('middle')?'primary':'outline-primary'}
               onClick={
                 () => {
@@ -1005,7 +1000,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
             overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              disabled={!labelVisibleChecked}
               variant={labelPositionOrtho('above')?'primary':'outline-primary'}
               onClick={
                 () => {
@@ -1031,7 +1025,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button
             className='btn_menu_config'
             style={{width:'30%'}}
-            disabled={!labelVisibleChecked}
             // disabled={selected_link.current.label_position === 'frozen'}
             variant={label_link_free_checked?'primary':'outline-primary'}
             onClick={() => {
@@ -1044,7 +1037,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
               set_data({ ...data })
             }}>{label_link_free_checked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
         </OverlayTrigger>
-      </InputGroup></>:<></>}
+      </InputGroup>
+    </>:<></>}
   </>
 
   const content_style=(!menu_for_style)?<InputGroup>

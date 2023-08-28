@@ -329,6 +329,7 @@ const resources = {
         },
         icon:{
           'icon':'Icon',
+          'Visibilité':'Visibility of icons',
           'si':'Select icon',
           'couleur':'Color',
           'rIN':'Size ratio icon/node',
@@ -350,7 +351,7 @@ const resources = {
           'FES':'Links type',
           'ent':'Input',
           'sort':'Output',
-          'FRN':'Relative position to the node',
+          'FRN':'Relative position / node',
           'gauche':'Left',
           'droite':'Right',
           'ades':'Above',
@@ -890,6 +891,7 @@ const resources = {
         },
         icon:{
           'icon':'Icône',
+          'Visibilité':'Visibilité des icônes',
           'si':'Sélectionner l\'icône',
           'couleur':'Couleur',
           'rIN':'Ratio taille icône/noeud',
@@ -911,7 +913,7 @@ const resources = {
           'FES':'Type de flux',
           'ent':'Entrant',
           'sort':'Sortant',
-          'FRN':'Position relative au noeud',
+          'FRN':'Position / noeud',
           'gauche':'Gauche',
           'droite':'Droite',
           'ades':'Au-dessus',

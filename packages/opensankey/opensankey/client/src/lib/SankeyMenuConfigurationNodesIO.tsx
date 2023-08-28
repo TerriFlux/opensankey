@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Form, FormLabel, Col, FormCheck,Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode,SankeyLinkValue,SankeyLink } from './types'
 import { link_visible,link_color,return_value_link} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
@@ -111,7 +111,7 @@ const getIOLink=(
         }
         const ori=return_value_link(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
-        
+
         return n_t.y>=n.y && (ori=='vv' ||ori=='vh')&& link_visible(data.links[k],data,getLinkValue)
       })
     }
@@ -479,217 +479,220 @@ export const SankeyMenuConfigurationNodesIO = (
       <path d="M483.914,188.117l-82.816-82.752c-12.501-12.495-32.764-12.49-45.259,0.011s-12.49,32.764,0.011,45.259l72.789,72.768   L138.698,224c-17.673,0-32,14.327-32,32s14.327,32,32,32l0,0l291.115-0.533l-73.963,73.963   c-12.042,12.936-11.317,33.184,1.618,45.226c12.295,11.445,31.346,11.436,43.63-0.021l82.752-82.752   c37.491-37.49,37.491-98.274,0.001-135.764c0,0-0.001-0.001-0.001-0.001L483.914,188.117z"/>
     </g>
   </svg>
-  const content=<><Form>
-    <Form.Group as={Row}>
-      <Col xs={6}>
-        <FormLabel >{t('Noeud.PF.FES')}</FormLabel>
-      </Col>
+  const content=<>
 
-      {/* Choisir un lien entrant */}
-      <Col >
-        <ButtonGroup>
-          <OverlayTrigger
-            key={'noeud.pf.tooltips.1'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.pf.tooltips.1'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
-            <Button
-              variant={(link_io=='output')?'dark':'outline-dark'}
-              onClick={() => {
-                set_link_io('output')
-                set_link_pos('')
-              }}>{logo_exit}</Button>
+    {/* Choisir un lien entrant / sortant */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>
+        {t('Noeud.PF.FES')}
+      </InputGroup.Text>
 
-          </OverlayTrigger>
-          
+      <ButtonGroup style={{width:'60%'}}>
+        {/* Choisir un lien entrant */}
+        <OverlayTrigger
+          key={'noeud.pf.tooltips.1'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.pf.tooltips.1'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={(link_io=='output')?'primary':'outline-primary'}
+            onClick={() => {
+              set_link_io('output')
+              set_link_pos('')
+            }}>{logo_exit}</Button>
+        </OverlayTrigger>
 
-          {/* Choisir un lien entrant */}
+        {/* Choisir un lien entrant */}
+        <OverlayTrigger
+          key={'noeud.pf.tooltips.2'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.pf.tooltips.2'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={(link_io=='input')?'primary':'outline-primary'}
+            onClick={() => {
+              set_link_io('input')
+              set_link_pos('')
+            }}>{logo_enter}</Button>
+        </OverlayTrigger>
+      </ButtonGroup>
+    </InputGroup>
 
-          <OverlayTrigger
-            key={'noeud.pf.tooltips.2'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.pf.tooltips.2'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
-            <Button
-              variant={(link_io=='input')?'dark':'outline-dark'}
-              onClick={() => {
-                set_link_io('input')
-                set_link_pos('')
-              }}>{logo_enter}</Button>
+    {/* Choix des liens */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>
+        {t('Noeud.PF.FRN')}
+      </InputGroup.Text>
 
-          </OverlayTrigger>
-        </ButtonGroup>
-      </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
-      <FormLabel >{t('Noeud.PF.FRN')}:</FormLabel>
-    </Form.Group>
-    <Form.Group as={Row}>
-      {/* Choisir un lien situé à gauche */}
-      <Col xs={3}>
+      <ButtonGroup style={{width:'60%'}}>
+
+        {/* Choisir un lien situé à gauche */}
         <OverlayTrigger
           key={'noeud.pf.tooltips.3'}
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'noeud.pf.tooltips.3'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
-          <FormCheck
+          <Button
+            className='btn_menu_config'
             disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
-            value="left"
-            type='radio'
-            label={t('Noeud.PF.gauche')}
-            checked={link_pos=='left'}
-            onChange={() => {
+            variant={(link_pos=='left')?'primary':'outline-primary'}
+            onClick={() => {
               set_link_pos('left')
-            }}/>
+            }}>
+            {t('Noeud.PF.gauche')}
+          </Button>
         </OverlayTrigger>
-      </Col>
 
-      {/* Choisir un lien situé à droite */}
-      <Col xs={3}>
+        {/* Choisir un lien situé à droite */}
         <OverlayTrigger
           key={'noeud.pf.tooltips.4'}
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'noeud.pf.tooltips.4'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
-          <FormCheck
+          <Button
+            className='btn_menu_config'
             disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
-            value="right"
-            type='radio'
-            label={t('Noeud.PF.droite')}
-            checked={link_pos=='right'}
-            onChange={() => {
+            variant={(link_pos=='right')?'primary':'outline-primary'}
+            onClick={() => {
               set_link_pos('right')
-            }}/>
+            }}>
+            {t('Noeud.PF.droite')}
+          </Button>
         </OverlayTrigger>
-      </Col>
 
-      {/* Choisir un lien situé au dessus */}
-      <Col xs={3}>
+        {/* Choisir un lien situé au dessus */}
         <OverlayTrigger
           key={'noeud.pf.tooltips.5'}
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'noeud.pf.tooltips.5'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
-          <FormCheck
+          <Button
+            className='btn_menu_config'
             disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
-            value="top"
-            type='radio'
-            label={t('Noeud.PF.ades')}
-            checked={link_pos=='top'}
-            onChange={() => {
+            variant={(link_pos=='top')?'primary':'outline-primary'}
+            onClick={() => {
               set_link_pos('top')
-            }}/>
+            }}>
+            {t('Noeud.PF.ades')}
+          </Button>
         </OverlayTrigger>
-      </Col>
 
-      {/* Choisir un lien situé en dessous */}
-      <Col xs={3}>
+        {/* Choisir un lien situé en dessous */}
         <OverlayTrigger
           key={'noeud.pf.tooltips.6'}
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'noeud.pf.tooltips.6'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
-          <FormCheck
+          <Button
+            className='btn_menu_config'
             disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
-            value="bottom"
-            type='radio'
-            label={t('Noeud.PF.edes')}
-            checked={link_pos=='bottom'}
-            onChange={() => {
+            variant={(link_pos=='bottom')?'primary':'outline-primary'}
+            onClick={() => {
               set_link_pos('bottom')
-            }}/>
+            }}>
+            {t('Noeud.PF.edes')}
+          </Button>
         </OverlayTrigger>
-      </Col>
-    </Form.Group>
+      </ButtonGroup>
+    </InputGroup>
 
     {/* Mettre les couleurs des flux dans le tableau pour les indentifier */}
-    <Form.Group as={Row}>
-      <Col xs={8}>
-        <FormLabel >{t('Noeud.PF.lti')}</FormLabel>
-      </Col>
-      <Col xs={3}>
+    <InputGroup>
+      <InputGroup.Text style={{width:'70%'}}>
+        {t('Noeud.PF.lti')}
+      </InputGroup.Text>
+
+      <OverlayTrigger
+        key={'noeud.pf.tooltips.7'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'noeud.pf.tooltips.7'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'30%'}}
+          variant={tab_colored?'primary':'outline-primary'}
+          onClick={() => {
+            //console.log(tab_colored)
+            set_tab_colored(!tab_colored)
+          }}>
+          {t('Noeud.PF.col')}
+        </Button>
+      </OverlayTrigger>
+    </InputGroup>
+
+    {/* Table montrant les noeuds selectionnés  */}
+    {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored,getLinkValue)}
+
+    {/* Boutons de rérrangement / selection des flux  */}
+    <InputGroup>
+      <ButtonGroup>
         <OverlayTrigger
-          key={'noeud.pf.tooltips.7'}
+          key={'menu.tooltips.noeud.7'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'noeud.pf.tooltips.7'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
-          <FormCheck
-            value="bottom"
-            type='checkbox'
-            label={t('Noeud.PF.col')}
-            checked={tab_colored}
-            onChange={() => {
-              //console.log(tab_colored)
-              set_tab_colored(!tab_colored)
-            }}/>
+          overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'33.3%'}}
+            variant='primary'
+            onClick={() => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                reorganize_node_inputLinksId(data,d, data.nodes, data.links)
+                reorganize_node_outputLinksId(data,d, data.nodes, data.links)
+              })
+              set_data({ ...data })
+            }}>
+            {t('Noeud.Reorg')}
+          </Button>
         </OverlayTrigger>
-      </Col>
-    </Form.Group>
-    {/* Boutons de rérrangement / selection des flux  */}
-    <ButtonGroup>
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.7'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
-        <Button
-          variant='outline-dark'
-          className='btn_menu_config'
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              reorganize_node_inputLinksId(data,d, data.nodes, data.links)
-              reorganize_node_outputLinksId(data,d, data.nodes, data.links)
-            })
-            set_data({ ...data })
-          }}>
-          {t('Noeud.Reorg')}
-        </Button>
-      </OverlayTrigger>
 
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.8'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
-        <Button
-          variant='outline-dark'
-          className='btn_menu_config'
-          onClick={() => {
-            multi_selected_links.current = []
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-              const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
-              set_display_link_opacity(opacity)
-            })
-            multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
-          }}>
-          {t('Noeud.SlctOutLink')}
-        </Button>
-      </OverlayTrigger>
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.8'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'33.3%'}}
+            variant='primary'
+            onClick={() => {
+              multi_selected_links.current = []
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
+                const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
+                set_display_link_opacity(opacity)
+              })
+              multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+            }}>
+            {t('Noeud.SlctOutLink')}
+          </Button>
+        </OverlayTrigger>
 
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.9'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
-        <Button
-          variant='outline-dark'
-          className='btn_menu_config'
-          onClick={() => {
-            multi_selected_links.current = []
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-              const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
-              set_display_link_opacity(opacity)
-            })
-            multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
-          }}>
-          {t('Noeud.SlctInLink')}
-        </Button>
-      </OverlayTrigger>
-    </ButtonGroup>
-  </Form>
-  {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored,getLinkValue)}
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.9'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'33.4%'}}
+            variant='primary'
+            onClick={() => {
+              multi_selected_links.current = []
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
+                const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
+                set_display_link_opacity(opacity)
+              })
+              multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+            }}>
+            {t('Noeud.SlctInLink')}
+          </Button>
+        </OverlayTrigger>
+      </ButtonGroup>
+    </InputGroup>
   </>
 
   return menu_for_modal?content:<Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>{content}</Tab>

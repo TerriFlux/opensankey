@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import React from 'react'
-import { Row, Form, Tab, OverlayTrigger, Tooltip,FormControl, Button, ButtonGroup, InputGroup,Dropdown } from 'react-bootstrap'
+import { Form, Tab, OverlayTrigger, Tooltip,FormControl, Button, ButtonGroup, InputGroup,Dropdown } from 'react-bootstrap'
 import { SankeyData, SankeyNode } from './types'
 import { return_correct_node_attribute_value,assign_node_value_to_correct_var,is_node_diplaying_value_local,is_all_node_attr_same_value,cut_name} from './SankeyUtils'
 import { FaAlignLeft,FaAlignCenter,FaAlignRight,FaBold,FaItalic, FaLock, FaLockOpen, FaEye, FaEyeSlash,FaCheck} from 'react-icons/fa'
@@ -154,14 +154,14 @@ export const OpenSankeyConfigurationNodesAttributes = (
         <InputGroup.Text style={{width:'40%'}}>
           {t('Noeud.apparence.Visibilité')+(is_node_diplaying_value_local(multi_selected_nodes,'shape_visible',menu_for_style)?'*':'')}
         </InputGroup.Text><Button
-            className='btn_menu_config'
-            style={{width:'60%'}}
-            //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-            variant={isAllNodeVisible?'primary':'outline-primary'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'shape_visible',!isAllNodeVisible,menu_for_style))
-              set_data({ ...data })
-            }}>{isAllNodeVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+          className='btn_menu_config'
+          style={{width:'60%'}}
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllNodeVisible?'primary':'outline-primary'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'shape_visible',!isAllNodeVisible,menu_for_style))
+            set_data({ ...data })
+          }}>{isAllNodeVisible?<FaEye/>:<FaEyeSlash/>}</Button>
       </InputGroup>
     </OverlayTrigger>
 
@@ -175,7 +175,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
           <Tooltip id={'noeud.apparence.tooltips.2'}>
             {t('Noeud.apparence.tooltips.Couleur')}
           </Tooltip>
-      }>
+        }>
         <InputGroup>
           <InputGroup.Text
             style={{width:'40%'}}
@@ -187,31 +187,31 @@ export const OpenSankeyConfigurationNodesAttributes = (
               width:'50%',
               background:(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string): '#ffffff',
               border:'1px solid #ced4da',
-          }}/>
-            {(getBrowserName()==='Firefox')?<Form.Control
-              style={{width:'50%',display:'none'}}
-              type='color'
-              id='form_color_node'
-              name='form_color_node'
-              value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
-              onChange={evt=>{
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
-                set_data({ ...data })
-              }}
-            />:<Form.Control
-              style={{width:'50%',display:'none'}}
-              type='color'
-              id='form_color_node'
-              name='form_color_node'
-              value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
-              onChange={evt=>{
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
-                // set_data({ ...data })
-              }}
-              onBlurCapture={()=>{
-                set_data({ ...data })
-              }}
-            />}
+            }}/>
+          {(getBrowserName()==='Firefox')?<Form.Control
+            style={{width:'50%',display:'none'}}
+            type='color'
+            id='form_color_node'
+            name='form_color_node'
+            value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+            onChange={evt=>{
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
+              set_data({ ...data })
+            }}
+          />:<Form.Control
+            style={{width:'50%',display:'none'}}
+            type='color'
+            id='form_color_node'
+            name='form_color_node'
+            value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+            onChange={evt=>{
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
+              // set_data({ ...data })
+            }}
+            onBlurCapture={()=>{
+              set_data({ ...data })
+            }}
+          />}
           <OverlayTrigger
             key={'noeud.apparence.tooltips.3'}
             placement={'top'}
@@ -245,13 +245,13 @@ export const OpenSankeyConfigurationNodesAttributes = (
           </InputGroup.Text>
 
           <Button className='btn_menu_config'
-              style={{width:'30%'}}
-              value="ellipse"
-              variant={isAllNodeCircle()?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape','ellipse',menu_for_style))
-                set_data({ ...data })
-              }}>{t('Noeud.apparence.Cercle')}</Button>
+            style={{width:'30%'}}
+            value="ellipse"
+            variant={isAllNodeCircle()?'primary':'outline-primary'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape','ellipse',menu_for_style))
+              set_data({ ...data })
+            }}>{t('Noeud.apparence.Cercle')}</Button>
 
           <Button className='btn_menu_config'
             style={{width:'30%'}}
@@ -395,7 +395,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.l_bg')} </Tooltip>}>
         <InputGroup>
           <InputGroup.Text style={{width:'40%'}} >
-              {t('Noeud.labels.l_bg')+(is_node_diplaying_value_local(multi_selected_nodes,'label_background',menu_for_style)?'*':'')}
+            {t('Noeud.labels.l_bg')+(is_node_diplaying_value_local(multi_selected_nodes,'label_background',menu_for_style)?'*':'')}
           </InputGroup.Text>
 
           <Button
