@@ -12,9 +12,6 @@ export const OpenSankeyMenuConfigurationLayout = (
   set_legend_position:(n:number[])=>void
 ) => {
 
-
-
- 
   return [
     <h5>{t('Menu.background')}</h5>,
     /* Couleur du fond de la page */
@@ -228,6 +225,6 @@ export const OpenSankeyMenuConfigurationLayout = (
     </Form.Group>,
 
 
-   
+
   ]
 }
