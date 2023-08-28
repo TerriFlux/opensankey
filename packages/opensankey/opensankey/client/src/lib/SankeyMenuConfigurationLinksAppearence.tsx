@@ -663,6 +663,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             }}>{labelVisibleChecked?<FaEye/>:<FaEyeSlash/>}</Button>
       </OverlayTrigger>
     </InputGroup>
+
     {labelVisibleChecked?<>       {/* Ajout une unité au label de flux */}
       <InputGroup>
         <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.l_u_v')+(is_link_diplaying_value_local(multi_selected_links,'label_unit_visible',menu_for_style)?'*':'')}</InputGroup.Text>
@@ -724,7 +725,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
                   assign_link_value_to_correct_var(d,'to_precision',!val,menu_for_style)
                 })
                 set_data({ ...data })
-              }}>{isAllLinkToPrecision()?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+              }}>{isAllLinkToPrecision()?<FaEye/>:<FaEyeSlash/>}</Button>
         </OverlayTrigger>
       </InputGroup>
 
@@ -816,7 +817,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
           </OverlayTrigger>
         </ButtonGroup>
       </Form.Group>
-
 
       {/* Police des labels de flux  */}
       <InputGroup>

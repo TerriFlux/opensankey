@@ -48,20 +48,11 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
     set_selected_style_node('default')
   }
 
-
   const closeStyleEdition = () => {
     setShowStyle(false)
   }
   const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(t,data,set_data,{current:[]},true,selected_style_node,set_style_to_apply,[],[],[])
   additional_node_attribute.forEach(el=>tab_node_style_attribute.push(el))
-
-  // const applyStyleToNodes = () => {
-  //   Object.values(data.nodes).filter(d => d.style !== '' && d.style === selected_style_node).map(d => {
-  //     delete d.local
-  //   })
-  //   set_data({ ...data })
-  // }
-
 
   return(
     <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'}  >
@@ -79,9 +70,9 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
                 new_style.idNode=new_id
                 data.style_node[new_id] = new_style
                 set_data({ ...data })
-
               }}><FaPlus /></Button>
             </Col>
+
             {
             // Drodown to select the style to modify
             // The dropdown is not visible when sankey+ isn't activated
