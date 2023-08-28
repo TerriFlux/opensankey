@@ -1005,16 +1005,28 @@ export const eventOnSankeyZoneMouseUp=(
 
   if(mode_selection.current=='s' && d3.selectAll('.selection_zone').nodes().length>0){
     node_visible_on_svg().forEach(k=>deselect_visualy_nodes(data.nodes[k]))
-
+    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
     const z_x=Number(d3.select('.selection_zone rect').attr('x'))
     const z_y=Number(d3.select('.selection_zone rect').attr('y'))
     const z_w=Number(d3.select('.selection_zone rect').attr('width'))
     const z_h=Number(d3.select('.selection_zone rect').attr('height'))
     const node_visible=node_visible_on_svg()
     if(evt.shiftKey){
-      Object.values(data.nodes).filter(n=>!multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h)).forEach(n=>multi_selected_nodes.current.push(n))
+      Object.values(data.nodes).filter(n=>{
+        const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
+        const height_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
+        
+        return !multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
+      }
+      ).forEach(n=>multi_selected_nodes.current.push(n))
     }else{
-      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
+      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>{
+        const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
+        const height_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
+        return node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
+      
+      })
     }
     multi_selected_nodes.current.forEach(n=>select_visualy_nodes(n))
     multi_selected_links.current.forEach(l=>deselect_visualy_links(l))
