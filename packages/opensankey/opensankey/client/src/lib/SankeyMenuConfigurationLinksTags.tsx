@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Form, Col, FormLabel, Tab, Table,Button } from 'react-bootstrap'
+import { Row, Form, FormLabel, Tab, Table,Button, InputGroup } from 'react-bootstrap'
 import { SankeyData, SankeyLink,SankeyLinkValue } from './types'
 import { TFunction } from 'i18next'
 import { FaCheck} from 'react-icons/fa'
@@ -43,70 +43,63 @@ export const SankeyMenuConfigurationLinksTags = (
       })
       return val
     }
-    
+
   }
   // Si le tags_group_key n'est pas (qu'il soit vide ou différent) dans la liste des keys de fluxTags, alors on met à jour en prenant le premier
   if(!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length>0){
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
-  return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}
-    disabled={/*node.colorParameter !== 'groupTag'*/false} >
+
+  return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}>
 
     {/* Groupe d'étiquettes  */}
-    <Form.Group as={Row} >
-      <Col xs={4}>
-        <FormLabel >{t('Tags.GE')}:</FormLabel>
-      </Col>
-      <Col xs={8}>
-        <Form.Select
-          onChange={
-            (evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)
-          }
-          value={tags_group_key}
-        >
-          {Object.entries(fluxTags).map(
-            (tags_group, i) =>
-              <option
-                key={i}
-                value={tags_group[0]}>
-                {tags_group[1].group_name}
-              </option>)}
-        </Form.Select>
-      </Col>
-    </Form.Group>
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>
+        {t('Tags.GE')}
+      </InputGroup.Text>
+      <Form.Select
+        style={{width:'60%'}}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
+        value={tags_group_key}
+      >
+        {Object.entries(fluxTags).map(
+          (tags_group, i) =>
+            <option
+              key={i}
+              value={tags_group[0]}>
+              {tags_group[1].group_name}
+            </option>)}
+      </Form.Select>
+    </InputGroup>
 
     {//Définition des valeurs selon les paramètre dataTags
       Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
         if (Object.keys(dataTag.tags).length != 0) {
           return (
-            <Row key={dataTagKey}>
-              <Col xs={4} >
-                <FormLabel>
-                  {dataTag.group_name} :
-                </FormLabel>
-              </Col>
-
-              <Col xs={8}>
-                <Form.Select
-                  name={dataTagKey}
-                  value={tags_selected[dataTagKey]}
-                  onChange={
-                    (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                      //Modifie les paramètres selectionnés
-                      const { name, value } = evt.target
-                      set_tags_selected(prevState => ({
-                        ...prevState,
-                        [name]: value
-                      }))
-                    }}>
-                  {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
-                    return (
-                      <option key={tag.name} value={tag_key}>{tag.name}</option>
-                    )
-                  })}
-                </Form.Select>
-              </Col>
-            </Row>
+            <InputGroup>
+              <InputGroup.Text style={{width:'40%'}}>
+                {dataTag.group_name}
+              </InputGroup.Text>
+              <Form.Select
+                name={dataTagKey}
+                style={{width:'60%'}}
+                value={tags_selected[dataTagKey]}
+                onChange={
+                  (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                    //Modifie les paramètres selectionnés
+                    const { name, value } = evt.target
+                    set_tags_selected(prevState => ({
+                      ...prevState,
+                      [name]: value
+                    }))
+                  }}>
+                {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
+                  return (
+                    <option key={tag.name} value={tag_key}>{tag.name}</option>
+                  )
+                })}
+              </Form.Select>
+            </InputGroup>
           )
         }
       })}
