@@ -958,7 +958,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
-  // fullscreen:boolean
 
 )=>{
 
@@ -987,18 +986,21 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonCreateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonCreateView'}>{t('Menu.tooltips.buttonCreateView')} </Tooltip>}
   >
-    <Button size='sm' variant='light' disabled={!connected}
-      onClick={() => {
-        const ev = document
-        const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
-        if (ev.onkeydown) {
-          ev.onkeydown(t)
-        }
-      }}
-    >
-      <Col><FaPlus/></Col>
-      <Col style={{'fontSize':'9px'}}>{t('Menu.addView')}</Col>
-    </Button>
+    <span>
+      <Button size='sm' variant='light' disabled={!connected}
+        style={{opacity:connected?'1':'0.5'}}
+        onClick={() => {
+          const ev = document
+          const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
+          if (ev.onkeydown) {
+            ev.onkeydown(t)
+          }
+        }}
+      >
+        <Col><FaPlus/></Col>
+        <Col style={{'fontSize':'9px'}}>{t('Menu.addView')}</Col>
+      </Button>
+    </span>
   </OverlayTrigger>
 
 
@@ -1008,18 +1010,21 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected)?(<Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
   >
-    <Button size='sm' disabled={!connected} variant='light'
-      onClick={() => {
-        const ev = document
-        const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
-        if (ev.onkeydown) {
-          ev.onkeydown(t)
-        }
-      }}
-    >
-      <Col>{is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />}</Col>
-      <Col style={{'fontSize':'9px'}}>{t('Menu.updateView')}</Col>
-    </Button>
+    <span>
+      <Button size='sm' disabled={!connected} variant='light'
+        style={{opacity:connected?'1':'0.5'}}
+        onClick={() => {
+          const ev = document
+          const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+          if (ev.onkeydown) {
+            ev.onkeydown(t)
+          }
+        }}
+      >
+        <Col>{is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />}</Col>
+        <Col style={{'fontSize':'9px'}}>{t('Menu.updateView')}</Col>
+      </Button>
+    </span>
   </OverlayTrigger>
 
 

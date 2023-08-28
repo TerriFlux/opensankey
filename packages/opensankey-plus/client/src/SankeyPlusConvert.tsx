@@ -111,7 +111,11 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
 export const OpenSankeyPlusDiagramSelector = (
   master_data : SankeyPlusData,
   set_master_data : (d:SankeyPlusData)=>void,
-  view : string
+  view : string,
+  view_selected:string,
+  set_view_selected:(s:string)=>void,
+  diagramType:string,
+  setDiagramType:(s:string)=>void,
 ) => {
   const OpenSankeyPlusDiagramSelectorInner = (
     t: TFunction, 
@@ -124,8 +128,7 @@ export const OpenSankeyPlusDiagramSelector = (
     elementToDispose : string[]
   ) => {
     const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
-    const [view_selected, set_view_selected] = useState('none')
-    const [diagramType, setDiagramType] = useState('File')
+
     return <InputGroup as={Row}>
       <Col xs='3'>
         <InputGroup.Text>{t('Menu.Transformation.fmep')}</InputGroup.Text>
