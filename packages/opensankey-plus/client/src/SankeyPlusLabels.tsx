@@ -302,10 +302,20 @@ export const zone_selection_label=(data:SankeyPlusData,
     const z_y=Number(d3.select('.selection_zone rect').attr('y'))
     const z_w=Number(d3.select('.selection_zone rect').attr('width'))
     const z_h=Number(d3.select('.selection_zone rect').attr('height'))
+    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
     if(evt.shiftKey){
-      Object.values(data.labels).filter(n=>!multi_selected_label.current.includes(n) &&  n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h)).forEach(n=>multi_selected_label.current.push(n))
+      Object.values(data.labels).filter(n=>{
+        const width_n=(document.getElementById(n.idLabel)?.getBoundingClientRect().width??0)/scale_svg
+        const height_n=(document.getElementById(n.idLabel)?.getBoundingClientRect().height??0)/scale_svg
+        return !multi_selected_label.current.includes(n) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
+      }).forEach(n=>multi_selected_label.current.push(n))
     }else{
-      multi_selected_label.current=Object.values(data.labels).filter(n=>n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h))
+      multi_selected_label.current=Object.values(data.labels).filter(n=>{
+        const width_n=(document.getElementById(n.idLabel)?.getBoundingClientRect().width??0)/scale_svg
+        const height_n=(document.getElementById(n.idLabel)?.getBoundingClientRect().height??0)/scale_svg
+        return n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
+      })
     }
   }
 }
