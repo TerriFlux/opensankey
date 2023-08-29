@@ -1008,7 +1008,7 @@ const resources = {
           'dessus':'Dessus',
           'pls':'Positionner le label à la souris',
           'toPrecision':'Afficher la valeur en notation scientifique',
-          'NbPrecision':'Nombre de signe significatif',
+          'NbPrecision':'Nombre de signes significatifs',
           'l_u_v':'Unité du flux visible',
           'l_u':'Nom de l\'unité',
 

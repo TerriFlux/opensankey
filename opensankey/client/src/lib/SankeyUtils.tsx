@@ -603,6 +603,7 @@ export const default_sankey_data = (): SankeyData => {
 
     width: window.innerWidth - 50,
     height: window.innerHeight - 50,
+    linkZIndex:[],
 
     h_space: 200,
     v_space: 50,
