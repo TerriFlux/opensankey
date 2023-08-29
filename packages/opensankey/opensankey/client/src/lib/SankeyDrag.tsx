@@ -1016,7 +1016,7 @@ export const return_out_of_bound_element=(dragged:SankeyNode,data:SankeyData,eve
   const out_of_zone_item:(SankeyNode)[]=Object.values(data.nodes).filter(d=>{
     const n=d as SankeyNode
     // Don't take into account node with relative position because they aren't reliable  
-    if(n.position=='relative' || !node_visible.includes(n.idNode)){
+    if(n.position=='relative' || !node_visible.includes('shape_'+n.idNode)){
       return false
     }
     if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){

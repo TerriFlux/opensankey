@@ -285,6 +285,9 @@ export const SankeyDataPropTypes = {
     font_family: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   }).isRequired,
 
+  linkZIndex:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+
+
   grid_square_size: PropTypes.number.isRequired,
   grid_visible: PropTypes.bool.isRequired,
 

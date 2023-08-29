@@ -193,13 +193,18 @@ export const OpenSankeyDrawLinks = (
     //- rect :
     //- arrow :
     //const display_nodes=data.nodes
-    const display_links=Object.keys(data.links)
+    const pre_display_links=Object.keys(data.links)
       .filter((key) => node_displayed(data,data.nodes[data.links[key].idSource])&&node_displayed(data,data.nodes[data.links[key].idTarget]))
       .reduce((obj, key) => {
         return Object.assign(obj, {
           [key]: data.links[key]
         })
       }, {}) as {[idLink:string]:SankeyLink}
+      
+    const pre_link_key=Object.keys(pre_display_links)
+    const display_links={} as {[idLink:string]:SankeyLink}
+    data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
+
     const display_nodes = Object.keys(data.nodes)
       .filter((key) => node_displayed(data,data.nodes[key]))
       .reduce((obj, key) => {

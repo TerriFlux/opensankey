@@ -1165,8 +1165,8 @@ const Menu: FunctionComponent<MenuTypes> = (
   Object.entries(new_array_for_exemple).forEach(d=>{
     tuto_sub_nav[d[0]]=<>
       {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
-        return <Card>
-          <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'} style={{'objectFit':'contain'/*,'minHeight':'350px','maxHeight':'500px'*/}} />
+        return <Card >
+          <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'} style={{'objectFit':'contain'/*,'minHeight':'250px','maxHeight':'350px'*/}} />
           <Card.Body>
             <Card.Title>{dd.replace('_layout.json','').replaceAll('_',' ')}</Card.Title>
             <Card.Text>
@@ -1224,7 +1224,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   })
 
-  modal_tuto=<Modal size={'xl'} fullscreen={true}  show={show_modale_tuto} onHide={() => set_show_modale_tuto(false)}>
+  modal_tuto=<Modal size={'xl'} fullscreen={true} id='modal_tutoriel' show={show_modale_tuto} onHide={() => set_show_modale_tuto(false)}>
     <Modal.Header closeButton>{t('Menu.formation')}</Modal.Header>
     <Modal.Body>
       <Row>
@@ -1239,7 +1239,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           })}
         </Nav>
       </Row>
-      <Row md={4}>
+      <Row md={3}>
         {tuto_sub_nav[modale_sub_tuto]}
       </Row>
     </Modal.Body>
@@ -1681,7 +1681,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   const has_node_tags=Object.values(data.nodeTags).filter(nt=>nt.group_name!=='Type de noeud').length>0
   const dropdown_c_n_tag=(contextualised_node!==undefined && has_node_tags) ?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Menu.tagNode_assign')}
+      {t('Menu.Transformation.tagNode_assign')}
     </Dropdown.Toggle>
     <Dropdown.Menu  variant='light'>
       {Object.entries(data.nodeTags).filter(nt=>Object.keys(nt[1].tags).length>0).map(nt=>{
@@ -1967,7 +1967,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
   // Dropdown to change some pararmeter concerning the appearence of the node  
   const dropdown_c_l_tag=(contextualised_link!==undefined && has_flux_tags) && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Menu.tagFlux_assign')}
+      {t('Menu.Transformation.tagFlux_assign')}
     </Dropdown.Toggle>
 
     <Dropdown.Menu  variant='light'>
