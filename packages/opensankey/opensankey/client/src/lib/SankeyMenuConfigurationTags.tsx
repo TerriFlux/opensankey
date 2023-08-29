@@ -382,7 +382,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                       </Form.Select>
                     </OverlayTrigger>) :
                     (<></>)
-                
+
                   }
                 </td>
               </tr>
@@ -466,7 +466,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                         <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
                           value={data[type_tag_name][tags_group_key].banner}
                         >
-                          {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Tags.Aucun')}</option>:<></>}
+                          {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Menu.Aucun')}</option>:<></>}
                           <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
                           <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
                         </Form.Select>

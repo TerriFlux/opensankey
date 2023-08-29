@@ -412,8 +412,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
       {/* Position  du label par rapport au noeud */}
       <InputGroup>
-        <InputGroup.Text style={{width:'30%'}}>{'Position'}</InputGroup.Text>
-        <ButtonGroup style={{width:'35%'}}>
+        <InputGroup.Text style={{width:'40%'}}>{'Position'}</InputGroup.Text>
+
+        {/* Position horizontale */}
+        <ButtonGroup style={{width:'30%'}}>
           {/* A gauche  */}
           <OverlayTrigger
             key={'noeud.labels.tooltips.6'}
@@ -472,8 +474,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
           </OverlayTrigger>
         </ButtonGroup>
 
-        {/* En haut */}
-        <ButtonGroup style={{width:'35%'}}>
+        {/* Position verticale */}
+        <ButtonGroup style={{width:'30%'}}>
+          {/* En haut */}
           <OverlayTrigger
             key={'noeud.labels.tooltips.3'}
             placement={'top'}
@@ -534,7 +537,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
       {/* Police et taille du texte de label */}
       <InputGroup>
-        <InputGroup.Text style={{width:'30%'}} >{'Police'}</InputGroup.Text>
+        <InputGroup.Text style={{width:'17.5%'}} >{'Police'}</InputGroup.Text>
 
         {/* Gras */}
         <Button
@@ -650,12 +653,11 @@ export const OpenSankeyConfigurationNodesAttributes = (
           onClick={() => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'show_value',!isAllNodeTotal,menu_for_style))
             set_data({ ...data })
-          }}>{isAllNodeTotal?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          }}>{isAllNodeTotal?<FaEye/>:<FaEyeSlash/>}</Button>
       </InputGroup>
     </OverlayTrigger>
 
     {isAllNodeTotal? <>
-
       {/* Position de l'affichage des données par rapport au noeud */}
       <InputGroup>
         <InputGroup.Text style={{width:'40%'}}>{'Position'}</InputGroup.Text>
@@ -800,7 +802,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
             n.style = ''
           })
           set_data({ ...data })
-        }}>{'Aucun'}</Dropdown.Item>
+        }}>{t('Menu.Aucun')}</Dropdown.Item>
         {Object.keys(data.style_node).map((d,i) => {
           return (<Dropdown.Item
             key={i}
