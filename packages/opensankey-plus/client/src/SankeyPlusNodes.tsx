@@ -63,7 +63,7 @@ export const SankeyPlusNodeIcon = (
             backgroundColor:(!is_activated)?'#cccccc':'',
             width:'75%'}}
         >
-          {t('Noeud.apparence.Visibilité')}
+          {t('Noeud.icon.Visibilité')}
           {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
         </InputGroup.Text>
 
@@ -115,7 +115,7 @@ export const SankeyPlusNodeIcon = (
             }}
             value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].iconName:'None'}
           >
-            <option key={0} value={'none'}>{t('Noeud.icon.Aucun')}</option>
+            <option key={0} value={'none'}>{t('Menu.Aucun')}</option>
             {Object.keys(data.icon_catalog).map((n, i) => {
               return <option key={i + 1} value={n}>{n}</option>
             })}

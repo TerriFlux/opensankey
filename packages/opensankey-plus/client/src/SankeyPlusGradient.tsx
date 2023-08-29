@@ -25,13 +25,13 @@ export const menu_conf_link_apparence_gradient=(
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
   const gradChecked=OpensankeyUtils.is_all_link_attr_same_value(data,selected_parameter,'gradient',menu_for_style)
 
-  return <InputGroup>
-    <OverlayTrigger
+  return <OverlayTrigger
       key={'gradiantDisabled'}
       placement={'top'}
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
     >
+    <InputGroup>
       <InputGroup.Text
         style={{
           color:(!is_activated)?'#666666':'',
@@ -41,13 +41,6 @@ export const menu_conf_link_apparence_gradient=(
         {t('Flux.apparence.grad')+(OpensankeyUtils.is_link_diplaying_value_local(multi_selected_links,'gradient',menu_for_style)?'*':'')}
         {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
       </InputGroup.Text>
-    </OverlayTrigger>
-    <OverlayTrigger
-      key={'gradiantDisabled'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
-    >
       <Button
         style={{width:'60%'}}
         className='btn_menu_config'
@@ -62,8 +55,8 @@ export const menu_conf_link_apparence_gradient=(
           }
         }
       >{gradChecked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-    </OverlayTrigger>
-  </InputGroup>
+    </InputGroup>
+  </OverlayTrigger>
 }
 
 export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue)=>{

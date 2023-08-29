@@ -1,14 +1,20 @@
 import React from 'react'
-import { Col, Form, FormCheck, FormLabel, Row,Tab,OverlayTrigger,Tooltip,Badge } from 'react-bootstrap'
+import { Form, Tab, OverlayTrigger, Tooltip, Badge, InputGroup, Button } from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
 import * as d3 from 'd3'
-import {SankeyPlusData,SankeyPlusNode} from './types'
+import { SankeyPlusData, SankeyPlusNode } from './types'
 
 import ReactQuill,{Quill} from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import ImageResize from 'quill-image-resize-module-react'
-import {node_displayed,return_value_node} from 'open-sankey/dist/SankeyUtils'
+
+import { node_displayed, return_value_node } from 'open-sankey/dist/SankeyUtils'
+
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaCheck} from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 Quill.register('modules/imageResize', ImageResize)
 declare const window: Window &
@@ -61,6 +67,10 @@ export const SankeyPlusNodeFO = (
     'bold', 'italic', 'underline', 'strike','color','background',
     'list', 'bullet','image','align'
   ]
+
+  const is_all_fo_visible = isAllFOVisible()
+  const is_all_fo_raw = isAllFORaw()
+
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
@@ -77,12 +87,18 @@ export const SankeyPlusNodeFO = (
     theme="snow"
     modules={modules}
     formats={formats}
-    readOnly={!is_activated?true:!isAllFOVisible()}
+    readOnly={!is_activated?true:!is_all_fo_visible}
+    style={{
+      color:(!is_activated || !is_all_fo_visible )?'#666666':'',
+      backgroundColor:(!is_activated || !is_all_fo_visible)?'#cccccc':''}}
   />
   const editor_fo_raw=<Form.Control
     as="textarea"
     rows={5}
-    disabled={!is_activated?true:!isAllFOVisible()}
+    style={{
+      color:(!is_activated || !is_all_fo_visible)?'#666666':'',
+      backgroundColor:(!is_activated || !is_all_fo_visible)?'#cccccc':''}}
+    disabled={!is_activated?true:!is_all_fo_visible}
     value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
     onChange={(evt) => {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
@@ -92,7 +108,6 @@ export const SankeyPlusNodeFO = (
     }}
   />
 
-
   return <Tab eventKey="node_fo" title={<>{t('Noeud.FO.FO')} <Badge pill bg="info" style={{marginLeft:'auto'}}>Beta</Badge></>} >
     <OverlayTrigger
       key={'foDisabled'}
@@ -100,54 +115,87 @@ export const SankeyPlusNodeFO = (
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <Form>
-        <Form.Group as={Row}>
-          <Col xs={4}>
-            <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.Visibilité')}</FormLabel>
-          </Col>
-          <Col xs={8}>
-            <FormCheck inline
-              type='switch'
-              checked={isAllFOVisible()}
-              disabled={!is_activated}
-              onChange={evt => {
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(!is_activated)?'#666666':'',
+            backgroundColor:(!is_activated)?'#cccccc':'',
+            width:'75%'}}
+        >
+          {t('Noeud.foreign_object.Visibilité')}
+          {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+        </InputGroup.Text>
 
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.has_FO = evt.target.checked)
-                set_data({ ...data })
-              }}
-            />
-          </Col>
-        </Form.Group>
+        <Button
+          style={{width:'25%'}}
+          className='btn_menu_config'
+          disabled={!is_activated}
+          variant={is_all_fo_visible?'primary':'outline-primary'}
+          onClick={
+            () => {
+              Object.values(data.nodes).filter(
+                f => multi_selected_nodes.current.map(
+                  d => d.idNode).includes(
+                f.idNode)).map(
+                  d => d.has_FO = !is_all_fo_visible)
+              set_data({ ...data })
+            }
+          }
+        >
+          {is_all_fo_visible?<FaEye/>:<FaEyeSlash/>}
+        </Button>
+      </InputGroup>
+    </OverlayTrigger>
 
-        <Form.Group as={Row}>
-          <Col xs={4}>
-            <FormLabel style={{color:(is_activated)?'#555555':'#DADADA'}}>{t('Noeud.apparence.raw')}</FormLabel>
-          </Col>
-          <Col xs={8}>
-            <FormCheck inline
-              type='switch'
-              checked={isAllFORaw()}
-              disabled={!is_activated}
-              onChange={evt => {
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.is_FO_raw = evt.target.checked)
-                set_data({ ...data })
-              }}
-            />
-          </Col>
-        </Form.Group>
-        {multi_selected_nodes.current.length>0?<Form.Group as={Row}>
-          {multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}
-        </Form.Group>:<></>}
+    <OverlayTrigger
+      key={'foDisabled'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(!is_activated)?'#666666':'',
+            backgroundColor:(!is_activated)?'#cccccc':'',
+            width:'75%'}}
+        >
+          {t('Noeud.foreign_object.raw')}
+          {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+        </InputGroup.Text>
 
+        <Button
+          style={{width:'25%'}}
+          className='btn_menu_config'
+          disabled={!is_activated}
+          variant={is_all_fo_raw?'primary':'outline-primary'}
+          onClick={
+            () => {
+              Object.values(data.nodes).filter(
+                f => multi_selected_nodes.current.map(
+                  d => d.idNode).includes(f.idNode)).map(
+                d => d.is_FO_raw = !is_all_fo_raw)
+              set_data({ ...data })
+            }
+          }
+        >
+          {is_all_fo_raw?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+        </Button>
+      </InputGroup>
+    </OverlayTrigger>
 
-
-      </Form></OverlayTrigger>
+    {(multi_selected_nodes.current.length>0)?<OverlayTrigger
+      key={'foDisabled'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+      >
+        <Form>
+          <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
+        </Form>
+    </OverlayTrigger>:<></>}
   </Tab>
 }
-
-
-
-
 
 
 export const SankeyPlusDrawNodesFO = (
@@ -156,7 +204,6 @@ export const SankeyPlusDrawNodesFO = (
   nodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
 
 ) => {
-
 
   const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection === 's')? 'pointer' : 'unset')
@@ -185,13 +232,6 @@ export const SankeyPlusDrawNodesFO = (
     }
   }
 
-
-
-
-
-
-
-
   const add_nodes_fo = (
   ) => {
     //----------------ICON-----------------
@@ -219,7 +259,6 @@ export const SankeyPlusDrawNodesFO = (
       })
       .append('xhtml:div')
       .html((d)=>d.FO_content)
-
   }
   add_nodes_fo()
 
