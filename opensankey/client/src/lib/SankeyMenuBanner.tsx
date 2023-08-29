@@ -695,8 +695,8 @@ export const toolbar_builder = (
             <option key='structure'  value='structure' >Structure</option>
             <option key='data'       value='data'      >Données collectées</option>
             <option key='reconciled' value='reconciled'>Données réconciliées</option>
-            <option key='free_interval' value='free_interval' >Données réconciliées+flux indéterminées (intervalles)</option>
-            <option key='free_value' value='free_value' >Données réconciliées+flux indéterminées (valeurs)</option>
+            <option key='free_interval' value='free_interval' >Données réconciliées+flux indéterminés (intervalles)</option>
+            <option key='free_value' value='free_value' >Données réconciliées+flux indéterminés (valeurs)</option>
           </Form.Select>
         </Col>
       </FormGroup>

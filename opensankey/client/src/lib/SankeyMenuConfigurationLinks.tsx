@@ -452,18 +452,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             className='btn_menu_config'
             onClick={() => {
               multi_selected_links.current.map(l => {
-                const i = l.idLink
-                const { links } = data
-                const listElmt = Object.keys(links)
-                const posElemt = listElmt.indexOf(i)
-                listElmt.splice(posElemt, 1)
-                listElmt.splice(listElmt.length, 0, i)
-                const new_cat: { [key: string]: SankeyLink } = {}
-                listElmt.forEach(elt => {
-                  new_cat[elt] = links[elt]
-                })
-                for (const member in links) delete links[member]
-                Object.assign(links, new_cat)
+
+                const posElemt = data.linkZIndex.indexOf(l.idLink)
+                data.linkZIndex.splice(posElemt, 1)
+                data.linkZIndex.splice(data.linkZIndex.length, 0, l.idLink)
+                
               })
               set_data({ ...data })
             }}>
@@ -499,18 +492,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             className='btn_menu_config'
             onClick={() => {
               multi_selected_links.current.map(l => {
-                const i = l.idLink
-                const { links } = data
-                const listElmt = Object.keys(links)
-                const posElemt = listElmt.indexOf(i)
-                listElmt.splice(posElemt, 1)
-                listElmt.splice(0, 0, i)
-                const new_cat: { [key: string]: SankeyLink } = {}
-                listElmt.forEach(elt => {
-                  new_cat[elt] = links[elt]
-                })
-                for (const member in links) delete links[member]
-                Object.assign(links, new_cat)
+                const posElemt = data.linkZIndex.indexOf(l.idLink)
+                data.linkZIndex.splice(posElemt, 1)
+                data.linkZIndex.splice(0, 0, l.idLink)
               })
               set_data({ ...data })
             }}>
@@ -539,31 +523,15 @@ export default SankeyMenuConfigurationLinks
 //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
 //Permet donc de les déssiner avant
 export const handleUpLink = (data:SankeyData,i: string) => {
-  const { links } = data
-  const listElmt = Object.keys(links)
-  const posElemt = listElmt.indexOf(i)
-  listElmt.splice(posElemt, 1)
-  listElmt.splice(posElemt - 1, 0, i)
-  const new_cat: { [key: string]: SankeyLink } = {}
-  listElmt.forEach(elt => {
-    new_cat[elt] = links[elt]
-  })
-  for (const member in links) delete links[member]
-  Object.assign(links, new_cat)
+  const posElemt = data.linkZIndex.indexOf(i)
+  data.linkZIndex.splice(posElemt, 1)
+  data.linkZIndex.splice(posElemt-1, 0, i)
 }
 
 //Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
 //Permet donc de les déssiner après
 export const handleDownLink = (data:SankeyData,i: string) => {
-  const { links } = data
-  const listElmt = Object.keys(links)
-  const posElemt = listElmt.indexOf(i)
-  listElmt.splice(posElemt, 1)
-  listElmt.splice(posElemt + 1, 0, i)
-  const new_cat: { [key: string]: SankeyLink } = {}
-  listElmt.forEach(elt => {
-    new_cat[elt] = links[elt]
-  })
-  for (const member in links) delete links[member]
-  Object.assign(links, new_cat)
+  const posElemt = data.linkZIndex.indexOf(i)
+  data.linkZIndex.splice(posElemt, 1)
+  data.linkZIndex.splice(posElemt+1, 0, i)
 }

@@ -1466,7 +1466,9 @@ export const convert_data = (
   convert_nodes(data)
   convert_links(data)
 
-
+  if(data.linkZIndex===undefined || (data.linkZIndex.length!=Object.keys(data.links).length)){
+    data.linkZIndex=Object.keys(data.links)
+  }
 
   
 
