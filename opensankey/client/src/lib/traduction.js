@@ -8,6 +8,7 @@ const resources = {
   en: {
     translation: {
       Menu:{
+        'Aucun':'None',
         'confSankey': 'Sankey\'s configuration',
         'MEP':'Drawing zone',
         'background':'Background',
@@ -164,9 +165,6 @@ const resources = {
           'checkpoint':'Save the data in the browser to not lost it when you leave the application',
           'fontSize':'Change the size of the font in the legend'
         },
-
-
-
       },
       MEP:{
         'onBlur':'Value is applied when we leave the input',
@@ -205,7 +203,6 @@ const resources = {
         'tags':'Tags',
         'Bannière':'Banner',
         'Position':'Position',
-        'Aucun':'None',
         'Unique':'Unique',
         'Multiple':'Multiple',
         'Niveau' : 'Level',
@@ -332,8 +329,11 @@ const resources = {
           'Visibilité':'Visibility of icons',
           'si':'Select icon',
           'couleur':'Color',
-          'rIN':'Size ratio icon/node',
-          'Aucun':'None'
+          'rIN':'Size ratio icon/node'
+        },
+        foreign_object:{
+          'Visibilité':'Visibility',
+          'raw':'Raw editor'
         },
         tags_node:{
           'tags':'Tags',
@@ -571,6 +571,7 @@ const resources = {
   fr: {
     translation: {
       Menu:{
+        'Aucun':'Aucun',
         'confSankey': 'Configuration du Sankey',
         'MEP':'Transformation du diagramme',
         'background':'Arrière plan',
@@ -768,7 +769,6 @@ const resources = {
         'tags':'Étiquette',
         'Bannière':'Bannière',
         'Position':'Position',
-        'Aucun':'Aucun',
         'Unique':'Unique',
         'Multiple':'Multiple',
         'Niveau': 'Niveau',
@@ -894,8 +894,11 @@ const resources = {
           'Visibilité':'Visibilité des icônes',
           'si':'Sélectionner l\'icône',
           'couleur':'Couleur',
-          'rIN':'Ratio taille icône/noeud',
-          'Aucun':'Aucun'
+          'rIN':'Ratio taille icône/noeud'
+        },
+        foreign_object:{
+          'Visibilité':'Visibilité',
+          'raw':'Editeur brut'
         },
         tags_node:{
           'tags':'Étiquettes',

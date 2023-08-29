@@ -19,7 +19,6 @@ const SankeyMenuConfigurationLinksPropTypes = {
   t: PropTypes.func.isRequired,
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
-  // selected_link: PropTypes.shape({current:PropTypes.shape(SankeyLinkPropTypes).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   set_displayed_input_link_value:PropTypes.func.isRequired,
@@ -32,7 +31,6 @@ type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurati
 export const OpenSankeyMenuConfigurationLinks = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  // selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   tags_group_key:string,
@@ -72,11 +70,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
 
-  // let link = selected_link.current
-  // if (link === undefined) {
-  //   link = default_link(data)
-  // }
-
   const newEntries = new Map(Object.entries(dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -100,6 +93,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     }
     return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink }
   })
+
   //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
     const DD = (
@@ -154,7 +148,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
               }
             }
-
 
             set_data({...data})
           }}
@@ -456,7 +449,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 const posElemt = data.linkZIndex.indexOf(l.idLink)
                 data.linkZIndex.splice(posElemt, 1)
                 data.linkZIndex.splice(data.linkZIndex.length, 0, l.idLink)
-                
+
               })
               set_data({ ...data })
             }}>

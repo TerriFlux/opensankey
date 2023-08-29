@@ -72,7 +72,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </g>
   </svg>
 
-  
+
 
   const shiftCenter = () => {
     if (selected_parameter.length == 0) {
@@ -867,7 +867,9 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
       {/* Police des labels de flux  */}
       <InputGroup>
+        <InputGroup.Text style={{width:'40%'}} >{'Police'}</InputGroup.Text>
         <Form.Select
+          style={{width:'30%'}}
           value={allLinkFF?return_correct_link_attribute_value(data,selected_parameter[0],'font_family',menu_for_style) as string:''}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -883,7 +885,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           })}
         </Form.Select>
         <FormControl
-          style={{width:'30%'}}
+          style={{width:'20%'}}
           min={11}
           type={'number'}
           disabled={!labelVisibleChecked}
@@ -895,7 +897,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             set_data({ ...data })
           }}
         />
-        <InputGroup.Text style={{width:'15%'}}>px</InputGroup.Text>
+        <InputGroup.Text style={{width:'10%'}}>px</InputGroup.Text>
       </InputGroup>
 
       {/* Orienter le texte du label le long du flux  */}
@@ -1101,7 +1103,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
             n.style = ''
           })
           set_data({ ...data })
-        }}>{'Aucun'}</Dropdown.Item>
+        }}>{t('Menu.Aucun')}</Dropdown.Item>
         {Object.keys(data.style_link).map((d,i) => {
           return (<Dropdown.Item key={i} onClick={() => {
             set_style_to_apply_to_link(d)
