@@ -1197,3 +1197,12 @@ textarea {
 .sankey-menu .input-group .btn {
 	z-index: 1;
 }
+
+#modal_tutoriel .row {
+	align-items: unset;
+	padding-bottom: 2px;
+}
+#modal_tutoriel .card {
+	margin:5px;
+	width: 32%;
+}
