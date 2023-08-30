@@ -277,6 +277,7 @@ const resources = {
             Couleur: 'Choose the color of the selected node(s)',
             CouleurPérenne: 'Keep the color of the node(s) if any flux or data filter is activated, otherwise node turns grey (default color)',
             Forme: 'Choose a shape between rectangle or circle for the selected node(s)',
+            FormeDisabled: 'Deactivated because the shape is managed by the "Type de noeud" tag group, if you want to be able to change the shape of the selected nodes, go to the "tags" tab and uncheck all the selected tag of the "Type de noeud" group',
             TML: 'Minimum width in pixels of the selected node(s)',
             TMH: 'Minimum height in pixels of the selected node(s)'
           }
@@ -843,6 +844,7 @@ const resources = {
             Couleur: 'Choisir la couleur du/des noeud(s) selectionné(s)',
             CouleurPérenne: 'Garder la couleur du/des noeud(s) en cas de filtrage des flux ou données. Sinon le noeud reste en gris (couleur par defaut).',
             Forme: 'Choisir une Forme entre rectangle ou cercle pour le/les noeud(s) selectionné(s)',
+            FormeDisabled: 'Désactivé car la forme est gérée par le groupe d\'étiquette "Type de noeud", si vous voulez pouvoir modifier la forme des noeuds séléctionnés, allez dans l\'onlget Étiquettes et décochez tous les étiquettes sélectionné du groupe "Type de noeud"',
             TML: 'Largeur minimale en pixel du/des noeud(s) selectionné(s)',
             TMH: 'Hauteur minimale en pixel du/des noeud(s) selectionné(s)'
           }
