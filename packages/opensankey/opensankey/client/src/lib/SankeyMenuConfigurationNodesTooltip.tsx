@@ -10,7 +10,7 @@ export const SankeyMenuConfigurationNodesTooltip = (
   multi_selected_nodes:{current:SankeyNode[]}
 ) => {
   return (
-    <Tab eventKey="node_tooltip" title={t('Noeud.IB')}>
+    <Tab key="node_tooltip" eventKey="node_tooltip" title={t('Noeud.IB')}>
       <Form >
         <Row>
           <Col xs={12}>
