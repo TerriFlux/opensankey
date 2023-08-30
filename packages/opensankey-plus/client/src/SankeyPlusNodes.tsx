@@ -51,10 +51,10 @@ export const SankeyPlusNodeIcon = (
 
   const content_tab=<>
     <OverlayTrigger
-      key={'iconDisabled'}
+      key={'iconDisabled1'}
       placement={'top'}
       delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+      overlay={(!is_activated)?(<Tooltip id={'iconDisabled1'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
       <InputGroup>
         <InputGroup.Text
@@ -89,10 +89,10 @@ export const SankeyPlusNodeIcon = (
 
     {isAllIconVisible()?<>
       <OverlayTrigger
-        key={'iconDisabled'}
+        key={'iconDisabled2'}
         placement={'top'}
         delay={500}
-        overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+        overlay={(!is_activated)?(<Tooltip id={'iconDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
       >
         <InputGroup>
           <InputGroup.Text
@@ -124,10 +124,10 @@ export const SankeyPlusNodeIcon = (
       </OverlayTrigger>
 
       <OverlayTrigger
-        key={'iconDisabled'}
+        key={'iconDisabled3'}
         placement={'top'}
         delay={500}
-        overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+        overlay={(!is_activated)?(<Tooltip id={'iconDisabled3'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
       >
         <InputGroup>
           <InputGroup.Text
@@ -139,10 +139,17 @@ export const SankeyPlusNodeIcon = (
             {t('Noeud.apparence.Couleur')}
             {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
           </InputGroup.Text>
-
+          <Form.Label htmlFor="form_color_icon" style={{width:'60%',
+            'background':(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff',
+            border:'1px solid #ced4da',
+            borderTopRightRadius:'4px',
+            borderBottomRightRadius:'4px',
+          }}/>
           <Form.Control
-            style={{width:'60%'}}
+            style={{display:'none'}}
             type='color'
+            id='form_color_icon'
+            name='form_color_icon'
             disabled={!is_activated?true:(radio_selected !== 'local')}
             value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
             onChange={evt => {
@@ -155,10 +162,10 @@ export const SankeyPlusNodeIcon = (
       </OverlayTrigger>
 
       <OverlayTrigger
-        key={'iconDisabled'}
+        key={'iconDisabled4'}
         placement={'top'}
         delay={500}
-        overlay={(!is_activated)?(<Tooltip id={'iconDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+        overlay={(!is_activated)?(<Tooltip id={'iconDisabled4'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
       >
         <InputGroup>
           <InputGroup.Text
@@ -195,7 +202,7 @@ export const SankeyPlusNodeIcon = (
     </>:<></>}
   </>
 
-  return menu_for_modal?content_tab:<Tab eventKey="node_icon" title={t('Noeud.icon.icon')}>{content_tab}</Tab>
+  return menu_for_modal?content_tab:<Tab key="node_icon" eventKey="node_icon" title={t('Noeud.icon.icon')}>{content_tab}</Tab>
 }
 
 const calcPath = (

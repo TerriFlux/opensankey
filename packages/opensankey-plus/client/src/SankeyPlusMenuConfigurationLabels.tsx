@@ -358,7 +358,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
 
       <InputGroup>
         <InputGroup.Text style={{width:'40%'}}>{t('LL.cfl')}</InputGroup.Text>
-        <Form.Label for="form_color_zdt" style={{width:'20%',
+        <Form.Label htmlFor="form_color_zdt" style={{width:'20%',
           'background':(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff',
           border:'1px solid #ced4da',
         }}/>
@@ -398,7 +398,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         
 
         <InputGroup.Text style={{width:'40%'}}>{t('LL.cbl')}</InputGroup.Text>
-        <Form.Label for="form_color_border_zdt" style={{width:'20%',
+        <Form.Label htmlFor="form_color_border_zdt" style={{width:'20%',
           'background':(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff',
           border:'1px solid #ced4da',
         }}/>

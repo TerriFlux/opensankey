@@ -23,7 +23,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
       set_cube_dimension(Object.entries(data.levelTags)[0][0])
     }
   }
-  return<Tab eventKey="agregation" title={t('Noeud.agre.Agré')}>
+  return<Tab key="agregation" eventKey="agregation" title={t('Noeud.agre.Agré')}>
     <Form >
       <Form.Group as={Row} >
         <FormLabel column>{t('Noeud.agre.DC')}</FormLabel>

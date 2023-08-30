@@ -26,11 +26,11 @@ export const menu_conf_link_apparence_gradient=(
   const gradChecked=OpensankeyUtils.is_all_link_attr_same_value(data,selected_parameter,'gradient',menu_for_style)
 
   return <OverlayTrigger
-      key={'gradiantDisabled'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
-    >
+    key={'gradiantDisabled'}
+    placement={'top'}
+    delay={500}
+    overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
+  >
     <InputGroup>
       <InputGroup.Text
         style={{
