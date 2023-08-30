@@ -1090,6 +1090,7 @@ export const eventOnSankeyZoneMouseUp=(
       data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
       data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
       multi_selected_links.current=[new_link]
+      data.linkZIndex.push(new_link.idLink)
       set_displayed_input_link_value('')
       open_links_menu()
       set_first_selected_node({})
@@ -1130,6 +1131,7 @@ export const eventOnSankeyZoneMouseUp=(
       fsn.outputLinksId.push(n_link.idLink)
       fsn.outputLinksId=sort_outputLinksId_by_YPos(data,fsn)
       n_node.inputLinksId.push(n_link.idLink)
+      data.linkZIndex.push(n_link.idLink)
       set_displayed_input_link_value('')
       multi_selected_links.current=[n_link]
       open_links_menu()
@@ -1185,11 +1187,10 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
       if (n_link.idSource === n_link.idTarget) {
         // n_link.recycling = true
         assign_link_local_attribute(n_link,'recycling',true)
-
       }
       fsn.outputLinksId.push(n_link.idLink)
       d.inputLinksId.push(n_link.idLink)
-
+      data.linkZIndex.push(n_link.idLink)
       set_displayed_input_link_value('')
       multi_selected_links.current=[n_link]
 
@@ -1238,7 +1239,7 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
     tmp.outputLinksId.push(new_link.idLink)
     d.inputLinksId.push(new_link.idLink)
     d3.selectAll(' .opensankey #svg #path-flux').remove()
-
+    data.linkZIndex.push(new_link.idLink)
     set_first_selected_node({})
     set_data({...data})
   }

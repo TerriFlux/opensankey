@@ -189,7 +189,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     // selected_link.current = link
     multi_selected_links.current = [link]
     set_display_link_opacity(return_correct_link_attribute_value(data,link,'opacity',false))
-
+    data.linkZIndex.push(link.idLink)
     set_data({ ...data })
     set_show_link(true)
   }
