@@ -316,7 +316,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
       <InputGroup.Text style={{width:'40%'}}>
         {t('Flux.apparence.couleur')+(is_link_diplaying_value_local(multi_selected_links,'color',menu_for_style)?'*':'')}
       </InputGroup.Text>
-      <Form.Label for="form_color_link" style={{width:'60%',
+      <Form.Label htmlFor="form_color_link" style={{width:'60%',
         'background':(selected_parameter.length == 1) ? (return_correct_link_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff',
         border:'1px solid #ced4da',
         borderTopRightRadius:'4px',
@@ -1097,13 +1097,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
     <Dropdown>
       <Dropdown.Toggle style={{width:'50%'}} variant="outline-primary" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
       <Dropdown.Menu>
-        <Dropdown.Item onClick={() => {
-          set_style_to_apply_to_link('')
-          multi_selected_links.current.map(n => {
-            n.style = ''
-          })
-          set_data({ ...data })
-        }}>{t('Menu.Aucun')}</Dropdown.Item>
         {Object.keys(data.style_link).map((d,i) => {
           return (<Dropdown.Item key={i} onClick={() => {
             set_style_to_apply_to_link(d)
@@ -1147,5 +1140,5 @@ export const SankeyMenuConfigurationLinksAppearence = (
     {content_label}</div>
 
   /* Formattage de l'affichage du menu attribut de flux */
-  return menu_for_modal?content:<Tab eventKey="flux_attributes" title={t('Flux.apparence.apparence')}>{content}</Tab>
+  return menu_for_modal?content:<Tab key="flux_attributes" eventKey="flux_attributes" title={t('Flux.apparence.apparence')}>{content}</Tab>
 }
