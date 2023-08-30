@@ -5,7 +5,7 @@ import { link_visible,link_color,return_value_link} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
-import * as d3 from 'd3'
+import { select_visualy_links } from './SankeyDrawFunction'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them
 const getIOLink=(
@@ -664,7 +664,7 @@ export const SankeyMenuConfigurationNodesIO = (
                 const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
                 set_display_link_opacity(opacity)
               })
-              multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+              multi_selected_links.current.forEach(l=>select_visualy_links(l))
             }}>
             {t('Noeud.SlctOutLink')}
           </Button>
@@ -686,7 +686,7 @@ export const SankeyMenuConfigurationNodesIO = (
                 const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
                 set_display_link_opacity(opacity)
               })
-              multi_selected_links.current.forEach(l=>d3.selectAll(' .opensankey #gg_' + l.idLink + ' rect').attr('fill-opacity', '1'))
+              multi_selected_links.current.forEach(l=>select_visualy_links(l))
             }}>
             {t('Noeud.SlctInLink')}
           </Button>
@@ -695,7 +695,7 @@ export const SankeyMenuConfigurationNodesIO = (
     </InputGroup>
   </>
 
-  return menu_for_modal?content:<Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>{content}</Tab>
+  return menu_for_modal?content:<Tab key="node_link_io" eventKey="node_link_io" title={t('Noeud.PF.PF')}>{content}</Tab>
 }
 
 

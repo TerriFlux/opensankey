@@ -182,7 +182,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
           >
             {t('Noeud.apparence.Couleur')+(is_node_diplaying_value_local(multi_selected_nodes,'color',menu_for_style)?'*':'')}
           </InputGroup.Text>
-          <Form.Label for="form_color_node"
+          <Form.Label htmlFor="form_color_node"
             style={{
               width:'50%',
               background:(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string): '#ffffff',
@@ -389,10 +389,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
       {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
       <OverlayTrigger
-        key={'noeud.labels.tooltips.2'}
+        key={'noeud.labels.tooltips.l_bg'}
         placement={'top'}
         delay={500}
-        overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.l_bg')} </Tooltip>}>
+        overlay={<Tooltip id={'noeud.labels.tooltips.l_bg'}>{t('Noeud.labels.tooltips.l_bg')} </Tooltip>}>
         <InputGroup>
           <InputGroup.Text style={{width:'40%'}} >
             {t('Noeud.labels.l_bg')+(is_node_diplaying_value_local(multi_selected_nodes,'label_background',menu_for_style)?'*':'')}
@@ -796,13 +796,6 @@ export const OpenSankeyConfigurationNodesAttributes = (
         style={{width:'50%'}}
         variant='outline-primary'>{style_of_selected_nodes()}</Dropdown.Toggle>
       <Dropdown.Menu>
-        <Dropdown.Item onClick={() => {
-          set_style_to_apply('')
-          multi_selected_nodes.current.map(n => {
-            n.style = ''
-          })
-          set_data({ ...data })
-        }}>{t('Menu.Aucun')}</Dropdown.Item>
         {Object.keys(data.style_node).map((d,i) => {
           return (<Dropdown.Item
             key={i}
@@ -863,7 +856,7 @@ export const SankeyMenuConfigurationNodesAttributes = (
   return for_modal ? <Form >
     {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
       return <React.Fragment key={i}>{c}</React.Fragment>})}
-  </Form>:<Tab eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}>
+  </Form>:<Tab key='nodes_desc' eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}>
     <Form >
       {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>})}

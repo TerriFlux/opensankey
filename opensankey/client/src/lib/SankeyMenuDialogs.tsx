@@ -92,7 +92,7 @@ export const ApplyLayoutDialog = ({
   }
   const content_modal_layout=  <Tabs defaultActiveKey={'import'} >
 
-    <Tab eventKey='import' title={t('Menu.Transformation.amp_import')} style={{marginBottom:'10px'}}>
+    <Tab key='import' eventKey='import' title={t('Menu.Transformation.amp_import')} style={{marginBottom:'10px'}}>
       {diagramSelector(t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose)}
       <InputGroup as={Row}>
         <Col xs='3'>
@@ -396,7 +396,7 @@ export const ApplyLayoutDialog = ({
       })}
     </Tab>
 
-    <Tab eventKey={'manuelle'} title={t('Menu.Transformation.amp_manuelle')} style={{marginBottom:'10px'}}>
+    <Tab key={'manuelle'} eventKey={'manuelle'} title={t('Menu.Transformation.amp_manuelle')} style={{marginBottom:'10px'}}>
       {/* Ecart horizontal */}
       <Form.Group as={Row} >
         <Col xs={7}>
@@ -548,7 +548,7 @@ export const ApplyLayoutDialog = ({
         </Col>
       </Form.Group>
     </Tab>
-    <Tab eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
+    <Tab key='trans_topo' eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
   </Tabs>
 
   const dragLayout=show_apply_layout?menu_draggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.Transformation.title'),set_show_apply_layout,60):<></>

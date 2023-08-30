@@ -12,7 +12,7 @@ export const SankeyMenuConfigurationLinksTooltip = (
 )=>{
 
 
-  return <Tab eventKey="flux_tooltip" title={t('Flux.IB')}>
+  return <Tab key="flux_tooltip" eventKey="flux_tooltip" title={t('Flux.IB')}>
     <Form.Group as={Row} >
       <Col xs={12}>
         <OverlayTrigger

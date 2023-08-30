@@ -22,7 +22,7 @@ export const OpenSankeyMenuConfigurationLayout = (
     /* Couleur du fond de la page */
     <InputGroup>
       <InputGroup.Text style={{width:'60%'}}>{t('Menu.BgC')}</InputGroup.Text>
-      <Form.Label for="form_color_zdd" style={{width:'40%',
+      <Form.Label htmlFor="form_color_zdd" style={{width:'40%',
         'background':data.couleur_fond_sankey,
         border:'1px solid #ced4da',
         borderTopRightRadius:'4px',

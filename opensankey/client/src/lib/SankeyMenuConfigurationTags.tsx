@@ -1,11 +1,12 @@
 import React, { useState, FunctionComponent } from 'react'
-import { Button, Row, FormControl, Form, Col, FormLabel, Table, ButtonGroup,  OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Button, FormControl, Form, FormLabel, Table, ButtonGroup,  OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyDataPropTypes,  TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
 import { add_tag,add_grp_tag } from './SankeyUtils'
+import { FaEye,FaEyeSlash} from 'react-icons/fa'
 
 
 const SankeySettingsEditionTagsPropTypes = {
@@ -132,39 +133,40 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
   }
 
   const tagSetting = (<>
-    <Form.Group as={Row} >
-      <Col xs={3}>
-        <FormLabel >{t('Tags.GE')}:</FormLabel>
-      </Col>
-      <Col xs={4}>
-        <Form.Select onChange={
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+    <FormLabel>{t('Tags.GE')}:</FormLabel>
+    <InputGroup>
+
+      <Form.Select
+        style={{width:'50%'}}
+        onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
             set_tags_group_key(evt.target.value)
             set_data({ ...data })
           }}
         value={tags_group_key}>
-          {Object.keys(data[elementTagName]).map(
-            (key, i) =>
-              <option
-                key={i}
-                value={key}
-              >
-                {data[elementTagName][key].group_name}
-              </option>
-          )}
-        </Form.Select>
-      </Col>
+        {Object.keys(data[elementTagName]).map(
+          (key, i) =>
+            <option
+              key={i}
+              value={key}
+            >
+              {data[elementTagName][key].group_name}
+            </option>
+        )}
+      </Form.Select>
 
       {/* Boutons des palettes de couleur  */}
-      <Col xs={2}>
-        <ButtonGroup>
-          {/* Palette de couleur aléatoire  */}
-          <OverlayTrigger
-            key={'tags.tooltips.1'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'tags.tooltips.1'}>{t('Tags.tooltips.pal')} </Tooltip>}>
-            <Button variant="secondary" value='rand' onClick={()=>{
+      <ButtonGroup style={{width:'25%'}}>
+        {/* Palette de couleur aléatoire  */}
+        <OverlayTrigger
+          key={'tags.tooltips.1'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'tags.tooltips.1'}>{t('Tags.tooltips.pal')} </Tooltip>}>
+          <Button variant="secondary" value='rand' 
+            size='sm'
+            onClick={()=>{
               const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
               const size_color=Object.keys(data[elementTagName][tags_group_key].tags).length
               for(const i in d3.range(size_color)){
@@ -172,16 +174,18 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
               }
               set_data({...data})
             }}>
-              <FaPalette/>
-            </Button>
-          </OverlayTrigger>
-          {/* Melanger les couleur  */}
-          <OverlayTrigger
-            key={'tags.tooltips.2'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'tags.tooltips.2'}>{t('Tags.tooltips.pal_shuffle')} </Tooltip>}>
-            <Button variant="dark" value='alea' onClick={()=>{
+            <FaPalette/>
+          </Button>
+        </OverlayTrigger>
+        {/* Melanger les couleur  */}
+        <OverlayTrigger
+          key={'tags.tooltips.2'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'tags.tooltips.2'}>{t('Tags.tooltips.pal_shuffle')} </Tooltip>}>
+          <Button variant="dark" value='alea' 
+            size='sm'
+            onClick={()=>{
               const color=element_tags.map(d=>{
                 return data[elementTagName][tags_group_key].tags[d].color
               })
@@ -197,52 +201,50 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
               }
               set_data({...data})
             }}>
-              <FaRandom/>
-            </Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </Col>
+            <FaRandom/>
+          </Button>
+        </OverlayTrigger>
+      </ButtonGroup>
 
       {/* Palettes des couleurs standard */}
-      <Col xs={3}>
-        <OverlayTrigger
-          key={'tags.tooltips.3'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'tags.tooltips.3'}>{t('Tags.tooltips.pal_std')} </Tooltip>}>
-          <Form.Select
-            onChange={
-              (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                data[elementTagName][tags_group_key].color_map = evt.target.value
-                const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
-                if (evt.target.value === 'custom') {
-                  return
-                }
-                const colors = colormap({
-                  colormap: evt.target.value,
-                  nshades: Math.max(11, nb_tags),
-                  format: 'hex',
-                  alpha: 1
-                })
-                let step = 1
-                if (nb_tags < 11) {
-                  step = Math.round(11 / nb_tags)
-                }
-                Object.keys(data[elementTagName][tags_group_key].tags).forEach(
-                  (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
-                )
-                set_data({ ...data })
-              }}
-            value={(Object.keys(data[elementTagName]).length>0 && data[elementTagName][tags_group_key] &&  tags_group_key!='')? data[elementTagName][tags_group_key].color_map:''}
-          >
-            {colormaps.map(
-              (cur_colormap, i) =>
-                <option key={i} value={cur_colormap}>{cur_colormap}</option>
-            )}
-          </Form.Select>
-        </OverlayTrigger>
-      </Col>
-    </Form.Group>
+      <OverlayTrigger
+        key={'tags.tooltips.3'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'tags.tooltips.3'}>{t('Tags.tooltips.pal_std')} </Tooltip>}>
+        <Form.Select
+          style={{width:'25%'}}
+          onChange={
+            (evt: React.ChangeEvent<HTMLSelectElement>) => {
+              data[elementTagName][tags_group_key].color_map = evt.target.value
+              const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
+              if (evt.target.value === 'custom') {
+                return
+              }
+              const colors = colormap({
+                colormap: evt.target.value,
+                nshades: Math.max(11, nb_tags),
+                format: 'hex',
+                alpha: 1
+              })
+              let step = 1
+              if (nb_tags < 11) {
+                step = Math.round(11 / nb_tags)
+              }
+              Object.keys(data[elementTagName][tags_group_key].tags).forEach(
+                (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
+              )
+              set_data({ ...data })
+            }}
+          value={(Object.keys(data[elementTagName]).length>0 && data[elementTagName][tags_group_key] &&  tags_group_key!='')? data[elementTagName][tags_group_key].color_map:''}
+        >
+          {colormaps.map(
+            (cur_colormap, i) =>
+              <option key={i} value={cur_colormap}>{cur_colormap}</option>
+          )}
+        </Form.Select>
+      </OverlayTrigger>
+    </InputGroup>
 
     {/* Entete du Tableau des étiquettes  */}
     <Table striped bordered hover responsive='sm' size='sm' className='node_tags_definition'>
@@ -285,6 +287,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
       <tbody>
         {element_tags.length > 0 ? element_tags.map(
           (tag_key, i) => {
+            const tag_visible=data[elementTagName][tags_group_key].tags[tag_key].selected
             return (
               <tr key={i.toString()}>
                 {/* Supprimer une etiquette  */}
@@ -300,7 +303,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                   </OverlayTrigger>
                 </td>
                 {/* Renommer l'étiquette  */}
-                <td style={{ 'width': '33%' }}>
+                {/* Met une largeur de cellue plus petite quand c'est les étiquettes de noeud car le tableau contient une colonne de plsu (forme) */}
+                <td style={{ 'width': elementNameProp==='nodes'?'33%':'60%' }}>
                   <OverlayTrigger
                     key={'tags.tooltips.6'}
                     placement={'top'}
@@ -328,25 +332,21 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                       placement={'top'}
                       delay={500}
                       overlay={<Tooltip id={'tags.tooltips.7'}>{t('Tags.tooltips.visible')} </Tooltip>}>
-                      <Form.Check inline={true}
+                      <Button
+                        variant={tag_visible?'primary':'outline-primary'}
                         name={'element_visible' + tag_key}
-                        checked={data[elementTagName][tags_group_key].tags[tag_key].selected}
                         id={tag_key}
-                        type='switch'
-                        style={{marginRight: '0px', marginLeft: '2.5em'}}
-                        onChange={
-                          (evt: React.ChangeEvent) => {
-                            const new_nb_element = evt.target as HTMLInputElement
-                            const tag_key = new_nb_element.id
-                            const visible = new_nb_element.checked
+                        onClick={
+                          () => {
+                            const visible = !tag_visible
                             data[elementTagName][tags_group_key].tags[tag_key].selected = visible
                             set_data({ ...data })
-                          }}/>
+                          }}>{tag_visible?<FaEye/>:<FaEyeSlash/>}</Button>
                     </OverlayTrigger>
                   </td>:<></>
                 }
-                {/* Choix de la couleur  */}
-                <td style={{'width':'10%'}}>
+                {/* Choix de la couleur*/}
+                <td style={{'width':elementTagName !== 'dataTags'?'10%':'30%'}}>
                   <OverlayTrigger
                     key={'tags.tooltips.8'}
                     placement={'top'}

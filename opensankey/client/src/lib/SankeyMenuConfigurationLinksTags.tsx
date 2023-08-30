@@ -50,7 +50,7 @@ export const SankeyMenuConfigurationLinksTags = (
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
 
-  return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}>
+  return <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
 
     {/* Groupe d'étiquettes  */}
     <InputGroup>
