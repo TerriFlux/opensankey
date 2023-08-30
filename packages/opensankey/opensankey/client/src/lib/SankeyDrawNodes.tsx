@@ -58,15 +58,15 @@ export const OpenSankeyDrawNodes = (
 
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
-    if (return_value_node(data,(d as SankeyNode),'shape_visible') && (window.SankeyToolsStatic ||event.shiftKey)) {
+    if ( (window.SankeyToolsStatic ||event.shiftKey)) {
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyNode,getLinkValue))
     }
   }
     
-  const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,over_icon:boolean)=>{
-    if ((return_value_node(data,(d as SankeyNode),'shape_visible') ||over_icon) && (window.SankeyToolsStatic ||event.shiftKey)) {
+  const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
+    if ((window.SankeyToolsStatic ||event.shiftKey)) {
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight 
@@ -215,7 +215,7 @@ export const OpenSankeyDrawNodes = (
       })
       .on('mousemove', function (event, d) {
         // Triggered when the mouse move over the node
-        node_mouse_move(event,d,sankeyTooltip,false)
+        node_mouse_move(event,d,sankeyTooltip)
       })
       .on('mouseout', function (event, d) {
         node_mouse_out(d,sankeyTooltip)
