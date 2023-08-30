@@ -91,23 +91,23 @@ def save_svg():
         svg_str = svg_str.replace(';=""', '')
         # Deal with Foreign objects // texts
         for _ in \
-            ['div', 'b', 'i', 'p', 's', 'a',
-             'li', 'ul', 'ol'
+            ['div', 'b', 'i', 'p', 's', 'a', 'u',
+             'li', 'ul', 'ol',
              'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-             'center']:
+             'strong', 'center']:
             svg_str = svg_str.replace('<'+_+' ', '<xhtml:'+_+' ')
             svg_str = svg_str.replace('<'+_+'>', '<xhtml:'+_+'>')
             svg_str = svg_str.replace('</'+_+' ', '</xhtml:'+_+' ')
             svg_str = svg_str.replace('</'+_+'>', '</xhtml:'+_+'>')
         # Deal with foreign objects // embedded objects
         for _ in ['input', 'img']:
-            for match in re.finditer(r"<{}[ a-zA-Z0-9\"_:;.,\-+/=]+>".format(_), svg_str):
+            for match in re.finditer(r"<{}[ A-zÀ-ú0-9\"\'\(\)\-_:;.,+/=]+>".format(_), svg_str):
                 match_str = match[0]
                 sub_match_str = match_str.replace('<{}'.format(_), '')
                 new_match_str = '<xhtml:{}'.format(_)+sub_match_str+'</xhtml:{}>'.format(_)
                 svg_str = svg_str.replace(match_str, new_match_str)
         # Deal with Textpaths
-        for match in re.finditer(r"<textPath[ a-zA-Z0-9\"=#%\-_]*", svg_str):
+        for match in re.finditer(r"<textPath[ A-zÀ-ú0-9\"\'\(\)\-=#%_]*", svg_str):
             match_str = match[0]
             new_str = match_str.replace('href', 'xlink:href')
             svg_str = svg_str.replace(match_str, new_str)
@@ -133,7 +133,7 @@ def save_png():
     try:
         html_as_str = '<meta charset="utf-8">' + request.files['html'].read().decode('UTF-8')
         # Deal with Textpaths
-        for match in re.finditer(r"<textPath[ a-zA-Z0-9\"=#%\-_]*", html_as_str):
+        for match in re.finditer(r"<textPath[ A-zÀ-ú0-9\"\'\(\)\-=#%_]*", html_as_str):
             match_str = match[0]
             new_str = match_str.replace('href', 'xlink:href')
             html_as_str = html_as_str.replace(match_str, new_str)
@@ -160,7 +160,7 @@ def save_pdf():
     try:
         html_as_str = '<meta charset="utf-8">' + request.files['html'].read().decode('UTF-8')
         # Deal with Textpaths
-        for match in re.finditer(r"<textPath[ a-zA-Z0-9\"=#%\-_]*", html_as_str):
+        for match in re.finditer(r"<textPath[ A-zÀ-ú0-9\"\'\(\)\-=#%_]*", html_as_str):
             match_str = match[0]
             new_str = match_str.replace('href', 'xlink:href')
             html_as_str = html_as_str.replace(match_str, new_str)
