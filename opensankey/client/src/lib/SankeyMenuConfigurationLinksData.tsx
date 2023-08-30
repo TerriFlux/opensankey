@@ -167,5 +167,5 @@ export const SankeyMenuConfigurationLinksData = (
     {additional_data_element}
 
   </Form>
-  return menu_for_modal?content:<Tab eventKey="flux_data" title={t('Flux.data.données')}>{content}</Tab>
+  return menu_for_modal?content:<Tab key="flux_data" eventKey="flux_data" title={t('Flux.data.données')}>{content}</Tab>
 }

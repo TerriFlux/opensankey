@@ -775,7 +775,7 @@ const resources = {
         'Visible':'Visible',
         'Couleur':'Couleur',
         'Forme':'Forme',
-        'GE':'Groupe d\'étiquettes',
+        'GE':'Étiquettes du groupe',
         'selct':'Sélectionné',
         tooltips: {
           pal: 'Appliquer une palette de couleurs aléatoires pour les étiquettes du groupe sélectionné',

@@ -25,7 +25,7 @@ export const SankeyMenuConfigurationNodesTags = (
   if ((tags_group_key == '' && Object.keys(data.nodeTags).length > 0) || (!Object.keys(data.nodeTags).includes(tags_group_key) && Object.keys(data.nodeTags).length > 0)) {
     set_tags_group_key(Object.keys(data.nodeTags)[0])
   }
-  return <Tab eventKey="tags" title={t('Noeud.tags_node.tags')}>
+  return <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
 
     {/* Groupe d'étiquettes  */}
     <InputGroup>

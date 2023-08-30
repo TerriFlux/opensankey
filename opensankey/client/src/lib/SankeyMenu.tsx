@@ -1106,7 +1106,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       [data.width, data.height] = min_width_and_height(data)
       const transform=d3.select('.opensankey #svg').attr('transform')
       let scale_svg=1
-      if(transform!==undefined){
+      if(transform!==undefined && transform!==null){
         scale_svg=Number(transform.split('scale(')[1].replace(')',''))
       }
       d3.select('.scroll_zone').style('width',((data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
