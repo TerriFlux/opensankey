@@ -74,7 +74,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [nav_item_active, set_nav_item_active] = useState<string>('')
   const [style_to_apply, set_style_to_apply] = useState('default')
   const mode_selection= useRef('s')
-  // const selected_link = useRef(SankeyUtils.default_link(initial_sankey_data))
   const multi_selected_nodes = useRef([])
   const multi_selected_links = useRef([])
   const button_ref = useRef<HTMLLabelElement>(null)
