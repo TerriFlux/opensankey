@@ -101,6 +101,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
                   new_link.idTarget = d.idNode
                   new_link.idLink = 'link' + idLink
                   data.links[new_link.idLink] = new_link
+                  data.linkZIndex.push(new_link.idLink)
                   idLink = idLink+1
                   reorganize_node_outputLinksId(data.nodes[new_link.idSource], data.nodes, data.links)
                 })
@@ -109,6 +110,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
                   new_link.idSource = d.idNode
                   new_link.idLink = 'link' + idLink
                   data.links[new_link.idLink] = new_link
+                  data.linkZIndex.push(new_link.idLink)
                   idLink = idLink+1
                   reorganize_node_inputLinksId(data.nodes[new_link.idTarget], data.nodes, data.links)
                 })
