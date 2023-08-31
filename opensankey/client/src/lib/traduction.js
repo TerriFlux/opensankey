@@ -80,6 +80,7 @@ const resources = {
         'filter':'Filter',
         'toolbar':'Tools',
         'check':'Check',
+        'last_save':'Last save',
         'style':'Styles',
 
         'reinit':'Reset',
@@ -651,6 +652,7 @@ const resources = {
         'filter':'Filtres',
         'toolbar':'Outils',
         'check':'Sauv.',
+        'last_save':'Dernière sauvegarde',
         'style':'Styles',
         'presentation_OS':'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n La création d\'un compte sans licence permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         'presentation_OSP':'OpenSankey+ est une licence payante qui permet de débloquer de nouvelles fonctionnalités pour la réalisation de beaux diagrammes de Sankey pour des présentations.\n\n Cette licence inclut des fonctionnalités de mise en forme avancées comme l\'ajout d\'images ou d\'icônes illustratifs pour les noeuds, l\'ajout de gradients de couleurs sur les flux et d\'animations, etc.\n\n Mais surtout, OpenSankey+ permet de générer des diaporamas explicatifs de vos diagrammes de Sankey grâce au mécanisme des "Vues", qui enregistre les états visuel de celui-ci (avec / sans certains filtres activés par exemple) pour simplifier la navigation entre eux.\n\n',
