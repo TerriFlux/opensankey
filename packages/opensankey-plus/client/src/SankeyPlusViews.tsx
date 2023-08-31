@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import { LZString } from 'lz-string'
 
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal } from 'react-bootstrap'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -628,200 +628,228 @@ export const viewsAccordion = (
     }>
     <Accordion.Header>
       Storytelling
-      <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge>
+      {(!is_activated)?
+        <OverlayTrigger
+          key={'textZoneDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+        >
+          <Badge pill
+            bg="white"
+            style={{marginLeft:'5px', fontSize:'1.3em'}}>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Badge>
+        </OverlayTrigger>:
+        <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge>}
     </Accordion.Header>
     <Accordion.Body>
       <OverlayTrigger
-        key={'textZoneDisabled'}
-        placement={'top'}
-        delay={500}
-        overlay={(!is_activated)?(<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-      >
-        <Form>
-          <Row>
-            <Col xs={3}>
-              <FormLabel>{t('view.select')}</FormLabel>
-            </Col>
-            <Col xs={7}>
-              <>{selector}</>
-            </Col>
-            <Col xs={2}>
-              <OverlayTrigger
-                key={'tooltip-apply_display'}
-                placement={'left'}
-                trigger={'click'}
-                rootClose
-                overlay={popover_for_apply_display_from_view}>
-                <Button variant='danger' id='button-apply_display' >
-                  <FaFileInvoice/>
-                </Button>
-              </OverlayTrigger>
-            </Col>
+        key={'tooltip-apply_display'}
+        placement={'left'}
+        trigger={'click'}
+        rootClose
+        overlay={popover_for_apply_display_from_view}>
+        <InputGroup>
+          <InputGroup.Text
+            style={{
+              color:!(is_activated)?'#666666':'',
+              backgroundColor:!(is_activated)?'#cccccc':'',
+              width:'30%'}}>
+            {t('view.select')}
+          </InputGroup.Text>
+          <>{selector}</>
+          <Button
+            variant='danger'
+            style={{width:'20%'}}
+            disabled={!is_activated}
+            id='button-apply_display' >
+            <FaFileInvoice/>
+          </Button>
+        </InputGroup>
+      </OverlayTrigger>
 
-          </Row>
+      <Form>
+        <Table bordered size='sm'
+          style={{
+            color:!(is_activated)?'#666666':'',
+            backgroundColor:!(is_activated)?'#cccccc':''}}>
+          <thead>
+            <tr>
+              <th>{t('view.name')}</th>
+              <th>Position</th>
+              <th>{t('view.delete')}</th>
+              <th>{t('view.copy')}</th>
+              <th>{t('view.import')}</th>
+              <th>{t('view.export')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {master_data ? Object.values(master_data.view).map(d => {
+              return (
+                <tr style={{ 'border': (d.id === view) ? '2px solid red' : 'none' }}>
+                  <td><FormControl size='sm'
+                    value={d.nom}
+                    disabled={!is_activated}
+                    onChange={evt => {
+                      // Change the name of the view
+                      master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
+                      set_master_data({...master_data})
+                    }}
+                  /></td>
+                  <td>
+                    {/* Change the position of the view in the liste of view from master data */}
+                    <ButtonGroup className="button_position" size="sm">
+                      <Button
+                        size="sm"
+                        variant="success"
+                        disabled={!is_activated}
+                        onClick={
+                          () => {
+                            let ind = -1
+                            master_data.view.map((v, i) => {
+                              ind = (v.id === d.id) ? i : ind
+                            })
+                            const toShift = master_data.view[ind]
+                            master_data.view.splice(ind, 1)
+                            master_data.view.splice(ind - 1, 0, toShift)
+                            set_master_data({...master_data})
+                            set_data({ ...data })
+                          }
+                        }
+                      ><FaArrowUp /></Button><Button
+                        size="sm"
+                        variant="success"
+                        disabled={!is_activated}
+                        onClick={
+                          () => {
+                            let ind = -1
+                            master_data.view.map((v, i) => {
+                              ind = (v.id === d.id) ? i : ind
+                            })
+                            const toShift = master_data.view[ind]
+                            master_data.view.splice(ind, 1)
+                            master_data.view.splice(ind + 1, 0, toShift)
+                            set_master_data({...master_data})
+                            set_data({ ...data })
+                          }
+                        }
+                      ><FaArrowDown /></Button>
+                    </ButtonGroup>
 
-          <Table bordered size='sm'>
-            <thead>
-              <tr>
-                <th>{t('view.name')}</th>
-                <th>Position</th>
-                <th>{t('view.delete')}</th>
-                <th>{t('view.copy')}</th>
-                <th>{t('view.import')}</th>
-                <th>{t('view.export')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {master_data ? Object.values(master_data.view).map(d => {
-                return (
-                  <tr style={{ 'border': (d.id === view) ? '2px solid red' : 'none' }}>
-                    <td><FormControl size='sm'
-                      value={d.nom}
-                      disabled={!is_activated}
-                      onChange={evt => {
-                        // Change the name of the view
-                        master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
+                  </td>
+                  <td><Button
+                    size="sm"
+                    variant='danger'
+                    disabled={!is_activated}
+                    onClick={
+                      // Delete the view
+                      () => {
+                        let ind = -1
+                        master_data.view.map((v, i) => {
+                          ind = (v.id === d.id) ? i : ind
+                        })
+                        master_data.view.splice(ind, 1)
+                        set_view('none')
                         set_master_data({...master_data})
+                        set_data({ ...master_data })
+                      }
+                    }
+                  ><FaMinus /></Button></td>
+                  <td><Button
+                    disabled={!is_activated}
+                    size="sm"
+                    variant='success'
+                    onClick={
+                      () => {
+                        // Create a copy of the view
+                        const cur_view = d
+                        const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
+                        const new_ind = 'view_' + String(new Date().getTime())
 
+                        copy_view_data.view = []
+                        master_data.view.push({
+                          id: new_ind,
+                          view_data: copy_view_data,
+                          nom: 'copy of ' + cur_view.nom,
+                          details: ''
+                        })
+                        set_view(new_ind)
+                        set_master_data({...master_data})
+                        set_data(get_data_from_view(master_data,new_ind))
+                      }
+                    }
+                  ><FaCopy /></Button></td>
+                  <td><Button
+                    size="sm"
+                    variant='secondary'
+                    onClick={
+                      () => {
+                        // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
+                        if (_load_json.current) {
+                          _load_json.current.name = ''
+                          _load_json.current.click()
+                          _load_json.current.id = d.id
+                        }
+                      }
+                    }
+                  ><FaFileImport /></Button></td>
+                  <td>
+                    <Button variant='warning'
+                      onClick={()=>{
+                        const to_download=get_data_from_view(master_data,d.id)
+                        to_download.view=[]
+                        clickSaveDiagram(to_download,d.nom)
                       }}
-                    /></td>
-                    <td>
-                      {/* Change the position of the view in the liste of view from master data */}
-                      <ButtonGroup className="button_position" size="sm">
-                        <Button
-                          size="sm"
-                          variant="success"
-                          disabled={!is_activated}
-                          onClick={
-                            () => {
-                              let ind = -1
-                              master_data.view.map((v, i) => {
-                                ind = (v.id === d.id) ? i : ind
-                              })
-                              const toShift = master_data.view[ind]
-                              master_data.view.splice(ind, 1)
-                              master_data.view.splice(ind - 1, 0, toShift)
-                              set_master_data({...master_data})
-                              set_data({ ...data })
+                    ><FaFileExport/></Button>
+                  </td>
 
-                            }
-                          }
-                        ><FaArrowUp /></Button><Button
-                          size="sm"
-                          variant="success"
-                          disabled={!is_activated}
-                          onClick={
-                            () => {
-                              let ind = -1
-                              master_data.view.map((v, i) => {
-                                ind = (v.id === d.id) ? i : ind
-                              })
-                              const toShift = master_data.view[ind]
-                              master_data.view.splice(ind, 1)
-                              master_data.view.splice(ind + 1, 0, toShift)
-                              set_master_data({...master_data})
-                              set_data({ ...data })
-                            }
-                          }
-                        ><FaArrowDown /></Button>
-                      </ButtonGroup>
+                </tr>
+              )
+            }) : <></>}
+          </tbody>
+        </Table>
+      </Form>
 
-                    </td>
-                    <td><Button
-                      size="sm"
-                      variant='danger'
-                      disabled={!is_activated}
-                      onClick={
-                        // Delete the view
-                        () => {
-                          let ind = -1
-                          master_data.view.map((v, i) => {
-                            ind = (v.id === d.id) ? i : ind
-                          })
-                          master_data.view.splice(ind, 1)
-                          set_view('none')
-                          set_master_data({...master_data})
-                          set_data({ ...master_data })
-                        }
-                      }
-                    ><FaMinus /></Button></td>
-                    <td><Button
-                      disabled={!is_activated}
-                      size="sm"
-                      variant='success'
-                      onClick={
-                        () => {
-                          // Create a copy of the view
-                          const cur_view = d
-                          const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
-                          const new_ind = 'view_' + String(new Date().getTime())
-
-                          copy_view_data.view = []
-                          master_data.view.push({
-                            id: new_ind,
-                            view_data: copy_view_data,
-                            nom: 'copy of ' + cur_view.nom,
-                            details: ''
-                          })
-                          set_view(new_ind)
-                          set_master_data({...master_data})
-                          set_data(get_data_from_view(master_data,new_ind))
-                        }
-                      }
-                    ><FaCopy /></Button></td>
-                    <td><Button
-                      size="sm"
-                      variant='secondary'
-                      onClick={
-                        () => {
-                          // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
-                          if (_load_json.current) {
-                            _load_json.current.name = ''
-                            _load_json.current.click()
-                            _load_json.current.id = d.id
-                          }
-                        }
-                      }
-                    ><FaFileImport /></Button></td>
-                    <td>
-                      <Button variant='warning'
-                        onClick={()=>{
-                          const to_download=get_data_from_view(master_data,d.id)
-                          to_download.view=[]
-                          clickSaveDiagram(to_download,d.nom)
-                        }}
-                      ><FaFileExport/></Button>
-                    </td>
-
-                  </tr>
-                )
-              }) : <></>}
-            </tbody>
-          </Table>
-          <Button onClick={()=>{
+      <InputGroup>
+        <Button
+          style={{width:'50%', height:'2.5em'}}
+          className='btn_menu_config'
+          disabled={!is_activated}
+          variant={is_activated?'outline-primary':'primary'}
+          onClick={()=>{
             master_data.view.forEach(v=>{
               const to_download=get_data_from_view(master_data,v.id)
               to_download.view=[]
               clickSaveDiagram(to_download,v.nom)
             })
           }}>
-            {t('view.exportAll')}
-          </Button>
-          <Button
-            variant='info'
-            onClick={
-              () => {
-                // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
-                if (_load_multiple_json.current) {
-                  _load_multiple_json.current.name = ''
-                  _load_multiple_json.current.click()
-                }
+          {t('view.exportAll')}
+        </Button>
+        <Button
+          style={{width:'50%', height:'2.5em'}}
+          className='btn_menu_config'
+          disabled={!is_activated}
+          variant={is_activated?'outline-primary':'primary'}
+          onClick={
+            () => {
+              // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
+              if (_load_multiple_json.current) {
+                _load_multiple_json.current.name = ''
+                _load_multiple_json.current.click()
               }
             }
-          >{t('view.importMultiple')}</Button>
-        </Form></OverlayTrigger>
+          }
+        >
+          {t('view.importMultiple')}
+        </Button>
+      </InputGroup>
     </Accordion.Body>
   </Accordion.Item>
+
   <Form.Control
     type="file"
     ref={_load_json}
@@ -852,12 +880,12 @@ export const viewsAccordion = (
           set_master_data({...master_data})
           set_data({...imported_data})
           set_view(cur_view.id)
-
         }
       })()
       reader.readAsText(files[0])
     }}
   />
+
   <Form.Control
     multiple
     className='multipleImport'
