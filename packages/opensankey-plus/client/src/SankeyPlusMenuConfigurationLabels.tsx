@@ -1,5 +1,5 @@
 import React from 'react'
-import { Row, Form, FormControl, Button,OverlayTrigger,Tooltip, InputGroup,Popover,ButtonGroup} from 'react-bootstrap'
+import { Row, Form, FormControl, Button, OverlayTrigger,Tooltip, InputGroup, Popover, ButtonGroup, Badge} from 'react-bootstrap'
 import {  SankeyPlusData,SankeyPlusLabel} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
@@ -10,7 +10,7 @@ import 'react-quill/dist/quill.snow.css'
 import ImageResize from 'quill-image-resize-module-react'
 import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark,faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 
 Quill.register('modules/imageResize', ImageResize)
 
@@ -95,8 +95,13 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   //Renvoie le menue déroulant pour la sélection des labels libres
   const dropdownMultiLabel = () => {
     const DD = (
-      <div id='DD_multi_label' style={{width:'60%'}}>
+      <div id='DD_multi_label' style={{
+        color:(!is_activated)?'#666666':'',
+        backgroundColor:(!is_activated)?'#cccccc':'',
+        width:'60%'}}
+      >
         <MultiSelect
+          disabled={!is_activated}
           valueRenderer={(selected: selected_type[]) => {
             return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
           }}
@@ -166,7 +171,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     return transparent
   }
   const valAllLabelBorderTransparent=allLabelBorderTransparent()
-  
 
   const modules = {
     toolbar: [
@@ -192,6 +196,10 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     'bold', 'italic', 'underline', 'strike','color','background',
     'list', 'bullet','image','align'
   ]
+
+  const disable_options = !(is_activated && (multi_selected_label.current.length === 1))
+  const disable_editor = !(is_activated && (multi_selected_label.current.length >= 1))
+
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
@@ -206,230 +214,281 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     theme="snow"
     modules={modules}
     formats={formats}
-    readOnly={!is_activated}
+    readOnly={disable_editor}
+    style={{
+      color:(disable_editor)?'#666666':'',
+      backgroundColor:(disable_editor)?'#cccccc':''}}
   />
 
-  const content_zdt=<OverlayTrigger
-    key={'textZoneDisabled'}
-    placement={'top'}
-    delay={500}
-    overlay={(!is_activated)?(<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-  >
-    <Form>
-  
+  const content_zdt=<Form>
+    <Form.Group as={Row}>
+      <InputGroup>
+        <Button size="sm"
+          style={{width:'10%'}}
+          disabled={!is_activated}
+          className='btn_menu_config'
+          variant={is_activated?'outline-primary':'primary'}
+          onClick={() => {
 
-      <Form.Group as={Row}>
-        <InputGroup>
-          <Button size="sm"
-            style={{width:'10%'}}
-            disabled={!is_activated}
-            className='btn_menu_config'
-            variant={'outline-primary'}
-            onClick={() => {
-
-              let idZdt = Object.keys(data.labels).length
-              const tab_title=Object.values(data.labels).map(zdt=>zdt.title)
-              while (tab_title.includes('Zone de texte '+idZdt) ) {
-                idZdt = idZdt+1
-              }
-              const new_label = {
-                idLabel: 'label_' + String(new Date().getTime()),
-                title:'Zone de texte '+idZdt,
-                content: 'Text Label ...',
-                label_width: 100,
-                label_height: 25,
-                color: 'white',
-                color_border: 'black',
-                opacity: 100,
-                transparent_border: false,
-                position_vert: 'middle',
-                position_horiz: 'left',
-                font_size: 12,
-                font_weight: false,
-                font_style: false,
-                font_uppercase: false,
-                isTextHTML:false,
-                x: 50,
-                y: 50,
-                x_label: 50,
-                y_label: 12,
-                is_edit_raw:false,
-                underline:false
-              }
-              data.labels[new_label.idLabel] = new_label
-              multi_selected_label.current = [new_label]
-              set_data({ ...data })
+            let idZdt = Object.keys(data.labels).length
+            const tab_title=Object.values(data.labels).map(zdt=>zdt.title)
+            while (tab_title.includes('Zone de texte '+idZdt) ) {
+              idZdt = idZdt+1
             }
-            }><FaPlus /></Button>
-      
-          {dropdownMultiLabel()}
-
-          <Button size="sm" 
-            style={{width:'10%'}}
-            className='btn_menu_config'
-            variant={'outline-primary'}
-            disabled={!is_activated}
-            onClick={() => {
-              data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
-              multi_selected_label.current = []
-              set_data({ ...data })
+            const new_label = {
+              idLabel: 'label_' + String(new Date().getTime()),
+              title:'Zone de texte '+idZdt,
+              content: 'Text Label ...',
+              label_width: 100,
+              label_height: 25,
+              color: 'white',
+              color_border: 'black',
+              opacity: 100,
+              transparent_border: false,
+              position_vert: 'middle',
+              position_horiz: 'left',
+              font_size: 12,
+              font_weight: false,
+              font_style: false,
+              font_uppercase: false,
+              isTextHTML:false,
+              x: 50,
+              y: 50,
+              x_label: 50,
+              y_label: 12,
+              is_edit_raw:false,
+              underline:false
             }
-            }><FaMinus /></Button>
-
-          {//Boutton pour monter le label sélctionné
+            data.labels[new_label.idLabel] = new_label
+            multi_selected_label.current = [new_label]
+            set_data({ ...data })
           }
+          }><FaPlus /></Button>
 
-          <Button 
-            style={{width:'10%'}}
-            className='btn_menu_config'
-            variant={'outline-primary'}
-            disabled={is_activated?multi_selected_label.current.length !== 1:true}
+        {dropdownMultiLabel()}
 
-            onClick={() => {
-              multi_selected_label.current.map(l => {
-                handleDownlabel(l.idLabel)
-              })
-
-
-            }}><FaAngleUp /></Button>
-
-          <Button 
-            style={{width:'10%'}}
-            className='btn_menu_config'
-            variant={'outline-primary'}
-            disabled={is_activated?multi_selected_label.current.length !== 1:true}
-            onClick={() => {
-              multi_selected_label.current.map(l => {
-                handleUplabel(l.idLabel)
-              })
-            }}><FaAngleDown /></Button>
-        </InputGroup>
-      </Form.Group>
-      <InputGroup>
-        <InputGroup.Text >{t('LL.title')}</InputGroup.Text>
-        <Form.Control
-          type='text'
-          max={100}
-          disabled={!is_activated}
-          value={allLabelTitle()}
-
-          onChange={evt => {
-            const value=evt.target.value
-            multi_selected_label.current.map(d => d.title = value)
+        <Button size="sm"
+          style={{width:'10%'}}
+          className='btn_menu_config'
+          variant={disable_editor?'outline-primary':'primary'}
+          disabled={disable_editor}
+          onClick={() => {
+            data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
+            multi_selected_label.current = []
             set_data({ ...data })
-          }}
-        />
-      </InputGroup>
+          }
+          }><FaMinus /></Button>
 
-      <Form.Group as={Row}>
-        {editor_fo}
-      </Form.Group>
-
-
-      <InputGroup>
-        <InputGroup.Text >{t('LL.hl')}</InputGroup.Text>
-        <FormControl
-          min={0}
-          max={1000}
-          disabled={!is_activated}
-          type={'number'}
-          value={allLabelHeight()}
-          onChange={evt => {
-            multi_selected_label.current.map(d => d.label_height = +evt.target.value)
-            set_data({ ...data })
-          }}
-        />
-
-        <InputGroup.Text >{t('LL.ll')}</InputGroup.Text>
-
-        <FormControl
-          min={0}
-          max={1000}
-          type={'number'}
-          disabled={!is_activated}
-          value={allLabelWidth()}
-          onChange={evt => {
-            multi_selected_label.current.map(d => d.label_width = +evt.target.value)
-            set_data({ ...data })
-          }}
-        />
-      
-      </InputGroup>
-
-      <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>{t('LL.cfl')}</InputGroup.Text>
-        <Form.Label htmlFor="form_color_zdt" style={{width:'20%',
-          'background':(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff',
-          border:'1px solid #ced4da',
-        }}/>
-        <FormControl size='sm'
-          type='color'
-          id='form_color_zdt'
-          name='form_color_zdt'
-          disabled={!is_activated}
-          style={{display:'none'}}
-          value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
-          onChange={evt => {
-            const val = evt.target.value
-            multi_selected_label.current.map(d => d.color = val)
-            set_data({ ...data })
-          }}
-        />
-
-        <InputGroup.Text >{t('LL.ft')}</InputGroup.Text>
-        <Form.Control
-          type='number'
-          max={100}
-          min={0}
-          step={1}
-          disabled={!is_activated}
-          value={allLabelTransparent()}
-
-          onChange={evt => {
-            const value=+evt.target.value
-            multi_selected_label.current.map(d => d.opacity = value)
-            set_data({ ...data })
-          }}
-        />
-      </InputGroup>
-    
-      <InputGroup>
-
-        
-
-        <InputGroup.Text style={{width:'40%'}}>{t('LL.cbl')}</InputGroup.Text>
-        <Form.Label htmlFor="form_color_border_zdt" style={{width:'20%',
-          'background':(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff',
-          border:'1px solid #ced4da',
-        }}/>
-        <FormControl size='sm'
-          type='color'
-          style={{display:'none'}}
-          id='form_color_border_zdt'
-          name='form_color_border_zdt'
-          disabled={!is_activated && !valAllLabelBorderTransparent }
-          value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
-          onChange={evt => {
-            const val = evt.target.value
-            multi_selected_label.current.map(d => d.color_border = val)
-            set_data({ ...data })
-          }}
-        />
-
-        <InputGroup.Text style={{width:'30%'}}>{t('LL.bt')}</InputGroup.Text>
+        {//Boutton pour monter le label sélctionné
+        }
 
         <Button
           style={{width:'10%'}}
-          disabled={!is_activated}
-          variant={valAllLabelBorderTransparent?'primary':'outline-primary'}
+          className='btn_menu_config'
+          variant={disable_options?'primary':'outline-primary'}
+          disabled={disable_options}
           onClick={() => {
-            multi_selected_label.current.map(d => d.transparent_border = !valAllLabelBorderTransparent)
-            set_data({ ...data })
-          }}
-        >{valAllLabelBorderTransparent?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-      </InputGroup>
+            multi_selected_label.current.map(l => {
+              handleDownlabel(l.idLabel)
+            })
+          }}><FaAngleUp /></Button>
 
-    </Form></OverlayTrigger>
+        <Button
+          style={{width:'10%'}}
+          className='btn_menu_config'
+          variant={disable_options?'primary':'outline-primary'}
+          disabled={disable_options}
+          onClick={() => {
+            multi_selected_label.current.map(l => {
+              handleUplabel(l.idLabel)
+            })
+          }}><FaAngleDown /></Button>
+      </InputGroup>
+    </Form.Group>
+
+    <InputGroup>
+      <InputGroup.Text
+        style={{
+          color:(disable_options)?'#666666':'',
+          backgroundColor:(disable_options)?'#cccccc':'',
+          width:'20%'}}>
+        {t('LL.title')}
+      </InputGroup.Text>
+      <Form.Control
+        type='text'
+        max={100}
+        disabled={disable_options}
+        style={{
+          color:(disable_options)?'#666666':'',
+          backgroundColor:(disable_options)?'#cccccc':''}}
+        value={allLabelTitle()}
+        onChange={evt => {
+          const value=evt.target.value
+          multi_selected_label.current.map(d => d.title = value)
+          set_data({ ...data })
+        }}
+      />
+    </InputGroup>
+
+    <Form>
+      <Form.Group>
+        {editor_fo}
+      </Form.Group>
+    </Form>
+
+    <InputGroup>
+      <InputGroup.Text
+        style={{
+          color:(disable_options)?'#666666':'',
+          backgroundColor:(disable_options)?'#cccccc':'',
+          width:'20%'}}>
+        {t('LL.hl')}</InputGroup.Text>
+      <FormControl
+        style={{
+          color:(disable_options)?'#666666':'',
+          backgroundColor:(disable_options)?'#cccccc':'',
+          width:'30%'}}
+        min={0}
+        max={1000}
+        disabled={disable_options}
+        type={'number'}
+        value={allLabelHeight()}
+        onChange={evt => {
+          multi_selected_label.current.map(d => d.label_height = +evt.target.value)
+          set_data({ ...data })
+        }}
+      />
+
+      <InputGroup.Text
+        style={{
+          color:(disable_options)?'#666666':'',
+          backgroundColor:(disable_options)?'#cccccc':'',
+          width:'20%'}}>
+        {t('LL.ll')}
+      </InputGroup.Text>
+      <FormControl
+        style={{
+          color:(disable_options)?'#666666':'',
+          backgroundColor:(disable_options)?'#cccccc':'',
+          width:'30%'}}
+        min={0}
+        max={1000}
+        type={'number'}
+        disabled={disable_options}
+        value={allLabelWidth()}
+        onChange={evt => {
+          multi_selected_label.current.map(d => d.label_width = +evt.target.value)
+          set_data({ ...data })
+        }}
+      />
+    </InputGroup>
+
+    <InputGroup>
+      <InputGroup.Text
+        style={{
+          color:disable_options?'#666666':'',
+          backgroundColor:disable_options?'#cccccc':'',
+          width:'30%'}}>
+        {t('LL.cfl')}
+      </InputGroup.Text>
+      <Form.Label
+        htmlFor="form_color_zdt"
+        style={{
+          width:'20%',
+          background:(is_activated && (multi_selected_label.current.length === 1)) ? multi_selected_label.current[0].color : '#cccccc',
+          border:'1px solid #ced4da',
+        }}/>
+      <FormControl size='sm'
+        type='color'
+        id='form_color_zdt'
+        name='form_color_zdt'
+        disabled={disable_options}
+        style={{display:'none'}}
+        value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
+        onChange={evt => {
+          const val = evt.target.value
+          multi_selected_label.current.map(d => d.color = val)
+          set_data({ ...data })
+        }}
+      />
+
+      <InputGroup.Text
+        style={{
+          color:disable_options?'#666666':'',
+          backgroundColor:disable_options?'#cccccc':'',
+          width:'30%'}}>
+        {t('LL.ft')}
+      </InputGroup.Text>
+      <Form.Control
+        style={{
+          color:disable_options?'#666666':'',
+          backgroundColor:disable_options?'#cccccc':'',
+          width:'20%'}}
+        type='number'
+        max={100}
+        min={0}
+        step={1}
+        disabled={disable_options}
+        value={allLabelTransparent()}
+        onChange={evt => {
+          const value=+evt.target.value
+          multi_selected_label.current.map(d => d.opacity = value)
+          set_data({ ...data })
+        }}
+      />
+    </InputGroup>
+
+    <InputGroup>
+      <InputGroup.Text
+        style={{
+          color:disable_options?'#666666':'',
+          backgroundColor:disable_options?'#cccccc':'',
+          width:'30%'}}>
+        {t('LL.cbl')}
+      </InputGroup.Text>
+      <Form.Label
+        htmlFor="form_color_border_zdt"
+        style={{
+          width:'20%',
+          background:(is_activated && (multi_selected_label.current.length === 1)) ? multi_selected_label.current[0].color_border : '#cccccc',
+          border:'1px solid #ced4da',
+        }}/>
+      <FormControl size='sm'
+        type='color'
+        style={{display:'none'}}
+        id='form_color_border_zdt'
+        name='form_color_border_zdt'
+        disabled={!is_activated && !valAllLabelBorderTransparent }
+        value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
+        onChange={evt => {
+          const val = evt.target.value
+          multi_selected_label.current.map(d => d.color_border = val)
+          set_data({ ...data })
+        }}
+      />
+
+      <InputGroup.Text style={{
+        color:disable_options?'#666666':'',
+        backgroundColor:disable_options?'#cccccc':'',
+        width:'30%'}}>
+        {t('LL.bt')}
+      </InputGroup.Text>
+
+      <Button
+        className='btn_menu_config'
+        style={{
+          color:disable_options?'#666666':'',
+          backgroundColor:disable_options?'#cccccc':'',
+          width:'20%'}}
+        disabled={disable_options}
+        variant={valAllLabelBorderTransparent?'outline-primary':'primary'}
+        onClick={() => {
+          multi_selected_label.current.map(d => d.transparent_border = !valAllLabelBorderTransparent)
+          set_data({ ...data })
+        }}
+      >{valAllLabelBorderTransparent?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+    </InputGroup>
+  </Form>
 
   return menu_for_modal?content_zdt:<Accordion.Item
     key='9'
@@ -444,14 +503,29 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       }
     }}
   >
-    <Accordion.Header>{t('Menu.LL')}</Accordion.Header>
+    <Accordion.Header>
+      {t('Menu.LL')}
+      {(!is_activated)?
+        <OverlayTrigger
+          key={'textZoneDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+        >
+          <Badge pill
+            bg="white"
+            style={{marginLeft:'5px', fontSize:'1.3em'}}>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Badge>
+        </OverlayTrigger>:<></>}
+    </Accordion.Header>
     <Accordion.Body>
       {content_zdt}
-      
     </Accordion.Body>
   </Accordion.Item>
-
-
 }
 
 
@@ -460,12 +534,12 @@ export const context_zdt=(show_context_zdt:boolean,set_show_context_zdt:(b:boole
   t:TFunction,
   set_show_menu_zdt:(b:boolean)=>void
 )=>{
-  
+
   let style_c_zdd='0px 0px auto auto'
   if(show_context_zdt){
     style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
-    
+
   const button_open_layout=<Button onClick={()=>{
     set_show_menu_zdt(true)
     set_show_context_zdt(false)

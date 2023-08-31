@@ -12,7 +12,7 @@ import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_
 
 import { FaEyeSlash, FaEye} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
+import { faUpRightFromSquare, faLock } from '@fortawesome/free-solid-svg-icons'
 
 declare const window: Window &
 typeof globalThis & {
@@ -64,7 +64,7 @@ export const SankeyPlusNodeIcon = (
             width:'75%'}}
         >
           {t('Noeud.icon.Visibilité')}
-          {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+          {/* {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>} */}
         </InputGroup.Text>
 
         <Button
@@ -99,10 +99,11 @@ export const SankeyPlusNodeIcon = (
             style={{
               color:(!is_activated)?'#666666':'',
               backgroundColor:(!is_activated)?'#cccccc':'',
-              width:(!is_activated)?'60%':'40%'}}
+              // width:(!is_activated)?'60%':'40%'}}
+              width:'40%'}}
           >
             {t('Noeud.icon.si')}
-            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+            {/* {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>} */}
           </InputGroup.Text>
           <Form.Select
             style={{width:(!is_activated)?'40%':'60%'}}
@@ -137,7 +138,7 @@ export const SankeyPlusNodeIcon = (
               width:'40%'}}
           >
             {t('Noeud.apparence.Couleur')}
-            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+            {/* {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>} */}
           </InputGroup.Text>
           <Form.Label htmlFor="form_color_icon" style={{width:'60%',
             'background':(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff',
@@ -172,10 +173,11 @@ export const SankeyPlusNodeIcon = (
             style={{
               color:(!is_activated)?'#666666':'',
               backgroundColor:(!is_activated)?'#cccccc':'',
-              width:(!is_activated)?'70%':'50%'}}
+              // width:(!is_activated)?'70%':'50%'}}
+              width:'50%'}}
           >
             {t('Noeud.icon.rIN')}
-            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+            {/* {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>} */}
           </InputGroup.Text>
           <Form.Control
             type='number'
@@ -202,7 +204,32 @@ export const SankeyPlusNodeIcon = (
     </>:<></>}
   </>
 
-  return menu_for_modal?content_tab:<Tab key="node_icon" eventKey="node_icon" title={t('Noeud.icon.icon')}>{content_tab}</Tab>
+  return menu_for_modal?content_tab:<Tab
+    key="node_icon"
+    eventKey="node_icon"
+    title={<>
+      {t('Noeud.icon.icon')}
+      {(!is_activated)?
+        <OverlayTrigger
+          key={'textZoneDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+        >
+          <Badge pill
+            bg="white"
+            style={{marginLeft:'5px', fontSize:'1.3em'}}>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Badge>
+          {/* <Badge pill bg="info" style={{marginLeft:'5px'}}>{t('Menu.featureLocked')}</Badge> */}
+        </OverlayTrigger>:<></>}
+    </>}
+  >
+    {content_tab}
+  </Tab>
 }
 
 const calcPath = (

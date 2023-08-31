@@ -14,7 +14,7 @@ import { node_displayed, return_value_node } from 'open-sankey/dist/SankeyUtils'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faLock } from '@fortawesome/free-solid-svg-icons'
 
 Quill.register('modules/imageResize', ImageResize)
 declare const window: Window &
@@ -108,82 +108,115 @@ export const SankeyPlusNodeFO = (
     }}
   />
 
-  return <Tab key="node_fo" eventKey="node_fo" title={<>{t('Noeud.FO.FO')} <Badge pill bg="info" style={{marginLeft:'auto'}}>Beta</Badge></>} >
+  return <Tab key="node_fo" eventKey="node_fo" title={
+    <>
+      {t('Noeud.FO.FO')}
+      {(!is_activated)?
+        <OverlayTrigger
+          key={'textZoneDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+        >
+          <Badge pill
+            bg="white"
+            style={{marginLeft:'5px', fontSize:'1.3em'}}>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Badge>
+        </OverlayTrigger>:
+        <Badge pill bg="info" style={{marginLeft:'5px'}}>Beta</Badge>}
+    </>}
+  >
     <OverlayTrigger
       key={'foDisabled'}
       placement={'top'}
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    ><>
-        <InputGroup>
-          <InputGroup.Text
-            style={{
-              color:(!is_activated)?'#666666':'',
-              backgroundColor:(!is_activated)?'#cccccc':'',
-              width:'75%'}}
-          >
-            {t('Noeud.foreign_object.Visibilité')}
-            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
-          </InputGroup.Text>
+    >
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(!is_activated)?'#666666':'',
+            backgroundColor:(!is_activated)?'#cccccc':'',
+            width:'75%'}}
+        >
+          {t('Noeud.foreign_object.Visibilité')}
+        </InputGroup.Text>
 
-          <Button
-            style={{width:'25%'}}
-            className='btn_menu_config'
-            disabled={!is_activated}
-            variant={is_all_fo_visible?'primary':'outline-primary'}
-            onClick={
-              () => {
-                Object.values(data.nodes).filter(
-                  f => multi_selected_nodes.current.map(
-                    d => d.idNode).includes(
-                    f.idNode)).map(
-                  d => d.has_FO = !is_all_fo_visible)
-                set_data({ ...data })
-              }
+        <Button
+          style={{width:'25%'}}
+          className='btn_menu_config'
+          disabled={!is_activated}
+          variant={is_all_fo_visible?'primary':'outline-primary'}
+          onClick={
+            () => {
+              Object.values(data.nodes).filter(
+                f => multi_selected_nodes.current.map(
+                  d => d.idNode).includes(
+                  f.idNode)).map(
+                d => d.has_FO = !is_all_fo_visible)
+              set_data({ ...data })
             }
-          >
-            {is_all_fo_visible?<FaEye/>:<FaEyeSlash/>}
-          </Button>
-        </InputGroup>
-
-        <InputGroup>
-          <InputGroup.Text
-            style={{
-              color:(!is_activated)?'#666666':'',
-              backgroundColor:(!is_activated)?'#cccccc':'',
-              width:'75%'}}
-          >
-            {t('Noeud.foreign_object.raw')}
-            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
-          </InputGroup.Text>
-
-          <Button
-            style={{width:'25%'}}
-            className='btn_menu_config'
-            disabled={!is_activated}
-            variant={is_all_fo_raw?'primary':'outline-primary'}
-            onClick={
-              () => {
-                Object.values(data.nodes).filter(
-                  f => multi_selected_nodes.current.map(
-                    d => d.idNode).includes(f.idNode)).map(
-                  d => d.is_FO_raw = !is_all_fo_raw)
-                set_data({ ...data })
-              }
-            }
-          >
-            {is_all_fo_raw?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
-          </Button>
-        </InputGroup>
-      
-
-        {(multi_selected_nodes.current.length>0)?
-          <Form>
-            <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
-          </Form>
-          :<></>}
-      </>
+          }
+        >
+          {is_all_fo_visible?<FaEye/>:<FaEyeSlash/>}
+        </Button>
+      </InputGroup>
     </OverlayTrigger>
+
+    <OverlayTrigger
+      key={'foDisabled'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(!is_activated)?'#666666':'',
+            backgroundColor:(!is_activated)?'#cccccc':'',
+            width:'75%'}}
+        >
+          {t('Noeud.foreign_object.raw')}
+        </InputGroup.Text>
+
+        <Button
+          style={{width:'25%'}}
+          className='btn_menu_config'
+          disabled={!is_activated}
+          variant={is_all_fo_raw?'primary':'outline-primary'}
+          onClick={
+            () => {
+              Object.values(data.nodes).filter(
+                f => multi_selected_nodes.current.map(
+                  d => d.idNode).includes(f.idNode)).map(
+                d => d.is_FO_raw = !is_all_fo_raw)
+              set_data({ ...data })
+            }
+          }
+        >
+          {is_all_fo_raw?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+        </Button>
+      </InputGroup>
+    </OverlayTrigger>
+
+    {(multi_selected_nodes.current.length>0)?
+      <OverlayTrigger
+        key={'foDisabled'}
+        placement={'top'}
+        delay={500}
+        overlay={(!is_activated)?
+          (<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+          (!is_all_fo_visible)?<Tooltip id={'foNotVisible'}>{t('Noeud.foreign_object.not_activated')}</Tooltip>:<></>}
+      >
+        <Form>
+          <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
+        </Form>
+      </OverlayTrigger>
+      :<></>}
   </Tab>
 }
 
