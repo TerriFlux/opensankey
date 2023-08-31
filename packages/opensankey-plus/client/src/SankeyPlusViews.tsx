@@ -1,18 +1,21 @@
 import React, { ChangeEvent, useRef } from 'react'
-import {SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
+import { LZString } from 'lz-string'
+
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, FormLabel, Row, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal } from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink,SankeyPlusLabel,differenceType} from './types'
-import { FaHome,FaCaretSquareRight,FaCaretSquareLeft} from 'react-icons/fa'
-import {  clickSaveDiagram,adjust_sankey_zone,node_displayed } from 'open-sankey/dist/SankeyUtils'
-import { updateLayout, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
+import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileCircleExclamation,faFileCircleCheck } from '@fortawesome/free-solid-svg-icons'
-import LZString from 'lz-string'
-import { FaPlus } from 'react-icons/fa'
-import {sankey_plus_min_width_and_height} from './SankeyPlusLabels'
+import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile } from '@fortawesome/free-solid-svg-icons'
+
+import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
+import { clickSaveDiagram, adjust_sankey_zone, node_displayed } from 'open-sankey/dist/SankeyUtils'
+import { updateLayout, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
+
+import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType } from './types'
+import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
+
 /* eslint-disable */
 // @ts-ignore
 const deep_diff = require('deep-diff')
@@ -254,7 +257,7 @@ export const keyHandler = (
     if(view!=='none'){
       // If we do a control+S while we are on a view, we save the difference between the data we are handling
       // and the master data. These difference are the saved the view we are currently on
-      
+
 
       // Get difference between master_data and the current data then save it in view
       let difference = deep_diff.diff(master_data, data)
@@ -277,9 +280,9 @@ export const keyHandler = (
       // Save current data (wich is master_data)
       localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
     }
-      
 
-    
+
+
   }
   // Changing view to master
   if (!master && e.key === 'F7') {
@@ -385,7 +388,7 @@ export const keyHandler = (
 
 
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
-    // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input 
+    // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
     e.preventDefault()
     if (e.key === 'ArrowUp') {
@@ -394,9 +397,9 @@ export const keyHandler = (
           return d.idLabel
         }
       }).includes(f.idLabel)).map(d => {
-        
+
         d.y = d.y - data.grid_square_size
-        
+
         let y_max = 0
         Object.values(data.labels).map(d => {
           y_max = (d.y > y_max) ? d.y : y_max
@@ -412,10 +415,10 @@ export const keyHandler = (
           return d.idLabel
         }
       }).includes(f.idLabel)).map(d => {
-        
-        
+
+
         d.y = d.y + data.grid_square_size
-        
+
         //Augumente hauteur svg si le noeud est près du bord
         if (d.y > data.height - 100) {
           data.height += 100
@@ -427,10 +430,10 @@ export const keyHandler = (
           return d.idLabel
         }
       }).includes(f.idLabel)).map(d => {
-        
-        
+
+
         d.x = d.x - data.grid_square_size
-        
+
         //Diminue largeur svg si le noeud est près du bord
         if (d.x < data.width - 100 && data.width - 100 >= window.innerWidth - 40) {
           data.width -= 50
@@ -442,10 +445,10 @@ export const keyHandler = (
           return d.idLabel
         }
       }).includes(f.idLabel)).map(d => {
-        
-        
+
+
         d.x = d.x + data.grid_square_size
-        
+
         //Augumente largeur svg si le noeud est près du bord
         if (d.x > data.width - 100) {
           data.width += 100
@@ -454,7 +457,7 @@ export const keyHandler = (
     }
     set_data({ ...data })
   }
-  
+
   // Add deselection of all selected zdt
   if (e.key === 'Escape') {
 
@@ -463,14 +466,14 @@ export const keyHandler = (
       d3.select('#'+l.idLabel+ ' rect').attr('stroke-width',1)
     })
     multi_selected_labels.current=[]
-    
+
   }
 
   if(e.key==='Delete'){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')==='menuConfigButton')
-    {   
+    {
 
-      data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_labels.current.map(l => l.idLabel).includes(d[0])))     
+      data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_labels.current.map(l => l.idLabel).includes(d[0])))
       multi_selected_labels.current=[]
       set_data({...data})
     }
@@ -623,7 +626,10 @@ export const viewsAccordion = (
         }
       }
     }>
-    <Accordion.Header>Storytelling <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge></Accordion.Header>
+    <Accordion.Header>
+      Storytelling
+      <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge>
+    </Accordion.Header>
     <Accordion.Body>
       <OverlayTrigger
         key={'textZoneDisabled'}
@@ -823,7 +829,7 @@ export const viewsAccordion = (
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
       const reader = new FileReader()
-      
+
       reader.onload = (() => {
         return (e: ProgressEvent<FileReader>) => {
           const result = String((e.target as FileReader).result)
@@ -860,7 +866,7 @@ export const viewsAccordion = (
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
-      
+
       master_data=(master_data)?master_data:JSON.parse(JSON.stringify(data))
       // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
       for(const i in files){
@@ -875,7 +881,7 @@ export const viewsAccordion = (
             if (keep_visible_nodes) {
               const initial_nodes = JSON.parse(JSON.stringify(imported_data.nodes))
               const visible_nodes = Object.values(imported_data.nodes).filter(n => node_displayed(data,n))
-              const visible_links = Object.values(imported_data.links).filter(l => 
+              const visible_links = Object.values(imported_data.links).filter(l =>
                 node_displayed(imported_data,imported_data.nodes[l.idSource]) && node_displayed(imported_data,imported_data.nodes[l.idTarget])
               )
               imported_data.nodes = Object.assign({}, ...visible_nodes.map(n => ({ [n.idNode]: { ...n } })))
@@ -980,15 +986,23 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     }
   }
 
+  const has_views = master_data?true:false
+  const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
+  const prev_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')
+
   const buttonCreateView=<OverlayTrigger
     key={'buttonCreateViewDisabled'}
     placement={'bottom'}
     delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonCreateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonCreateView'}>{t('Menu.tooltips.buttonCreateView')} </Tooltip>}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonCreateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonCreateView'}>{t('Menu.tooltips.buttonCreateView')} </Tooltip>}
   >
     <span>
-      <Button size='sm' variant='light' disabled={!connected}
-        style={{opacity:connected?'1':'0.5'}}
+      <Button
+        size='sm'
+        variant='light'
+        disabled={!connected}
         onClick={() => {
           const ev = document
           const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
@@ -997,22 +1011,39 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
           }
         }}
       >
-        <Col><FaPlus/></Col>
+        <Col><FaPlus
+          style={{opacity:(!connected)?'0.6':'1'}}/>
+        </Col>
+        {!connected?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
         <Col style={{'fontSize':'9px'}}>{t('Menu.addView')}</Col>
       </Button>
     </span>
   </OverlayTrigger>
 
-
   const buttonUpdateView=<OverlayTrigger
     key={'buttonUpdateViewDisabled'}
     placement={'bottom'}
     delay={500}
-    overlay={(!connected)?(<Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
   >
     <span>
-      <Button size='sm' disabled={!connected} variant='light'
-        style={{opacity:connected?'1':'0.5'}}
+      <Button
+        size='sm'
+        disabled={!connected}
+        variant='light'
         onClick={() => {
           const ev = document
           const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
@@ -1021,7 +1052,25 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
           }
         }}
       >
-        <Col>{is_different?<FontAwesomeIcon icon={faFileCircleExclamation} />:<FontAwesomeIcon icon={faFileCircleCheck} />}</Col>
+        {!connected?<>
+          <Col><FontAwesomeIcon
+            icon={faFile}
+            style={{opacity:(!connected)?'0.6':'1'}}/>
+          </Col>
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col></>
+          :<Col>{is_different?
+            <FontAwesomeIcon icon={faFileCircleExclamation}/>:
+            <FontAwesomeIcon icon={faFileCircleCheck} />}
+          </Col>}
         <Col style={{'fontSize':'9px'}}>{t('Menu.updateView')}</Col>
       </Button>
     </span>
@@ -1033,63 +1082,123 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       key={'buttonHomeViewDisabled'}
       placement={'bottom'}
       delay={500}
-      overlay={(!connected)?(<Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
+      overlay={(!connected && !has_views)?
+        <Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
+        <Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
     >
-      <Button size='sm' variant= 'light' onClick={() => {
-        const ev = document
-        const tmp = { key: 'F7' }
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp as KeyboardEvent)
-        }
-      }}>
-        <Col><FaHome /></Col>
-        <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
-      </Button>
+      <span>
+        <Button
+          size='sm'
+          variant='light'
+          disabled={(!connected && !has_views)}
+          onClick={() => {
+            const ev = document
+            const tmp = { key: 'F7' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+          <Col><FaHome
+            style={{opacity:(!connected && !has_views)?'0.6':'1'}}/>
+          </Col>
+          {(!connected && !has_views)?
+            <Col>
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{
+                  fontSize:'1em',
+                  position: 'absolute',
+                  right: '0.1em',
+                  bottom: '0em',
+                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+            </Col>
+            :<></>}
+          <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
+        </Button>
+      </span>
     </OverlayTrigger>
-  
-    {/* <>{!window.SankeyToolsStatic&&!fullscreen?<> */}
+
     {buttonCreateView}
     {buttonUpdateView}
-    {/* </>:<></>}</> */}
 
     <OverlayTrigger
       key={'buttonPrevViewDisabled'}
       placement={'bottom'}
       delay={500}
-      overlay={(!connected)?(<Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
+      overlay={(!connected && !has_views)?
+        <Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
+        <Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
     >
-      <Button size='sm' variant={'light'}
-        disabled={ m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')}
-        onClick={() => {
-          const ev = document
-          const tmp = { key: 'F8' }
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp as KeyboardEvent)
-          }
-        }}>
-        <Col><FaCaretSquareLeft /></Col>
-        <Col style={{'fontSize':'9px'}}>{t('Menu.precView')}</Col>
-      </Button>
+      <span>
+        <Button
+          size='sm'
+          variant={'light'}
+          disabled={prev_button_disabled || !has_views}
+          onClick={() => {
+            const ev = document
+            const tmp = { key: 'F8' }
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+          <Col><FaCaretSquareLeft
+            style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
+          </Col>
+          {(!connected && !has_views)?
+            <Col>
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{
+                  fontSize:'1em',
+                  position: 'absolute',
+                  right: '0.1em',
+                  bottom: '0em',
+                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+            </Col>
+            :<></>}
+          <Col style={{'fontSize':'9px'}}>{t('Menu.precView')}</Col>
+        </Button>
+      </span>
     </OverlayTrigger>
 
     <OverlayTrigger
       key={'buttonNextViewDisabled'}
       placement={'bottom'}
       delay={500}
-      overlay={(!connected)?(<Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
+      overlay={(!connected && !has_views)?(
+        <Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+        <Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
     >
-      <Button size='sm' variant={'light'}
-        disabled={m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)}
-        onClick={() => {
-          const ev = document
-          const tmp = { key: 'F9'}
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp as KeyboardEvent)
-          }
-        }}>
-        <Col><FaCaretSquareRight /></Col>
-        <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
-      </Button>
+      <span>
+        <Button
+          size='sm'
+          variant={'light'}
+          disabled={next_button_disabled || !has_views}
+          onClick={() => {
+            const ev = document
+            const tmp = { key: 'F9'}
+            if (ev.onkeydown) {
+              ev.onkeydown(tmp as KeyboardEvent)
+            }
+          }}>
+          <Col><FaCaretSquareRight
+            style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}
+          /></Col>
+          {(!connected && !has_views)?
+            <Col>
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{
+                  fontSize:'1em',
+                  position: 'absolute',
+                  right: '0.1em',
+                  bottom: '0em',
+                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+            </Col>
+            :<></>}
+          <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
+        </Button>
+      </span>
     </OverlayTrigger>
     {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
 
@@ -1148,7 +1257,7 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
         <Button variant='success'
           onClick={()=>{
             // Save the view before changing to the selected one
-            
+
             let difference = deep_diff.diff(master_data, data)
             difference=(difference !== undefined)?difference:[]
             difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
@@ -1193,5 +1302,5 @@ export const toolbar_fullscreen=(data:SankeyPlusData,
     {buttons_view}
   </ButtonGroup>
   return <>{group_btn}</>
-    
+
 }
