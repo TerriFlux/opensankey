@@ -335,7 +335,8 @@ const resources = {
         },
         foreign_object:{
           'Visibilité':'Visibility',
-          'raw':'Raw editor'
+          'raw':'Raw editor',
+          'not_activated': 'Set visibility to activate'
         },
         tags_node:{
           'tags':'Tags',
@@ -481,7 +482,7 @@ const resources = {
         'll':'Width',
         'ft':'Opacity',
         'cfl':'Background Color',
-        'bt':'Transparent border',
+        'bt':'Invisible',
         'cbl':'Border Color',
         'pvt':'Vertical position',
         'at':'Texte alignment',
@@ -902,7 +903,8 @@ const resources = {
         },
         foreign_object:{
           'Visibilité':'Visibilité',
-          'raw':'Editeur brut'
+          'raw':'Editeur brut',
+          'not_activated': 'Pour activer l\'editeur, activer la visibilité'
         },
         tags_node:{
           'tags':'Étiquettes',
@@ -1048,9 +1050,9 @@ const resources = {
         'hl':'Hauteur',
         'll':'Largeur',
         'ft':'Opacité',
-        'cfl':'Couleur fond label',
-        'bt':'Bordure transparent',
-        'cbl':'Couleur bordure label',
+        'cfl':'Couleur fond',
+        'bt':'Invisible',
+        'cbl':'Couleur bordure',
         'pvt':'Position verticale texte',
         'at':'Alignement texte',
         'labels':'Labels',
