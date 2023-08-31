@@ -823,7 +823,12 @@ export const OpenSankeyMenus = (
 
   const logo_tempalte=<svg xmlns="http://www.w3.org/2000/svg" aria-hidden='false' data-prefix='fas' className='svg-inline--fa' viewBox="0 0 24 24"><path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z"/></svg>
 
-
+  const last_save=localStorage.getItem('last_save')
+  let l_s_c=new Date()
+  const has_save=last_save!==undefined && last_save!==null
+  if(last_save!==undefined && last_save!==null){
+    l_s_c=new Date(last_save)
+  }
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui :{[s:string] : JSX.Element}=  {}
@@ -911,7 +916,7 @@ export const OpenSankeyMenus = (
             ev.onkeydown(tmp)
           }
         }}  ><><Col><FontAwesomeIcon icon={faFloppyDisk} /></Col><Col className='textIcon'>{t('Menu.check')}</Col></></Button></OverlayTrigger>
-    </>
+      {has_save?<Form.Label style={{marginTop:'auto',marginBottom:'auto'}}>{t('Menu.last_save')+' : ' + l_s_c.toLocaleDateString() +' - ' + l_s_c.toLocaleTimeString()}</Form.Label>:<></>}    </>
 
     ui['edition']=<>
       <Button size='sm' variant='light' onClick={reinitialization} ><><Col><FontAwesomeIcon icon={faTrashCan} /></Col><Col className='textIcon'>{t('Menu.reinit')}</Col></></Button>
