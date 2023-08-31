@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef} from 'react'
 import { Popover, Form,Pagination,Button,ButtonGroup,Carousel} from 'react-bootstrap'
 
-import { useBeforeunload } from 'react-beforeunload'
-import LZString from 'lz-string'
 import * as d3 from 'd3'
 
 import SankeyDraw from './SankeyDraw'
@@ -191,6 +189,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
     localStorage.removeItem('initial_data')
+    localStorage.removeItem('last_save')
     set_legend_position(data.legend_position)
     set_data({ ...data })
   }
@@ -363,10 +362,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   })
 
   //-3. Sankey Draws
-  useBeforeunload((event : BeforeUnloadEvent) => {
-    event.preventDefault()
-    localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-  })
+  // useBeforeunload((event : BeforeUnloadEvent) => {
+  //   event.preventDefault()
+  //   localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+  // })
 
   // const select_link=(l: SankeyLink) => {
   //   selected_link.current = l
