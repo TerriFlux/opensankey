@@ -51,7 +51,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
   const logo_vv=<svg xmlns="http://www.w3.org/2000/svg"
     width="27"
-    height="70"
+    height="27"
     viewBox="0 0 27 70">
     <g>
       <path
@@ -61,7 +61,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
   </svg>
 
   const logo_hh=<svg xmlns="http://www.w3.org/2000/svg"
-    width="70"
+    width="27"
     height="27"
     viewBox="0 0 70 27"
   >
@@ -622,9 +622,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
               const val=linkType('recycling')
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                 assign_link_value_to_correct_var(d,'recycling',!val,menu_for_style)
-                assign_link_value_to_correct_var(d,'left_horiz_shift',0,menu_for_style)
-                assign_link_value_to_correct_var(d,'right_horiz_shift',0,menu_for_style)
-
+                assign_link_value_to_correct_var(d,'left_horiz_shift',(val?0.2:0),menu_for_style)
+                assign_link_value_to_correct_var(d,'right_horiz_shift',(val?0.8:0),menu_for_style)
               })
               set_data({ ...data })
             }}>{t('Flux.apparence.recy')}</Button>
