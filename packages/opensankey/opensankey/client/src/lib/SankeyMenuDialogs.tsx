@@ -29,8 +29,6 @@ const ApplyLayoutDialogPropTypes = {
   set_node_hspace:PropTypes.func.isRequired,
   node_vspace:PropTypes.number.isRequired,
   set_node_vspace:PropTypes.func.isRequired,
-  // data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  // set_data:PropTypes.func.isRequired,
   diagramSelector: PropTypes.func.isRequired,
   apply_transformation_additional_elements: PropTypes.func.isRequired,
   set_is_computing:PropTypes.func.isRequired,
@@ -735,7 +733,7 @@ export const OpenSankeyDiagramSelector = (
                 (e: ProgressEvent<FileReader>) => {
                   let result = (e.target as FileReader).result
                   if (result) {
-                    result = String(result) //.split('<br>').join('\\\\n')
+                    result = String(result)
                     const new_layout = JSON.parse(result)
                     convert_data(new_layout)
                     complete_sankey_data(new_layout, default_sankey_data, default_node, default_link)

@@ -4,7 +4,6 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form,  Modal, Button, ButtonGroup,Col,Row} from 'react-bootstrap'
 import { SankeyData } from './types'
 import { TFunction,i18n } from 'i18next'
-// import i18next  from './traduction'
 const modalPreferencePropTypes = {
   showPreference: PropTypes.bool.isRequired,
   setShowPreference: PropTypes.func.isRequired,

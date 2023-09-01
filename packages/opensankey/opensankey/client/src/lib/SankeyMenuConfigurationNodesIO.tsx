@@ -139,7 +139,6 @@ const handleUpLinkIOPos=(
   const link_io=getIOLink(data,multi_selected_nodes,pos,io,getLinkValue)
   if(io=='input'){
     if(pos=='left'){
-      //Recherche tous les flux entrant a gauche
 
 
       //Repositionne le flux avant le flux entrant du même coté
@@ -152,7 +151,6 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='right'){
-      //Recherche tous les flux entrant a droite
 
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -164,7 +162,6 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='top'){
-      //Recherche tous les flux entrant en haut
 
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -176,7 +173,6 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='bottom'){
-      //Recherche tous les flux entrant en haut
 
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -190,7 +186,6 @@ const handleUpLinkIOPos=(
     }
   }else if(io=='output'){
     if(pos=='left'){
-      //Recherche tous les flux sortant a gauche
 
 
       //Repositionne le flux avant le flux sortant du même coté
@@ -203,7 +198,6 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='right'){
-      //Recherche tous les flux sortant a droite
 
       //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)>0){
@@ -217,7 +211,6 @@ const handleUpLinkIOPos=(
 
 
     }else if(pos=='top'){
-      //Recherche tous les flux sortant en haut
 
 
       //Repositionne le flux avant le flux sortant du même coté
@@ -230,7 +223,6 @@ const handleUpLinkIOPos=(
       }
 
     }else if(pos=='bottom'){
-      //Recherche tous les flux sortant en bas
 
 
       //Repositionne le flux avant le flux sortant du même coté
@@ -269,7 +261,6 @@ const handleDownLinkIOPos=(
 
   if(io=='input'){
     if(pos=='left'){
-      //Recherche tous les flux entrant a gauche
 
 
       //Repositionne le flux avant le flux entrant du même coté
@@ -282,7 +273,6 @@ const handleDownLinkIOPos=(
       }
 
     }else if(pos=='right'){
-      //Recherche tous les flux entrant a droite
 
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -293,7 +283,6 @@ const handleDownLinkIOPos=(
         n.inputLinksId.splice(posElementPrec,0,k_link)
       }
     }else if(pos=='top'){
-      //Recherche tous les flux entrant en haut
 
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -304,7 +293,6 @@ const handleDownLinkIOPos=(
         n.inputLinksId.splice(posElementPrec,0,k_link)
       }
     }else if(pos=='bottom'){
-      //Recherche tous les flux entrant en haut
 
       //Repositionne le flux avant le flux entrant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -318,7 +306,6 @@ const handleDownLinkIOPos=(
     }
   }else if(io=='output'){
     if(pos=='left'){
-      //Recherche tous les flux sortant a gauche
 
 
       //Repositionne le flux avant le flux sortant du même coté
@@ -331,7 +318,6 @@ const handleDownLinkIOPos=(
       }
 
     }else if(pos=='right'){
-      //Recherche tous les flux sortant a droite
 
       //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -344,7 +330,6 @@ const handleDownLinkIOPos=(
       }
 
     }else if(pos=='top'){
-      //Recherche tous les flux sortant en haut
 
       //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
@@ -356,7 +341,6 @@ const handleDownLinkIOPos=(
       }
 
     }else if(pos=='bottom'){
-      //Recherche tous les flux sortant en bas
       //Repositionne le flux avant le flux sortant du même coté
       if(link_io.includes(k_link) && link_io.indexOf(k_link)<link_io.length-1){
         const ElementPrecInFilter = link_io[link_io.indexOf(k_link)+1]
@@ -462,11 +446,7 @@ export const SankeyMenuConfigurationNodesIO = (
   set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
   menu_for_modal=false
 ) => {
-  // const [link_io,set_link_io]=useState<string>('output')
-  // const [link_pos,set_link_pos]=useState<string>('right')
-  // const [tab_colored,set_tab_colored]=useState<boolean>(false)
 
-  // return <Tab eventKey="node_link_io" title={t('Noeud.PF.PF')}>
   const logo_enter=<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512 512" width="15" height="15">
     <g>
       <path d="M170.699,448H72.757c-4.814-0.012-8.714-3.911-8.725-8.725V72.725c0.012-4.814,3.911-8.714,8.725-8.725h97.941   c17.673,0,32-14.327,32-32s-14.327-32-32-32H72.757C32.612,0.047,0.079,32.58,0.032,72.725v366.549   C0.079,479.42,32.612,511.953,72.757,512h97.941c17.673,0,32-14.327,32-32S188.372,448,170.699,448z"/>
@@ -614,7 +594,6 @@ export const SankeyMenuConfigurationNodesIO = (
           style={{width:'30%'}}
           variant={tab_colored?'primary':'outline-primary'}
           onClick={() => {
-            //console.log(tab_colored)
             set_tab_colored(!tab_colored)
           }}>
           {t('Noeud.PF.col')}

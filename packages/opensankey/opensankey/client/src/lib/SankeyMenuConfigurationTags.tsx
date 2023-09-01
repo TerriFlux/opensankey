@@ -69,9 +69,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
   // Delete a tag
   const handleDelTag = (n: string) => {
     const elementTagName = type_tag_name
-    //const elementName = elementTagNameProp === 'nodeTags' ? 'nodes' : 'links'
     delete data[elementTagName][tags_group_key].tags[n]
-    //Object.values(data[elementName]).forEach(el=> el.tags[tags_group_key] = el.tags[tags_group_key].filter((tag:string)=>tag !== n))
     set_data({ ...data })
   }
 
@@ -310,7 +308,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
                     placement={'top'}
                     delay={500}
                     overlay={<Tooltip id={'tags.tooltips.6'}>{t('Tags.tooltips.nom')} </Tooltip>}>
-                    <FormControl /* size='sm' */
+                    <FormControl
                       id={i.toString()}
                       type="text"
                       value={data[elementTagName][tags_group_key].tags[tag_key].name}

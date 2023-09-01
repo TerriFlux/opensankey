@@ -19,19 +19,13 @@ const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   animation:PropTypes.bool.isRequired,
-
   mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
-
-
   show_agregation:PropTypes.bool.isRequired, set_show_agregation:PropTypes.func.isRequired,
   agregation_node:PropTypes.string.isRequired,
   set_agregation_node:PropTypes.func.isRequired,
   is_agregation:PropTypes.bool.isRequired,
-
   set_alt_key_pressed:PropTypes.func.isRequired,
-
   min_width_and_height:PropTypes.func.isRequired,
-  // additional_draw_element:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   pointer_pos:PropTypes.shape({current:PropTypes.arrayOf(PropTypes.number.isRequired).isRequired}).isRequired,
   set_show_context_zdd:PropTypes.func.isRequired
 
@@ -52,7 +46,6 @@ export const SankeyDrawDefaultProps = {
   set_alt_key_pressed:()=>false,
   min_width_and_height:()=>[],
   set_show_toast_limit_node:()=>false,
-  // additional_draw_element:[],
   pointer_pos:{current:[]},
   set_show_context_zdd:()=>false
 
@@ -70,26 +63,17 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   set_agregation_node,
   is_agregation,
   set_alt_key_pressed,min_width_and_height,
-  // additional_draw_element,
   pointer_pos,
   set_show_context_zdd
 }) => {
 
-  // const [first_selected_node,set_first_selected_node] = useState({})
-  // const diff=require('deep-diff')
-
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
 
-  const sankeyTooltip = d3.select('body')
+  d3.select('body')
     .append('div')
     .style('opacity', 0)
     .attr('class', 'sankey-tooltip')
-
-
-  sankeyTooltip
-
-
 
   window.focus()
   d3.select(window).on('keydown', (event) => {
@@ -107,45 +91,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
   const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
-  //const node_font = data.display_style.node_font_family_selected
-  // const link_font = data.display_style.link_font_family_selected
-  // const test = document.getElementsByClassName('navbar')
-  // let margin_top = 0
-  // if (test && test.length > 0) {
-  //   margin_top = test[0].getBoundingClientRect().height -20
-  // }
-
-
-  // const get_diff = () => {
-  //   const diff = require('deep-diff')
-  //   const old_data_str = LZString.decompress(localStorage.getItem('data') as string) as string
-  //   //Si data existe dans le localStorage
-  //   if (old_data_str != '') {
-  //     //On le parse en JSON
-  //     const old_data = JSON.parse(old_data_str)
-  //     //on va chercher les anciennes différences
-  //     // let old_diff = JSON.parse(localStorage.getItem('diff') as string)
-  //     const old_diff_str = LZString.decompress(localStorage.getItem('diff') as string) as string
-  //     let old_diff = (old_diff_str != '') ? JSON.parse(old_diff_str) : null
-  //     const difference = diff(data, old_data)
-
-  //     //Si il y des différences et que le tableau des anciennes différences existes alors on push dedans la nouvelles différence
-  //     //sinon on créer un tableau ne contenant que la nouvelle différence
-  //     if (difference !== undefined) {
-  //       if (old_diff !== undefined && old_diff !== null) {
-  //         old_diff.push(difference)
-  //       } else {
-  //         old_diff = [difference]
-  //       }
-  //     }
-
-  //     const cmp = LZString.compress(JSON.stringify(old_diff))
-  //     if (old_diff !== undefined) {
-  //       localStorage.setItem('diff', cmp)
-  //     }
-  //   }
-
-  // }
+ 
 
 
 
@@ -156,7 +102,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     [data.width, data.height] = min_width_and_height(data)
     removeAnimate()
     d3.select('body').style('background-color',data.couleur_fond_sankey)
-    // let isDown = false
     // Permet d'affecter une class au svg selon le mode
     if (mode_selection.current=='s') {
       d3.select(' .opensankey #svg').attr('class','mode_selection')
@@ -242,20 +187,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         set_data({...data})
       }
     })
-    // d3.select('body')
 
-
-    // try {
-    //   //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur
-    //   if (current) {
-    //     get_diff()
-    //     const cmp = LZString.compress(JSON.stringify(data))
-    //     localStorage.setItem('data', cmp)
-    //   }
-    // } catch (e) {
-    //   console.log(e)
-    //   localStorage.clear()
-    // }
 
   })
   let border = '0px'
@@ -268,13 +200,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   return (
     <>
       <div className="span12" style={{ 'color': 'black','display': 'inline' }} id='visualization_div' >
-        {/* {additional_draw_element} */}
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <div className='scroll_zone' >
             <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
               <g className='grid' id='grid'></g>
-              <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
-              <g className='g_nodes' id='g_nodes' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
+              <g className='g_links' id='g_links' style={{ 'position': position }} ></g>
+              <g className='g_nodes' id='g_nodes' style={{ 'position': position }} ></g>
               <g className='g_link_handles' id='g_link_handles'></g>
               <g className='g_legend' id='g_legend'></g>
             </svg>
@@ -405,108 +336,8 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
 
     closeAllMenu()
 
-    // set_mode_selection('s')
-    // if ( button_ref && button_ref.current && accordion_ref ) {
-    //   button_ref.current.click()
-    // }
 
-  } /*else if (e.key == 'z' && (e.ctrlKey||e.metaKey)) {
-    e.preventDefault()
-    //va chercher les différences sauvegardées dans le localStorage
-    // const differences = JSON.parse(localStorage.getItem('diff') as string)
-    const differences_str = LZString.decompress(localStorage.getItem('diff') as string) as string
-    const differences = (differences_str != '') ? JSON.parse(differences_str) : undefined
-    //Si il y a des différences, prend la dernière effectuée
-    if (differences !== undefined && differences.length != 0) {
-      type difference_type = {
-        kind: string,
-        path: string[],
-        item: {
-          rhs: string,
-          kind: string
-        },
-        rhs: string,
-        index: string
-      }
-      const difference = differences.pop() as difference_type[]
-      //On crée une copie de data que l'on utilise ensuite pour pouvoir le parcourir et modifié
-      //La copie nous permet de reffecter une variable avec d'autre type d'objet
-      //Nous ne pouvons pas prendre ddirectement data car c'est un composant régis par des paramètre obligatoire
-      //element_to_delete change de type au fur et à mesure qu'il parcours les chemins des différences
-      let dt = JSON.parse(JSON.stringify(data))
-      //Parcours les dernières modifications à effectuer
-      //D : Supprime un objet qui a été ajouté
-      //N : Rajoute un objet qui a été supprimé avec les mêmes propriétés
-      //A : Annule des moddification faites à des array
-      //E : Annule des modifications faites à des propriétées de l'objet
-      //path : Tableau contenant le chemin vers la propriété modifié/ajouté/supprimé
-      // Exemple : path=['P1','P2'] --> {P1:{P2:Propriété modifié}}
-      difference.map(d => {
-        let element_to_delete = dt
-        if (d['kind'] == 'D') {
-          let cpt = 0
-          d.path.map(dd => {
-            cpt++
-            if (cpt == d['path'].length) {
-              delete element_to_delete[dd]
-            } else {
-              element_to_delete = element_to_delete[dd]
-            }
-          })
-        } else if (d['kind'] == 'N') {
-          let cpt = 0
-          d.path.map(dd => {
-            cpt++
-            if (cpt == d['path'].length) {
-              element_to_delete[dd] = d['rhs']
-            } else {
-              element_to_delete = element_to_delete[dd]
-            }
-          })
-        } else if (d['kind'] == 'A') {
-          let cpt = 0
-          d.path.map(dd => {
-            cpt++
-            if (cpt == d['path'].length) {
-              if (d['item']['kind'] == 'N') {
-                element_to_delete[dd].splice(d['index'], 0, d['item']['rhs'])
-              } else if (d['item']['kind'] == 'D') {
-                element_to_delete[dd].splice(d['index'], 1)
-              }
-            } else {
-              element_to_delete = element_to_delete[dd]
-            }
-          })
-        } else if (d['kind'] == 'E') {
-          let cpt = 0
-          if (d.path !== null && d.path !== undefined) {
-            d.path.map(dd => {
-              cpt++
-              if (cpt == d['path'].length) {
-                element_to_delete[dd] = d['rhs']
-              } else {
-                element_to_delete = element_to_delete[dd]
-              }
-            })
-          } else {
-            dt = d['rhs']
-          }
-        }
-      })
-      data = dt
-      localStorage.setItem('diff', JSON.stringify(differences))
-      try {
-        //Permet d'éviter qu'une vue soit stocké en tant que données dans la naviguateur
-        localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-      } catch (e) {
-        localStorage.clear()
-      }
-      set_data({ ...data })
-    } else {
-      console.log('Aucune action en mémoire pour un retour en arrière')
-    }
-  }*/
-  else if(e.key=='Delete'){
+  }else if(e.key=='Delete'){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {
       multi_selected_links.current.forEach(el=>{
@@ -521,7 +352,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     }
   }else if(e.key=='a' && e.ctrlKey){
     e.preventDefault()
-    multi_selected_nodes.current=Object.values(data.nodes)//.filter(n=>node_visible_on_svg().includes(n.idNode))
+    multi_selected_nodes.current=Object.values(data.nodes)
     multi_selected_nodes.current.forEach(n=>{
       select_visualy_nodes(n)
     })

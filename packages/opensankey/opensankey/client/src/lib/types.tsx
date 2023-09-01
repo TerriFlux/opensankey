@@ -39,7 +39,6 @@ export type SankeyNodeAttrLocal = InferProps<typeof SankeyNodeAttrLocalTypes>
 export const SankeyNodeStyleTypes ={
   idNode: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
-  // local_aggregation: PropTypes.bool.isRequired,
 
   // Parameter of node shape
   shape_visible: PropTypes.bool.isRequired,
@@ -114,8 +113,6 @@ export type SankeyNode = InferProps<typeof SankeyNodePropTypes>
 export const SankeyLinkValueTypes =
 {
   value: PropTypes.any,
-  // is_percent:PropTypes.bool.isRequired,
-  // percent:PropTypes.number.isRequired,
   display_value: PropTypes.string.isRequired,
   tags: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string.isRequired).isRequired).isRequired,
   // for previous_value, data_value, data_source, data_period, mini, maxi ...
@@ -198,8 +195,6 @@ export const SankeyLinkPropTypes = {
   idLink: PropTypes.string.isRequired,
   idSource: PropTypes.string.isRequired,
   idTarget: PropTypes.string.isRequired,
-
-  //colorParameter: PropTypes.string.isRequired,
   colorTag: PropTypes.string.isRequired,
   
 
@@ -253,17 +248,11 @@ export const SankeyDataPropTypes = {
 
   maximum_flux: PropTypes.number,
   minimum_flux: PropTypes.number,
-
-  // node_width: PropTypes.number.isRequired,
-  // node_height: PropTypes.number.isRequired,
-
   accordeonToShow:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   style_node:PropTypes.objectOf(PropTypes.shape(SankeyNodeStyleTypes).isRequired).isRequired,
   style_link:PropTypes.objectOf(PropTypes.shape(SankeyLinkStyleTypes).isRequired).isRequired,
 
-
   show_structure: PropTypes.oneOf(['structure','data','reconciled','free_value','free_interval']).isRequired,
-  //show_data: PropTypes.bool.isRequired,
   fit_screen: PropTypes.bool.isRequired,
   height: PropTypes.number.isRequired,
   width: PropTypes.number.isRequired,

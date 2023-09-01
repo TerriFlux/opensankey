@@ -200,7 +200,7 @@ export const apply_input_outputLinksId = (
           new_inputLinksId.push(idLink)
         }
       )
-      node.inputLinksId = new_inputLinksId //result_inputLinksId.filter(function (item, pos) {return node.inputLinksId.indexOf(item) == pos})
+      node.inputLinksId = new_inputLinksId 
       const new_outputLinksId: string[] = []
       ref_node.outputLinksId.forEach(
         (idLink) => {
@@ -211,7 +211,7 @@ export const apply_input_outputLinksId = (
           new_outputLinksId.push(idLink)
         }
       )
-      node.outputLinksId = new_outputLinksId//result_outputLinksId.filter(function (item, pos) {return node.outputLinksId.indexOf(item) == pos})
+      node.outputLinksId = new_outputLinksId
     }
   )
 }
@@ -230,7 +230,6 @@ export const explore_branch = (
   nodes[idNode].inputLinksId.filter(linkId =>visible_nodes.includes(links[linkId].idSource)).forEach(linkId => {
     if (visited_nodes.indexOf(idNode) === -1) {
       no_input_link = false
-      //visited_nodes.push(idNode)
       const branch_length = explore_branch(links[linkId].idSource, current_length + 1, [...visited_nodes,idNode], links,nodes,visible_nodes,data)
       if (branch_length > highest_branch_length) {
         highest_branch_length = branch_length
@@ -361,9 +360,7 @@ export const compute_auto_sankey = (
           }
         })
       if (modified) {
-        //const horizontal_index = nodes2horizontal_indices[node.idNode]
         to_splice.push(node)
-        //horizontal_indices2nodes[horizontal_index].splice(horizontal_indices2nodes[horizontal_index].indexOf(node),1)
         nodes2horizontal_indices[node.idNode] = min_next_horizontal_index - 1
         if (!horizontal_indices2nodes[min_next_horizontal_index - 1]) {
           horizontal_indices2nodes[min_next_horizontal_index - 1] = []
@@ -409,9 +406,8 @@ export const compute_auto_sankey = (
     } 
     let vertical_space: number
     let vertical_offset = 0
-    //const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && nodes2horizontal_indices[n.idNode] === i)
     if (horizontal_indices2nodes[i].length > 0) {
-      vertical_space = vspace //(200 - total_height) / (total_nb - 1)
+      vertical_space = vspace 
     }
     else {
       vertical_space = 0
@@ -444,63 +440,7 @@ export const compute_auto_sankey = (
   Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n =>
     desagregation(data,n.idNode, Object.keys(n.dimensions).length == 1 ? 'Primaire' : Object.keys(n.dimensions).filter(dim=>dim !== 'Primaire')[0], true )
   )
-  // const visible_links = Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]))
-  // visible_links.forEach(l=> {
-  //   if (l.local && l.local.recycling) {
-  //     l.local.vert_shift = max_vertical_offset
-  //   }
-  // })
-
-  // for (let i = 0; i <= max_horizontal_index; i++) {
-  //   //const the_nodes = Object.values(data.nodes).filter(n => node_displayed(data,n) && horizontal_indices[n.idNode] === i)
-  //   let total_nb_outputLinksId_up = 0
-  //   let total_nb_outputLinksId_down = 0
-  //   horizontal_indices2nodes[i].forEach((node) => {
-  //     data.nodes[node.idNode].outputLinksId.forEach(
-  //       (idLink) => {
-  //         if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
-  //           const target_node = data.nodes[data.links[idLink].idTarget]
-  //           if (target_node === undefined ) {
-  //             return
-  //           }
-  //           if ( target_node.y < node.y ) {
-  //             total_nb_outputLinksId_up += 1
-  //           } else {
-  //             total_nb_outputLinksId_down += 1
-  //           }
-  //         }
-  //       }
-  //     )
-  //   })
-  //   let current_output_link_up = 0
-  //   let current_output_link_down = 0
-  //   horizontal_indices2nodes[i].forEach(node => {
-  //     data.nodes[node.idNode].outputLinksId.forEach(
-  //       (idLink) => {
-  //         if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget]) ) {
-  //           const target_node = data.nodes[data.links[idLink].idTarget]
-  //           if (target_node === undefined ) {
-  //             return
-  //           }
-  //           if ( target_node.y < node.y ) {
-  //             assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
-  //             assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift)
-  //             // data.links[idLink].left_horiz_shift = data.left_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
-  //             // data.links[idLink].right_horiz_shift = data.right_shift + (current_output_link_up/total_nb_outputLinksId_up)*data.max_shift
-  //             current_output_link_up += 1
-  //           } else {
-  //             assign_link_local_attribute(data.links[idLink],'left_horiz_shift',data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
-  //             assign_link_local_attribute(data.links[idLink],'right_horiz_shift',data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift)
-  //             // data.links[idLink].left_horiz_shift = data.left_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
-  //             // data.links[idLink].right_horiz_shift = data.right_shift - (current_output_link_down/total_nb_outputLinksId_down)*data.max_shift
-  //             current_output_link_down += 1
-  //           }
   
-  //         }
-  //       }
-  //     )
-  //   })
-  // }
 
 
   data.width = width + h_space
@@ -707,7 +647,6 @@ export const updateLayout = (
         return
       }
       const difference = deep_diff.diff(link.value, layoutLink.value)
-      // difference = difference.filter((d :{path:string[],kind:string}) => d.kind === 'E' && d.path[1] === 'value' )
       if (difference) {
         difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(link.value, {}, diff))
       }  
@@ -886,7 +825,6 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           return
         }
         if (n.dimensions[dim].parent_name) {
-          //parent_names.push(n.dimensions[dim].parent_name as string)
           dim_names.push(dim)
         }
       }

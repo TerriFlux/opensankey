@@ -10,28 +10,7 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import { SankeyData } from './types'
 
 
-// /**
-//  * Variable that define the Menu element, it's variable and function
-//  *
-//  * @type {{ data: any; set_data: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
-//  */
-// const MenuStyleNodePropTypes = {
-//   t:PropTypes.func.isRequired,
-//   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-//   set_data: PropTypes.func.isRequired,
-//   setShowStyle:PropTypes.func.isRequired,
-//   showStyle:PropTypes.bool.isRequired,
-//   selected_style_node: PropTypes.string.isRequired,
-//   set_selected_style_node:PropTypes.func.isRequired
-// }
 
-
-// /**
-//  * Description placeholder
-//  *
-//  * @typedef {MenuTypes}
-//  */
-// type MenuStyleNodeTypes = InferProps<typeof MenuStyleNodePropTypes>
 
 export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -103,9 +82,6 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
               ><FaMinus /></Button>
 
             </Col>
-            {/* <Col xs={5}>
-            <Button variant="warning" onClick={applyStyleToNodes}>{t('Noeud.apparence.asn')}</Button>
-          </Col> */}
           </InputGroup>
 
           <InputGroup>
@@ -140,7 +116,6 @@ export const SankeyPlusModalStyleLink = (
   set_data:(d:SankeyData)=>void,
   showStyleLink:boolean,
   setShowStyleLink:React.Dispatch<React.SetStateAction<boolean>>,
-  // selected_link:{current:SankeyLink},
   selected_style_link:string,
   set_selected_style_link:React.Dispatch<React.SetStateAction<string>>,
   additional_link_appearence_items:JSX.Element[],

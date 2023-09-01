@@ -129,7 +129,6 @@ if (!window.SankeyToolsStatic) {
   }
 
   const json_data = LZString.decompress(localStorage.getItem('data') as string) as string
-  //console.log(json_data)
   if (json_data !== null && json_data !== 'undefined' && json_data != '') {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)

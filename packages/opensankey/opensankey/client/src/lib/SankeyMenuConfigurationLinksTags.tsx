@@ -127,8 +127,6 @@ export const SankeyMenuConfigurationLinksTags = (
                       id={tag_key}
                       onClick={
                         () => {
-                          // const new_nb_element = evt.target as HTMLInputElement
-                          // const new_tag_key = new_nb_element.id
                           const visible = !is_selected
                           Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                             let val = Object(d.value)
