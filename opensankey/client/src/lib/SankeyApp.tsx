@@ -36,7 +36,7 @@ import { FaAngleDoubleLeft} from 'react-icons/fa'
 import { return_value_link } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
 import { OpenSankeyDiagramSelector } from './SankeyMenuDialogs'
-
+import { SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from './SankeyStyle'
 type SankeyAppTypes = {
   initial_sankey_data : SankeyData
   exemple_menu        : object
@@ -170,14 +170,27 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_save_json, set_show_save_json] = useState(false)
   const [showPreference, setShowPreference] = useState(false)
   //Modal et fonctions pour l'édition et affectation des styles de noeud
-  const showStyleEdition = () => null
+  // Modal et fonctions pour l'edition et affectation des style de flux
+  const [showStyleLink, setShowStyleLink] = useState(false)
+  const [showStyle, setShowStyle] = useState(false)
+    
+  const [selected_style_link, set_selected_style_link] = useState('default')
+  const [selected_style_node, set_selected_style_node] = useState('default')
+    
+  const showStyleEditionLink = () => {
+    setShowStyleLink(true)
+  }
+
+  const showStyleEdition = () => {
+    setShowStyle(true)
+  }
+
+
   //Modal et fonctions pour l'edition et affectation des style de flux
-  const showStyleEditionLink = () => null
   const [show_publish_dialog,set_show_publish_dialog] = useState(false)
   const [show_modalTemplate, set_show_modalTemplate] = useState(false)
 
   //- Styles
-  const selected_style_node = useState('default')[0]
 
   const {t} =useTranslation()
 
@@ -494,6 +507,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout)
 
+
+
+  const modale_style_link=<React.Fragment key={'modale_style_link'}>{SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_style_link,set_selected_style_link,[],display_link_opacity,set_display_link_opacity)}</React.Fragment>
+  const modale_style_node=<React.Fragment key={'modale_style_node'}>{SankeyPlusModalStyleNode(t,data,set_data,showStyle,setShowStyle,selected_style_node,set_selected_style_node,[],set_style_to_apply)}</React.Fragment>
+  external_menu_modal.push(modale_style_link)
+  external_menu_modal.push(modale_style_node)
 
 
   const d= (
