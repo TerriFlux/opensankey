@@ -4,7 +4,7 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 // the translations
 // (tip move them in a JSON file and import them,
 // or even better, manage them separated from your code: https://react.i18next.com/guides/multiple-translation-files)
-const resources = {
+export const open_resources = {
   en: {
     translation: {
       Menu:{
@@ -19,7 +19,6 @@ const resources = {
         'EF':'Links\' tags',
         'EdF':'Editing links',
         'ED':'Data\'s tags',
-        'LL':'Free labels',
         'Leg':'Legends',
         'LegX':'Horizontal position',
         'LegY':'Vertical position',
@@ -33,9 +32,6 @@ const resources = {
         'enregistrer':'DL',
         'exporter':'Export',
         'preference':'Settings',
-        'amp':'Modify the layout',
-        'amp_import':'Import a layout',
-        'amp_manuelle':'Modify manualy',
         'esn':'Edit nodes style',
         'esf':'Edit links style',
         'rc':'Keyboard Shortcuts',
@@ -50,10 +46,6 @@ const resources = {
         'BgC':'Sankey background color',
         'dns':'Display only visible nodes in the nodes selector',
         'dls':'Display only visible links in the links selector',
-        'textDisposition':'Apply differences on :',
-        'Topology':'Topology',
-        'Geometry':'Geometry',
-        'Attribut':'Attributes',
         'Tags':'Tags',
         'PosNoeud':'Node geometry',
         'PosFlux':'Flux Geometry',
@@ -64,7 +56,6 @@ const resources = {
         'tagFlux':'Flux Tags',
         'tagData':'Data Tags',
         'tagFlux_assign':'Assign a link tag',
-        'attrGeneral':'Generals attributes',
         'SaveJSON':'Save as JSON',
         'SaveValue':'Save with links\' values',
         'templates':'Templates',
@@ -84,14 +75,10 @@ const resources = {
         'style':'Styles',
 
         'reinit':'Reset',
-        'pub':'Publish',
         'amp_short':'Layout',
 
         'ajustH':'Adjust. H',
         'ajustV':'Adjust. V',
-        'presentation_OS':'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge, and includes simple functions for creating nodes, flows and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
-        'presentation_OSP':'OpenSankey+ is a paid license that unlocks new features for creating beautiful Sankey diagrams for presentations.\n\nThis license includes advanced formatting features such as the addition of illustrative images or icons for nodes, the addition of color gradients on flows and animations, and more.\n\n But above all, OpenSankey+ lets you generate slideshows to explain your Sankey diagrams, thanks to the "Views" mechanism, which records their visual states (with / without certain filters activated, for example) to simplify navigation between them.\n\n',
-        'presentation_OSS':'SankeySuite is a paid license that unlocks all the advanced charting and analysis features of Sankey.\n\n This license includes flow data reconciliation functionalities to identify inconsistencies or calculate flows whose values are not directly accessible.\n\n It also includes OpenSankey+ functionalities.\n\n',
 
         'rcc_titre_princ':'OpenSankey Application Shortcuts',
         'rcc_titre_select':'With the mouse in selection mode',
@@ -234,7 +221,8 @@ const resources = {
       Noeud:{
         'Nom':'Name',
         'Style':'Style',
-        'AS':'Apply the style',
+        'AS':'Reset',
+        'SelectStyle':'Select a style',
         'TS':'Select all',
         'NS':'No node selected',
         'Reorg':'Reorganize incoming/outgoing links',
@@ -265,14 +253,7 @@ const resources = {
           'Rectangle':'Rectangle',
           'TML':'Minimum width',
           'TMH': 'Minimum height',
-          'HideAlone':'Hide if node is intermediate',
           'asn':'Apply style to nodes',
-          'toScale':'Node out of scale',
-          'Orientation':'Orientation : ',
-          'toScaleBottom':'to the bottom',
-          'toScaleTop':'to the top',
-          'toScaleLeft':'to the left',
-          'toScaleRight':'to the right',
           tooltips: {
             Visibilité: 'Makes the selected node(s) visible or invisible',
             Couleur: 'Choose the color of the selected node(s)',
@@ -289,21 +270,10 @@ const resources = {
           'vdb':'Label visibility',
           'lb':'White label',
           'l_bg':'Background visibility',
-          'pv':'Vertical position',
           'pos':'Position',
           'pos_v':'Value position',
-
-          'top':'Top',
-          'middle':'Middle',
-          'bottom':'Bottom',
-          'ph':'Horizontal position',
-          'left':'Left',
-          'right':'Right',
           'tp':'Font size',
           'police':'Font type',
-          'gras':'Bold',
-          'maj':'Uppercase',
-          'ita':'Italic',
           'cl':'Text box width',
           'vdv':'Set value visibility',
           tooltips: {
@@ -325,19 +295,7 @@ const resources = {
             Milieu_ph_val: 'Displays the associated value in the middle (horizontally) of the selected node(s)',
             droite_val: 'Displays the associated value to the right of the selected node(s)',
           }
-        },
-        icon:{
-          'icon':'Icon',
-          'Visibilité':'Visibility of icons',
-          'si':'Select icon',
-          'couleur':'Color',
-          'rIN':'Size ratio icon/node'
-        },
-        foreign_object:{
-          'Visibilité':'Visibility',
-          'raw':'Raw editor',
-          'not_activated': 'Set visibility to activate'
-        },
+        },       
         tags_node:{
           'tags':'Tags',
           'Appartenance':'Affiliations'
@@ -400,6 +358,7 @@ const resources = {
           'affichage':'Display',
           tooltips: {
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
+            toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram'
           }
         },
@@ -414,6 +373,7 @@ const resources = {
           'type':'Type',
           'courbe':'Curve',
           'fleche':'Arrow',
+          'opacity':'Opacity',
           'recy':'Recycling',
           'courbure':'Curvature',
           'arrow_size':'Size of arrow',
@@ -477,24 +437,7 @@ const resources = {
         'layoutDown':'Move backward',
         'layoutBottom':'Move to the bottom',
       },
-      LL:{
-        'hl':'Height',
-        'll':'Width',
-        'ft':'Opacity',
-        'cfl':'Background Color',
-        'bt':'Invisible',
-        'cbl':'Border Color',
-        'pvt':'Vertical position',
-        'at':'Texte alignment',
-        'labels':'Labels',
-        'gras':'Bold',
-        'maj':'Uppercase',
-        'ita':'Italic',
-        'centre':'Centre',
-        'textAsHTML':'foreignObject label',
-        'editorRaw':'Editeur brut'
 
-      },
       Banner:{
         'data':'Data',
         'filter':'Filter',
@@ -515,7 +458,6 @@ const resources = {
         'fl':'Threshold value for labels display',
         'fn':'Null Link',
         'visible':'Visible',
-        'hlp':'Help',
         'hlp_1':'Sankey diagram',
         'hlp_1_txt_1':'The thickness of an arrow is proportional to the value of the flux it represents.',
         'hlp_1_txt_2':'The diagram can be viewed with different levels of aggregation using the Level of Detail> selector',
@@ -540,8 +482,6 @@ const resources = {
         'intro':'Introduction',
         'rc':'Keyboard Shortcut',
         'licence':'Licences',
-        'exemple1':'Exemple of a sankey diagram with gradient links (functionality from Opensankey+) ',
-        'exemple2':'Exemple of a sankey diagram realised with Opensankey',
         1: 'Mouse mode selection button, there are 2 modes: a mode to select nodes and flows to be able to move them, then a mode to create links and nodes with mouse click',
         2: 'Buttons to filter the visibility or colors of nodes and flows according to the groups to which they are associated',
         3: 'Buttons to filter the nodes according to their aggregation level',
@@ -552,7 +492,6 @@ const resources = {
         8: 'Navigation menu to open,save, edit sankeys',
         9: 'Buttons to connect with an opensankey account and enable additional modules',
         10:'Buttons to open the configuration menu to edit the elements of the sankey diagram' ,
-        'view':'Buttons to navigate through the differents views of the sankey',
         'excel':'Button download the data used for the sankey in Excel format'
       },
       'DisplayWelcome':'Display Bienvenue',
@@ -576,7 +515,7 @@ const resources = {
       Menu:{
         'Aucun':'Aucun',
         'confSankey': 'Configuration du Sankey',
-        'MEP':'Transformation du diagramme',
+        'MEP':'Zone de dessin',
         'background':'Arrière plan',
         'Noeuds':'Noeuds',
         'EN':'Étiquettes des noeuds',
@@ -585,7 +524,6 @@ const resources = {
         'EF':'Étiquettes des flux',
         'EdF':'Édition des flux',
         'ED':'Étiquettes des données',
-        'LL':'Label libres',
         'Leg':'Legendes',
         'LegX':'Position horizontale',
         'LegY':'Position verticale',
@@ -599,13 +537,11 @@ const resources = {
         'enregistrer':'Téléch.',
         'exporter':'Exporter',
         'preference':'Réglage',
-        'reinit':'Réinitialiser',
-        'pub':'Publier',
-        'amp':'Modifier la mise en page',
+        'reinit':'Réinit.',
         'amp_import':'Depuis autre diagramme',
-        'amp_manuelle':'Transformation Géométrique',
-        'amp_short':'M.e.p',
-
+        'amp_short':'Trans.',
+        'ajustH':'Ajust. H',
+        'ajustV':'Ajust. V',
         'esn':'Editer le style des noeuds',
         'esf':'Editer le style des flux',
         'rc':'Raccourcis clavier',
@@ -620,25 +556,16 @@ const resources = {
         'BgC':'Couleur du fond de page',
         'dns':'N\'affiche que les noeuds visibles dans le sélecteur de noeuds',
         'dls':'N\'affiche que les flux visibles dans le sélecteur de flux',
-        'textDisposition':'Appliquer les modifications sur :',
-        'Topology':'Topologie',
-        'Geometry':'Géométrie',
-        'Attribut':'Attributs',
         'Tags':'Etiquettes',
         'Values' : 'Valeurs',
         'topoNode' : 'des Noeuds',
         'topoFlux' : 'des Flux',
-        'PosNoeud':'Geométrie des Noeuds',
-        'PosFlux':'Geométrie des Flux',
-        'attrNode':'Attributs Noeuds',
-        'attrFlux':'Attributs Flux',
         'tagLevel':'Niveaux de détail',
         'tagNode':'Etiquette Noeuds',
         'tagFlux':'Etiquette Flux',
         'tagData':'Etiquette Données',
         'tagNode_assign':'Assigner une étiquettes',
         'tagFlux_assign':'Assigner une étiquettes',
-        'attrGeneral':'Attributs généraux',
         'SaveJSON':'Enregistrer JSON',
         'SaveValue':'Enregistrer avec les valeurs des flux',
         'templates':'Modèles',
@@ -655,9 +582,6 @@ const resources = {
         'check':'Sauv.',
         'last_save':'Dernière sauvegarde',
         'style':'Styles',
-        'presentation_OS':'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n La création d\'un compte sans licence permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
-        'presentation_OSP':'OpenSankey+ est une licence payante qui permet de débloquer de nouvelles fonctionnalités pour la réalisation de beaux diagrammes de Sankey pour des présentations.\n\n Cette licence inclut des fonctionnalités de mise en forme avancées comme l\'ajout d\'images ou d\'icônes illustratifs pour les noeuds, l\'ajout de gradients de couleurs sur les flux et d\'animations, etc.\n\n Mais surtout, OpenSankey+ permet de générer des diaporamas explicatifs de vos diagrammes de Sankey grâce au mécanisme des "Vues", qui enregistre les états visuel de celui-ci (avec / sans certains filtres activés par exemple) pour simplifier la navigation entre eux.\n\n',
-        'presentation_OSS':'SankeySuite est une licence payante qui permet de débloquer toutes les usages avancés de réalisation et d\'analyse des diagrammes de Sankey.\n\nCette licence inclut les fonctionnalités de réconciliation des données de flux afin de relever des incohérences ou de calculer des flux dont les valeurs ne sont pas accessibles directement.\n\n Elle inclut aussi les fonctionnalités de OpenSankey+.\n\n',
 
         'rcc_titre_princ':'Raccourcis de l\'application OpenSankey',
         'rcc_titre_select':'Avec la souris en mode sélection',
@@ -712,7 +636,43 @@ const resources = {
         'support_explication':'Si vous rencontrez un problème technique, écrivez-nous à [], nous traiterons votre demande dans les meilleurs délais.',
         'suppr':'Supprimer',
         'rand_node_color':'Assigne une couleur aléatoire à tous les noeuds',
-
+        Transformation : {
+          'amp_short':'Trans.',
+          'amp':'Modifier la mise en page',
+          'amp_import':'Depuis autre diagramme',
+          'amp_manuelle':'Géométriques',
+          'trans_topo':'Topologiques',
+          'fmep':'Autre diagramme',
+          'ad':'Appliquer',
+          'undo':'Annuler',
+          'Shortcuts': 'Raccourcis sélections',
+          'unSelectAll': 'Aucun',
+          'selectAll': 'Tout',
+          'selectDefault': 'Défaut',
+          'Topology': 'Ajouts et suppressions',
+          'Geometry': 'Tailles et positions',
+          'Attribut': 'Attributs',
+          'Tags': 'Etiquettes',
+          'Values': 'Valeurs des flux',
+          'Views': 'Vues',
+          'freeLabels': 'Zones de texte',
+          'addNode': 'Aj. Noeuds',
+          'removeNode': 'Sup. Noeuds',
+          'addFlux': 'Aj. Flux',
+          'removeFlux': 'Sup. Flux',
+          'PosNoeud': 'Noeuds',
+          'posFlux': 'Flux',
+          'attrNode': 'Noeuds',
+          'attrFlux': 'Flux',
+          'tagLevel': 'Niveaux de détail',
+          'tagNode': 'Noeuds',
+          'tagFlux': 'Flux',
+          'tagData': 'Données',
+          'tagNode_assign': 'Assigner une étiquettes',
+          'tagFlux_assign': 'Assigner une étiquettes',
+          'attrGeneral': 'Zone de dessin',
+          'title': 'Transformations'
+        },
         tooltips:{
           noeud:{
             slct: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante',
@@ -803,7 +763,8 @@ const resources = {
       Noeud:{
         'Nom':'Nom',
         'Style':'Style',
-        'AS':'Appliquer le style',
+        'SelectStyle':'Selectionner un style',
+        'AS':'Réinitialiser',
         'TS':'Tout sélectionner',
         'NS':'Aucun noeud sélectionné',
         'Reorg':'Réorganisation automatique flux E/S',
@@ -834,14 +795,7 @@ const resources = {
           'Rectangle':'Rectangle',
           'TML':'Largeur minimale',
           'TMH':'Hauteur minimale',
-          'HideAlone':'Cacher intermédiaire',
           'asn':'Appliquer le style aux noeuds',
-          'toScale':'Noeud hors échelle',
-          'Orientation':'Orientation : ',
-          'toScaleBottom':'Vers le bas',
-          'toScaleTop':'Vers le haut',
-          'toScaleLeft':'Vers la gauche',
-          'toScaleRight':'Vers la droite',
           tooltips: {
             Visibilité: 'Rend le/les noeud(s) selectionné(s) visible(s) ou invisible(s)',
             Couleur: 'Choisir la couleur du/des noeud(s) selectionné(s)',
@@ -858,20 +812,10 @@ const resources = {
           'vdb':'Visibilité du label',
           'lb':'Label blanc',
           'l_bg':'Fond de label',
-          'pv':'Position verticale',
           'pos':'Position',
           'pos_v':'Position de la valeur',
-          'top':'Haut',
-          'middle':'Milieu',
-          'bottom':'Bas',
-          'ph':'Position horizontale',
-          'left':'Gauche',
-          'right':'Droite',
           'tp':'Taille de police',
           'police':'Style de police',
-          'gras':'Gras',
-          'maj':'Majuscule',
-          'ita':'Italique',
           'cl':'Largeur zone de texte',
           'vdv':'Afficher la valeur totale des flux',
           tooltips: {
@@ -894,18 +838,7 @@ const resources = {
             droite_val: 'Positionner l\'affichage de la valeur associée à droite du/des noeud(s) sélectionné(s)',
           }
         },
-        icon:{
-          'icon':'Icône',
-          'Visibilité':'Visibilité des icônes',
-          'si':'Sélectionner l\'icône',
-          'couleur':'Couleur',
-          'rIN':'Ratio taille icône/noeud'
-        },
-        foreign_object:{
-          'Visibilité':'Visibilité',
-          'raw':'Editeur brut',
-          'not_activated': 'Pour activer l\'editeur, activer la visibilité'
-        },
+
         tags_node:{
           'tags':'Étiquettes',
           'Appartenance':'Appartenance'
@@ -949,7 +882,7 @@ const resources = {
         'if':'Inverser la direction',
         'dzf':'Superposition d\'affichage',
         'style':'Style',
-        'as':'Appliquer le style',
+        'as':'Réinitialiser',
         'IB':'Info-bulle',
         tooltips: {
           src: 'Choix du noeud de départ pour le/les flux sélectionné(s)',
@@ -968,6 +901,7 @@ const resources = {
           'affichage':'Affichage',
           tooltips: {
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
+            toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
             affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey'
           }
         },
@@ -982,6 +916,7 @@ const resources = {
           'type':'Type',
           'courbe':'Courbe',
           'fleche':'Flèche',
+          'opacity':'Opacité',
           'recy':'Recyclage',
           'courbure':'Courbure',
           'arrow_size':'Taile de la flêche',
@@ -1046,24 +981,7 @@ const resources = {
         'layoutDown':'Envoyer vers l \'arrière',
         'layoutBottom':'Envoyer à l \'arrière',
       },
-      LL:{
-        'hl':'Hauteur',
-        'll':'Largeur',
-        'ft':'Opacité',
-        'cfl':'Couleur fond',
-        'bt':'Invisible',
-        'cbl':'Couleur bordure',
-        'pvt':'Position verticale texte',
-        'at':'Alignement texte',
-        'labels':'Labels',
-        'gras':'Gras',
-        'maj':'Majuscule',
-        'ita':'Italique',
-        'centre':'Centre',
-        'textAsHTML':'Label foreignObject',
-        'editorRaw':'Editeur brut'
 
-      },
       Banner:{
         'data':'Données',
         'filter':'Filtres',
@@ -1083,7 +1001,6 @@ const resources = {
         'fl':'Valeur seuil pour l\'affichage des labels',
         'fn':'Flux nuls',
         'visible':'Visible',
-        'hlp':'Aide',
         'hlp_1':'Les diagrammes de Sankey',
         'hlp_1_txt_1':'L\'épaisseur d\'une flèche est proportionnelle à la valeur du flux qu\'elle représente.',
         'hlp_1_txt_2':'Le diagramme peut être visualisé avec différents niveaux d\'agrégations en utilisant le sélecteur Niveau de détail',
@@ -1107,8 +1024,6 @@ const resources = {
         'intro':'Introduction',
         'rc':'Raccourcis clavier',
         'licence':'Licences',
-        'exemple1':'Exemple d\'un diagramme de sankey comme des dégradés comme couleur de flux  (fonctionnalité d\'Opensankey+) ',
-        'exemple2':'Exemple d\'un diagramme de sankey pouvant être réalisé avec Opensankey',
         1:'Bouton de sélection du mode de la souris, il existe 2 modes : un mode permettant de sélectionner les noeuds et flux pour pouvoir les déplacer, puis un mode permettant de créer des liens et noeuds aux cliques de la souris',
         2:'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
         3:'Bouton permettant de filtrer les noeuds en fonction de leur niveau d\'agrégation',
@@ -1119,7 +1034,6 @@ const resources = {
         8:'Menu de navigation permettant d\'ouvrir, enregistrer, éditer des sankeys ',
         9:'Bouton permettant de se connecter avec un compte opensankey et activer des modules supplémentaires',
         10:'Bouton permettant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
-        'view':'Boutons permettant de naviguer entre les différentes vues du diagramme',
         'excel':'Bouton permettant de télécharger les données au format Excel'
       },
       'DisplayWelcome':'Afficher Bienvenue',
@@ -1138,7 +1052,7 @@ const resources = {
     }
   }
 }
-
+const resources=open_resources
 i18next
   .use(LanguageDetector)
   .use(initReactI18next) // passes i18n down to react-i18next

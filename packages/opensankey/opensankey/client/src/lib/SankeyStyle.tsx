@@ -34,13 +34,12 @@ import { SankeyData } from './types'
 // type MenuStyleNodeTypes = InferProps<typeof MenuStyleNodePropTypes>
 
 export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   showStyle:boolean,
   setShowStyle:React.Dispatch<React.SetStateAction<boolean>>,
   selected_style_node:string,
   set_selected_style_node:React.Dispatch<React.SetStateAction<string>>,
   additional_node_attribute:JSX.Element[],
-  // additional_node_label_attribute:JSX.Element[],
   set_style_to_apply:(s:string)=>void,
 ) => {
 
@@ -138,7 +137,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
 export const SankeyPlusModalStyleLink = (
   t:TFunction,
   data:SankeyData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyData>>,
+  set_data:(d:SankeyData)=>void,
   showStyleLink:boolean,
   setShowStyleLink:React.Dispatch<React.SetStateAction<boolean>>,
   // selected_link:{current:SankeyLink},

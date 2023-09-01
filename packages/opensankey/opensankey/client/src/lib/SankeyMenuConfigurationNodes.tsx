@@ -282,8 +282,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     {(multi_selected_nodes.current.length !== 0) ? (
       <>
         <Tabs defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
-          {menu_configuration_nodes.map((c:JSX.Element,i)=>{
-            c.key=i
+          {menu_configuration_nodes.map((c:JSX.Element)=>{
             return c})}
         </Tabs>
       </>) : (<></>)}
