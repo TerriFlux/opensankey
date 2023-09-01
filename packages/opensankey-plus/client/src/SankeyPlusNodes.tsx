@@ -64,7 +64,6 @@ export const SankeyPlusNodeIcon = (
             width:'75%'}}
         >
           {t('Noeud.icon.Visibilité')}
-          {/* {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>} */}
         </InputGroup.Text>
 
         <Button
@@ -103,7 +102,6 @@ export const SankeyPlusNodeIcon = (
               width:'40%'}}
           >
             {t('Noeud.icon.si')}
-            {/* {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>} */}
           </InputGroup.Text>
           <Form.Select
             style={{width:(!is_activated)?'40%':'60%'}}
@@ -138,7 +136,6 @@ export const SankeyPlusNodeIcon = (
               width:'40%'}}
           >
             {t('Noeud.apparence.Couleur')}
-            {/* {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>} */}
           </InputGroup.Text>
           <Form.Label htmlFor="form_color_icon" style={{width:'60%',
             'background':(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff',
@@ -177,7 +174,6 @@ export const SankeyPlusNodeIcon = (
               width:'50%'}}
           >
             {t('Noeud.icon.rIN')}
-            {/* {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>} */}
           </InputGroup.Text>
           <Form.Control
             type='number'
@@ -224,7 +220,6 @@ export const SankeyPlusNodeIcon = (
               style={{
                 color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           </Badge>
-          {/* <Badge pill bg="info" style={{marginLeft:'5px'}}>{t('Menu.featureLocked')}</Badge> */}
         </OverlayTrigger>:<></>}
     </>}
   >
