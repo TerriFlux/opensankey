@@ -77,7 +77,6 @@ export const  linkTooltipsContent = (
   let t = '<p class="title" style="margin-bottom: 5px;">'+ data.nodes[l.idSource].name.split('\\n').join(' ') + ' → ' + data.nodes[l.idTarget].name.split('\\n').join(' ') + '</p>'
 
   if (l.tooltip_text) {
-    //t += '<p><b>Définition'+ '</b></p>' 
     t += '<p>'+l.tooltip_text.split('\n').join('</br>')+ '</p>' 
   }
 
@@ -174,8 +173,6 @@ export const nodeTooltipsContent = (
   t += '<div style="padding-left :5px;padding-right :5px">'
 
   if (n.tooltip_text) {
-    //t += '<p><b>Définition'+ '</b></p>' 
-    //t += '<p class="subtitle">'+n.tooltip_text.split('\n').join('</br>')+ '</p>' 
     t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n').join('<br>') + '</p>' 
   }
 
@@ -200,7 +197,6 @@ export const nodeTooltipsContent = (
       }
     }
   }
-  //t += '<br>'
   if ( n.inputLinksId.length > 0 ) {
     t += '<p class="tab-title" style="margin-bottom: 5px;">Entrées'+ '</p>' 
     t += '<table class="table" style="margin-bottom: 5px;">'

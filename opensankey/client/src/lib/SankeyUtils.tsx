@@ -31,12 +31,9 @@ export const addDataTags = (
       } catch {
         return
       }
-      // const the_val = v.value as unknown as number
       v[listKey[i]] = {
         value: v.value as unknown as number,
         display_value: v.display_value as unknown as string,
-        // is_percent:false as unknown as boolean,
-        // percent:0 as unknown as number,
         tags: {},
         extension: {}
       }
@@ -87,8 +84,6 @@ export const getLinkValue = (
     return {
       value: 0,
       display_value: '',
-      // is_percent:false,
-      // percent:0,
       tags: {},
       extension: {}
     }
@@ -109,8 +104,7 @@ export const getLinkValue = (
       value: 0,
       display_value: '',
       tags: {},
-      // is_percent:false,
-      // percent:0,
+
       extension: {}
     }
   }
@@ -121,13 +115,10 @@ export const getLinkValue = (
     }
     val = val[listKey[i]]
     if (val === undefined) {
-      //console.log(listKey[i] + ' not in val')
       return {
         value: 0,
         display_value: '',
         tags: {},
-        // is_percent:false,
-        // percent:0,
         extension: {}
       }
     }
@@ -177,7 +168,6 @@ export const getTotalLinks = (
   Links: string[],
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
-  //const node_visible=node_visible_on_svg()
   let total = 0
   Links.forEach(element => {
     // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
@@ -204,7 +194,6 @@ export const compute_total_offsets = (
 
 ) => {
   const { nodes, links} = data
-  //const node_visible=node_displayed(data,node)
   let offset_height_left = 0
   let offset_height_right = 0
   let offset_width_top = 0
@@ -556,11 +545,10 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
       extension: {}
     }
   }
-  // //Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
+  // Récupère la liste des tags selectionné pour chaque dataTags ayant au moins un groupe tag
 
   for (const i in listKey) {
     if ( val === undefined) {
-      //console.log(listKey[i] + ' not found in val')
       break
     }
     val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
@@ -603,15 +591,8 @@ export const default_sankey_data = (): SankeyData => {
     show_structure: 'reconciled',
     fit_screen: window.SankeyToolsStatic,
 
-    // icon_catalog: {},
-
     left_shift: 0,
     right_shift: 1,
-    //max_shift: 0.2,
-
-    // node_width:20,
-    // node_height:20,
-
     display_style: {
       filter: 0,
       filter_label: 0,
@@ -621,8 +602,6 @@ export const default_sankey_data = (): SankeyData => {
         'Consolas,monospace','Courier,monospace','Courier New,monospace','Lucida Console,monospace','Lucidatypewriter,monospace','Lucida Sans Typewriter,monospace','Monaco,monospace','Andale Mono,monospace',
         'Comic Sans,cursive','Comic Sans MS,cursive','Apple Chancery,cursive','Zapf Chancery,cursive','Bradley Hand,cursive','Brush Script MT,cursive','Brush Script Std,cursive','Snell Roundhan,cursive','URW Chancery,cursive','Coronet script,cursive','Florence,cursive','Parkavenue,cursive'
       ],
-      // node_font_family_selected: 'Arial,serif',
-      // link_font_family_selected: 'Arial,serif'
     },
     grid_square_size: 50,
     grid_visible: true,
@@ -636,12 +615,10 @@ export const default_sankey_data = (): SankeyData => {
     colorMap: 'no_colormap',
 
     legend_width:180,
-    // legend_position initial : largeur ecran - legend_width - marge du svg - largeur bouton menu
     legend_position: [window.innerWidth-240, 10],
     display_legend_scale:false,
     legend_police:16,
 
-    // view: []
   }
   const default_data = {
     ...data,
@@ -747,7 +724,6 @@ export const link_visible = (l: SankeyLink, data: SankeyData,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const { dataTags, fluxTags } = data
-  //const node_visible=node_visible_on_svg()
 
   if (data.show_structure === 'structure') {
     if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative') {
@@ -979,7 +955,6 @@ export const default_link = (data: SankeyData): SankeyLink => {
     value: nObjet,
 
     colorTag: '',
-    //colorParameter: 'local',
     style:'default',
     local:{dashed:true}
   }
@@ -1178,7 +1153,6 @@ export const uploadExemple = (
     method: 'POST',
     body: file_name
   }
-  //set_data({ ...default_sankey_data() })
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
@@ -1189,14 +1163,8 @@ export const uploadExemple = (
         return
       }
 
-      if (file_name.includes('.xlsx')) {
-        // Object.assign(data,processExample(server_data))
-        // callback(data)
-        // set_data({ ...data })
-        //downloadExamples(file_name, the_url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-      } else {
+      if (!file_name.includes('.xlsx')) {
         reinitialization()
-        //Object.assign(data,server_data)
         complete_sankey_data(server_data,default_sankey_data,default_node,default_link)
         convert_data(server_data)
         set_data({ ...server_data})
@@ -1466,7 +1434,6 @@ export const assign_node_value_to_correct_var=(n:SankeyNode|SankeyNodeStyle,k:ke
 export const return_correct_node_attribute_value=(data:SankeyData,n:SankeyNode|SankeyNodeStyle,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle,menu_for_style:boolean)=>{
   const ks=(k as keyof SankeyNodeStyle)
   const kl=(k as keyof SankeyNodeAttrLocal)
-  // const ns=(n as SankeyNodeStyle)
   const nn=(n as SankeyNode)
   const ns=(n as SankeyNodeStyle)
   return (menu_for_style)?get_node_attribute_value_from_style(data,ns,ks):return_value_node(data,nn,kl)
@@ -1493,22 +1460,8 @@ export const node_displayed=(data:SankeyData,n:SankeyNode)=>{
   if(has_local_level!==undefined && has_local_level!==null){
     local_level=has_local_level
   }
-  // const data_t_s=(data as unknown as {trade_sectors:string[]})
-  // const is_export_import:string[]=[]
-  // if(data_t_s.trade_sectors){
-  //   data_t_s.trade_sectors.forEach(ts=>{
-  //     if(n.name.includes(ts)){
-  //       is_export_import.push(ts)
-  //     }
-  //   })
-  // }
-  // if (is_export_import.length==1){
-  //   const fitlered_name=n.name.split(' - '+is_export_import[0])[0]
-  //   const node_connected=Object.values(data.nodes).filter(nn=>nn.name===fitlered_name)[0]
-  //   return node_has_displayed_tags(data,node_connected) && ( node_has_displayed_level(data,node_connected) ) && has_links_zero(data,node_connected)
-  // }else{
+
   return node_has_displayed_tags(data,n) && ( local_level ) && has_links_zero(data,n)
-  //}
 }
 
 export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
@@ -1684,7 +1637,6 @@ export const assign_link_value_to_correct_var=(l:SankeyLink|SankeyLinkStyle,k:ke
 export const return_correct_link_attribute_value=(data:SankeyData,l:SankeyLink|SankeyLinkStyle,k:keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle,menu_for_style:boolean)=>{
   const ks=(k as keyof SankeyLinkStyle)
   const kl=(k as keyof SankeyLinkAttrLocal)
-  // const ns=(l as SankeyLinkStyle)
   const nn=(l as SankeyLink)
   const ns=(l as SankeyLinkStyle)
   return (menu_for_style)?get_link_attribute_value_from_style(data,ns,ks):return_value_link(data,nn,kl)
@@ -1855,9 +1807,7 @@ export const add_new_node = (data:SankeyData,
     node.tags[tag_group_key] = []
   }
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
-  //set_multi_selected_nodes([node])
   multi_selected_nodes.current = [node]
-  // style_to_apply = 'default'
   apply_style_to_nodes(data,set_data,multi_selected_nodes)
   set_data({...data})
 }

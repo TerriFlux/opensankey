@@ -86,7 +86,6 @@ export const OpenSankeyDrawNodesLabel = (
           return 'start'
         }
       })
-      // .attr('visibility', n => return_value_node(data,n,'label_visible')? 'visible' : 'hidden')
       .style('text-align', 'center')
       .style('font-weight', n => (return_value_node(data,n,'bold')) ? 'bold' : 'normal')
       .style('font-style', n => (return_value_node(data,n,'italic')) ? 'italic' : 'normal')
@@ -107,7 +106,6 @@ export const OpenSankeyDrawNodesLabel = (
         .attr('y',(n)=>node_label_posY(n as SankeyNode,data))
         .attr('width',d=>Number(return_value_node(data,d,'label_box_width'))+5)
         .attr('height',d=>Number(return_value_node(data,d,'font_size'))+2)
-        // .attr('position','fixed')
         .style('display','none')
         .append('xhtml:div')
         .append('input')
@@ -173,13 +171,8 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('x', n =>node_value_posX(data,n as SankeyNode))
       .attr('y', n => node_value_posY(data,n as SankeyNode))
       .attr('text-anchor', (n) => (return_value_node(data,n,'label_horiz_valeur') as string).replace('left','end').replace('right','start'))
-      // .attr('visibility', n => return_value_node(data,n,'show_value') ? 'visible' : 'hidden')
-    // .style('text-align', 'center')
-    // .style('font-weight', n => (return_value_node(data,n,'bold) ? 'bold' : 'normal')
-    // .style('font-style', n => (return_value_node(data,n,'italic) ? 'italic' : 'normal')
       .style('font-family', n => return_value_node(data,n,'font_family'))
       .style('font-size', n => return_value_node(data,n,'value_font_size') + 'px')
-    // .style('text-transform', n => (return_value_node(data,n,'uppercase) ? 'uppercase' : 'none')
       .text(n => textNodeValue((n as SankeyNode),data,display_links,display_nodes,getLinkValue))
 
         
@@ -230,7 +223,6 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('fill','grey')
       .attr('fill-opacity','0')
       .attr('stroke','grey')
-    // .attr('stroke-dasharray',('3,2'))
       .attr('stroke-width','2px')
       .attr('cursor','ew-resize')
       .attr('visibility',n=>(multi_selected_nodes.current.length==1 && multi_selected_nodes.current.includes(n as SankeyNode)?'visible':'hidden'))

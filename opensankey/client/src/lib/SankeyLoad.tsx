@@ -120,7 +120,6 @@ const SankeyLoad = ({
                 finishReconciliation={()=>{
                   setProcessing(false)
                   setFailure(false)
-                  //setNotStarted(true)
                 }}
                 value={value}
                 result={result}
@@ -161,9 +160,7 @@ const SankeyLoad = ({
 const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}) => {
   useEffect(() =>{
     const interval = setInterval(() => {
-      //const path = window.location.href
       const root = window.location.href
-      //const url = root + 'load_process'
       const url = root + url_prefix + 'load_process'
       const fetchData = {
         method: 'POST',
@@ -182,10 +179,8 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
     }, 5000)
     return () => clearInterval(interval)
   })
-  //let {value, result} = parent
   const infos = result !== undefined ? result.split('\n') : []
   if ( infos.length > 2) {
-    //const info = infos[infos.length-2]
     if (result.includes('FINISHED')) {
       //console.log('finished')
       finishReconciliation(false)

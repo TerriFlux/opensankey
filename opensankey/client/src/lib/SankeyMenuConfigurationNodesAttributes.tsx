@@ -208,7 +208,6 @@ export const OpenSankeyConfigurationNodesAttributes = (
             value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
             onChange={evt=>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
-              // set_data({ ...data })
             }}
             onBlurCapture={()=>{
               set_data({ ...data })

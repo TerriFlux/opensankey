@@ -315,7 +315,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     nav_item_active,set_nav_item_active,
     nodes_accordion_ref,links_accordion_ref,
     multi_selected_nodes,multi_selected_links,
-    style_to_apply,set_style_to_apply,set_show_nav,
+    set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
     menu_configuration_nodes,menu_configuration_links,<></>,sub_nav_item_active,set_sub_nav_item_active,
     true,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
@@ -381,9 +381,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //   localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
   // })
 
-  // const select_link=(l: SankeyLink) => {
-  //   selected_link.current = l
-  // }
+
   const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !SankeyUtils.node_displayed(data,n) || (n.inputLinksId.length === 0) || (!(return_value_link(data,data.links[n.inputLinksId[0]],'arrow'))) ? false : true
   const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
 
@@ -423,7 +421,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       accordion_ref,button_ref,
       alt_key_pressed,
       nodeTooltipsContent,SankeyUtils.link_text,SankeyUtils.getLinkValue,
-      // multi_selected_label,
       set_displayed_input_link_value,accept_simple_click,set_contextualised_node,pointer_pos)
 
     OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue,accept_simple_click)
@@ -612,7 +609,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
           
           const timer = setTimeout(() => {
-            // set_show_draw(true)
             SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
           }, 100)
           return () => clearTimeout(timer)
@@ -630,7 +626,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           is_agregation={is_agregation}
           set_alt_key_pressed={set_alt_key_pressed}
           min_width_and_height={min_width_and_height}
-          // additional_draw_element={[]}
           pointer_pos={pointer_pos}
           set_show_context_zdd={set_show_context_zdd}
         />

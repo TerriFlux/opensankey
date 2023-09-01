@@ -49,7 +49,6 @@ export const addSimpleLevelDropDown = (
           </td>
         </tr>
       </>)
-  // return (<><tr><th >{t('Banner.ndd_lst')}</th></tr>{allDD}</>)
   }else{
     return <></>
   }
@@ -124,7 +123,6 @@ export const addAllDropDownNode = (
                       el.colorTag = 'no_colormap'
                     })
                     Object.values(data.links).forEach(el => {
-                      //el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
                     data.colorMap = 'no_colormap'
@@ -134,7 +132,6 @@ export const addAllDropDownNode = (
                         el.colorTag = tags_selected[0]
                       })
                       Object.values(data.links).forEach(el => {
-                        //el.colorParameter = 'groupTag'
                         el.colorTag = 'no_colormap'
                       })
                       data.colorMap = tags_selected[0]
@@ -233,7 +230,6 @@ export const addAllDropDownNode = (
                   overrideStrings={{
                     'selectAll': 'Tout sélectionner',
                   }}
-                  // hasSelectAll={false}
                   value={selected}
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
@@ -261,7 +257,6 @@ export const addAllDropDownNode = (
                       el.colorTag = 'no_colormap'
                     })
                     Object.values(data.links).forEach(el => {
-                      //el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
                     data.colorMap = 'no_colormap'
@@ -271,7 +266,6 @@ export const addAllDropDownNode = (
                         el.colorTag = tags_selected[0]
                       })
                       Object.values(data.links).forEach(el => {
-                        //el.colorParameter = 'groupTag'
                         el.colorTag = 'no_colormap'
                       })
                       data.colorMap = tags_selected[0]
@@ -286,11 +280,6 @@ export const addAllDropDownNode = (
         </FormGroup>)
     }
   })
-  // if (!level) {
-  //   return (<><tr><th >{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD}</>)
-  // } else {
-  //   return (<><tr><th >{t('Banner.ndd_lst')}</th><th></th></tr>{allDD}</>)
-  // }
   return (<>{allDD}</>)
 }
 
@@ -349,7 +338,6 @@ export const setDiagram = (
   set_data : (d:SankeyData)=>void,
   convert_data:(d:SankeyData)=>void
 ) => {
-  //const the_diagram = evt.target.value as string
   const sous_filieres = window.sankey.sous_filieres
 
   const new_data = JSON.parse(
@@ -357,14 +345,7 @@ export const setDiagram = (
       window.sankey[sous_filieres[the_diagram]]
     )
   ) as SankeyData
-  //Object.assign(sankey_data, new_data)
   convert_data(new_data)
-  // if (!is_split) {
-  //   set_diagram(the_diagram)
-  // }
-
-
-  // new_data.fit_screen = true
   d3.select(' .opensankey #svg').on('.zoom', null)
   set_data({ ...new_data })
 }
@@ -413,7 +394,6 @@ export const toolbar_builder = (
       data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
       set_first_selected_node({})
     }
-    // set_mode_selection(val)
   }
   let sous_filieres = undefined
 
@@ -649,7 +629,6 @@ export const toolbar_builder = (
   if (window.SankeyToolsStatic && sous_filieres && is_split) {
     diagrams_element =
       <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
-        {/* <FormLabel className="text-center" style={{justifyContent: 'center'}}  ><b>{diagram_label}</b></FormLabel> */}
         <Form.Select style={{ width: '200px', color:'black' }}
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             set_diagram(evt.target.value)
@@ -734,7 +713,6 @@ export const toolbar_builder = (
         <Button variant={(!(mode_selection.current == 'ln')) ? 'secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
           {/* Ajout liaison entre noeud */}
           <Col><FontAwesomeIcon icon={faShareNodes}/></Col>
-          {/* <Col className='textIcon'>Création</Col> */}
         </Button>
       </OverlayTrigger>
     </>
@@ -755,7 +733,6 @@ export const toolbar_builder = (
           overlay={<Tooltip id={'tooltip-nodes-level'}>{t('Banner.hlp_1_txt_2')} </Tooltip>}>
           <Button ref={target_detail_level} variant='warning' id='button-details-level' onClick={()=>{set_show_detail_level(!show_detail_level)}} >
             <Col><FontAwesomeIcon icon={faFolderTree} /></Col>
-            {/* <Col className='textIcon'>Agréga.</Col> */}
           </Button>
         </OverlayTrigger>
         <Overlay
@@ -784,7 +761,6 @@ export const toolbar_builder = (
           }}
         >
           <Col><FontAwesomeIcon icon={faSliders} /></Col>
-          {/* <Col className='textIcon'>{t('Menu.filter')}</Col> */}
         </Button>
       </OverlayTrigger>
 
@@ -812,7 +788,6 @@ export const toolbar_builder = (
           overlay={struc_data_reconciled}>
           <Button variant='success'>
             <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
-            {/* <Col className='textIcon'>Struct.</Col> */}
 
           </Button>
         </OverlayTrigger>
@@ -824,11 +799,9 @@ export const toolbar_builder = (
           overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
           <Button variant={'success'} onClick={() => {
             data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
-            //data.show_data = false
             set_data({ ...data })
           }} >
             <Col><FontAwesomeIcon icon={faCodeBranch} /></Col>
-            {/* <Col className='textIcon'>Struct.</Col> */}
           </Button>
         </OverlayTrigger>}
       {window.SankeyToolsStatic ? <OverlayTrigger
@@ -857,7 +830,6 @@ export const stretchButtons=(data:SankeyData,min_width_and_height:(d:SankeyData)
     overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
     <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
-      {/* <Col className='textIcon'>{t('Menu.ajustH')}</Col> */}
     </Button>
   </OverlayTrigger>
   <OverlayTrigger
@@ -867,7 +839,6 @@ export const stretchButtons=(data:SankeyData,min_width_and_height:(d:SankeyData)
     overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
     <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
       <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
-      {/* <Col className='textIcon'>{t('Menu.ajustV')}</Col> */}
     </Button>
   </OverlayTrigger></>
 }

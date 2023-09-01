@@ -285,7 +285,6 @@ export const dragGNodeEvent=(
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
           drag_nodes(node,event,multi_selected_nodes,data,
-            // multi_selected_label,
             set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,node_visible
           )
         }
@@ -312,10 +311,8 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:(d:Sanke
         const tmp=return_value_node(data,data.nodes[node.idNode],'label_box_width') as number
 
         if(event.x<pos_node){
-          // data.nodes[node.idNode].display_style.label_box_width-=event.dx;
           assign_node_local_attribute(data.nodes[node.idNode],'label_box_width',tmp-event.dx)
         }else{
-          // data.nodes[node.idNode].display_style.label_box_width+=event.dx
           assign_node_local_attribute(data.nodes[node.idNode],'label_box_width',tmp-event.dx)
         }
         
@@ -407,7 +404,6 @@ const identify_node = (
   const target_y_min = target_node.y
   const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #shape_' + target_node.idNode).attr('height'))
   const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
-  // const tolerance = 3 * data.node_width
   const l_ori=return_value_link(data,link,'orientation')
 
   if ((l_ori === 'hh' || l_ori === 'hv') && mouse_coord[1] >= source_y_min && mouse_coord[1] <= source_y_max && (mouse_coord[0] <= source_x_max + tolerance)) {
@@ -623,9 +619,7 @@ const drag_link = (
         }
       }
     }
-    //const node_select = d3.select('#ggg_' + node.idNode) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
     drawArrows(node as SankeyNode,data,display_nodes,scale,inv_scale,getLinkValue,display_style)
-    //drawArrows(data, node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
   }
 }
 
@@ -678,7 +672,6 @@ export const drag_handle = (
   const old_y = +old_y_str.substring(0, old_y_str.length - 1)
   const new_x = old_x + the_event.dx
   const new_y = old_y + the_event.dy
-  // const d: SankeyLink = d3.select(dragged).data()[0] as SankeyLink
   const d: SankeyLink = data.links[d3.select(dragged).attr('id').replace('right_horiz_shift','').replace('left_horiz_shift','').replace('vert_shift','')]
   let u_center_new = -1
   const source_node = nodes[d.idSource]
@@ -712,19 +705,15 @@ export const drag_handle = (
     }
     if (u_center_new >= 0 && u_center_new <= 1) {
       if (handle_type === 'left') {
-        // d_l_h_s = u_center_new
         assign_link_local_attribute(d,'left_horiz_shift',u_center_new)
         if (d_r_h_s && d_l_h_s && d_r_h_s < d_l_h_s) {
-          // d_r_h_s = d_l_h_s
           assign_link_local_attribute(d,'right_horiz_shift',d_l_h_s)
 
         }
       } else {
-        // d_r_h_s = u_center_new
         assign_link_local_attribute(d,'right_horiz_shift',u_center_new)
 
         if (d_r_h_s && d_l_h_s && d_r_h_s < d_l_h_s) {
-          // d_l_h_s = d_r_h_s
           assign_link_local_attribute(d,'left_horiz_shift',d_r_h_s)
 
         }
@@ -734,7 +723,6 @@ export const drag_handle = (
     }
   } else if (handle_type === 'vert') {
     const vert_shift = d_v_s ? d_v_s : 0
-    // d_v_s = vert_shift + the_event.dy
     assign_link_local_attribute(d,'vert_shift',vert_shift + the_event.dy)
 
     if (data.height < d_v_s + Math.max(data.nodes[d.idSource].y, data.nodes[d.idTarget].y) + 100) {
@@ -753,7 +741,6 @@ export const drag_handle = (
     let tmp=getLinkValue(data, d.idLink).value
     tmp=(tmp)?tmp:0
     if (left_horiz_shift + the_event.dx < default_horiz_shift && new_x > scale(tmp) / 2) {
-      // d_l_h_s = left_horiz_shift + the_event.dx
       assign_link_local_attribute(d,'left_horiz_shift',left_horiz_shift + the_event.dx)
 
     } else {
@@ -762,7 +749,6 @@ export const drag_handle = (
   } else if (handle_type === 'right') {
     const right_horiz_shift = d_r_h_s ? d_r_h_s : 0
     if (right_horiz_shift + the_event.dx > -default_horiz_shift) {
-      // d_r_h_s = right_horiz_shift + the_event.dx
       assign_link_local_attribute(d,'right_horiz_shift',right_horiz_shift + the_event.dx)
       if (data.width < d_r_h_s + data.nodes[d.idSource].x + 100) {
         data.width = d_r_h_s + data.nodes[d.idSource].x + 100
@@ -803,7 +789,6 @@ const  drag_link_text = (
   d3.select(' .opensankey #text_' + link.idLink).attr('y', new_y)
   link.x_label = new_x
   link.y_label = new_y
-  // link.label_position = 'frozen'
   assign_link_local_attribute(link,'label_position','frozen')
 }
 /**
@@ -842,7 +827,6 @@ const drag_zone_position=(link:SankeyLink,
   const link_value = test_link_value(data, display_nodes, link,getLinkValue)
   const tmp=(link_value=='')?1:link_value  
   if (l_ori === 'hh' && l_recy) {
-    // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
     if (!l_v_s) {
       assign_link_local_attribute(link,'left_horiz_shift',0)
     }
@@ -857,7 +841,6 @@ const drag_zone_position=(link:SankeyLink,
       return [vert, left]
     }
   } else if (l_ori === 'vv' && l_recy) {
-    // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
    
     if (!l_v_s) {
       assign_link_local_attribute(link,'left_horiz_shift',0)
@@ -1028,9 +1011,6 @@ export const return_out_of_bound_element=(dragged:SankeyNode,data:SankeyData,eve
     }
   })
 
-  // Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).filter(lb=>{
-  //   return (lb.x<=0 && event.dx<0) || (lb.y<=0 && event.dy<0) || (lb.x<=0 && event.x<0) || (lb.y<=0 && event.y<0) 
-  // }).forEach(lb=>out_of_zone_item.push(lb))
   return out_of_zone_item
 
 }
@@ -1041,7 +1021,6 @@ export const opposing_drag_elements=(out_of_zone_item:(SankeyNode)[],
   multi_selected_nodes:{current:SankeyNode[]},
 )=>{
   const node=Object.keys(dragged).includes('idNode')?dragged as SankeyNode:{} as SankeyNode
-  // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
 
   if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
     // Shift not selected nodes to opposing direction

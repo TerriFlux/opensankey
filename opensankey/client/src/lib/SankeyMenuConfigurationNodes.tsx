@@ -20,7 +20,6 @@ const SankeyNodeEditionPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  // style_to_apply: PropTypes.string.isRequired,
   set_style_to_apply: PropTypes.func.isRequired,
   menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   token:PropTypes.bool.isRequired,
@@ -160,10 +159,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             () => {
               multi_selected_nodes.current.map(d => delete_node(data, d))
               multi_selected_nodes.current = []
-              // Object.values(data.nodes).forEach( n =>
-              //   d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',0)
-              // )
-              // setForceUpdate(!forceUpdate)
               set_data({ ...data })
             }}>
           <FaMinus />

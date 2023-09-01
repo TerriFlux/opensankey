@@ -11,8 +11,6 @@ import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
 import * as SankeyUtils from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
-// import ModalPreference from './SankeyMenuPreferences'
-// import { ModalStyleLink, ModalStyleNode } from './SankeyMenuStyles'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { TFunction } from 'i18next'
@@ -25,6 +23,7 @@ import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinks'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
+import { repositionne_sidebar } from './SankeyDrawFunction'
 
 declare const window: Window &
   typeof globalThis & {
@@ -62,7 +61,6 @@ const MenuPropTypes = {
   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
 
   example_menu: PropTypes.element,
-  // portfolio_menu: PropTypes.element,
   formations_menu: PropTypes.object.isRequired,
   url_prefix: PropTypes.string.isRequired,
 
@@ -413,7 +411,6 @@ export const addAllDropDownFlux = (
                     })
 
                     Object.values(data.links).forEach(el => {
-                      //el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
                     data.colorMap = 'no_colormap'
@@ -424,7 +421,6 @@ export const addAllDropDownFlux = (
                         el.colorTag = tags_selected[0]
                       })
                       Object.values(data.links).forEach(el => {
-                        //el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
                       data.colorMap = tags_selected[0]
@@ -500,7 +496,6 @@ export const addAllDropDownFlux = (
                     })
 
                     Object.values(data.links).forEach(el => {
-                      //el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
                     data.colorMap = 'no_colormap'
@@ -510,7 +505,6 @@ export const addAllDropDownFlux = (
                         el.colorTag = tags_selected[0]
                       })
                       Object.values(data['links']).forEach(el => {
-                        //el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
                       data.colorMap = tags_selected[0]
@@ -747,7 +741,6 @@ export const OpenSankeyMenus = (
               })
 
               Object.values(data.links).forEach(el => {
-                //el.colorParameter = 'local'
                 el.colorTag = 'no_colormap'
               })
 
@@ -760,7 +753,6 @@ export const OpenSankeyMenus = (
                   el.colorTag = 'no_colormap'
                 })
                 Object.values(data.links).forEach(el => {
-                  //el.colorParameter = 'groupTag'
                   el.colorTag = 'no_colormap'
                 })
                 data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
@@ -867,7 +859,6 @@ export const OpenSankeyMenus = (
                   }
                   convert_data(new_data)
                   complete_sankey_data(new_data,default_sankey_data,SankeyUtils.default_node,SankeyUtils.default_link)
-                  // SankeyUtils.set_nodes_level(data)
                   console.log('open json')
 
                   set_data(new_data)
@@ -893,7 +884,6 @@ export const OpenSankeyMenus = (
           <Dropdown.Item onClick={()=>{
             set_show_save_json(true)
           }} >JSON</Dropdown.Item>
-          {/* <Dropdown.Item onClick={()=>SankeyUtils.clickSaveExcelSimple(url_prefix,data)} >Excel Simple</Dropdown.Item> */}
           <Dropdown.Item onClick={()=>SankeyUtils.clickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
           {externale_save_item}
         </Dropdown.Menu>
@@ -923,7 +913,6 @@ export const OpenSankeyMenus = (
 
     ui['edition']=<>
       <Button size='sm' variant='light' onClick={reinitialization} ><><Col><FontAwesomeIcon icon={faTrashCan} /></Col><Col className='textIcon'>{t('Menu.reinit')}</Col></></Button>
-      {/* <Button size='sm' variant='light' onClick={() => set_show_publish_dialog(true)} >{t('Menu.pub')}</Button>     */}
       <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}><><Col><FontAwesomeIcon icon={faFileInvoice} /></Col><Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></></Button>
       <Dropdown className='buttonSubNav'drop='end'  id='exporter' >
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPenToSquare} /></Col><Col className='textIcon'>{t('Menu.style')}</Col></></Dropdown.Toggle>
@@ -1089,7 +1078,6 @@ const Menu: FunctionComponent<MenuTypes> = (
             const size_color=n_keys.length
               
             for(const i in d3.range(size_color)){
-              // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
               SankeyUtils.assign_node_local_attribute(new_data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
             }            
           }
@@ -1123,6 +1111,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
+    repositionne_sidebar()
+
   }
   const setChecked = useState(false)[1]
 
@@ -1176,7 +1166,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     tuto_sub_nav[d[0]]=<>
       {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
         return <Card >
-          <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'} style={{'objectFit':'contain'/*,'minHeight':'250px','maxHeight':'350px'*/}} />
+          <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'} style={{'objectFit':'contain'}} />
           <Card.Body>
             <Card.Title>{dd.replace('_layout.json','').replaceAll('_',' ')}</Card.Title>
             <Card.Text>
@@ -1343,7 +1333,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
 
-      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' /*onHide={set_show_nav(false)}*/ {...props} style={{ 'width': '450px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
+      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' {...props} style={{ 'width': '450px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
             nav_item_active={nav_item_active}
@@ -1434,7 +1424,6 @@ const Menu: FunctionComponent<MenuTypes> = (
       />
 
       {
-      // {modalTemplate}
         <Modal size={'xl'}  show={show_modalTemplate} onHide={() => set_show_modalTemplate(false)}>
           <Modal.Header closeButton>{t('Banner.sdr')}</Modal.Header>
           <Modal.Body>
@@ -1454,58 +1443,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 Menu.propTypes = MenuPropTypes
 
 export default Menu
-
-// export //Modal for shortcut
-// const OpenSankeyModalShortcut = (t:TFunction,
-//   showShortcut:boolean,
-//   setshowShortcut:React.Dispatch<React.SetStateAction<boolean>>,
-//   additional_shortcut_item:JSX.Element[]
-// )=>{
-//   return <Modal size={'lg'} show={showShortcut} onHide={() => setshowShortcut(false)}>
-//     <Modal.Header closeButton>
-//       <Modal.Title>{t('Menu.rc')}</Modal.Title>
-//     </Modal.Header>
-//     <Modal.Body >
-//       <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
-
-//       <h5>{t('Menu.rcc_titre_select')}:</h5>
-//       <p>{t('Menu.rcc_cn')}</p>
-//       <p>{t('Menu.rcc_ctrl_')}</p>
-//       <p><b>Click (flux) :</b> Sélectionne le flux cliqué</p>
-//       <p><b>CTRL + Click (flux) :</b> Sélectionne le flux cliqué et ouvre l'onglet "<b>Flux</b>" du menu</p>
-//       <p><b>Click (en dehors d'un noeud/flux) :</b>  Désélectionne les noeuds et flux sélectionnés</p>
-//       <p><b>Click droit (noeuds) :</b>  Agrége le noeud</p>
-//       <p><b>Alt Click droit (noeuds) :</b>  Désagrége le noeud</p>
-//       <p><b>Alt + Drag (label noeuds) :</b>  Déplace le label</p>
-//       <p><b>Shift + survole (noeuds) :</b>  Affiche la valeur des flux entrant et sortant du noeud dans une tooltip</p>
-//       <p><b>Shift + survole (flux) :</b>  Affiche la valeur du flux dans une tooltip </p>
-
-//       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-//       <h5>Avec la souris en mode édition :</h5>
-//       <p><b>Click (zone de dessin) :</b> Ajoute un noeud à l'endroit cliqué</p>
-//       <p><b>Drag (à partir de la zone de dessin) :</b> Crée un noeud au point de départ du drag puis crée un flux partir du noeud crée vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin </p>
-//       <p><b>Drag (à partir d'un noeud) :</b> Créer un flux partir du  noeud de départ du drag vers : soit un noeud déjà existant si l'on drop dessus, soit crée un noeud si l'on drop sur la zone de dessin  </p>
-
-//       <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-//       <h5>Autres raccourcis :</h5>
-//       <p><b>Suppr :</b> Supprime les noeuds et flux sélectionnés</p>
-//       <p><b>Flèche du clavier :</b> Permet de déplacer les noeuds sélectionnés en fonction du grillage  </p>
-//       <p><b>Drag (bouton du milieu de la souris et en dehors d'un noeud/flux)</b> Permet de déplacer le sankey complet  </p>
-
-//       <p><b>Echap :</b> Ferme le Menu si il est ouvert et remet la fonction de la souris en tant que sélecteur </p>
-
-//       {additional_shortcut_item}
-
-//     </Modal.Body>
-//     <Modal.Footer>
-//       <Button variant="secondary" onClick={() => setshowShortcut(false)}>
-//         Close
-//       </Button>
-//     </Modal.Footer>
-//   </Modal>
-// }
 
 export const OpenSankeyModalWelcome=(t:TFunction,
   active_page:string,
@@ -1586,7 +1523,6 @@ export const OpenSankeyModalWelcome=(t:TFunction,
 
 
 
-  // external_content['licence']=content_licence
 
 
   return <Modal scrollable size='xl' show={show_modal_welcome && !never_see_again} onHide={()=>{
@@ -2009,7 +1945,6 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
                   }else{
                     val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
                   }
-                  //val.tags[nt[0]] = !(value_selected_parameter_contextualised_link().tags[nt[0]] === t)? t : ''
                 })
 
                 // Assign tag to contextualised link
@@ -2028,7 +1963,6 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
                 }else{
                   val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
                 }
-                //val.tags[nt[0]] = !(value_selected_parameter_contextualised_link().tags[nt[0]] === t)? t : ''
 
                 
                 set_data({...data})
