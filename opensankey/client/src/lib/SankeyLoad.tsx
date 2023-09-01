@@ -1,7 +1,9 @@
+import { TFunction } from 'i18next'
 import React,{ useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 import Spinner  from 'react-bootstrap/Spinner'
 interface SankeyLoadProdTypes {
+  t:TFunction
   url_prefix: string,
   successAction: () => void,
   show_dialog : boolean,
@@ -32,17 +34,19 @@ interface SankeyLoadProdTypes {
    */
   setNotStarted : (b:boolean)=>void
   result : string;
-  setResult: (s:string)=>void
+  setResult: (s:string)=>void,
+  is_computing:boolean,
 }
 
 const SankeyLoad = ({
+  t,
   url_prefix,
   successAction,
   show_dialog,set_show_dialog,
   processing,setProcessing,
   failure,setFailure,
   setNotStarted,
-  result,setResult
+  result,setResult,is_computing
 } : SankeyLoadProdTypes) => {
   const [value,setValue] = useState([1,2])
   
@@ -62,8 +66,8 @@ const SankeyLoad = ({
   }
 
   const infos = result !== undefined ? result.split('\n') : []
-  const success_status = 'Chargement terminée'
-  const failure_status = 'Echec du chargement'
+  const success_status = t('Menu.loaded_file')
+  const failure_status = t('Menu.failur_file')
 
   return (
     <Modal 
@@ -76,7 +80,7 @@ const SankeyLoad = ({
         alignItems: 'center'
       }}>
       <Modal.Header closeButton>
-        <Modal.Title>Chargement du fichier </Modal.Title>
+        <Modal.Title>Chargement du fichier {(processing || is_computing)? <Spinner animation="border" />:<></>}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form >
@@ -86,22 +90,21 @@ const SankeyLoad = ({
               <Col sm={2}>    
                 { 
                   processing ? (
-                    <Button variant="warning"><span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> En traitement...</Button>):(
+                    <Button variant="warning"><span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> {t('Menu.load_file')}</Button>):(
                     failure ? 
-                      (<Button variant="danger" onClick={reset}>{failure_status}</Button>) : 
-                      (<Button variant="success" 
-                        onClick={()=>{
-                          successAction()
-                          set_show_dialog(false)
-                        }}>{success_status}</Button>))
+                      (<Button variant="danger" onClick={reset}>{failure_status}</Button>) : <>
+                        {
+                          is_computing?<Button variant='info'>{t('Menu.compute_file')}</Button>:(<Button variant="success" 
+                            onClick={()=>{
+                              successAction()
+                              set_show_dialog(false)
+                            }}>{success_status}</Button>)
+                        }</>
+                  )
                 }
               </Col><Col sm={5}/></Row> 
             <br/>              
-            <br/>
-            <Row>
-              <Col sm={12}><h3 style={{textAlign:'center'}}>Terminal</h3></Col> 
-            </Row>
-            <br/>              
+            <br/>             
             <br/>
             <Row>
               <Col sm={12}>
@@ -139,10 +142,6 @@ const SankeyLoad = ({
                   }
                 </Col>
               </Row>
-              <Row className='loading_auto_compute'>
-                <Spinner animation="border" />
-              </Row>
-
             </>
             )}
           </FormGroup>
