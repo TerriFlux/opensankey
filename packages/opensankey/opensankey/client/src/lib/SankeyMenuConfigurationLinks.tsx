@@ -1,9 +1,9 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Form, Tabs,  Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { reorganize_inputLinksId } from './SankeyLayout'
-import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes, SankeyNode,SankeyData } from './types'
+import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import {  default_link, delete_link,return_value_link,assign_link_value_to_correct_var,return_correct_link_attribute_value } from './SankeyUtils'
+import {  default_link, delete_link,return_value_link,assign_link_value_to_correct_var,return_correct_link_attribute_value, add_new_node } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH, FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -20,6 +20,7 @@ const SankeyMenuConfigurationLinksPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
+  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   set_displayed_input_link_value:PropTypes.func.isRequired,
   tags_selected:PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
@@ -59,10 +60,12 @@ export const OpenSankeyMenuConfigurationLinks = (
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, multi_selected_links,menu_configuration_links,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity}
+  { t,data, set_data, multi_selected_links,multi_selected_nodes,menu_configuration_links,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity}
 ) => {
   const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
+  const [pre_idSource,set_pre_idSource]=useState('none')
+  const [pre_idTarget,set_pre_idTarget]=useState('none')
   const set_show_link = useState(true)[1]
   const node_visible=node_visible_on_svg()
 
@@ -164,7 +167,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     const { nodes, links } = data
 
     if (Object.keys(nodes).length < 2) {
-      return
+      if (Object.keys(nodes).length == 0) {
+        add_new_node(data,()=>null,multi_selected_nodes)
+      }
+      add_new_node(data,()=>null,multi_selected_nodes)
     }
     const link: SankeyLink = default_link(data)
     // Méthode pour incrementer idNode
@@ -175,44 +181,60 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     link.idLink = 'link' + idLink
     links[link.idLink] = link
     const node_keys = Object.keys(nodes)
-    link.idSource = nodes[node_keys[0]].idNode
-    link.idTarget = nodes[node_keys[1]].idNode
+    let ids=node_keys[0]
+    let idt=node_keys[1]
+
+    if(pre_idSource!=='none'){
+      ids=pre_idSource
+    }
+    if(pre_idTarget!=='none'){
+      idt=pre_idTarget
+    }
+    
+    link.idSource = nodes[ids].idNode
+    link.idTarget = nodes[idt].idNode
     if (link.idSource === link.idTarget) {
       // link.recycling = true
       assign_link_value_to_correct_var(link,'recycling',true,false)
 
     }
 
-    nodes[node_keys[0]].outputLinksId.push(link.idLink)
-    nodes[node_keys[1]].inputLinksId.push(link.idLink)
+    nodes[ids].outputLinksId.push(link.idLink)
+    nodes[idt].inputLinksId.push(link.idLink)
 
     // selected_link.current = link
     multi_selected_links.current = [link]
     set_display_link_opacity(return_correct_link_attribute_value(data,link,'opacity',false))
-    data.linkZIndex.push(link.idLink)
+    data.linkZIndex.push(
+      link.idLink)
     set_data({ ...data })
     set_show_link(true)
   }
 
   //Change the source of selected link
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const link = multi_selected_links.current[0]
-    //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
-    const previous_node = data.nodes[link.idSource]
-    previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-
-    const source_node = data.nodes[changeEvent.target.value]
-    link.idSource = source_node.idNode
-    if (link.idSource === link.idTarget) {
-      assign_link_value_to_correct_var(link,'recycling',true,false)
+    if(multi_selected_links.current.length>0){
+      const link = multi_selected_links.current[0]
+      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
+      const previous_node = data.nodes[link.idSource]
+      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
+  
+      const source_node = data.nodes[changeEvent.target.value]
+      link.idSource = source_node.idNode
+      if (link.idSource === link.idTarget) {
+        assign_link_value_to_correct_var(link,'recycling',true,false)
+      }
+      source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
+  
+      set_data({ ...data })
+    }else if(Object.keys(data.nodes).length>1){
+      set_pre_idSource(changeEvent.target.value)
     }
-    source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
-
-    set_data({ ...data })
+    
   }
 
   const addDropSource = () => {
-    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0 && multi_selected_links.current.length != 0) {
+    if (Object.keys(data.nodes).length >= 2) {
       return (
         Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)
       )
@@ -220,7 +242,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   }
 
   const addDropCible = () => {
-    if (Object.keys(data.nodes).length >= 2 && Object.keys(data.links).length != 0 && multi_selected_links.current.length != 0) {
+    if (Object.keys(data.nodes).length >= 2) {
       return (
         Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)
       )
@@ -229,22 +251,25 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   //Change the target of selected link
   const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    const { nodes } = data
-    const link = multi_selected_links.current[0]
-    const previous_node = nodes[link.idTarget]
-    previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-
-    const target_node = nodes[changeEvent.target.value]
-    link.idTarget = target_node.idNode
-    if (link.idSource === link.idTarget) {
-      // link.recycling = true
-      assign_link_value_to_correct_var(link,'recycling',true,false)
-
+    if(multi_selected_links.current.length>0){
+      const { nodes } = data
+      const link = multi_selected_links.current[0]
+      const previous_node = nodes[link.idTarget]
+      previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
+  
+      const target_node = nodes[changeEvent.target.value]
+      link.idTarget = target_node.idNode
+      if (link.idSource === link.idTarget) {
+        // link.recycling = true
+        assign_link_value_to_correct_var(link,'recycling',true,false)
+  
+      }
+      target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
+      set_data({ ...data })
+    }else if(Object.keys(data.nodes).length>1){
+      set_pre_idTarget(changeEvent.target.value)
     }
-
-    target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
-
-    set_data({ ...data })
+   
   }
 
   return (<>
@@ -331,10 +356,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           {t('Flux.src')}
         </InputGroup.Text>
         <Form.Select
-          disabled={multi_selected_links.current.length != 1}
+          disabled={Object.keys(data.nodes).length<2}
           style={{width:'55%'}}
           onChange={source_change}
-          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:''}>
+          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
           {addDropSource()}
         </Form.Select>
       </InputGroup>
@@ -354,10 +379,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           {t('Flux.trgt')}
         </InputGroup.Text>
         <Form.Select
-          disabled={multi_selected_links.current.length != 1}
+          disabled={Object.keys(data.nodes).length<2}
           style={{width:'55%'}}
           onChange={target_change}
-          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:''}>
+          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
           {addDropCible()}
         </Form.Select>
       </InputGroup>
