@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useRef } from 'react'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
-import { LZString } from 'lz-string'
+import LZString from 'lz-string'
 
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
