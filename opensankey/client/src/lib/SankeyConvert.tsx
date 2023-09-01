@@ -47,6 +47,9 @@ interface ConvertSankeyNode {
 
   }
 }
+type layout_type = {
+  layout: SankeyData
+}
 interface ConvertSankeyLink {
   classif?: string
   title_length?: number
@@ -1467,7 +1470,10 @@ export const convert_data = (
   convert_links(data)
 
   if(data.linkZIndex===undefined || (data.linkZIndex.length!=Object.keys(data.links).length)){
-    data.linkZIndex=Object.keys(data.links)
+    data.linkZIndex=Object.values(data.links).map(l=>l.idLink)
+    if((data as SankeyData & layout_type).layout){
+      data.linkZIndex=Object.values((data as SankeyData & layout_type).layout.links).map(l=>l.idLink)
+    }
   }
 
   
