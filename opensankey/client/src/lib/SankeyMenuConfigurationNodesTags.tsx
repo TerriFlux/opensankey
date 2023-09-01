@@ -73,8 +73,6 @@ export const SankeyMenuConfigurationNodesTags = (
                       id={tags[0]}
                       onClick={
                         () => {
-                          // const new_nb_element = evt.target as HTMLInputElement
-                          // const tag_key = new_nb_element.id
                           const visible = !allChecked
                           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                             if (visible) {

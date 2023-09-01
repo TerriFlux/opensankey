@@ -38,7 +38,6 @@ export const OpenSankeyDrawNodes = (
   pointer_pos:{current:number[]}
 
 ) => {
-  //const display_nodes=data.nodes
   const display_links=Object.keys(data.links)
     .filter((key) => node_displayed(data,data.nodes[data.links[key].idSource])&&node_displayed(data,data.nodes[data.links[key].idTarget]))
     .reduce((obj, key) => {
@@ -53,9 +52,6 @@ export const OpenSankeyDrawNodes = (
         [key]: data.nodes[key]
       })
     }, {}) as {[idNode:string]:SankeyNode}
-  //const display_nodes = Object.assign({}, ...Object.values(data.nodes).filter(n=>node_displayed(data,n)).map(n => ({ [n.idNode]: { n } }))) as {[idNode:string]:SankeyNode}
-  //const display_links= Object.assign({}, ...Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).map(l => ({ [l.idLink]: { l } }))) as {[idLink:string]:SankeyLink}
-
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic ||event.shiftKey)) {
@@ -114,7 +110,6 @@ export const OpenSankeyDrawNodes = (
         return display
       })
       .style('font-family',(d) => {
-        // d.display_style.font_family
         return return_value_node(data,d,'font_family') as string
       })
 
@@ -185,10 +180,6 @@ export const OpenSankeyDrawNodes = (
         .attr('cy', d =>return_value_node(data,d,'node_height') as number / 2)
         .attr('rx', d =>return_value_node(data,d,'node_width') as number / 2)
         .attr('ry', d =>return_value_node(data,d,'node_height') as number / 2)
-        // .attr('cx',data.node_width / 2)
-        // .attr('cy',data.node_height / 2)
-        // .attr('rx',data.node_width / 2)
-        // .attr('ry',data.node_height / 2)
             
             
     }
@@ -220,21 +211,11 @@ export const OpenSankeyDrawNodes = (
       .on('mouseout', function (event, d) {
         node_mouse_out(d,sankeyTooltip)
       })
-    // .on('click', (event, d) => {
-    // // Apply some style change to element before starting the animation
-    // node_mouse_click(data,event,d,sankeyTooltip)
-    // })
 
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
     Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes,data,scale,inv_scale,getLinkValue))
         
-    // const nodes_not_to_scale=ggg_nodes
-    //   .filter(d=>return_value_node(data,d,'not_to_scale') as boolean)
-    //   .append('g')
-    // addNodesNotToScale(nodes_not_to_scale,data,scale,inv_scale)
-
-
   }
   
   add_nodes(pointer_pos)

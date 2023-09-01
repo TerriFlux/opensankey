@@ -10,7 +10,6 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 export const SankeyMenuConfigurationLinksAppearence = (
   data:SankeyData,
-  // // selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
   t:TFunction,
@@ -335,9 +334,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           value={(selected_parameter.length == 1) ? (return_correct_link_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
           onChange={
             evt => {
-              // selected_parameter[0].color = evt.target.value
               const color = evt.target.value
-              // selected_parameter.map(d => d.color = evt.target.value)
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => assign_link_value_to_correct_var(d,'color',color,menu_for_style))
               set_data({ ...data })
             }}/>
@@ -414,7 +411,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                // d.orientation = evt.target.value
                 assign_link_value_to_correct_var(d,'orientation','hh',menu_for_style)
 
               })
@@ -647,7 +643,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onChange={
             evt => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                // d.curvature = +evt.target.value
                 assign_link_value_to_correct_var(d,'curvature',+evt.target.value,menu_for_style)
 
               })
@@ -1073,7 +1068,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button
             className='btn_menu_config'
             style={{width:'30%'}}
-            // disabled={selected_link.current.label_position === 'frozen'}
             variant={label_link_free_checked?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {

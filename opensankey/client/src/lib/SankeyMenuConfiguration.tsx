@@ -3,7 +3,6 @@ import PropTypes, { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode } from './types'
 import React, { FunctionComponent, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
-// import SankeyLabelEdition from './SankeyMenuConfigurationLabel'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { TFunction } from 'i18next'
 
@@ -17,8 +16,6 @@ export const OpenSankeyConfigurationsMenus = (
   links_accordion_ref:Ref<HTMLDivElement>,
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
-  // // selected_link:{current:SankeyLink},
-  style_to_apply:string,
   set_style_to_apply:(s:string)=>void,
   set_show_nav:(d:boolean)=>void,
   menu_configuration_layout: JSX.Element[],
@@ -134,7 +131,6 @@ export const OpenSankeyConfigurationsMenus = (
                 t={t}
                 data={data}
                 set_data={set_data}
-                // style_to_apply={style_to_apply}
                 set_style_to_apply={set_style_to_apply}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}

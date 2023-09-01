@@ -194,7 +194,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     link.idSource = nodes[ids].idNode
     link.idTarget = nodes[idt].idNode
     if (link.idSource === link.idTarget) {
-      // link.recycling = true
       assign_link_value_to_correct_var(link,'recycling',true,false)
 
     }
@@ -202,7 +201,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     nodes[ids].outputLinksId.push(link.idLink)
     nodes[idt].inputLinksId.push(link.idLink)
 
-    // selected_link.current = link
     multi_selected_links.current = [link]
     set_display_link_opacity(return_correct_link_attribute_value(data,link,'opacity',false))
     data.linkZIndex.push(
@@ -260,7 +258,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       const target_node = nodes[changeEvent.target.value]
       link.idTarget = target_node.idNode
       if (link.idSource === link.idTarget) {
-        // link.recycling = true
         assign_link_value_to_correct_var(link,'recycling',true,false)
   
       }

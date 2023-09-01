@@ -17,12 +17,8 @@ export const OpenSankeyDrawLinks = (
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   multi_selected_links:{current: SankeyLink[] },
   mode_selection:{current:string},
-
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
-
-  // select_link:(l: SankeyLink) => void,
-
   alt_key_pressed:boolean,
   position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
@@ -58,7 +54,6 @@ export const OpenSankeyDrawLinks = (
     button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
     multi_selected_links:{current: SankeyLink[] },
     links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-    // select_link:(n: SankeyLink) => void,
     set_data:(d:SankeyData)=>void
   )=>{
     mode_selection.current='s'
@@ -75,12 +70,6 @@ export const OpenSankeyDrawLinks = (
       } else {
         multi_selected_links.current.push(d)
         set_display_link_opacity(return_value_link(data,multi_selected_links.current[0],'opacity') as string)
-        // d3.selectAll(' .opensankey #gg_link_handle_'+ d.idLink + ' rect.handle').attr('fill-opacity', '1')
-        // d3.selectAll(' .opensankey #gg_link_handle_'+ d.idLink + ' rect.handle').attr('cursor', 'ew-resize')
-        // d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('cursor', 'ns-resize')
-        // d3.selectAll(' .opensankey #gg_' + d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-        // d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('stroke-opacity', '1')
-        // d3.selectAll(' .opensankey #gg_' + d.idLink + ' .center_handle').attr('fill-opacity', '1')
       }
       if((event.ctrlKey || event.metaKey)){
         if ( accordion_ref && accordion_ref.current) {
@@ -135,11 +124,6 @@ export const OpenSankeyDrawLinks = (
     }
   }
 
-  // Function that return the link color
-  // the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags), if it's a gradient between the source node color and it's target node color
-
-
-  
 
   // Function that return the side of link label
   const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
@@ -260,7 +244,6 @@ export const OpenSankeyDrawLinks = (
       )
       .append('text')
       .attr('pointer-events', 'none')
-      // .attr('style', 'font-weight: bold;font-family:Arial; font-size:' + display_style.font_size + 'px;')
       .attr('style',d=> 'font-weight: bold; font-size:' + return_value_link(data,d,'label_font_size') + 'px;'+'font-family:'+return_value_link(data,d,'font_family'))
       .attr('fill', l => {
         if (return_value_link(data,l,'text_color') === return_value_link(data,l,'color')) {
@@ -307,7 +290,6 @@ export const OpenSankeyDrawLinks = (
         .on('click', (event, d) => {
           const source_node = display_nodes[d.idSource]
           const target_node = display_nodes[d.idTarget]
-          // select_link(d)
           // if classic link
           if (return_value_link(data,d,'orientation') === 'hh' && source_node.x < target_node.x) {
             d3.select(' .opensankey #link_center' + d.idLink).attr('fill-opacity', 0.7)
@@ -373,7 +355,6 @@ export const OpenSankeyDrawLinks = (
         let tmp=getLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
         if (tmp >= display_style.filter) {
-          // const opacity = String(getLinkValue(data, d.idLink).display_value).includes('[') ? 0.85 : 0.85
           const opacity = return_value_link(data,d,'opacity')
           d3.select(' .opensankey #path_'+d.idLink+'_arrow').attr('opacity','1')
           return d3.select(this).attr('stroke-opacity', opacity)
@@ -381,27 +362,12 @@ export const OpenSankeyDrawLinks = (
       })
 
     paths.on('click', (event, d) =>eventLinkClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,set_data))
-    // const arrowVisible=(l :SankeyLink)=>{
-    //   return  data.nodes[l.idSource].display && data.nodes[l.idTarget].display && l.arrow
-
-    // }
     //Creation des Arrows associés au link
     d3.selectAll(' .opensankey .ggg_nodes')
       .filter((n) => (n as SankeyNode).inputLinksId.length>0?node_arrow_visible(data,(n as SankeyNode)):false)
       .each( (n) => {
-        //const selection = (d3.select(this!) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
         drawArrows(n as SankeyNode,data,display_nodes,scale,inv_scale,getLinkValue,display_style)
-        //drawArrows(data, n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags)
       })
-
-
-    // d3.selectAll(' .opensankey .gg_links')
-    //   .filter(l=>arrowVisible(l as SankeyLink))
-    //   .each(function (l) {
-    //     const n =data.nodes[(l as SankeyLink).idTarget]
-    //     const selection = (d3.select(this) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-    //     //drawArrows(data, n as SankeyNode, display_nodes, display_links, display_style, data.nodeTags,scale,inv_scale,min_thickness,getLinkValue)
-    //   })
 
     paths.attr('d', d => {
       setNodesHeight(data,display_nodes, d, getLinkValue)
@@ -516,7 +482,6 @@ export const OpenSankeyDrawLinks = (
     const target_y_min = target_node.y
     const target_y_max = target_y_min + parseInt(d3.select(' .opensankey #shape_' + target_node.idNode).attr('height'))
     const tolerance = 3 * (return_value_node(data,source_node,'node_width') as number)
-    // const tolerance = 3 * data.node_width
     const link_orientation=return_value_link(data,link,'orientation')
     if ((link_orientation === 'hh' || link_orientation === 'hv') && mouse_coord[1] >= source_y_min && mouse_coord[1] <= source_y_max && (mouse_coord[0] <= source_x_max + tolerance)) {
       return { 'node_id': source_node.idNode, 'type': 'source', 'origin': source_y_min }
@@ -730,10 +695,7 @@ export const OpenSankeyDrawLinks = (
           }
         }
       }
-      //const selection = (d3.select(this!) as unknown) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-      //const node_select = d3.select('#ggg_' + node.idNode) as d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
       drawArrows(node as SankeyNode,data,display_nodes,scale,inv_scale,getLinkValue,display_style)
-      //drawArrows(data, node, nodes, links, display_style, nodeTags,scale,inv_scale,min_thickness,getLinkValue)
     }
   }
 
