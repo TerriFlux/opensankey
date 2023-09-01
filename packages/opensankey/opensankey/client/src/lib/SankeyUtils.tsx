@@ -465,19 +465,11 @@ export const toPrecision = (
   v: number,
   nb_scientific=3
 ) => {
-  if (v < 1) {
-    return String(v.toFixed(1).replace(/\.0+$/, ''))
-  }
   if(!isNaN(v)){
-    let new_v = (+v).toPrecision(nb_scientific).replace(/\.0+$/, '')
-    if (!new_v.includes('e+')) {
-      new_v = String(parseFloat(new_v))
-    }
-    return new_v
+    return v.toExponential(nb_scientific)
   }else{
     return v
   }
-
 }
 /**
  * Return the value of the link if the display value is empty either way it return display_value
