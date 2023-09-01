@@ -203,6 +203,7 @@ export const OpenSankeyConfigurationsMenus = (
                 data={data}
                 set_data={set_data}
                 multi_selected_links={multi_selected_links}
+                multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_links={Object.values(menu_configuration_links)}
                 set_displayed_input_link_value={set_displayed_input_link_value}
                 tags_selected={tags_selected}

@@ -2,7 +2,7 @@ import React, { FunctionComponent, useState } from 'react'
 import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup} from 'react-bootstrap'
 import PropTypes, { InferProps } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLinkValue,SankeyLink } from './types'
-import { default_node,delete_node,return_value_node} from './SankeyUtils'
+import { delete_node,return_value_node,apply_style_to_nodes,add_new_node} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus, FaEye} from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -98,41 +98,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     return DD
   }
 
-  const add_new_node = () => {
-    const { nodes } = data
-    const node: SankeyNode = default_node(data)
+ 
 
-    // Méthode pour incrementer idNode
-    let idNode = Object.keys(data.nodes).length
-    while (data.nodes['node'+idNode]) {
-      idNode = idNode+1
-    }
-    node.idNode = 'node' + idNode
-    node.name = node.idNode
-    if (Object.keys(nodes).length < 5) {
-      node.x = Object.keys(nodes).length * 200 + 200
-    } else {
-      node.x = 200
-    }
-    nodes[node.idNode] = node
-    for (const tag_group_key in data.nodeTags) {
-      node.tags[tag_group_key] = []
-    }
-    //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
-    //set_multi_selected_nodes([node])
-    multi_selected_nodes.current = [node]
-    // style_to_apply = 'default'
-    apply_style_to_nodes()
-    set_data({...data})
-  }
-
-  const apply_style_to_nodes = () => {
-    multi_selected_nodes.current.map(d => {
-      // Delete local value so the used value come from the style
-      delete d.local
-    })
-    set_data({ ...data })
-  }
 
 
 
@@ -161,8 +128,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
             set_style_to_apply('default')
-            add_new_node()
-            apply_style_to_nodes()
+            add_new_node(data,set_data,multi_selected_nodes)
+            apply_style_to_nodes(data,set_data,multi_selected_nodes)
           }}>
           <FaPlus/>
         </Button>

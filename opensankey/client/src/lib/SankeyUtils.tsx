@@ -1821,3 +1821,43 @@ export const node_context_has_desaggregate=(n:SankeyNode,data:SankeyData)=>{
   }
 
 }
+
+export const apply_style_to_nodes = (data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]}) => {
+  multi_selected_nodes.current.map(d => {
+    // Delete local value so the used value come from the style
+    delete d.local
+  })
+  set_data({ ...data })
+}
+
+export const add_new_node = (data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]}) => {
+  const { nodes } = data
+  const node: SankeyNode = default_node(data)
+
+  // Méthode pour incrementer idNode
+  let idNode = Object.keys(data.nodes).length
+  while (data.nodes['node'+idNode]) {
+    idNode = idNode+1
+  }
+  node.idNode = 'node' + idNode
+  node.name = node.idNode
+  if (Object.keys(nodes).length < 5) {
+    node.x = Object.keys(nodes).length * 200 + 200
+  } else {
+    node.x = 200
+  }
+  nodes[node.idNode] = node
+  for (const tag_group_key in data.nodeTags) {
+    node.tags[tag_group_key] = []
+  }
+  //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
+  //set_multi_selected_nodes([node])
+  multi_selected_nodes.current = [node]
+  // style_to_apply = 'default'
+  apply_style_to_nodes(data,set_data,multi_selected_nodes)
+  set_data({...data})
+}
