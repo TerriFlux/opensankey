@@ -126,7 +126,10 @@ const MenuPropTypes = {
   node_vspace:PropTypes.number.isRequired,
   set_node_vspace:PropTypes.func.isRequired,
   apply_transformation_additional_elements: PropTypes.func.isRequired,
-  DiagramSelector: PropTypes.func.isRequired
+  DiagramSelector: PropTypes.func.isRequired,
+  is_computing:PropTypes.bool.isRequired,
+  set_is_computing:PropTypes.func.isRequired,
+
 }
 
 const pre_process_export_svg=()=>{
@@ -1017,7 +1020,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     node_hspace,set_node_hspace,
     node_vspace,set_node_vspace,
     apply_transformation_additional_elements,
-    DiagramSelector
+    DiagramSelector,
+    is_computing,
+    set_is_computing
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1062,7 +1067,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             default_nstyle = JSON.parse(JSON.stringify(data.style_node['default']))
             default_lstyle = JSON.parse(JSON.stringify(data.style_link['default']))
           }
-          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data)) as SankeyData
+          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data,set_is_computing)) as SankeyData
           new_data.style_node['default'] = default_nstyle
           new_data.style_link['default'] = default_lstyle
           callback(new_data)
@@ -1397,6 +1402,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_node_vspace={set_node_vspace}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
+        set_is_computing={set_is_computing}
       />
 
       <ExcelModal
@@ -1412,6 +1418,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         callback={callback} />
 
       <SankeyLoad
+        t={t}
         url_prefix={url_prefix}
         successAction={()=>SankeyUtils.downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
         show_dialog={show_load}
@@ -1423,6 +1430,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         setNotStarted={setNotStarted}
         result={result}
         setResult={setResult}
+        is_computing={is_computing}
       />
 
       {
@@ -2174,7 +2182,9 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   node_vspace:number,
   set_node_vspace:(n:number)=>void,
   t:TFunction,
-  set_show_menu_layout:(b:boolean)=>void
+  set_show_menu_layout:(b:boolean)=>void,
+  set_is_computing:(b:boolean)=>void,
+
 )=>{
   const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
     d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
@@ -2319,7 +2329,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
       </Dropdown>
     
       <Dropdown.Item as={Button} variant='light' onClick={() => {
-        compute_auto_sankey(data, node_hspace)
+        compute_auto_sankey(data, node_hspace,set_is_computing)
         set_data({ ...data })
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>

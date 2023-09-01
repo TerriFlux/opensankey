@@ -281,9 +281,10 @@ export const nodeHeight = (
 
 export const compute_auto_sankey = (
   data: SankeyData,
-  h_space : number
+  h_space : number,
+  set_is_computing:(b:boolean)=>void,
 ) => {
-  
+  set_is_computing(true)
   let max_horizontal_index = 0
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
@@ -505,7 +506,7 @@ export const compute_auto_sankey = (
   data.width = width + h_space
   
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
-
+  set_is_computing(false)
   return []
 }
 

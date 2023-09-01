@@ -162,6 +162,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [not_started,setNotStarted] = useState(true)
   const [result,setResult] = useState('')
   const [path,setPath] = useState('')
+  const [is_computing,set_is_computing]=useState(false)
 
   //- Modals and Dialogs
   const [show_load,set_show_load] = useState(false)
@@ -505,7 +506,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const drag_menu_layout=show_menu_layout?menu_draggable(menu_configuration_layout,pointer_pos,t('Menu.MEP'),set_show_menu_layout):<></>
     
 
-  const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout)
+  const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout,set_is_computing)
 
 
 
@@ -587,6 +588,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_node_vspace={set_node_vspace}
             apply_transformation_additional_elements={()=>[]}
             DiagramSelector={OpenSankeyDiagramSelector}
+            is_computing={is_computing}
+            set_is_computing={set_is_computing}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
