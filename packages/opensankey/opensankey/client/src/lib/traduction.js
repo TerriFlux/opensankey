@@ -133,6 +133,10 @@ export const open_resources = {
         'support_explication':'If you encounter a technical problem, write to us at [] and we will deal with your request as quickly as possible.',
         'suppr':'Delete',
         'rand_node_color':'Assign random color to all nodes',
+        'load_file':'Load file',
+        'compute_file':'Computing',
+        'loaded_file':'File loaded',
+        'failure_file':'Loading failed',
         tooltips:{
           noeud:{
             slct: 'Choose one / some / all nodes to select via a drop-down list',
@@ -636,6 +640,10 @@ export const open_resources = {
         'support_explication':'Si vous rencontrez un problème technique, écrivez-nous à [], nous traiterons votre demande dans les meilleurs délais.',
         'suppr':'Supprimer',
         'rand_node_color':'Assigne une couleur aléatoire à tous les noeuds',
+        'load_file':'Lecture du fichier',
+        'compute_file':'Traitment des informations',
+        'loaded_file':'Chargement terminé',
+        'failure_file':'Chargement échoué',
         Transformation : {
           'amp_short':'Trans.',
           'amp':'Modifier la mise en page',
