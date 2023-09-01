@@ -133,7 +133,7 @@ const pre_process_export_svg=()=>{
   // Resize the svg scale to be the scale by default
   const svg =window.d3.select(' .opensankey#svg-container svg')
   svg.attr('transform','scale(1)')
-  svg.select('#g_legend').style('transform','scale(1)')
+  svg.select('#g_legend').attr('transform','scale(1)')
 
   // Get size of g elements that contain visual content
   const g_nodes=document.getElementById('g_nodes')
@@ -1359,7 +1359,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             id="toggle-check"
             className='openMenu'
             type="checkbox"
-            variant="outline-primary"
+            variant="primary"
             checked={show_nav}
             onChange={(e) => { setChecked(e.currentTarget.checked)}}
             onClick={toggleShow}
