@@ -361,6 +361,8 @@ export const compute_auto_sankey = (
         })
       if (modified) {
         to_splice.push(node)
+        // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
+        // ce qui lors de l'affectation d'une position x, ceux-ci sont négatif
         nodes2horizontal_indices[node.idNode] = min_next_horizontal_index - 1
         if (!horizontal_indices2nodes[min_next_horizontal_index - 1]) {
           horizontal_indices2nodes[min_next_horizontal_index - 1] = []
@@ -387,8 +389,16 @@ export const compute_auto_sankey = (
   }
   Object.entries(horizontal_indices2nodes).forEach(([key,val])=>val.forEach(n=>nodes2horizontal_indices[n.idNode]= +key))
 
-  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n =>
+  // Correction post indexation de la profondeur des noeud pour mettre tous les index positif (en additionnant tous les indices par le mini si il y en a un négatif,
+  // par exemple :  si nodes2horizontal_indices[n.idNode]=2 et que le min est -2 alors le nouveau nodes2horizontal_indices[n.idNode]=4)
+  if(Object.values(nodes2horizontal_indices).filter(x_i=>x_i<0).length>0){
+    const min_x=Object.values(nodes2horizontal_indices).sort()[0]
+    Object.entries(nodes2horizontal_indices).forEach(n=>nodes2horizontal_indices[n[0]]=n[1]+Math.abs(min_x))
+  }
+  
+  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n =>{
     n.x = max_horizontal_index !== 0 ? 50 + nodes2horizontal_indices[n.idNode] / max_horizontal_index * width : 50
+  }
   )
 
   Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).forEach(l => {
