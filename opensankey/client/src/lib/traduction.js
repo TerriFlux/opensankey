@@ -528,7 +528,7 @@ export const open_resources = {
         'EF':'Étiquettes des flux',
         'EdF':'Édition des flux',
         'ED':'Étiquettes des données',
-        'Leg':'Legendes',
+        'Leg':'Légendes',
         'LegX':'Position horizontale',
         'LegY':'Position verticale',
         'LegWidth':'Largeur',
