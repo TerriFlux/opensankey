@@ -209,8 +209,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
         d.content =evt
       })
+      set_data({ ...data })
     }}
-    onBlur={()=>{set_data({ ...data })}}
+
     theme="snow"
     modules={modules}
     formats={formats}
