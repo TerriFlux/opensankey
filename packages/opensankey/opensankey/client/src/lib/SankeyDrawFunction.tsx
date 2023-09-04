@@ -2077,6 +2077,8 @@ export const linkStrokeWidth=(l:SankeyLink,
   const nodes = data.nodes
   //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
   //position noeud source ou target
+  const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+  const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
   let pos_x_src, pos_y_src
   if (node.idNode == nodes[l.idSource].idNode) {
     pos_x_src = nodes[l.idTarget].x
@@ -2108,20 +2110,19 @@ export const linkStrokeWidth=(l:SankeyLink,
   }
   let link_value = test_link_value(data, nodes, l,getLinkValue)
   link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
+  const width_n=(document.getElementById('shape_'+node.idNode)?.getBoundingClientRect().width??0)/scale_svg
   //Zones limite à ne pas êtres
-  const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + (return_value_node(data,node,'node_width') as number) + scale(link_value / 2)]
-  // const limit_x = [pos_x_src - scale(link_value / 2), pos_x_src + data.node_width + scale(link_value / 2)]
-  const limit_y = [pos_y_src - scale(link_value / 2), pos_y_src + scale(link_value / 2)]
+  // La limite à ne pas être(fixé arbitrairement) ce situe à : largeur/hauteur du noeud + 1/4 de l'épaisseur du flux 
+  const limit_x = [pos_x_src - scale(link_value / 4), pos_x_src + width_n + scale(link_value / 4)]
+  const limit_y = [pos_y_src - scale(link_value / 4), pos_y_src + scale(link_value / 4)]
   let draw_warning = false
   //verifie que la position du noeud drag n'est pas au même niveau que ses noeuds traget
   //si partie gauche du noeud ne se situe pas dans les coord du noeud source
   const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
   //si partie droite du noeud ne se situe pas dans le noeud source
   const right_in_src = node.x + (return_value_node(data,node,'node_width') as number) > limit_x[0] && node.x + (return_value_node(data,node,'node_width') as number) < limit_x[1]
-  // const right_in_src = node.x + (data.node_width) > limit_x[0] && node.x + (data.node_width) < limit_x[1]
   //si partie haute du noeud ne se situe pas dans le noeud source
   const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-  // const bottom_in_src = node.y + scale(link_value) > limit_y[0] && node.y + scale(link_value) < limit_y[1]
   if (return_value_link(data,l,'orientation') == 'hh') {
     //orientation hh
     draw_warning = left_in_src || right_in_src

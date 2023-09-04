@@ -75,7 +75,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
   const isAllNodeTotal =is_all_node_attr_same_value(data,selected_parameter,'show_value',menu_for_style) as boolean
 
-  const valueAllNodeLabelBox =is_all_node_attr_same_value(data,selected_parameter,'label_box_width',menu_for_style) as number
+  const valueAllNodeLabelBox =Math.round(is_all_node_attr_same_value(data,selected_parameter,'label_box_width',menu_for_style) as number)
 
   const allNodeLabelFontSize =is_all_node_attr_same_value(data,selected_parameter,'font_size',menu_for_style) as number
 
