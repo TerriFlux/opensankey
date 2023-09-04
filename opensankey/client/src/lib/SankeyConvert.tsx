@@ -200,8 +200,12 @@ export const complete_sankey_data = (
     if (data.nodeTags['Type de noeud'].tags.secteur && !data.nodeTags['Type de noeud'].tags.secteur.shape) {
       data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
     }
-    if ('échange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['échange'].shape) {
-      data.nodeTags['Type de noeud'].tags['échange'].shape = 'rect'
+    if ('echange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['echange'].shape) {
+      data.nodeTags['Type de noeud'].tags['echange'].shape = 'rect'
+    }
+    if ('échange' in data.nodeTags['Type de noeud'].tags) {
+      data.nodeTags['Type de noeud'].tags['echange'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud'].tags['échange']))
+      delete data.nodeTags['Type de noeud'].tags['échange']
     }
   }
   compute_initial_colors(data)
@@ -438,7 +442,7 @@ export const convert_tags = (
             color: '',
             shape: 'rect'
           },
-          'échange' : {
+          'echange' : {
             name : 'échange',
             selected : true,
             color: '',
@@ -461,8 +465,12 @@ export const convert_tags = (
     if (data.nodeTags['Type de noeud'].tags.secteur && !data.nodeTags['Type de noeud'].tags.secteur.shape) {
       data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
     }
-    if ('échange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['échange'].shape) {
-      data.nodeTags['Type de noeud'].tags['échange'].shape = 'rect'
+    if ('echange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['echange'].shape) {
+      data.nodeTags['Type de noeud'].tags['echange'].shape = 'rect'
+    }
+    if ('échange' in data.nodeTags['Type de noeud'].tags) {
+      data.nodeTags['Type de noeud'].tags['echange'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud'].tags['échange']))
+      delete data.nodeTags['Type de noeud'].tags['échange']
     }
   }
 
@@ -544,6 +552,52 @@ export const convert_tags = (
           }
         })
         delete n_convert.subchain
+      }
+      if ( n.tags['Type de noeud'].includes('échange')) {
+        n.tags['Type de noeud'].push('echange')
+        n.tags['Type de noeud'].splice(n.tags['Type de noeud'].indexOf('échange'),1)
+      }
+      if ( n.tags['Type de noeud'].includes('echange')) {
+        if (n.inputLinksId.length === 0) {
+          const link =  data.links[n.outputLinksId[0]]
+          if (!link) {
+            return
+          }
+          //link.idSource = new_node.idNode
+          const target_node = data.nodes[link.idTarget]
+          Object.keys(target_node.dimensions).forEach(dim_key => {
+            n.dimensions[dim_key] = JSON.parse(JSON.stringify(target_node.dimensions[dim_key]))
+          })
+    
+          Object.keys(target_node.tags).forEach(tag_key => {
+            if ( tag_key === 'Type de noeud' ) {
+              return
+            }
+            //const tags = [...target_node.tags[tag_key]]
+            if (tag_key in n.tags) {
+              n.tags[tag_key] = JSON.parse(JSON.stringify(target_node.tags[tag_key]))
+            } 
+          })   
+        } else {
+          const link = data.links[n.inputLinksId[0]]
+          if (!link) {
+            return
+          }
+          link.idTarget = n.idNode
+          const source_node = data.nodes[link.idSource]
+          Object.keys(source_node.dimensions).forEach(dim_key => {
+            n.dimensions[dim_key] = JSON.parse(JSON.stringify(source_node.dimensions[dim_key]))
+          })
+    
+          Object.keys(source_node.tags).forEach(tag_key => {
+            if ( tag_key === 'Type de noeud' ) {
+              return
+            }
+            if (tag_key in n.tags) {
+              n.tags[tag_key] = JSON.parse(JSON.stringify(source_node.tags[tag_key]))
+            }
+          })
+        }
       }
     }
   )
@@ -827,7 +881,7 @@ export const convert_nodes = (
         n.dimensions['Primaire'] = { level : 1, parent_name: undefined }
       }
       if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
-        n.tags['Type de noeud'] = ['échange']
+        n.tags['Type de noeud'] = ['echange']
         if (!n.dimensions) {
           n.dimensions = {}
         }

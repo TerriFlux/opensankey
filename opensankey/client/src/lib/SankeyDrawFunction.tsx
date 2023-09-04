@@ -1996,13 +1996,9 @@ export const node_label_text=(
   data:SankeyData,
   d:SankeyNode
 )=>{
-  // if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'échange' && (data as unknown as {trade_label:string}).trade_label) {
-  //   return d.name.split(' - ')[1]
-  // }
-  // if (!isNaN(parseInt(d.name.split(' - ')[0]))) {
-  //   return d.name
-  // }
-  // return d.name.split(' - ')[0]
+  if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'echange' && (data as unknown as {trade_label:string}).trade_label) {
+    return d.name.split(' - ')[1]
+  }
   return d.name
 }
 
