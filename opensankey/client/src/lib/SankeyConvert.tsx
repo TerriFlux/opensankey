@@ -553,11 +553,11 @@ export const convert_tags = (
         })
         delete n_convert.subchain
       }
-      if ( n.tags['Type de noeud'].includes('échange')) {
+      if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'].includes('échange')) {
         n.tags['Type de noeud'].push('echange')
         n.tags['Type de noeud'].splice(n.tags['Type de noeud'].indexOf('échange'),1)
       }
-      if ( n.tags['Type de noeud'].includes('echange')) {
+      if ( 'Type de noeud' in n.tags && n.tags['Type de noeud'].includes('echange')) {
         if (n.inputLinksId.length === 0) {
           const link =  data.links[n.outputLinksId[0]]
           if (!link) {
