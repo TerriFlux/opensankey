@@ -366,7 +366,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   }else if(e.key=='s' && e.ctrlKey && !e.shiftKey){
     e.preventDefault()
     localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-    localStorage.setItem('last_save', JSON.stringify(new Date().toString()))
+    const time_save=new Date()
+    const parsed_time_save=time_save.toLocaleDateString() +' - ' + time_save.toLocaleTimeString()
+    localStorage.setItem('last_save', parsed_time_save)
     set_data({...data})
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()

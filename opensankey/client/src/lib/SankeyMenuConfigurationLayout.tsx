@@ -134,7 +134,7 @@ export const OpenSankeyMenuConfigurationLayout = (
         overlay={<Tooltip id={'Menu.tooltips.LegX'}>{t('Menu.tooltips.LegX')} </Tooltip>}>
         <FormControl
           type="text"
-          value={legend_position[0]}
+          value={Math.round(legend_position[0])}
           onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
           onBlur={() => {
             data.legend_position = legend_position
@@ -157,7 +157,7 @@ export const OpenSankeyMenuConfigurationLayout = (
         overlay={<Tooltip id={'Menu.tooltips.LegY'}>{t('Menu.tooltips.LegY')} </Tooltip>}>
         <FormControl
           type="text"
-          value={legend_position[1]}
+          value={Math.round(legend_position[1])}
           onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
           onBlur={() => {
             data.legend_position = legend_position

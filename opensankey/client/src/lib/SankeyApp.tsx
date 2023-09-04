@@ -18,7 +18,7 @@ import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayo
 import { keyHandler } from './SankeyDraw'
 import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
 import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
-import { OpenSankeyDrawLegend } from './SankeyDrawLegend'
+import { OpenSankeyDrawLegend,drag_legend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
@@ -442,6 +442,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
     OpenSankeyDrawLegend(data,set_data,SankeyUtils.getLinkValue,t)
+    const g_legend=d3.select(' .opensankey #g_legend') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
+    if(!window.SankeyToolsStatic){
+      g_legend.call(drag_legend(data,set_data))
+    }
   })
  
   //Event listener sur les touche du clavier

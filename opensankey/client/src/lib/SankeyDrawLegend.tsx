@@ -8,25 +8,7 @@ import { TFunction } from 'i18next'
 import { opposing_drag_elements } from './SankeyDrag'
 import { node_visible_on_svg } from './SankeyDrawFunction'
 
-declare const window: Window &
-typeof globalThis & {
-  SankeyToolsStatic: boolean
-  sankey: {
-    sankey_data_file:RequestInfo
-    sous_filieres : { [ key : string ] : string }
-    units: string[]
-    flask_logo? : string
-    flask_header? : string
-    logo_width? : number
-    legend_average : string
-    legend_uncert : string
-    help_text : string
-    welcome_text: string
-    excel : string
-    logo: string,
-    advanced: boolean
-  }
-}
+
 
 export const OpenSankeyDrawLegend = (
   data:SankeyData,
@@ -309,28 +291,6 @@ export const OpenSankeyDrawLegend = (
     h=h?h:50
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
   
-    const drag_legend=()=>d3.drag<SVGGElement, unknown>()
-      .subject(Object).on('drag', function (event) {
-
-        if(d3.select('.opensankey #svg').nodes().length>0){
-          const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-          const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-          scale_for_legend=(scale_svg<1?(1/scale_svg):1)
-          data.legend_position[0]+=(event.dx)
-          data.legend_position[1]+=(event.dy)
-          data.legend_position[0]=(data.legend_position[0]>=0?data.legend_position[0]:0)
-          data.legend_position[1]=(data.legend_position[1]>=0?data.legend_position[1]:0)
-          d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
-          if(data.legend_position[0]==0 ||data.legend_position[1]==0){
-            opposing_drag_elements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
-          }
-        }
-      }).on('end',()=>set_data({...data}))
-
-    const g_legend=d3.select(' .opensankey #g_legend') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
-    if(!window.SankeyToolsStatic){
-      g_legend.call(drag_legend())
-    }
 
   }
 
@@ -341,3 +301,27 @@ export const OpenSankeyDrawLegend = (
   )
 }
 
+export const drag_legend=(data:SankeyData,
+  set_data:(d:SankeyData)=>void
+)=>d3.drag<SVGGElement, unknown>()
+  .subject(Object).on('drag', function (event) {
+
+    if(d3.select('.opensankey #svg').nodes().length>0){
+      drag_legend_g_element(data,event)
+      if(data.legend_position[0]==0 ||data.legend_position[1]==0){
+        opposing_drag_elements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
+      }
+    }
+  }).on('end',()=>set_data({...data}))
+
+export const drag_legend_g_element=(data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },)=>{
+  let scale_for_legend=1
+  const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+  const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+  scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+  data.legend_position[0]+=(event.dx)
+  data.legend_position[1]+=(event.dy)
+  data.legend_position[0]=(data.legend_position[0]>=0?data.legend_position[0]:0)
+  data.legend_position[1]=(data.legend_position[1]>=0?data.legend_position[1]:0)
+  d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
+}
