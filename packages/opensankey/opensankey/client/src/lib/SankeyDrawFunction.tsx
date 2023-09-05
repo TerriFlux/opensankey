@@ -6,7 +6,7 @@ import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,Sank
 import { InferProps } from 'prop-types'
 import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,get_vertical_marfin_for_sankey_zone,node_displayed,return_value_node,return_value_link, assign_link_local_attribute, toPrecision} from './SankeyUtils'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
-
+import { menu_config_width } from './SankeyMenu'
 import * as SankeyShapes from './SankeyShapes'
 // Function that create the dashed pattern on links
 
@@ -2058,7 +2058,7 @@ export const select_visualy_nodes=(n:SankeyNode)=>{
 export const repositionne_sidebar=()=>{
   const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
   const menu_open=d3.select('.offcanvas-body').node()
-  d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?450:0))+'px')  
+  d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?menu_config_width:0))+'px')  
 }
 
 // Function that compute the link width
@@ -2249,5 +2249,5 @@ export const zoom_function=(evt:d3.D3ZoomEvent<SVGElement,unknown>,data:SankeyDa
   d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(scale_legend)+')')
   d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)*scale_legend)))
 
-  repositionne_sidebar()
+  // repositionne_sidebar()
 }
