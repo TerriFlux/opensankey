@@ -521,6 +521,11 @@ export const synchronizeNodesandLinksId = (
     const layout_link = linksRef[0]
     idLinksMap[l.idLink] = layout_link.idLink
   })
+
+  const newLinkZIndex : string[]= []
+  dataModify.linkZIndex.forEach(idLink=>newLinkZIndex.push(idLinksMap[idLink]))
+  dataModify.linkZIndex = newLinkZIndex
+
   Object.values(dataModify.links).forEach(l=>l.idLink=idLinksMap[l.idLink])
   dataModify.links = Object.assign({}, ...Object.values(dataModify.links).map(lModify => ({ [lModify.idLink]: { ...lModify } })))
 
