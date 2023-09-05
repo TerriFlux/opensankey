@@ -30,7 +30,7 @@ const getIOLink=(
 
         const n_s=data.nodes[data.links[k].idSource]
         const cond_no_recy=(((n_s.x<=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x<0))&& !recy)
-        const cond_recy=(recy && n_s.x>n.x)
+        const cond_recy=(recy && n_s.x>=n.x)
 
         return (cond_no_recy || cond_recy)  && (ori=='hh' ||ori=='vh') && link_visible(data.links[k],data,getLinkValue)
       })
@@ -88,7 +88,7 @@ const getIOLink=(
         const ori=return_value_link(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
         const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !recy)
-        const cond_recy=(recy && n_t.x<n.x)
+        const cond_recy=(recy && n_t.x<=n.x)
 
         return  ( cond_no_recy || cond_recy) && (ori=='hh' ||ori=='hv')&& link_visible(data.links[k],data,getLinkValue)
       })
