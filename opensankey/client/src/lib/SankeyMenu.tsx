@@ -40,7 +40,7 @@ declare const window: Window &
  * @typedef {selected_type}
  */
 export type selected_type = {'label':string;'value':string}
-
+export const menu_config_width=450
 /**
  * Variable that define the Menu element, it's variable and function
  *
@@ -697,7 +697,7 @@ export const OpenSankeyMenus = (
   const filter_color_node=
   <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
-    <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
+    <Popover.Body style={{  marginLeft: '5px', width: menu_config_width+'px' }}>
       <>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
         {addAllDropDownNode(t,data,set_data,false)}</>
       ) : (<>
@@ -710,7 +710,7 @@ export const OpenSankeyMenus = (
   const filter_color_link=
   <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
-    <Popover.Body style={{  marginLeft: '5px', width: '450px' }}>
+    <Popover.Body style={{  marginLeft: '5px', width: menu_config_width+'px' }}>
       {addAllDropDownFlux(t, data.fluxTags, data, set_data)}
     </Popover.Body>
   </Popover>
@@ -1288,7 +1288,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
 
-
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
@@ -1333,7 +1332,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
 
-      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' {...props} style={{ 'width': '450px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
+      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' {...props} style={{ 'width': menu_config_width+'px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
             nav_item_active={nav_item_active}
@@ -1345,7 +1344,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
       <ButtonGroup vertical
         className='sideBar'
-        style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?450+has_scrollbar_shift:has_scrollbar_shift)}}
+        style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?menu_config_width+has_scrollbar_shift:has_scrollbar_shift)}}
       >
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (

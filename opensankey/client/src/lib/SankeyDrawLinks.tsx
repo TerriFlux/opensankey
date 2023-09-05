@@ -536,7 +536,7 @@ export const OpenSankeyDrawLinks = (
   ) => {
     //Peut etre appelé sur un drag de path qui a directement l'id du link
     //ou bien peut etre appelé par le rect de drag qui a l'id du link après un prefix
-    const idLink = d3.select(dragged).attr('id').replace('drag_zone_s_','').replace('drag_zone_t_','')
+    const idLink = d3.select(dragged).attr('id').replace('path_','')
     const p2 = d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))
     const linked_node = identify_node(display_nodes, display_links, display_links[idLink], p2)
     if (linked_node === undefined) {

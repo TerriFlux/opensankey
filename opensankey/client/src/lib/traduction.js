@@ -249,7 +249,7 @@ export const open_resources = {
         },
         apparence:{
           'apparence':'Appearence',
-          'Visibilité':'Visibility of nodes',
+          'Visibilité':'Shape visibility',
           'Couleur':'Color',
           'CouleurPérenne':'Static color',
           'Forme':'Shape',
@@ -279,7 +279,7 @@ export const open_resources = {
           'tp':'Font size',
           'police':'Font type',
           'cl':'Text box width',
-          'vdv':'Set value visibility',
+          'vdv':'Value visibility',
           tooltips: {
             vdb: 'Displays or not the label(s) attached to the selected node(s)',
             lb: 'Displays the text of the label(s) in white or black (useful if label is positioned on node(s))',
@@ -825,7 +825,7 @@ export const open_resources = {
           'tp':'Taille de police',
           'police':'Style de police',
           'cl':'Largeur zone de texte',
-          'vdv':'Afficher la valeur totale des flux',
+          'vdv':'Visibilité de la valeur',
           tooltips: {
             vdb: 'Permet d\'afficher ou non le label accolé au(x) noeud(s) sélectionné(s)',
             lb: 'Permet d\'afficher le texte du label en blanc ou en noir (utile si label positionné sur noeud(s))',
