@@ -22,7 +22,7 @@ import { OpenSankeyDrawLegend,drag_legend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
-import {linkStroke, min_width_and_height,drawArrows,eventOnSankeyZoneMouseDown,eventOnSankeyZoneMouseMove,eventOnSankeyZoneMouseUp,zoom_function} from './SankeyDrawFunction'
+import {linkStroke, min_width_and_height,drawArrows,eventOnSankeyZoneMouseDown,eventOnSankeyZoneMouseMove,eventOnSankeyZoneMouseUp,zoom_function,repositionne_sidebar} from './SankeyDrawFunction'
 import i18next from './traduction'
 import { updateLayout } from './SankeyLayout'
 import {SankeyMenuConfigurationNodesIO} from './SankeyMenuConfigurationNodesIO'
@@ -411,6 +411,15 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       closeAllMenu
     )
   }
+
+  // Add event listener on the resize of window (can happen when we move the window to a different screen with different format) to reposition the sidebar
+  /* eslint-disable */
+    // @ts-ignore
+    addEventListener('resize',()=>{
+      console.log('here')
+      repositionne_sidebar()
+      })
+      /* eslint-enable */
   useEffect(()=>{
   // Call the function that add nodes to the sankey
     OpenSankeyDrawNodes(data,set_data,
