@@ -4,7 +4,7 @@ import { complete_sankey_data } from './SankeyConvert'
 import {  compute_auto_sankey,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
 import * as d3 from 'd3'
 import colormap from 'colormap'
-
+import { menu_config_width } from './SankeyMenu'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -1277,7 +1277,7 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   [data.width, data.height] = min_width_and_height(data)
   let size_menu=0
   if(show_nav){
-    size_menu=450
+    size_menu=menu_config_width
   }
   // Width of the screen minus the margin of the sankey zone minus the width of the configuration menu if it's open
   const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
