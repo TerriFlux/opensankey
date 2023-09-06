@@ -653,12 +653,7 @@ export const SankeyPlusdragGNodeEvent=(
       if(mode_selection.current==='s'){
         if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
-        }else if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && !alt_key_pressed){
-          drag_nodes_plus(node,event,multi_selected_nodes,data,
-            set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,multi_selected_label,node_visible
-          )
-        }
-        if(d3.select(event.subject.sourceEvent.target).node().tagName==='rect' || d3.select(event.subject.sourceEvent.target).node().tagName==='ellipse'){
+        }else {
           drag_nodes_plus(node,event,multi_selected_nodes,data,
             set_data,display_nodes,display_links,multi_selected_links,link_text,min_width_and_height,getLinkValue,drawArrows,scale,inv_scale,multi_selected_label,node_visible
           )
