@@ -290,7 +290,9 @@ export const dragGNodeEvent=(
         }
       }
     }).on('end',()=>{
-      set_data({...data})
+      if(d3.select(document.activeElement).attr('class')!=='input_label'){
+        set_data(data)
+      }
     })
 }
 /**

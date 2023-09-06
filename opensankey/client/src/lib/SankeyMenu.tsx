@@ -1763,6 +1763,25 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     </Dropdown.Menu>
   </Dropdown>:<></> 
 
+  const button_edit_label_node=contextualised_node!==undefined?<Button variant='light'
+    onClick={()=>{
+      const label_x=document.getElementById('text_'+contextualised_node.idNode)?.getBoundingClientRect().x??0
+      const label_y=document.getElementById('text_'+contextualised_node.idNode)?.getBoundingClientRect().y??0
+      const node_x=document.getElementById('shape_'+contextualised_node.idNode)?.getBoundingClientRect().x??0
+      const node_y=document.getElementById('shape_'+contextualised_node.idNode)?.getBoundingClientRect().y??0
+
+      d3.select('#fo_input_label_'+contextualised_node.idNode).style('display','inline-block')
+      d3.select('#fo_input_label_'+contextualised_node.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
+      d3.select('#text_'+contextualised_node.idNode).style('display','none')
+      document.getElementById('input_label_'+contextualised_node.idNode)?.focus()
+
+      set_contextualised_node(undefined)
+
+    }}
+  >
+    {t('Noeud.labels.edit_node_label')}
+  </Button>:<></> 
+
 
   // Pop over that serve as context menu 
   return contextualised_node!==undefined?<Popover  id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
@@ -1780,6 +1799,8 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           set_data({...data})
           set_contextualised_node(undefined)
         }}>Desaggregation</Button>:<></>}
+        {sep}
+        {button_edit_label_node}
         {sep}
         <Button
           variant='light'

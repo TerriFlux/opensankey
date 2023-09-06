@@ -280,6 +280,7 @@ export const open_resources = {
           'police':'Font type',
           'cl':'Text box width',
           'vdv':'Value visibility',
+          'edit_node_label':'Edit node label',
           tooltips: {
             vdb: 'Displays or not the label(s) attached to the selected node(s)',
             lb: 'Displays the text of the label(s) in white or black (useful if label is positioned on node(s))',
@@ -826,6 +827,7 @@ export const open_resources = {
           'police':'Style de police',
           'cl':'Largeur zone de texte',
           'vdv':'Visibilité de la valeur',
+          'edit_node_label':'Éditer nom label',
           tooltips: {
             vdb: 'Permet d\'afficher ou non le label accolé au(x) noeud(s) sélectionné(s)',
             lb: 'Permet d\'afficher le texte du label en blanc ou en noir (utile si label positionné sur noeud(s))',
