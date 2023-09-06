@@ -29,28 +29,12 @@ export const OpenSankeyDrawNodesLabel = (
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current: SankeyNode[] },
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  accept_simple_click:{current:boolean}
   
 ) => {
   const display_nodes=data.nodes
   const display_links=data.links
 
-  const DoubleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
-    accept_simple_click.current=false
-    
-    const label_x=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().x??0
-    const label_y=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().y??0
-    const node_x=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().x??0
-    const node_y=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().y??0
-    
-    d3.select('#fo_input_label_'+d.idNode).style('display','inline-block')
-    d3.select('#fo_input_label_'+d.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
-    d3.select('#text_'+d.idNode).style('display','none')
-    document.getElementById('input_label_'+d.idNode)?.focus()
-    setTimeout(()=>{
-      accept_simple_click.current=true
-    },200)
-  }
+
 
   const add_nodes_label = (
   ) => {
@@ -65,7 +49,7 @@ export const OpenSankeyDrawNodesLabel = (
       .attr('fill-opacity',0.55)
       .attr('rx',4)
 
-    const text_node=ggg_nodes
+    ggg_nodes
       .filter(n=>(return_value_node(data,n,'label_visible') as boolean))
       .append('text')
       .attr('fill',n=>(return_value_node(data,n,'label_color') )?'white':'black')
@@ -104,7 +88,7 @@ export const OpenSankeyDrawNodesLabel = (
         .attr('id',d=>'fo_input_label_'+d.idNode)
         .attr('x',(n)=>node_label_posX(data,n as SankeyNode))
         .attr('y',(n)=>node_label_posY(n as SankeyNode,data))
-        .attr('width',d=>Number(return_value_node(data,d,'label_box_width'))+5)
+        .style('width',d=>((d.name.length))+'rem')
         .attr('height',d=>Number(return_value_node(data,d,'font_size'))+2)
         .style('display','none')
         .append('xhtml:div')
@@ -114,15 +98,20 @@ export const OpenSankeyDrawNodesLabel = (
         .attr('type','text')
         .attr('value',d=>d.name)
         .style('font-size', n => return_value_node(data,n,'font_size') + 'px')
-        .on('input',(evt,d)=>d.name=evt.target.value)
+        .on('input',(evt,d)=>{
+          d.name=evt.target.value})
+        .on('keypress',(evt)=>{
+          if(evt.keyCode==13){
+            // if 'enter' key pressed, update the label
+            set_data({...data})
+          }
+        })
         .style('background-color','white')
         .style('border','none')
         .style('border-color','transparent')
-        .style('width',d=>Number(return_value_node(data,d,'label_box_width'))+'px')
         .style('height',d=>Number(return_value_node(data,d,'font_size'))+'px')
         .style('outline','none')
         
-      text_node.on('dblclick',(event, d)=>DoubleGNodeClick(event,d))
 
     }
     

@@ -432,7 +432,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       nodeTooltipsContent,SankeyUtils.link_text,SankeyUtils.getLinkValue,
       set_displayed_input_link_value,accept_simple_click,set_contextualised_node,pointer_pos)
 
-    OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue,accept_simple_click)
+    OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue)
 
     // Call the function that add links to the sankey
     OpenSankeyDrawLinks(
