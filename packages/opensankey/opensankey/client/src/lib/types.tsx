@@ -152,6 +152,8 @@ export const SankeyLinkAttrLocalTypes ={
   font_family: PropTypes.string,
   label_unit_visible:PropTypes.bool,
   label_unit:PropTypes.string,
+  custom_digit:PropTypes.bool,
+  nb_digit:PropTypes.number,
 }
 export type SankeyLinkAttrLocal = InferProps<typeof SankeyLinkAttrLocalTypes>
 
@@ -186,6 +188,8 @@ export const SankeyLinkStyleTypes ={
   font_family: PropTypes.string.isRequired,
   label_unit_visible:PropTypes.bool.isRequired,
   label_unit:PropTypes.string.isRequired,
+  custom_digit:PropTypes.bool.isRequired,
+  nb_digit:PropTypes.number.isRequired,
 
 }
 export type SankeyLinkStyle = InferProps<typeof SankeyLinkStyleTypes>
