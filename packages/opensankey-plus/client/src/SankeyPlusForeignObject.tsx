@@ -76,12 +76,14 @@ export const SankeyPlusNodeFO = (
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<ReactQuill
     value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
-    onChange={(evt) => {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-        d.FO_content = evt
-        const node_width = return_value_node(data,d,'node_width') as number
-        d.FO_content = d.FO_content.replace('<img src=','<img width="'+node_width+'" src=')
-      })
+    onChange={(evt,_,s) => {
+      if(s==='user'){
+        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+          d.FO_content = evt
+          const node_width = return_value_node(data,d,'node_width') as number
+          d.FO_content = d.FO_content.replace('<img src=','<img width="'+node_width+'" src=')
+        })
+      }
     }}
     onBlur={()=>{set_data({ ...data })}}
     theme="snow"
