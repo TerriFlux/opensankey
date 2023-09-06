@@ -260,6 +260,25 @@ export const SankeyMenuConfigurationLinksAppearence = (
     })
     return toPrecision
   }
+  const isAllLinkToCustomDigit=()=>{
+    let toPrecision = true
+    selected_parameter.map(d => {
+      toPrecision =(return_correct_link_attribute_value(data,d,'custom_digit',menu_for_style)) ? toPrecision : false
+    })
+    return toPrecision
+  }
+  const  AllLinkToCustomDigit=isAllLinkToCustomDigit()
+  const allLinkLabelCustomDigit = () => {
+    let display_size = true
+    let size = 0
+    if (selected_parameter.length != 0) {
+      size = return_correct_link_attribute_value(data,selected_parameter[0],'nb_digit',menu_for_style) as number
+    }
+    selected_parameter.map((d) => {
+      display_size = ((return_correct_link_attribute_value(data,d,'nb_digit',menu_for_style) as number) == size) ? display_size : false
+    })
+    return (display_size) ? size : 0
+  }
 
   const allLinkLabelScientificPrecision = () => {
     let display_size = true
@@ -763,6 +782,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               () => {
                 const val=isAllLinkToPrecision()
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  assign_link_value_to_correct_var(d,'custom_digit',false,menu_for_style)
                   assign_link_value_to_correct_var(d,'to_precision',!val,menu_for_style)
                 })
                 set_data({ ...data })
@@ -789,6 +809,54 @@ export const SankeyMenuConfigurationLinksAppearence = (
                 const value=+evt.target.value
                 const val=isNaN(value) || value<=0?5:Math.round(value)
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'scientific_precision',val,menu_for_style))
+                set_data({...data})
+              }}/>
+          </OverlayTrigger>
+        </InputGroup></>:<></>}
+      {/* Choix d'affichage du nombre de chiffre après la virgule  */}
+      <InputGroup>
+        <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.custom_digit')}</InputGroup.Text>
+        <OverlayTrigger
+          key={'flux.label.tooltips.cd'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.cd'}>{t('Flux.label.tooltips.custom_digit')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'30%'}}
+            variant={AllLinkToCustomDigit?'primary':'outline-primary'}
+            onClick={
+              () => {
+                const val=AllLinkToCustomDigit
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+
+                  assign_link_value_to_correct_var(d,'to_precision',false,menu_for_style)
+                  assign_link_value_to_correct_var(d,'custom_digit',!val,menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{AllLinkToCustomDigit?<FaEye/>:<FaEyeSlash/>}</Button>
+        </OverlayTrigger>
+      </InputGroup>
+
+      {AllLinkToCustomDigit?<>  {/* Choose number of custom digit */}
+        <InputGroup>
+          <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.NbDigit')}</InputGroup.Text>
+          <OverlayTrigger
+            key={'flux.label.tooltips.nd'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'flux.label.tooltips.nd'}>{t('Flux.label.tooltips.NbDigit')} </Tooltip>}>
+            <Form.Control
+              style={{width:'30%'}}
+              type='number'
+              min={0}
+              step={1}
+              disabled={!AllLinkToCustomDigit}
+              value={allLinkLabelCustomDigit()}
+              onChange={evt=>{
+                const value=+evt.target.value
+                const val=isNaN(value) 
+                Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'nb_digit',value,menu_for_style))
                 set_data({...data})
               }}/>
           </OverlayTrigger>
