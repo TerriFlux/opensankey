@@ -1,9 +1,10 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form,  Modal, Button, ButtonGroup,Col,Row} from 'react-bootstrap'
+import { Form,  Modal, Button, ButtonGroup,Col,Row, InputGroup} from 'react-bootstrap'
 import { SankeyData } from './types'
 import { TFunction,i18n } from 'i18next'
+import { FaEyeSlash,FaEye } from 'react-icons/fa'
 const modalPreferencePropTypes = {
   showPreference: PropTypes.bool.isRequired,
   setShowPreference: PropTypes.func.isRequired,
@@ -60,24 +61,63 @@ export const OpenSankeyDefaultModalePreferenceContent=(
         }}
       >Expert</Button>
     </ButtonGroup>,
-    'form':[<Form.Check key='MEP' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('MEP')} type="checkbox" label={t('Menu.MEP')} onChange={() => {
-      preferenceCheck('MEP',data)
-      set_data({ ...data })
-    }} />,
-    <Form.Check key='Node' checked={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} disabled type="checkbox" label={t('Menu.Noeuds')} />,
-    <Form.Check key='EN' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('EN')} type="checkbox" label={t('Menu.EN')} onChange={() => {Form.Check
-      preferenceCheck('EN',data)
-      set_data({ ...data })
-    }} />,
-    <Form.Check key='flux' checked={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} disabled type="checkbox" label={t('Menu.flux')} />,
-    <Form.Check key='ef' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('EF')} type="checkbox" label={t('Menu.EF')} onChange={() => {
-      preferenceCheck('EF',data)
-      set_data({ ...data })
-    }} />,
-    <Form.Check key='ed' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('ED')} type="checkbox" label={t('Menu.ED')} onChange={() => {
-      preferenceCheck('ED',data)
-      set_data({ ...data })
-    }} />,
+    'form':[
+      <InputGroup>
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.MEP')}</InputGroup.Text>
+        <Button style={{width:'10%'}} className='btn_menu_config' key='MEP' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('MEP')?'primary':'outline-primary'} onClick={() => {
+          preferenceCheck('MEP',data)
+          set_data({ ...data })
+        }} >
+          {data.accordeonToShow.includes('MEP')?<FaEye/>:<FaEyeSlash/>}
+        </Button>
+      </InputGroup>,
+
+      <InputGroup>
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Noeuds')}</InputGroup.Text>
+        <Button style={{width:'10%'}} className='btn_menu_config' key='Node' variant={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)?'primary':'outline-primary'} disabled >
+          <FaEye/>
+        </Button>
+      </InputGroup>,
+
+      <InputGroup>
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.EN')}</InputGroup.Text>
+        <Button style={{width:'10%'}} className='btn_menu_config' key='EN' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('EN')?'primary':'outline-primary'} onClick={() => {Button
+          preferenceCheck('EN',data)
+          set_data({ ...data })
+        }} >
+          {data.accordeonToShow.includes('EN')?<FaEye/>:<FaEyeSlash/>}
+        </Button>
+      </InputGroup>,
+
+      <InputGroup>
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.flux')}</InputGroup.Text>
+        <Button style={{width:'10%'}} className='btn_menu_config' key='flux' variant={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)?'primary':'outline-primary'} disabled >
+          <FaEye/>
+
+        </Button>
+      </InputGroup>,
+
+      <InputGroup>
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.EF')}</InputGroup.Text>
+        <Button style={{width:'10%'}} className='btn_menu_config' key='ef' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('EF')?'primary':'outline-primary'} onClick={() => {
+          preferenceCheck('EF',data)
+          set_data({ ...data })
+        }} >
+          {data.accordeonToShow.includes('EF')?<FaEye/>:<FaEyeSlash/>}
+
+        </Button>
+      </InputGroup>,
+
+      <InputGroup>
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.ED')}</InputGroup.Text>
+        <Button style={{width:'10%'}} className='btn_menu_config' key='ed' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('ED')?'primary':'outline-primary'} onClick={() => {
+          preferenceCheck('ED',data)
+          set_data({ ...data })
+        }}>
+          {data.accordeonToShow.includes('ED')?<FaEye/>:<FaEyeSlash/>}
+
+        </Button>
+      </InputGroup>,
 
     ]
 
