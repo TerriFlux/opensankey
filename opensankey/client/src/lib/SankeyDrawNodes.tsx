@@ -123,15 +123,38 @@ export const OpenSankeyDrawNodes = (
       // When we Ctrl + click a node, it select it and open a menu 
 
       const simpleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
+
+        if((event.target as HTMLSpanElement).tagName==='tspan'){
+          setTimeout(()=>{
+            if(accept_simple_click.current){
+              eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
+            }
+          },200)
+        }else{
+          eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
+        }
+      }
+
+
+      const DoubleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
+        accept_simple_click.current=false
+        const label_x=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().x??0
+        const label_y=document.getElementById('text_'+d.idNode)?.getBoundingClientRect().y??0
+        const node_x=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().x??0
+        const node_y=document.getElementById('shape_'+d.idNode)?.getBoundingClientRect().y??0
+        
+        d3.select('#fo_input_label_'+d.idNode).style('display','inline-block')
+        d3.select('#fo_input_label_'+d.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
+        d3.select('#text_'+d.idNode).style('display','none')
+        document.getElementById('input_label_'+d.idNode)?.focus()
         setTimeout(()=>{
-          if(accept_simple_click.current){
-            eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
-          }
+          accept_simple_click.current=true
         },200)
       }
 
       ggg_nodes
         .on('click', (event, d) => simpleGNodeClick(event,d))
+        .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
 
       if (mode_selection.current == 'ln') {
         ggg_nodes.on('mousedown', function (event, d) {
