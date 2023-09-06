@@ -4,7 +4,7 @@ import { TFunction } from 'i18next'
 import LZString from 'lz-string'
 
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup } from 'react-bootstrap'
-import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
+import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile } from '@fortawesome/free-solid-svg-icons'
@@ -1234,10 +1234,15 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
 }
 
 export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
-  return <Form.Check disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('Vis')} type="checkbox" label="Storytelling" onChange={() => {
-    preferenceCheck('Vis',data)
-    set_data({ ...data })
-  }} />
+  return <InputGroup>
+    <InputGroup.Text style={{width:'20%'}}>Storytelling</InputGroup.Text>
+    <Button style={{width:'10%'}} className='btn_menu_config' key='Vis' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('Vis')?'primary':'outline-primary'} onClick={() => {
+      preferenceCheck('Vis',data)
+      set_data({ ...data })
+    }} >
+      {data.accordeonToShow.includes('Vis')?<FaEye/>:<FaEyeSlash/>}
+    </Button>
+  </InputGroup>
 }
 
 

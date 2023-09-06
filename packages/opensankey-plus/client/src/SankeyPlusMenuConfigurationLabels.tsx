@@ -2,7 +2,7 @@ import React from 'react'
 import { Row, Form, FormControl, Button, OverlayTrigger,Tooltip, InputGroup, Popover, ButtonGroup, Badge} from 'react-bootstrap'
 import {  SankeyPlusData,SankeyPlusLabel} from './types'
 import { MultiSelect } from 'react-multi-select-component'
-import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
+import { FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaMinus, FaPlus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import Accordion from 'react-bootstrap/Accordion'
 import ReactQuill,{Quill} from 'react-quill'
@@ -23,10 +23,15 @@ typeof globalThis & {
 
 
 export const SankeyPlusMenuPreferenceLabels=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
-  return  (<Form.Check disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} checked={data.accordeonToShow.includes('LL')} type="checkbox" label={t('Menu.LL')} onChange={() => {
-    preferenceCheck('LL',data)
-    set_data({ ...data })
-  }} />)
+  return <InputGroup>
+    <InputGroup.Text style={{width:'20%'}}>{t('Menu.LL')}</InputGroup.Text>
+    <Button style={{width:'10%'}} className='btn_menu_config' key='LL' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('LL')?'primary':'outline-primary'} onClick={() => {
+      preferenceCheck('LL',data)
+      set_data({ ...data })
+    }} >
+      {data.accordeonToShow.includes('LL')?<FaEye/>:<FaEyeSlash/>}
+    </Button>
+  </InputGroup>
 }
 
 
