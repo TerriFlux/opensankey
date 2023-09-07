@@ -31,7 +31,7 @@ import {SankeyMenuConfigurationLinksData} from './SankeyMenuConfigurationLinksDa
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faFilter,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes, faArrowPointer,faSliders,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { FaAngleDoubleLeft} from 'react-icons/fa'
 import { return_value_link } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
@@ -253,7 +253,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         </>:<></>}   
           
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'warning'}><FontAwesomeIcon icon={faFolderTree} /></Button></td><td style={{'border':style_border}}>{t('welcome.3')}</td></tr>
-        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FontAwesomeIcon icon={faFilter} /></Button></td><td style={{'border':style_border}}>{t('welcome.4')}</td></tr>
+        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FontAwesomeIcon icon={faSliders} /></Button></td><td style={{'border':style_border}}>{t('welcome.4')}</td></tr>
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsUpDown} /></Button><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsLeftRight} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.5')}</td></tr>
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FontAwesomeIcon icon={faDiagramProject} /></Button></td><td style={{'border':style_border}}>{t('welcome.6')}</td></tr>
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'info'}> ?</Button></td><td style={{'border':style_border}}>{t('welcome.7')}</td></tr>
