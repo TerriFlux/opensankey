@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal } from './types'
+import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal,SankeyNodeStyle, SankeyNodeAttrLocal, SankeyLinkStyle} from './types'
 import colormap from 'colormap'
 import { default_sankey_data, default_node,assign_link_local_attribute, return_value_link, default_link_style,default_node_style, node_displayed} from './SankeyUtils'
 
@@ -1474,7 +1474,40 @@ export const convert_data = (
   if(!data.accordeonToShow.includes('ED') && Object.keys(data.dataTags).length>0){
     data.accordeonToShow.push('ED')
   }
+
+  clean_data_local(data)
 }
 const has_not_converted_nodeTags_as_levelTags=(data:SankeyData)=>{
   return Object.values(data.nodeTags).filter(nt=>nt.banner=='level').length>0
+}
+// Function to clean local variable of nodes and links by deleting local variable if they have the same value as the style
+// they're associated with
+const clean_data_local=(data:SankeyData)=>{
+  // Clean nodes local
+  Object.values(data.nodes).forEach(n=>{
+    if(n.local!==undefined && n.local!==null){
+      Object.keys(n.local).forEach((k_l : string)=>{
+        const k_l_c=k_l as keyof SankeyNodeAttrLocal
+        const k_s_c=k_l as keyof SankeyNodeStyle
+
+        if(n.local && n.local[k_l_c]==data.style_node[n.style][k_s_c]){
+          delete n.local[k_l_c]
+        } 
+      })
+    }
+  })
+
+  // Clean links local
+  Object.values(data.links).forEach(l=>{
+    if(l.local!==undefined && l.local!==null){
+      Object.keys(l.local).forEach((k_l : string)=>{
+        const k_l_c=k_l as keyof SankeyLinkAttrLocal
+        const k_s_c=k_l as keyof SankeyLinkStyle
+
+        if(l.local && l.local[k_l_c]==data.style_link[l.style][k_s_c]){
+          delete l.local[k_l_c]
+        } 
+      })
+    }
+  })
 }
