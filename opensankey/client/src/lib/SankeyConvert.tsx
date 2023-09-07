@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal } from './types'
 import colormap from 'colormap'
-import { default_sankey_data, default_node,assign_link_local_attribute, return_value_link, default_link_style,default_node_style} from './SankeyUtils'
+import { default_sankey_data, default_node,assign_link_local_attribute, return_value_link, default_link_style,default_node_style, node_displayed} from './SankeyUtils'
 
 
 interface ConvertSankeyNode {
@@ -18,6 +18,7 @@ interface ConvertSankeyNode {
   output_offsets: number[],
   horizontal_index: number,
   visible?: number | boolean,
+  node_visible?:boolean,
   label_visible?: boolean,
   shape_visible?: number | boolean,
   trade_close: boolean,
@@ -782,7 +783,7 @@ export const convert_nodes = (
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         n.local.shape_visible=(n_convert.shape_visible as boolean)
         delete n_convert.shape_visible
-        delete n_convert.display
+        //delete n_convert.display
       }
       if(n_convert.shape){
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
@@ -829,6 +830,14 @@ export const convert_nodes = (
       if (n_convert.label_visible) {
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         n.local.label_visible=(n_convert.label_visible as boolean)
+      }
+      if (n_convert.node_visible !== undefined && n_convert.display !== undefined) {
+        if (node_displayed(data,n,false) !== (n_convert.node_visible&&n_convert.display) ) {
+          n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+          n.local.local_aggregation = (n_convert.node_visible&&n_convert.display)
+        }
+        delete n_convert.node_visible
+        delete n_convert.display
       }
 
       // FIN CONVERSION EN ATTRIBUT LOCAL
