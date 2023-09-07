@@ -574,6 +574,7 @@ export const updateLayout = (
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
     }
   }
+
   if(mode.includes('removeFlux')) {
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
@@ -615,6 +616,20 @@ export const updateLayout = (
       )
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
     }
+    Object.entries(data.nodes).forEach( ([key,node]) => {
+      const layoutNode = new_layout.nodes[key]
+      if (!layoutNode) {
+        return
+      }
+      const commonInputLinksId = layoutNode.inputLinksId.filter(id=>node.inputLinksId.indexOf(id) !== -1)
+      let justInNode = node.inputLinksId.filter(id=>layoutNode.inputLinksId.indexOf(id) === -1)
+      const newInputLinksId = commonInputLinksId.concat(justInNode)
+      node.inputLinksId = newInputLinksId
+      const commonOutputLinksId = layoutNode.outputLinksId.filter(id=>node.outputLinksId.indexOf(id) !== -1)
+      justInNode = node.inputLinksId.filter(id=>layoutNode.inputLinksId.indexOf(id) === -1)
+      const newOutputLinksId = commonOutputLinksId.concat(justInNode)
+      node.outputLinksId = newOutputLinksId
+    })
   }
 
   if (mode.includes('attrNode')) {

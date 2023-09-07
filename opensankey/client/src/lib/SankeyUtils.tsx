@@ -5,6 +5,7 @@ import {  compute_auto_sankey,compute_default_input_outputLinksId,agregation,des
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from './SankeyMenu'
+
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -1460,14 +1461,14 @@ export const assign_node_style_attribute=(n:SankeyNodeStyle,k:keyof SankeyNodeSt
 
 // The node is displayed if the tags attribued are also selected and either it has the general aggregation level selected
 // or it can have a local aggregation level selected that doesn't require the verify the general level selected
-export const node_displayed=(data:SankeyData,n:SankeyNode)=>{
+export const node_displayed=(data:SankeyData,n:SankeyNode, skip_link_zero=false)=>{
   const has_local_level=return_local_node_value(n,'local_aggregation') as boolean | undefined
   let local_level=node_has_displayed_level(data,n)
   if(has_local_level!==undefined && has_local_level!==null){
     local_level=has_local_level
   }
 
-  return node_has_displayed_tags(data,n) && ( local_level ) && has_links_zero(data,n)
+  return node_has_displayed_tags(data,n) && ( local_level ) && ( skip_link_zero || has_links_zero(data,n))
 }
 
 export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
@@ -1534,6 +1535,9 @@ export const has_links_zero=(data:SankeyData,node:SankeyNode)=>{
           //alert('Corruption du diagramme')
           return ''
         }
+        if (!node_displayed(data,data.nodes[link.idSource],true) || !node_displayed(data,data.nodes[link.idTarget],true)) {
+          continue
+        }
         if (data.nodes[link.idSource]  && data.nodes[link.idTarget]) {
           const val = getLinkValue(data, link.idLink)
           if (val.extension?.free_visible) {
@@ -1555,6 +1559,9 @@ export const has_links_zero=(data:SankeyData,node:SankeyNode)=>{
         if (link === undefined) {
           //alert('Corruption du diagramme')
           return ''
+        }
+        if (!node_displayed(data,data.nodes[link.idSource],true) || !node_displayed(data,data.nodes[link.idTarget],true)) {
+          continue
         }
         if (data.nodes[link.idSource] && data.nodes[link.idTarget]) {
           const val = getLinkValue(data, link.idLink)
