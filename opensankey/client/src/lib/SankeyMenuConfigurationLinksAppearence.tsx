@@ -704,7 +704,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
   const content_label=<>
     {/* Display label  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.vdb')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.vdb') +(is_link_diplaying_value_local(multi_selected_links,'label_visible',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'flux.label.tooltips.1'}
         placement={'top'}

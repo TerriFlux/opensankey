@@ -353,7 +353,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
       overlay={<Tooltip id={'noeud.labels.tooltips.1'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
       <InputGroup>
         <InputGroup.Text style={{width:'40%'}}>
-          {t('Noeud.labels.vdb')}
+          {t('Noeud.labels.vdb')+(is_node_diplaying_value_local(multi_selected_nodes,'label_visible',menu_for_style)?'*':'')}
         </InputGroup.Text>
 
         <Button
