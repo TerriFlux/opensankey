@@ -73,6 +73,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
 
   const l_ori=OpensankeyUtils.return_value_link(data,l,'orientation')
   const l_grad=OpensankeyUtils.return_value_link(data,l,'gradient')
+  const l_recy=OpensankeyUtils.return_value_link(data,l,'recycling')
   const width_src = +d3.select(' .opensankey #shape_' + l.idSource).attr('width')
   const height_src = +d3.select(' .opensankey #shape_' + l.idSource).attr('height')
   const width_trgt = +d3.select(' .opensankey #shape_' + l.idTarget).attr('width')
@@ -139,7 +140,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
     .attr('stop-opacity', 1)
   if (l_ori === 'hh' || l_ori === 'hv') {
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-start').attr('stop-color', () => {
-      if (nodes[l.idSource].x < nodes[l.idTarget].x) {
+      if ( (!l_recy && nodes[l.idSource].x < nodes[l.idTarget].x) || (l_recy && nodes[l.idSource].x >= nodes[l.idTarget].x ) ) {
         d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode)
           .attr('x1', nodes[l.idSource].x + width_src)
           .attr('y1', '0')
@@ -173,7 +174,7 @@ export const linkStroke=(l:SankeyPlusLink,data:SankeyPlusData,getLinkValue:(data
     }
     )
     d3.select(' .opensankey #gradient-' + nodes[l.idSource].idNode + '-' + nodes[l.idTarget].idNode + ' #stop-end').attr('stop-color', () => {
-      if (nodes[l.idSource].x > nodes[l.idTarget].x) {
+      if ( (!l_recy && nodes[l.idSource].x > nodes[l.idTarget].x) || (l_recy && nodes[l.idSource].x <= nodes[l.idTarget].x)) {
         const n = n_source
         if (n.colorTag in n.tags && n.colorParameter === 'groupTag') {
           const selected_tag = n.tags[n.colorTag][0]
