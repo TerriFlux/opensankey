@@ -1206,3 +1206,6 @@ textarea {
 	margin:5px;
 	width: 32%;
 }
+.accordion_new_welcome .accordion-button{
+	background-color:#eeeeee;
+}
