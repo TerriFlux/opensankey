@@ -44,7 +44,9 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
       if(((l as unknown) as SankeyPlusLabelToConvert ).name!==undefined){
         const new_content=((l as unknown) as SankeyPlusLabelToConvert).name
         if (((l as unknown) as SankeyPlusLabelToConvert).font_size === 40) {
-          l.content=new_content?'<h3>'+new_content+'</h3>':''          
+          l.content=new_content?'<h3>'+new_content+'</h3>':''   
+        } else if (((l as unknown) as SankeyPlusLabelToConvert).font_size === 30) {
+          l.content=new_content?'<h4>'+new_content+'</h4>':''        
         } else {
           l.content=new_content?new_content:''
         }
