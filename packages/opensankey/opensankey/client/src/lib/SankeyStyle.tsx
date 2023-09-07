@@ -39,7 +39,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
       </Modal.Header>
       <Modal.Body className='sankey-menu'>
         <Form.Group>
-          <InputGroup >
+          <InputGroup>
             <Col>
               <Button style={{width:'20%'}} onClick={() => {
                 const new_style = default_node_style()
