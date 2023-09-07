@@ -1462,7 +1462,6 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   const content_rc_static=<>
     <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
-    <p><b>{t('Menu.rcc_acdn_bold')}</b>{t('Menu.rcc_acdn')}</p>
     <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
     
     <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
@@ -1480,8 +1479,8 @@ export const OpenSankeyModalWelcome=(t:TFunction,
     <p><b>{t('Menu.rcc_cf_bold')}</b>{t('Menu.rcc_cf')}</p>
     <p><b>{t('Menu.rcc_ctrl_cf_bold')}</b>{t('Menu.rcc_ctrl_cf')}</p>
     <p><b>{t('Menu.rcc_cs_bold')}</b>{t('Menu.rcc_cs')}</p>
+    <p><b>{t('Menu.rcc_click_and_drag_bold')}</b>{t('Menu.rcc_click_and_drag')}</p>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
-    <p><b>{t('Menu.rcc_acdn_bold')}</b>{t('Menu.rcc_acdn')}</p>
     <p><b>{t('Menu.rcc_ad_bold')}</b>{t('Menu.rcc_ad')}</p>
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
