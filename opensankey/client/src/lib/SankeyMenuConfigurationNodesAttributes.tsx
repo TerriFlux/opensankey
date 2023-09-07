@@ -238,7 +238,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         delay={500}
         overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{has_NodeType_Tag?t('Noeud.apparence.tooltips.FormeDisabled'):t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
 
-        <InputGroup >
+        <InputGroup>
           <InputGroup.Text
             style={{width:'40%',
               color:(!menu_for_style && has_NodeType_Tag)?'#666666':'',
@@ -795,7 +795,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     {advanced_label_value_content}
   </Form.Group>
 
-  const style_node=!menu_for_style? <InputGroup >
+  const style_node=!menu_for_style? <InputGroup>
     <InputGroup.Text style={{width:'25%'}}>{t('Noeud.Style')}</InputGroup.Text>
     <Dropdown  >
       <Dropdown.Toggle

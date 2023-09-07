@@ -330,7 +330,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
   const content_appearence = <Form >
 
     {/* Choix de la couleur du flux */}
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
         {t('Flux.apparence.couleur')+(is_link_diplaying_value_local(multi_selected_links,'color',menu_for_style)?'*':'')}
       </InputGroup.Text>
@@ -361,7 +361,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </InputGroup>
 
     {/* Opacité */}
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'40%'}} >{t('Flux.apparence.opacity')+(is_link_diplaying_value_local(multi_selected_links,'opacity',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'Flux.apparence.tooltips.1'}
@@ -391,7 +391,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </InputGroup>
 
     {/* Flux hachuré */}
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>{t('Flux.apparence.hach')+(is_link_diplaying_value_local(multi_selected_links,'dashed',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'Flux.apparence.tooltips.2'}
@@ -411,7 +411,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </InputGroup>
 
     {/* Orientation du flux */}
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
         {t('Flux.apparence.of')+(is_link_diplaying_value_local(multi_selected_links,'orientation',menu_for_style)?'*':'')}
       </InputGroup.Text>
@@ -499,7 +499,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </InputGroup>
 
     {/* Positionnement du centre du flux  */}
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'70%'}}>
         {t('Flux.apparence.pdc')}
       </InputGroup.Text>
@@ -536,7 +536,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </InputGroup>
 
     {/* Distance des poignée */}
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'70%'}}>
         {t('Flux.apparence.eep')+(is_link_diplaying_value_local(multi_selected_links,'left_horiz_shift',menu_for_style)&&is_link_diplaying_value_local(multi_selected_links,'right_horiz_shift',menu_for_style)?'*':'')}
       </InputGroup.Text>
@@ -580,7 +580,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </InputGroup>
 
     {/* Choix du type de représentation du flux  */}
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
         {t('Flux.apparence.type')+(is_link_diplaying_value_local(multi_selected_links,'left_horiz_shift',menu_for_style)&&is_link_diplaying_value_local(multi_selected_links,'right_horiz_shift',menu_for_style)?'*':'')}
       </InputGroup.Text>
@@ -646,7 +646,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </InputGroup>
 
     {/* Modification du rayon de courbure du flux  */}
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>{t('Flux.apparence.courbure')+(is_link_diplaying_value_local(multi_selected_links,'curvature',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'flux.apparence.tooltips.12'}
@@ -670,7 +670,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
       </OverlayTrigger>
     </InputGroup>
 
-    <InputGroup >
+    <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
         {t('Flux.apparence.arrow_size')+(is_link_diplaying_value_local(multi_selected_links,'arrow_size',menu_for_style)?'*':'')}
       </InputGroup.Text>
