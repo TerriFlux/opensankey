@@ -12,6 +12,7 @@ import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
+import * as d3 from 'd3'
 /**
  * Define ApplyLayoutDialog
  *
@@ -565,7 +566,7 @@ const ApplySaveJSONPropTypes = {
   t:PropTypes.func.isRequired,
   show_save_json : PropTypes.bool.isRequired,
   set_show_save_json: PropTypes.func.isRequired,
-  sankey_data:SankeyDataPropTypes,
+  sankey_data : PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_sankey_data:PropTypes.func.isRequired,
   set_view:PropTypes.func
 }
@@ -580,6 +581,8 @@ type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
  */
 export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,set_sankey_data,set_view }: ApplySaveJSONTypes) => {
   const [mode_save,set_mode_save]=useState(true)
+  const [mode_visible_element,set_mode_visible_element]=useState(false)
+
   return (
     <Modal
       bsSize="large"
@@ -596,40 +599,73 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
       <Modal.Body>
         <Form >
           <InputGroup>
+            <InputGroup.Text style={{width:'40%'}}>{t('Menu.SaveValue')}</InputGroup.Text>
             <Button
-              style={{width:'10%'}}
+              style={{width:'40%'}}
+              className='btn_menu_config'
               variant={mode_save?'primary':'outline-primary'}
               onClick={()=>set_mode_save(!mode_save)}>
               {mode_save?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
             </Button>
-            
-            <InputGroup.Text style={{width:'70%'}}>{t('Menu.SaveValue')}</InputGroup.Text>
+          </InputGroup>
+          <InputGroup>
+            <InputGroup.Text style={{width:'40%'}}>{t('Menu.VisibleElement')}</InputGroup.Text>
             <Button
-              size="sm"
-              style={{width:'20%'}}
-              onClick={
-                () => {
-                  // Crée une copie pour d'abord enregitrer avec les changements
-                  // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-                  const cpy=JSON.parse(JSON.stringify(sankey_data))
-                  if(!mode_save){
-                    Object.values(sankey_data.links).map(d=>{
-                      (d as SankeyLink).value={}
-                      return d
-                    })
-                  }
-                  if(set_view){
-                    set_view('none')
-                  }
-                  set_sankey_data({...sankey_data})
-                  clickSaveDiagram(sankey_data)
-                  set_sankey_data({...cpy})
-                }
-              }>{t('Menu.SaveJSON')}
+              style={{width:'40%'}}
+              className='btn_menu_config'
+              variant={mode_visible_element?'primary':'outline-primary'}
+              onClick={()=>set_mode_visible_element(!mode_visible_element)}>
+              {mode_visible_element?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
             </Button>
           </InputGroup>
         </Form>
       </Modal.Body>
+      <Modal.Footer>
+        <Button
+          size="sm"
+          style={{width:'20%'}}
+          variant='danger'
+          onClick={
+            () => {
+              set_show_save_json(false)
+            }
+          }>{t('Menu.close')}
+        </Button>
+        <Button
+          size="sm"
+          style={{width:'20%'}}
+          onClick={
+            () => {
+              // Crée une copie pour d'abord enregitrer avec les changements
+              // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
+              const cpy=JSON.parse(JSON.stringify(sankey_data))
+              if(!mode_save){
+                Object.values(sankey_data.links).forEach(d=>{
+                  (d as SankeyLink).value={}
+                })
+              }
+              if(mode_visible_element){
+                // Si l'on enregistre que les element visible alors on cherche les élements visible dasns le svg
+                const link_present=[] as string[]
+                d3.selectAll('.gg_links .link').each(s=>{
+                  const d=s as SankeyLink
+                  link_present.push(d.idLink)
+                })
+                const node_visible=node_visible_on_svg()
+                sankey_data.links=Object.fromEntries(Object.entries(sankey_data.links).filter(l=>link_present.includes(l[0])).map(l=>l))
+                sankey_data.nodes=Object.fromEntries(Object.entries(sankey_data.nodes).filter(n=>node_visible.includes(n[0])).map(n=>n))
+              }
+
+              if(set_view){
+                set_view('none')
+              }
+              set_sankey_data({...sankey_data})
+              clickSaveDiagram(sankey_data)
+              set_sankey_data({...cpy})
+            }
+          }>{t('Menu.SaveJSON')}
+        </Button>
+      </Modal.Footer>
     </Modal>
   )
 }
