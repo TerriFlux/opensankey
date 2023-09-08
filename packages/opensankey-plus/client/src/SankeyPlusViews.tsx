@@ -386,8 +386,7 @@ export const keyHandler = (
     }
   }
 
-
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true) && (!document.activeElement?.className.includes('ql-editor'))) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
     e.preventDefault()
@@ -469,7 +468,7 @@ export const keyHandler = (
 
   }
 
-  if(e.key==='Delete'){
+  if(e.key==='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')==='menuConfigButton')
     {
 

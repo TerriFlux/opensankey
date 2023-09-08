@@ -9,7 +9,7 @@ import ReactQuill,{Quill} from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import ImageResize from 'quill-image-resize-module-react'
 
-import { node_displayed, return_value_node } from 'open-sankey/dist/SankeyUtils'
+import { node_displayed} from 'open-sankey/dist/SankeyUtils'
 
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { FaCheck} from 'react-icons/fa'
@@ -27,7 +27,10 @@ export const SankeyPlusNodeFO = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean
+  is_activated:boolean,
+  editor_content_fo_node:string,
+  set_editor_content_fo_node:(s:string)=>void,
+
 )=> {
   // const [value, setValue] = useState('')
 
@@ -75,17 +78,17 @@ export const SankeyPlusNodeFO = (
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<ReactQuill
-    value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
+    value={editor_content_fo_node}
     onChange={(evt,_,s) => {
       if(s==='user'){
-        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-          d.FO_content = evt
-          const node_width = return_value_node(data,d,'node_width') as number
-          d.FO_content = d.FO_content.replace('<img src=','<img width="'+node_width+'" src=')
-        })
+        // Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+        //   d.FO_content = evt
+        //   const node_width = return_value_node(data,d,'node_width') as number
+        //   d.FO_content = d.FO_content.replace('<img src=','<img width="'+node_width+'" src=')
+        // })
+        set_editor_content_fo_node(evt)
       }
     }}
-    onBlur={()=>{set_data({ ...data })}}
     theme="snow"
     modules={modules}
     formats={formats}
@@ -216,6 +219,14 @@ export const SankeyPlusNodeFO = (
       >
         <Form>
           <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
+          <Button
+            onClick={()=>{
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                d.FO_content = editor_content_fo_node
+              })
+              set_data({...data})
+            }}
+          >{t('Menu.updateFOZdd')}</Button>
         </Form>
       </OverlayTrigger>
       :<></>}

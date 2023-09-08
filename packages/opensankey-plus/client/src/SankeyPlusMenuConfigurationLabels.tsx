@@ -54,7 +54,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   nav_item_active:string,
   set_nav_item_active:React.Dispatch<React.SetStateAction<string>>,
   is_activated:boolean,
-  menu_for_modal:boolean
+  menu_for_modal:boolean,
+  editor_content_fo_zdt:string,
+  set_editor_content_fo_zdt:(s:string)=>void,
 ) => {
 
 
@@ -211,10 +213,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   const editor_fo=<ReactQuill
     value={multi_selected_label.current.length>0?multi_selected_label.current[0].content:''}
     onChange={(evt) => {
-      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-        d.content =evt
-      })
-      set_data({ ...data })
+      set_editor_content_fo_zdt(evt)
     }}
 
     theme="snow"
@@ -340,6 +339,14 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       <Form.Group>
         {editor_fo}
       </Form.Group>
+      <Button
+        onClick={()=>{
+          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.content).includes(f.idLabel)).map(d => {
+            d.content = editor_content_fo_zdt
+          })
+          set_data({...data})
+        }}
+      >{t('Menu.updateFOZdd')}</Button>
     </Form>
 
     <InputGroup>
