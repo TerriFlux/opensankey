@@ -1314,7 +1314,7 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
 
 export const clickSaveDiagram = (data:SankeyData,name='sankey_diagram') => {
   const data_to_save = { ...data }
-  const str_data = JSON.stringify(data_to_save, null, 2)
+  const str_data = JSON.stringify(data_to_save)
 
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
   FileSaver.saveAs(blob, name+'.json')
