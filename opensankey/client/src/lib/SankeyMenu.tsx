@@ -133,24 +133,24 @@ const MenuPropTypes = {
 const pre_process_export_svg=()=>{
   // Resize the svg scale to be the scale by default
   const svg =window.d3.select(' .opensankey#svg-container svg')
-  svg.attr('transform','scale(1)')
-  svg.select('#g_legend').attr('transform','scale(1)')
+  // svg.attr('transform','scale(1)')
+  // svg.select('#g_legend').attr('transform','scale(1)')
 
   // Get size of g elements that contain visual content
-  const g_nodes=document.getElementById('g_nodes')
-  const size_nodes = (g_nodes) ? [(g_nodes.getBoundingClientRect().width+g_nodes.getBoundingClientRect().x),(g_nodes.getBoundingClientRect().height+g_nodes.getBoundingClientRect().y)] : [0,0]
+  // const g_nodes=document.getElementById('g_nodes')
+  // const size_nodes = (g_nodes) ? [(g_nodes.getBoundingClientRect().width+g_nodes.getBoundingClientRect().x),(g_nodes.getBoundingClientRect().height+g_nodes.getBoundingClientRect().y)] : [0,0]
 
-  const g_links=document.getElementById('g_links')
-  const size_links = (g_links) ? [(g_links.getBoundingClientRect().width+g_links.getBoundingClientRect().x),(g_links.getBoundingClientRect().height+g_links.getBoundingClientRect().y)] : [0,0]
+  // const g_links=document.getElementById('g_links')
+  // const size_links = (g_links) ? [(g_links.getBoundingClientRect().width+g_links.getBoundingClientRect().x),(g_links.getBoundingClientRect().height+g_links.getBoundingClientRect().y)] : [0,0]
 
-  const g_label=document.getElementById('g_label')
-  const size_label = (g_label) ? [(g_label.getBoundingClientRect().width+g_label.getBoundingClientRect().x),(g_label.getBoundingClientRect().height+g_label.getBoundingClientRect().y)] : [0,0]
+  // const g_label=document.getElementById('g_label')
+  // const size_label = (g_label) ? [(g_label.getBoundingClientRect().width+g_label.getBoundingClientRect().x),(g_label.getBoundingClientRect().height+g_label.getBoundingClientRect().y)] : [0,0]
 
   // Search the element that go to the most bottom right of the sankey
-  const export_dim_unscaled=[Math.max(size_nodes[0],size_links[0],size_label[0]),Math.max(size_nodes[1],size_links[1],size_label[1])]
+  // const export_dim_unscaled=[Math.max(size_nodes[0],size_links[0],size_label[0]),Math.max(size_nodes[1],size_links[1],size_label[1])]
   // Resize the svg width and height with the minimum value it require to display the elements
-  svg.style('width',export_dim_unscaled[0]+'px')
-  svg.style('height',export_dim_unscaled[1]+'px')
+  // svg.style('width',export_dim_unscaled[0]+'px')
+  // svg.style('height',export_dim_unscaled[1]+'px')
 
   // Hidde non-essential visual elements
   svg.selectAll('.sankey-tooltip').remove()
