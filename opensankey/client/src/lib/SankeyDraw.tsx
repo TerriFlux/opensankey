@@ -241,7 +241,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   closeAllMenu:()=>void
 
 ) => {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true)) {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true && (!document.activeElement?.className.includes('ql-editor')))) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
     if (e.key == 'ArrowUp') {
@@ -337,7 +337,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     closeAllMenu()
 
 
-  }else if(e.key=='Delete'){
+  }else if(e.key=='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
+    console.log(document.activeElement?.className)
+    
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {
       multi_selected_links.current.forEach(el=>{

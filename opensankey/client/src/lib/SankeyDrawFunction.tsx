@@ -388,6 +388,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }
+    set_data({...data})
   }else if(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  !event.ctrlKey){
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
