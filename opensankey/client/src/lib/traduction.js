@@ -649,7 +649,7 @@ export const open_resources = {
         suppr:'Supprimer',
         rand_node_color:'Assigne une couleur aléatoire à tous les noeuds',
         load_file:'Lecture du fichier',
-        compute_file:'Traitment des informations',
+        compute_file:'Traitement des informations',
         loaded_file:'Chargement terminé',
         failure_file:'Chargement échoué',
         Transformation : {
