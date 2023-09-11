@@ -32,7 +32,6 @@ const ApplyLayoutDialogPropTypes = {
   set_node_vspace:PropTypes.func.isRequired,
   diagramSelector: PropTypes.func.isRequired,
   apply_transformation_additional_elements: PropTypes.func.isRequired,
-  set_is_computing:PropTypes.func.isRequired,
 
 }
 
@@ -52,7 +51,6 @@ export const ApplyLayoutDialog = ({
   updateLayout,convert_data,node_hspace,set_node_hspace,node_vspace,set_node_vspace,
   diagramSelector,
   apply_transformation_additional_elements,
-  set_is_computing
 }: ApplyLayoutDialogTypes) => {
   const [elementToDispose, ] = useState([''])
   const [prev_sankey_data,set_prev_sankey_data] = useState(sankey_data)
@@ -523,7 +521,7 @@ export const ApplyLayoutDialog = ({
             <Button
               size="sm"
               onClick={() => {
-                compute_auto_sankey(sankey_data, node_hspace,set_is_computing)
+                compute_auto_sankey(sankey_data, node_hspace)
                 set_sankey_data({ ...sankey_data })
               }}>
               {t('MEP.PA')}

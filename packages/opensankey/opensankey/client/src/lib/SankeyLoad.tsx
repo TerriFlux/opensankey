@@ -36,6 +36,7 @@ interface SankeyLoadProdTypes {
   result : string;
   setResult: (s:string)=>void,
   is_computing:boolean,
+  set_is_computing:(b:boolean)=>void,
 }
 
 const SankeyLoad = ({
@@ -46,14 +47,15 @@ const SankeyLoad = ({
   processing,setProcessing,
   failure,setFailure,
   setNotStarted,
-  result,setResult,is_computing
+  result,setResult,is_computing,set_is_computing
 } : SankeyLoadProdTypes) => {
   const [value,setValue] = useState([1,2])
   
   const reset = () => {
     setProcessing(false)
     setFailure(false)
-    setNotStarted(true)  
+    set_is_computing(false)
+    setNotStarted(true)
   }
 
   const handleChange = (evt:MouseEvent) => {
@@ -68,7 +70,7 @@ const SankeyLoad = ({
   const infos = result !== undefined ? result.split('\n') : []
   const success_status = t('Menu.loaded_file')
   const failure_status = t('Menu.failur_file')
-
+  const spinner=(processing || is_computing)? <Spinner animation="border" />:<></>
   return (
     <Modal 
       bsSize="large" 
@@ -80,7 +82,7 @@ const SankeyLoad = ({
         alignItems: 'center'
       }}>
       <Modal.Header closeButton>
-        <Modal.Title>Chargement du fichier {(processing || is_computing)? <Spinner animation="border" />:<></>}</Modal.Title>
+        <Modal.Title>Chargement du fichier {spinner}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form >
@@ -119,6 +121,7 @@ const SankeyLoad = ({
                 url_prefix={url_prefix}
                 finishReconciliation={()=>{
                   setProcessing(false)
+                  set_is_computing(true)
                   setFailure(false)
                 }}
                 value={value}

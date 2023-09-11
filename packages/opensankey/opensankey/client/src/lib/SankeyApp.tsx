@@ -516,7 +516,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const drag_menu_layout=show_menu_layout?menu_draggable(menu_configuration_layout,pointer_pos,t('Menu.MEP'),set_show_menu_layout):<></>
     
 
-  const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout,set_is_computing)
+  const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout)
 
 
 
