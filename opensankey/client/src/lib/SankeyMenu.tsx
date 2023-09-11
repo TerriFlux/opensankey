@@ -1056,7 +1056,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             default_nstyle = JSON.parse(JSON.stringify(data.style_node['default']))
             default_lstyle = JSON.parse(JSON.stringify(data.style_link['default']))
           }
-          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data,set_is_computing)) as SankeyData
+          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data)) as SankeyData
           new_data.style_node['default'] = default_nstyle
           new_data.style_link['default'] = default_lstyle
           callback(new_data)
@@ -1391,7 +1391,6 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_node_vspace={set_node_vspace}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
-        set_is_computing={set_is_computing}
       />
 
       <ExcelModal
@@ -1420,6 +1419,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         result={result}
         setResult={setResult}
         is_computing={is_computing}
+        set_is_computing={set_is_computing}
       />
 
       {
@@ -2144,7 +2144,6 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   set_node_vspace:(n:number)=>void,
   t:TFunction,
   set_show_menu_layout:(b:boolean)=>void,
-  set_is_computing:(b:boolean)=>void,
 
 )=>{
   const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
@@ -2290,7 +2289,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
       </Dropdown>
     
       <Dropdown.Item as={Button} variant='light' onClick={() => {
-        compute_auto_sankey(data, node_hspace,set_is_computing)
+        compute_auto_sankey(data, node_hspace)
         set_data({ ...data })
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>

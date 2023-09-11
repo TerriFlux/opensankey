@@ -1083,7 +1083,6 @@ export const downloadExamples = (
  */
 export const processExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[])=>void,
   convert_data:(d:SankeyData)=>void,  
-  set_is_computing:(b:boolean)=>void,
 
 ) => {
   const data = default_sankey_data()
@@ -1091,7 +1090,7 @@ export const processExample = (server_data: SankeyData,updateLayout:(data: Sanke
   complete_sankey_data(data,default_sankey_data,default_node,default_link)
   convert_data(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
-    compute_auto_sankey(data, data.h_space ? data.h_space : 200,set_is_computing)
+    compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
     convert_data((data as SankeyData & layout_type).layout)
     complete_sankey_data((data as SankeyData & layout_type).layout,default_sankey_data,default_node,default_link)
