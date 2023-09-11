@@ -7,6 +7,7 @@ export interface SankeyPlusData extends SankeyData {
     nodes:{[x: string]:SankeyPlusNode}
     links:{[x: string]:SankeyPlusLink}
     view:{id: string, view_data: {diff:{path:string[],kind:string,rhs:string}[]},nom:string,details:string}[],
+    current_view:string
     labels:{[x: string]:SankeyPlusLabel}
     style_node:{[x: string]:SankeyPlusNodeStyle},
     style_link:{[x: string]:SankeyPlusLinkStyle},

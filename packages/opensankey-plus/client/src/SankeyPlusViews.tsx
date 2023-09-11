@@ -661,7 +661,7 @@ export const viewsAccordion = (
           </InputGroup.Text>
           <>{selector}</>
           <Button
-            variant='danger'
+            variant='light'
             style={{width:'20%'}}
             disabled={!is_activated}
             id='button-apply_display' >
@@ -680,15 +680,15 @@ export const viewsAccordion = (
               <th>{t('view.name')}</th>
               <th>Position</th>
               <th>{t('view.delete')}</th>
-              <th>{t('view.copy')}</th>
+              {/* <th>{t('view.copy')}</th>
               <th>{t('view.import')}</th>
-              <th>{t('view.export')}</th>
+              <th>{t('view.export')}</th> */}
             </tr>
           </thead>
           <tbody>
             {master_data ? Object.values(master_data.view).map(d => {
               return (
-                <tr style={{ 'border': (d.id === view) ? '2px solid red' : 'none' }}>
+                <tr style={{ 'border': (d.id === view) ? '2px solid #5a9282' : 'none' }}>
                   <td><FormControl size='sm'
                     value={d.nom}
                     disabled={!is_activated}
@@ -703,7 +703,7 @@ export const viewsAccordion = (
                     <ButtonGroup className="button_position" size="sm">
                       <Button
                         size="sm"
-                        variant="success"
+                        variant="light"
                         disabled={!is_activated}
                         onClick={
                           () => {
@@ -720,7 +720,7 @@ export const viewsAccordion = (
                         }
                       ><FaArrowUp /></Button><Button
                         size="sm"
-                        variant="success"
+                        variant="light"
                         disabled={!is_activated}
                         onClick={
                           () => {
@@ -741,7 +741,7 @@ export const viewsAccordion = (
                   </td>
                   <td><Button
                     size="sm"
-                    variant='danger'
+                    variant='light'
                     disabled={!is_activated}
                     onClick={
                       // Delete the view
@@ -757,7 +757,7 @@ export const viewsAccordion = (
                       }
                     }
                   ><FaMinus /></Button></td>
-                  <td><Button
+                  {/* <td><Button
                     disabled={!is_activated}
                     size="sm"
                     variant='success'
@@ -803,7 +803,7 @@ export const viewsAccordion = (
                         clickSaveDiagram(to_download,d.nom)
                       }}
                     ><FaFileExport/></Button>
-                  </td>
+                  </td> */}
 
                 </tr>
               )
@@ -990,6 +990,8 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
+  _load_json:{current:HTMLInputElement},
+
 
 )=>{
 
@@ -1102,6 +1104,145 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </span>
   </OverlayTrigger>
 
+
+  const button_clone_view=<OverlayTrigger
+    key={'buttonCloneViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonCloneViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonCloneView'}>{t('Menu.tooltips.buttonCloneView')} </Tooltip>}
+  >
+    <span>
+      <Button
+        size='sm'
+        variant='light'
+        disabled={!connected}
+        onClick={
+          () => {
+            // Create a copy of the view
+            const cur_view = master_data.view.filter(v=>v.id===master_data.current_view)[0]
+            const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
+            const new_ind = 'view_' + String(new Date().getTime())
+
+            copy_view_data.view = []
+            master_data.view.push({
+              id: new_ind,
+              view_data: copy_view_data,
+              nom: 'copy of ' + cur_view.nom,
+              details: ''
+            })
+            set_view(new_ind)
+            set_master_data({...master_data})
+            set_data(get_data_from_view(master_data,new_ind))
+          }
+        }
+      >
+        <Col><FaCopy
+          style={{opacity:(!connected)?'0.6':'1'}}/>
+        </Col>
+        {!connected?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
+        <Col style={{'fontSize':'9px'}}>{t('view.copy')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
+
+
+  const button_import_view=<OverlayTrigger
+    key={'buttonImportViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonImportViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonImportView'}>{t('Menu.tooltips.buttonImportView')} </Tooltip>}
+  >
+    <span>
+      <Button
+        size='sm'
+        variant='light'
+        disabled={!connected}
+        onClick={
+          () => {
+            // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
+            if (_load_json.current) {
+              _load_json.current.name = ''
+              _load_json.current.click()
+              _load_json.current.id = master_data.current_view
+            }
+          }
+        }
+      >
+        <Col><FaFileImport
+          style={{opacity:(!connected)?'0.6':'1'}}/>
+        </Col>
+        {!connected?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
+        <Col style={{'fontSize':'9px'}}>{t('view.import')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
+
+
+  const button_export_view=<OverlayTrigger
+    key={'buttonExportViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonExportViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonExportView'}>{t('Menu.tooltips.buttonExportView')} </Tooltip>}
+  >
+    <span>
+      <Button
+        size='sm'
+        variant='light'
+        disabled={!connected}
+        onClick={()=>{
+          const d = master_data.view.filter(v=>v.id===master_data.current_view)[0]
+          const to_download=get_data_from_view(master_data,d.id)
+          to_download.view=[]
+          clickSaveDiagram(to_download,d.nom)
+        }}
+      >
+        <Col><FaFileExport
+          style={{opacity:(!connected)?'0.6':'1'}}/>
+        </Col>
+        {!connected?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
+        <Col style={{'fontSize':'9px'}}>{t('view.import')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
 
   return <>
     <OverlayTrigger
@@ -1227,7 +1368,14 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       </span>
     </OverlayTrigger>
     {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
+    {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data.current_view!=='none' && !window.SankeyToolsStatic?<>
+      {button_clone_view}
+      {button_import_view}
+      {button_export_view}
+    </>
+      :<></>
 
+    }
   </>
 }
 
@@ -1327,8 +1475,10 @@ export const toolbar_fullscreen=(data:SankeyPlusData,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
+  _load_json:{current:HTMLInputElement},
+
 )=>{
-  const buttons_view= SankeyPlusBannerView(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,connected,set_view_not_saved)
+  const buttons_view= SankeyPlusBannerView(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,connected,set_view_not_saved,_load_json)
   const group_btn=<ButtonGroup>
     {buttons_view}
   </ButtonGroup>
