@@ -890,7 +890,7 @@ export const default_link_style=()=>{
     vert_shift: 0,
     dashed:false,
     opacity:0.85,
-    to_precision:true,
+    to_precision:false,
     scientific_precision:5,
     arrow_size:10,
     font_family: 'Arial,serif',
