@@ -461,7 +461,6 @@ export const keyHandler = (
   if (e.key === 'Escape') {
 
     multi_selected_labels.current.forEach(l=>{
-      console.log(d3.select('#'+l.idLabel))
       d3.select('#'+l.idLabel+ ' rect').attr('stroke-width',1)
     })
     multi_selected_labels.current=[]
@@ -951,7 +950,7 @@ export const viewsAccordion = (
 
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
-const check_current_view_saved=(master_data:SankeyPlusData,data:SankeyPlusData,view:string)=>{
+export const check_current_view_saved=(master_data:SankeyPlusData,data:SankeyPlusData,view:string)=>{
   const original_diff=get_data_from_view(master_data,view)
   let difference = deep_diff.diff(original_diff, data)
   difference=(difference !== undefined)?difference:[]
