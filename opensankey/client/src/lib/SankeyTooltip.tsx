@@ -1,5 +1,5 @@
 import { SankeyNode, SankeyLink, SankeyData,SankeyLinkValue } from './types'
-import { toPrecision,link_visible,node_displayed } from './SankeyUtils'
+import { toPrecision,link_visible,node_displayed,return_value_link } from './SankeyUtils'
 
 
 /**
@@ -59,6 +59,11 @@ function write_children_table(
   return t
 }
 
+
+const TooltipLinkToPrecision=(data : SankeyData,
+  l : SankeyLink,value:number)=>{
+  return return_value_link(data,l,'to_precision')?toPrecision(value):value
+}
 /**
  * Function used to fill the tooltip of link
  * The tooltip is visible when we hover a link and press the key shift
@@ -91,7 +96,7 @@ export const  linkTooltipsContent = (
   if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
   } 
-  t += '<td>' + toPrecision((the_value)?the_value:0) +'</td>'
+  t += '<td>' + TooltipLinkToPrecision(data,l,(the_value)?the_value:0) +'</td>'
   t += '</td>'
   t += '</tr>'
   Object.entries(link_info.tags).forEach(([tag_group_key,tags])=> {
