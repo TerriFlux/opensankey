@@ -1,18 +1,24 @@
 import React,{ChangeEvent, useState} from 'react'
-import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge } from 'react-bootstrap'
+import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge,Dropdown,ButtonGroup} from 'react-bootstrap'
 import { SankeyLinkValue } from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
-import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
+import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg,link_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
 import {  getLinkValue,node_color,link_color,return_value_node,return_value_link, } from 'open-sankey/dist/SankeyUtils'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
+import { filter_view,get_data_from_view } from './SankeyPlusViews'
 
 import { FaEyeSlash, FaEye} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare, faLock } from '@fortawesome/free-solid-svg-icons'
+
+/* eslint-disable */
+// @ts-ignore
+const deep_diff = require('deep-diff')
+/* eslint-enable */
 
 declare const window: Window &
 typeof globalThis & {
@@ -803,4 +809,228 @@ export const menu_preference_icon_catalog=(data:SankeyPlusData,set_data:(d:Sanke
     }}>{t('Menu.ouvrir')}</Button>
   </InputGroup>
 
+}
+
+
+export const context_node_view_node_unitary=(
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  contextualised_node:SankeyPlusNode,
+  data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData,
+  set_master_data:(d:SankeyPlusData)=>void,
+  set_view:(s:string)=>void,
+  t:TFunction
+)=>{
+  const create_view_node_unitary=(view_name='')=>{
+
+    const cpy=JSON.parse(JSON.stringify(data)) as SankeyPlusData
+
+    const n_v=node_visible_on_svg()
+    const l_v=link_visible_on_svg()
+    const n_link_s=Object.values(cpy.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink)&& n_v.includes(l.idSource)).map(l=>l.idSource)
+    const n_link_t=Object.values(cpy.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink)&& n_v.includes(l.idTarget)).map(l=>l.idTarget)
+
+    const links_to_keep=Object.fromEntries(Object.entries(cpy.links).filter(l=>l_v.includes(l[1].idLink) && (contextualised_node.inputLinksId.includes(l[1].idLink) || contextualised_node.outputLinksId.includes(l[1].idLink)) ).map(l=>l))
+    const k_l_t_k=Object.keys(links_to_keep)
+
+    const nodes_to_keep=Object.fromEntries(Object.entries(cpy.nodes).filter(ne=>{
+      
+      // Keep only the node contextualised,
+      // or the node linked to it (and visible on the svg)
+      return ne[1].idNode===contextualised_node.idNode || ((n_link_s.includes(ne[1].idNode) || n_link_t.includes(ne[1].idNode) ) && n_v)
+    }).map(n=>{
+
+      // Filter output/input link id by removing link no longer present in data
+      n[1].outputLinksId=n[1].outputLinksId.filter(ol=>k_l_t_k.includes(ol))
+      n[1].inputLinksId=n[1].inputLinksId.filter(il=>k_l_t_k.includes(il))
+
+      // Reset input/output link id of node linked to the unitary node
+      if(n_link_s.includes(n[0])){
+        n[1].inputLinksId=[]
+      }
+      if(n_link_t.includes(n[0])){
+        n[1].outputLinksId=[]
+      }
+
+      return n
+    }))
+
+    cpy.linkZIndex=cpy.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
+
+    cpy.nodes=nodes_to_keep
+    cpy.links=links_to_keep
+    
+  
+
+    if(view_name===''){
+      // Add the contextualised node to list of explored nodes (to use in the process of link_text)
+      cpy.unitary_node.push(contextualised_node.idNode)
+
+      let difference = deep_diff.diff(master_data, cpy)
+      difference=(difference !== undefined)?difference:[]
+      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      difference=filter_view(difference)
+  
+      const new_id='view_' + String(new Date().getTime())
+      master_data.view.push({
+        id: new_id,
+        view_data: {diff:difference},
+        nom: 'Exploration view of node '+contextualised_node.name,
+        details: ''
+      })
+
+      set_view(new_id)
+      set_data({...cpy})
+
+
+    }else{
+      
+
+      // Search for the view to add the new exploration node
+      let ind = -1
+      master_data.view.map((v, i) => {
+        ind = (v.id === view_name) ? i : ind
+      })
+
+      // Update the view
+      const data_view=get_data_from_view(master_data,master_data.view[ind].id) as SankeyPlusData
+
+
+
+      // Add a unique prefix to the link in case we add node/link who have the same id of some in the view
+      const unique_key=String(new Date().getTime())
+      Object.entries(cpy.nodes).map(n=>{
+        n[0]=n[0]+'_'+unique_key
+        n[1].idNode=n[0]
+        n[1].inputLinksId=n[1].inputLinksId.map(l=>l+'_'+unique_key)
+        n[1].outputLinksId=n[1].outputLinksId.map(l=>l+'_'+unique_key)
+        return n
+      }).forEach(n=>{
+        data_view.nodes[n[0]]=n[1]
+      })
+
+      Object.entries(cpy.links).map(l=>{
+        l[0]=l[0]+'_'+unique_key
+        l[1].idLink=l[0]
+        l[1].idSource=l[1].idSource+'_'+unique_key
+        l[1].idTarget=l[1].idTarget+'_'+unique_key
+        return l
+      }).forEach(l=>{
+        data_view.linkZIndex.push(l[1].idLink)
+        data_view.links[l[0]]=l[1]
+      })
+
+      // Add the contextualised node to list of explored nodes (to use in the process of link_text)
+      data_view.unitary_node.push(contextualised_node.idNode+'_'+unique_key)
+
+
+      // ------------------------------------------------------------
+      
+      let difference = deep_diff.diff(master_data, data_view)
+      difference=(difference !== undefined)?difference:[]
+      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+      difference=filter_view(difference)
+
+      master_data.view[ind].view_data={diff:difference}
+    
+      set_view(view_name)
+      set_data({...data_view})
+
+    }
+
+    // Save master data with the view we are currently working on updated
+    set_master_data({...master_data})
+
+      
+  }
+
+  const dropdown_c_n_explore_node_add_to_view=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('view.in_existing')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      {master_data.view.filter(v=>v.view_data.diff.filter(vo=>vo.path.includes('unitary_node')).length>0).map(v=>{
+        
+        return <Dropdown.Item as={Button} variant='light' 
+          onClick={()=>{
+            create_view_node_unitary(v.id)
+          }}
+        >
+          {v.nom}
+        </Dropdown.Item>
+      })}
+    </Dropdown.Menu></Dropdown>:<></>
+
+  const dropdown_c_n_explore_node=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('view.unit_node')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item  as={Button} variant='light' onClick={()=>{
+        create_view_node_unitary()
+      }}>{t('view.in_new')}</Dropdown.Item>
+      {master_data.view.filter(v=>v.view_data.diff.filter(vo=>vo.path.includes('unitary_node')).length>0).length>0?dropdown_c_n_explore_node_add_to_view:<></>}
+
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+
+  if(contextualised_node!==undefined && multi_selected_nodes.current.length===1 && data.unitary_node && data.unitary_node.length===0){
+    return dropdown_c_n_explore_node
+  }else if(contextualised_node!==undefined && data.unitary_node && data.unitary_node.length>0) {
+    return <Button onClick={()=>{
+      data.unitary_node=[]
+      set_data({...data})
+    }} variant='light'>{t('view.to_normal_view')} </Button>
+  }else{
+    return <></>
+  }
+  
+
+}
+
+export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+)=>{
+  const k_n_u=data.unitary_node.filter(kn=>kn===d.idTarget || kn===d.idSource)[0]
+  const total_io=calc_total_input_output(data.nodes[k_n_u],data,getLinkValue)
+  if(getLinkValue===undefined){
+    console.log('stop')
+  }
+  const the_link_value = getLinkValue(data, d.idLink).value
+  if (data.show_structure === 'structure' ) {
+    return
+  }
+  if (data.show_structure === 'data' ) {
+    const link_value = getLinkValue(data, d.idLink)
+    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value
+    } else {
+      return
+    }
+  }
+  if(!isNaN(the_link_value)){
+    return (data.unitary_node.includes(d.idSource)?((the_link_value/total_io[1])*100):((the_link_value/total_io[0])*100)).toFixed(2)+'%'
+  }else{
+    return '0%'
+  }
+
+    
+}
+
+const calc_total_input_output=(n:SankeyPlusNode,data:SankeyPlusData,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue
+)=>{
+  let total_input=0
+  for(const i in n.inputLinksId){
+    const val=getLinkValue(data,n.inputLinksId[i]).value
+    total_input+=(!isNaN(val)?val:0)
+  }
+  let total_output=0
+  for(const i in n.outputLinksId){
+    const val=getLinkValue(data,n.outputLinksId[i]).value
+    total_output+=(!isNaN(val)?val:0)
+  }
+  return [total_input,total_output]
 }

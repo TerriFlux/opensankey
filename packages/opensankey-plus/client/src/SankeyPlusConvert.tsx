@@ -63,10 +63,13 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
     })
   }
 
+  if(data.unitary_node===undefined){
+    data.unitary_node=[]
+  }
+
   if (!data.view) {
     return
   }
-
   // Convert old view (when we copied the entire data)
   data.view.forEach((v)=>{
     if((v.view_data as unknown as SankeyPlusData ).version){

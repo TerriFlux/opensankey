@@ -173,10 +173,10 @@ export const SankeyPlusNodeFO = (
     </OverlayTrigger>
 
     <OverlayTrigger
-      key={'foDisabled'}
+      key={'foRawDisabled'}
       placement={'top'}
       delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+      overlay={(!is_activated)?(<Tooltip id={'foRawDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
       <InputGroup>
         <InputGroup.Text
@@ -210,11 +210,11 @@ export const SankeyPlusNodeFO = (
 
     {(multi_selected_nodes.current.length>0)?
       <OverlayTrigger
-        key={'foDisabled'}
+        key={'foContentDisabled'}
         placement={'top'}
         delay={500}
         overlay={(!is_activated)?
-          (<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+          (<Tooltip id={'foContentDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
           (!is_all_fo_visible)?<Tooltip id={'foNotVisible'}>{t('Noeud.foreign_object.not_activated')}</Tooltip>:<></>}
       >
         <Form>
