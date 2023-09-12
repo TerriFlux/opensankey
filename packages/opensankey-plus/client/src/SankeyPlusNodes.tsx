@@ -860,7 +860,8 @@ export const context_node_view_node_unitary=(
 
     cpy.nodes=nodes_to_keep
     cpy.links=links_to_keep
-    console.log(cpy)
+    
+    cpy.unitary_node=contextualised_node.idNode
   
     // Get difference between master_data and the current data then save it in view
     let difference = deep_diff.diff(master_data, cpy)
@@ -875,7 +876,6 @@ export const context_node_view_node_unitary=(
       nom: 'Unitary view of node '+contextualised_node.name,
       details: ''
     })
-  
     // Save master data with the view we are currently working on updated
     set_master_data({...master_data})
     set_data({...cpy})
@@ -883,8 +883,63 @@ export const context_node_view_node_unitary=(
 
       
   }
-  return contextualised_node!==undefined && multi_selected_nodes.current.length===1?<Button onClick={()=>{
-    create_view_node_unitary()
-  }} variant='light'>{t('view.unit_node')} </Button>:<></>
+  if(contextualised_node!==undefined && multi_selected_nodes.current.length===1 && data.unitary_node===''){
+    return <Button onClick={()=>{
+      create_view_node_unitary()
+    }} variant='light'>{t('view.unit_node')} </Button>
+  }else if(contextualised_node!==undefined && data.unitary_node!=='') {
+    return <Button onClick={()=>{
+      data.unitary_node=''
+      set_data({...data})
+    }} variant='light'>{t('view.to_normal_view')} </Button>
+  }else{
+    return <></>
+  }
+  
 
+}
+
+export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+)=>{
+
+  const total_io=calc_total_input_output(data.nodes[data.unitary_node],data,getLinkValue)
+  if(getLinkValue===undefined){
+    console.log('stop')
+  }
+  const the_link_value = getLinkValue(data, d.idLink).value
+  if (data.show_structure === 'structure' ) {
+    return
+  }
+  if (data.show_structure === 'data' ) {
+    const link_value = getLinkValue(data, d.idLink)
+    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value
+    } else {
+      return
+    }
+  }
+  if(!isNaN(the_link_value)){
+    return ((d.idSource===data.unitary_node)?((the_link_value/total_io[1])*100):((the_link_value/total_io[0])*100)).toFixed(2)+'%'
+  }else{
+    return '0%'
+  }
+
+    
+}
+
+const calc_total_input_output=(n:SankeyPlusNode,data:SankeyPlusData,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue
+)=>{
+  let total_input=0
+  for(const i in n.inputLinksId){
+    const val=getLinkValue(data,n.inputLinksId[i]).value
+    total_input+=(!isNaN(val)?val:0)
+  }
+  let total_output=0
+  for(const i in n.outputLinksId){
+    const val=getLinkValue(data,n.outputLinksId[i]).value
+    total_output+=(!isNaN(val)?val:0)
+  }
+  return [total_input,total_output]
 }
