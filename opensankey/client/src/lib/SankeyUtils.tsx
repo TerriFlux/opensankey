@@ -888,7 +888,6 @@ export const default_link_style=()=>{
     left_horiz_shift: 0.05,
     right_horiz_shift: 0.95,
     vert_shift: 0,
-    dashed:false,
     opacity:0.85,
     to_precision:false,
     scientific_precision:5,
@@ -963,7 +962,6 @@ export const default_link = (data: SankeyData): SankeyLink => {
 
     colorTag: '',
     style:'default',
-    local:{dashed:true}
   }
 }
 /**
