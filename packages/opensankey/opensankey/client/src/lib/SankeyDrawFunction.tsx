@@ -43,7 +43,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
                  data.show_structure !== 'free_value' &&
                  data.show_structure !== 'free_interval'  &&
                  !link_values.extension?.free_visible
-  if (return_value_link(data,d,'dashed') || is_free || link_values.extension?.display_thin) {
+  if (link_values.value=='' || is_free || link_values.extension?.display_thin) {
     return '5, 5'
   } else {
     return ''
