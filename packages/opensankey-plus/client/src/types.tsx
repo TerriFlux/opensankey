@@ -11,7 +11,7 @@ export interface SankeyPlusData extends SankeyData {
     labels:{[x: string]:SankeyPlusLabel}
     style_node:{[x: string]:SankeyPlusNodeStyle},
     style_link:{[x: string]:SankeyPlusLinkStyle},
-    unitary_node:string
+    unitary_node:string[]
 
 }
 

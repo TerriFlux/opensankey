@@ -64,7 +64,7 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
   }
 
   if(data.unitary_node===undefined){
-    data.unitary_node=''
+    data.unitary_node=[]
   }
 
   if (!data.view) {
