@@ -24,7 +24,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
 
-  const dashChecked=is_all_link_attr_same_value(data,selected_parameter,'dashed',menu_for_style) as boolean
   const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
     width="26"
     height="26"
@@ -387,26 +386,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
           />
           <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
         </>
-      </OverlayTrigger>
-    </InputGroup>
-
-    {/* Flux hachuré */}
-    <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>{t('Flux.apparence.hach')+(is_link_diplaying_value_local(multi_selected_links,'dashed',menu_for_style)?'*':'')}</InputGroup.Text>
-      <OverlayTrigger
-        key={'Flux.apparence.tooltips.2'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'Flux.apparence.tooltips.2'}>{t('Flux.apparence.tooltips.hach')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={dashChecked?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'dashed',!dashChecked,menu_for_style))
-            set_data({ ...data })
-          }}>{dashChecked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
       </OverlayTrigger>
     </InputGroup>
 
