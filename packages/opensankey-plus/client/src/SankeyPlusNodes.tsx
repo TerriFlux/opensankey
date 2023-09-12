@@ -2,17 +2,23 @@ import React,{ChangeEvent, useState} from 'react'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge } from 'react-bootstrap'
 import { SankeyLinkValue } from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
-import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
+import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg,link_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
 
 import * as d3 from 'd3'
 import {SankeyPlusData,SankeyPlusNode} from './types'
 import {  getLinkValue,node_color,link_color,return_value_node,return_value_link, } from 'open-sankey/dist/SankeyUtils'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
+import { filter_view } from './SankeyPlusViews'
 
 import { FaEyeSlash, FaEye} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare, faLock } from '@fortawesome/free-solid-svg-icons'
+
+/* eslint-disable */
+// @ts-ignore
+const deep_diff = require('deep-diff')
+/* eslint-enable */
 
 declare const window: Window &
 typeof globalThis & {
@@ -802,5 +808,83 @@ export const menu_preference_icon_catalog=(data:SankeyPlusData,set_data:(d:Sanke
 
     }}>{t('Menu.ouvrir')}</Button>
   </InputGroup>
+
+}
+
+
+export const context_node_view_node_unitary=(
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  contextualised_node:SankeyPlusNode,
+  data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData,
+  set_master_data:(d:SankeyPlusData)=>void,
+  set_view:(s:string)=>void,
+  t:TFunction
+)=>{
+  const create_view_node_unitary=()=>{
+
+    const cpy=JSON.parse(JSON.stringify(data)) as SankeyPlusData
+
+    const n_v=node_visible_on_svg()
+    const l_v=link_visible_on_svg()
+    const n_link_s=Object.values(cpy.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink)&& n_v.includes(l.idSource)).map(l=>l.idSource)
+    const n_link_t=Object.values(cpy.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink)&& n_v.includes(l.idTarget)).map(l=>l.idTarget)
+
+    const links_to_keep=Object.fromEntries(Object.entries(cpy.links).filter(l=>l_v.includes(l[1].idLink) && (contextualised_node.inputLinksId.includes(l[1].idLink) || contextualised_node.outputLinksId.includes(l[1].idLink)) ).map(l=>l))
+    const k_l_t_k=Object.keys(links_to_keep)
+
+    const nodes_to_keep=Object.fromEntries(Object.entries(cpy.nodes).filter(ne=>{
+      
+      // Keep only the node contextualised,
+      // or the node linked to it (and visible on the svg)
+      return ne[1].idNode===contextualised_node.idNode || ((n_link_s.includes(ne[1].idNode) || n_link_t.includes(ne[1].idNode) ) && n_v)
+    }).map(n=>{
+
+      // Filter output/input link id by removing link no longer present in data
+      n[1].outputLinksId=n[1].outputLinksId.filter(ol=>k_l_t_k.includes(ol))
+      n[1].inputLinksId=n[1].inputLinksId.filter(il=>k_l_t_k.includes(il))
+
+      // Reset input/output link id of node linked to the unitary node
+      if(n_link_s.includes(n[0])){
+        n[1].inputLinksId=[]
+      }
+      if(n_link_t.includes(n[0])){
+        n[1].outputLinksId=[]
+      }
+
+      return n
+    }))
+
+    cpy.linkZIndex=cpy.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
+
+    cpy.nodes=nodes_to_keep
+    cpy.links=links_to_keep
+    console.log(cpy)
+  
+    // Get difference between master_data and the current data then save it in view
+    let difference = deep_diff.diff(master_data, cpy)
+    difference=(difference !== undefined)?difference:[]
+    difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+    difference=filter_view(difference)
+
+    const new_id='view_' + String(new Date().getTime())
+    master_data.view.push({
+      id: new_id,
+      view_data: {diff:difference},
+      nom: 'Unitary view of node '+contextualised_node.name,
+      details: ''
+    })
+  
+    // Save master data with the view we are currently working on updated
+    set_master_data({...master_data})
+    set_data({...cpy})
+    set_view(new_id)
+
+      
+  }
+  return contextualised_node!==undefined && multi_selected_nodes.current.length===1?<Button onClick={()=>{
+    create_view_node_unitary()
+  }} variant='light'>{t('view.unit_node')} </Button>:<></>
 
 }

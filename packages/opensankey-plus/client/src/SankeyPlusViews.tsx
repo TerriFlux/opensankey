@@ -140,7 +140,7 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   // }
 }
 
-const filter_view=(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
+export const filter_view=(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
   return JSON.parse(JSON.stringify(pre_diff))
     .filter((d:{path:string[]})=>{
       return !d.path.includes('view')
