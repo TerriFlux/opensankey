@@ -127,6 +127,8 @@ export const OpenSankeyDrawNodesLabel = (
         let horiz_shift=0
         if(return_value_node(data,n,'label_horiz')=='left'){
           horiz_shift=box_text.width
+        }else if (return_value_node(data,n,'label_horiz') == 'middle') {
+          return -(return_value_node(data,n,'label_box_width')as number)/2
         }
 
         return ((box_text.x)-box_zdd.x-horiz_shift)/scale_svg
@@ -140,6 +142,9 @@ export const OpenSankeyDrawNodesLabel = (
           return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().y??0)-box_zdd.y)/scale_svg-shift_if_above
         })
         .attr('width',n=>{
+          if (return_value_node(data,n,'label_horiz') == 'middle') {
+            return return_value_node(data,n,'label_box_width')as number
+          }
           return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0))/scale_svg+4
         })
         .attr('height',n=>{
