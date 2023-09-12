@@ -950,7 +950,7 @@ export const context_node_view_node_unitary=(
       {t('view.in_existing')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
-      {master_data.view.map(v=>{
+      {master_data.view.filter(v=>v.view_data.diff.filter(vo=>vo.path.includes('unitary_node')).length>0).map(v=>{
         
         return <Dropdown.Item as={Button} variant='light' 
           onClick={()=>{
@@ -970,7 +970,7 @@ export const context_node_view_node_unitary=(
       <Dropdown.Item  as={Button} variant='light' onClick={()=>{
         create_view_node_unitary()
       }}>{t('view.in_new')}</Dropdown.Item>
-      {master_data.view.length>0?dropdown_c_n_explore_node_add_to_view:<></>}
+      {master_data.view.filter(v=>v.view_data.diff.filter(vo=>vo.path.includes('unitary_node')).length>0).length>0?dropdown_c_n_explore_node_add_to_view:<></>}
 
     </Dropdown.Menu>
   </Dropdown>:<></>
