@@ -2232,6 +2232,9 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
 export const node_visible_on_svg=()=>d3.selectAll('.node_shape').nodes().map(element => {
   return d3.select(element).attr('id').replace('shape_','')
 })
+export const link_visible_on_svg=()=>d3.selectAll('.link').nodes().map(element => {
+  return d3.select(element).attr('id').replace('path_','')
+})
 
 export const zoom_function=(evt:d3.D3ZoomEvent<SVGElement,unknown>,data:SankeyData)=>{
 

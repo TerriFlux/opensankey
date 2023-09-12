@@ -1612,7 +1612,8 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,
   set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
   pointer_pos:{current:number[]},
-  additional_context_element:JSX.Element[]
+  additional_context_element_menu:JSX.Element[],
+  additional_context_element_other:JSX.Element[]
 )=>{
   let style_c_n='0px 0px auto auto'
   if(contextualised_node!==undefined){
@@ -1872,10 +1873,11 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
         {sep}
 
         {dropdown_c_n_apparence}
-        {additional_context_element}
+        {additional_context_element_menu}
         {sep}
         {dropdown_c_n_style}
-
+        {additional_context_element_other}
+        
       </ButtonGroup>
     </Popover.Body>
   </Popover>:<></>
