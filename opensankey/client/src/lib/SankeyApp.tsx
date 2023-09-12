@@ -416,7 +416,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   /* eslint-disable */
     // @ts-ignore
     addEventListener('resize',()=>{
-      console.log('here')
       repositionne_sidebar()
       })
       /* eslint-enable */
@@ -495,7 +494,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_show_menu_node_apparence,set_show_menu_node_io,
     set_agregation_node,set_is_agregation,set_show_agregation,
     set_display_link_opacity,
-    pointer_pos,[])
+    pointer_pos,[],[])
 
 
   // MENU DRAGGABLE LINK DATA
