@@ -455,10 +455,10 @@ export const toPrecision = (
   v: number,
   nb_scientific=3
 ) => {
-  if(!isNaN(v)){
+  if(!isNaN(v) && v > Math.pow(10,nb_scientific)){
     return v.toExponential(nb_scientific)
   }else{
-    return v
+    return parseFloat(v.toPrecision(nb_scientific))
   }
 }
 /**
@@ -889,7 +889,7 @@ export const default_link_style=()=>{
     right_horiz_shift: 0.95,
     vert_shift: 0,
     opacity:0.85,
-    to_precision:false,
+    to_precision:true,
     scientific_precision:5,
     arrow_size:10,
     font_family: 'Arial,serif',
