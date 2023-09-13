@@ -831,11 +831,14 @@ export const context_node_view_node_unitary=(
     const n_link_s=Object.values(cpy.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink)&& n_v.includes(l.idSource)).map(l=>l.idSource)
     const n_link_t=Object.values(cpy.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink)&& n_v.includes(l.idTarget)).map(l=>l.idTarget)
 
-    const links_to_keep=Object.fromEntries(Object.entries(cpy.links).filter(l=>l_v.includes(l[1].idLink) && (contextualised_node.inputLinksId.includes(l[1].idLink) || contextualised_node.outputLinksId.includes(l[1].idLink)) ).map(l=>l))
+    const links_to_keep=Object.fromEntries(Object.entries(cpy.links).filter(l=>l_v.includes(l[1].idLink) && (contextualised_node.inputLinksId.includes(l[1].idLink) || contextualised_node.outputLinksId.includes(l[1].idLink)) ).map(l=>{
+      l[1].value=getLinkValue(cpy,l[1].idLink)
+      l[1].colorTag='no_colormap'
+      return l
+    }))
     const k_l_t_k=Object.keys(links_to_keep)
 
     const nodes_to_keep=Object.fromEntries(Object.entries(cpy.nodes).filter(ne=>{
-      
       // Keep only the node contextualised,
       // or the node linked to it (and visible on the svg)
       return ne[1].idNode===contextualised_node.idNode || ((n_link_s.includes(ne[1].idNode) || n_link_t.includes(ne[1].idNode) ) && n_v)
@@ -853,17 +856,77 @@ export const context_node_view_node_unitary=(
         n[1].outputLinksId=[]
       }
 
+      // Normalise node tags
+      n[1].tags={}
+      n[1].colorTag='no_colormap'
+      n[1].colorParameter='local'
+      n[1].dimensions={}
+
       return n
     }))
 
+    // Normalize data
+    cpy.nodeTags={}
+    cpy.fluxTags={}
+    cpy.dataTags={}
+    cpy.labels={}
+    cpy.colorMap='no_colormap'
     cpy.linkZIndex=cpy.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
-
     cpy.nodes=nodes_to_keep
     cpy.links=links_to_keep
-    
-  
 
+    // ======Add ZDT====== 
+    // Get dimensions for labels 
+    const min_x=Object.values(cpy.nodes).filter(n=>n.position==='absolute').sort((a,b)=>a.x-b.x)[0].x
+    const min_y=Object.values(cpy.nodes).filter(n=>n.position==='absolute').sort((a,b)=>a.y-b.y)[0].y
+
+    let max_x=min_x
+    let max_y=min_y
+    Object.values(cpy.nodes).filter(n=>n.position==='absolute').forEach(n=>{
+      const boxX=n.x
+      const boxY=n.y
+      const boxW=Number(d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
+      const boxH=Number(d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
+      
+      max_x=((boxX+boxW)>max_x)?(boxX+boxW):max_x
+      max_y=((boxY+boxH)>max_y)?(boxY+boxH):max_y
+    })
+
+
+    // Info from data source in ZDT
+    let content_zdt=''
+    const name_view=(master_data.current_view && master_data.current_view!=='none')?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:t('Menu.home')
+    content_zdt='<p>'+t('view.template_unitary_zdt_content')+' <strong>'+name_view+' </strong></p>'
+    content_zdt+='<p>'+t('view.template_unitary_zdt_content_of_node')+' <strong>'+contextualised_node.name+' </strong></p>'
+
+    const data_tags = Object.assign({},data.dataTags)
+    Object.entries(data_tags).forEach(tag_group => {
+      const intro_group_data_tags=' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')
+      content_zdt+='<p>'+tag_group[1].group_name+intro_group_data_tags+'</p>'
+    })
+
+
+    // Create the zdt  
+    const n_label={
+      idLabel: 'label_' + String(new Date().getTime()),
+      title:'Description',
+      content: content_zdt,
+      label_width: ((max_x-min_x)+10),
+      label_height: ((max_y-min_y)+10),
+      color: 'white',
+      color_border: 'black',
+      opacity: 100,
+      transparent_border: false,
+      x: min_x-5,
+      y: min_y-5,
+
+    }
+ 
+    // Perform some configuration if the unitary go to a new view or an existing view
     if(view_name===''){
+
+      cpy.labels[n_label.idLabel]=n_label
+
       // Add the contextualised node to list of explored nodes (to use in the process of link_text)
       cpy.unitary_node.push(contextualised_node.idNode)
 
@@ -885,26 +948,43 @@ export const context_node_view_node_unitary=(
 
 
     }else{
-      
+      // If the unitary sankey go to an existing view then we perform some ajustement :
+      // - We change the id of links and nodes to avoid corruption of the other unitary sankey in the view
+      // - We shift the explainatory ZDT  and new unitary sankey under the existing one 
 
       // Search for the view to add the new exploration node
       let ind = -1
       master_data.view.map((v, i) => {
         ind = (v.id === view_name) ? i : ind
       })
-
-      // Update the view
       const data_view=get_data_from_view(master_data,master_data.view[ind].id) as SankeyPlusData
 
+      // =====Update data icon catalog=====
+      Object.entries(cpy.icon_catalog).forEach(i=>{
+        data_view.icon_catalog[i[0]]=i[1]
+      })
+      
+      // =====Update the ZDT to verticaly align it with the last one in the view=====
+      const last_label_pos_in_view=Object.values(data_view.labels)[data_view.unitary_node.length-1]
+      n_label.x=last_label_pos_in_view.x
+      n_label.y=last_label_pos_in_view.y+last_label_pos_in_view.label_height+5
 
 
-      // Add a unique prefix to the link in case we add node/link who have the same id of some in the view
+      // =====Update nodes & links=====
+      // Create unique key to use in the suffix
       const unique_key=String(new Date().getTime())
+      // Add a unique suffix to nodes & links in case we add node/link who have the same id of some in the view
       Object.entries(cpy.nodes).map(n=>{
         n[0]=n[0]+'_'+unique_key
         n[1].idNode=n[0]
         n[1].inputLinksId=n[1].inputLinksId.map(l=>l+'_'+unique_key)
         n[1].outputLinksId=n[1].outputLinksId.map(l=>l+'_'+unique_key)
+
+        n[1].x-=(min_x-n_label.x)
+        n[1].y-=(min_y-n_label.y)
+
+        n[1].style=n[1].style+'_'+unique_key
+
         return n
       }).forEach(n=>{
         data_view.nodes[n[0]]=n[1]
@@ -915,18 +995,33 @@ export const context_node_view_node_unitary=(
         l[1].idLink=l[0]
         l[1].idSource=l[1].idSource+'_'+unique_key
         l[1].idTarget=l[1].idTarget+'_'+unique_key
+
+        l[1].style=l[1].style+'_'+unique_key
+        
         return l
       }).forEach(l=>{
         data_view.linkZIndex.push(l[1].idLink)
         data_view.links[l[0]]=l[1]
       })
 
-      // Add the contextualised node to list of explored nodes (to use in the process of link_text)
+      // Update style ID in case it has different value with the samez id 
+      Object.entries(cpy.style_node).forEach(ns=>{
+        data_view.style_node[ns[0]+'_'+unique_key]=ns[1]
+      })
+
+      Object.entries(cpy.style_link).forEach(ls=>{
+        data_view.style_link[ls[0]+'_'+unique_key]=ls[1]
+      })
+
+      // =====Add the new ZDT=====
+      data_view.labels[n_label.idLabel]=n_label
+
+      // =====Add the contextualised node to list of explored nodes (to use in the process of link_text)=====
       data_view.unitary_node.push(contextualised_node.idNode+'_'+unique_key)
 
 
       // ------------------------------------------------------------
-      
+      // =====Update the view=====
       let difference = deep_diff.diff(master_data, data_view)
       difference=(difference !== undefined)?difference:[]
       difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
