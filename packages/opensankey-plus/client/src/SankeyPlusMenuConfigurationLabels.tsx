@@ -206,12 +206,11 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
 
   const disable_options = !(is_activated && (multi_selected_label.current.length === 1))
   const disable_editor = !(is_activated && (multi_selected_label.current.length >= 1))
-
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<ReactQuill
-    value={multi_selected_label.current.length>0?multi_selected_label.current[0].content:''}
+    value={editor_content_fo_zdt}
     onChange={(evt) => {
       set_editor_content_fo_zdt(evt)
     }}
@@ -250,19 +249,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               color_border: 'black',
               opacity: 100,
               transparent_border: false,
-              position_vert: 'middle',
-              position_horiz: 'left',
-              font_size: 12,
-              font_weight: false,
-              font_style: false,
-              font_uppercase: false,
-              isTextHTML:false,
+              
               x: 50,
               y: 50,
-              x_label: 50,
-              y_label: 12,
-              is_edit_raw:false,
-              underline:false
             }
             data.labels[new_label.idLabel] = new_label
             multi_selected_label.current = [new_label]
@@ -341,7 +330,8 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       </Form.Group>
       <Button
         onClick={()=>{
-          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.content).includes(f.idLabel)).map(d => {
+          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
+            console.log(d.content,editor_content_fo_zdt)
             d.content = editor_content_fo_zdt
           })
           set_data({...data})
