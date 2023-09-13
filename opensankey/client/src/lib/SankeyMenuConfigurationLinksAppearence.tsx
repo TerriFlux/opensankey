@@ -703,431 +703,432 @@ export const SankeyMenuConfigurationLinksAppearence = (
       </OverlayTrigger>
     </InputGroup>
 
-    {labelVisibleChecked?<>       {/* Ajout une unité au label de flux */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.l_u_v')+(is_link_diplaying_value_local(multi_selected_links,'label_unit_visible',menu_for_style)?'*':'')}</InputGroup.Text>
+         
+    {/* Ajout une unité au label de flux */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.l_u_v')+(is_link_diplaying_value_local(multi_selected_links,'label_unit_visible',menu_for_style)?'*':'')}</InputGroup.Text>
 
-        <OverlayTrigger
-          key={'Flux.label.tooltips.2'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Flux.label.tooltips.2'}>{t('Flux.label.tooltips.l_u_v')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            style={{width:'30%'}}
-            //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-            variant={isAllLabelUnitVisible?'primary':'outline-primary'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'label_unit_visible',!isAllLabelUnitVisible,menu_for_style))
-              set_data({ ...data })
-            }}>{isAllLabelUnitVisible?<FaEye/>:<FaEyeSlash/>}</Button>
-        </OverlayTrigger>
-      </InputGroup>
-
-      {isAllLabelUnitVisible?<>    {/* Modifie l'unité du label de flux */}
-        <InputGroup>
-          <InputGroup.Text style={{width:'40%'}}>
-            {t('Flux.label.l_u')+(is_link_diplaying_value_local(multi_selected_links,'label_unit',menu_for_style)?'*':'')}
-          </InputGroup.Text>
-          <OverlayTrigger
-            key={'Flux.label.tooltips.l_u'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'Flux.label.tooltips.l_u'}>{t('Flux.label.tooltips.l_u')} </Tooltip>}>
-            <Form.Control
-              type='text'
-              style={{width:'60%'}}
-              value={return_correct_link_attribute_value(data,selected_parameter[0],'label_unit',menu_for_style) as string}
-              onChange={evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'label_unit',evt.target.value,menu_for_style))
-                set_data({ ...data })
-              }}/>
-          </OverlayTrigger>
-        </InputGroup></>:<></>}
-
-      {/* Choix d'affichage en notation scientifique  */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.toPrecision')}</InputGroup.Text>
-        <OverlayTrigger
-          key={'flux.label.tooltips.13'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.13'}>{t('Flux.label.tooltips.toPrecision')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            style={{width:'30%'}}
-            variant={isAllLinkToPrecision()?'primary':'outline-primary'}
-            onClick={
-              () => {
-                const val=isAllLinkToPrecision()
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  assign_link_value_to_correct_var(d,'custom_digit',false,menu_for_style)
-                  assign_link_value_to_correct_var(d,'to_precision',!val,menu_for_style)
-                })
-                set_data({ ...data })
-              }}>{isAllLinkToPrecision()?<FaEye/>:<FaEyeSlash/>}</Button>
-        </OverlayTrigger>
-      </InputGroup>
-
-      {isAllLinkToPrecision()?<>  {/* Choose number of scientific number */}
-        <InputGroup>
-          <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.NbPrecision')}</InputGroup.Text>
-          <OverlayTrigger
-            key={'flux.label.tooltips.14'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.14'}>{t('Flux.label.tooltips.NbPrecision')} </Tooltip>}>
-            <Form.Control
-              style={{width:'30%'}}
-              type='number'
-              min={1}
-              step={1}
-              disabled={!isAllLinkToPrecision()}
-              value={allLinkLabelScientificPrecision()}
-              onChange={evt=>{
-                const value=+evt.target.value
-                const val=isNaN(value) || value<=0?5:Math.round(value)
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'scientific_precision',val,menu_for_style))
-                set_data({...data})
-              }}/>
-          </OverlayTrigger>
-        </InputGroup></>:<></>}
-      {/* Choix d'affichage du nombre de chiffre après la virgule  */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.custom_digit')}</InputGroup.Text>
-        <OverlayTrigger
-          key={'flux.label.tooltips.cd'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.cd'}>{t('Flux.label.tooltips.custom_digit')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            style={{width:'30%'}}
-            variant={AllLinkToCustomDigit?'primary':'outline-primary'}
-            onClick={
-              () => {
-                const val=AllLinkToCustomDigit
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-
-                  assign_link_value_to_correct_var(d,'to_precision',false,menu_for_style)
-                  assign_link_value_to_correct_var(d,'custom_digit',!val,menu_for_style)
-                })
-                set_data({ ...data })
-              }}>{AllLinkToCustomDigit?<FaEye/>:<FaEyeSlash/>}</Button>
-        </OverlayTrigger>
-      </InputGroup>
-
-      {AllLinkToCustomDigit?<>  {/* Choose number of custom digit */}
-        <InputGroup>
-          <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.NbDigit')}</InputGroup.Text>
-          <OverlayTrigger
-            key={'flux.label.tooltips.nd'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.nd'}>{t('Flux.label.tooltips.NbDigit')} </Tooltip>}>
-            <Form.Control
-              style={{width:'30%'}}
-              type='number'
-              min={0}
-              step={1}
-              disabled={!AllLinkToCustomDigit}
-              value={allLinkLabelCustomDigit()}
-              onChange={evt=>{
-                const value=+evt.target.value
-                const val=isNaN(value) 
-                Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'nb_digit',value,menu_for_style))
-                set_data({...data})
-              }}/>
-          </OverlayTrigger>
-        </InputGroup></>:<></>}
-
-      {/* Couleur des Labels  */}
-      <Form.Group as={Row} >
-        <ButtonGroup>
-          {/* Label en noir  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.2'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.2'}>{t('Flux.label.tooltips.len')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              style={{width:'33%', height:'2rem'}}
-              disabled={!labelVisibleChecked}
-              variant={linkLabelColor('black')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    assign_link_value_to_correct_var(d,'text_color','black',menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{t('Flux.label.len')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
-          </OverlayTrigger>
-
-          {/* Label en blanc  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.3'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.3'}>{t('Flux.label.tooltips.lb')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              style={{width:'33%', height:'2rem'}}
-              disabled={!labelVisibleChecked}
-              variant={linkLabelColor('white')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    assign_link_value_to_correct_var(d,'text_color','white',menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{t('Flux.label.lb')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
-          </OverlayTrigger>
-
-          {/* Label en couleur  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.4'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.4'}>{t('Flux.label.tooltips.lec')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              style={{width:'34%', height:'2rem'}}
-              disabled={!labelVisibleChecked}
-              variant={linkLabelColor('color')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    assign_link_value_to_correct_var(d,'text_color',return_correct_link_attribute_value(data,d,'color',menu_for_style),menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{t('Flux.label.lec')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </Form.Group>
-
-      {/* Police des labels de flux  */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'40%'}} >{'Police'}</InputGroup.Text>
-        <Form.Select
+      <OverlayTrigger
+        key={'Flux.label.tooltips.2'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'Flux.label.tooltips.2'}>{t('Flux.label.tooltips.l_u_v')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
           style={{width:'30%'}}
-          value={allLinkFF?return_correct_link_attribute_value(data,selected_parameter[0],'font_family',menu_for_style) as string:''}
-          onChange={
-            (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'font_family', evt.target.value,menu_for_style))
-              set_data({...data})
-            }}>
-          {data.display_style.font_family.map((d) => {
-            return <option
-              style={{fontFamily:d}}
-              key={'ff-' + d}
-              value={d}
-            >{d}</option>
-          })}
-        </Form.Select>
-        <FormControl
-          style={{width:'20%'}}
-          min={11}
-          type={'number'}
-          disabled={!labelVisibleChecked}
-          value={allNodeLabelFontSize()}
-          onChange={evt => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>{
-              assign_link_value_to_correct_var(d,'label_font_size',+evt.target.value,menu_for_style)
-            })
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllLabelUnitVisible?'primary':'outline-primary'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'label_unit_visible',!isAllLabelUnitVisible,menu_for_style))
             set_data({ ...data })
-          }}
-        />
-        <InputGroup.Text style={{width:'10%'}}>px</InputGroup.Text>
-      </InputGroup>
+          }}>{isAllLabelUnitVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+      </OverlayTrigger>
+    </InputGroup>
 
-      {/* Orienter le texte du label le long du flux  */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'70%'}}>
-          {t('Flux.label.acf')+(is_link_diplaying_value_local(multi_selected_links,'label_on_path',menu_for_style)?'*':'')}
-        </InputGroup.Text>
-        <OverlayTrigger
-          key={'flux.label.tooltips.5'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.5'}>{t('Flux.label.tooltips.acf')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            style={{width:'30%'}}
-            disabled={!labelVisibleChecked}
-            variant={labelSticktoLinkDisabled?'primary':'outline-primary'}
-            onClick={()=>{
-              const val=labelSticktoLinkDisabled
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'label_on_path',!val,menu_for_style)
-                if(!val){
-                  const l_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
-                  const l_orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
-                  assign_link_value_to_correct_var(d,'label_position',(l_pos=='frozen')?'middle':l_pos,menu_for_style)
-                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(l_orth_pos=='frozen')?'middle':l_orth_pos,menu_for_style)
-                }
-              })
-              set_data({ ...data })
-            }}>{labelSticktoLinkDisabled?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-        </OverlayTrigger>
-      </InputGroup>
-
-      {/* Positionnement lateral des label */}
+    {isAllLabelUnitVisible?<>    {/* Modifie l'unité du label de flux */}
       <InputGroup>
         <InputGroup.Text style={{width:'40%'}}>
-          {t('Flux.label.pos')+(is_link_diplaying_value_local(multi_selected_links,'label_position',menu_for_style)?'*':'')}
+          {t('Flux.label.l_u')+(is_link_diplaying_value_local(multi_selected_links,'label_unit',menu_for_style)?'*':'')}
         </InputGroup.Text>
-
-        {/* Vers le début  */}
-        <ButtonGroup style={{width:'30%'}}>
-          <OverlayTrigger
-            key={'flux.label.tooltips.6'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.6'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={labelPositionVert('beginning')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
-                    assign_link_value_to_correct_var(d,'label_position','beginning',menu_for_style)
-                    assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}><FaAlignLeft/></Button>
-          </OverlayTrigger>
-
-          {/* Vers le milieu  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.7'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.7'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={labelPositionVert('middle')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
-                    assign_link_value_to_correct_var(d,'label_position','middle',menu_for_style)
-                    assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}><FaAlignCenter/></Button>
-          </OverlayTrigger>
-
-          {/* Vers la fin du flux  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.8'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.8'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={labelPositionVert('end')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
-                    assign_link_value_to_correct_var(d,'label_position','end',menu_for_style)
-                    assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}><FaAlignRight/></Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-
-        {/* Positionnement vertical des label  */}
-        <ButtonGroup style={{width:'30%'}}>
-          {/* Positionnement au dessous  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.9'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={labelPositionOrtho('below')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
-                    assign_link_value_to_correct_var(d,'orthogonal_label_position','below',menu_for_style)
-                    assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{svg_label_bottom}</Button>
-          </OverlayTrigger>
-
-          {/* Positionnement au milieu  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.10'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={labelPositionOrtho('middle')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
-                    assign_link_value_to_correct_var(d,'orthogonal_label_position','middle',menu_for_style)
-                    assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{svg_label_center}</Button>
-          </OverlayTrigger>
-
-          {/* Positionnement au dessus  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.11'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={labelPositionOrtho('above')?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
-                    assign_link_value_to_correct_var(d,'orthogonal_label_position','above',menu_for_style)
-                    assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{svg_label_top}</Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </InputGroup>
-
-      {/* Positionnement à la souris  */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.pls')+(is_link_diplaying_value_local(multi_selected_links,'label_position',menu_for_style)?'*':'')}</InputGroup.Text>
         <OverlayTrigger
-          key={'flux.label.tooltips.12'}
+          key={'Flux.label.tooltips.l_u'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.12'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            style={{width:'30%'}}
-            variant={label_link_free_checked?'primary':'outline-primary'}
-            onClick={() => {
+          overlay={<Tooltip id={'Flux.label.tooltips.l_u'}>{t('Flux.label.tooltips.l_u')} </Tooltip>}>
+          <Form.Control
+            type='text'
+            style={{width:'60%'}}
+            value={return_correct_link_attribute_value(data,selected_parameter[0],'label_unit',menu_for_style) as string}
+            onChange={evt => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'label_unit',evt.target.value,menu_for_style))
+              set_data({ ...data })
+            }}/>
+        </OverlayTrigger>
+      </InputGroup></>:<></>}
+
+    {/* Choix d'affichage en notation scientifique  */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.toPrecision')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'flux.label.tooltips.13'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'flux.label.tooltips.13'}>{t('Flux.label.tooltips.toPrecision')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'30%'}}
+          variant={isAllLinkToPrecision()?'primary':'outline-primary'}
+          onClick={
+            () => {
+              const val=isAllLinkToPrecision()
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                const l_o_p=return_correct_link_attribute_value(data,d,'label_on_path',menu_for_style)
-                assign_link_value_to_correct_var(d,'label_on_path',((!label_link_free_checked)?false:l_o_p),menu_for_style)
-                assign_link_value_to_correct_var(d,'label_position',(!label_link_free_checked)?'frozen':'middle',menu_for_style)
-                assign_link_value_to_correct_var(d,'orthogonal_label_position',(!label_link_free_checked)?'frozen':'middle',menu_for_style)
+                assign_link_value_to_correct_var(d,'custom_digit',false,menu_for_style)
+                assign_link_value_to_correct_var(d,'to_precision',!val,menu_for_style)
               })
               set_data({ ...data })
-            }}>{label_link_free_checked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+            }}>{isAllLinkToPrecision()?<FaEye/>:<FaEyeSlash/>}</Button>
+      </OverlayTrigger>
+    </InputGroup>
+
+    {isAllLinkToPrecision()?<>  {/* Choose number of scientific number */}
+      <InputGroup>
+        <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.NbPrecision')}</InputGroup.Text>
+        <OverlayTrigger
+          key={'flux.label.tooltips.14'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.14'}>{t('Flux.label.tooltips.NbPrecision')} </Tooltip>}>
+          <Form.Control
+            style={{width:'30%'}}
+            type='number'
+            min={1}
+            step={1}
+            disabled={!isAllLinkToPrecision()}
+            value={allLinkLabelScientificPrecision()}
+            onChange={evt=>{
+              const value=+evt.target.value
+              const val=isNaN(value) || value<=0?5:Math.round(value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'scientific_precision',val,menu_for_style))
+              set_data({...data})
+            }}/>
         </OverlayTrigger>
-      </InputGroup>
-    </>:<></>}
+      </InputGroup></>:<></>}
+    {/* Choix d'affichage du nombre de chiffre après la virgule  */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.custom_digit')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'flux.label.tooltips.cd'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'flux.label.tooltips.cd'}>{t('Flux.label.tooltips.custom_digit')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'30%'}}
+          variant={AllLinkToCustomDigit?'primary':'outline-primary'}
+          onClick={
+            () => {
+              const val=AllLinkToCustomDigit
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+
+                assign_link_value_to_correct_var(d,'to_precision',false,menu_for_style)
+                assign_link_value_to_correct_var(d,'custom_digit',!val,menu_for_style)
+              })
+              set_data({ ...data })
+            }}>{AllLinkToCustomDigit?<FaEye/>:<FaEyeSlash/>}</Button>
+      </OverlayTrigger>
+    </InputGroup>
+
+    {AllLinkToCustomDigit?<>  {/* Choose number of custom digit */}
+      <InputGroup>
+        <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.NbDigit')}</InputGroup.Text>
+        <OverlayTrigger
+          key={'flux.label.tooltips.nd'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.nd'}>{t('Flux.label.tooltips.NbDigit')} </Tooltip>}>
+          <Form.Control
+            style={{width:'30%'}}
+            type='number'
+            min={0}
+            step={1}
+            disabled={!AllLinkToCustomDigit}
+            value={allLinkLabelCustomDigit()}
+            onChange={evt=>{
+              const value=+evt.target.value
+              const val=isNaN(value) 
+              Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'nb_digit',value,menu_for_style))
+              set_data({...data})
+            }}/>
+        </OverlayTrigger>
+      </InputGroup></>:<></>}
+
+    {/* Couleur des Labels  */}
+    <Form.Group as={Row} >
+      <ButtonGroup>
+        {/* Label en noir  */}
+        <OverlayTrigger
+          key={'flux.label.tooltips.2'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.2'}>{t('Flux.label.tooltips.len')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'33%', height:'2rem'}}
+            disabled={!labelVisibleChecked}
+            variant={linkLabelColor('black')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  assign_link_value_to_correct_var(d,'text_color','black',menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{t('Flux.label.len')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
+        </OverlayTrigger>
+
+        {/* Label en blanc  */}
+        <OverlayTrigger
+          key={'flux.label.tooltips.3'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.3'}>{t('Flux.label.tooltips.lb')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'33%', height:'2rem'}}
+            disabled={!labelVisibleChecked}
+            variant={linkLabelColor('white')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  assign_link_value_to_correct_var(d,'text_color','white',menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{t('Flux.label.lb')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
+        </OverlayTrigger>
+
+        {/* Label en couleur  */}
+        <OverlayTrigger
+          key={'flux.label.tooltips.4'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.4'}>{t('Flux.label.tooltips.lec')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'34%', height:'2rem'}}
+            disabled={!labelVisibleChecked}
+            variant={linkLabelColor('color')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  assign_link_value_to_correct_var(d,'text_color',return_correct_link_attribute_value(data,d,'color',menu_for_style),menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{t('Flux.label.lec')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
+        </OverlayTrigger>
+      </ButtonGroup>
+    </Form.Group>
+
+    {/* Police des labels de flux  */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}} >{'Police'}</InputGroup.Text>
+      <Form.Select
+        style={{width:'30%'}}
+        value={allLinkFF?return_correct_link_attribute_value(data,selected_parameter[0],'font_family',menu_for_style) as string:''}
+        onChange={
+          (evt: React.ChangeEvent<HTMLSelectElement>) => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'font_family', evt.target.value,menu_for_style))
+            set_data({...data})
+          }}>
+        {data.display_style.font_family.map((d) => {
+          return <option
+            style={{fontFamily:d}}
+            key={'ff-' + d}
+            value={d}
+          >{d}</option>
+        })}
+      </Form.Select>
+      <FormControl
+        style={{width:'20%'}}
+        min={11}
+        type={'number'}
+        disabled={!labelVisibleChecked}
+        value={allNodeLabelFontSize()}
+        onChange={evt => {
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>{
+            assign_link_value_to_correct_var(d,'label_font_size',+evt.target.value,menu_for_style)
+          })
+          set_data({ ...data })
+        }}
+      />
+      <InputGroup.Text style={{width:'10%'}}>px</InputGroup.Text>
+    </InputGroup>
+
+    {/* Orienter le texte du label le long du flux  */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'70%'}}>
+        {t('Flux.label.acf')+(is_link_diplaying_value_local(multi_selected_links,'label_on_path',menu_for_style)?'*':'')}
+      </InputGroup.Text>
+      <OverlayTrigger
+        key={'flux.label.tooltips.5'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'flux.label.tooltips.5'}>{t('Flux.label.tooltips.acf')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'30%'}}
+          disabled={!labelVisibleChecked}
+          variant={labelSticktoLinkDisabled?'primary':'outline-primary'}
+          onClick={()=>{
+            const val=labelSticktoLinkDisabled
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+              assign_link_value_to_correct_var(d,'label_on_path',!val,menu_for_style)
+              if(!val){
+                const l_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
+                const l_orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
+                assign_link_value_to_correct_var(d,'label_position',(l_pos=='frozen')?'middle':l_pos,menu_for_style)
+                assign_link_value_to_correct_var(d,'orthogonal_label_position',(l_orth_pos=='frozen')?'middle':l_orth_pos,menu_for_style)
+              }
+            })
+            set_data({ ...data })
+          }}>{labelSticktoLinkDisabled?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      </OverlayTrigger>
+    </InputGroup>
+
+    {/* Positionnement lateral des label */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'40%'}}>
+        {t('Flux.label.pos')+(is_link_diplaying_value_local(multi_selected_links,'label_position',menu_for_style)?'*':'')}
+      </InputGroup.Text>
+
+      {/* Vers le début  */}
+      <ButtonGroup style={{width:'30%'}}>
+        <OverlayTrigger
+          key={'flux.label.tooltips.6'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.6'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={labelPositionVert('beginning')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position','beginning',menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                })
+                set_data({ ...data })
+              }}><FaAlignLeft/></Button>
+        </OverlayTrigger>
+
+        {/* Vers le milieu  */}
+        <OverlayTrigger
+          key={'flux.label.tooltips.7'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.7'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={labelPositionVert('middle')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position','middle',menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                })
+                set_data({ ...data })
+              }}><FaAlignCenter/></Button>
+        </OverlayTrigger>
+
+        {/* Vers la fin du flux  */}
+        <OverlayTrigger
+          key={'flux.label.tooltips.8'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.8'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={labelPositionVert('end')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position','end',menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                })
+                set_data({ ...data })
+              }}><FaAlignRight/></Button>
+        </OverlayTrigger>
+      </ButtonGroup>
+
+      {/* Positionnement vertical des label  */}
+      <ButtonGroup style={{width:'30%'}}>
+        {/* Positionnement au dessous  */}
+        <OverlayTrigger
+          key={'flux.label.tooltips.9'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={labelPositionOrtho('below')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position','below',menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{svg_label_bottom}</Button>
+        </OverlayTrigger>
+
+        {/* Positionnement au milieu  */}
+        <OverlayTrigger
+          key={'flux.label.tooltips.10'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={labelPositionOrtho('middle')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position','middle',menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{svg_label_center}</Button>
+        </OverlayTrigger>
+
+        {/* Positionnement au dessus  */}
+        <OverlayTrigger
+          key={'flux.label.tooltips.11'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={labelPositionOrtho('above')?'primary':'outline-primary'}
+            onClick={
+              () => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
+                  assign_link_value_to_correct_var(d,'orthogonal_label_position','above',menu_for_style)
+                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{svg_label_top}</Button>
+        </OverlayTrigger>
+      </ButtonGroup>
+    </InputGroup>
+
+    {/* Positionnement à la souris  */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.pls')+(is_link_diplaying_value_local(multi_selected_links,'label_position',menu_for_style)?'*':'')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'flux.label.tooltips.12'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'flux.label.tooltips.12'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'30%'}}
+          variant={label_link_free_checked?'primary':'outline-primary'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+              const l_o_p=return_correct_link_attribute_value(data,d,'label_on_path',menu_for_style)
+              assign_link_value_to_correct_var(d,'label_on_path',((!label_link_free_checked)?false:l_o_p),menu_for_style)
+              assign_link_value_to_correct_var(d,'label_position',(!label_link_free_checked)?'frozen':'middle',menu_for_style)
+              assign_link_value_to_correct_var(d,'orthogonal_label_position',(!label_link_free_checked)?'frozen':'middle',menu_for_style)
+            })
+            set_data({ ...data })
+          }}>{label_link_free_checked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      </OverlayTrigger>
+    </InputGroup>
+    
   </>
 
   const content_style=(!menu_for_style)?<InputGroup>
