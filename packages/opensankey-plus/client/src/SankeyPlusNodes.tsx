@@ -824,21 +824,21 @@ export const context_node_view_node_unitary=(
 )=>{
   const create_view_node_unitary=(view_name='')=>{
 
-    const cpy=JSON.parse(JSON.stringify(data)) as SankeyPlusData
+    const new_unitary_sankey=JSON.parse(JSON.stringify(data)) as SankeyPlusData
 
     const n_v=node_visible_on_svg()
     const l_v=link_visible_on_svg()
-    const n_link_s=Object.values(cpy.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink)&& n_v.includes(l.idSource)).map(l=>l.idSource)
-    const n_link_t=Object.values(cpy.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink)&& n_v.includes(l.idTarget)).map(l=>l.idTarget)
+    const n_link_s=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink)&& n_v.includes(l.idSource)).map(l=>l.idSource)
+    const n_link_t=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink)&& n_v.includes(l.idTarget)).map(l=>l.idTarget)
 
-    const links_to_keep=Object.fromEntries(Object.entries(cpy.links).filter(l=>l_v.includes(l[1].idLink) && (contextualised_node.inputLinksId.includes(l[1].idLink) || contextualised_node.outputLinksId.includes(l[1].idLink)) ).map(l=>{
-      l[1].value=getLinkValue(cpy,l[1].idLink)
+    const links_to_keep=Object.fromEntries(Object.entries(new_unitary_sankey.links).filter(l=>l_v.includes(l[1].idLink) && (contextualised_node.inputLinksId.includes(l[1].idLink) || contextualised_node.outputLinksId.includes(l[1].idLink)) ).map(l=>{
+      l[1].value=getLinkValue(new_unitary_sankey,l[1].idLink)
       l[1].colorTag='no_colormap'
       return l
     }))
     const k_l_t_k=Object.keys(links_to_keep)
 
-    const nodes_to_keep=Object.fromEntries(Object.entries(cpy.nodes).filter(ne=>{
+    const nodes_to_keep=Object.fromEntries(Object.entries(new_unitary_sankey.nodes).filter(ne=>{
       // Keep only the node contextualised,
       // or the node linked to it (and visible on the svg)
       return ne[1].idNode===contextualised_node.idNode || ((n_link_s.includes(ne[1].idNode) || n_link_t.includes(ne[1].idNode) ) && n_v)
@@ -866,23 +866,23 @@ export const context_node_view_node_unitary=(
     }))
 
     // Normalize data
-    cpy.nodeTags={}
-    cpy.fluxTags={}
-    cpy.dataTags={}
-    cpy.labels={}
-    cpy.colorMap='no_colormap'
-    cpy.linkZIndex=cpy.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
-    cpy.nodes=nodes_to_keep
-    cpy.links=links_to_keep
+    new_unitary_sankey.nodeTags={}
+    new_unitary_sankey.fluxTags={}
+    new_unitary_sankey.dataTags={}
+    new_unitary_sankey.labels={}
+    new_unitary_sankey.colorMap='no_colormap'
+    new_unitary_sankey.linkZIndex=new_unitary_sankey.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
+    new_unitary_sankey.nodes=nodes_to_keep
+    new_unitary_sankey.links=links_to_keep
 
     // ======Add ZDT====== 
     // Get dimensions for labels 
-    const min_x=Object.values(cpy.nodes).filter(n=>n.position==='absolute').sort((a,b)=>a.x-b.x)[0].x
-    const min_y=Object.values(cpy.nodes).filter(n=>n.position==='absolute').sort((a,b)=>a.y-b.y)[0].y
+    const min_x=Object.values(new_unitary_sankey.nodes).filter(n=>n.position==='absolute').sort((a,b)=>a.x-b.x)[0].x
+    const min_y=Object.values(new_unitary_sankey.nodes).filter(n=>n.position==='absolute').sort((a,b)=>a.y-b.y)[0].y
 
     let max_x=min_x
     let max_y=min_y
-    Object.values(cpy.nodes).filter(n=>n.position==='absolute').forEach(n=>{
+    Object.values(new_unitary_sankey.nodes).filter(n=>n.position==='absolute').forEach(n=>{
       const boxX=n.x
       const boxY=n.y
       const boxW=Number(d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
@@ -925,12 +925,12 @@ export const context_node_view_node_unitary=(
     // Perform some configuration if the unitary go to a new view or an existing view
     if(view_name===''){
 
-      cpy.labels[n_label.idLabel]=n_label
+      new_unitary_sankey.labels[n_label.idLabel]=n_label
 
       // Add the contextualised node to list of explored nodes (to use in the process of link_text)
-      cpy.unitary_node.push(contextualised_node.idNode)
+      new_unitary_sankey.unitary_node.push(contextualised_node.idNode)
 
-      let difference = deep_diff.diff(master_data, cpy)
+      let difference = deep_diff.diff(master_data, new_unitary_sankey)
       difference=(difference !== undefined)?difference:[]
       difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
       difference=filter_view(difference)
@@ -944,7 +944,7 @@ export const context_node_view_node_unitary=(
       })
 
       set_view(new_id)
-      set_data({...cpy})
+      set_data({...new_unitary_sankey})
 
 
     }else{
@@ -960,7 +960,7 @@ export const context_node_view_node_unitary=(
       const data_view=get_data_from_view(master_data,master_data.view[ind].id) as SankeyPlusData
 
       // =====Update data icon catalog=====
-      Object.entries(cpy.icon_catalog).forEach(i=>{
+      Object.entries(new_unitary_sankey.icon_catalog).forEach(i=>{
         data_view.icon_catalog[i[0]]=i[1]
       })
       
@@ -974,7 +974,7 @@ export const context_node_view_node_unitary=(
       // Create unique key to use in the suffix
       const unique_key=String(new Date().getTime())
       // Add a unique suffix to nodes & links in case we add node/link who have the same id of some in the view
-      Object.entries(cpy.nodes).map(n=>{
+      Object.entries(new_unitary_sankey.nodes).map(n=>{
         n[0]=n[0]+'_'+unique_key
         n[1].idNode=n[0]
         n[1].inputLinksId=n[1].inputLinksId.map(l=>l+'_'+unique_key)
@@ -990,14 +990,14 @@ export const context_node_view_node_unitary=(
         data_view.nodes[n[0]]=n[1]
       })
 
-      Object.entries(cpy.links).map(l=>{
+      Object.entries(new_unitary_sankey.links).map(l=>{
         l[0]=l[0]+'_'+unique_key
         l[1].idLink=l[0]
         l[1].idSource=l[1].idSource+'_'+unique_key
         l[1].idTarget=l[1].idTarget+'_'+unique_key
 
         l[1].style=l[1].style+'_'+unique_key
-        
+
         return l
       }).forEach(l=>{
         data_view.linkZIndex.push(l[1].idLink)
@@ -1005,11 +1005,11 @@ export const context_node_view_node_unitary=(
       })
 
       // Update style ID in case it has different value with the samez id 
-      Object.entries(cpy.style_node).forEach(ns=>{
+      Object.entries(new_unitary_sankey.style_node).forEach(ns=>{
         data_view.style_node[ns[0]+'_'+unique_key]=ns[1]
       })
 
-      Object.entries(cpy.style_link).forEach(ls=>{
+      Object.entries(new_unitary_sankey.style_link).forEach(ls=>{
         data_view.style_link[ls[0]+'_'+unique_key]=ls[1]
       })
 
