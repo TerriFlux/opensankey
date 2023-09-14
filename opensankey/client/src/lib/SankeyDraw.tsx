@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
-import React, { FunctionComponent, useEffect,Requireable } from 'react'
+import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData} from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
@@ -235,8 +235,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   mode_selection:{current : string},
   closeAllMenu:()=>void
 
@@ -247,9 +245,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     if (e.key == 'ArrowUp') {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
         if (d != undefined) {
-          return d.name
+          return d.idNode
         }
-      }).includes(f.name)).map(d => {
+      }).includes(f.idNode)).map(d => {
         if (d.position === 'relative') {
           return
         }
@@ -268,9 +266,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     } else if (e.key == 'ArrowDown') {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
         if (d != undefined) {
-          return d.name
+          return d.idNode
         }
-      }).includes(f.name)).map(d => {
+      }).includes(f.idNode)).map(d => {
         if (d.position === 'relative') {
           return
         }
@@ -285,9 +283,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     } else if (e.key == 'ArrowLeft') {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
         if (d != undefined) {
-          return d.name
+          return d.idNode
         }
-      }).includes(f.name)).map(d => {
+      }).includes(f.idNode)).map(d => {
         if (d.position === 'relative') {
           return
         }
@@ -302,9 +300,9 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     } else if (e.key == 'ArrowRight') {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => {
         if (d != undefined) {
-          return d.name
+          return d.idNode
         }
-      }).includes(f.name)).map(d => {
+      }).includes(f.idNode)).map(d => {
         if (d.position === 'relative') {
           return
         }
@@ -338,7 +336,6 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
 
 
   }else if(e.key=='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
-    console.log(document.activeElement?.className)
     
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {
