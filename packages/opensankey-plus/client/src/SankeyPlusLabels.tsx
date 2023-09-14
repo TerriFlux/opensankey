@@ -64,7 +64,6 @@ export const SankeyPlusDrawLabels = (
       gg_label.on('mousedown',()=>closeAllMenuContext())
       gg_label.on('contextmenu',evt=>{
         evt.preventDefault()
-        console.log('here')
         pointer_pos.current=[evt.pageX,evt.pageY]
         if(!multi_selected_label.current.includes(d)){
           multi_selected_label.current.forEach(nn=>deselect_visualy_nodes(nn))
@@ -105,13 +104,7 @@ export const SankeyPlusDrawLabels = (
   // Insert la balise qui contient tous les lables libres avant la balise de la légende
   d3.select('.opensankey #svg').insert('g','#g_links').attr('class','g_label').attr('id','g_label')
   d3.select('.opensankey #svg').append('g').attr('class','g_label_handles').attr('id','g_label_handles')
-  // Ajoute l'event au click sur la zone du dessin qui désélectionne tous les labels libres sélectionné
-  d3.select('.opensankey #svg').on('click',evt=>{
-    if(!evt.ctrlKey && d3.select(evt.srcElement).attr('id') === 'svg'){
-      multi_selected_label.current = []
-    }
 
-  })
   add_labels()
 }
 
@@ -294,7 +287,7 @@ export const sankey_plus_min_width_and_height = (data:SankeyPlusData) => {
 
 export const zone_selection_label=(data:SankeyPlusData,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  evt:MouseEvent,
+  evt:MouseEvent
 )=>{
   
   if( d3.selectAll('.selection_zone').nodes().length>0){
