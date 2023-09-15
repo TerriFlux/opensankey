@@ -5,22 +5,20 @@ import LZString from 'lz-string'
 
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice} from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice,FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile } from '@fortawesome/free-solid-svg-icons'
+import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile,faListCheck, faXmark} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
 import { clickSaveDiagram, adjust_sankey_zone, node_displayed } from 'open-sankey/dist/SankeyUtils'
 import { updateLayout, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 
-import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType } from './types'
+import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType, DiffType, ViewType } from './types'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
-
 /* eslint-disable */
 // @ts-ignore
 const deep_diff = require('deep-diff')
 /* eslint-enable */
-
 export const setDiagram = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
   set_view: (s:string)=>void
@@ -94,17 +92,24 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   }
   const copy_master_data= {...master_data}
   copy_master_data.view = []
-  const data_init=JSON.parse(JSON.stringify(copy_master_data))
+  let data_init=JSON.parse(JSON.stringify(copy_master_data))
   // Get the difference from the view
   if (master_data.view.filter(v=>v.id === id_view_to_see).length === 0) {
     alert('view not found')
     return data_init
   }
-  const diff_view=master_data.view.filter(v=>v.id === id_view_to_see)[0].view_data.diff
-  if (!diff_view) {
-    return data_init
+  const view_object=master_data.view.filter(v=>v.id === id_view_to_see)[0]
+
+  if((view_object.view_data as DiffType).diff){
+    const diff_view=(view_object.view_data as DiffType).diff
+    if (!diff_view) {
+      return data_init
+    }
+    diff_view.forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d))
+  }else{
+    data_init=view_object.view_data as SankeyPlusData
   }
-  diff_view.forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d))
+  updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
   return data_init
   // const del_node_views = diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] === 'nodes' && d.kind === 'D' && d.path.length === 2))
   // del_node_views.forEach((d:{path:string[],kind:string,rhs:boolean|string})=>{
@@ -170,12 +175,18 @@ export const recompute_views = (
         return
       }
       const data_view=get_data_from_view(prev_master_data,current_v.id) as SankeyPlusData
-      let difference = deep_diff.diff(new_master_data,data_view)
-      difference = (difference !== undefined) ? difference : []
-      difference = filter_view(difference)
-      if (difference.length > 0) {
-        current_v.view_data.diff = difference
+      
+      if((current_v.view_data as SankeyPlusData).version){
+        current_v.view_data=data_view
+      }else{
+        let difference = deep_diff.diff(new_master_data,data_view)
+        difference = (difference !== undefined) ? difference : []
+        difference = filter_view(difference)
+        if (difference.length > 0) {
+          (current_v.view_data as DiffType).diff = difference
+        }
       }
+      
     })
   }
   // master data is now set
@@ -222,13 +233,15 @@ export const keyHandler = (
       // If we do a control+X while we are on master data, we create view empty
       // data is master data and master_data might not be  se
       const new_ind = 'view_' + String(new Date().getTime())
-      const copy_data = {diff:[]}
+      // const copy_data = {diff:[]}
+      const copy_data = JSON.parse(JSON.stringify(data))
       const new_master_data = data
       new_master_data.view.push({
         id: new_ind,
         view_data: copy_data,
         nom: 'data_' + new_ind,
-        details: ''
+        details: '',
+        heredited_attr_from_master:[]
       })
       recompute_views(new_master_data,master_data,set_master_data)
       // master data is now set
@@ -239,13 +252,19 @@ export const keyHandler = (
       }, 3000)
     } else {
       const new_ind = 'view_' + String(new Date().getTime())
-      const copy_data = JSON.parse(JSON.stringify(master_data.view.filter(v=>v.id === view)[0].view_data))
+      const current_view_object=master_data.view.filter(v=>v.id === view)[0]
+
+      const copy_data = JSON.parse(JSON.stringify(current_view_object.view_data))
       master_data.view.push({
         id: new_ind,
         view_data: copy_data,
-        nom: 'copy of '+master_data.view.filter(v=>v.id === view)[0].nom,
-        details: ''
+        nom: 'copy of '+current_view_object.nom,
+        details: '',
+        heredited_attr_from_master:[]
+
       })
+      
+     
       // master data is now set
       //set_master_data({...master_data})
       set_view(new_ind)
@@ -253,6 +272,7 @@ export const keyHandler = (
   }
 
   if(e.key==='s' && e.ctrlKey && !e.shiftKey){
+
     e.preventDefault()
     if(view!=='none'){
       // If we do a control+S while we are on a view, we save the difference between the data we are handling
@@ -264,7 +284,10 @@ export const keyHandler = (
       difference=(difference !== undefined)?difference:[]
       difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
       difference=filter_view(difference)
-      master_data.view.filter(v => v.id === view)[0].view_data = {diff:difference}
+
+      // Check wich format of the view is better optimized for memory storage
+      const raw_is_smaller_than_diff=JSON.stringify(data).length<JSON.stringify(difference).length
+      master_data.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff?JSON.parse(JSON.stringify(data)):{diff:difference}
 
       // Save master data with the view we are currently working on updated
       set_master_data({...master_data})
@@ -365,6 +388,10 @@ export const keyHandler = (
       }
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
+      if(view==='none'){
+        new_master_data.current_view=master_data.view[ind+1].id
+        set_master_data(new_master_data)
+      }
       let saved=true
       if(view !== 'none' && connected ){
         const diff=check_current_view_saved(new_master_data,data,view)
@@ -527,6 +554,9 @@ const selecteur_view=(data:SankeyPlusData,
             set_view(evt.target.value)
             const data_view=get_data_from_view(new_master_data,evt.target.value) as SankeyPlusData
             set_data(data_view)
+            new_master_data.current_view=evt.target.value
+            set_master_data(new_master_data)
+
             setTimeout(()=>{
               adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
             },100)
@@ -926,7 +956,9 @@ export const viewsAccordion = (
               id: new_ind,
               view_data: copy_data,
               nom: (files[i].name).replace('.json',''),
-              details: ''
+              details: '',
+              heredited_attr_from_master:[]
+
             })
 
           }
@@ -951,7 +983,13 @@ export const viewsAccordion = (
 // We compare the differences saved in the master_data with the current changement of the view
 export const check_current_view_saved=(master_data:SankeyPlusData,data:SankeyPlusData,view:string)=>{
   const original_diff=get_data_from_view(master_data,view)
-  let difference = deep_diff.diff(original_diff, data)
+  const data_updated_layout=JSON.parse(JSON.stringify(data))
+  const updated_diff=JSON.parse(JSON.stringify(original_diff))
+
+  updateLayout(data_updated_layout,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
+  updateLayout(updated_diff,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
+
+  let difference = deep_diff.diff(updated_diff, data_updated_layout)
   difference=(difference !== undefined)?difference:[]
   difference=difference.filter((d:{path:string[],kind:string,item:{kind:string}})=>{
     // Ne prend pas en compte les modif de vue, de la largeur ou hauteur du sankey
@@ -990,7 +1028,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
-
+  set_show_modal_transparent_view_attr:(b:boolean)=>void
 
 )=>{
 
@@ -1000,6 +1038,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   // const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
 
   const m_d=master_data?master_data:data
+  const current_view = m_d.view.filter(v=>v.id===m_d.current_view)[0]
 
 
   // Boolean used to change the logo of the button to save the current view :
@@ -1104,6 +1143,46 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </OverlayTrigger>
 
 
+  const button_heredited_attr_from_master=<OverlayTrigger
+    key={'buttonCloneMasterAttrViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonCloneMasterAttrViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonCloneMasterAttrView'}>{t('Menu.tooltips.buttonCloneMasterAttrView')} </Tooltip>}
+  >
+    <span>
+      <Button
+        size='sm'
+        variant='light'
+        disabled={!connected}
+        onClick={
+          () => {
+            set_show_modal_transparent_view_attr(true)
+          }
+        }
+      >
+        <Col>
+          <FontAwesomeIcon style={{opacity:(!connected)?'0.6':'1'}} icon={faListCheck} />
+        </Col>
+        {!connected?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
+        <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.keep_master_var')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
+
+
   const button_clone_view=<OverlayTrigger
     key={'buttonCloneViewDisabled'}
     placement={'bottom'}
@@ -1120,16 +1199,17 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
         onClick={
           () => {
             // Create a copy of the view
-            const cur_view = master_data.view.filter(v=>v.id===master_data.current_view)[0]
-            const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
+            const copy_view_data = JSON.parse(JSON.stringify(current_view.view_data))
             const new_ind = 'view_' + String(new Date().getTime())
 
             copy_view_data.view = []
             master_data.view.push({
               id: new_ind,
               view_data: copy_view_data,
-              nom: 'copy of ' + cur_view.nom,
-              details: ''
+              nom: 'copy of ' + current_view.nom,
+              details: '',
+              heredited_attr_from_master:[]
+
             })
             set_view(new_ind)
             set_master_data({...master_data})
@@ -1217,10 +1297,9 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
         variant='light'
         disabled={!connected}
         onClick={()=>{
-          const d = master_data.view.filter(v=>v.id===master_data.current_view)[0]
-          const to_download=get_data_from_view(master_data,d.id)
+          const to_download=get_data_from_view(master_data,current_view.id)
           to_download.view=[]
-          clickSaveDiagram(to_download,d.nom)
+          clickSaveDiagram(to_download,current_view.nom)
         }}
       >
         <Col><FaFileExport
@@ -1368,6 +1447,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </OverlayTrigger>
     {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
     {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data.current_view!=='none' && !window.SankeyToolsStatic?<>
+      {button_heredited_attr_from_master}
       {button_clone_view}
       {button_import_view}
       {button_export_view}
@@ -1475,12 +1555,305 @@ export const toolbar_fullscreen=(data:SankeyPlusData,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
-
+  set_show_modal_transparent_view_attr:(b:boolean)=>void
 )=>{
-  const buttons_view= SankeyPlusBannerView(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,connected,set_view_not_saved,_load_json)
+  const buttons_view= SankeyPlusBannerView(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,connected,set_view_not_saved,_load_json,set_show_modal_transparent_view_attr)
   const group_btn=<ButtonGroup>
     {buttons_view}
   </ButtonGroup>
   return <>{group_btn}</>
 
+}
+
+export const modal_transparent_view_attr=(show_modal_transparent_view_attr:boolean,
+  set_show_modal_transparent_view_attr:(b:boolean)=>void,
+  data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData,
+  set_master_data:(d:SankeyPlusData)=>void,
+  current_view:ViewType,
+  t:TFunction
+)=>{
+  return <Modal size='xl' show={show_modal_transparent_view_attr} onHide={()=>{
+    recompute_views(data,data,set_data)
+    set_show_modal_transparent_view_attr(false)}}>
+    <Modal.Header closeButton>{t('view.setTransparentAttr')}</Modal.Header>
+    <Modal.Body>
+      <InputGroup>
+            
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Topology')}</InputGroup.Text>
+         
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={ current_view.heredited_attr_from_master.includes('addNode')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('addNode')){
+              current_view.heredited_attr_from_master.push('addNode')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{t('Menu.Transformation.addNode')}</Button>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={ current_view.heredited_attr_from_master.includes('removeNode')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('removeNode')){
+              current_view.heredited_attr_from_master.push('removeNode')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{t('Menu.Transformation.removeNode')}</Button>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={ current_view.heredited_attr_from_master.includes('addFlux')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('addFlux')){
+              current_view.heredited_attr_from_master.push('addFlux')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }>{t('Menu.Transformation.addFlux')}</Button>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={ current_view.heredited_attr_from_master.includes('removeFlux')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('removeFlux')){
+              current_view.heredited_attr_from_master.push('removeFlux')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }>{t('Menu.Transformation.removeFlux')}</Button>
+            
+      </InputGroup>           
+      <InputGroup>
+            
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={ current_view.heredited_attr_from_master.includes('posNode')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('posNode')){
+              current_view.heredited_attr_from_master.push('posNode')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }>{t('Menu.Transformation.PosNoeud')}</Button>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={ current_view.heredited_attr_from_master.includes('posFlux')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('posFlux')){
+              current_view.heredited_attr_from_master.push('posFlux')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }> {t('Menu.Transformation.posFlux')}</Button>
+            
+      </InputGroup>
+      <InputGroup>
+            
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Values')}</InputGroup.Text>
+
+        <Button 
+          className='btn_menu_config' 
+          style={{width:'20%'}}
+          variant={ current_view.heredited_attr_from_master.includes('Values')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('Values')){
+              current_view.heredited_attr_from_master.push('Values')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{current_view.heredited_attr_from_master.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+            
+      </InputGroup>
+      <InputGroup>
+            
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={current_view.heredited_attr_from_master.includes('attrNode')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('attrNode')){
+              current_view.heredited_attr_from_master.push('attrNode')
+                    
+    
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{t('Menu.Transformation.attrNode')}</Button>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={current_view.heredited_attr_from_master.includes('attrFlux')?'primary':'outline-primary'} 
+          onClick={() =>{
+            if(!current_view.heredited_attr_from_master.includes('attrFlux')){
+              current_view.heredited_attr_from_master.push('attrFlux')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{t('Menu.Transformation.attrFlux')}</Button>
+            
+      </InputGroup>
+      <InputGroup>
+            
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Tags')}</InputGroup.Text>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={current_view.heredited_attr_from_master.includes('tagNode')?'primary':'outline-primary'} 
+          onClick={() =>{
+            if(!current_view.heredited_attr_from_master.includes('tagNode')){
+              current_view.heredited_attr_from_master.push('tagNode')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'),1)
+                    
+    
+            }}
+          }
+        >{t('Menu.Transformation.tagNode')}</Button>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={current_view.heredited_attr_from_master.includes('tagFlux')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('tagFlux')){
+              current_view.heredited_attr_from_master.push('tagFlux')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{t('Menu.Transformation.tagFlux')}</Button>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={current_view.heredited_attr_from_master.includes('tagData')?'primary':'outline-primary'}
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('tagData')){
+              current_view.heredited_attr_from_master.push('tagData')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{t('Menu.Transformation.tagData')}</Button>
+            
+      </InputGroup>
+      <InputGroup>
+            
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={current_view.heredited_attr_from_master.includes('tagLevel')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!current_view.heredited_attr_from_master.includes('tagLevel')){
+              current_view.heredited_attr_from_master.push('tagLevel')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{current_view.heredited_attr_from_master.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+            
+      </InputGroup>
+      <InputGroup>
+            
+        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
+
+        <Button 
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={current_view.heredited_attr_from_master.includes('attrGeneral')?'primary':'outline-primary'} 
+          onClick={() =>{
+            if(!current_view.heredited_attr_from_master.includes('attrGeneral')){
+              current_view.heredited_attr_from_master.push('attrGeneral')
+            }else{
+              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'),1)
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+
+          }
+          }
+        >{current_view.heredited_attr_from_master.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+            
+      </InputGroup>
+
+    </Modal.Body>
+
+    <Modal.Footer><Button onClick={()=>{
+      updateLayout(data,master_data,current_view.heredited_attr_from_master)
+      set_data({...data})
+    }}>{t('view.updateViewWithMasterVar')}</Button></Modal.Footer>
+  </Modal>
 }

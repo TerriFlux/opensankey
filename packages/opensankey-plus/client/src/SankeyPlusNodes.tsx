@@ -5,7 +5,7 @@ import { TFunction } from 'i18next'
 import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg,link_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
 
 import * as d3 from 'd3'
-import {SankeyPlusData,SankeyPlusNode} from './types'
+import {DiffType, SankeyPlusData,SankeyPlusNode, ViewType} from './types'
 import {  getLinkValue,node_color,link_color,return_value_node,return_value_link, } from 'open-sankey/dist/SankeyUtils'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
@@ -940,7 +940,8 @@ export const context_node_view_node_unitary=(
         id: new_id,
         view_data: {diff:difference},
         nom: 'Exploration view of node '+contextualised_node.name,
-        details: ''
+        details: '',
+        heredited_attr_from_master:[]
       })
 
       set_view(new_id)
@@ -1039,13 +1040,28 @@ export const context_node_view_node_unitary=(
 
       
   }
+  // Search if master data has view with unitary sankey
+  const has_unitary_view=master_data.view.filter(v=>{
+    if((v.view_data as DiffType).diff!==undefined){
+      return (v.view_data as DiffType).diff.filter(vo=>vo.path.includes('unitary_node')).length>0
+    }else{
+      return (v.view_data as SankeyPlusData).unitary_node.length>0
+    }}).length>0
+
+  const is_unitary_view=(v:ViewType)=>{
+    if((v.view_data as DiffType).diff!==undefined){
+      return (v.view_data as DiffType).diff.filter(vo=>vo.path.includes('unitary_node')).length>0
+    }else{
+      return (v.view_data as SankeyPlusData).unitary_node.length>0
+    }
+  }
 
   const dropdown_c_n_explore_node_add_to_view=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('view.in_existing')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
-      {master_data.view.filter(v=>v.view_data.diff.filter(vo=>vo.path.includes('unitary_node')).length>0).map(v=>{
+      {master_data.view.filter(v=>is_unitary_view(v)).map(v=>{
         
         return <Dropdown.Item as={Button} variant='light' 
           onClick={()=>{
@@ -1057,6 +1073,8 @@ export const context_node_view_node_unitary=(
       })}
     </Dropdown.Menu></Dropdown>:<></>
 
+
+
   const dropdown_c_n_explore_node=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('view.unit_node')}
@@ -1065,7 +1083,7 @@ export const context_node_view_node_unitary=(
       <Dropdown.Item  as={Button} variant='light' onClick={()=>{
         create_view_node_unitary()
       }}>{t('view.in_new')}</Dropdown.Item>
-      {master_data.view.filter(v=>v.view_data.diff.filter(vo=>vo.path.includes('unitary_node')).length>0).length>0?dropdown_c_n_explore_node_add_to_view:<></>}
+      {has_unitary_view?dropdown_c_n_explore_node_add_to_view:<></>}
 
     </Dropdown.Menu>
   </Dropdown>:<></>

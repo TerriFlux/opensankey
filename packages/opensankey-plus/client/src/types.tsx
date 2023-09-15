@@ -6,7 +6,7 @@ export interface SankeyPlusData extends SankeyData {
     icon_catalog: { [x: string]: string | null | undefined},
     nodes:{[x: string]:SankeyPlusNode}
     links:{[x: string]:SankeyPlusLink}
-    view:{id: string, view_data: {diff:{path:string[],kind:string,rhs:string}[]},nom:string,details:string}[],
+    view:ViewType[],
     current_view:string
     labels:{[x: string]:SankeyPlusLabel}
     style_node:{[x: string]:SankeyPlusNodeStyle},
@@ -14,6 +14,23 @@ export interface SankeyPlusData extends SankeyData {
     unitary_node:string[]
 
 }
+
+export type ViewType={
+  id: string,
+   view_data:  DiffType | Omit<SankeyPlusData, 'view'>,
+   nom:string,
+   details:string,
+   heredited_attr_from_master:string[]
+  
+  }
+
+export type DiffType={
+    diff:{
+      path:string[],
+      kind:string,
+      rhs:string
+    }[]
+  }
 
 export type SankeyPlusNodeStyle = SankeyNodeStyle
 export interface SankeyPlusLinkStyle extends SankeyLinkStyle{
