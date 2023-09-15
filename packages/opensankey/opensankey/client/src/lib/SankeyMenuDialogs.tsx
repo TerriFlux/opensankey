@@ -57,6 +57,7 @@ export const ApplyLayoutDialog = ({
   const [forceUpdate,setForceUpdate] = useState(true)
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
+  const [mode_trans,set_mode_trans]=useState('simple')
   const node_visible=node_visible_on_svg()
 
   const all_element_to_transform = [
@@ -93,26 +94,35 @@ export const ApplyLayoutDialog = ({
   const content_modal_layout=  <Tabs defaultActiveKey={'import'} >
 
     <Tab key='import' eventKey='import' title={t('Menu.Transformation.amp_import')} style={{marginBottom:'10px'}}>
+
+      <InputGroup>
+        <InputGroup.Text style={{width:'50%'}}>{t('Menu.choseTransforDifficulty')}</InputGroup.Text>
+        <Button variant={mode_trans=='simple'?'primary':'outline-primary'} style={{width:50/3+'%'}} onClick={()=>{set_mode_trans('simple')}}>Simple</Button>
+        <Button variant={mode_trans=='avancé'?'warning':'outline-warning'} style={{width:50/3+'%'}} onClick={()=>{set_mode_trans('avancé')}}>{t('Avancé')}</Button>
+        <Button variant={mode_trans=='expert'?'danger':'outline-danger'} style={{width:50/3+'%'}} onClick={()=>{set_mode_trans('expert')}}>Expert</Button>
+      </InputGroup>
+      
+
       {diagramSelector(t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose)}
-      <InputGroup as={Row}>
-        <Col xs='3'>
-          <InputGroup.Text>{t('Menu.Transformation.Shortcuts')}</InputGroup.Text>
-        </Col >
-        <Col xs='1'>
+      <OverlayTrigger
+        key={'TransforShortCut'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'TransforShortCut'}>{t('Menu.Transformation.tooltips.Shortcuts')} </Tooltip>}
+      >
+        <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Shortcuts')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant='outline-primary' 
             onClick={() => {
               elementToDispose.length = 0
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.unSelectAll')}</Button>
-        </Col>    
-        <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant='outline-primary' 
             onClick={() => {
               elementToDispose.length = 0
@@ -120,11 +130,9 @@ export const ApplyLayoutDialog = ({
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.selectAll')}</Button>
-        </Col>
-        <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant='outline-primary' 
             onClick={() => {
               elementToDispose.length = 0
@@ -132,83 +140,85 @@ export const ApplyLayoutDialog = ({
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.selectDefault')}</Button>
-        </Col>
-      </InputGroup>  
-      <InputGroup as={Row}>
-        <Col xs='3'>
-          <InputGroup.Text>{t('Menu.Transformation.Topology')}</InputGroup.Text>
-        </Col >          
-        <Col xs='1'>
+        
+        </InputGroup>  
+      </OverlayTrigger>
+
+      {mode_trans!='simple'?
+        <OverlayTrigger
+          key={'TransforTopology'}
+          placement={'bottom'}
+          delay={500}
+          overlay={<Tooltip id={'TransforTopology'}>{t('Menu.Transformation.tooltips.Topology')} </Tooltip>}
+        ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Topology')}</InputGroup.Text>
+            <Button 
+              className='btn_menu_config'
+              style={{width:'20%'}}
+              variant={ elementToDispose.includes('addNode')?'primary':'outline-primary'} 
+              onClick={() => {
+                if(!elementToDispose.includes('addNode')){
+                  elementToDispose.push('addNode')
+                  setForceUpdate(!forceUpdate)
+                }else{
+                  elementToDispose.splice(elementToDispose.indexOf('addNode'),1)
+                  setForceUpdate(!forceUpdate)
+                }}
+              }
+            >{t('Menu.Transformation.addNode')}</Button>
+            <Button 
+              className='btn_menu_config'
+              style={{width:'20%'}}
+              variant={ elementToDispose.includes('removeNode')?'primary':'outline-primary'} 
+              onClick={() => {
+                if(!elementToDispose.includes('removeNode')){
+                  elementToDispose.push('removeNode')
+                  setForceUpdate(!forceUpdate)
+                }else{
+                  elementToDispose.splice(elementToDispose.indexOf('removeNode'),1)
+                  setForceUpdate(!forceUpdate)
+                }}
+              }
+            >{t('Menu.Transformation.removeNode')}</Button>
+            <Button 
+              className='btn_menu_config'
+              style={{width:'20%'}}
+              variant={ elementToDispose.includes('addFlux')?'primary':'outline-primary'} 
+              onClick={() => {
+                if(!elementToDispose.includes('addFlux')){
+                  elementToDispose.push('addFlux')
+                  setForceUpdate(!forceUpdate)
+                }else{
+                  elementToDispose.splice(elementToDispose.indexOf('addFlux'),1)
+                  setForceUpdate(!forceUpdate)
+                }}
+              }>{t('Menu.Transformation.addFlux')}</Button>
+            <Button 
+              className='btn_menu_config'
+              style={{width:'20%'}}
+              variant={ elementToDispose.includes('removeFlux')?'primary':'outline-primary'} 
+              onClick={() => {
+                if(!elementToDispose.includes('removeFlux')){
+                  elementToDispose.push('removeFlux')
+                  setForceUpdate(!forceUpdate)
+                }else{
+                  elementToDispose.splice(elementToDispose.indexOf('removeFlux'),1)
+                  setForceUpdate(!forceUpdate)
+                }}
+              }>{t('Menu.Transformation.removeFlux')}</Button>
+        
+          </InputGroup></OverlayTrigger>:<></>}
+
+      {/* Taille et pos des noeud/flux */}
+      <OverlayTrigger
+        key={'TransforGeometry'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'TransforGeometry'}>{t('Menu.Transformation.tooltips.Geometry')} </Tooltip>}
+      >
+        <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
-            variant={ elementToDispose.includes('addNode')?'primary':'outline-primary'} 
-            onClick={() => {
-              if(!elementToDispose.includes('addNode')){
-                elementToDispose.push('addNode')
-                setForceUpdate(!forceUpdate)
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('addNode'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{t('Menu.Transformation.addNode')}</Button>
-        </Col>
-        <Col xs='1'>
-          <Button 
-            className='btn_menu_config'
-            style={{width:'90px'}}
-            variant={ elementToDispose.includes('removeNode')?'primary':'outline-primary'} 
-            onClick={() => {
-              if(!elementToDispose.includes('removeNode')){
-                elementToDispose.push('removeNode')
-                setForceUpdate(!forceUpdate)
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('removeNode'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{t('Menu.Transformation.removeNode')}</Button>
-        </Col>
-        <Col xs='1'>
-          <Button 
-            className='btn_menu_config'
-            style={{width:'90px'}}
-            variant={ elementToDispose.includes('addFlux')?'primary':'outline-primary'} 
-            onClick={() => {
-              if(!elementToDispose.includes('addFlux')){
-                elementToDispose.push('addFlux')
-                setForceUpdate(!forceUpdate)
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('addFlux'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }>{t('Menu.Transformation.addFlux')}</Button>
-        </Col>
-        <Col xs='1'>
-          <Button 
-            className='btn_menu_config'
-            style={{width:'90px'}}
-            variant={ elementToDispose.includes('removeFlux')?'primary':'outline-primary'} 
-            onClick={() => {
-              if(!elementToDispose.includes('removeFlux')){
-                elementToDispose.push('removeFlux')
-                setForceUpdate(!forceUpdate)
-              }else{
-                elementToDispose.splice(elementToDispose.indexOf('removeFlux'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }>{t('Menu.Transformation.removeFlux')}</Button>
-        </Col>
-      </InputGroup>           
-      <InputGroup as={Row}>
-        <Col xs='3'>
-          <InputGroup.Text>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
-        </Col >
-        <Col xs='1'>
-          <Button 
-            className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={ elementToDispose.includes('posNode')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('posNode')){
@@ -219,11 +229,9 @@ export const ApplyLayoutDialog = ({
                 setForceUpdate(!forceUpdate)
               }}
             }>{t('Menu.Transformation.PosNoeud')}</Button>
-        </Col>
-        <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={ elementToDispose.includes('posFlux')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('posFlux')){
@@ -234,16 +242,19 @@ export const ApplyLayoutDialog = ({
                 setForceUpdate(!forceUpdate)
               }}
             }> {t('Menu.Transformation.posFlux')}</Button>
-        </Col>
-      </InputGroup>
-      <InputGroup as={Row}>
-        <Col xs='3'>
-          <InputGroup.Text>{t('Menu.Transformation.Values')}</InputGroup.Text>
-        </Col >
-        <Col xs='1'>
+        
+        </InputGroup></OverlayTrigger>
+      
+      {/* Valeur des flux */}
+      {mode_trans!='simple'?<OverlayTrigger
+        key={'TransforValues'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'TransforValues'}>{t('Menu.Transformation.tooltips.Values')} </Tooltip>}
+      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Values')}</InputGroup.Text>
           <Button 
             className='btn_menu_config' 
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={ elementToDispose.includes('Values')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('Values')){
@@ -255,16 +266,18 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{elementToDispose.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-        </Col>
-      </InputGroup>
-      <InputGroup as={Row}>
-        <Col xs='3'>
-          <InputGroup.Text>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
-        </Col >
-        <Col xs='1'>
+        
+        </InputGroup></OverlayTrigger>:<></>}
+      
+      <OverlayTrigger
+        key={'TransforAttribut'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'TransforAttribut'}>{t('Menu.Transformation.tooltips.Attribut')} </Tooltip>}
+      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={elementToDispose.includes('attrNode')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('attrNode')){
@@ -277,11 +290,9 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{t('Menu.Transformation.attrNode')}</Button>
-        </Col>
-        <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={elementToDispose.includes('attrFlux')?'primary':'outline-primary'} 
             onClick={() =>{
               if(!elementToDispose.includes('attrFlux')){
@@ -293,16 +304,19 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{t('Menu.Transformation.attrFlux')}</Button>
-        </Col>
-      </InputGroup>
-      <InputGroup as={Row}>
-        <Col xs='3'>
-          <InputGroup.Text>{t('Menu.Transformation.Tags')}</InputGroup.Text>
-        </Col >
-        <Col xs='1'>
+        
+        </InputGroup></OverlayTrigger>
+
+      {/* Etiquette */}
+      {mode_trans=='expert'?<OverlayTrigger
+        key={'TransforTags'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'TransforTags'}>{t('Menu.Transformation.tooltips.Tags')} </Tooltip>}
+      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Tags')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={elementToDispose.includes('tagNode')?'primary':'outline-primary'} 
             onClick={() =>{
               if(!elementToDispose.includes('tagNode')){
@@ -315,11 +329,9 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{t('Menu.Transformation.tagNode')}</Button>
-        </Col>
-        <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={elementToDispose.includes('tagFlux')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('tagFlux')){
@@ -331,11 +343,9 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{t('Menu.Transformation.tagFlux')}</Button>
-        </Col>
-        <Col xs='1'>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={elementToDispose.includes('tagData')?'primary':'outline-primary'}
             onClick={() => {
               if(!elementToDispose.includes('tagData')){
@@ -347,16 +357,19 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{t('Menu.Transformation.tagData')}</Button>
-        </Col>
-      </InputGroup>
-      <InputGroup as={Row}>
-        <Col xs='3'>
-          <InputGroup.Text>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
-        </Col >
-        <Col xs='1'>
+        
+        </InputGroup></OverlayTrigger>:<></>}
+
+      {/* Aggrégation */}
+      {mode_trans=='expert'?<OverlayTrigger
+        key={'TransfortagLevel'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'TransfortagLevel'}>{t('Menu.Transformation.tooltips.tagLevel')} </Tooltip>}
+      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={elementToDispose.includes('tagLevel')?'primary':'outline-primary'} 
             onClick={() => {
               if(!elementToDispose.includes('tagLevel')){
@@ -368,16 +381,17 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{elementToDispose.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-        </Col>
-      </InputGroup>
-      <InputGroup as={Row}>
-        <Col xs='3'>
-          <InputGroup.Text>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
-        </Col >
-        <Col xs='1'>
+        </InputGroup></OverlayTrigger>:<></>}
+      
+      <OverlayTrigger
+        key={'TransforattrGeneral'}
+        placement={'bottom'}
+        delay={500}
+        overlay={<Tooltip id={'TransforattrGeneral'}>{t('Menu.Transformation.tooltips.attrGeneral')} </Tooltip>}
+      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
-            style={{width:'90px'}}
+            style={{width:'20%'}}
             variant={elementToDispose.includes('attrGeneral')?'primary':'outline-primary'} 
             onClick={() =>{
               if(!elementToDispose.includes('attrGeneral')){
@@ -389,8 +403,7 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{elementToDispose.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-        </Col>
-      </InputGroup>
+        </InputGroup></OverlayTrigger>
       {apply_transformation_additional_elements(t,forceUpdate,setForceUpdate,elementToDispose).map((c:JSX.Element,i:number)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>
       })}
@@ -398,48 +411,40 @@ export const ApplyLayoutDialog = ({
 
     <Tab key={'manuelle'} eventKey={'manuelle'} title={t('Menu.Transformation.amp_manuelle')} style={{marginBottom:'10px'}}>
       {/* Ecart horizontal */}
-      <Form.Group as={Row} >
-        <Col xs={7}>
-          <InputGroup.Text>{t('MEP.Horizontal')}</InputGroup.Text>
-        </Col>
-        <Col xs={5}>
-          <OverlayTrigger
-            key={'MEP.tooltips.EEN_h'}
-            placement={'top'}
-            delay={500}
-            rootClose
-            overlay={<Tooltip id={'tooltip-adjust'}>{t('MEP.tooltips.EEN_h')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={node_hspace}
-              onChange={evt => {
-                set_node_hspace(+evt.target.value)
-                sankey_data.h_space = +evt.target.value
-              }}/>
-          </OverlayTrigger>
-        </Col>
+      <Form.Group ><InputGroup.Text style={{width:'20%'}}>{t('MEP.Horizontal')}</InputGroup.Text>
+        <OverlayTrigger
+          key={'MEP.tooltips.EEN_h'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'tooltip-adjust'}>{t('MEP.tooltips.EEN_h')} </Tooltip>}>
+          <FormControl
+            type="text"
+            value={node_hspace}
+            onChange={evt => {
+              set_node_hspace(+evt.target.value)
+              sankey_data.h_space = +evt.target.value
+            }}/>
+        </OverlayTrigger>
+        
       </Form.Group>
       {/* Ecart Vertical */}
-      <Form.Group as={Row}>
-        <Col xs={7}>
-          <InputGroup.Text>{t('MEP.Vertical')}</InputGroup.Text>
-        </Col>
-        <Col xs={5}>
-          <OverlayTrigger
-            key={'MEP.tooltips.EEN_v'}
-            placement={'top'}
-            delay={500}
-            rootClose
-            overlay={<Tooltip id={'MEP.tooltips.EEN_v'}>{t('MEP.tooltips.EEN_v')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={node_vspace}
-              onChange={evt => {
-                set_node_vspace(+evt.target.value)
-                sankey_data.v_space = +evt.target.value
-              }}/>
-          </OverlayTrigger>
-        </Col>
+      <Form.Group><InputGroup.Text style={{width:'20%'}}>{t('MEP.Vertical')}</InputGroup.Text>
+        <OverlayTrigger
+          key={'MEP.tooltips.EEN_v'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'MEP.tooltips.EEN_v'}>{t('MEP.tooltips.EEN_v')} </Tooltip>}>
+          <FormControl
+            type="text"
+            value={node_vspace}
+            onChange={evt => {
+              set_node_vspace(+evt.target.value)
+              sankey_data.v_space = +evt.target.value
+            }}/>
+        </OverlayTrigger>
+        
       </Form.Group>
       <OverlayTrigger
         key={'MEP.tooltips.factExpH'}
@@ -447,31 +452,31 @@ export const ApplyLayoutDialog = ({
         delay={500}
         rootClose
         overlay={<Tooltip id={'MEP.tooltips.factExpH'}>{t('MEP.tooltips.factExpH')} </Tooltip>}>
-        <Form.Group as={Row}>
-          <Col xs={7}>
+        <Form.Group>
+          
 
-            <Form.Label>
-              {t('MEP.factExpH')}
-            </Form.Label>
-          </Col>
-          <Col xs={5}>
-            <InputGroup>
-              <Form.Control
-                type='number'
-                min={0}
-                step={0.1}
-                value={stretchFactorH}
-                onChange={evt=>{
-                  set_stretchFactorH(+evt.target.value)
-                }}
-              />
-              <Button
-                variant='outline-primary'
-                onClick={()=>applyStretch('h')}>
-                {t('MEP.stretchH')}
-              </Button>
-            </InputGroup>
-          </Col>
+          <Form.Label>
+            {t('MEP.factExpH')}
+          </Form.Label>
+          
+          
+          <InputGroup>
+            <Form.Control
+              type='number'
+              min={0}
+              step={0.1}
+              value={stretchFactorH}
+              onChange={evt=>{
+                set_stretchFactorH(+evt.target.value)
+              }}
+            />
+            <Button
+              variant='outline-primary'
+              onClick={()=>applyStretch('h')}>
+              {t('MEP.stretchH')}
+            </Button>
+          </InputGroup>
+          
         </Form.Group>
       </OverlayTrigger>
       <OverlayTrigger
@@ -479,73 +484,65 @@ export const ApplyLayoutDialog = ({
         placement={'top'}
         delay={500}
         rootClose
-        overlay={<Tooltip id={'MEP.tooltips.factExpV'}>{t('MEP.tooltips.factExpV')} </Tooltip>}>
-        
-        <Form.Group as={Row}>
-          <Col xs={7}>
-            <Form.Label>
-              {t('MEP.factExpV')}
-            </Form.Label>
-          </Col>
-          <Col xs={5}>
-            <InputGroup>
-              <Form.Control
-                type='number'
-                min={0}
-                step={0.1}
-                value={stretchFactorV}
-                onChange={evt=>{
-                  set_stretchFactorV(+evt.target.value)
-                }}
-              />
-              <Button
-                variant='outline-primary'
-                onClick={()=>applyStretch('v')}>
-                {t('MEP.stretchV')}
-              </Button>
-            </InputGroup>
-          </Col>
+        overlay={<Tooltip id={'MEP.tooltips.factExpV'}>{t('MEP.tooltips.factExpV')} </Tooltip>}><Form.Group>
+          
+          <Form.Label>
+            {t('MEP.factExpV')}
+          </Form.Label>
+          
+          
+          <InputGroup>
+            <Form.Control
+              type='number'
+              min={0}
+              step={0.1}
+              value={stretchFactorV}
+              onChange={evt=>{
+                set_stretchFactorV(+evt.target.value)
+              }}
+            />
+            <Button
+              variant='outline-primary'
+              onClick={()=>applyStretch('v')}>
+              {t('MEP.stretchV')}
+            </Button>
+          </InputGroup>
+          
         </Form.Group>
       </OverlayTrigger>
 
       { /* Positionnement des noeuds */}
-      <Form.Group as={Row}>
-        { /* Mise en forme automatique */}
-        <Col xs={6}>
-          <OverlayTrigger
-            key={'MEP.tooltips.PA'}
-            placement={'top'}
-            delay={500}
-            rootClose
-            overlay={<Tooltip id={'MEP.tooltips.PA'}>{t('MEP.tooltips.PA')} </Tooltip>}>
-            <Button
-              size="sm"
-              onClick={() => {
-                compute_auto_sankey(sankey_data, node_hspace)
-                set_sankey_data({ ...sankey_data })
-              }}>
-              {t('MEP.PA')}
-            </Button>
-          </OverlayTrigger>
-        </Col>
-        {/* Arranger les noeud */}
-        <Col xs={6}>
-          <OverlayTrigger
-            key={'MEP.tooltips.AN'}
-            placement={'top'}
-            delay={500}
-            rootClose
-            overlay={<Tooltip id={'MEP.tooltips.AN'}>{t('MEP.tooltips.AN')} </Tooltip>}>
-            <Button
-              size="sm"
-              onClick={() => {
-                arrangeNodes(sankey_data)
-                set_sankey_data({ ...sankey_data })
-              }}>
-              {t('MEP.AN')}
-            </Button>
-          </OverlayTrigger>
-        </Col>
+      <Form.Group>
+        { /* Mise en forme automatique */}<OverlayTrigger
+          key={'MEP.tooltips.PA'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'MEP.tooltips.PA'}>{t('MEP.tooltips.PA')} </Tooltip>}>
+          <Button
+            size="sm"
+            onClick={() => {
+              compute_auto_sankey(sankey_data, node_hspace)
+              set_sankey_data({ ...sankey_data })
+            }}>
+            {t('MEP.PA')}
+          </Button>
+        </OverlayTrigger>{/* Arranger les noeud */}<OverlayTrigger
+          key={'MEP.tooltips.AN'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'MEP.tooltips.AN'}>{t('MEP.tooltips.AN')} </Tooltip>}>
+          <Button
+            size="sm"
+            onClick={() => {
+              arrangeNodes(sankey_data)
+              set_sankey_data({ ...sankey_data })
+            }}>
+            {t('MEP.AN')}
+          </Button>
+        </OverlayTrigger>
+        
       </Form.Group>
     </Tab>
     <Tab key='trans_topo' eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
