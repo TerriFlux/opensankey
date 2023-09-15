@@ -3,7 +3,7 @@ import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
 import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
 import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
-import { Col, InputGroup, Row, Button, Form } from 'react-bootstrap'
+import { InputGroup, Button, Form } from 'react-bootstrap'
 import React, { useState } from 'react'
 import { TFunction } from 'i18next'
 import { FaCheck } from 'react-icons/fa'
@@ -142,120 +142,116 @@ export const OpenSankeyPlusDiagramSelector = (
   ) => {
     const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
 
-    return <InputGroup as={Row}>
-      <Col xs='3'>
-        <InputGroup.Text>{t('Menu.Transformation.fmep')}</InputGroup.Text>
-      </Col>
-      <Col xs={1}>
-        <Button 
-          className='btn_menu_config' 
-          style={{width:'90px'}}
-          variant={diagramType==='File'?'primary':'outline-primary'}
-          onClick={
-            () => {
-              setDiagramType('File')
-            }}>Fichier</Button>
-      </Col>
-      <Col xs={1}>
-        <Button 
-          className='btn_menu_config'
-          style={{width:'90px'}}
-          variant={diagramType==='View'?'primary':'outline-primary'}
-          onClick={
-            () => {
-              setDiagramType('View')
-            }}>Vues</Button>
-      </Col>
-      {diagramType==='File' ? <><Col xs='3'>
+    return <InputGroup>
+      
+      <InputGroup.Text style={{width:'20%'}} >{t('Menu.Transformation.fmep')}</InputGroup.Text>
+      <Button 
+        className='btn_menu_config' 
+        style={{width:'10%'}}
+        variant={diagramType==='File'?'primary':'outline-primary'}
+        onClick={
+          () => {
+            setDiagramType('File')
+          }}>Fichier</Button>
+      <Button 
+        className='btn_menu_config'
+        style={{width:'10%'}}
+        variant={diagramType==='View'?'primary':'outline-primary'}
+        onClick={
+          () => {
+            setDiagramType('View')
+          }}>Vues</Button>
+      
+      {diagramType==='File' ? <>
         <Form.Control
           type="file"
           onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} />
-      </Col></> : 
-        <Col xs='3'>
-          <Form.Select 
-            onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
-              set_view_selected(evt.target.value)
-            }}>
-            <option key='none' value='none'>{t('view.actual')}</option>
-            {master_data ? master_data.view.map(d => {
-              return <option key={d.id} value={d.id}>{d.nom}</option>
-            }) : <></>}
-          </Form.Select>
-        </Col>}
-      <Col xs={1}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'90px'}}
-          onClick={() => {
-            if (diagramType === 'View') {
-              if (view_selected === 'none') {
-                // View selected is master data
-                if (view === 'none' ) {
-                  // No update of master data by master data
-                  return
-                }
-                //- current view is updated by master data
-                updateLayout(sankey_data,master_data,elementToDispose)
-                set_sankey_data({ ...JSON.parse(JSON.stringify(sankey_data)) })
-              } else {
-                // A view is selected to update either another view or the master data
-                if (view === view_selected ) {
-                  // No update of view by itself
-                  return
-                }                
-                const data_view=get_data_from_view(master_data,view_selected)
-                updateLayout(sankey_data,data_view,elementToDispose)
-                const copy_data = JSON.parse(JSON.stringify(sankey_data))
-                set_sankey_data(copy_data)
-                if (view === 'none' ) {
-                  recompute_views(copy_data,master_data,set_master_data)
-                }
+      </> : 
+        
+        <Form.Select 
+          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
+            set_view_selected(evt.target.value)
+          }}>
+          <option key='none' value='none'>{t('view.actual')}</option>
+          {master_data ? master_data.view.map(d => {
+            return <option key={d.id} value={d.id}>{d.nom}</option>
+          }) : <></>}
+        </Form.Select>
+      }
+      
+      <Button
+        className='btn_menu_config'
+        style={{width:'15%'}}
+        onClick={() => {
+          if (diagramType === 'View') {
+            if (view_selected === 'none') {
+              // View selected is master data
+              if (view === 'none' ) {
+                // No update of master data by master data
+                return
               }
-              return
+              //- current view is updated by master data
+              updateLayout(sankey_data,master_data,elementToDispose)
+              set_sankey_data({ ...JSON.parse(JSON.stringify(sankey_data)) })
+            } else {
+              // A view is selected to update either another view or the master data
+              if (view === view_selected ) {
+                // No update of view by itself
+                return
+              }                
+              const data_view=get_data_from_view(master_data,view_selected)
+              updateLayout(sankey_data,data_view,elementToDispose)
+              const copy_data = JSON.parse(JSON.stringify(sankey_data))
+              set_sankey_data(copy_data)
+              if (view === 'none' ) {
+                recompute_views(copy_data,master_data,set_master_data)
+              }
             }
-            if (file_layout === undefined) {
-              return
-            }
-            const reader = new FileReader()
-            reader.onload = (() => {
-              return (
-                (e: ProgressEvent<FileReader>) => {
-                  let result = (e.target as FileReader).result
-                  if (result) {
-                    result = String(result) //.split('<br>').join('\\\\n')
-                    const new_layout = JSON.parse(result)
-                    convert_data(new_layout)
-                    complete_sankey_data(new_layout, default_sankey_data, default_node, default_link)
-                    set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
-                    updateLayout(sankey_data, new_layout, elementToDispose)
-                    const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
-                    set_sankey_data(copy_data)
-                    if (view === 'none' ) {
-                      // if master is being updated we need to set it.
-                      set_master_data(copy_data)
-                    }
+            return
+          }
+          if (file_layout === undefined) {
+            return
+          }
+          const reader = new FileReader()
+          reader.onload = (() => {
+            return (
+              (e: ProgressEvent<FileReader>) => {
+                let result = (e.target as FileReader).result
+                if (result) {
+                  result = String(result) //.split('<br>').join('\\\\n')
+                  const new_layout = JSON.parse(result)
+                  convert_data(new_layout)
+                  complete_sankey_data(new_layout, default_sankey_data, default_node, default_link)
+                  set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
+                  updateLayout(sankey_data, new_layout, elementToDispose)
+                  const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
+                  set_sankey_data(copy_data)
+                  if (view === 'none' ) {
+                    // if master is being updated we need to set it.
+                    set_master_data(copy_data)
                   }
                 }
-              )
-            })()
-            reader.readAsText(file_layout[0])
-          } }>{t('Menu.Transformation.ad')}
-        </Button>
-      </Col>
-      <Col xs={1}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'90px'}}
-          onClick={() => {
-            const copy_data = { ...JSON.parse(JSON.stringify(prev_sankey_data)) }
-            set_sankey_data(copy_data)
-            if (view === 'none' ) {
-              // if master is being updated we need to set it.
-              set_master_data(copy_data)
-            }
-          } }>{t('Menu.Transformation.undo')}
-        </Button>
-      </Col>
+              }
+            )
+          })()
+          reader.readAsText(file_layout[0])
+        } }>{t('Menu.Transformation.ad')}
+      </Button>
+      
+      
+      <Button
+        className='btn_menu_config'
+        style={{width:'15%'}}
+        onClick={() => {
+          const copy_data = { ...JSON.parse(JSON.stringify(prev_sankey_data)) }
+          set_sankey_data(copy_data)
+          if (view === 'none' ) {
+            // if master is being updated we need to set it.
+            set_master_data(copy_data)
+          }
+        } }>{t('Menu.Transformation.undo')}
+      </Button>
+      
     </InputGroup>
   }
   return OpenSankeyPlusDiagramSelectorInner
@@ -267,47 +263,40 @@ export const apply_transformation_opensankey_plus_elements = (
   setForceUpdate: (b:boolean)=>null,
   elementToDispose: string[]
 ) => {return [
-  <InputGroup as={Row}>
-    <Col xs='3'>
-      <InputGroup.Text>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
-    </Col >          
-    <Col xs='1'>
-      <Button
-        className='btn_menu_config'
-        style={{width:'90px'}}
-        variant={elementToDispose.includes('freeLabels')?'primary':'outline-primary'} 
-        onClick={() => {
-          if(!elementToDispose.includes('freeLabels')){
-            elementToDispose.push('freeLabels')
-            setForceUpdate(!forceUpdate)
-          }else{
-            elementToDispose.splice(elementToDispose.indexOf('freeLabels'),1)
-            setForceUpdate(!forceUpdate)
-          }}
-        }
-      >{elementToDispose.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-    </Col>
+  <InputGroup>
+    <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
+    <Button
+      className='btn_menu_config'
+      style={{width:'20%'}}
+      variant={elementToDispose.includes('freeLabels')?'primary':'outline-primary'} 
+      onClick={() => {
+        if(!elementToDispose.includes('freeLabels')){
+          elementToDispose.push('freeLabels')
+          setForceUpdate(!forceUpdate)
+        }else{
+          elementToDispose.splice(elementToDispose.indexOf('freeLabels'),1)
+          setForceUpdate(!forceUpdate)
+        }}
+      }
+    >{elementToDispose.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+    
   </InputGroup>,
-  <InputGroup as={Row}>
-    <Col xs='3'>
-      <InputGroup.Text>{t('Menu.Transformation.Views')}</InputGroup.Text>
-    </Col >
-    <Col xs='1'>
-      <Button
-        className='btn_menu_config'
-        style={{width:'90px'}}
-        variant={elementToDispose.includes('Views')?'primary':'outline-primary'} 
-        onClick={() => {
-          if(!elementToDispose.includes('Views')){
-            elementToDispose.push('Views')
-            setForceUpdate(!forceUpdate)
-          }else{
-            elementToDispose.splice(elementToDispose.indexOf('Views'),1)
-            setForceUpdate(!forceUpdate)
-          }}
-        }
-      >{elementToDispose.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-    </Col>
+  <InputGroup>
+    <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Views')}</InputGroup.Text>
+    <Button
+      className='btn_menu_config'
+      style={{width:'20%'}}
+      variant={elementToDispose.includes('Views')?'primary':'outline-primary'} 
+      onClick={() => {
+        if(!elementToDispose.includes('Views')){
+          elementToDispose.push('Views')
+          setForceUpdate(!forceUpdate)
+        }else{
+          elementToDispose.splice(elementToDispose.indexOf('Views'),1)
+          setForceUpdate(!forceUpdate)
+        }}
+      }
+    >{elementToDispose.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
   </InputGroup> 
 ]}
 
