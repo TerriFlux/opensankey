@@ -1,7 +1,7 @@
 
-import {SankeyPlusData,SankeyPlusLabel,differenceType} from './types'
+import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
 import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
-import { get_data_from_view, recompute_views } from './SankeyPlusViews'
+import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
 import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
 import { Col, InputGroup, Row, Button, Form } from 'react-bootstrap'
 import React, { useState } from 'react'
@@ -9,6 +9,7 @@ import { TFunction } from 'i18next'
 import { FaCheck } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
+
 interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
   transparent?:boolean,
   name?:string,
@@ -70,33 +71,39 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
   if (!data.view) {
     return
   }
+
   // Convert old view (when we copied the entire data)
   data.view.forEach((v)=>{
+    if(v.heredited_attr_from_master===undefined){
+      v.heredited_attr_from_master=['']
+    }
     if((v.view_data as unknown as SankeyPlusData ).version){
       complete_sankey_data(v.view_data,default_sankey_data,default_node,default_link)
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
       plus_convert_data((v.view_data as unknown as SankeyPlusData ))
-      let difference = deep_diff.diff(data, v.view_data)
-      difference=(difference!==undefined)?difference:[]
-      difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
-        if(d.kind==='D'){
-          delete ((d as unknown) as differenceType).lhs
-        }
-        if(d.kind==='A' && d.item.kind==='D'){
-          delete ((d as unknown) as differenceType).item.lhs
-        }
-        if(d.kind==='E'){
-          delete ((d as unknown) as differenceType).lhs
-        }
-        return d
-      })
-      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'));
-      (v.view_data as {diff:object[]}) = {
-        diff : difference
-      }
-    } else if(v.view_data.diff){
+      // let difference = deep_diff.diff(data, v.view_data)
+      // difference=(difference!==undefined)?difference:[]
+      // difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
+      //   if(d.kind==='D'){
+      //     delete ((d as unknown) as differenceType).lhs
+      //   }
+      //   if(d.kind==='A' && d.item.kind==='D'){
+      //     delete ((d as unknown) as differenceType).item.lhs
+      //   }
+      //   if(d.kind==='E'){
+      //     delete ((d as unknown) as differenceType).lhs
+      //   }
+      //   return d
+      // })
+      // difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'));
+      // (v.view_data as {diff:object[]}) = {
+      //   diff : difference
+      // }
+
+
+    } else if((v.view_data as unknown as DiffType).diff!==undefined){
       const d_view=get_data_from_view(data,v.id)
       convert_data(d_view)
       plus_convert_data(d_view)
@@ -107,7 +114,8 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
       plus_convert_data(converted_master)
       let difference = deep_diff.diff(converted_master, d_view)
       difference=(difference !== undefined)?difference:[]
-      v.view_data.diff=difference
+      difference=filter_view(difference)
+      v.view_data={diff:difference}
     }
 
   })
@@ -322,16 +330,20 @@ export const plus_sankey_layout=(
       if (!(data.view)) {
         data.view = []
       }
-      new_layout.view.forEach (
-        layout_view=> {
-          if (data.view.filter(d_view=>d_view.nom === layout_view.nom ).length===0) {
-            const view_data=JSON.parse(JSON.stringify(new_layout))
-            layout_view.view_data.diff.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(view_data, {}, diff))
-            const data_view_diff = deep_diff.diff(data,view_data)
-            layout_view.view_data.diff = data_view_diff.filter((d:{path:string[]}) => !d.path.includes('view'))
-            data.view.push(layout_view)
+      new_layout.view.forEach ((view_of_new_layout:ViewType )=> {
+        const view_data=JSON.parse(JSON.stringify(new_layout))
+        if (data.view.filter(d_view=>d_view.nom === view_of_new_layout.nom ).length===0) {
+          if((view_of_new_layout.view_data as SankeyPlusData ).version){
+            data.view.push(view_of_new_layout)
+          }else if((view_of_new_layout.view_data as DiffType).diff!==undefined){
+            (view_of_new_layout.view_data as DiffType).diff.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(view_data, {}, diff))
+            const data_view_diff = deep_diff.diff(data,view_data) as {path:string[],kind:string,rhs:string}[]
+            (view_of_new_layout.view_data as DiffType).diff = data_view_diff.filter((d:{path:string[]}) => !d.path.includes('view'))
+            data.view.push(view_of_new_layout)
           }
+           
         }
+      }
       )
     }
   }
