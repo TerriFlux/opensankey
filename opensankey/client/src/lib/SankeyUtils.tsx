@@ -455,12 +455,15 @@ export const toPrecision = (
   v: number,
   nb_scientific=3
 ) => {
-  if(!isNaN(v) && v > Math.pow(10,nb_scientific)){
-    return v.toExponential(nb_scientific)
-  }else{
+  if(!isNaN(v)) {
+    if (v > Math.pow(10,nb_scientific)){
+      return v.toExponential(nb_scientific)
+    }
     return parseFloat(v.toPrecision(nb_scientific))
   }
+  return v
 }
+
 /**
  * Return the value of the link if the display value is empty either way it return display_value
  *
