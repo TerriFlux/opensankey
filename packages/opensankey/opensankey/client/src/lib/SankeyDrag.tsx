@@ -155,6 +155,8 @@ export const dragLinkIOPosition=(multi_selected_links:{current: SankeyLink[]},
 export const dragLinkCenterHandleEvent=(
   multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
+  display_links:{ [link_id: string]: SankeyLink },
+  display_nodes:{ [link_id: string]: SankeyNode },
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   selected_tags:{[tag_group:string]:string[]},
@@ -174,8 +176,8 @@ export const dragLinkCenterHandleEvent=(
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && (l_ori=='hh' || l_ori=='vv')){
         const shift_handle=d3.selectAll(' .opensankey #gg_link_handle_'+link.idLink+' .handle').nodes()
-        drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
-        drag_handle(link, data.nodes, data.links, data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
+        drag_handle(link, display_nodes, display_links, data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
+        drag_handle(link, display_nodes, display_links, data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,multi_selected_links,link_text,getLinkValue)
       }            
     }).on('end',()=>set_data({...data}))
 }
