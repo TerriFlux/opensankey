@@ -815,6 +815,7 @@ export const menu_preference_icon_catalog=(data:SankeyPlusData,set_data:(d:Sanke
 export const context_node_view_node_unitary=(
   multi_selected_nodes:{current:SankeyPlusNode[]},
   contextualised_node:SankeyPlusNode,
+  set_contextualised_node:(n:SankeyPlusNode|undefined)=>void,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   master_data:SankeyPlusData,
@@ -869,6 +870,7 @@ export const context_node_view_node_unitary=(
     new_unitary_sankey.nodeTags={}
     new_unitary_sankey.fluxTags={}
     new_unitary_sankey.dataTags={}
+    // new_unitary_sankey.levelTags={}
     new_unitary_sankey.labels={}
     new_unitary_sankey.colorMap='no_colormap'
     new_unitary_sankey.linkZIndex=new_unitary_sankey.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
@@ -877,8 +879,50 @@ export const context_node_view_node_unitary=(
 
     // ======Add ZDT====== 
     // Get dimensions for labels 
-    const min_x=Object.values(new_unitary_sankey.nodes).filter(n=>n.position==='absolute').sort((a,b)=>a.x-b.x)[0].x
-    const min_y=Object.values(new_unitary_sankey.nodes).filter(n=>n.position==='absolute').sort((a,b)=>a.y-b.y)[0].y
+
+    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+
+    const min_x_node=Object.values(new_unitary_sankey.nodes).filter(n=>n.position==='absolute').sort((a,b)=>{
+
+      const pos_labe_h_a=return_value_node(data,a,'label_horiz')
+      let a_shift_left=0
+      if(pos_labe_h_a==='left'){
+        a_shift_left=document.getElementById('text_'+a.idNode)?.getBoundingClientRect().width??0/scale_svg
+      }else if(pos_labe_h_a==='middle'){
+        a_shift_left=((document.getElementById('text_'+a.idNode)?.getBoundingClientRect().width??0)/2)/scale_svg
+      }
+
+      const pos_labe_h_b=return_value_node(data,b,'label_horiz')
+      let b_shift_left=0
+      if(pos_labe_h_b==='left'){
+        b_shift_left=document.getElementById('text_'+b.idNode)?.getBoundingClientRect().width??0/scale_svg
+      }else if(pos_labe_h_b==='middle'){
+        b_shift_left=((document.getElementById('text_'+b.idNode)?.getBoundingClientRect().width??0)/2)/scale_svg
+      }
+
+      return (a.x-a_shift_left)-(b.x-b_shift_left)
+    
+    })[0]
+
+    const pos_labe_h=return_value_node(data,min_x_node,'label_horiz')
+    let shift_left=0
+    if(pos_labe_h==='left'){
+      shift_left=document.getElementById('text_'+min_x_node.idNode)?.getBoundingClientRect().width??0/scale_svg
+    }else if(pos_labe_h==='middle'){
+      shift_left=((document.getElementById('text_'+min_x_node.idNode)?.getBoundingClientRect().width??0)/2)/scale_svg
+    }
+
+    const min_x=min_x_node.x-(shift_left/scale_svg)
+
+    const min_y_node=Object.values(new_unitary_sankey.nodes).filter(n=>n.position==='absolute').sort((a,b)=>{
+      const a_shift_top=return_value_node(data,a,'label_vert')==='top'?document.getElementById('text_'+a.idNode)?.getBoundingClientRect().height??0:0
+      const b_shift_top=return_value_node(data,b,'label_vert')==='top'?document.getElementById('text_'+b.idNode)?.getBoundingClientRect().height??0:0
+      
+      return (a.y-a_shift_top)-(b.y-b_shift_top)
+    
+    })[0]
+    const min_y=min_y_node.y-(return_value_node(data,min_x_node,'label_vert')==='top'?document.getElementById('text_'+min_x_node.idNode)?.getBoundingClientRect().height??0:0)/scale_svg
 
     let max_x=min_x
     let max_y=min_y
@@ -888,8 +932,24 @@ export const context_node_view_node_unitary=(
       const boxW=Number(d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
       const boxH=Number(d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
       
-      max_x=((boxX+boxW)>max_x)?(boxX+boxW):max_x
-      max_y=((boxY+boxH)>max_y)?(boxY+boxH):max_y
+      // Get HTML Box size of node label to add to the maximum size of the unitary sankey
+      const pos_labe_h=return_value_node(data,n,'label_horiz')
+      let text_box_h=0
+      if(pos_labe_h==='right'){
+        text_box_h=document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0/scale_svg
+      }else if(pos_labe_h==='middle'){
+        text_box_h=((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0)/2)/scale_svg
+      }
+
+      const pos_labe_v=return_value_node(data,n,'label_horiz')
+      let text_box_v=0
+      if(pos_labe_v==='bottom'){
+        (text_box_v=document.getElementById('text_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
+      }
+
+      
+      max_x=((boxX+boxW+text_box_h)>max_x)?(boxX+boxW+text_box_h):max_x
+      max_y=((boxY+boxH+text_box_v)>max_y)?(boxY+boxH+text_box_v):max_y
     })
 
 
@@ -1066,6 +1126,7 @@ export const context_node_view_node_unitary=(
         return <Dropdown.Item as={Button} variant='light' 
           onClick={()=>{
             create_view_node_unitary(v.id)
+            set_contextualised_node(undefined)
           }}
         >
           {v.nom}
