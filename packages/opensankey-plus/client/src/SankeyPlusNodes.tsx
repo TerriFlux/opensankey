@@ -1185,7 +1185,8 @@ export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
     }
   }
   if(!isNaN(the_link_value)){
-    return (data.unitary_node.includes(d.idSource)?((the_link_value/total_io[1])*100):((the_link_value/total_io[0])*100)).toFixed(2)+'%'
+    const val=(data.unitary_node.includes(d.idSource)?((the_link_value/total_io[1])*100):((the_link_value/total_io[0])*100))
+    return (Number.isInteger(val)?Math.round(val):(val).toFixed(2))+'%'
   }else{
     return '0%'
   }
