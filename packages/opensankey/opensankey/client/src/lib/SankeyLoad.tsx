@@ -36,7 +36,7 @@ interface SankeyLoadProdTypes {
   result : string;
   setResult: (s:string)=>void,
   is_computing:boolean,
-  set_is_computing:(b:boolean)=>void,
+  setIsComputing:(b:boolean)=>void,
 }
 
 const SankeyLoad = ({
@@ -47,14 +47,15 @@ const SankeyLoad = ({
   processing,setProcessing,
   failure,setFailure,
   setNotStarted,
-  result,setResult,is_computing,set_is_computing
+  result,setResult,
+  is_computing,setIsComputing
 } : SankeyLoadProdTypes) => {
   const [value,setValue] = useState([1,2])
-  
+
   const reset = () => {
     setProcessing(false)
     setFailure(false)
-    set_is_computing(false)
+    setIsComputing(false)
     setNotStarted(true)
   }
 
@@ -72,9 +73,9 @@ const SankeyLoad = ({
   const failure_status = t('Menu.failur_file')
   const spinner=(processing || is_computing)? <Spinner animation="border" />:<></>
   return (
-    <Modal 
-      bsSize="large" 
-      show={show_dialog} 
+    <Modal
+      bsSize="large"
+      show={show_dialog}
       onHide={ () => set_show_dialog(false) }
       style={{
         display: 'flex',
@@ -86,27 +87,36 @@ const SankeyLoad = ({
       </Modal.Header>
       <Modal.Body>
         <Form >
-          <FormGroup>  
+          <FormGroup>
             <Row>
               <Col sm={5}/>
-              <Col sm={2}>    
-                { 
+              <Col sm={2}>
+                {
                   processing ? (
-                    <Button variant="warning"><span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> {t('Menu.load_file')}</Button>):(
-                    failure ? 
-                      (<Button variant="danger" onClick={reset}>{failure_status}</Button>) : <>
+                    <Button variant="warning">
+                      <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
+                      {t('Menu.load_file')}
+                    </Button>):(
+                    failure ? (
+                      <Button variant="danger" onClick={reset}>{failure_status}</Button>) : <>
                         {
-                          is_computing?<Button variant='info'>{t('Menu.compute_file')}</Button>:(<Button variant="success" 
-                            onClick={()=>{
-                              successAction()
-                              set_show_dialog(false)
-                            }}>{success_status}</Button>)
+                          is_computing? (
+                            <Button
+                              variant='info'>
+                              {t('Menu.compute_file')}
+                            </Button>):(
+                            <Button
+                              variant="success"
+                              onClick={()=>{
+                                successAction()
+                                set_show_dialog(false)
+                              }}>{success_status}</Button>)
                         }</>
                   )
                 }
-              </Col><Col sm={5}/></Row> 
-            <br/>              
-            <br/>             
+              </Col><Col sm={5}/></Row>
+            <br/>
+            <br/>
             <br/>
             <Row>
               <Col sm={12}>
@@ -117,16 +127,16 @@ const SankeyLoad = ({
                 </ButtonGroup></Col>
             </Row>
             {processing ? (
-              <Counter 
+              <Counter
                 url_prefix={url_prefix}
                 finishReconciliation={()=>{
                   setProcessing(false)
-                  set_is_computing(true)
+                  setIsComputing(true)
                   setFailure(false)
                 }}
                 value={value}
                 result={result}
-                setResult={setResult} 
+                setResult={setResult}
               />
             ) : (<>
               <Row >
@@ -137,7 +147,7 @@ const SankeyLoad = ({
                         (<div style={{color:'red'}}>{info.replace('ERROR','')}</div>)
                         : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
                           (<div style={{color:'blue'}}>{info.replace('INFO','')}</div>)
-                          : value.includes(3) && (info.includes('DEBUG') ) ? 
+                          : value.includes(3) && (info.includes('DEBUG') ) ?
                             (<div style={{color:'orange'}}>{info.replace('DEBUG','')}</div>) : (null)
                     )
                   )
@@ -177,7 +187,7 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
                 setResult(data.output)
               }
             )
-          }  
+          }
         })
     }, 5000)
     return () => clearInterval(interval)
@@ -202,7 +212,7 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
               (<div style={{color:'red'}}>{info.replace('ERROR','')}</div>)
               : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
                 (<div style={{color:'blue'}}>{info.replace('INFO','')}</div>)
-                : value.includes(3) && (info.includes('DEBUG') ) ? 
+                : value.includes(3) && (info.includes('DEBUG') ) ?
                   (<div style={{color:'orange'}}>{info.replace('DEBUG','')}</div>) : (null)
           )
         )
