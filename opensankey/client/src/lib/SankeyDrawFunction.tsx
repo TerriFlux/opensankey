@@ -1371,7 +1371,7 @@ const add_center_handle=(
       .attr('fill','black')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
-      .call(dragLinkCenterHandleEvent(multi_selected_links,link,data,set_data,selected_tags,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
+      .call(dragLinkCenterHandleEvent(multi_selected_links,link,display_links,display_nodes,data,set_data,selected_tags,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
       )
   }
 
