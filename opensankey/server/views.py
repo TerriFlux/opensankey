@@ -9,6 +9,7 @@ import json
 import imgkit
 import pdfkit
 import re
+import pandas as pd
 try:
     import pythoncom
     pythoncom.CoInitialize()
@@ -389,7 +390,7 @@ def upload_excel_thread(
     trace_filename,
     log_filename,
     json_output_filename,
-    use_layout
+    use_layout_file
 ):
     '''
     Excel convertion thread function.
@@ -404,7 +405,7 @@ def upload_excel_thread(
         debug logs file name (with full path)
     json_output_filename : string
         output json file name (with full path)
-    use_layout: bool
+    use_layout_file: bool
         read layout from input file or not.
 
     Returns
@@ -437,19 +438,47 @@ def upload_excel_thread(
         trace.logger.error('{:->{w}}'.format(' FAILED', w=max_line_length))
         return
     # Step 3 : Extract layout
-    if '_reconciled' in trace_filename:
-        layout_filename = os.path.splitext(trace_filename)[0].replace('_reconciled',  '_layout')+'.json'
-    else:
-        layout_filename = os.path.splitext(trace_filename)[0] + '_layout.json'
-    if use_layout:
+    if use_layout_file:
+        # Try to get layout from another file
+        if '_reconciled' in trace_filename:
+            layout_filename = os.path.splitext(trace_filename)[0].replace('_reconciled',  '_layout')+'.json'
+        else:
+            layout_filename = os.path.splitext(trace_filename)[0] + '_layout.json'
+        # Start extracting layout
         trace.logger.info('{:-<{w}}'.format('Extract diagram layout ', w=max_line_length))
-        sankey_folder = os.path.join(os.path.dirname(excel_input_filename),  'sankey')
-        layout_filename = os.path.join(sankey_folder, layout_filename)
-        if os.path.exists(layout_filename):
-            layout_file = open(layout_filename, encoding="utf-8", mode="r")
-            layout_json = json.load(layout_file)
+        try:
+            sankey_folder = os.path.join(os.path.dirname(excel_input_filename),  'sankey')
+            layout_filename = os.path.join(sankey_folder, layout_filename)
+            if os.path.exists(layout_filename):
+                layout_file = open(layout_filename, encoding="utf-8", mode="r")
+                layout_json = json.load(layout_file)
+                sankey_json['layout'] = layout_json
+            sankey_json['file_name'] = layout_filename
+            trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
+        except Exception as expt:
+            trace.logger.error('Extract diagram layout Failed: ' + str(expt))
+            trace.logger.error('{:->{w}}'.format(' FAILED', w=max_line_length))
+            return
+    else:
+        # Try to read layout directly from excel file
+        layout_table_present = False
+        try:
+            # If it has been read before, we will never have any issue here
+            excel_book = pd.read_excel(excel_input_filename, None)
+            layout_table = excel_book['layout']
+            layout_table_present = True
+            trace.logger.info('{:-<{w}}'.format('Extract diagram layout ', w=max_line_length))
+            layout_json_str = \
+                layout_table.columns[0] + \
+                ''.join([layout_table.iloc[_][0] for _ in layout_table.index])
+            layout_json = json.loads(layout_json_str)
             sankey_json['layout'] = layout_json
-        sankey_json['file_name'] = layout_filename
+            trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
+        except Exception as expt:
+            if layout_table_present:
+                trace.logger.error('Extract diagram layout Failed: ' + str(expt))
+                trace.logger.error('{:->{w}}'.format(' FAILED', w=max_line_length))
+            pass
     # Step 4 : Dump everything in local json for display
     trace.logger.info('{:-<{w}}'.format('Loading diagram display ', w=max_line_length))
     try:
