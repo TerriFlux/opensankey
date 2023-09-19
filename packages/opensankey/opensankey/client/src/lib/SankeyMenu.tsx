@@ -1374,7 +1374,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         show_save_json={show_save_json}
         set_show_save_json={set_show_save_json}
         sankey_data={data}
-        set_sankey_data={set_data}
+        additionnal_button_option_save_json={[]}
+        clickSaveDiagram={SankeyUtils.clickSaveDiagram}
       />
       <ApplyLayoutDialog
         t={t}
