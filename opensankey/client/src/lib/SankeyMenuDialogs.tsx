@@ -4,7 +4,7 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { complete_sankey_data } from './SankeyConvert'
-import { default_link, default_node, default_sankey_data,clickSaveDiagram } from './SankeyUtils'
+import { default_link, default_node, default_sankey_data } from './SankeyUtils'
 import { node_visible_on_svg } from './SankeyDrawFunction'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { menu_draggable } from './SankeyMenu'
@@ -562,8 +562,8 @@ const ApplySaveJSONPropTypes = {
   show_save_json : PropTypes.bool.isRequired,
   set_show_save_json: PropTypes.func.isRequired,
   sankey_data : PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_sankey_data:PropTypes.func.isRequired,
-  set_view:PropTypes.func
+  additionnal_button_option_save_json:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  clickSaveDiagram:PropTypes.func.isRequired
 }
 
 
@@ -574,7 +574,7 @@ type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
  * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }
  * @returns {*}
  */
-export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,set_sankey_data,set_view }: ApplySaveJSONTypes) => {
+export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,additionnal_button_option_save_json,clickSaveDiagram }: ApplySaveJSONTypes) => {
   const [mode_save,set_mode_save]=useState(true)
   const [mode_visible_element,set_mode_visible_element]=useState(false)
 
@@ -613,6 +613,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
               {mode_visible_element?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
             </Button>
           </InputGroup>
+          {additionnal_button_option_save_json}
         </Form>
       </Modal.Body>
       <Modal.Footer>
@@ -635,7 +636,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
               // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
               const cpy=JSON.parse(JSON.stringify(sankey_data))
               if(!mode_save){
-                Object.values(sankey_data.links).forEach(d=>{
+                Object.values(cpy.links).forEach(d=>{
                   (d as SankeyLink).value={}
                 })
               }
@@ -647,16 +648,13 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
                   link_present.push(d.idLink)
                 })
                 const node_visible=node_visible_on_svg()
-                sankey_data.links=Object.fromEntries(Object.entries(sankey_data.links).filter(l=>link_present.includes(l[0])).map(l=>l))
-                sankey_data.nodes=Object.fromEntries(Object.entries(sankey_data.nodes).filter(n=>node_visible.includes(n[0])).map(n=>n))
+                cpy.links=Object.fromEntries(Object.entries(cpy.links).filter(l=>link_present.includes(l[0])).map(l=>l))
+                cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>n))
               }
 
-              if(set_view){
-                set_view('none')
-              }
-              set_sankey_data({...sankey_data})
-              clickSaveDiagram(sankey_data)
-              set_sankey_data({...cpy})
+              // set_sankey_data({...sankey_data})
+              clickSaveDiagram(cpy)
+              // set_sankey_data({...cpy})
             }
           }>{t('Menu.SaveJSON')}
         </Button>
