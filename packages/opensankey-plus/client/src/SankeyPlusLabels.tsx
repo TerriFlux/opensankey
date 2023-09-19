@@ -63,16 +63,19 @@ export const SankeyPlusDrawLabels = (
       gg_label.on('click', (event) => eventLabelClick(event,d,data,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
       gg_label.on('mousedown',()=>closeAllMenuContext())
       gg_label.on('contextmenu',evt=>{
-        evt.preventDefault()
-        pointer_pos.current=[evt.pageX,evt.pageY]
-        if(!multi_selected_label.current.includes(d)){
-          multi_selected_label.current.forEach(nn=>deselect_visualy_nodes(nn))
-          multi_selected_label.current=[]
-          select_visualy_zdt(d)
-          multi_selected_label.current.push(d)
-          
+        if(!window.SankeyToolsStatic){
+          evt.preventDefault()
+          pointer_pos.current=[evt.pageX,evt.pageY]
+          if(!multi_selected_label.current.includes(d)){
+            multi_selected_label.current.forEach(nn=>deselect_visualy_nodes(nn))
+            multi_selected_label.current=[]
+            select_visualy_zdt(d)
+            multi_selected_label.current.push(d)
+            
+          }
+          set_show_context_zdt(true)
         }
-        set_show_context_zdt(true)
+        
         
       })
       // Traite les labels qui sont dans des foreignObject
