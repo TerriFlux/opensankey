@@ -18,7 +18,7 @@ import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayo
 import { keyHandler } from './SankeyDraw'
 import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
 import { OpenSankeyDrawLinks } from './SankeyDrawLinks'
-import { OpenSankeyDrawLegend,drag_legend } from './SankeyDrawLegend'
+import { OpenSankeyDrawLegend,context_legend_tags,drag_legend } from './SankeyDrawLegend'
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
@@ -100,6 +100,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [contextualised_link,set_contextualised_link]=useState<SankeyLink>()
   const [show_context_zdd,set_show_context_zdd]=useState(false)
   const pointer_pos=useRef([0,0])
+  const [tag_contextualised,set_tag_contextualised]=useState<string>()
+
   // For SankeyDraw
   const [alt_key_pressed,set_alt_key_pressed] = useState(false)
   const start_point=useRef([0,0])
@@ -389,6 +391,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const closeAllMenuContext=()=>{
     set_contextualised_node(undefined)
     set_contextualised_link(undefined)
+    set_tag_contextualised(undefined)
     set_show_context_zdd(false)
   }
   // Function to close all menu : menu confugartion, menu context (nodes,links, drawZone), an menu dragggable
@@ -449,7 +452,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     )
 
 
-    OpenSankeyDrawLegend(data,set_data,SankeyUtils.getLinkValue,t)
+    OpenSankeyDrawLegend(data,set_data,SankeyUtils.getLinkValue,t,pointer_pos,set_tag_contextualised)
     const g_legend=d3.select(' .opensankey #g_legend') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
     if(!window.SankeyToolsStatic){
       g_legend.call(drag_legend(data,set_data))
@@ -516,7 +519,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     
 
   const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout)
-
+  const context_for_tag_legend=context_legend_tags(tag_contextualised,set_tag_contextualised,data,set_data,multi_selected_nodes,multi_selected_links,t,pointer_pos,SankeyUtils.getLinkValue)
 
 
   const modale_style_link=<React.Fragment key={'modale_style_link'}>{SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_style_link,set_selected_style_link,[],display_link_opacity,set_display_link_opacity)}</React.Fragment>
@@ -588,6 +591,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             additional_nav_item={[] as JSX.Element[]}
             set_contextualised_node={set_contextualised_node}
             set_contextualised_link={set_contextualised_link}
+            set_tag_contextualised={set_tag_contextualised}
             set_show_context_zdd={set_show_context_zdd}
             updateLayout={updateLayout}
             convert_data={convert_data}
@@ -652,6 +656,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         {context_n}
         {context_l}
         {context_for_zdd}
+        {context_for_tag_legend}
       </>
     </div>
   )

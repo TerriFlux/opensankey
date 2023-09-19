@@ -1,4 +1,4 @@
-import { SankeyData,SankeyLinkValue, SankeyNode } from './types'
+import { SankeyData,SankeyLinkValue, SankeyNode,SankeyLink } from './types'
 import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
@@ -7,14 +7,21 @@ import { link_visible} from './SankeyUtils'
 import { TFunction } from 'i18next'
 import { opposing_drag_elements } from './SankeyDrag'
 import { node_visible_on_svg } from './SankeyDrawFunction'
+import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 
 
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
 
 export const OpenSankeyDrawLegend = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  t:TFunction
+  t:TFunction,
+  pointer_pos:{current:number[]},
+  set_tag_contextualised:(t:string)=>void,
 ) => {
   // Function that add legend of tags
   // In the legend it draw the legend (color of the tag and it name) that are visually reprensented on the graph
@@ -184,6 +191,13 @@ export const OpenSankeyDrawLegend = (
           d3.selectAll(' .opensankey .arrow').attr('opacity',0.85)
           d3.selectAll(' .opensankey .gg_links text').style('opacity',1)
           d3.selectAll(' .opensankey .ggg_nodes').attr('opacity',1)
+        }).on('contextmenu',(evt,d)=>{
+          if(!window.SankeyToolsStatic){
+            evt.preventDefault()
+            pointer_pos.current=[evt.pageX,evt.pageY]
+            set_tag_contextualised(d[0])  
+          }
+          
         })
 
       // Ajout du shape  
@@ -324,4 +338,62 @@ export const drag_legend_g_element=(data:SankeyData,event:{ dx: number; dy: numb
   data.legend_position[0]=(data.legend_position[0]>=0?data.legend_position[0]:0)
   data.legend_position[1]=(data.legend_position[1]>=0?data.legend_position[1]:0)
   d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
+}
+
+
+// const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
+
+export const context_legend_tags=(tag_contextualised:string|undefined,
+  set_tag_contextualised:(t:string|undefined)=>void,
+  data:SankeyData,set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
+  multi_selected_links:{current:SankeyLink[]},
+  t:TFunction,
+  pointer_pos:{current:number[]},
+  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+
+)=>{
+  let style_c_t='0px 0px auto auto'
+  if(tag_contextualised!==undefined){
+    style_c_t=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+  }
+
+  let NodeOrLinkTag=''
+  if(Object.values(data.nodeTags).filter(t=>t.show_legend).length>0){
+    NodeOrLinkTag='nodeTags'
+  }else if(Object.values(data.fluxTags).filter(t=>t.show_legend).length>0){
+    NodeOrLinkTag='fluxTags'
+  }else if(Object.values(data.dataTags).filter(t=>t.show_legend).length>0){
+    NodeOrLinkTag='dataTags'
+  }
+  let text_button_select_element_by_tag=''
+  if(NodeOrLinkTag=='nodeTags'){
+    text_button_select_element_by_tag=t('Menu.selectNodeAttrubutedToTag')
+  }else if(NodeOrLinkTag=='fluxTags'){
+    text_button_select_element_by_tag=t('Menu.selectLinkAttrubutedToTag')
+  }else if(NodeOrLinkTag=='dataTags'){
+    text_button_select_element_by_tag=t('Menu.selectDataAttrubutedToTag')
+  }
+  const button_select_element_tagged=tag_contextualised!==undefined &&['nodeTags','fluxTags','dataTags'].includes(NodeOrLinkTag) ?<Button onClick={()=>{
+    if(NodeOrLinkTag=='nodeTags'){
+      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag_contextualised)))
+    }else if(NodeOrLinkTag=='fluxTags'){
+      multi_selected_links.current=Object.values(data.links).filter(l=>{
+        const tmp=getLinkValue(data,l.idLink)
+        return tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag_contextualised)
+      })
+    }
+    set_data({...data})
+    set_tag_contextualised(undefined)
+  }} variant='light'>{text_button_select_element_by_tag} {}</Button>:<></>
+
+
+  // Pop over that serve as context menu 
+  return tag_contextualised!==undefined?<Popover id="context_tag_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_t}}>
+    <Popover.Body >
+      <ButtonGroup vertical>
+        {button_select_element_tagged}
+      </ButtonGroup>
+    </Popover.Body>
+  </Popover>:<></>
 }
