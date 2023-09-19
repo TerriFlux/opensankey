@@ -160,7 +160,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     svgSankey.on('contextmenu',(evt)=>{
       evt.preventDefault()
       pointer_pos.current=[evt.pageX,evt.pageY]
-      if(d3.select(evt.target).attr('class')=='mode_selection'){
+      if(d3.select(evt.target).attr('class')=='mode_selection' && !window.SankeyToolsStatic){
         set_show_context_zdd(true)
       }
     })

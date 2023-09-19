@@ -227,9 +227,12 @@ export const OpenSankeyDrawLinks = (
       .attr('stroke-dasharray', d => {
         return strokeDasharray(d,data,getLinkValue)
       })
-    gg_links.on('contextmenu', (ev, l) => eventLinkContextMenu(ev,l,set_contextualised_link,pointer_pos,data,set_data,
-      multi_selected_links,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
-    ))
+    gg_links.on('contextmenu', (ev, l) => {
+      if(!window.SankeyToolsStatic){
+        return eventLinkContextMenu(ev,l,set_contextualised_link,pointer_pos,data,set_data,
+          multi_selected_links,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
+        )}}
+    )
 
     const paths = gg_links.append('path')
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {

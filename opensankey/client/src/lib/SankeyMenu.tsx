@@ -116,6 +116,7 @@ const MenuPropTypes = {
 
   set_contextualised_node:PropTypes.func.isRequired,
   set_contextualised_link:PropTypes.func.isRequired,
+  set_tag_contextualised:PropTypes.func.isRequired,
   set_show_context_zdd:PropTypes.func.isRequired,
   updateLayout:PropTypes.func.isRequired,
   convert_data:PropTypes.func.isRequired,
@@ -1003,6 +1004,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     additional_nav_item,
     set_contextualised_node,
     set_contextualised_link,
+    set_tag_contextualised,
     set_show_context_zdd,
     updateLayout,
     convert_data,
@@ -1296,6 +1298,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_contextualised_node(undefined)
         set_contextualised_link(undefined)
         set_show_context_zdd(false)
+        set_tag_contextualised(undefined)
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>

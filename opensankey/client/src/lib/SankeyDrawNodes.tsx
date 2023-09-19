@@ -170,7 +170,7 @@ export const OpenSankeyDrawNodes = (
       }
     }
     // ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-    ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,set_contextualised_node,pointer_pos,multi_selected_nodes))
+    ggg_nodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return eventNodeContextMenu(ev,n,set_contextualised_node,pointer_pos,multi_selected_nodes)}})
     // if node have a unique groupTag then it control the shape of the node
     if ( data.nodeTags['Type de noeud'] ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {

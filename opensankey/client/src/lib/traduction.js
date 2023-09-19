@@ -139,7 +139,9 @@ export const open_resources = {
         compute_file:'Computing',
         loaded_file:'File loaded',
         failure_file:'Loading failed',
-        choseTransforDifficulty:'Choisissez votre niveaux de connaissance des données du diagramme de sankey',
+        choseTransforDifficulty:'Choose your knowledge level of the application',
+        selectNodeAttrubutedToTag:'Select all nodes having this tag',
+        selectLinkAttrubutedToTag:'Select all links having this tag',
         Transformation : {
           amp_short:'Trans.',
           amp:'Change the layout',
@@ -703,6 +705,8 @@ export const open_resources = {
         loaded_file:'Chargement terminé',
         failure_file:'Chargement échoué',
         choseTransforDifficulty:'Choisssez votre niveau de connaissance d\'opensankey',
+        selectNodeAttrubutedToTag:'Sélectionne les noeuds possédant cette étiquette',
+        selectLinkAttrubutedToTag:'Sélectionne les flux possédant cette étiquette',
 
         Transformation : {
           amp_short:'Trans.',
