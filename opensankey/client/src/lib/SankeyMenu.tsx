@@ -127,7 +127,7 @@ const MenuPropTypes = {
   apply_transformation_additional_elements: PropTypes.func.isRequired,
   DiagramSelector: PropTypes.func.isRequired,
   is_computing:PropTypes.bool.isRequired,
-  set_is_computing:PropTypes.func.isRequired,
+  setIsComputing:PropTypes.func.isRequired,
 
 }
 
@@ -996,7 +996,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     show_modalTemplate,
     set_show_modalTemplate,
     cardsTemplate,
-    
+
     external_modal,
     min_width_and_height,
     formations_menu,reinitialization,set_show_modale_tuto,show_modale_tuto,
@@ -1012,8 +1012,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     node_vspace,set_node_vspace,
     apply_transformation_additional_elements,
     DiagramSelector,
-    is_computing,
-    set_is_computing
+    is_computing, setIsComputing
   }
 ) => {
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1070,18 +1069,18 @@ const Menu: FunctionComponent<MenuTypes> = (
               el.colorTag = new_data.colorMap
             })
           }
-          if (Object.keys(new_data.nodeTags).length == 0 && 
-              Object.keys(new_data.fluxTags).filter(tag=>tag !== 'flux_type').length == 0 && 
+          if (Object.keys(new_data.nodeTags).length == 0 &&
+              Object.keys(new_data.fluxTags).filter(tag=>tag !== 'flux_type').length == 0 &&
               Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0 &&
               Object.values(new_data.links).filter(l=>l.local && l.local.color).length == 0
           ) {
             const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
             const n_keys=Object.keys(new_data.nodes)
             const size_color=n_keys.length
-              
+
             for(const i in d3.range(size_color)){
               SankeyUtils.assign_node_local_attribute(new_data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
-            }            
+            }
           }
           set_data({ ...new_data })
           setTimeout(()=>{
@@ -1093,6 +1092,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       })
     })
     setProcessing(false)
+    setIsComputing(false)
     setFailure(false)
     setNotStarted(true)
   }
@@ -1100,7 +1100,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
-
 
     if(!show_nav){
       [data.width, data.height] = min_width_and_height(data)
@@ -1133,11 +1132,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   }
 
-
   const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
 
-
-  
   const ordered_menu:{[s:string]:JSX.Element}={}
   const oredred_key=['file','edition','diagramme','excel','filter','view','afm','formation','demo','aide']
   oredred_key.forEach((k:string)=>{
@@ -1313,7 +1309,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             {menus['unité']}
           </>:<></>}
           {additional_nav_item}
-          
+
         </Container>
       </Navbar>
       {/* Bottom Navbar with some more info */}
@@ -1422,7 +1418,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         result={result}
         setResult={setResult}
         is_computing={is_computing}
-        set_is_computing={set_is_computing}
+        setIsComputing={setIsComputing}
       />
 
       {
@@ -1466,7 +1462,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
     <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
     <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
-    
+
     <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
     <p><b>{t('Menu.rcc_F8_bold')}</b>{t('Menu.rcc_F8')}</p>
     <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
@@ -1509,7 +1505,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
         <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
       </Accordion.Body>
     </Accordion.Item>
-    
+
 
     {additional_shortcut_item}
   </Accordion>
@@ -1551,7 +1547,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
         }}>
           {t('welcome.rc')}
         </Pagination.Item>
-        
+
       </Pagination>
       <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again} onChange={evt=>{
         set_never_see_again(evt.target.checked)
@@ -1577,20 +1573,20 @@ export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{curr
   const class_name=title.replaceAll('/','').replaceAll('.','').split(' ').join('_')
   const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
   n_style_menu_draggable.width=width_menu+'%'
-  return <Draggable  handle='.title_menu' 
+  return <Draggable  handle='.title_menu'
     defaultPosition={{x:pointer_pos.current[0],y:pointer_pos.current[1]}}
     bounds={{left:0,top:0}}
     onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
       d3.select('.menu_conf.'+class_name).style('z-index','1031')
-    }} 
+    }}
   >
     <div className={'menu_conf '+class_name}
-      style={n_style_menu_draggable}       
+      style={n_style_menu_draggable}
     >
       <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'3','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
         <Col><h3>{title}</h3></Col>
         <Col className='text-end'>{<CloseButton onClick={()=>{set_display_menu(false)}}/>}</Col>
-      </Row>  
+      </Row>
       <div className='sankey-menu'>
         {content}
       </div>
@@ -1621,7 +1617,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   let style_c_n='0px 0px auto auto'
   if(contextualised_node!==undefined){
     style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
-  } 
+  }
   const align_node=(ref:'min'|'max',attr:'x'|'y')=>{
     const node_ref=multi_selected_nodes.current.filter(nf=>nf.position!='relative').sort((n1,n2)=>{
       return ref=='min'?n1[attr]-n2[attr]:n2[attr]-n1[attr]
@@ -1636,7 +1632,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     })
   }
 
-  // Dropdown to change some pararmeter concerning the appearence of the node  
+  // Dropdown to change some pararmeter concerning the appearence of the node
   const has_node_tags=Object.values(data.nodeTags).filter(nt=>nt.group_name!=='Type de noeud').length>0
   const dropdown_c_n_tag=(contextualised_node!==undefined && has_node_tags) ?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
@@ -1684,7 +1680,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     </Dropdown.Menu>
   </Dropdown>:<></>
 
-  
+
 
 
 
@@ -1695,7 +1691,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   }} variant='light'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
 
-  // Dropdown to change some pararmeter concerning the style of the node  
+  // Dropdown to change some pararmeter concerning the style of the node
   const dropdown_c_n_style_select=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.SelectStyle')}
@@ -1735,7 +1731,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
 
 
 
-  
+
   const dropdown_c_n_align_h=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.align_horiz')}
@@ -1752,7 +1748,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
       }}>{t('Noeud.align_horiz_max')}
       </Dropdown.Item>
     </Dropdown.Menu>
-  </Dropdown>:<></> 
+  </Dropdown>:<></>
 
   const dropdown_c_n_align_v=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
@@ -1770,7 +1766,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
       }}>{t('Noeud.align_vert_max')}
       </Dropdown.Item>
     </Dropdown.Menu>
-  </Dropdown>:<></> 
+  </Dropdown>:<></>
 
   const button_edit_label_node=contextualised_node!==undefined?<Button variant='light'
     onClick={()=>{
@@ -1789,10 +1785,10 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     }}
   >
     {t('Noeud.labels.edit_node_label')}
-  </Button>:<></> 
+  </Button>:<></>
 
 
-  // Pop over that serve as context menu 
+  // Pop over that serve as context menu
   return contextualised_node!==undefined?<Popover  id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
     <Popover.Body>
       <ButtonGroup vertical>
@@ -1822,7 +1818,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           }}>
           {t('Menu.suppr')}
         </Button>
-        {sep}   
+        {sep}
         <Button
           variant='light'
           onClick={() => {
@@ -1880,7 +1876,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
         {sep}
         {dropdown_c_n_style}
         {additional_context_element_other}
-        
+
       </ButtonGroup>
     </Popover.Body>
   </Popover>:<></>
@@ -1901,7 +1897,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
   }
 
   const invert_flux=(l:SankeyLink,nodes_to_reorganize: SankeyNode[])=>{
-              
+
     const tmp = l.idSource
     const previous_node_s = data.nodes[l.idSource]
     previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
@@ -1915,10 +1911,10 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
     l.idTarget = target_node.idNode
     target_node.inputLinksId.push(l.idLink)
     nodes_to_reorganize.push(target_node)
-              
-              
+
+
   }
-  
+
   const value_selected_parameter_contextualised_link = (): SankeyLinkValue => {
     if(contextualised_link===undefined){
       return ({} as SankeyLinkValue)
@@ -1942,10 +1938,10 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
       })
       return val
     }
-    
+
   }
   const has_flux_tags=Object.values(data.fluxTags).length>0
-  // Dropdown to change some pararmeter concerning the appearence of the node  
+  // Dropdown to change some pararmeter concerning the appearence of the node
   const dropdown_c_l_tag=(contextualised_link!==undefined && has_flux_tags) && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Menu.Transformation.tagFlux_assign')}
@@ -1996,7 +1992,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
                   val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
                 }
 
-                
+
                 set_data({...data})
               }}>
                 {nt[1].tags[t].name}{checked(value_selected_parameter_contextualised_link().tags[nt[0]].includes(t))}
@@ -2015,7 +2011,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
     set_contextualised_node(undefined)
   }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
-  // Dropdown to change some pararmeter concerning the style of the node  
+  // Dropdown to change some pararmeter concerning the style of the node
   const dropdown_c_l_style_select=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.SelectStyle')}
@@ -2051,7 +2047,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Flux.layout')}
     </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>      
+    <Dropdown.Menu variant='light'>
       <Dropdown.Item onClick={()=>{
         multi_selected_links.current.forEach(n=>handleDownLink(data,n.idLink))
         set_data({...data})
@@ -2100,7 +2096,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
         })
         set_data({...data})
       }}>{t('Flux.layoutBottom')}</Dropdown.Item>
-     
+
     </Dropdown.Menu>
   </Dropdown>:<></>
 
@@ -2109,7 +2105,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
     set_contextualised_node(undefined)
   }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
 
-  // Pop over that serve as context menu 
+  // Pop over that serve as context menu
   return contextualised_link!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
     <Popover.Body >
       <ButtonGroup vertical>
@@ -2164,7 +2160,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   if(show_context_zdd){
     style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
-    
+
   const button_bg_color=<Form as={Button} variant='light'><Form.Control hidden type='color' id='color_bg_zdd' name='color_bg_zdd' onChange={(evt)=>{
     data.couleur_fond_sankey=evt.target.value
     set_data({...data})
@@ -2181,7 +2177,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
     const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
     const n_keys=Object.keys(data.nodes)
     const size_color=n_keys.length
-      
+
     for(const i in d3.range(size_color)){
       // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
       SankeyUtils.assign_node_local_attribute(data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
@@ -2292,16 +2288,16 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
             /></Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
-    
+
       <Dropdown.Item as={Button} variant='light' onClick={() => {
         compute_auto_sankey(data, node_hspace)
         set_data({ ...data })
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>
-  
-  
-  
+
+
+
   const button_an=<Button variant='light'
     onClick={() => {
       arrangeNodes(data)

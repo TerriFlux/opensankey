@@ -115,7 +115,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // For OpenSankeyConfigurationsMenus
   const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
 
-  
+
   const [show_menu_node_apparence,set_show_menu_node_apparence]=useState(false)
   const [show_menu_node_io,set_show_menu_node_io]=useState(false)
 
@@ -164,7 +164,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [not_started,setNotStarted] = useState(true)
   const [result,setResult] = useState('')
   const [path,setPath] = useState('')
-  const [is_computing,set_is_computing]=useState(false)
+  const [is_computing,setIsComputing]=useState(false)
 
   //- Modals and Dialogs
   const [show_load,set_show_load] = useState(false)
@@ -176,10 +176,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // Modal et fonctions pour l'edition et affectation des style de flux
   const [showStyleLink, setShowStyleLink] = useState(false)
   const [showStyle, setShowStyle] = useState(false)
-    
+
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [selected_style_node, set_selected_style_node] = useState('default')
-    
+
   const showStyleEditionLink = () => {
     setShowStyleLink(true)
   }
@@ -241,7 +241,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
   const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
   const buttons_filter=<>{(node_filter)?<Button size='sm' variant='light'>{t('Menu.Noeuds')}</Button>:<></>}
-  
+
     {(flux_filter)?<Button size='sm' variant='light' >{t('Menu.flux')}</Button>:<></>}
     {(Object.values(data.dataTags).length>0)?<Button size='sm' variant='light'>{t('Banner.data')}</Button>:<></>}</>
 
@@ -252,8 +252,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       <tbody>
         {!window.SankeyToolsStatic?<>
           <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'info'}><FontAwesomeIcon icon={faArrowPointer} /></Button><Button size='sm' variant={'secondary'}><FontAwesomeIcon icon={faShareNodes} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.1')}</td></tr>
-        </>:<></>}   
-          
+        </>:<></>}
+
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'warning'}><FontAwesomeIcon icon={faFolderTree} /></Button></td><td style={{'border':style_border}}>{t('welcome.3')}</td></tr>
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FontAwesomeIcon icon={faSliders} /></Button></td><td style={{'border':style_border}}>{t('welcome.4')}</td></tr>
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsUpDown} /></Button><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsLeftRight} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.5')}</td></tr>
@@ -265,14 +265,14 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       </tbody>
     </table>
   </div>
-  
+
   const pagination_intro=<Pagination.Item active={active_page==='intro'} key={'intro'} onClick={()=>{
     set_active_page('intro')
   }}>Introduction
   </Pagination.Item>
 
   const external_pagination=[pagination_intro]
-  const external_content={'intro':intro} 
+  const external_content={'intro':intro}
 
   const intro_modal=!window.SankeyToolsStatic?OpenSankeyModalWelcome(t,active_page,set_active_page,show_modal_welcome,set_show_modal_welcome,never_see_again,set_never_see_again,[],external_pagination,external_content,exemple_menu):<></>
 
@@ -332,7 +332,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   sankey_menus['formation']=<>{()=>set_show_modale_tuto(true)}</>
 
-  
+
   // 2.4 Modal linked to menu item
   const external_menu_modal=[] as JSX.Element[]
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(t,data,set_data,i18next)
@@ -364,7 +364,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
       <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
       <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-      
+
         <>{(Object.entries(data.levelTags).length > 0) ? (<>
           {addSimpleLevelDropDown(t,data,set_data)}</>
         ) : (<>
@@ -395,7 +395,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_show_context_zdd(false)
   }
   // Function to close all menu : menu confugartion, menu context (nodes,links, drawZone), an menu dragggable
-  // Called when we press escape   
+  // Called when we press escape
   const closeAllMenu=()=>{
     set_show_nav(false)
     set_show_menu_node_apparence(false)
@@ -443,7 +443,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       mode_selection,
       accordion_ref,
       button_ref,
-      
+
       alt_key_pressed,
       position,node_arrow_visible,
       linkTooltipsContent,
@@ -458,7 +458,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       g_legend.call(drag_legend(data,set_data))
     }
   })
- 
+
   //Event listener sur les touche du clavier
   //Réagis à :
   //-Flêches qui déplace les noeuds sélectionnés
@@ -476,7 +476,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
   // =================DRAGGABEL MENU + CONTEXT MENU=============================
-  
+
   // MENU DRAGGABLE NODE ATTR
   const menu_node_attr=menu_configuration_nodes_attributes
   const dragNodeAttr=show_menu_node_apparence?menu_draggable(menu_node_attr,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.apparence.apparence'),set_show_menu_node_apparence):<></>
@@ -488,11 +488,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const menu_node_io=multi_selected_nodes.current.length==1?SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.getLinkValue,multi_selected_links,set_display_link_opacity,true):<></>
   const dragNodeIO=show_menu_node_io?menu_draggable(menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),set_show_menu_node_io):<></>
 
-    
 
 
 
-    
+
+
   const context_n=context_menu_node(contextualised_node,set_contextualised_node,data,set_data,multi_selected_nodes,multi_selected_links,t,
     set_show_menu_node_apparence,set_show_menu_node_io,
     set_agregation_node,set_is_agregation,set_show_agregation,
@@ -516,7 +516,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // MENU DRAGGABLE LAYOUT
   menu_configuration_layout
   const drag_menu_layout=show_menu_layout?menu_draggable(menu_configuration_layout,pointer_pos,t('Menu.MEP'),set_show_menu_layout):<></>
-    
+
 
   const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout)
   const context_for_tag_legend=context_legend_tags(tag_contextualised,set_tag_contextualised,data,set_data,multi_selected_nodes,multi_selected_links,t,pointer_pos,SankeyUtils.getLinkValue)
@@ -602,7 +602,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             apply_transformation_additional_elements={()=>[]}
             DiagramSelector={OpenSankeyDiagramSelector}
             is_computing={is_computing}
-            set_is_computing={set_is_computing}
+            setIsComputing={setIsComputing}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
@@ -623,13 +623,13 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
               }))
             .on('dblclick.zoom', null)
 
-          
+
           const timer = setTimeout(() => {
             SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
           }, 100)
           return () => clearTimeout(timer)
         }, [])}
-        
+
         <SankeyDraw
           data={data}
           set_data={set_data}
@@ -650,7 +650,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
         {dragLink_data}
         {dragLink_appearence}
-        
+
         {drag_menu_layout}
 
         {context_n}
@@ -675,7 +675,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       eventOnSankeyZoneMouseUp(mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,true,()=>false,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value,evt,start_point)
     })
   }, 100)
-  
+
   return (
     d
 
