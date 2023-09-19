@@ -99,19 +99,19 @@ const SankeyLoad = ({
                     </Button>):(
                     failure ? (
                       <Button variant="danger" onClick={reset}>{failure_status}</Button>) : <>
-                        {
-                          is_computing? (
-                            <Button
-                              variant='info'>
-                              {t('Menu.compute_file')}
-                            </Button>):(
-                            <Button
-                              variant="success"
-                              onClick={()=>{
-                                successAction()
-                                set_show_dialog(false)
-                              }}>{success_status}</Button>)
-                        }</>
+                      {
+                        is_computing? (
+                          <Button
+                            variant='info'>
+                            {t('Menu.compute_file')}
+                          </Button>):(
+                          <Button
+                            variant="success"
+                            onClick={()=>{
+                              successAction()
+                              set_show_dialog(false)
+                            }}>{success_status}</Button>)
+                      }</>
                   )
                 }
               </Col><Col sm={5}/></Row>
