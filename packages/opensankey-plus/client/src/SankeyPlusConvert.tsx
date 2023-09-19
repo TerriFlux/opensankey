@@ -336,4 +336,27 @@ export const plus_sankey_layout=(
       )
     }
   }
+  if(mode.includes('attrNode')){
+    Object.entries(data.nodes).forEach( ([key,node]) => {
+      const layoutNode = new_layout.nodes[key]
+      if (!layoutNode) {
+        return
+      }
+
+      // Add icon fromm imported layout if it has all the attribut 
+      if(layoutNode.iconVisible!==undefined && layoutNode.iconColor && layoutNode.iconName && layoutNode.iconRatio ){
+        node.iconVisible=layoutNode.iconVisible
+        node.iconColor=layoutNode.iconColor
+        node.iconName=layoutNode.iconName
+        node.iconRatio=layoutNode.iconRatio
+      }
+      // Add ForeignObject from imported layout if it has all the attribut 
+      if(layoutNode.has_FO!==undefined && layoutNode.is_FO_raw && layoutNode.FO_content ){
+        node.has_FO=layoutNode.has_FO
+        node.is_FO_raw=layoutNode.is_FO_raw
+        node.FO_content=layoutNode.FO_content
+      }
+
+    })
+  }
 }
