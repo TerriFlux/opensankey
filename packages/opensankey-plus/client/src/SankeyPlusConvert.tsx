@@ -71,7 +71,10 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
   if (!data.view) {
     return
   }
-
+  const key_view=Object.values(data.view).map(v=>v.id)
+  if(data.current_view &&data.current_view!=='none' && !key_view.includes(data.current_view)){
+    data.current_view='none'
+  }
   // Convert old view (when we copied the entire data)
   data.view.forEach((v)=>{
     if(v.heredited_attr_from_master===undefined){

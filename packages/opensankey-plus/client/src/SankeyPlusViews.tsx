@@ -5,12 +5,12 @@ import LZString from 'lz-string'
 
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileExport, FaFileImport, FaFileInvoice,FaCheck} from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileInvoice,FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile,faListCheck, faXmark} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { clickSaveDiagram, adjust_sankey_zone, node_displayed } from 'open-sankey/dist/SankeyUtils'
+import { adjust_sankey_zone, node_displayed } from 'open-sankey/dist/SankeyUtils'
 import { updateLayout, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 
 import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType, DiffType, ViewType } from './types'
@@ -840,8 +840,8 @@ export const viewsAccordion = (
           </tbody>
         </Table>
       </Form>
-
-      <InputGroup>
+      {/* L'import/export de multiple vue est jugé inutile */}
+      {/* <InputGroup>
         <Button
           style={{width:'50%', height:'2.5em'}}
           className='btn_menu_config'
@@ -873,7 +873,7 @@ export const viewsAccordion = (
         >
           {t('view.importMultiple')}
         </Button>
-      </InputGroup>
+      </InputGroup> */}
     </Accordion.Body>
   </Accordion.Item>
 
@@ -1237,90 +1237,90 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </span>
   </OverlayTrigger>
 
+  // -- NOT REALLY USEFULL ANYMORE WITH THE IMPORT LAYOUT 
+  // const button_import_view=<OverlayTrigger
+  //   key={'buttonImportViewDisabled'}
+  //   placement={'bottom'}
+  //   delay={500}
+  //   overlay={(!connected)?(
+  //     <Tooltip id={'buttonImportViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+  //     <Tooltip id={'buttonImportView'}>{t('Menu.tooltips.buttonImportView')} </Tooltip>}
+  // >
+  //   <span>
+  //     <Button
+  //       size='sm'
+  //       variant='light'
+  //       disabled={!connected}
+  //       onClick={
+  //         () => {
+  //           // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
+  //           if (_load_json.current) {
+  //             _load_json.current.name = ''
+  //             _load_json.current.click()
+  //             _load_json.current.id = master_data.current_view
+  //           }
+  //         }
+  //       }
+  //     >
+  //       <Col><FaFileImport
+  //         style={{opacity:(!connected)?'0.6':'1'}}/>
+  //       </Col>
+  //       {!connected?
+  //         <Col>
+  //           <FontAwesomeIcon
+  //             icon={faLock}
+  //             style={{
+  //               fontSize:'1em',
+  //               position: 'absolute',
+  //               right: '0.1em',
+  //               bottom: '0em',
+  //               color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+  //         </Col>
+  //         :<></>}
+  //       <Col style={{'fontSize':'9px'}}>{t('view.import')}</Col>
+  //     </Button>
+  //   </span>
+  // </OverlayTrigger>
 
-  const button_import_view=<OverlayTrigger
-    key={'buttonImportViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonImportViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonImportView'}>{t('Menu.tooltips.buttonImportView')} </Tooltip>}
-  >
-    <span>
-      <Button
-        size='sm'
-        variant='light'
-        disabled={!connected}
-        onClick={
-          () => {
-            // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
-            if (_load_json.current) {
-              _load_json.current.name = ''
-              _load_json.current.click()
-              _load_json.current.id = master_data.current_view
-            }
-          }
-        }
-      >
-        <Col><FaFileImport
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        </Col>
-        {!connected?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
-          :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('view.import')}</Col>
-      </Button>
-    </span>
-  </OverlayTrigger>
-
-
-  const button_export_view=<OverlayTrigger
-    key={'buttonExportViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonExportViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonExportView'}>{t('Menu.tooltips.buttonExportView')} </Tooltip>}
-  >
-    <span>
-      <Button
-        size='sm'
-        variant='light'
-        disabled={!connected}
-        onClick={()=>{
-          const to_download=get_data_from_view(master_data,current_view.id)
-          to_download.view=[]
-          clickSaveDiagram(to_download,current_view.nom)
-        }}
-      >
-        <Col><FaFileExport
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        </Col>
-        {!connected?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
-          :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('view.import')}</Col>
-      </Button>
-    </span>
-  </OverlayTrigger>
+  // -- ADDED AS OPTION IN SAVE JSON
+  // const button_export_view=<OverlayTrigger
+  //   key={'buttonExportViewDisabled'}
+  //   placement={'bottom'}
+  //   delay={500}
+  //   overlay={(!connected)?(
+  //     <Tooltip id={'buttonExportViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+  //     <Tooltip id={'buttonExportView'}>{t('Menu.tooltips.buttonExportView')} </Tooltip>}
+  // >
+  //   <span>
+  //     <Button
+  //       size='sm'
+  //       variant='light'
+  //       disabled={!connected}
+  //       onClick={()=>{
+  //         const to_download=get_data_from_view(master_data,current_view.id)
+  //         to_download.view=[]
+  //         clickSaveDiagram(to_download,current_view.nom)
+  //       }}
+  //     >
+  //       <Col><FaFileExport
+  //         style={{opacity:(!connected)?'0.6':'1'}}/>
+  //       </Col>
+  //       {!connected?
+  //         <Col>
+  //           <FontAwesomeIcon
+  //             icon={faLock}
+  //             style={{
+  //               fontSize:'1em',
+  //               position: 'absolute',
+  //               right: '0.1em',
+  //               bottom: '0em',
+  //               color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+  //         </Col>
+  //         :<></>}
+  //       <Col style={{'fontSize':'9px'}}>{t('view.import')}</Col>
+  //     </Button>
+  //   </span>
+  // </OverlayTrigger>
 
   return <>
     <OverlayTrigger
@@ -1449,8 +1449,8 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data.current_view!=='none' && !window.SankeyToolsStatic?<>
       {button_heredited_attr_from_master}
       {button_clone_view}
-      {button_import_view}
-      {button_export_view}
+      {/* {button_import_view}
+      {button_export_view} */}
     </>
       :<></>
 
@@ -1856,4 +1856,23 @@ export const modal_transparent_view_attr=(show_modal_transparent_view_attr:boole
       set_data({...data})
     }}>{t('view.updateViewWithMasterVar')}</Button></Modal.Footer>
   </Modal>
+}
+
+export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_only_view:boolean,set_save_only_view:(b:boolean)=>void)=>{
+  return <InputGroup>
+    <InputGroup.Text style={{width:'40%'}}>{t('view.export')}</InputGroup.Text>
+    <OverlayTrigger
+      key={'buttonExportViewDisabled'}
+      placement={'bottom'}
+      delay={500}
+      overlay={<Tooltip id={'buttonExportView'}>{t('Menu.tooltips.buttonExportView')} </Tooltip>}
+    >
+      <Button
+        style={{width:'40%'}}
+        className='btn_menu_config'
+        variant={save_only_view?'primary':'outline-primary'}
+        onClick={()=>set_save_only_view(!save_only_view)} >
+        {save_only_view?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+      </Button></OverlayTrigger>
+  </InputGroup>
 }
