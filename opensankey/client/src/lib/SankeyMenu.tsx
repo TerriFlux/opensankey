@@ -1069,8 +1069,8 @@ const Menu: FunctionComponent<MenuTypes> = (
               el.colorTag = new_data.colorMap
             })
           }
-          if (Object.keys(new_data.nodeTags).length == 0 &&
-              Object.keys(new_data.fluxTags).filter(tag=>tag !== 'flux_type').length == 0 &&
+          if (Object.keys(new_data.nodeTags).filter(t=>new_data.nodeTags[t].show_legend).length == 0 &&
+              Object.keys(new_data.fluxTags).filter(tag=>tag === 'flux_type').length == 0 &&
               Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0 &&
               Object.values(new_data.links).filter(l=>l.local && l.local.color).length == 0
           ) {
