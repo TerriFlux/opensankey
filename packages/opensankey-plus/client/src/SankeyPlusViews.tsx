@@ -1,13 +1,13 @@
-import React, { ChangeEvent, useRef } from 'react'
+import React, { ChangeEvent, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import LZString from 'lz-string'
 
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup } from 'react-bootstrap'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup, Overlay } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileInvoice,FaCheck} from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileInvoice,FaCheck,} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile,faListCheck, faXmark} from '@fortawesome/free-solid-svg-icons'
+import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile,faListCheck, faXmark, faSquarePen} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
 import { adjust_sankey_zone, node_displayed } from 'open-sankey/dist/SankeyUtils'
@@ -1039,6 +1039,8 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
 
   const m_d=master_data?master_data:data
   const current_view = m_d.view.filter(v=>v.id===m_d.current_view)[0]
+  const [show_modify_name_view,set_show_modify_name_view]=useState(false)
+  const target_popover_modify_view_name=useRef(null)
 
 
   // Boolean used to change the logo of the button to save the current view :
@@ -1322,139 +1324,190 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   //   </span>
   // </OverlayTrigger>
 
-  return <>
-    <OverlayTrigger
-      key={'buttonHomeViewDisabled'}
-      placement={'bottom'}
-      delay={500}
-      overlay={(!connected && !has_views)?
-        <Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-        <Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
-    >
-      <span>
-        <Button
-          size='sm'
-          variant='light'
-          disabled={(!connected && !has_views)}
-          onClick={() => {
-            const ev = document
-            const tmp = { key: 'F7' }
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}>
-          <Col><FaHome
-            style={{opacity:(!connected && !has_views)?'0.6':'1'}}/>
+  const popover_modify_view_name=
+  <Popover id="popover-link-filter" style={{maxWidth:'100%','overflowY':'auto'}}>
+    <Popover.Header as="h3">{t('view.modify_name_view')}</Popover.Header>
+    <Popover.Body >
+      <Form.Control 
+        type='text'
+        value={master_data&& master_data.current_view!=='none'?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:''}
+        onChange={(evt)=>{
+          master_data?master_data.view.filter(v=>v.id===master_data.current_view).forEach(v=>v.nom=evt.target.value):''
+          set_data({...data})
+        }}
+      >
+
+      </Form.Control>
+    </Popover.Body>
+  </Popover>
+  
+  const button_modify_name=<span><Button ref={target_popover_modify_view_name} variant='light' id='button-filter-link'
+    onClick={()=>{
+      set_show_modify_name_view(!show_modify_name_view)
+    }}
+  >
+    <Col><FontAwesomeIcon icon={faSquarePen} /></Col>
+    {!connected?
+      <Col>
+        <FontAwesomeIcon
+          icon={faLock}
+          style={{
+            fontSize:'1em',
+            position: 'absolute',
+            right: '0.1em',
+            bottom: '0em',
+            color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+      </Col>
+      :<></>}
+    <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.edit_name')}</Col>
+  </Button>
+
+  </span>
+
+  return <><Overlay
+    key={'popover-link-filter'}
+    placement={'bottom'}
+    target={target_popover_modify_view_name}
+    rootClose
+    show={show_modify_name_view}
+    onHide={()=>{set_show_modify_name_view(false)}}
+  >
+    {popover_modify_view_name}
+  </Overlay>
+  <OverlayTrigger
+    key={'buttonHomeViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected && !has_views)?
+      <Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
+      <Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
+  >
+    <span>
+      <Button
+        size='sm'
+        variant='light'
+        disabled={(!connected && !has_views)}
+        onClick={() => {
+          const ev = document
+          const tmp = { key: 'F7' }
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}>
+        <Col><FaHome
+          style={{opacity:(!connected && !has_views)?'0.6':'1'}}/>
+        </Col>
+        {(!connected && !has_views)?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           </Col>
-          {(!connected && !has_views)?
-            <Col>
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  fontSize:'1em',
-                  position: 'absolute',
-                  right: '0.1em',
-                  bottom: '0em',
-                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-            </Col>
-            :<></>}
-          <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
-        </Button>
-      </span>
-    </OverlayTrigger>
+          :<></>}
+        <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
 
-    {buttonCreateView}
-    {buttonUpdateView}
+  {buttonCreateView}
+  {buttonUpdateView}
 
-    <OverlayTrigger
-      key={'buttonPrevViewDisabled'}
-      placement={'bottom'}
-      delay={500}
-      overlay={(!connected && !has_views)?
-        <Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-        <Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
-    >
-      <span>
-        <Button
-          size='sm'
-          variant={'light'}
-          disabled={prev_button_disabled || !has_views}
-          onClick={() => {
-            const ev = document
-            const tmp = { key: 'F8' }
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}>
-          <Col><FaCaretSquareLeft
-            style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
+  <OverlayTrigger
+    key={'buttonPrevViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected && !has_views)?
+      <Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
+      <Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
+  >
+    <span>
+      <Button
+        size='sm'
+        variant={'light'}
+        disabled={prev_button_disabled || !has_views}
+        onClick={() => {
+          const ev = document
+          const tmp = { key: 'F8' }
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}>
+        <Col><FaCaretSquareLeft
+          style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
+        </Col>
+        {(!connected && !has_views)?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           </Col>
-          {(!connected && !has_views)?
-            <Col>
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  fontSize:'1em',
-                  position: 'absolute',
-                  right: '0.1em',
-                  bottom: '0em',
-                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-            </Col>
-            :<></>}
-          <Col style={{'fontSize':'9px'}}>{t('Menu.precView')}</Col>
-        </Button>
-      </span>
-    </OverlayTrigger>
+          :<></>}
+        <Col style={{'fontSize':'9px'}}>{t('Menu.precView')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
 
-    <OverlayTrigger
-      key={'buttonNextViewDisabled'}
-      placement={'bottom'}
-      delay={500}
-      overlay={(!connected && !has_views)?(
-        <Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-        <Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
-    >
-      <span>
-        <Button
-          size='sm'
-          variant={'light'}
-          disabled={next_button_disabled || !has_views}
-          onClick={() => {
-            const ev = document
-            const tmp = { key: 'F9'}
-            if (ev.onkeydown) {
-              ev.onkeydown(tmp as KeyboardEvent)
-            }
-          }}>
-          <Col><FaCaretSquareRight
-            style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}
-          /></Col>
-          {(!connected && !has_views)?
-            <Col>
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{
-                  fontSize:'1em',
-                  position: 'absolute',
-                  right: '0.1em',
-                  bottom: '0em',
-                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-            </Col>
-            :<></>}
-          <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
-        </Button>
-      </span>
-    </OverlayTrigger>
-    {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
-    {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data.current_view!=='none' && !window.SankeyToolsStatic?<>
-      {button_heredited_attr_from_master}
-      {button_clone_view}
-      {/* {button_import_view}
+  <OverlayTrigger
+    key={'buttonNextViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected && !has_views)?(
+      <Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
+  >
+    <span>
+      <Button
+        size='sm'
+        variant={'light'}
+        disabled={next_button_disabled || !has_views}
+        onClick={() => {
+          const ev = document
+          const tmp = { key: 'F9'}
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp as KeyboardEvent)
+          }
+        }}>
+        <Col><FaCaretSquareRight
+          style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}
+        /></Col>
+        {(!connected && !has_views)?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
+        <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
+  {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
+  {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data.current_view!=='none' && !window.SankeyToolsStatic?<>
+      
+    {button_heredited_attr_from_master}
+    {button_clone_view}
+    {button_modify_name}
+    {/* {button_import_view}
       {button_export_view} */}
-    </>
-      :<></>
+  </>
+    :<></>
 
-    }
+  }
   </>
 }
 
