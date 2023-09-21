@@ -5,13 +5,13 @@ import LZString from 'lz-string'
 
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup, Overlay } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileInvoice,FaCheck,} from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileInvoice,FaCheck,FaBars} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile,faListCheck, faXmark, faSquarePen} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { adjust_sankey_zone, node_displayed } from 'open-sankey/dist/SankeyUtils'
-import { updateLayout, apply_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
+import { adjust_sankey_zone} from 'open-sankey/dist/SankeyUtils'
+import { updateLayout } from 'open-sankey/dist/SankeyLayout'
 
 import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType, DiffType, ViewType } from './types'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
@@ -599,7 +599,7 @@ export const viewsAccordion = (
 
 ) => {
 
-  const _load_multiple_json = useRef<HTMLInputElement>(null)
+  // const _load_multiple_json = useRef<HTMLInputElement>(null)
 
   const selector=selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
@@ -913,7 +913,7 @@ export const viewsAccordion = (
     }}
   />
 
-  <Form.Control
+  {/* <Form.Control
     multiple
     className='multipleImport'
     type="file"
@@ -974,7 +974,7 @@ export const viewsAccordion = (
       set_view('none')
 
     }}
-  />
+  /> */}
 
   </>
 }
@@ -1015,6 +1015,10 @@ declare const window: Window &
 // - a button to create a view if we are currently on master data
 // - 2 button to navigate in the list of view
 // - a dropdown to directly select the view we want to display (or select master data)
+// Then if we are in a view there is additionnal button
+// - a button to choose variable of the view that get their value from master
+// - a button to clone the actual view
+// a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export const SankeyPlusBannerView=(data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string,
@@ -1028,14 +1032,11 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
-  set_show_modal_transparent_view_attr:(b:boolean)=>void
+  set_show_modal_transparent_view_attr:(b:boolean)=>void,
+  show_modal_selection_link_ref_in_unitary_sankey:boolean,
+  set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void
 
 )=>{
-
-  // const elementNavBar=document.getElementsByClassName('bg-light')[0]
-  //const elementHerowrap=document.getElementsByClassName('herowrap')[0]
-
-  // const height_Herowrap=(elementHerowrap)?elementHerowrap.getBoundingClientRect().height:0
 
   const m_d=master_data?master_data:data
   const current_view = m_d.view.filter(v=>v.id===m_d.current_view)[0]
@@ -1239,6 +1240,13 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </span>
   </OverlayTrigger>
 
+  // Button to display a modal where we chose refrence link in the unitary sankey (for more info look func modal_unitary_sankey_sector_node in SankeyPlusNodes)
+  const button_open_modal_unitary_sankey_sector_node=<span><Button variant='light'
+    onClick={()=>set_show_modal_selection_link_ref_in_unitary_sankey(true)}
+  ><Col><FaBars/></Col>
+    <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.choose_link_ref_sankey_unit')}</Col>
+  </Button></span>
+
   // -- NOT REALLY USEFULL ANYMORE WITH THE IMPORT LAYOUT 
   // const button_import_view=<OverlayTrigger
   //   key={'buttonImportViewDisabled'}
@@ -1363,6 +1371,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </Button>
 
   </span>
+  const has_sector_ref_node_ins_unitary_view=data.unitary_node.length>0 && data.unitary_node.filter(nid=>data.nodes[nid].tags['Type de nœuds']&&data.nodes[nid].tags['Type de nœuds'].includes('secteur')).length>0
 
   return <><Overlay
     key={'popover-link-filter'}
@@ -1502,6 +1511,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     {button_heredited_attr_from_master}
     {button_clone_view}
     {button_modify_name}
+    {has_sector_ref_node_ins_unitary_view? button_open_modal_unitary_sankey_sector_node:<></>}
     {/* {button_import_view}
       {button_export_view} */}
   </>
@@ -1608,9 +1618,18 @@ export const toolbar_fullscreen=(data:SankeyPlusData,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
-  set_show_modal_transparent_view_attr:(b:boolean)=>void
+  set_show_modal_transparent_view_attr:(b:boolean)=>void,
+  show_modal_selection_link_ref_in_unitary_sankey:boolean,
+  set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void
 )=>{
-  const buttons_view= SankeyPlusBannerView(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,connected,set_view_not_saved,_load_json,set_show_modal_transparent_view_attr)
+  const buttons_view= SankeyPlusBannerView(data,set_data,
+    view,set_view,
+    multi_selected_nodes,multi_selected_links,multi_selected_label,
+    master_data,set_master_data,
+    t,
+    connected,set_view_not_saved,
+    _load_json,set_show_modal_transparent_view_attr,
+    show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey)
   const group_btn=<ButtonGroup>
     {buttons_view}
   </ButtonGroup>

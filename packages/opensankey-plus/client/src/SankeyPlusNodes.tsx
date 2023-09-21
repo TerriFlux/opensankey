@@ -1,15 +1,16 @@
 import React,{ChangeEvent, useState} from 'react'
-import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge,Dropdown,ButtonGroup} from 'react-bootstrap'
+import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge,Dropdown,ButtonGroup, Container} from 'react-bootstrap'
 import { SankeyLinkValue } from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
-import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
-
 import * as d3 from 'd3'
-import {DiffType, SankeyPlusData,SankeyPlusNode, ViewType} from './types'
-import {  getLinkValue,node_color,link_color,return_value_node,return_value_link,node_displayed } from 'open-sankey/dist/SankeyUtils'
+import { MultiSelect } from 'react-multi-select-component'
 
-import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType} from './types'
+import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
+import {  getLinkValue,node_color,link_color,return_value_node,return_value_link,node_displayed,link_text,link_visible } from 'open-sankey/dist/SankeyUtils'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
+import { menu_draggable} from 'open-sankey/dist/SankeyMenu'
+
+import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType,DiffType, SankeyPlusData,SankeyPlusNode, ViewType} from './types'
 import { filter_view,get_data_from_view } from './SankeyPlusViews'
 
 import { FaEyeSlash, FaEye} from 'react-icons/fa'
@@ -840,7 +841,7 @@ export const context_node_view_node_unitary=(
     }).map(n=>n))
 
 
-    // Get all the parents & sons (aggregation speaking) of initial_nodes_to_keep
+    // Get all the parents & sons (aggregation speaking) of all_nodes_in_unitary_sankey
     let center_sankey_node_unitary=[contextualised_node.idNode]
     let aggregate_nodes_to_keep=[] as string[]
     Object.entries(nodes_visible_to_keep).forEach(ne=>{
@@ -855,17 +856,15 @@ export const context_node_view_node_unitary=(
     aggregate_nodes_to_keep=[...new Set(aggregate_nodes_to_keep)]
 
     // Add nodes not visible but that have an aggregation link to one visible
-    const initial_nodes_to_keep=JSON.parse(JSON.stringify(nodes_visible_to_keep)) as {[x:string]:SankeyPlusNode}
+    const all_nodes_in_unitary_sankey=JSON.parse(JSON.stringify(nodes_visible_to_keep)) as {[x:string]:SankeyPlusNode}
     aggregate_nodes_to_keep.forEach(kn=>{
-      initial_nodes_to_keep[kn]=new_unitary_sankey.nodes[kn]
+      all_nodes_in_unitary_sankey[kn]=new_unitary_sankey.nodes[kn]
     })
 
-    
-    const key_of_unitary_sankey=Object.values(initial_nodes_to_keep).map(n=>n.idNode)
-
+    const key_of_nodes_in_unitary_sankey=Object.values(all_nodes_in_unitary_sankey).map(n=>n.idNode)
 
     // Get key of link that are connected to 2 nodes of the nodes to keep  
-    const n_link=Object.values(new_unitary_sankey.links).filter(l=>key_of_unitary_sankey.includes(l.idSource) && key_of_unitary_sankey.includes(l.idSource) ).map(l=>l.idSource)
+    const n_link=Object.values(new_unitary_sankey.links).filter(l=>key_of_nodes_in_unitary_sankey.includes(l.idSource) && key_of_nodes_in_unitary_sankey.includes(l.idSource) ).map(l=>l.idSource)
 
     const links_to_keep=Object.fromEntries(Object.entries(new_unitary_sankey.links).filter(l=>n_link.includes(l[1].idSource) && n_link.includes(l[1].idTarget)).map(l=>{
       l[1].value=getLinkValue(new_unitary_sankey,l[1].idLink)
@@ -876,15 +875,15 @@ export const context_node_view_node_unitary=(
 
     // Key levelTag
     const k_level_tag=Object.keys(new_unitary_sankey.levelTags)
-    // Correct nodes of unitary sankey  
-    Object.entries(initial_nodes_to_keep).map(n=>{
+
+
+    Object.entries(all_nodes_in_unitary_sankey).map(n=>{
       // Filter output/input link id by removing link no longer present in data
       n[1].outputLinksId=n[1].outputLinksId.filter(ol=>k_l_t_k.includes(ol))
       n[1].inputLinksId=n[1].inputLinksId.filter(il=>k_l_t_k.includes(il))
 
-      // Keep tag that refernece levelTag
-  
-      n[1].tags=Object.fromEntries(Object.entries(n[1].tags).filter(nt=>k_level_tag.includes(nt[0])))
+      // Keep tag that refernece levelTag && tag of group tag 'Type de noeud'
+      n[1].tags=Object.fromEntries(Object.entries(n[1].tags).filter(nt=>nt[0]==='Type de nœuds' || k_level_tag.includes(nt[0])))
 
       n[1].colorTag='no_colormap'
       n[1].colorParameter='local'
@@ -895,10 +894,10 @@ export const context_node_view_node_unitary=(
 
 
 
-    const nodes_to_keep=initial_nodes_to_keep
+    const nodes_to_keep=all_nodes_in_unitary_sankey
 
     // Normalize data
-    new_unitary_sankey.nodeTags={}
+    new_unitary_sankey.nodeTags=Object.fromEntries(Object.entries(new_unitary_sankey.nodeTags).filter(nt=>nt[0]==='Type de nœuds').map(nt=>nt))
     new_unitary_sankey.fluxTags={}
     new_unitary_sankey.dataTags={}
     // new_unitary_sankey.levelTags={}
@@ -986,9 +985,10 @@ export const context_node_view_node_unitary=(
 
     // Info from data source in ZDT
     let content_zdt=''
+    const type_node=(contextualised_node.tags['Type de nœuds']!==undefined)?('('+contextualised_node.tags['Type de nœuds'].join(',')+')'):''
     const name_view=(master_data.current_view && master_data.current_view!=='none')?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:t('Menu.home')
     content_zdt='<p>'+t('view.template_unitary_zdt_content')+' <strong>'+name_view+' </strong></p>'
-    content_zdt+='<p>'+t('view.template_unitary_zdt_content_of_node')+' <strong>'+contextualised_node.name+' </strong></p>'
+    content_zdt+='<p>'+t('view.template_unitary_zdt_content_of_node')+' <strong>'+contextualised_node.name+type_node+' </strong></p>'
 
     const data_tags = Object.assign({},data.dataTags)
     Object.entries(data_tags).forEach(tag_group => {
@@ -1200,30 +1200,60 @@ export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
   getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
 )=>{
   const k_n_u=data.unitary_node.filter(kn=>kn===d.idTarget || kn===d.idSource)[0]
-  if(k_n_u===undefined){
-    return '100%'
-  }
-  const total_io=calc_total_input_output(data.nodes[k_n_u],data,getLinkValue)
+  const link_ref=Object.keys(data.process_transfo_ref).filter(k=>k===k_n_u && data.process_transfo_ref[k].length>0).map(k=>k)
+  const link_unit=return_value_link(data,d,'label_unit')
   if(getLinkValue===undefined){
-    console.log('stop')
-  }
-  const the_link_value = getLinkValue(data, d.idLink).value
-  if (data.show_structure === 'structure' ) {
     return
   }
-  if (data.show_structure === 'data' ) {
-    const link_value = getLinkValue(data, d.idLink)
-    if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
-      return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value
-    } else {
+  const the_link_value = getLinkValue(data, d.idLink)
+  
+  // Si le flux n'est pas relié à un noeud unitaire alors sa valeur est de 100% 
+  if(k_n_u===undefined){
+    return '100%'
+  }else if(data.nodes[k_n_u].tags['Type de nœuds'] && data.nodes[k_n_u].tags['Type de nœuds'].includes('produit')){
+  // Si le flux est relié à un noeud unitaire et que ce noeud est un produit
+  // alors sa valeur est en % par rapport à la somme des flux entrant ou sortant
+
+    // Calcul le total des flux entrants entre eux et de même pour les sortants
+    const total_io=calc_total_input_output(data.nodes[k_n_u],data,getLinkValue)
+
+    if (data.show_structure === 'structure' ) {
       return
     }
-  }
-  if(!isNaN(the_link_value)){
-    const val=(data.unitary_node.includes(d.idSource)?((the_link_value/total_io[1])*100):((the_link_value/total_io[0])*100))
-    return (Number.isInteger(val)?Math.round(val):(val).toFixed(2))+'%'
+    if (data.show_structure === 'data' ) {
+      if ((the_link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
+        return (the_link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value
+      } else {
+        return
+      }
+    }
+    if(!isNaN(the_link_value.value)){
+      // Return value of link in %
+      // If the value has decimal, then fix it to 2 decimal
+      const val=(data.unitary_node.includes(d.idSource)?((the_link_value.value/total_io[1])*100):((the_link_value.value/total_io[0])*100))
+      return (Number.isInteger(val)?Math.round(val):(val).toFixed(2))+'%'
+    }else{
+      return '0%'
+    }
+
+  }else if(data.nodes[k_n_u].tags['Type de nœuds'] && data.nodes[k_n_u].tags['Type de nœuds'].includes('secteur') && link_ref.length>0){
+  // Si le flux est relié à un noeud unitaire et que ce noeud est un secteur
+  // alors 1 ou + flux peuvent être des références et sont utilisés pour normalisé les valeurs
+
+    // Les flux sont normalisé selont la somme des flux de référence
+    let sum=0
+    data.process_transfo_ref[k_n_u].forEach(p=>{
+      sum+=getLinkValue(data,p).value
+    })
+
+    const part_value=(the_link_value.value/sum)
+    const formated_value=(Number.isInteger(part_value)?Math.round(part_value):(part_value).toFixed(3))
+    return formated_value+link_unit
+
   }else{
-    return '0%'
+    // le noeud unitaire est un secteur mais qu'il n'a pas de flux de référence ou qu'il n'ai pas l'étiquette 'Type de noeud'
+    // alors il les affiche normalement 
+    return link_text(data,d,getLinkValue)
   }
 
     
@@ -1277,7 +1307,6 @@ const return_aggregation_parents_of_node=(n:SankeyPlusNode,nodes:{[x:string]:San
         found_fathers.push(nd[1].parent_name)
         return_aggregation_parents_of_node(nodes[nd[1].parent_name],nodes,found_fathers)
       }
-
     })
   }
 }
@@ -1298,3 +1327,90 @@ const return_aggregation_sons_of_node=((n:SankeyPlusNode,nodes:{[x:string]:Sanke
   })
   
 })
+
+export const modal_unitary_sankey_sector_node=(data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
+  show_modal_selection_link_ref_in_unitary_sankey:boolean,set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
+  t:TFunction,
+  selected_node_to_configure:string,
+  set_selected_node_to_configure:(s:string)=>void,
+  search_in_input_or_output:'inputLinksId'|'outputLinksId',
+  set_search_in_input_or_output:(s:string)=>void,
+  getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue
+)=>{
+  // Modale used to chose link as ref in the to unitary sankey view, those links come are linked to the unitary node
+  // We can select multiple links but only if they're all input or output (we can't select some input links and output link to be reference a the same )
+  let selected_id = [] as {label:string,value:string}[]
+  let option = [] as {label:string,value:string}[]
+
+  if(selected_node_to_configure && selected_node_to_configure!=='None'){
+    selected_id=data.process_transfo_ref[selected_node_to_configure]?data.process_transfo_ref[selected_node_to_configure].map(lidref=>{return{ 'label': lidref, 'value': lidref }} ):selected_id
+
+    option=data.nodes[selected_node_to_configure][search_in_input_or_output].filter(lid=>link_visible(data.links[lid],data,getLinkValue)).map(lid=>{
+      return { 'label': lid, 'value': lid }
+    })
+  }
+
+  const content_slectlink_ref=<Container style={{height:'400px'}}>
+    
+    <InputGroup>
+      <InputGroup.Text style={{width:'50%'}}>{t('view.chose_node_to_configure')}</InputGroup.Text>
+      <Form.Select
+        onChange={(evt)=>{
+          set_selected_node_to_configure(evt.target.value)
+        }}
+      >
+        <option value={undefined}>None</option>
+        {data.unitary_node.map(nid=>{
+
+          return <option value={data.nodes[nid].idNode}>{data.nodes[nid].name}</option>
+        })}
+      </Form.Select>
+    </InputGroup>
+    {
+      selected_node_to_configure && selected_node_to_configure!=='None' ?<>
+        <InputGroup>
+          <InputGroup.Text style={{width:'50%'}}>{t('view.chose_io')}</InputGroup.Text>
+          <Button style={{width:'25%'}} variant={search_in_input_or_output==='inputLinksId'?'primary':'outline-primary'}
+            onClick={()=>{
+              data.process_transfo_ref[selected_node_to_configure]=[]
+              set_search_in_input_or_output('inputLinksId')}}
+          >Input</Button>
+          
+          <Button style={{width:'25%'}} variant={search_in_input_or_output==='outputLinksId'?'primary':'outline-primary'}
+            onClick={()=>{
+              data.process_transfo_ref[selected_node_to_configure]=[]
+              set_search_in_input_or_output('outputLinksId')}}
+          >Output</Button>
+        </InputGroup>
+
+        <InputGroup>
+          <InputGroup.Text style={{width:'50%'}}>{t('view.chose_link_ref')}</InputGroup.Text>
+          <div  style={{width:'50%'}}>
+            <MultiSelect
+              className={'multidropdown_select_link_ref'}
+              // style={{ width:'50%' }}
+              labelledBy={'dropdown_link_filter'}
+              overrideStrings={{
+                'selectAll': 'Tout sélectionner',
+              }}
+              value={selected_id}
+              options={option}
+              onChange={(selected: [{ label: string, value: string }]) => {
+                data.process_transfo_ref[selected_node_to_configure]=[]
+
+                selected.forEach(s=>{
+                  data.process_transfo_ref[selected_node_to_configure].push(s.value)
+                })
+                set_data({...data})
+              }} />
+          </div>
+        </InputGroup>
+      </>:<></>
+    }
+    
+
+  </Container>
+
+  const dragLayout=show_modal_selection_link_ref_in_unitary_sankey?menu_draggable(content_slectlink_ref,{current:[window.innerWidth/4,window.innerHeight/4]},t('view.view_title_modal_select_link_ref_in_unitary_sankey'),set_show_modal_selection_link_ref_in_unitary_sankey,40):<></>
+  return dragLayout
+}
