@@ -291,6 +291,11 @@ export const open_resources = {
         align_vert:'Align nodes vertically',
         align_vert_min:'Relative to the selected topmost node',
         align_vert_max:'Relative to the selected node furthest down',
+        align_horiz_left:'Align to its left',
+        align_horiz_center:'Align to its center',
+        align_horiz_right:'Align to its right',
+        align_vert_top:'Align to its top',
+        align_vert_bottom:'Align to its bottom',
         tooltips:{
           Nom:'Change the name of the selected node. If several nodes are selected, this field is disabled',
           AS:'Allow to apply a predefined style in the preference menu to the selected node(s)',
@@ -859,6 +864,11 @@ export const open_resources = {
         align_vert:'Aligner les noeuds verticalement',
         align_vert_min:'Par rapport au noeud sélectionné le + en haut',
         align_vert_max:'Par rapport au noeud sélectionné le + en bas',
+        align_horiz_left:'À son côté gauche',
+        align_horiz_center:'À son centre',
+        align_horiz_right:'À son côté droit',
+        align_vert_top:'À son côté du dessus',
+        align_vert_bottom:'À son côté du dessous',
         tooltips:{
           Nom:'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
           AS:'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
