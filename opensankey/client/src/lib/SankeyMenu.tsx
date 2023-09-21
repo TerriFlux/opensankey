@@ -1619,17 +1619,36 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   if(contextualised_node!==undefined){
     style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
-  const align_node=(ref:'min'|'max',attr:'x'|'y')=>{
+
+  // b:before,m:middle,a:after
+  const align_node=(ref:'min'|'max',attr:'x'|'y',pos:'b'|'m'|'a')=>{
     const node_ref=multi_selected_nodes.current.filter(nf=>nf.position!='relative').sort((n1,n2)=>{
       return ref=='min'?n1[attr]-n2[attr]:n2[attr]-n1[attr]
     })[0]
     const pos_ref=node_ref[attr]
     const wORh=(attr=='x')?'width':'height'
-    const wORh_ref=(document.getElementById('shape_'+node_ref.idNode)?.getBoundingClientRect()[wORh]??0)
-    const center_ref=pos_ref+(wORh_ref/2)
+    const is_circle=d3.select('#shape_'+node_ref.idNode).attr('rx')!==null
+
+    const wORh_ref=is_circle?Number(d3.select('#shape_'+node_ref.idNode).attr('r'+attr)):Number(d3.select('#shape_'+node_ref.idNode).attr(wORh))
+    let center_ref=0
+    
+    if (pos==='m'){
+      center_ref=pos_ref+(wORh_ref/2)
+    }
+
     multi_selected_nodes.current.filter(n=>n!=node_ref && n.position!='relative').forEach(n=>{
-      const wORh_to_shift=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect()[wORh]??0)
-      n[attr]=center_ref-((wORh_to_shift)/2)
+
+      const is_circle_to_shift=d3.select('#shape_'+n.idNode).attr('rx')!==null
+      const wORh_to_shift=is_circle_to_shift?Number(d3.select('#shape_'+n.idNode).attr('r'+attr)):Number(d3.select('#shape_'+n.idNode).attr(wORh))
+      
+      if (pos==='m'){
+        n[attr]=center_ref-((wORh_to_shift)/2)
+      }else if(pos==='b'){
+        n[attr]=pos_ref
+      }else if(pos==='a'){
+        n[attr]=(pos_ref+wORh_ref)-wORh_to_shift
+
+      }
     })
   }
 
@@ -1730,7 +1749,51 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
     set_contextualised_node(undefined)
   }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>:<></>
 
+  const dropdown_c_n_align_h_min_ori=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.align_horiz_min')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item onClick={()=>{
+        align_node('min','x','b')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_left')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('min','x','m')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_center')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('min','x','a')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_right')}
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>:<></>
 
+  const dropdown_c_n_align_h_max_ori=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.align_horiz_max')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item onClick={()=>{
+        align_node('max','x','b')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_left')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('max','x','m')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_center')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('max','x','a')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_right')}
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>:<></>
 
 
   const dropdown_c_n_align_h=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
@@ -1738,15 +1801,59 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
       {t('Noeud.align_horiz')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
+      {dropdown_c_n_align_h_min_ori}
+      {dropdown_c_n_align_h_max_ori}
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+
+
+
+
+  // ===============ALIGNEMENT VERTICAL DES NOEUDS=======================================
+
+  const dropdown_c_n_align_v_min_ori=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.align_vert_min')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
       <Dropdown.Item onClick={()=>{
-        align_node('min','x')
+        align_node('min','y','b')
         set_data({...data})
-      }}>{t('Noeud.align_horiz_min')}
+      }}>{t('Noeud.align_vert_top')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
-        align_node('max','x')
+        align_node('min','y','m')
         set_data({...data})
-      }}>{t('Noeud.align_horiz_max')}
+      }}>{t('Noeud.align_horiz_center')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('min','y','a')
+        set_data({...data})
+      }}>{t('Noeud.align_vert_bottom')}
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>:<></>
+
+  const dropdown_c_n_align_v_max_ori=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.align_vert_max')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+      <Dropdown.Item onClick={()=>{
+        align_node('max','y','b')
+        set_data({...data})
+      }}>{t('Noeud.align_vert_top')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('max','y','m')
+        set_data({...data})
+      }}>{t('Noeud.align_horiz_center')}
+      </Dropdown.Item>
+      <Dropdown.Item onClick={()=>{
+        align_node('max','y','a')
+        set_data({...data})
+      }}>{t('Noeud.align_vert_bottom')}
       </Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>:<></>
@@ -1756,16 +1863,8 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
       {t('Noeud.align_vert')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
-        align_node('min','y')
-        set_data({...data})
-      }}>{t('Noeud.align_vert_min')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('max','y')
-        set_data({...data})
-      }}>{t('Noeud.align_vert_max')}
-      </Dropdown.Item>
+      {dropdown_c_n_align_v_min_ori}
+      {dropdown_c_n_align_v_max_ori}
     </Dropdown.Menu>
   </Dropdown>:<></>
 
@@ -2105,6 +2204,8 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
     set_show_menu_link_data(true)
     set_contextualised_node(undefined)
   }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
+
+
 
   // Pop over that serve as context menu
   return contextualised_link!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
