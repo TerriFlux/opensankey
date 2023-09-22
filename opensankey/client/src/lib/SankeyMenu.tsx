@@ -1089,10 +1089,11 @@ const Menu: FunctionComponent<MenuTypes> = (
         } catch(err) {
           alert(err)
         }
+      }).then(r=>{
+        setIsComputing(false)
       })
     })
     setProcessing(false)
-    setIsComputing(false)
     setFailure(false)
     setNotStarted(true)
   }
