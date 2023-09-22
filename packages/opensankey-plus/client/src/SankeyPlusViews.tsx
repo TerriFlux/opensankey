@@ -1371,7 +1371,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </Button>
 
   </span>
-  const has_sector_ref_node_ins_unitary_view=data.unitary_node.length>0 && data.unitary_node.filter(nid=>data.nodes[nid].tags['Type de nœuds']&&data.nodes[nid].tags['Type de nœuds'].includes('secteur')).length>0
+  const has_sector_ref_node_ins_unitary_view=data.unitary_node.length>0 && data.unitary_node.filter(nid=>data.nodes[nid].tags['Type de noeud']&&data.nodes[nid].tags['Type de noeud'].includes('secteur')).length>0
 
   return <><Overlay
     key={'popover-link-filter'}

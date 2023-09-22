@@ -883,7 +883,7 @@ export const context_node_view_node_unitary=(
       n[1].inputLinksId=n[1].inputLinksId.filter(il=>k_l_t_k.includes(il))
 
       // Keep tag that refernece levelTag && tag of group tag 'Type de noeud'
-      n[1].tags=Object.fromEntries(Object.entries(n[1].tags).filter(nt=>nt[0]==='Type de nœuds' || k_level_tag.includes(nt[0])))
+      n[1].tags=Object.fromEntries(Object.entries(n[1].tags).filter(nt=>nt[0]==='Type de noeud' || k_level_tag.includes(nt[0])))
 
       n[1].colorTag='no_colormap'
       n[1].colorParameter='local'
@@ -897,7 +897,7 @@ export const context_node_view_node_unitary=(
     const nodes_to_keep=all_nodes_in_unitary_sankey
 
     // Normalize data
-    new_unitary_sankey.nodeTags=Object.fromEntries(Object.entries(new_unitary_sankey.nodeTags).filter(nt=>nt[0]==='Type de nœuds').map(nt=>nt))
+    new_unitary_sankey.nodeTags=Object.fromEntries(Object.entries(new_unitary_sankey.nodeTags).filter(nt=>nt[0]==='Type de noeud').map(nt=>nt))
     new_unitary_sankey.fluxTags={}
     new_unitary_sankey.dataTags={}
     // new_unitary_sankey.levelTags={}
@@ -985,7 +985,7 @@ export const context_node_view_node_unitary=(
 
     // Info from data source in ZDT
     let content_zdt=''
-    const type_node=(contextualised_node.tags['Type de nœuds']!==undefined)?('('+contextualised_node.tags['Type de nœuds'].join(',')+')'):''
+    const type_node=(contextualised_node.tags['Type de noeud']!==undefined)?('('+contextualised_node.tags['Type de noeud'].join(',')+')'):''
     const name_view=(master_data.current_view && master_data.current_view!=='none')?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:t('Menu.home')
     content_zdt='<p>'+t('view.template_unitary_zdt_content')+' <strong>'+name_view+' </strong></p>'
     content_zdt+='<p>'+t('view.template_unitary_zdt_content_of_node')+' <strong>'+contextualised_node.name+type_node+' </strong></p>'
@@ -1210,7 +1210,7 @@ export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
   // Si le flux n'est pas relié à un noeud unitaire alors sa valeur est de 100% 
   if(k_n_u===undefined){
     return '100%'
-  }else if(data.nodes[k_n_u].tags['Type de nœuds'] && data.nodes[k_n_u].tags['Type de nœuds'].includes('produit')){
+  }else if(data.nodes[k_n_u].tags['Type de noeud'] && data.nodes[k_n_u].tags['Type de noeud'].includes('produit')){
   // Si le flux est relié à un noeud unitaire et que ce noeud est un produit
   // alors sa valeur est en % par rapport à la somme des flux entrant ou sortant
 
@@ -1236,7 +1236,7 @@ export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
       return '0%'
     }
 
-  }else if(data.nodes[k_n_u].tags['Type de nœuds'] && data.nodes[k_n_u].tags['Type de nœuds'].includes('secteur') && link_ref.length>0){
+  }else if(data.nodes[k_n_u].tags['Type de noeud'] && data.nodes[k_n_u].tags['Type de noeud'].includes('secteur') && link_ref.length>0){
   // Si le flux est relié à un noeud unitaire et que ce noeud est un secteur
   // alors 1 ou + flux peuvent être des références et sont utilisés pour normalisé les valeurs
 
