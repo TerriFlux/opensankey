@@ -48,6 +48,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       <Button variant='info'
         disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
         onClick={() => {
+          sessionStorage.removeItem('modepref')
           data.accordeonToShow = ['MEP']
           set_data({ ...data })
 
@@ -56,6 +57,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       <Button variant='dark'
         disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
         onClick={() => {
+          sessionStorage.setItem('modepref','expert')
           data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
           set_data({ ...data })
         }}
