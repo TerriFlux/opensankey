@@ -32,3 +32,15 @@ La barre d'édition est un ensemble de bouton permettant de faciliter certaines 
     :maxdepth: 2
 
     user_tools_edition_banner
+
+
+Menu de navigation
+==================
+
+.. image:: _static/navbar_file.PNG
+   :align: center
+
+.. toctree::
+    :maxdepth: 2
+
+    user_navbar

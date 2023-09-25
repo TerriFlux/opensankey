@@ -14,18 +14,6 @@ Bouton de sélection
 Ce mode permet de sélectionner des élements du diagramme tel que les noeuds,flux et labels libre (via Ctrl+click) et de les déplacer en les draggant
 
 
-Bouton d'ajout de noeud
-===========================
-
-.. image:: _static/add_node.PNG
-   :align: left
-   :width: 20
-   :height: 20
-
-
-Ce mode permet de d'ajouter des noeuds qu click sur la zone de dessin.
-
-
 Bouton d'ajout de flux et noeud
 ===================================
 
@@ -41,7 +29,46 @@ Ce mode permet :
 * soit créer un noeud au click et/ou relachement de la souris
 
 
-Sur la partie droite  de la barre d'édition ce trouve des filtres et autres boutons modifiant la visualisation du diagramme sans modifier cette dernière.
+
+
+Bouton du choix des niveau d'agrégation du sankey
+=================================================
+
+.. image:: _static/aggregation_button.PNG
+   :align: left
+   :width: 20
+   :height: 20
+
+
+Ce boutton permet de choisir les niveau d'agrégation des différents groupes d'agrégation, les groupes d'agrégations sont une hiérarchie entre les noeuds, ces groupes ne peuvent être formés qu'à partir d'un fichier excel.
+
+
+Bouton pour ouverture du pop-up de seuil des flux
+=================================================
+
+.. image:: _static/link_threshold_button.PNG
+   :width: 20
+   :height: 20
+
+
+Pop-up de seuil des flux
+------------------------
+
+.. image:: _static/link_threshold.PNG
+   :align: center
+
+Le pop-up permete de modifier les variables concernant l'affichage des flux :
+
+* **L'échelle**: Permet de reduire ou augumenter l'échelle du diagramme et ainsi modifier l'épaisseur des flux 
+* **La taille max des flux**: Permet choisir l'épaisseur maximum des flux en px 
+* **La taille min des flux**: Permet choisir l'épaisseur minimale des flux en px 
+
+* **Seuil d'affichage des flux**: Permet choisir un seuil de valeurs des flux sous lequel les flux ne sont pas affichés
+* **Seuil d'affichage des labels**: Permet choisir un seuil de valeurs des flux sous lequel les labels de flux ne sont pas affichés
+* **Afficher les flux nul**: Permet d'afficher les flux qui ont pour valeur 0, par défaut les flux n'ont pas de valeur et sont donc affichés en pointillés pour montrer qu'ils n'ont pas d'informations 
+
+
+
 
 Filtres noeuds
 ==================
@@ -65,32 +92,19 @@ Filtres sur les étiquettes de données
 
 Ce bouton permet de filtrer les valeurs de flux, on peut sélectionner une pour plusieurs étiquettes de données qui affichera plusieurs fois le même flux avec les différentes valeurs (`*voir Groupe d'étiquette* <user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes>`__)
 
-Filtrer les valeur de flux
-==========================
-
-.. image:: _static/link_threshold.PNG
-
-Ce bouton d'appliquer un filtre sur les flux pour masquer les flux et/ou labels qui sont inférieur à la valeur sélectionné.
-On peut aussi modifier l'échelle du diagramme et afficher les flux qui ont comme valeur 0.
-
 
 Réajuster la taille du diagramme
 ================================
 
 .. image:: _static/adjust_size.PNG
 
-Permets de réajuster le diagramme de telle sorte qu'il ce que le noeud le plus à droite soit visible sans avoir à dézoomer
+Permets de réajuster la zone de dessin afin que le diagramme soit visible soit :
+
+* Du noeud le plus à gauche au noeud le plus à droite
+* Du noeud le plus en haut au noeud le plus en bas
 
 
 Mode structure
 ==============
 
 .. image:: _static/structure_mode.PNG
-
-
-Aide
-====
-
-.. image:: _static/help_banner.PNG
-
-Permets d'afficher de l'aide
