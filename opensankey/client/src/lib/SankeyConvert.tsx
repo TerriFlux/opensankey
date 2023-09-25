@@ -785,30 +785,30 @@ export const convert_nodes = (
         delete n_convert.shape_visible
         //delete n_convert.display
       }
-      if(n_convert.shape){
+      if(n_convert.shape && ((n.local && n.local.shape==undefined) || n.local===undefined)){
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         n.local.shape=(n_convert.shape)
         delete n_convert.shape
 
       }
-      if(n_convert.node_width){
+      if(n_convert.node_width && ((n.local && n.local.node_width==undefined) || n.local===undefined)){
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         n.local.node_width=(n_convert.node_width)
         delete n_convert.node_width
 
       }
-      if(n_convert.node_height){
+      if(n_convert.node_height && ((n.local && n.local.node_height==undefined) || n.local===undefined)){
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         n.local.node_height=(n_convert.node_height)
         delete n_convert.node_height
       }
 
-      if(n_convert.color){
+      if(n_convert.color && ((n.local && n.local.color==undefined) || n.local===undefined)){
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         n.local.color=(n_convert.color)
         delete n_convert.color
       }
-      if(n_convert.colorSustainable){
+      if(n_convert.colorSustainable && ((n.local && n.local.colorSustainable==undefined) || n.local===undefined)){
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         n.local.colorSustainable=(n_convert.colorSustainable)
         delete n_convert.colorSustainable
@@ -827,7 +827,7 @@ export const convert_nodes = (
         delete n_convert.type
       }
 
-      if (n_convert.label_visible) {
+      if (n_convert.label_visible && ((n.local && n.local.label_visible==undefined) || n.local===undefined)) {
         n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         n.local.label_visible=(n_convert.label_visible as boolean)
       }
