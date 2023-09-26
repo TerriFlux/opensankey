@@ -892,7 +892,7 @@ export const default_link_style=()=>{
     right_horiz_shift: 0.95,
     vert_shift: 0,
     opacity:0.85,
-    to_precision:true,
+    to_precision:false,
     scientific_precision:5,
     arrow_size:10,
     font_family: 'Arial,serif',
