@@ -6,23 +6,18 @@ import openpyxl
 import tempfile
 import os
 import json
-import imgkit
-import pdfkit
-import re
+
 import pandas as pd
 try:
     import pythoncom
     pythoncom.CoInitialize()
 except Exception:
     pass
-
 # External modules
 from threading import Thread
 
 # Flask modules imports
-from flask import abort
 from flask import Blueprint
-from flask import current_app
 from flask import request
 from flask import Response
 from flask import send_file
@@ -73,179 +68,6 @@ image_template_folder = os.path.join(
 
 # ---------------------------------------------------------------
 # Define all routes
-@opensankey.route('/sankey/save_svg', methods=['POST'])
-def save_svg():
-    '''
-    HTTP POST request to save current sankey as PNG
-
-    Input : Data as html (current page)
-
-    Output : Send png file
-    '''
-    # Launch conversion
-    filename = "tutu.svg"
-    try:
-        svg_str = request.files['svg'].read().decode('UTF-8')
-        # Deal with eol
-        svg_str = svg_str.replace('\n', '<br/>')
-        svg_str = svg_str.replace('<br>', '<br/>')
-        svg_str = svg_str.replace(';=""', '')
-        # Deal with Foreign objects // texts
-        for _ in \
-            ['div', 'b', 'i', 'p', 's', 'a', 'u',
-             'li', 'ul', 'ol',
-             'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-             'strong', 'center']:
-            svg_str = svg_str.replace('<'+_+' ', '<xhtml:'+_+' ')
-            svg_str = svg_str.replace('<'+_+'>', '<xhtml:'+_+'>')
-            svg_str = svg_str.replace('</'+_+' ', '</xhtml:'+_+' ')
-            svg_str = svg_str.replace('</'+_+'>', '</xhtml:'+_+'>')
-        # Deal with foreign objects // embedded objects
-        for _ in ['input', 'img']:
-            for match in re.finditer(r"<{}[ A-zÀ-ú0-9\"\'\(\)\-_:;.,+/=]+>".format(_), svg_str):
-                match_str = match[0]
-                sub_match_str = match_str.replace('<{}'.format(_), '')
-                new_match_str = '<xhtml:{}'.format(_)+sub_match_str+'</xhtml:{}>'.format(_)
-                svg_str = svg_str.replace(match_str, new_match_str)
-        # Deal with Textpaths
-        for match in re.finditer(r"<textPath[ A-zÀ-ú0-9\"\'\(\)\-=#%_]*", svg_str):
-            match_str = match[0]
-            new_str = match_str.replace('href', 'xlink:href')
-            svg_str = svg_str.replace(match_str, new_str)
-        with open(filename, 'w') as f:
-            f.write(svg_str)
-    except Exception as e:
-        current_app.logger.error('SAVE_SVG | {0}'.format(e))
-        abort(500)
-    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
-
-
-@opensankey.route('/sankey/save_png', methods=['POST'])
-def save_png():
-    '''
-    HTTP POST request to save current sankey as PNG
-
-    Input : Data as html (current page)
-
-    Output : Send png file
-    '''
-    # Launch conversion
-    filename = "tutu.png"
-    try:
-        html_as_str = '<meta charset="utf-8">' + request.files['html'].read().decode('UTF-8')
-        # Deal with Textpaths
-        for match in re.finditer(r"<textPath[ A-zÀ-ú0-9\"\'\(\)\-=#%_]*", html_as_str):
-            match_str = match[0]
-            new_str = match_str.replace('href', 'xlink:href')
-            html_as_str = html_as_str.replace(match_str, new_str)
-        # Convert as pdf
-        imgkit.from_string(html_as_str, filename)
-    except Exception as e:
-        current_app.logger.error('SAVE_PNG | {0}'.format(e))
-        abort(500)
-    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
-
-
-# Create opensanker app routes
-@opensankey.route('/sankey/save_pdf', methods=['POST'])
-def save_pdf():
-    '''
-    HTTP POST request to save current sankey as PDF
-
-    Input : Data as html (current page)
-
-    Output : Send pdf file
-    '''
-    # Launch conversion with pdfkit
-    filename = "tutu.pdf"
-    try:
-        html_as_str = '<meta charset="utf-8">' + request.files['html'].read().decode('UTF-8')
-        # Deal with Textpaths
-        for match in re.finditer(r"<textPath[ A-zÀ-ú0-9\"\'\(\)\-=#%_]*", html_as_str):
-            match_str = match[0]
-            new_str = match_str.replace('href', 'xlink:href')
-            html_as_str = html_as_str.replace(match_str, new_str)
-        # Convert as pdf
-        options = {
-            'margin-top': '1cm',
-            'margin-right': '1cm',
-            'margin-bottom': '1cm',
-            'margin-left': '1cm',
-            'orientation': 'Landscape',
-            'disable-smart-shrinking': '',
-            'page-height': request.form['height']+'px',
-            'page-width': request.form['width']+'px'}
-        pdfkit.from_string(html_as_str, filename, options=options)
-    except Exception as e:
-        current_app.logger.error('SAVE_PDF | {0}'.format(e))
-        abort(500)
-    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
-
-
-@opensankey.route('/sankey/clean_svg', methods=['POST'])
-def clean_svg():
-    '''
-    HTTP POST request to remove remaining generated png image
-
-    Input : None
-
-    Output :
-        - Response 200 : OK
-        - Response 500 : Unknown exception
-    '''
-    return clean_file("tutu.svg", "CLEAN_SVG")
-
-
-@opensankey.route('/sankey/clean_png', methods=['POST'])
-def clean_png():
-    '''
-    HTTP POST request to remove remaining generated png image
-
-    Input : None
-
-    Output :
-        - Response 200 : OK
-        - Response 500 : Unknown exception
-    '''
-    return clean_file("tutu.png", "CLEAN_PNG")
-
-
-@opensankey.route('/sankey/clean_pdf', methods=['POST'])
-def clean_pdf():
-    '''
-    HTTP POST request to remove remaining generated pdf image
-
-    Input : None
-
-    Output :
-        - Response 200 : OK
-        - Response 500 : Unknown exception
-    '''
-    return clean_file("tutu.pdf", "CLEAN_PDF")
-
-
-def clean_file(filename, fctname):
-    '''
-    Delete a given file from server.
-
-    Input :
-        - filename (String) : File to be delete
-        - fctname (String) : Name of the calling function for error logging
-
-    Output :
-        - 200 : OK
-        - 500 : Unknown exception
-    '''
-    # Try to remove file
-    try:
-        os.remove(filename)
-    except FileNotFoundError:
-        current_app.logger.debug("{0} | No file {1} found".format(fctname, filename))
-    except Exception as e:
-        current_app.logger.error("{0} | Error : {1}".format(fctname, e))
-        abort(500)
-    # Everything is fine
-    return Response(status=200)
 
 
 @opensankey.route('/sankey/save_excel', methods=['POST'])

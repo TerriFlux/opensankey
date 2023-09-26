@@ -6,7 +6,6 @@ import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, Toggl
 import { SankeyDataPropTypes,  SankeyData,TagsGroup,TagsCatalog,SankeyLink,SankeyNode,SankeyLinkValue} from './types'
 
 import { complete_sankey_data } from './SankeyConvert'
-import FileSaver from 'file-saver'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
 import * as SankeyUtils from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
@@ -15,7 +14,7 @@ import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDi
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
-import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileExport, faTrashCan, faFileInvoice, faPenToSquare,faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
+import { faFloppyDisk,faGears,faFolderOpen, faDownload, faTrashCan, faFileInvoice, faPenToSquare,faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {addAllDropDownNode} from './SankeyMenuBanner'
 import { reorganize_inputLinksId } from './SankeyLayout'
@@ -131,171 +130,6 @@ const MenuPropTypes = {
 
 }
 
-const pre_process_export_svg=()=>{
-  // Resize the svg scale to be the scale by default
-  const svg =window.d3.select(' .opensankey#svg-container svg')
-  // svg.attr('transform','scale(1)')
-  // svg.select('#g_legend').attr('transform','scale(1)')
-
-  // Get size of g elements that contain visual content
-  // const g_nodes=document.getElementById('g_nodes')
-  // const size_nodes = (g_nodes) ? [(g_nodes.getBoundingClientRect().width+g_nodes.getBoundingClientRect().x),(g_nodes.getBoundingClientRect().height+g_nodes.getBoundingClientRect().y)] : [0,0]
-
-  // const g_links=document.getElementById('g_links')
-  // const size_links = (g_links) ? [(g_links.getBoundingClientRect().width+g_links.getBoundingClientRect().x),(g_links.getBoundingClientRect().height+g_links.getBoundingClientRect().y)] : [0,0]
-
-  // const g_label=document.getElementById('g_label')
-  // const size_label = (g_label) ? [(g_label.getBoundingClientRect().width+g_label.getBoundingClientRect().x),(g_label.getBoundingClientRect().height+g_label.getBoundingClientRect().y)] : [0,0]
-
-  // Search the element that go to the most bottom right of the sankey
-  // const export_dim_unscaled=[Math.max(size_nodes[0],size_links[0],size_label[0]),Math.max(size_nodes[1],size_links[1],size_label[1])]
-  // Resize the svg width and height with the minimum value it require to display the elements
-  // svg.style('width',export_dim_unscaled[0]+'px')
-  // svg.style('height',export_dim_unscaled[1]+'px')
-
-  // Hidde non-essential visual elements
-  svg.selectAll('.sankey-tooltip').remove()
-  svg.selectAll('text[visibility=hidden]').remove()
-  svg.style('border','0px')
-  svg.style('background-color','#fff')
-  svg.select('#grid').style('opacity','0')
-  svg.selectAll('.box_width_threshold').remove()
-  d3.selectAll('.gg_nodes rect').attr('stroke-width',0)
-  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0').attr('fill-opacity', '0')
-  d3.selectAll('.opensankey .gg_label rect').attr('stroke-width','1')
-
-  return svg
-}
-
-const post_process_export_svg=()=>{
-  window.d3.select(' .opensankey#svg-container svg').style('background-color','inherit')
-  window.d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity','1')
-  window.d3.select(' .opensankey#svg-container svg').style('border','2px')
-}
-
-
-export const clickSaveSVG = () => {
-  const svg = pre_process_export_svg()
-  const html = ((svg.attr('title', 'test2')
-    .attr('version', 1.1)
-    .attr('xmlns', 'http://www.w3.org/2000/svg')
-    .attr('xhtml', 'http://www.w3.org/1999/xhtml')
-    .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-    .attr('xmlns:xhtml', 'http://www.w3.org/1999/xhtml')
-    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-
-  const blob = new Blob([html], { type: 'image/svg+xml' })
-  const form_data = new FormData()
-  form_data.append('svg', blob)
-
-  post_process_export_svg()
-
-  const path = window.location.href
-  let url = path + '/opensankey/sankey/save_svg'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/svg' })
-    FileSaver.saveAs(newBlob, 'sankey_diagram.svg')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = path + '/opensankey/sankey/clean_svg'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
-}
-
-const clickSavePDF = (data:SankeyData) => {
-  const svg = pre_process_export_svg()
-  const html = ((svg.attr('title', 'test2')
-    .attr('version', 1.1)
-    .attr('xmlns', 'http://www.w3.org/2000/svg')
-    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-
-  const blob = new Blob([html], { type: 'image/svg+xml' })
-  const form_data = new FormData()
-  form_data.append('html', blob)
-  form_data.append('width', data.width.toString())
-  form_data.append('height', data.height.toString())
-
-  post_process_export_svg()
-
-  const path = window.location.href
-  let url = path + '/opensankey/sankey/save_pdf'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/pdf' })
-    FileSaver.saveAs(newBlob, 'sankey_diagram.pdf')
-  }
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = path + '/opensankey/sankey/clean_pdf'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
-}
-
-const clickSavePNG = () => {
-  const svg = pre_process_export_svg()
-  const html = ((svg.attr('title', 'test2')
-    .attr('version', 1.1)
-    .attr('xmlns', 'http://www.w3.org/2000/svg')
-    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-
-  const blob = new Blob([html], { type: 'image/svg+xml' })
-  const form_data = new FormData()
-  form_data.append('html', blob)
-
-  post_process_export_svg()
-
-  const path = window.location.href
-  let url = path + '/opensankey/sankey/save_png'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/png' })
-    FileSaver.saveAs(newBlob, 'sankey_diagram.png')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = path + '/opensankey/sankey/clean_png'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
-}
 
 const goToUserDoc = () => {
   const path = window.location.href
@@ -541,6 +375,7 @@ export const OpenSankeyMenus = (
   set_show_modalTemplate:(b:boolean)=>void,
   set_show_modale_support:(b:boolean)=>void,
   external_edition_item:JSX.Element[],
+  external_file_item:JSX.Element[],
   externale_save_item:JSX.Element[],
   set_tags_selected:(o:{[x:string]:string})=>void,
   convert_data:(d:SankeyData)=>void
@@ -816,7 +651,6 @@ export const OpenSankeyMenus = (
   </>
 
 
-
   const logo_tempalte=<svg xmlns="http://www.w3.org/2000/svg" aria-hidden='false' data-prefix='fas' className='svg-inline--fa' viewBox="0 0 24 24"><path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z"/></svg>
 
   const last_save=localStorage.getItem('last_save')
@@ -889,16 +723,9 @@ export const OpenSankeyMenus = (
           {externale_save_item}
         </Dropdown.Menu>
       </Dropdown>
-      <Dropdown className='buttonSubNav'drop='end'  id='exporter' >
-        <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faFileExport} /></Col><Col className='textIcon'>{t('Menu.exporter')}</Col></></Dropdown.Toggle>
-        <Dropdown.Menu>
-          <Dropdown.Item onClick={clickSaveSVG} >{t('Menu.exporter')} SVG</Dropdown.Item>
-          <Dropdown.Item onClick={()=>clickSavePDF(data)} >{t('Menu.exporter')} PDF</Dropdown.Item>
-          <Dropdown.Item onClick={()=>clickSavePNG()} >{t('Menu.exporter')} PNG</Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
       <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
       <Button size='sm' variant='light' onClick={() => { set_show_modalTemplate(true) }}>{<><Col>{logo_tempalte}</Col><Col className='textIcon'>{t('Menu.templates')}</Col></>}</Button>
+      {external_file_item}
       <OverlayTrigger
         key={'buttonCheckpoint'}
         placement={'left'}
@@ -1015,6 +842,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     is_computing, setIsComputing
   }
 ) => {
+
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
   let max_link_value = 0
