@@ -327,7 +327,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,reinitialization,SankeyUtils.default_sankey_data,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    set_show_modal_welcome,set_never_see_again,data,set_data,set_show_modalTemplate,set_show_modale_support,[],[],set_tags_selected,convert_data
+    set_show_modal_welcome,set_never_see_again,data,set_data,set_show_modalTemplate,set_show_modale_support,[],[],[],set_tags_selected,convert_data
   )
 
   sankey_menus['formation']=<>{()=>set_show_modale_tuto(true)}</>
