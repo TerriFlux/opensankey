@@ -745,6 +745,31 @@ export const SankeyMenuConfigurationLinksAppearence = (
             }}/>
         </OverlayTrigger>
       </InputGroup></>:<></>}
+    {/* Choose number of significant number */}
+    <InputGroup>
+      <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.NbPrecision')}</InputGroup.Text>
+      <OverlayTrigger
+        key={'flux.label.tooltips.14'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'flux.label.tooltips.14'}>{t('Flux.label.tooltips.NbPrecision')} </Tooltip>}>
+        <Form.Control
+          style={{width:'30%'}}
+          type='number'
+          min={0}
+          step={1}
+          value={allLinkLabelScientificPrecision()}
+          onChange={evt=>{
+            const value=+evt.target.value
+            if(!isNaN(value)){
+              const val=isNaN(value) || value<=0?5:Math.round(value)
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'scientific_precision',val,menu_for_style))
+              set_data({...data})
+            }
+           
+          }}/>
+      </OverlayTrigger>
+    </InputGroup>
 
     {/* Choix d'affichage en notation scientifique  */}
     <InputGroup>
@@ -770,29 +795,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
       </OverlayTrigger>
     </InputGroup>
 
-    {isAllLinkToPrecision()?<>  {/* Choose number of scientific number */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.NbPrecision')}</InputGroup.Text>
-        <OverlayTrigger
-          key={'flux.label.tooltips.14'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.14'}>{t('Flux.label.tooltips.NbPrecision')} </Tooltip>}>
-          <Form.Control
-            style={{width:'30%'}}
-            type='number'
-            min={1}
-            step={1}
-            disabled={!isAllLinkToPrecision()}
-            value={allLinkLabelScientificPrecision()}
-            onChange={evt=>{
-              const value=+evt.target.value
-              const val=isNaN(value) || value<=0?5:Math.round(value)
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'scientific_precision',val,menu_for_style))
-              set_data({...data})
-            }}/>
-        </OverlayTrigger>
-      </InputGroup></>:<></>}
+    {isAllLinkToPrecision()?<>  
+    </>:<></>}
     {/* Choix d'affichage du nombre de chiffre après la virgule  */}
     <InputGroup>
       <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.custom_digit')}</InputGroup.Text>

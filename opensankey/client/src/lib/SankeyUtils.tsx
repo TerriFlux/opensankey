@@ -495,6 +495,12 @@ export const link_text = (
       return
     }
   }
+  
+  const nb_sign=(return_value_link(data,d,'scientific_precision') as number)
+  if(nb_sign>0){
+    the_link_value=parseFloat(the_link_value.toPrecision(nb_sign))
+  }
+
   if((return_value_link(data,d,'to_precision'))){
     the_link_value =toPrecision(the_link_value,(return_value_link(data,d,'scientific_precision') as number))
   }else if (return_value_link(data,d,'custom_digit')){
@@ -503,6 +509,7 @@ export const link_text = (
   const unit=return_value_link(data,d,'label_unit_visible')?return_value_link(data,d,'label_unit'):''
   return the_link_value+unit
 }
+
 
 
 export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
