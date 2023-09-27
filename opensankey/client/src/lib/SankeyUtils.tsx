@@ -128,6 +128,7 @@ export const getLinkValue = (
 }
 
 /**
+ * Outputs max value from a given link dict.
  *
  * @param {number} max_node_value
  * @param {SankeyLinkValueDict} value_dict
@@ -138,19 +139,30 @@ export const findMaxLinkValue = (
   value_dict: SankeyLinkValueDict
 ) => {
   let new_max_node_value = max_node_value
-  if (value_dict === undefined || Object.values(value_dict).length == 0) {
+  // If input does not exist or does not contain any info, return
+  if (value_dict === undefined || Object.values(value_dict).length === 0) {
     return new_max_node_value
   }
+  // We need a recurrence here, because values are at the bottom of nested dicts (datatags)
+  // Such as :
+  // 'value': {
+  //   'value': {
+  //     ... {
+  //           'value': float
+  //           ... }
+  //     ... }
+  //   ... }
   const child = Object.values(value_dict)[0]
   if (typeof child === 'object') {
+    // Each link can contain multiple values, so we loop on each dict entry
     Object.values(value_dict).forEach(v => {
       const cur_max_value = findMaxLinkValue(new_max_node_value, (v as unknown) as SankeyLinkValueDict)
-      new_max_node_value = cur_max_value > new_max_node_value ? cur_max_value : new_max_node_value
+      new_max_node_value = (cur_max_value > new_max_node_value) ? cur_max_value : new_max_node_value
     })
-  } else {
+  }
+  else { // If we reached the value, we can compare with ref max value
     const tmp=(value_dict as SankeyLinkValue).value
     new_max_node_value = (tmp && (tmp > new_max_node_value)) ? tmp : new_max_node_value
-
   }
   return new_max_node_value
 }
@@ -1054,8 +1066,9 @@ export const delete_node = (
 type layout_type = {
   layout: SankeyData
 }
-// Download example from server
+
 /**
+ * Download examples from server
  *
  * @param {string} file_name
  * @param {string} the_url_prefix
@@ -1090,7 +1103,7 @@ export const downloadExamples = (
  * @returns {*}
  */
 export const processExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[])=>void,
-  convert_data:(d:SankeyData)=>void,  
+  convert_data:(d:SankeyData)=>void,
 
 ) => {
   const data = default_sankey_data()
@@ -1466,16 +1479,29 @@ export const assign_node_style_attribute=(n:SankeyNodeStyle,k:keyof SankeyNodeSt
 }
 
 
-// The node is displayed if the tags attribued are also selected and either it has the general aggregation level selected
-// or it can have a local aggregation level selected that doesn't require the verify the general level selected
-export const node_displayed=(data:SankeyData,n:SankeyNode, skip_link_zero=false)=>{
-  const has_local_level=return_local_node_value(n,'local_aggregation') as boolean | undefined
-  let local_level=node_has_displayed_level(data,n)
+//
+
+/**
+ * The node is displayed if the tags attribued are also selected
+ * and either it has the general aggregation level selected or
+ * it can have a local aggregation level selected that
+ * doesn't require the verify the general level selected
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {SankeyNode} node Node to check
+ * @param {boolean} skip_link_zero
+ */
+export const node_displayed=(
+  data:SankeyData,
+  node:SankeyNode,
+  skip_link_zero=false
+)=>{
+  const has_local_level=return_local_node_value(node,'local_aggregation') as boolean | undefined
+  let local_level=node_has_displayed_level(data,node)
   if(has_local_level!==undefined && has_local_level!==null){
     local_level=has_local_level
   }
-
-  return node_has_displayed_tags(data,n) && ( local_level ) && ( skip_link_zero || has_links_zero(data,n))
+  return node_has_displayed_tags(data,node) && ( local_level ) && ( skip_link_zero || has_links_zero(data,node))
 }
 
 export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{

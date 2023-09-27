@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup} from 'react-bootstrap'
-import PropTypes, { InferProps } from 'prop-types'
+import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
+import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLinkValue,SankeyLink } from './types'
 import { delete_node,return_value_node,apply_style_to_nodes,add_new_node} from './SankeyUtils'
 import * as d3 from 'd3'
@@ -97,7 +97,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     return DD
   }
 
- 
+
 
 
 
@@ -244,7 +244,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     {(multi_selected_nodes.current.length !== 0) ? (
       <>
         <Tabs defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
-          {menu_configuration_nodes.map((c:JSX.Element)=>{
+          {menu_configuration_nodes.map((c: ReactElementLike)=>{
             return c})}
         </Tabs>
       </>) : (<></>)}

@@ -1,19 +1,45 @@
 import * as d3 from 'd3'
-import { SankeyNode, SankeyLink, SankeyData, SankeyDataPropTypes, SankeyLinkValue} from './types'
-import { findMaxLinkValue,node_displayed,assign_link_local_attribute,return_value_link, assign_node_local_attribute, compute_total_offsets, test_link_value, getLinkValue,return_value_node } from './SankeyUtils'
-import React,{ FunctionComponent, useState } from 'react'
+import {
+  SankeyNode,
+  SankeyLink,
+  SankeyData,
+  SankeyDataPropTypes,
+  SankeyLinkValue} from './types'
+import {
+  findMaxLinkValue,
+  node_displayed,
+  assign_link_local_attribute,
+  return_value_link,
+  assign_node_local_attribute,
+  compute_total_offsets,
+  test_link_value,
+  getLinkValue,
+  return_value_node } from './SankeyUtils'
+import React, { FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 
+/**
+ * Reorganize vertically all links
+ * to given node
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {SankeyNode} node Node on which input links positions must be reorganized
+ * @param {object} nodes Dict of node to reorganize
+ * @param {object} links Dict of links to reorganize
+ */
 export const reorganize_node_inputLinksId = (
-  data:SankeyData,
+  data: SankeyData,
   node: SankeyNode,
-  nodes: { [idNode:string]:SankeyNode},
-  links: { [idLink:string]:SankeyLink}
+  nodes: {[idNode:string]:SankeyNode},
+  links: {[idLink:string]:SankeyLink}
 ) => {
+  // Get list of input links of given node
   const input_links = Object.values(links).filter(
-    l => l.idTarget === node.idNode
+    link => (link.idTarget === node.idNode)
   )
+
+  // Sorting algorithm between two input links
   input_links.sort((l1, l2) => {
     const n1Id = l1.idSource
     const n2Id = l2.idSource
@@ -37,14 +63,14 @@ export const reorganize_node_inputLinksId = (
         if (l1_v_s && l1_v_s < 0) {
           return -1
         }
-        return 1        
+        return 1
       }
       if ( !l1_recy && l2_recy) {
         if (l2_v_s && l2_v_s < 0) {
           return 1
         }
-        return -1       
-      } 
+        return -1
+      }
       if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
         if (n1 && n2 && n1.x < n2.x) {
           return -1
@@ -75,15 +101,27 @@ export const reorganize_node_inputLinksId = (
   node.inputLinksId = input_links.map(l=>l.idLink)
 }
 
+/**
+ * Reorganize vertically all output links
+ * from given node
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {SankeyNode} node Node on which output links positions must be reorganized
+ * @param {object} nodes Dict of node to reorganize
+ * @param {object} links Dict of links to reorganize
+ */
 export const reorganize_node_outputLinksId = (
-  data:SankeyData,
+  data: SankeyData,
   node: SankeyNode,
-  nodes: { [idNode:string]:SankeyNode},
-  links: { [idLink:string]:SankeyLink}
+  nodes: {[idNode:string]: SankeyNode},
+  links: {[idLink:string]: SankeyLink}
 ) => {
+  // Get list of output links of given node
   const output_links = Object.values(links).filter(
     l => l.idSource === node.idNode
   )
+
+  // Sorting algorithm
   output_links.sort((l1, l2) => {
     const n1Id = l1.idTarget
     const n2Id = l2.idTarget
@@ -107,14 +145,14 @@ export const reorganize_node_outputLinksId = (
         if (l1_v_s && l1_v_s < 0) {
           return 1
         }
-        return -1        
+        return -1
       }
       if ( !l1_recy && l2_recy) {
         if (l2_v_s && l2_v_s < 0) {
           return 1
         }
-        return -1       
-      }      
+        return -1
+      }
       if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
         if (n1 && n2 && n1.x < n2.x) {
           return -1
@@ -162,19 +200,30 @@ export const reorganize_inputLinksId = (
   }
 }
 
+/**
+ * Synchronise input / ouput links ids of nodes
+ * with informations from links
+ *
+ * @param {SankeyNode} nodes
+ * @param {SankeyLink} links
+ */
 export const compute_default_input_outputLinksId = (
   nodes: { [node_id : string]:SankeyNode},
   links: { [link_id : string]:SankeyLink},
 ) => {
+  // Reset lists of input and ouput links for each nodes
   Object.values(nodes).forEach( n => {
     n.inputLinksId = []
     n.outputLinksId = []
   })
+  // Rewrite lists of input and ouput links for each nodes
+  // from links information
   Object.values(links).forEach(link => {
     nodes[link.idTarget].inputLinksId.push(link.idLink)
     nodes[link.idSource].outputLinksId.push(link.idLink)
   })
 }
+
 const normalize_name = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
   return new_name
@@ -200,7 +249,7 @@ export const apply_input_outputLinksId = (
           new_inputLinksId.push(idLink)
         }
       )
-      node.inputLinksId = new_inputLinksId 
+      node.inputLinksId = new_inputLinksId
       const new_outputLinksId: string[] = []
       ref_node.outputLinksId.forEach(
         (idLink) => {
@@ -216,35 +265,197 @@ export const apply_input_outputLinksId = (
   )
 }
 
-export const explore_branch = (
-  idNode: string,
-  current_length: number,
-  visited_nodes: string[],
-  links: { [link_id : string]:SankeyLink},
-  nodes: { [node_id : string]:SankeyNode},
-  visible_nodes: string[],
-  data:SankeyData
+/**
+ * Explore all node's branches to compute all their nodes horizontal index
+ *
+ * @param {SankeyNode} node Node to start exploring from
+ * @param {number} starting_index
+ * @param {string[]} visible_nodes_ids List of nodes (by their id) that are currently visible on Sankey diagram
+ * @param {string[]} visited_nodes_ids List of nodes (by their id) that have been visited. Helps to find recycling flux
+ * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
+ * @param {object} indexes_per_nodes_ids Current index for given node id
+ * @param {object} links
+ * @param {object} nodes
+ */
+export const compute_horizontal_index = (
+  node: SankeyNode,
+  starting_index: number,
+  visible_nodes_ids: string[],
+  visited_nodes_ids: string[],
+  recycling_links_ids: string[],
+  indexes_per_nodes_ids: { [node_id: string]: number },
+  links: { [link_id: string]: SankeyLink},
+  nodes: { [node_id: string]: SankeyNode},
 ) => {
-  let no_input_link = true
-  let highest_branch_length = current_length
-  nodes[idNode].inputLinksId.filter(linkId =>visible_nodes.includes(links[linkId].idSource)).forEach(linkId => {
-
-    const is_exchange_node=nodes[idNode].tags['Type de noeud'] !== undefined &&  nodes[idNode].tags['Type de noeud'].includes('echange')
-
-    if (visited_nodes.indexOf(idNode) === -1 && !is_exchange_node) {
-      no_input_link = false
-      const branch_length = explore_branch(links[linkId].idSource, current_length + 1, [...visited_nodes,idNode], links,nodes,visible_nodes,data)
-      if (branch_length > highest_branch_length) {
-        highest_branch_length = branch_length
+  // Do not compute for exchange nodes
+  const is_exchange_node = (
+    (node.tags['Type de noeud'] !== undefined) &&
+    (node.tags['Type de noeud'].includes('echange')))
+  if (!is_exchange_node) {
+    // Update node index
+    if (!indexes_per_nodes_ids[node.idNode]) {
+      indexes_per_nodes_ids[node.idNode] = starting_index
+    }
+    else {
+      if (starting_index > indexes_per_nodes_ids[node.idNode]) {
+        indexes_per_nodes_ids[node.idNode] = starting_index
       }
     }
-  })
-  if (no_input_link === true) {
-    return current_length
+    // From current node, use output links to
+    // recurse on following node
+    node
+      .outputLinksId
+      .filter(linkId =>
+        // Computes only for link to visible nodes
+        // and not for nodes related to recyling flux
+        (visible_nodes_ids.includes(links[linkId].idTarget) &&
+         !recycling_links_ids.includes(linkId)))
+      .forEach(linkId => {
+        // Next node to recurse on
+        const next_node = nodes[links[linkId].idTarget]
+        // But first we check if next node has not been already visited
+        if (!visited_nodes_ids.includes(next_node.idNode)) {
+          // Recursive calling
+          compute_horizontal_index(
+            next_node,
+            starting_index + 1,
+            visible_nodes_ids,
+            [...visited_nodes_ids, node.idNode],
+            recycling_links_ids,
+            indexes_per_nodes_ids,
+            links,
+            nodes)
+        }
+        else {
+          // If next node has already been visited then this means
+          // that link between current node and next node
+          // is a recycling flux
+          //
+          // To illustrate :
+          // -> This example count as recycling flux :
+          //    N0 - N11 - N21 - N3
+          //       \ N12 - N22 -
+          //          |         |
+          //           ---------
+          // -> But not this one :
+          //    N0 - N11 - N21 - N3
+          //       \ N12 - N22 \
+          //          |         |
+          //           ---------
+          recycling_links_ids.push(linkId)
+        }
+      })
   }
-  else {
-    return highest_branch_length
+}
+
+/**
+ * Recompte index for link taggued as recyling links
+ * We need to recompute positionning of next_node,
+ * because of recycling link, its position can be all wrong
+ * -> exemple
+ *
+ *     N0 - N11 - N21 - N3
+ *       \     \
+ *        N12 - N22 \
+ *         |         |
+ *          ---------
+ *
+ *    So we got N0->N11->N22->N12->N22 stop
+ *               0   1    2    3
+ *    And the link N12->N22 will be considered as
+ *    recycled link and we will get
+ *
+ *      N0 - N11 - N21 - N3
+ *        \      \
+ *         \       N22
+ *          \    /
+ *           \   -------------
+ *            \              |
+ *             --------- N12 -
+ *    So we need to recompute N12 index
+ *
+ * @param {SankeyLink} link Link that has been previoulsy taggued ass possible recyling link
+ * @param {string[]} visible_nodes_ids List of nodes (by their id) that are currently visible on Sankey diagram
+ * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
+ * @param {object} indexes_per_nodes_ids Current index for given node id
+ * @param {object} links
+ * @param {object} nodes
+ */
+export const compute_recycling_horizontal_index = (
+  link: SankeyLink,
+  visible_nodes_ids: string[],
+  recycling_links_ids: string[],
+  indexes_per_nodes_ids: { [node_id: string]: number },
+  links: { [link_id: string]: SankeyLink},
+  nodes: { [node_id: string]: SankeyNode},
+) => {
+  // Get id for source and target
+  const target_node_id = link.idTarget
+  const source_node_id = link.idSource
+  // Compute only if indexes for source >= index for target
+  // which can not be the case if these nodes have been reprocessed
+  // by this same function
+  if (indexes_per_nodes_ids[source_node_id] >= indexes_per_nodes_ids[target_node_id]) {
+    // For source node, check if there is a gap
+    // between its previous node itself
+    const indexes_before_source_node: number[] = []
+    let min_index = -1
+    nodes[source_node_id]
+      .inputLinksId
+      .forEach(input_link_id => {
+        const index = indexes_per_nodes_ids[links[input_link_id].idSource]
+        if (min_index >= 0) {
+          if (index < min_index) {
+            min_index = index
+          }
+        }
+        else {
+          min_index = index
+        }
+        indexes_before_source_node.push(index)
+      })
+    // If there is a gap, we recompute indexing
+    const source_index = indexes_per_nodes_ids[source_node_id]
+    for (let index=min_index+1; index<source_index; index++) {
+      if (!indexes_before_source_node.includes(index)) {
+        indexes_per_nodes_ids[source_node_id] = index
+        // TODO faut un forçage des indexs à suivre.
+        compute_horizontal_index(
+          nodes[source_node_id],
+          index,
+          visible_nodes_ids,
+          [],
+          recycling_links_ids,
+          indexes_per_nodes_ids,
+          links,
+          nodes)
+        break
+      }
+    }
   }
+}
+
+/**
+ * Detect empty horizontal indexes and shift everithing accordingly
+ *
+ * @param {number} max_horizontal_index
+ * @param {object} nodes_per_indexes
+ * @param {object} shifting_indexes
+ */
+export const continuum_of_horizontal_index = (
+  max_horizontal_index: number,
+  nodes_per_indexes: {[index: number]: SankeyNode[]},
+  shifting_indexes: {[index: number]: number}
+) => {
+  let shifting_value = 0
+  for (let index=0; index<=max_horizontal_index; index++) {
+    // If no nodes for this index, we have a hole
+    if (!nodes_per_indexes[index]) {
+      shifting_value += 1
+      shifting_indexes[index] = shifting_value
+    }
+  }
+  return shifting_value
 }
 
 export const arrangeNodes = (
@@ -261,213 +472,345 @@ export const arrangeNodes = (
   })
 }
 
+/**
+ * Calcul de la hauteur d'un noeud
+ *
+ * @param {SankeyNode} node Node to compute height from
+ * @param {SankeyData} data
+ * @param {Function} inv_scale
+ * @param {Function} scale
+ * @param {Function} getLinkValue
+ */
 export const nodeHeight = (
-  n: SankeyNode,
+  node: SankeyNode,
   data:SankeyData,
-  inv_scale:(t:number)=>number,
-  scale:(t:number)=>number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-
+  inv_scale: (t:number)=>number,
+  scale: (t:number)=>number,
+  getLinkValue: (data: SankeyData, idLink: string, up?: boolean)=>SankeyLinkValue
 ) => {
-  const res = compute_total_offsets(inv_scale,n, data, data.nodes, test_link_value,undefined,getLinkValue)
+  const res = compute_total_offsets(
+    inv_scale,
+    node,
+    data,
+    data.nodes,
+    test_link_value,
+    undefined,
+    getLinkValue)
   const [total_offset_height_left, total_offset_height_right] = res
   const node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right)
   //Hauteur des noeuds
-  if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
+  if ((res[0] === 0) &&
+      (res[1] === 0) &&
+      (res[2] === 0) &&
+      (res[3] === 0) || data.show_structure == 'structure') {
     // Hauteur des noeuds
     // return data.node_height
-    return return_value_node(data,n,'node_height') as number
+    return return_value_node(data, node, 'node_height') as number
   }
   return scale(node_size_s_height)
 }
 
+/**
+ * Calcul la plus longue branch
+ * Determination de la position horiz
+ * Determination de la position vericale
+ * Post-traitement ecart
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {number} h_space Horizontal spacing factor
+ */
 export const compute_auto_sankey = (
   data: SankeyData,
   h_space : number,
 ) => {
-  let max_horizontal_index = 0
+
+  // Positionning values
+  const v_space = data.v_space
+
+  // Calcul de la valeur max des flux
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
-    const new_max_link_value  = findMaxLinkValue(
-      max_link_value, 
+    // We use a function to max value for each link because
+    // each link can have multiple values
+    max_link_value = findMaxLinkValue(
+      max_link_value,
       link.value
     )
-    max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })
-  max_link_value += 1
+  max_link_value += 1 // Protection if all values are at 0
+
+  // Get scale from max value
   if (max_link_value !== 1) {
-    data.user_scale = Math.min(data.maximum_flux ? data.maximum_flux : max_link_value ,max_link_value)
+    data.user_scale = data.maximum_flux ? Math.min(data.maximum_flux, max_link_value): max_link_value
   }
 
+  // Define vertical scaling functions
+  const v_scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
+  const v_scale_inv = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+
+  // Reset input / ouput links id for each node
   compute_default_input_outputLinksId(data.nodes, data.links)
 
-  const vspace = data.v_space
-  let max_nodes_on_vertical = 0
-  const nodes2horizontal_indices: { [node_id:string] : number   } = {}
-  const horizontal_indices2nodes: { [i      :number] : SankeyNode[] } = {}
-  const visible_nodes = Object.values(data.nodes).filter(n=>node_displayed(data,n) && n.position !== 'relative' ).map(n=>n.idNode)
-  Object.values(visible_nodes).forEach(idNode => {
-    const horizontal_index = explore_branch(idNode, 0, [], data.links, data.nodes,visible_nodes, data)
-    nodes2horizontal_indices[idNode] = horizontal_index
-    if (!horizontal_indices2nodes[horizontal_index]) {
-      horizontal_indices2nodes[horizontal_index] = []
-    }
-    horizontal_indices2nodes[horizontal_index].push(data.nodes[idNode])
-    if (horizontal_indices2nodes[horizontal_index].length > max_nodes_on_vertical ) {
-      max_nodes_on_vertical = horizontal_indices2nodes[horizontal_index].length
-    }
-    if (horizontal_index > max_horizontal_index) {
-      max_horizontal_index = horizontal_index
-    }
-  })
+  // Get all visible nodes
+  const visible_nodes_ids = Object.values(data.nodes)
+    .filter(n => node_displayed(data, n) && (n.position !== 'relative'))
+    .map(n=>n.idNode)
 
-
-  const width = max_horizontal_index* h_space 
-  
-  for (let i = max_horizontal_index; i >= 0; i--) {
-    if (!horizontal_indices2nodes[i]) {
-      continue
-    } 
-    const to_splice : SankeyNode[] = []
-    horizontal_indices2nodes[i].forEach(node => {
-      if (node.outputLinksId.length === 0) {
-        assign_node_local_attribute(node,'label_horiz', 'right')
-        assign_node_local_attribute(node,'label_vert', 'middle')
-      } else if (node.inputLinksId.length === 0) {
-        assign_node_local_attribute(node,'label_horiz', 'left')
-        assign_node_local_attribute(node,'label_vert', 'middle')
-      } else {
-        assign_node_local_attribute(node,'label_horiz', 'left')
-        assign_node_local_attribute(node,'label_vert', 'middle')
-        assign_node_local_attribute(node,'label_background', true)        
-      }
-      if (node.inputLinksId.length === 0) {
-        let min_next_horizontal_index = max_horizontal_index+1
-        node.outputLinksId.forEach(
-          (idLink) => {
-            if ( node_displayed(data,data.nodes[data.links[idLink].idSource]) && node_displayed(data,data.nodes[data.links[idLink].idTarget])) {
-              const target_node = data.nodes[data.links[idLink].idTarget]
-              if (target_node === undefined ) {
-                return
-              }
-              if (nodes2horizontal_indices[target_node.idNode] < nodes2horizontal_indices[node.idNode]) {
-                return
-              }
-              if (nodes2horizontal_indices[target_node.idNode]<min_next_horizontal_index) {
-                min_next_horizontal_index = nodes2horizontal_indices[target_node.idNode]
-              }
-            }
-          })
-        if (nodes2horizontal_indices[node.idNode]<min_next_horizontal_index-1) {
-          to_splice.push(node)
-          // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
-          // ce qui lors de l'affectation d'une position x, ceux-ci sont négatif
-          nodes2horizontal_indices[node.idNode] = min_next_horizontal_index - 1
-          if (!horizontal_indices2nodes[min_next_horizontal_index - 1]) {
-            horizontal_indices2nodes[min_next_horizontal_index - 1] = []
-          }
-          horizontal_indices2nodes[min_next_horizontal_index - 1].push(node)
-        }
-      }
-    })
-    to_splice.forEach(node=>horizontal_indices2nodes[i].splice(horizontal_indices2nodes[i].indexOf(node),1))
-  }
-
-  for (let i =0 ; i <= max_horizontal_index; i++) {
-    if (!horizontal_indices2nodes[i] || (horizontal_indices2nodes[i] && horizontal_indices2nodes[i].length === 0)) {
-      for (let ii=i;ii<max_horizontal_index;ii++) {
-        if ( horizontal_indices2nodes[ii+1] && horizontal_indices2nodes[ii+1].length>0) {
-          horizontal_indices2nodes[i] = horizontal_indices2nodes[ii+1]
-          delete horizontal_indices2nodes[ii+1]
-          if (ii+1 === max_horizontal_index) {
-            max_horizontal_index = i
-          }
-          break
-        }
-      }
-    }
-  }
-  Object.entries(horizontal_indices2nodes).forEach(([key,val])=>val.forEach(n=>nodes2horizontal_indices[n.idNode]= +key))
-
-  // // Correction post indexation de la profondeur des noeud pour mettre tous les index positif (en additionnant tous les indices par le mini si il y en a un négatif,
-  // // par exemple :  si nodes2horizontal_indices[n.idNode]=2 et que le min est -2 alors le nouveau nodes2horizontal_indices[n.idNode]=4)
-  // if(Object.values(nodes2horizontal_indices).filter(x_i=>x_i<0).length>0){
-  //   const min_x=Object.values(nodes2horizontal_indices).sort()[0]
-  //   Object.entries(nodes2horizontal_indices).forEach(n=>nodes2horizontal_indices[n[0]]=n[1]+Math.abs(min_x))
-  // }
-  
-  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n =>{
-    n.x = max_horizontal_index !== 0 ? 50 + nodes2horizontal_indices[n.idNode] / max_horizontal_index * width : 50
-  }
-  )
-
-  Object.values(data.links).filter(l=>node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget])).forEach(l => {
-    if (nodes2horizontal_indices[l.idSource] >= nodes2horizontal_indices[l.idTarget]) {
-      assign_link_local_attribute(l,'recycling',true)
-    }
-  })
-
-  // Vertical position of vertical nodes
-  // compute total height of nodes that belong to the same column, then compute the spaces between them and their positions.
-  let max_vertical_offset = 0
-  for (let i = 0; i <= max_horizontal_index; i++) {
-    if (!horizontal_indices2nodes[i]) {
-      continue
-    } 
-    let vertical_space: number
-    let vertical_offset = 0
-    if (horizontal_indices2nodes[i].length > 0) {
-      vertical_space = vspace 
-    }
-    else {
-      vertical_space = 0
-    }
-
-    const diff_nb_nodes = (max_nodes_on_vertical - horizontal_indices2nodes[i].length)/2
-    const inv_scale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, data.user_scale])
-    const scale = d3.scaleLinear()
-      .range([0, 100])
-      .domain([0, data.user_scale])
-    horizontal_indices2nodes[i].forEach((node, node_id) => {
-      if (node_id === 0) {
-        data.nodes[node.idNode].y = 200 + diff_nb_nodes*vertical_space//0.2 * height;
-        const node_h = nodeHeight(data.nodes[node.idNode],data,inv_scale,scale,getLinkValue)
-        vertical_offset = 200 + node_h + diff_nb_nodes*vertical_space + vertical_space
+  // Compute positionning indexes
+  const indexes_per_nodes_ids: { [node_id: string]: number } = {}
+  const possible_recycling_links_ids: string[] = []
+  Object.values(visible_nodes_ids)
+    .forEach(node_id => {
+      const node = data.nodes[node_id]
+      if ((node.inputLinksId.length === 0) &&
+          (node.outputLinksId.length > 0))
+      {
+        // get current node horizontal index (eg longest branch length)
+        const starting_index = 0
+        compute_horizontal_index(
+          node,
+          starting_index,
+          visible_nodes_ids,
+          [],
+          possible_recycling_links_ids,
+          indexes_per_nodes_ids,
+          data.links,
+          data.nodes)
       }
       else {
-        data.nodes[node.idNode].y = vertical_offset
-        const node_h = nodeHeight(data.nodes[node.idNode],data,inv_scale,scale,getLinkValue)
-        vertical_offset += vertical_space + node_h
+        // Lone node case
+        if ((node.inputLinksId.length === 0) &&
+            (node.outputLinksId.length === 0))
+        {
+          indexes_per_nodes_ids[node_id] = 0
+        }
       }
     })
-    if (max_vertical_offset < vertical_offset) {
-      max_vertical_offset = vertical_offset
+
+  // Double check recycling links
+  const checked_recycling_links_ids: string[] = []
+  Object.values(possible_recycling_links_ids)
+    .forEach(link_id =>
+      compute_recycling_horizontal_index(
+        data.links[link_id],
+        visible_nodes_ids,
+        checked_recycling_links_ids,
+        indexes_per_nodes_ids,
+        data.links,
+        data.nodes))
+
+  // Set recycling links
+  Object.values(checked_recycling_links_ids)
+    .forEach(link_id => {
+      // Get id for source and target
+      const target_node_id = data.links[link_id].idTarget
+      const source_node_id = data.links[link_id].idSource
+      // Compute only if indexes for source >= index for target
+      // which can not be the case if these nodes have been reprocessed
+      // by this same function
+      if (indexes_per_nodes_ids[source_node_id] >= indexes_per_nodes_ids[target_node_id]) {
+        assign_link_local_attribute(data.links[link_id], 'recycling', true)
+      }
+    })
+
+  // Use results from previous index computing
+  let max_horizontal_index = 0
+  const nodes_per_indexes: {[index: number]: SankeyNode[]} = {}
+  Object.values(visible_nodes_ids).forEach(node_id => {
+    // Previously computed index for given node
+    const node_index = indexes_per_nodes_ids[node_id]
+    // Update reversed dict index-> nodes
+    if (!nodes_per_indexes[node_index]) {
+      nodes_per_indexes[node_index] = []
     }
+    nodes_per_indexes[node_index].push(data.nodes[node_id])
+    // Update max horizontal index
+    if (node_index > max_horizontal_index) {
+      max_horizontal_index = node_index
+    }
+  })
+
+  // Look for "holes" (index without nodes) in horizontal index
+  // These empty index are dues to computation of recycling flux
+  const shifting_indexes: {[index: number]: number} = {}
+  const cumul_shifting_value = continuum_of_horizontal_index(
+    max_horizontal_index,
+    nodes_per_indexes,
+    shifting_indexes
+  )
+
+  // Loop on all index "columns"
+  let h_left_margin = h_space
+  let h_right_margin = h_space
+  const height_cumul_per_indexes: {[index: number]: number} = {}
+  let max_height_cumul = 0
+  for (let i=0; i<=max_horizontal_index; i++) {
+    // Current index
+    const index = i
+
+    // Shifting index if necessary
+    if (shifting_indexes[index]) {
+      // nodes_per_indexes will be shifted by one to the left
+      // to fill the gap at current index position
+      let new_index = index
+      for (let old_index=new_index+1; old_index<=max_horizontal_index; old_index++) {
+        nodes_per_indexes[new_index] = nodes_per_indexes[old_index]
+        new_index = old_index
+      }
+      // Last entry deletion since we shifted by one
+      // all nodes_per_indexes entries
+      const shifting_value = (shifting_indexes[index] - 1)
+      delete nodes_per_indexes[max_horizontal_index - shifting_value]
+    }
+
+    // Pass if no nodes for this index
+    if (!nodes_per_indexes[index]) {
+      continue
+    }
+
+    // Loop on nodes that have given index
+    let height_cumul_for_index = 0
+    nodes_per_indexes[index]
+      .forEach(node => {
+        // Compute cumulative height for given index
+        height_cumul_for_index += nodeHeight(
+          node,
+          data,
+          v_scale_inv,
+          v_scale,
+          getLinkValue)
+
+        // Compute left horizontal margin
+        if (index == 0) {
+          const node_label_width = data.style_node[node.style].label_box_width
+          const needed_margin = data.grid_square_size + node_label_width
+          if (needed_margin > h_right_margin) {
+            h_right_margin = needed_margin
+          }
+        }
+
+        // Compute left horizontal margin
+        if (index == (max_horizontal_index - cumul_shifting_value)) {
+          const node_label_width = data.style_node[node.style].label_box_width
+          const needed_margin = data.grid_square_size + node_label_width
+          if (needed_margin > h_left_margin) {
+            h_left_margin = needed_margin
+          }
+        }
+
+        // Place labels accordingly
+        // If node is lone, source, sink or in the middle
+        if ((node.inputLinksId.length === 0) &&
+            (node.outputLinksId.length === 0))
+        {
+          // Node is lone node
+          assign_node_local_attribute(node,'label_horiz', 'middle')
+          assign_node_local_attribute(node,'label_vert', 'middle')
+          assign_node_local_attribute(node,'label_background', true)
+        }
+        else if (node.inputLinksId.length === 0) {
+          // Node is a source : no input link
+          assign_node_local_attribute(node,'label_horiz', 'left')
+          assign_node_local_attribute(node,'label_vert', 'middle')
+        }
+        else if (node.outputLinksId.length === 0) {
+          // Node is a sink : no output link
+          assign_node_local_attribute(node,'label_horiz', 'right')
+          assign_node_local_attribute(node,'label_vert', 'middle')
+        }
+        else {
+          // Node is in the middle of the sankey
+          assign_node_local_attribute(node,'label_horiz', 'left')
+          assign_node_local_attribute(node,'label_vert', 'middle')
+          assign_node_local_attribute(node,'label_background', true)
+        }
+      })
+
+    // Get index that take most of vertical space
+    // and take vertical spacing between nodes in account
+    height_cumul_for_index += (nodes_per_indexes[index].length - 1)*(v_space)
+    if (height_cumul_for_index > max_height_cumul) {
+      max_height_cumul = height_cumul_for_index
+    }
+    height_cumul_per_indexes[index] = height_cumul_for_index
+  }
+  max_horizontal_index = (max_horizontal_index - cumul_shifting_value)
+
+  // Update horizontal and vertical position of nodes
+  // compute total height of nodes that belong to the same column,
+  // then compute the spaces between them and their positions.
+  const v_margin = v_space
+  for (let index=0; index<=max_horizontal_index; index++) {
+    // Pass if no nodes for this index
+    // TODO : if it is the case -> something was wrong before
+    if (!nodes_per_indexes[index]) {
+      continue
+    }
+
+    // Loop on index node
+    const h_position_for_index = h_left_margin + index*h_space
+    const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[index])/2
+    let upper_node_height_and_margin = v_margin_for_index
+    nodes_per_indexes[index]
+      .forEach(node => {
+        // Node position
+        node.x = h_position_for_index
+        node.y = upper_node_height_and_margin
+        // Update upper margin for next node
+        const node_height = nodeHeight(
+          node,
+          data,
+          v_scale_inv,
+          v_scale,
+          getLinkValue)
+        upper_node_height_and_margin += node_height + v_margin
+      })
   }
 
-  Object.values(data.nodes).filter(n=>node_displayed(data,n)).forEach(n =>
-    desagregation(data,n.idNode, Object.keys(n.dimensions).length == 1 ? 'Primaire' : Object.keys(n.dimensions).filter(dim=>dim !== 'Primaire')[0], true )
-  )
-  
+  Object.values(data.nodes)
+    .filter(n => node_displayed(data,n))
+    .forEach(n =>
+      desagregation(
+        data,
+        n.idNode,
+        (Object.keys(n.dimensions).length == 1 ?
+          'Primaire' :
+          Object
+            .keys(n.dimensions)
+            .filter(dim => dim !== 'Primaire')[0]),
+        true
+      )
+    )
 
+  data.width = h_left_margin + max_horizontal_index * h_space + h_right_margin
+  data.height = v_margin*2 + max_height_cumul
 
-  data.width = width + h_space
-  
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
   return []
 }
 
+/**
+ * Reorganize vertically all input / output position
+ * of given links to / from given nodes
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {object} nodes Dict of node to reorganize
+ * @param {object} links Dict of links to reorganize
+ */
 export const reorganize_all_input_outputLinksId = (
   data:SankeyData,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
 ) => {
-  Object.values(nodes).forEach( node => {
-    reorganize_node_inputLinksId(data,node, nodes, links)
-    reorganize_node_outputLinksId(data,node, nodes, links)
-  })
+  Object.values(nodes)
+    .forEach(node => {
+      reorganize_node_inputLinksId(data, node, nodes, links)
+      reorganize_node_outputLinksId(data, node, nodes, links)
+    })
 }
 
 export const synchronizeNodesandLinksId = (
@@ -496,7 +839,7 @@ export const synchronizeNodesandLinksId = (
 
   Object.values(dataModify.links).forEach(lModify=>{
     lModify.idSource=idNodesMap[lModify.idSource]
-    lModify.idTarget=idNodesMap[lModify.idTarget]    
+    lModify.idTarget=idNodesMap[lModify.idTarget]
   })
 
   //- Stores a mapping between idLink of initial data and layout idLinks
@@ -510,8 +853,8 @@ export const synchronizeNodesandLinksId = (
     }
     idLinksMap[lModify.idLink] = lRef.idLink
   })
-  links_with_no_match.forEach( l => {       
-    const linksRef = Object.values(dataRef.links).filter(lRef => 
+  links_with_no_match.forEach( l => {
+    const linksRef = Object.values(dataRef.links).filter(lRef =>
       l.idSource === lRef.idSource && l.idTarget === lRef.idTarget
     )
     if (linksRef.length === 0) {
@@ -543,7 +886,7 @@ export const updateLayout = (
   // @ts-ignore
   const deep_diff = require('deep-diff')
   /* eslint-enable */
-  
+
   if(mode.includes('attrGeneral')) {
     let difference = deep_diff.diff(data, new_layout)
     if (difference) {
@@ -588,11 +931,11 @@ export const updateLayout = (
     if (difference) {
       difference = difference.filter((d :{path:string[],kind:string}) => d.kind === 'E' && ['x','y','x_label','y_label'].includes(d.path[1]) )
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
-    }  
+    }
   }
 
   if (mode.includes('posFlux')) {
-    const geometry_attributes = [    
+    const geometry_attributes = [
       'orientation',
       'left_horiz_shift',
       'right_horiz_shift',
@@ -603,14 +946,14 @@ export const updateLayout = (
       'arrow_size',
       // Geometry link labels
       'x_label',
-      'y_label',  
+      'y_label',
       'label_position',
       'orthogonal_label_position',
       'label_on_path'
     ]
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => 
+      difference = difference.filter((d :{path:string[],kind:string}) =>
         (d.kind === 'D' || d.kind === 'N') && d.path.length === 3 && d.path[1] === 'local' && geometry_attributes.includes(d.path[2]) ||
       (d.kind === 'E' && geometry_attributes.includes(d.path[1]))
       )
@@ -647,7 +990,7 @@ export const updateLayout = (
       const difference = deep_diff.diff(node.local, layoutNode.local)
       if (difference) {
         difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(node.local, {}, diff))
-      } 
+      }
     })
   }
   if (mode.includes('attrFlux')){
@@ -665,7 +1008,7 @@ export const updateLayout = (
       const difference = deep_diff.diff(link.local, layoutLink.local)
       if (difference) {
         difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(link.local, {}, diff))
-      }  
+      }
     })
   }
 
@@ -678,7 +1021,7 @@ export const updateLayout = (
       const difference = deep_diff.diff(link.value, layoutLink.value)
       if (difference) {
         difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(link.value, {}, diff))
-      }  
+      }
     })
   }
 
@@ -701,7 +1044,7 @@ export const updateLayout = (
       const difference = deep_diff.diff(node.tags, layoutNode.tags)
       if (difference) {
         difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(node.tags, {}, diff))
-      } 
+      }
     })
   }
   if(mode.includes('tagFlux')){
@@ -717,12 +1060,20 @@ export const updateLayout = (
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.dataTags, {}, diff))
     }
   }
-  
+
 }
 
+/**
+ * TODO
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {string} idNode Id of node that we desagregate
+ * @param {string} cur_dimension Dimension on which we desagregage node
+ * @param {boolean} compute_auto_sankey Has the function been called from compute_auto_sankey ?
+ */
 export const desagregation = (
-  data: SankeyData,   
-  idNode: string, 
+  data: SankeyData,
+  idNode: string,
   cur_dimension: string,
   compute_auto_sankey=false
 ) => {
@@ -762,7 +1113,7 @@ export const desagregation = (
       } else {
         assign_node_local_attribute(n,'label_horiz', 'left')
         assign_node_local_attribute(n,'label_vert', 'middle')
-        assign_node_local_attribute(n,'label_background', true)        
+        assign_node_local_attribute(n,'label_background', true)
       }
     }
   })
@@ -777,7 +1128,7 @@ export const desagregation = (
 }
 
 export const agregation = (
-  data : SankeyData, 
+  data : SankeyData,
   idNode: string,
   cur_dimension: string,
 ) =>  {
@@ -807,7 +1158,7 @@ export const agregation = (
   let mean_y = 0
   dim_desagregated_nodes.forEach(n => {
     if (n.x) {
-      mean_x += n.x  
+      mean_x += n.x
       mean_y += n.y
     }
     if(n.local==undefined || n.local==null) {
@@ -865,8 +1216,8 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
       set_dim_name(dim_names[0])
     }
     return (
-      <Modal 
-        show={show_agregation} 
+      <Modal
+        show={show_agregation}
         onHide={ () => {
           set_show_agregation(false)
           set_dim_name('')
@@ -878,7 +1229,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Form>
             <Form.Group>
               <Row>
-                <Col>    
+                <Col>
                   <Form.Select
                     onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> set_dim_name(evt.target.value)}
                     value={dim_name}
@@ -889,13 +1240,13 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
                   </Form.Select>
                   <Form.Label>{dim_name !== '' && data.nodes[n.dimensions[dim_name].parent_name??0] ? data.nodes[n.dimensions[dim_name].parent_name??0].name : ''}</Form.Label>
                 </Col>
-              </Row>      
+              </Row>
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={()=> {
               agregation(data,agregation_node,dim_name)
               set_data({...data})
@@ -936,8 +1287,8 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
       set_child_names(the_child_names)
     }
     return (
-      <Modal 
-        show={show_agregation} 
+      <Modal
+        show={show_agregation}
         onHide={ () => {
           set_show_agregation(false)
           set_agregation_node('')
@@ -950,7 +1301,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Form>
             <Form.Group>
               <Row>
-                <Col>    
+                <Col>
                   <Form.Select
                     onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
                       set_dim_name(evt.target.value)
@@ -971,13 +1322,13 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
                   </Form.Select>
                   {child_names.map(child_name=><Form.Label>{child_name}</Form.Label>)}
                 </Col>
-              </Row>      
+              </Row>
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={()=> {
               desagregation(data,agregation_node,dim_name)
               set_data({...data})
@@ -996,7 +1347,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
 }
 
 const setLocalAgregation = (
-  n: SankeyNode, 
+  n: SankeyNode,
   data: SankeyData,
   local_aggregation: boolean
 ) => {

@@ -1,9 +1,39 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
-import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties } from 'react'
-import PropTypes, { InferProps } from 'prop-types'
-import { Form, Modal, Navbar, Nav, Button, Dropdown, Container, Offcanvas, ToggleButton,Row,Pagination,FormCheck,Col, ButtonGroup,OverlayTrigger,Tooltip,FormGroup,FormLabel,Popover,Card, Accordion} from 'react-bootstrap'
-import { SankeyDataPropTypes,  SankeyData,TagsGroup,TagsCatalog,SankeyLink,SankeyNode,SankeyLinkValue} from './types'
+import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
+import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
+import {
+  Accordion,
+  Button,
+  ButtonGroup,
+  Card,
+  Col,
+  Container,
+  Dropdown,
+  Form,
+  FormCheck,
+  FormGroup,
+  FormLabel,
+  Modal,
+  Nav,
+  Navbar,
+  Offcanvas,
+  OverlayTrigger,
+  Pagination,
+  Popover,
+  Row,
+  ToggleButton,
+  Tooltip
+} from 'react-bootstrap'
+import {
+  SankeyData,
+  SankeyDataPropTypes,
+  SankeyLink,
+  SankeyLinkValue,
+  SankeyNode,
+  TagsCatalog,
+  TagsGroup
+} from './types'
 
 import { complete_sankey_data } from './SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
@@ -16,7 +46,7 @@ import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
 import { faFloppyDisk,faGears,faFolderOpen, faDownload, faTrashCan, faFileInvoice, faPenToSquare,faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {addAllDropDownNode} from './SankeyMenuBanner'
+import { addAllDropDownNode } from './SankeyMenuBanner'
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinks'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
@@ -742,11 +772,11 @@ export const OpenSankeyMenus = (
     ui['edition']=<>
       <Button size='sm' variant='light' onClick={reinitialization} ><><Col><FontAwesomeIcon icon={faTrashCan} /></Col><Col className='textIcon'>{t('Menu.reinit')}</Col></></Button>
       <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}><><Col><FontAwesomeIcon icon={faFileInvoice} /></Col><Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></></Button>
-      <Dropdown className='buttonSubNav'drop='end'  id='exporter' >
+      <Dropdown className='buttonSubNav' drop='end' id='exporter' >
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPenToSquare} /></Col><Col className='textIcon'>{t('Menu.style')}</Col></></Dropdown.Toggle>
         <Dropdown.Menu>
-          <Dropdown.Item size='sm' variant='light' onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
-          <Dropdown.Item size='sm' variant='light' onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
+          <Dropdown.Item onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
+          <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
         </Dropdown.Menu></Dropdown>
       {external_edition_item}
     </>
@@ -797,7 +827,8 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
  * @returns
  */
 const Menu: FunctionComponent<MenuTypes> = (
-  { t,data, set_data,
+  { t,
+    data, set_data,
     default_sankey_data,
     nav_item_active,
     show_nav,
@@ -963,11 +994,21 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
 
-  const ordered_menu:{[s:string]:JSX.Element}={}
-  const oredred_key=['file','edition','diagramme','excel','filter','view','afm','formation','demo','aide']
-  oredred_key.forEach((k:string)=>{
-    if(Object.keys(menus).includes(k)){
-      ordered_menu[k]=menus[k]
+  const ordered_menu: {[s: string]: ReactElementLike} = {}
+  const ordered_key: string[] = [
+    'file',
+    'edition',
+    'diagramme',
+    'excel',
+    'filter',
+    'view',
+    'afm',
+    'formation',
+    'demo',
+    'aide']
+  ordered_key.forEach(key=>{
+    if(Object.keys(menus).includes(key)){
+      ordered_menu[key] = menus[key]
     }
   })
 
@@ -1460,7 +1501,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
 
     const wORh_ref=is_circle?Number(d3.select('#shape_'+node_ref.idNode).attr('r'+attr)):Number(d3.select('#shape_'+node_ref.idNode).attr(wORh))
     let center_ref=0
-    
+
     if (pos==='m'){
       center_ref=pos_ref+(wORh_ref/2)
     }
@@ -1469,7 +1510,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
 
       const is_circle_to_shift=d3.select('#shape_'+n.idNode).attr('rx')!==null
       const wORh_to_shift=is_circle_to_shift?Number(d3.select('#shape_'+n.idNode).attr('r'+attr)):Number(d3.select('#shape_'+n.idNode).attr(wORh))
-      
+
       if (pos==='m'){
         n[attr]=center_ref-((wORh_to_shift)/2)
       }else if(pos==='b'){

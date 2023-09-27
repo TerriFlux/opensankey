@@ -1,5 +1,5 @@
 import Accordion from 'react-bootstrap/Accordion'
-import PropTypes, { InferProps } from 'prop-types'
+import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode } from './types'
 import React, { FunctionComponent, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
@@ -227,7 +227,7 @@ export const OpenSankeyConfigurationsMenus = (
       <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
       <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
     </Accordion.Item>,
-    
+
     <>{menu_configuration_free_labels}</>,
   ]
 }
@@ -258,7 +258,7 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
 ) => {
   return (
     <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={nav_item_active as string} >
-      {configuration_menus.map((c:JSX.Element,i:number)=>{
+      {configuration_menus.map((c:ReactElementLike, i:number)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>})}
     </Accordion>
   )
