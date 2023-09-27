@@ -1,4 +1,5 @@
 import React from 'react'
+import * as d3 from 'd3'
 import { Row, Form, FormControl, Button, OverlayTrigger,Tooltip, InputGroup, Popover, ButtonGroup, Badge} from 'react-bootstrap'
 import {  SankeyPlusData,SankeyPlusLabel} from './types'
 import { MultiSelect } from 'react-multi-select-component'
@@ -58,6 +59,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   editor_content_fo_zdt:string,
   set_editor_content_fo_zdt:(s:string)=>void,
 ) => {
+  const parserHTML=new DOMParser()
 
 
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
@@ -324,14 +326,35 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       />
     </InputGroup>
 
-    <Form>
+    <Form className='FO_zdt_editeur'>
       <Form.Group>
         {editor_fo}
       </Form.Group>
       <Button
         onClick={()=>{
+          // Before updating rhe content of FO of nodes we change the resolution of the image by creating a new one with diffrent width/height
+          // We change directly the data used for the image and not he html tag <img> because attr width and height are reset when we reselect the image
+          const data_img=d3.select('.FO_zdt_editeur').select('img').node() as HTMLImageElement
+          const img_width=d3.select('.FO_zdt_editeur').select('img').attr('width')
+          if(data_img && img_width){
+
+            // create an off-screen canvas
+            const canvas = document.createElement('canvas'),ctx = canvas.getContext('2d')
+            const ratio_image=data_img.getBoundingClientRect().width/data_img.getBoundingClientRect().height
+
+            // set its dimension to target size
+            canvas.width = Number(img_width)
+            canvas.height = Number(img_width)/ratio_image
+
+            // draw source image into the off-screen canvas:
+            ctx?.drawImage(data_img, 0, 0, canvas.width, canvas.height)
+
+            //Get editor_content as html so we can change the data of the image with the one resized 
+            const editor_value_as_html= (parserHTML.parseFromString(editor_content_fo_zdt,'text/html')).body
+            d3.select(editor_value_as_html).select('img').attr('src',canvas.toDataURL())
+            editor_content_fo_zdt=editor_value_as_html.innerHTML.toString()
+          }
           Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-            console.log(d.content,editor_content_fo_zdt)
             d.content = editor_content_fo_zdt
           })
           set_data({...data})

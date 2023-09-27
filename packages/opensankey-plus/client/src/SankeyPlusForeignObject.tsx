@@ -73,6 +73,7 @@ export const SankeyPlusNodeFO = (
 
   const is_all_fo_visible = isAllFOVisible()
   const is_all_fo_raw = isAllFORaw()
+  const parserHTML=new DOMParser()
 
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
@@ -217,10 +218,35 @@ export const SankeyPlusNodeFO = (
           (<Tooltip id={'foContentDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
           (!is_all_fo_visible)?<Tooltip id={'foNotVisible'}>{t('Noeud.foreign_object.not_activated')}</Tooltip>:<></>}
       >
-        <Form>
+        <Form className='FO_node_editeur'>
           <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
           <Button
             onClick={()=>{
+
+
+              // Before updating rhe content of FO of nodes we change the resolution of the image by creating a new one with diffrent width/height
+              // We change directly the data used for the image and not he html tag <img> because attr width and height are reset when we reselect the image
+              const data_img=d3.select('.FO_node_editeur').select('img').node() as HTMLImageElement
+              const img_width=d3.select('.FO_node_editeur').select('img').attr('width')
+              if(data_img && img_width){
+
+                // create an off-screen canvas
+                const canvas = document.createElement('canvas'),
+                  ctx = canvas.getContext('2d')
+                const ratio_image=data_img.getBoundingClientRect().width/data_img.getBoundingClientRect().height
+                // set its dimension to target size
+                canvas.width = Number(img_width)
+                canvas.height = Number(img_width)/ratio_image
+
+                // draw source image into the off-screen canvas:
+                ctx?.drawImage(data_img, 0, 0, canvas.width, canvas.height)
+
+                //Get editor_content as html so we can change the data of the image with the one resized 
+                const editor_value_as_html= (parserHTML.parseFromString(editor_content_fo_node,'text/html')).body
+                d3.select(editor_value_as_html).select('img').attr('src',canvas.toDataURL())
+                editor_content_fo_node=editor_value_as_html.innerHTML.toString()
+              }
+
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
                 d.FO_content = editor_content_fo_node
               })
