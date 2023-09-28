@@ -507,19 +507,23 @@ export const link_text = (
       return
     }
   }
-  
-  const nb_sign=(return_value_link(data,d,'scientific_precision') as number)
-  if(nb_sign>0){
-    the_link_value=parseFloat(the_link_value.toPrecision(nb_sign))
-  }
 
-  if((return_value_link(data,d,'to_precision'))){
-    the_link_value =toPrecision(the_link_value,(return_value_link(data,d,'scientific_precision') as number))
-  }else if (return_value_link(data,d,'custom_digit')){
-    the_link_value =(the_link_value as number).toFixed((return_value_link(data,d,'nb_digit') as number))
+  if(isNaN(the_link_value)){
+    return the_link_value
+  }else{
+    const nb_sign=(return_value_link(data,d,'scientific_precision') as number)
+    if(nb_sign>0){
+      the_link_value=parseFloat(the_link_value.toPrecision(nb_sign))
+    }
+
+    if((return_value_link(data,d,'to_precision'))){
+      the_link_value =toPrecision(the_link_value,nb_sign)
+    }else if (return_value_link(data,d,'custom_digit')){
+      the_link_value =(the_link_value as number).toFixed((return_value_link(data,d,'nb_digit') as number))
+    }
+    const unit=return_value_link(data,d,'label_unit_visible')?return_value_link(data,d,'label_unit'):''
+    return the_link_value+unit
   }
-  const unit=return_value_link(data,d,'label_unit_visible')?return_value_link(data,d,'label_unit'):''
-  return the_link_value+unit
 }
 
 
