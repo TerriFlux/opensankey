@@ -1,20 +1,22 @@
 import * as d3 from 'd3'
 import {
-  SankeyNode,
-  SankeyLink,
   SankeyData,
   SankeyDataPropTypes,
-  SankeyLinkValue} from './types'
+  SankeyLink,
+  SankeyLinkValue,
+  SankeyNode
+} from './types'
 import {
-  findMaxLinkValue,
-  node_displayed,
   assign_link_local_attribute,
-  return_value_link,
   assign_node_local_attribute,
   compute_total_offsets,
-  test_link_value,
+  findMaxLinkValue,
   getLinkValue,
-  return_value_node } from './SankeyUtils'
+  node_displayed,
+  return_value_link,
+  return_value_node,
+  test_link_value
+} from './SankeyUtils'
 import React, { FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
@@ -273,7 +275,7 @@ export const apply_input_outputLinksId = (
  * @param {string[]} visible_nodes_ids List of nodes (by their id) that are currently visible on Sankey diagram
  * @param {string[]} visited_nodes_ids List of nodes (by their id) that have been visited. Helps to find recycling flux
  * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
- * @param {object} indexes_per_nodes_ids Current index for given node id
+ * @param {object} horizontal_indexes_per_nodes_ids Current horizontal index for given node id
  * @param {object} links
  * @param {object} nodes
  */
@@ -283,69 +285,63 @@ export const compute_horizontal_index = (
   visible_nodes_ids: string[],
   visited_nodes_ids: string[],
   recycling_links_ids: string[],
-  indexes_per_nodes_ids: { [node_id: string]: number },
+  horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
   links: { [link_id: string]: SankeyLink},
   nodes: { [node_id: string]: SankeyNode},
 ) => {
-  // Do not compute for exchange nodes
-  const is_exchange_node = (
-    (node.tags['Type de noeud'] !== undefined) &&
-    (node.tags['Type de noeud'].includes('echange')))
-  if (!is_exchange_node) {
-    // Update node index
-    if (!indexes_per_nodes_ids[node.idNode]) {
-      indexes_per_nodes_ids[node.idNode] = starting_index
-    }
-    else {
-      if (starting_index > indexes_per_nodes_ids[node.idNode]) {
-        indexes_per_nodes_ids[node.idNode] = starting_index
-      }
-    }
-    // From current node, use output links to
-    // recurse on following node
-    node
-      .outputLinksId
-      .filter(linkId =>
-        // Computes only for link to visible nodes
-        // and not for nodes related to recyling flux
-        (visible_nodes_ids.includes(links[linkId].idTarget) &&
-         !recycling_links_ids.includes(linkId)))
-      .forEach(linkId => {
-        // Next node to recurse on
-        const next_node = nodes[links[linkId].idTarget]
-        // But first we check if next node has not been already visited
-        if (!visited_nodes_ids.includes(next_node.idNode)) {
-          // Recursive calling
-          compute_horizontal_index(
-            next_node,
-            starting_index + 1,
-            visible_nodes_ids,
-            [...visited_nodes_ids, node.idNode],
-            recycling_links_ids,
-            indexes_per_nodes_ids,
-            links,
-            nodes)
-        }
-        else {
-          // If next node has already been visited then this means
-          // that link between current node and next node
-          // is a recycling flux
-          //
-          // To illustrate :
-          // -> This example count as recycling flux :
-          //    N0 - N11 - N21 - N3
-          //       \ N12 - N22 -
-          //          |         |
-          //           ---------
-          // -> But not this one :
-          //    N0 - N11 - N21 - N3
-          //       \ N12 - N22 \
-          //          |         |
-          //           ---------
-          recycling_links_ids.push(linkId)
-        }
-      })
+  // Update node index
+  if (!horizontal_indexes_per_nodes_ids[node.idNode]) {
+    horizontal_indexes_per_nodes_ids[node.idNode] = starting_index
   }
+  else {
+    if (starting_index > horizontal_indexes_per_nodes_ids[node.idNode]) {
+      horizontal_indexes_per_nodes_ids[node.idNode] = starting_index
+    }
+  }
+  // From current node, use output links to
+  // recurse on following node
+  node
+    .outputLinksId
+    .filter(linkId =>
+      // Computes only for link to visible nodes
+      // and not for nodes related to recyling flux
+      (visible_nodes_ids.includes(links[linkId].idTarget) &&
+        !recycling_links_ids.includes(linkId)))
+    .forEach(linkId => {
+      // Next node to recurse on
+      const next_node = nodes[links[linkId].idTarget]
+      // But first we check if next node has not been already visited
+      if (!visited_nodes_ids.includes(next_node.idNode)) {
+        // Recursive calling
+        compute_horizontal_index(
+          next_node,
+          starting_index + 1,
+          visible_nodes_ids,
+          [...visited_nodes_ids, node.idNode],
+          recycling_links_ids,
+          horizontal_indexes_per_nodes_ids,
+          links,
+          nodes)
+      }
+      else {
+        // If next node has already been visited then this means
+        // that link between current node and next node
+        // is a recycling flux
+        //
+        // To illustrate :
+        // -> This example count as recycling flux :
+        //    N0 - N11 - N21 - N3
+        //       \ N12 - N22 -
+        //          |         |
+        //           ---------
+        // -> But not this one :
+        //    N0 - N11 - N21 - N3
+        //       \ N12 - N22 \
+        //          |         |
+        //           ---------
+        recycling_links_ids.push(linkId)
+      }
+    })
 }
 
 /**
@@ -377,7 +373,7 @@ export const compute_horizontal_index = (
  * @param {SankeyLink} link Link that has been previoulsy taggued ass possible recyling link
  * @param {string[]} visible_nodes_ids List of nodes (by their id) that are currently visible on Sankey diagram
  * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
- * @param {object} indexes_per_nodes_ids Current index for given node id
+ * @param {object} horizontal_indexes_per_nodes_ids Current index for given node id
  * @param {object} links
  * @param {object} nodes
  */
@@ -385,25 +381,28 @@ export const compute_recycling_horizontal_index = (
   link: SankeyLink,
   visible_nodes_ids: string[],
   recycling_links_ids: string[],
-  indexes_per_nodes_ids: { [node_id: string]: number },
+  horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
   links: { [link_id: string]: SankeyLink},
   nodes: { [node_id: string]: SankeyNode},
 ) => {
   // Get id for source and target
   const target_node_id = link.idTarget
   const source_node_id = link.idSource
-  // Compute only if indexes for source >= index for target
-  // which can not be the case if these nodes have been reprocessed
+  // Compute only if horizontal indexes for source >= horizontal index for target
+  // which can not be the case if these nodes' indexes have been reprocessed
   // by this same function
-  if (indexes_per_nodes_ids[source_node_id] >= indexes_per_nodes_ids[target_node_id]) {
+  if (horizontal_indexes_per_nodes_ids[source_node_id] >=
+      horizontal_indexes_per_nodes_ids[target_node_id])
+  {
     // For source node, check if there is a gap
-    // between its previous node itself
+    // between its horizontal index and all the horizontal
+    // indexes of nodes that are sources of its own inputs links
     const indexes_before_source_node: number[] = []
     let min_index = -1
     nodes[source_node_id]
       .inputLinksId
       .forEach(input_link_id => {
-        const index = indexes_per_nodes_ids[links[input_link_id].idSource]
+        const index = horizontal_indexes_per_nodes_ids[links[input_link_id].idSource]
         if (min_index >= 0) {
           if (index < min_index) {
             min_index = index
@@ -414,11 +413,12 @@ export const compute_recycling_horizontal_index = (
         }
         indexes_before_source_node.push(index)
       })
-    // If there is a gap, we recompute indexing
-    const source_index = indexes_per_nodes_ids[source_node_id]
-    for (let index=min_index+1; index<source_index; index++) {
+    // If there is a gap, we recompute source node horizontal indexing
+    const horizontal_index_of_source_node = horizontal_indexes_per_nodes_ids[source_node_id] // memorize value for loop
+    for (let index=min_index+1; index<horizontal_index_of_source_node; index++) {
+      // Gap check here
       if (!indexes_before_source_node.includes(index)) {
-        indexes_per_nodes_ids[source_node_id] = index
+        horizontal_indexes_per_nodes_ids[source_node_id] = index
         // TODO faut un forçage des indexs à suivre.
         compute_horizontal_index(
           nodes[source_node_id],
@@ -426,36 +426,13 @@ export const compute_recycling_horizontal_index = (
           visible_nodes_ids,
           [],
           recycling_links_ids,
-          indexes_per_nodes_ids,
+          horizontal_indexes_per_nodes_ids,
           links,
           nodes)
         break
       }
     }
   }
-}
-
-/**
- * Detect empty horizontal indexes and shift everithing accordingly
- *
- * @param {number} max_horizontal_index
- * @param {object} nodes_per_indexes
- * @param {object} shifting_indexes
- */
-export const continuum_of_horizontal_index = (
-  max_horizontal_index: number,
-  nodes_per_indexes: {[index: number]: SankeyNode[]},
-  shifting_indexes: {[index: number]: number}
-) => {
-  let shifting_value = 0
-  for (let index=0; index<=max_horizontal_index; index++) {
-    // If no nodes for this index, we have a hole
-    if (!nodes_per_indexes[index]) {
-      shifting_value += 1
-      shifting_indexes[index] = shifting_value
-    }
-  }
-  return shifting_value
 }
 
 export const arrangeNodes = (
@@ -555,13 +532,15 @@ export const compute_auto_sankey = (
   // Reset input / ouput links id for each node
   compute_default_input_outputLinksId(data.nodes, data.links)
 
-  // Get all visible nodes
+  // Get list of all visible nodes
+  //  /!\ the nodes of this list will be the only nodes
+  //      that are going to be positionned
   const visible_nodes_ids = Object.values(data.nodes)
     .filter(n => node_displayed(data, n) && (n.position !== 'relative'))
     .map(n=>n.idNode)
 
   // Compute positionning indexes
-  const indexes_per_nodes_ids: { [node_id: string]: number } = {}
+  const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
   const possible_recycling_links_ids: string[] = []
   Object.values(visible_nodes_ids)
     .forEach(node_id => {
@@ -577,7 +556,7 @@ export const compute_auto_sankey = (
           visible_nodes_ids,
           [],
           possible_recycling_links_ids,
-          indexes_per_nodes_ids,
+          horizontal_indexes_per_nodes_ids,
           data.links,
           data.nodes)
       }
@@ -586,7 +565,7 @@ export const compute_auto_sankey = (
         if ((node.inputLinksId.length === 0) &&
             (node.outputLinksId.length === 0))
         {
-          indexes_per_nodes_ids[node_id] = 0
+          horizontal_indexes_per_nodes_ids[node_id] = 0
         }
       }
     })
@@ -599,106 +578,122 @@ export const compute_auto_sankey = (
         data.links[link_id],
         visible_nodes_ids,
         checked_recycling_links_ids,
-        indexes_per_nodes_ids,
+        horizontal_indexes_per_nodes_ids,
         data.links,
         data.nodes))
 
-  // Set recycling links
-  Object.values(checked_recycling_links_ids)
-    .forEach(link_id => {
-      // Get id for source and target
-      const target_node_id = data.links[link_id].idTarget
-      const source_node_id = data.links[link_id].idSource
-      // Compute only if indexes for source >= index for target
-      // which can not be the case if these nodes have been reprocessed
-      // by this same function
-      if (indexes_per_nodes_ids[source_node_id] >= indexes_per_nodes_ids[target_node_id]) {
-        assign_link_local_attribute(data.links[link_id], 'recycling', true)
-      }
-    })
-
   // Use results from previous index computing
+  // TODO : maybe possible to speed up here overall computing with getting
+  //        max_horizontal_index and nodes_per_horizontal_indexes from another loop
   let max_horizontal_index = 0
-  const nodes_per_indexes: {[index: number]: SankeyNode[]} = {}
+  const nodes_per_horizontal_indexes: {[index: number]: SankeyNode[]} = {}
   Object.values(visible_nodes_ids).forEach(node_id => {
     // Previously computed index for given node
-    const node_index = indexes_per_nodes_ids[node_id]
+    const node_index = horizontal_indexes_per_nodes_ids[node_id]
     // Update reversed dict index-> nodes
-    if (!nodes_per_indexes[node_index]) {
-      nodes_per_indexes[node_index] = []
+    if (!nodes_per_horizontal_indexes[node_index]) {
+      nodes_per_horizontal_indexes[node_index] = []
     }
-    nodes_per_indexes[node_index].push(data.nodes[node_id])
+    nodes_per_horizontal_indexes[node_index].push(data.nodes[node_id])
     // Update max horizontal index
     if (node_index > max_horizontal_index) {
       max_horizontal_index = node_index
     }
+    // Set recycling links
+    Object.values(data.nodes[node_id].outputLinksId)
+      .forEach(link_id => {
+        // Get id for source and target
+        const target_node_id = data.links[link_id].idTarget
+        // Compute only if indexes for source >= index for target
+        // which can not be the case if these nodes have been reprocessed
+        // by this same function
+        if (node_index >= horizontal_indexes_per_nodes_ids[target_node_id]) {
+          assign_link_local_attribute(data.links[link_id], 'recycling', true)
+        }
+        else {
+          assign_link_local_attribute(data.links[link_id], 'recycling', false)
+        }
+      })
   })
-
-  // Look for "holes" (index without nodes) in horizontal index
-  // These empty index are dues to computation of recycling flux
-  const shifting_indexes: {[index: number]: number} = {}
-  const cumul_shifting_value = continuum_of_horizontal_index(
-    max_horizontal_index,
-    nodes_per_indexes,
-    shifting_indexes
-  )
 
   // Loop on all index "columns"
   let h_left_margin = h_space
   let h_right_margin = h_space
-  const height_cumul_per_indexes: {[index: number]: number} = {}
+  const height_cumul_per_indexes: number[] = []
+  const height_per_nodes_ids: {[node_id: string]: number} = {}
+  const node_id_per_hxv_indexes: string[][] = []
   let max_height_cumul = 0
-  for (let i=0; i<=max_horizontal_index; i++) {
-    // Current index
-    const index = i
-
-    // Shifting index if necessary
-    if (shifting_indexes[index]) {
-      // nodes_per_indexes will be shifted by one to the left
-      // to fill the gap at current index position
-      let new_index = index
-      for (let old_index=new_index+1; old_index<=max_horizontal_index; old_index++) {
-        nodes_per_indexes[new_index] = nodes_per_indexes[old_index]
-        new_index = old_index
-      }
-      // Last entry deletion since we shifted by one
-      // all nodes_per_indexes entries
-      const shifting_value = (shifting_indexes[index] - 1)
-      delete nodes_per_indexes[max_horizontal_index - shifting_value]
-    }
-
+  for (let h_index=0; h_index<=max_horizontal_index; h_index++) {
     // Pass if no nodes for this index
-    if (!nodes_per_indexes[index]) {
+    if (!nodes_per_horizontal_indexes[h_index]) {
       continue
     }
 
-    // Loop on nodes that have given index
+    // Loop on nodes from computed horizontal index
     let height_cumul_for_index = 0
-    nodes_per_indexes[index]
+    let max_vertical_index = 0
+    const sortcoef_per_nodes_ids: {[node_id: string]: number} = {}
+    const vertical_indexes_per_node_id: {[node_id: string]: number} = {}
+    const nodes_ids_per_vertical_index: string[] = []
+    nodes_per_horizontal_indexes[h_index]
       .forEach(node => {
-        // Compute cumulative height for given index
-        height_cumul_for_index += nodeHeight(
+        // Node height
+        const node_height = nodeHeight(
           node,
           data,
           v_scale_inv,
           v_scale,
           getLinkValue)
+        // Coef to verticaly sort nodes - highest coef is upper
+        // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
+        const node_sortcoef = node_height * (0.8 + 0.2/(node.outputLinksId.length + node.inputLinksId.length))
 
-        // Compute left horizontal margin
-        if (index == 0) {
-          const node_label_width = data.style_node[node.style].label_box_width
-          const needed_margin = data.grid_square_size + node_label_width
-          if (needed_margin > h_right_margin) {
-            h_right_margin = needed_margin
+        // Verticaly sort nodes accordingly to their height
+        height_per_nodes_ids[node.idNode] = node_height
+        sortcoef_per_nodes_ids[node.idNode] = node_sortcoef
+        vertical_indexes_per_node_id[node.idNode] = max_vertical_index
+        nodes_ids_per_vertical_index.push(node.idNode)
+        if (max_vertical_index > 0) {
+          // Bubble sort algo
+          for (let v_index=max_vertical_index; v_index>0; v_index--) {
+            // Prev node infos
+            const prev_v_index = v_index-1
+            const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
+            const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
+            if (prev_node_sortcoef < node_sortcoef) {
+              // Update referencing for bubble node
+              vertical_indexes_per_node_id[node.idNode] = prev_v_index
+              nodes_ids_per_vertical_index[prev_v_index] = node.idNode
+              // Update referencing for prev node
+              vertical_indexes_per_node_id[prev_node_id] = v_index
+              nodes_ids_per_vertical_index[v_index] = prev_node_id
+            }
+            else {
+              break
+            }
           }
         }
+        max_vertical_index += 1
+
+        // Compute cumulative height for given index
+        height_cumul_for_index += node_height
 
         // Compute left horizontal margin
-        if (index == (max_horizontal_index - cumul_shifting_value)) {
+        if (h_index == 0) {
           const node_label_width = data.style_node[node.style].label_box_width
           const needed_margin = data.grid_square_size + node_label_width
           if (needed_margin > h_left_margin) {
             h_left_margin = needed_margin
+          }
+        }
+
+        // Compute right horizontal margin
+        // if (h_index == (max_horizontal_index - cumul_shifting_value)) {
+        if (h_index == max_horizontal_index) {
+          const node_label_width = data.style_node[node.style].label_box_width
+          const needed_margin = data.grid_square_size + node_label_width
+          if (needed_margin > h_right_margin) {
+            h_right_margin = needed_margin
           }
         }
 
@@ -730,47 +725,79 @@ export const compute_auto_sankey = (
         }
       })
 
-    // Get index that take most of vertical space
-    // and take vertical spacing between nodes in account
-    height_cumul_for_index += (nodes_per_indexes[index].length - 1)*(v_space)
+    // Get horizontal index that need the most of vertical space
+    // with vertical spacing between nodes in account
+    height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1)*(v_space)
     if (height_cumul_for_index > max_height_cumul) {
       max_height_cumul = height_cumul_for_index
     }
-    height_cumul_per_indexes[index] = height_cumul_for_index
+    height_cumul_per_indexes.push(height_cumul_for_index)
+
+    // Update global indexing table
+    node_id_per_hxv_indexes.push(nodes_ids_per_vertical_index)
   }
-  max_horizontal_index = (max_horizontal_index - cumul_shifting_value)
+  max_horizontal_index = (node_id_per_hxv_indexes.length - 1)
 
   // Update horizontal and vertical position of nodes
   // compute total height of nodes that belong to the same column,
   // then compute the spaces between them and their positions.
   const v_margin = v_space
-  for (let index=0; index<=max_horizontal_index; index++) {
-    // Pass if no nodes for this index
+  for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
+    // Pass if no nodes for this horizontal_index
     // TODO : if it is the case -> something was wrong before
-    if (!nodes_per_indexes[index]) {
+    if (!node_id_per_hxv_indexes[horizontal_index]) {
       continue
     }
 
-    // Loop on index node
-    const h_position_for_index = h_left_margin + index*h_space
-    const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[index])/2
+    // Loop on horizontal_index node
+    const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
+    const h_position_for_index = h_left_margin + horizontal_index*h_space
+    const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index])/2
     let upper_node_height_and_margin = v_margin_for_index
-    nodes_per_indexes[index]
-      .forEach(node => {
+    if (center_biggest_nodes === true) {
+      // From the bottom to the top : plot node every two index
+      let last_index = (node_id_per_hxv_indexes[horizontal_index].length-1)
+      for (let index=last_index; index>=0; index-=2) {
+        const node_id = node_id_per_hxv_indexes[horizontal_index][index]
         // Node position
-        node.x = h_position_for_index
-        node.y = upper_node_height_and_margin
+        data.nodes[node_id].x = h_position_for_index
+        data.nodes[node_id].y = upper_node_height_and_margin
         // Update upper margin for next node
-        const node_height = nodeHeight(
-          node,
-          data,
-          v_scale_inv,
-          v_scale,
-          getLinkValue)
+        const node_height = height_per_nodes_ids[node_id]
         upper_node_height_and_margin += node_height + v_margin
-      })
+        // Update last index
+        last_index = index
+      }
+      // From the top to the bottom : remaining index
+      if (last_index == 0)
+        last_index = 1
+      else
+        last_index = 0
+      for (let index=last_index; index<node_id_per_hxv_indexes[horizontal_index].length; index+=2) {
+        const node_id = node_id_per_hxv_indexes[horizontal_index][index]
+        // Node position
+        data.nodes[node_id].x = h_position_for_index
+        data.nodes[node_id].y = upper_node_height_and_margin
+        // Update upper margin for next node
+        const node_height = height_per_nodes_ids[node_id]
+        upper_node_height_and_margin += node_height + v_margin
+      }
+    }
+    else {
+      node_id_per_hxv_indexes[horizontal_index]
+        .forEach(node_id => {
+          // Node position
+          data.nodes[node_id].x = h_position_for_index
+          data.nodes[node_id].y = upper_node_height_and_margin
+          // Update upper margin for next node
+          const node_height = height_per_nodes_ids[node_id]
+          upper_node_height_and_margin += node_height + v_margin
+        })
+    }
   }
 
+  // Propagate node position to sub-levels
+  // --> This can slighty change y-positions of node (node's y = mean value of desagregated nodes' y)
   Object.values(data.nodes)
     .filter(n => node_displayed(data,n))
     .forEach(n =>
@@ -1127,6 +1154,13 @@ export const desagregation = (
   }
 }
 
+/**
+ * TODO
+ *
+ * @param {SankeyData} data Data structure for Sankey
+ * @param {string} idNode Id of node that we desagregate
+ * @param {string} cur_dimension Dimension on which we desagregage node
+ */
 export const agregation = (
   data : SankeyData,
   idNode: string,
@@ -1148,7 +1182,6 @@ export const agregation = (
         (cur_n_dim.parent_name && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension] && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension].parent_name === cur_parentId)
     )
   })
-
 
   if (dim_desagregated_nodes.length === 0) {
     return
