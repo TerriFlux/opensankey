@@ -23,6 +23,9 @@ const deep_diff = require('deep-diff')
 
 
 export const plus_convert_data = (data:SankeyPlusData)=>{
+  if(data.background_image===undefined){
+    data.background_image=''
+  }
   if (!data.labels) {
     data.labels = {}
   }

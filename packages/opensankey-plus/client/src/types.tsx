@@ -12,7 +12,8 @@ export interface SankeyPlusData extends SankeyData {
     style_node:{[x: string]:SankeyPlusNodeStyle},
     style_link:{[x: string]:SankeyPlusLinkStyle},
     unitary_node:string[],
-    process_transfo_ref:{[x: string]:string[]}
+    process_transfo_ref:{[x: string]:string[]},
+    background_image:string
 
 }
 
