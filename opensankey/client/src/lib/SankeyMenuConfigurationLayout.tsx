@@ -14,7 +14,8 @@ export const OpenSankeyMenuConfigurationLayout = (
   user_scale:number,
   set_user_scale:(n:number)=>void,
   legend_position:number[],
-  set_legend_position:(n:number[])=>void
+  set_legend_position:(n:number[])=>void,
+  extra_background_element:JSX.Element
 ) => {
 
   return [
@@ -116,6 +117,8 @@ export const OpenSankeyMenuConfigurationLayout = (
       <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
      
     </InputGroup>,
+
+    extra_background_element,
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />,
 
