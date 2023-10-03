@@ -165,7 +165,7 @@ export const OpenSankeyDrawNodes = (
           .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value))
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
-      if(mode_selection.current=='s'){
+      if(mode_selection.current=='s' && window.SankeyToolsStatic!==true){
         ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
       }
     }
