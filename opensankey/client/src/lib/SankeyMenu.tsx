@@ -706,6 +706,7 @@ export const OpenSankeyMenus = (
               }
             }} >JSON</Dropdown.Item>
           <Form.Control
+            accept='.json'
             type="file"
             ref={_load_json}
             style={{ display: 'none' }}
