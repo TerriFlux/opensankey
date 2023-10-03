@@ -78,8 +78,9 @@ export const SankeyPlusDrawLabels = (
         
         
       })
-      // Traite les labels qui sont dans des foreignObject
+      // Traite les labels qui sont des zone de texte
       gg_label
+        .filter(()=>!d.is_image)
         .append('foreignObject')
         .attr('width',d.label_width)
         .attr('height',d.label_height)
@@ -87,6 +88,14 @@ export const SankeyPlusDrawLabels = (
         .append('xhtml:div')
         .attr('class','ql-editor')
         .html(d.content)
+
+      gg_label
+        .filter(()=>d.is_image)
+        .append('image')
+        .attr('width',d.label_width)
+        .attr('height',d.label_height)
+        .attr('id', d.idLabel + '_img')
+        .attr('href',d.image_src)
 
 
       gg_label.call(dragLabelEvent(multi_selected_label,d,data,set_data,display_nodes,display_links,min_width_and_height,drawGrid,multi_selected_nodes,multi_selected_links,link_text,getLinkValue,drawArrows,scale,inv_scale,mode_selection,start_point))

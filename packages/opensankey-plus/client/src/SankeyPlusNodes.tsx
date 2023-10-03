@@ -1287,6 +1287,8 @@ export const context_node_view_node_unitary=(
       transparent_border: false,
       x: min_x-5,
       y: min_y-5,
+      is_image:false,
+      image_src:''
 
     }
  

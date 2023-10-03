@@ -1,4 +1,4 @@
-import React from 'react'
+import React,{useState,ChangeEvent} from 'react'
 import { Row, Form, FormControl, Button, OverlayTrigger,Tooltip, InputGroup, Popover, ButtonGroup, Badge} from 'react-bootstrap'
 import {  SankeyPlusData,SankeyPlusLabel} from './types'
 import { MultiSelect } from 'react-multi-select-component'
@@ -56,10 +56,11 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   editor_content_fo_zdt:string,
   set_editor_content_fo_zdt:(s:string)=>void,
 ) => {
-
+  const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.title, 'value': d.idLabel } })
   const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.title, 'value': d.idLabel } })
+  const [button_icon_or_image,set_button_icon_or_image]=useState<'zdt'|'image'>(zdt_or_image)
 
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
@@ -215,7 +216,69 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       backgroundColor:(disable_editor)?'#cccccc':''}}
   />
 
-  const content_zdt=<Form>
+  const content_wysiwyg=<Form>
+    <Form className='FO_zdt_editeur'>
+      <Form.Group>
+        {editor_fo}
+      </Form.Group>
+      <Button
+        onClick={()=>{
+          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
+            d.content = editor_content_fo_zdt
+          })
+          set_data({...data})
+        }}
+      >{t('Menu.updateFOZdd')}</Button>
+    </Form>
+
+
+  </Form>
+
+  const content_image=<>
+    {/* Import image */}
+    <OverlayTrigger
+      key={'imageDisabled2'}
+      placement={'top'}
+      delay={500}
+      overlay={(!disable_options)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(disable_options)?'#666666':'',
+            backgroundColor:(disable_options)?'#cccccc':'',
+            width:'40%'}}
+        >
+          {t('Noeud.img_src')}
+        </InputGroup.Text>
+
+        <Form.Control
+          accept='image/*'
+          type="file"
+          disabled={disable_options}
+          onChange={(evt: ChangeEvent) => {
+            const files = (evt.target as HTMLFormElement).files
+            const reader = new FileReader()
+            reader.onload = (() => {
+              return (e: ProgressEvent<FileReader>) => {
+                const resultat = (e.target as FileReader).result
+                const res=resultat?.toString().replaceAll('=','')
+                Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
+                  .forEach(n=>n.image_src=(res as string))
+
+                set_data({...data})
+
+              }
+            })()
+            reader.readAsDataURL(files[0])
+          }}
+        />
+
+      </InputGroup>
+    </OverlayTrigger>
+  </>
+
+  const content_menu_zdt=<>
     <Form.Group as={Row}>
       <InputGroup>
         <Button size="sm"
@@ -240,7 +303,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
               color_border: 'black',
               opacity: 100,
               transparent_border: false,
-              
+
+              is_image:false,
+              image_src:'',
               x: 50,
               y: 50,
             }
@@ -314,20 +379,43 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
     </InputGroup>
-
-    <Form className='FO_zdt_editeur'>
-      <Form.Group>
-        {editor_fo}
-      </Form.Group>
+    <InputGroup key={'node_illustration_type'} >
+      <InputGroup.Text style={{width:'40%',
+        color:(disable_options)?'#666666':'',
+        backgroundColor:(disable_options)?'#cccccc':'',
+      }}>
+        {t('Noeud.illustration_type')}
+      </InputGroup.Text>
       <Button
-        onClick={()=>{
-          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-            d.content = editor_content_fo_zdt
-          })
+        disabled={disable_options}
+        className='btn_menu_config'
+        style={{width:'30%'}}
+        variant={button_icon_or_image==='zdt'?'primary':'outline-primary'}
+        onClick={() => {
+          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
+            .forEach(n=>n.is_image=false)
+          set_button_icon_or_image('zdt')
           set_data({...data})
-        }}
-      >{t('Menu.updateFOZdd')}</Button>
-    </Form>
+        }}>Texte</Button>
+
+      <Button
+        disabled={disable_options}
+        className='btn_menu_config'
+        style={{width:'30%'}}
+        variant={button_icon_or_image==='image'?'primary':'outline-primary'}
+        onClick={() => {
+
+          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
+            .forEach(n=>n.is_image=true)
+
+          set_button_icon_or_image('image')
+          set_data({...data})
+
+        }}>Image</Button>
+    </InputGroup>
+
+    {button_icon_or_image==='zdt'?content_wysiwyg:content_image}
+
 
     <InputGroup>
       <InputGroup.Text
@@ -481,9 +569,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       >{valAllLabelBorderTransparent?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
     </InputGroup>
-  </Form>
+  </>
 
-  return menu_for_modal?content_zdt:<Accordion.Item
+  return menu_for_modal?content_menu_zdt:<Accordion.Item
     key='9'
     id="LL"
     eventKey="7"
@@ -516,7 +604,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         </OverlayTrigger>:<></>}
     </Accordion.Header>
     <Accordion.Body>
-      {content_zdt}
+      {content_menu_zdt}
     </Accordion.Body>
   </Accordion.Item>
 }

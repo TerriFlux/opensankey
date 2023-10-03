@@ -61,6 +61,11 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
         }
       })
       keys_to_remove.forEach(key=>delete (l as unknown as {[s:string]:string})[key])
+
+      if(l.is_image===undefined){
+        l.is_image=false
+        l.image_src=''
+      }
     })
   }
 
