@@ -47,6 +47,11 @@ export interface SankeyPlusNode extends SankeyNode{
     has_FO:boolean,
     is_FO_raw:boolean,
     FO_content:string,
+
+    is_image:boolean,
+    image_src:string,
+
+    hyperlink:string
 }
 
 export interface SankeyPlusLinkAttrLocal extends SankeyLinkAttrLocal{

@@ -1,19 +1,16 @@
 import React from 'react'
-import * as d3 from 'd3'
 import { Row, Form, FormControl, Button, OverlayTrigger,Tooltip, InputGroup, Popover, ButtonGroup, Badge} from 'react-bootstrap'
 import {  SankeyPlusData,SankeyPlusLabel} from './types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaMinus, FaPlus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import Accordion from 'react-bootstrap/Accordion'
-import ReactQuill,{Quill} from 'react-quill'
+import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
-import ImageResize from 'quill-image-resize-module-react'
 import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 
-Quill.register('modules/imageResize', ImageResize)
 
 import {  preferenceCheck } from 'open-sankey/dist/SankeyMenuPreferences'
 
@@ -59,8 +56,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   editor_content_fo_zdt:string,
   set_editor_content_fo_zdt:(s:string)=>void,
 ) => {
-  const parserHTML=new DOMParser()
-
 
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.title, 'value': d.idLabel } })
@@ -190,20 +185,14 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       [{ 'color': [] }, { 'background': [] }],
       [{'list': 'ordered'}, {'list': 'bullet'}],
       [{'align':[]}],
-
-      ['image'],
       ['clean'],
     ],
-    imageResize: {
-      parchment: Quill.import('parchment'),
-      modules: ['Resize', 'DisplaySize']
-    }
   }
 
   const formats = ['font',
     'header','size',
     'bold', 'italic', 'underline', 'strike','color','background',
-    'list', 'bullet','image','align'
+    'list', 'bullet','align'
   ]
 
   const disable_options = !(is_activated && (multi_selected_label.current.length === 1))
@@ -332,28 +321,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       </Form.Group>
       <Button
         onClick={()=>{
-          // Before updating rhe content of FO of nodes we change the resolution of the image by creating a new one with diffrent width/height
-          // We change directly the data used for the image and not he html tag <img> because attr width and height are reset when we reselect the image
-          const data_img=d3.select('.FO_zdt_editeur').select('img').node() as HTMLImageElement
-          const img_width=d3.select('.FO_zdt_editeur').select('img').attr('width')
-          if(data_img && img_width){
-
-            // create an off-screen canvas
-            const canvas = document.createElement('canvas'),ctx = canvas.getContext('2d')
-            const ratio_image=data_img.getBoundingClientRect().width/data_img.getBoundingClientRect().height
-
-            // set its dimension to target size
-            canvas.width = Number(img_width)
-            canvas.height = Number(img_width)/ratio_image
-
-            // draw source image into the off-screen canvas:
-            ctx?.drawImage(data_img, 0, 0, canvas.width, canvas.height)
-
-            //Get editor_content as html so we can change the data of the image with the one resized 
-            const editor_value_as_html= (parserHTML.parseFromString(editor_content_fo_zdt,'text/html')).body
-            d3.select(editor_value_as_html).select('img').attr('src',canvas.toDataURL())
-            editor_content_fo_zdt=editor_value_as_html.innerHTML.toString()
-          }
           Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
             d.content = editor_content_fo_zdt
           })
