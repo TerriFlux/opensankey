@@ -378,6 +378,77 @@ export const SankeyPlusNodeImage=( t:TFunction,
 
 }
 
+export const SankeyPlusHyperLink=( t:TFunction,
+  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
+  is_activated:boolean)=>{
+
+  const hasHyperLink = () => {
+    let visible = ''
+    visible=multi_selected_nodes.current[0]?.hyperlink??''
+    return visible
+  }
+  const node_hyperlink=hasHyperLink()
+
+  const content_image_tab=multi_selected_nodes.current.length>0?<>
+
+    <OverlayTrigger
+      key={'imageDisabledHL'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'imageDisabledHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(!is_activated)?'#666666':'',
+            backgroundColor:(!is_activated)?'#cccccc':'',
+            width:'40%'}}
+        >
+          {t('Noeud.HL')}
+        </InputGroup.Text>
+
+        <Form.Control value={node_hyperlink} type='text' onChange={(evt)=>{
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
+            set_data({ ...data })
+        }}/>
+      </InputGroup>
+    </OverlayTrigger>
+
+    {/* Open Hyperlink */}
+    <OverlayTrigger
+      key={'imageDisabledOHL'}
+      placement={'top'}
+      delay={500}
+      overlay={(!is_activated)?(<Tooltip id={'imageDisabledOHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(!is_activated)?'#666666':'',
+            backgroundColor:(!is_activated)?'#cccccc':'',
+            width:'40%'}}
+        >
+          {t('Noeud.open_HL')}
+        </InputGroup.Text>
+        <Button variant='outline-primary' style={{width:'60%'}} onClick={()=>{
+          window.open(node_hyperlink)
+        }}>
+          <FontAwesomeIcon icon={faUpRightFromSquare} />
+        </Button>
+
+
+      </InputGroup>
+    </OverlayTrigger>
+  </>:<></>
+
+  return <Tab eventKey={'hyperlink'} title={'Hyperlink'}>
+      {content_image_tab}
+    </Tab>
+  
+
+}
+
 const calcPath = (
   data: SankeyPlusData,
   nodes: { [node_id: string]: SankeyPlusNode },
@@ -697,6 +768,14 @@ export const SankeyPlusDrawNodesIcon = (
 
   add_nodes_icon()
   add_nodes_image()
+
+  if(window.SankeyToolsStatic===true){
+    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>)
+    ggg_nodes
+      .filter(d => d.hyperlink!==undefined && d.hyperlink!=='')
+      .attr('cursor','alias')
+      .on('click',n=>window.open(n.hyperlink))
+  }
 }
 
 
@@ -775,7 +854,7 @@ export const SankeyPlusNodeDragEvent=(
   min_width_and_height:(d:SankeyPlusData)=>number[],
 
 )=>{
-  if(mode_selection.current==='s'){
+  if(mode_selection.current==='s' && window.SankeyToolsStatic!==true){
     (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(
       SankeyPlusdragGNodeEvent(
         data,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,display_nodes,display_links,
