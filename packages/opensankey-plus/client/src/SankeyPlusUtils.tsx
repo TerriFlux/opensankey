@@ -4,6 +4,13 @@ import { default_link_style } from 'open-sankey/dist/SankeyUtils'
 import {drag_legend_g_element} from 'open-sankey/dist/SankeyDrawLegend'
 import * as d3 from 'd3'
 import { opposing_drag_elements_plus } from './SankeyPlusNodes'
+import React,{ChangeEvent,useRef} from 'react'
+import { OverlayTrigger,Tooltip,Form, InputGroup, Button} from 'react-bootstrap'
+import { TFunction } from 'i18next'
+import { FaFileImport} from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
+
 export const default_sankey_plus_style_link=()=>{
   const style=default_link_style() as SankeyPlusLinkStyle
   style.gradient=false
@@ -23,3 +30,92 @@ export  const drag_legend_plus = (data:SankeyPlusData,
       }
     }
   }).on('end',()=>set_data({...data}))
+
+
+export const import_image_as_svg_BG=(
+  t:TFunction,
+  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
+  has_open_sankey_plus:boolean)=>{
+  const _load_image = useRef<HTMLInputElement>(null)
+
+
+  const content_image=<>
+    {/* Import image */}
+    <OverlayTrigger
+      key={'imageDisabled2'}
+      placement={'top'}
+      delay={500}
+      overlay={(!has_open_sankey_plus)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+    >
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:(!has_open_sankey_plus)?'#666666':'',
+            backgroundColor:(!has_open_sankey_plus)?'#cccccc':'',
+            width:'40%'}}
+        >
+          {t('Image')}
+        </InputGroup.Text>
+        <Button
+          variant='outline-primary'
+          style={{width:'30%'}}
+          className='btn_menu_config'
+          onClick={()=>{
+            if (_load_image.current) {
+              _load_image.current.name = ''
+              _load_image.current.click()
+            }
+          }}
+        ><FaFileImport/></Button>
+
+        <Button
+          variant='outline-primary'
+          style={{width:'30%'}}
+          className='btn_menu_config'
+          onClick={()=>{
+            data.background_image=''
+            set_data({...data})
+          }}
+        ><FontAwesomeIcon icon={faDeleteLeft}/></Button>
+
+        <Form.Control
+          ref={_load_image}
+          style={{display:'none'}}
+          accept='image/*'
+          type="file"
+          disabled={!has_open_sankey_plus}
+          onChange={(evt: ChangeEvent) => {
+            const files = (evt.target as HTMLFormElement).files
+            const reader = new FileReader()
+            reader.onload = (() => {
+              return (e: ProgressEvent<FileReader>) => {
+                const resultat = (e.target as FileReader).result
+                const res=resultat?.toString().replaceAll('=','')
+                data.background_image=(res as string)
+                set_data({...data})
+              }
+            })()
+            reader.readAsDataURL(files[0])
+          }}
+        />
+
+      </InputGroup>
+    </OverlayTrigger>
+  </>
+  return content_image
+}
+
+export const set_svg_bg=(data:SankeyPlusData)=>{
+  console.log(data.background_image)
+  d3.select('#svg')
+    .filter(()=>data.background_image===undefined || data.background_image==='')
+    .style('background-image',null)
+    .style('background-size','contain')
+    .style('background-repeat','no-repeat')
+
+  d3.select('#svg')
+    .filter(()=>data.background_image!==undefined && data.background_image!=='')
+    .style('background-image','url('+data.background_image+')')
+    .style('background-size','contain')
+    .style('background-repeat','no-repeat')
+}
