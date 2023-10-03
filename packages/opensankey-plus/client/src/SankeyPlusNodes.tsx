@@ -36,6 +36,7 @@ export const SankeyPlusNodeIcon = (
   is_activated:boolean,
   menu_for_modal=false
 )=> {
+  const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('icon')
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
 
   const valueAllIconRatio = () => {
@@ -58,28 +59,9 @@ export const SankeyPlusNodeIcon = (
   }
   const isAllNodeVisible=is_all_node_attr_same_value(data,multi_selected_nodes.current,'shape_visible',false) as boolean
 
-  const content_tab=<>
-
-    {/* Visibilite du noeud */}
-    <OverlayTrigger
-      key={'noeud.apparence.tooltips.1'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
-      <InputGroup key={'node_visibility'} >
-        <InputGroup.Text style={{width:'40%'}}>
-          {t('Noeud.apparence.Visibilité')+(is_node_diplaying_value_local(multi_selected_nodes,'shape_visible',false)?'*':'')}
-        </InputGroup.Text><Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={isAllNodeVisible?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'shape_visible',!isAllNodeVisible,false))
-            set_data({ ...data })
-          }}>{isAllNodeVisible?<FaEye/>:<FaEyeSlash/>}</Button>
-      </InputGroup>
-    </OverlayTrigger>
+  
+  // Content if we want to add icon to node
+  const content_icon=<>
     <OverlayTrigger
       key={'iconDisabled1'}
       placement={'top'}
@@ -103,10 +85,11 @@ export const SankeyPlusNodeIcon = (
           variant={isAllIconVisible()?'primary':'outline-primary'}
           onClick={
             () => {
-              Object.values(data.nodes).filter(
-                f => multi_selected_nodes.current.map(
-                  d => d.idNode).includes(f.idNode)).map(
-                d => d.iconVisible = !isAllIconVisible())
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.iconVisible = !isAllIconVisible()
+                  d.is_image=false
+                })
               set_data({ ...data })
             }
           }
@@ -230,37 +213,6 @@ export const SankeyPlusNodeIcon = (
     </>:<></>}
   </>
 
-  return menu_for_modal?content_tab:<Tab
-    key="node_icon"
-    eventKey="node_icon"
-    title={<>
-      {t('Noeud.icon.icon')}
-      {(!is_activated)?
-        <OverlayTrigger
-          key={'textZoneDisabled'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
-        >
-          <Badge pill
-            bg="white"
-            style={{marginLeft:'5px', fontSize:'1.3em'}}>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Badge>
-        </OverlayTrigger>:<></>}
-    </>}
-  >
-    {content_tab}
-  </Tab>
-}
-
-export const SankeyPlusNodeImage=( t:TFunction,
-  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean)=>{
   const isAllNodeImage = () => {
     let visible = false
     multi_selected_nodes.current.map(
@@ -268,29 +220,9 @@ export const SankeyPlusNodeImage=( t:TFunction,
     return visible
   }
   const allNodeImage=isAllNodeImage()
-  const isAllNodeVisible=is_all_node_attr_same_value(data,multi_selected_nodes.current,'shape_visible',false) as boolean
 
-  const content_image_tab=<>
-    {/* Visibilite du noeud */}
-    <OverlayTrigger
-      key={'noeud.apparence.tooltips.1'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
-      <InputGroup key={'node_visibility'} >
-        <InputGroup.Text style={{width:'40%'}}>
-          {t('Noeud.apparence.Visibilité')+(is_node_diplaying_value_local(multi_selected_nodes,'shape_visible',false)?'*':'')}
-        </InputGroup.Text><Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={isAllNodeVisible?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'shape_visible',!isAllNodeVisible,false))
-            set_data({ ...data })
-          }}>{isAllNodeVisible?<FaEye/>:<FaEyeSlash/>}</Button>
-      </InputGroup>
-    </OverlayTrigger>
+  // Content if we want to add image to node
+  const content_image=<>
     <OverlayTrigger
       key={'imageDisabled1'}
       placement={'top'}
@@ -314,10 +246,11 @@ export const SankeyPlusNodeImage=( t:TFunction,
           variant={allNodeImage?'primary':'outline-primary'}
           onClick={
             () => {
-              Object.values(data.nodes).filter(
-                f => multi_selected_nodes.current.map(
-                  d => d.idNode).includes(f.idNode)).map(
-                d => d.is_image = !allNodeImage)
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.is_image = !allNodeImage
+                  d.iconVisible=false
+                })
               set_data({ ...data })
             }
           }
@@ -347,6 +280,7 @@ export const SankeyPlusNodeImage=( t:TFunction,
         <Form.Control
           accept='image/*'
           type="file"
+          disabled={!is_activated}
           onChange={(evt: ChangeEvent) => {
             const files = (evt.target as HTMLFormElement).files
             const reader = new FileReader()
@@ -354,7 +288,6 @@ export const SankeyPlusNodeImage=( t:TFunction,
               return (e: ProgressEvent<FileReader>) => {
                 const resultat = (e.target as FileReader).result
                 const res=resultat?.toString().replaceAll('=','')
-                console.log(res)
                 Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                   .forEach(n=>n.image_src=(res as string))
 
@@ -370,12 +303,79 @@ export const SankeyPlusNodeImage=( t:TFunction,
     </OverlayTrigger>
   </>
 
-  return <>
-  <React.Fragment key={'sep_4'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
-    <h4 style={{fontSize:'14px' ,fontWeight:'bold'}}>Image</h4>
-    {content_image_tab}
+  // Content of the tab that change depending on the illustration we want to make
+  const content_tab=<>
+    {/* Visibilite du noeud */}
+    <OverlayTrigger
+      key={'noeud.apparence.tooltips.1'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
+      <InputGroup key={'node_visibility'} >
+        <InputGroup.Text style={{width:'40%'}}>
+          {t('Noeud.apparence.Visibilité')+(is_node_diplaying_value_local(multi_selected_nodes,'shape_visible',false)?'*':'')}
+        </InputGroup.Text><Button
+          className='btn_menu_config'
+          style={{width:'60%'}}
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={isAllNodeVisible?'primary':'outline-primary'}
+          onClick={() => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'shape_visible',!isAllNodeVisible,false))
+            set_data({ ...data })
+          }}>{isAllNodeVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+      </InputGroup>
+    </OverlayTrigger>
+
+    <InputGroup key={'node_illustration_type'} >
+      <InputGroup.Text style={{width:'40%'}}>
+        {t('Noeud.illustration_type')}
+      </InputGroup.Text>
+      <Button
+        className='btn_menu_config'
+        style={{width:'30%'}}
+        variant={button_icon_or_image==='icon'?'primary':'outline-primary'}
+        onClick={() => {
+          set_button_icon_or_image('icon')
+        }}>Icon</Button>
+
+      <Button
+        className='btn_menu_config'
+        style={{width:'30%'}}
+        variant={button_icon_or_image==='image'?'primary':'outline-primary'}
+        onClick={() => {
+          set_button_icon_or_image('image')
+        }}>Image</Button>
+    </InputGroup>
+    {button_icon_or_image==='icon'?content_icon:content_image}
   </>
 
+
+
+  return menu_for_modal?content_tab:<Tab
+    key="node_icon"
+    eventKey="node_icon"
+    title={<>
+      {t('Noeud.illustration')}
+      {(!is_activated)?
+        <OverlayTrigger
+          key={'textZoneDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+        >
+          <Badge pill
+            bg="white"
+            style={{marginLeft:'5px', fontSize:'1.3em'}}>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Badge>
+        </OverlayTrigger>:<Badge pill bg="info" style={{marginLeft:'5px'}}>Beta</Badge>}
+    </>}
+  >
+    {content_tab}
+  </Tab>
 }
 
 export const SankeyPlusHyperLink=( t:TFunction,
@@ -409,8 +409,8 @@ export const SankeyPlusHyperLink=( t:TFunction,
         </InputGroup.Text>
 
         <Form.Control value={node_hyperlink} type='text' onChange={(evt)=>{
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
-            set_data({ ...data })
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
+          set_data({ ...data })
         }}/>
       </InputGroup>
     </OverlayTrigger>
@@ -442,9 +442,31 @@ export const SankeyPlusHyperLink=( t:TFunction,
     </OverlayTrigger>
   </>:<></>
 
-  return <Tab eventKey={'hyperlink'} title={'Hyperlink'}>
-      {content_image_tab}
-    </Tab>
+  return <Tab
+    key="hyperlink"
+    eventKey="hyperlink"
+    title={<>
+      Hyperlink
+      {(!is_activated)?
+        <OverlayTrigger
+          key={'textZoneDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+        >
+          <Badge pill
+            bg="white"
+            style={{marginLeft:'5px', fontSize:'1.3em'}}>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Badge>
+        </OverlayTrigger>:<Badge pill bg="info" style={{marginLeft:'5px'}}>Beta</Badge>}
+    </>}
+  >
+    {content_image_tab}
+  </Tab>
   
 
 }
