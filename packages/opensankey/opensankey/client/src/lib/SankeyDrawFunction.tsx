@@ -1997,8 +1997,8 @@ export const node_label_text=(
   data:SankeyData,
   d:SankeyNode
 )=>{
-  if ('Type de noeud' in d.tags && d.tags['Type de noeud'][0] == 'echange') {
-    return d.name.split(' - ')[0]
+  if (data.node_label_separator && data.node_label_separator!=='') {
+    return d.name.split(data.node_label_separator)[0]
   }
   return d.name
 }

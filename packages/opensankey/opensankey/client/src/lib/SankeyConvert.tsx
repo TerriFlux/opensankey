@@ -1470,6 +1470,10 @@ export const convert_data = (
     data.accordeonToShow.push('ED')
   }
 
+  if(data.node_label_separator===undefined || data.node_label_separator===null){
+    data.node_label_separator=''
+  }
+
   clean_data_local(data)
 }
 const has_not_converted_nodeTags_as_levelTags=(data:SankeyData)=>{

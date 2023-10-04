@@ -144,6 +144,8 @@ export const open_resources = {
         choseTransforDifficulty:'Choose your knowledge level of the application',
         selectNodeAttrubutedToTag:'Select all nodes having this tag',
         selectLinkAttrubutedToTag:'Select all links having this tag',
+        node_label_sep:'Node label separator',
+
         Transformation : {
           amp_short:'Trans.',
           amp:'Change the layout',
@@ -209,7 +211,8 @@ export const open_resources = {
           LegWidth:'Width (in px) for the legend space',
           BgC:'Change the background color of the interactive graphic space',
           checkpoint:'Save the data in the browser to not lost it when you leave the application',
-          fontSize:'Change the size of the font in the legend'
+          fontSize:'Change the size of the font in the legend',
+          node_label_sep:'String of text that will be used to hide some part of a node label, exemple: separator is " - " and node name is "node1 - subinfo" the node label displayed in the drawing area will be "node1"'
         },
       },
       MEP:{
@@ -716,6 +719,7 @@ export const open_resources = {
         choseTransforDifficulty:'Choisssez votre niveau de connaissance d\'opensankey',
         selectNodeAttrubutedToTag:'Sélectionne les noeuds possédant cette étiquette',
         selectLinkAttrubutedToTag:'Sélectionne les flux possédant cette étiquette',
+        node_label_sep:'Séparateur de label de noeud',
 
         Transformation : {
           amp_short:'Trans.',
@@ -783,6 +787,7 @@ export const open_resources = {
           BgC:'Changer la couleur fond de l\'espace graphique interactif',
           checkpoint:'Enregistre les données dans le navigateur pour ne pas les perdre les quand vous quittez l\'application',
           fontSize:'Modilie la taille de la font dans la légende',
+          node_label_sep:'Chaine de caractère qui permettra de masquer une partie d\'un label de noeud, exemple : le séparateur est " - " et le nom du noeud est " noeud1 - sousinfo" alors le label du noeud affiché dans la zone de dessin sera "noeud1"',
         },
 
 
