@@ -22,7 +22,7 @@ typeof globalThis & {
 
 export const SankeyPlusMenuPreferenceLabels=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
   return <InputGroup>
-    <InputGroup.Text style={{width:'20%'}}>{t('Menu.LL')}</InputGroup.Text>
+    <InputGroup.Text style={{width:'30%'}}>{t('Menu.LL')}</InputGroup.Text>
     <Button style={{width:'10%'}} className='btn_menu_config' key='LL' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('LL')?'primary':'outline-primary'} onClick={() => {
       preferenceCheck('LL',data)
       set_data({ ...data })
