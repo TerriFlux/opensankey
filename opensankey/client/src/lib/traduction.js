@@ -859,7 +859,7 @@ export const open_resources = {
       Noeud:{
         Nom:'Nom',
         Style:'Style',
-        SelectStyle:'Selectionner un style',
+        SelectStyle:'Sélectionner un style',
         AS:'Réinitialiser',
         TS:'Tout sélectionner',
         NS:'Aucun noeud sélectionné',
