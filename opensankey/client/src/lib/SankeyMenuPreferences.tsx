@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form,  Modal, Button, ButtonGroup,Col,Row, InputGroup} from 'react-bootstrap'
+import { Form,  Modal, Button, ButtonGroup,Col,Row, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
 import { SankeyData } from './types'
 import { TFunction,i18n } from 'i18next'
 import { FaEyeSlash,FaEye } from 'react-icons/fa'
@@ -65,7 +65,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
     </ButtonGroup>,
     'form':[
       <InputGroup>
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.MEP')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'30%'}}>{t('Menu.MEP')}</InputGroup.Text>
         <Button style={{width:'10%'}} className='btn_menu_config' key='MEP' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('MEP')?'primary':'outline-primary'} onClick={() => {
           preferenceCheck('MEP',data)
           set_data({ ...data })
@@ -75,14 +75,14 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Noeuds')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'30%'}}>{t('Menu.Noeuds')}</InputGroup.Text>
         <Button style={{width:'10%'}} className='btn_menu_config' key='Node' variant={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)?'primary':'outline-primary'} disabled >
           <FaEye/>
         </Button>
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.EN')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'30%'}}>{t('Menu.EN')}</InputGroup.Text>
         <Button style={{width:'10%'}} className='btn_menu_config' key='EN' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('EN')?'primary':'outline-primary'} onClick={() => {Button
           preferenceCheck('EN',data)
           set_data({ ...data })
@@ -92,7 +92,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.flux')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'30%'}}>{t('Menu.flux')}</InputGroup.Text>
         <Button style={{width:'10%'}} className='btn_menu_config' key='flux' variant={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)?'primary':'outline-primary'} disabled >
           <FaEye/>
 
@@ -100,7 +100,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.EF')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'30%'}}>{t('Menu.EF')}</InputGroup.Text>
         <Button style={{width:'10%'}} className='btn_menu_config' key='ef' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('EF')?'primary':'outline-primary'} onClick={() => {
           preferenceCheck('EF',data)
           set_data({ ...data })
@@ -111,7 +111,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.ED')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'30%'}}>{t('Menu.ED')}</InputGroup.Text>
         <Button style={{width:'10%'}} className='btn_menu_config' key='ed' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('ED')?'primary':'outline-primary'} onClick={() => {
           preferenceCheck('ED',data)
           set_data({ ...data })
@@ -121,7 +121,18 @@ export const OpenSankeyDefaultModalePreferenceContent=(
         </Button>
       </InputGroup>,
 
-    ]
+    ],
+    'node_label_sep':<OverlayTrigger
+    key={'Banner.ndd_lst.1'}
+    placement={'top'}
+    delay={500}
+    overlay={<Tooltip id={'node_label_sep'}>{t('Menu.tooltips.node_label_sep')} </Tooltip>}><InputGroup>
+      <InputGroup.Text>{t('Menu.node_label_sep')}</InputGroup.Text>
+      <Form.Control type='text' value={data.node_label_separator} onChange={(evt)=>{
+        data.node_label_separator=evt.target.value
+        set_data({...data})
+      }}></Form.Control>
+    </InputGroup></OverlayTrigger>
 
 
   }

@@ -649,6 +649,7 @@ export const default_sankey_data = (): SankeyData => {
     legend_position: [window.innerWidth-240, 10],
     display_legend_scale:false,
     legend_police:16,
+    node_label_separator:' - '
 
   }
   const default_data = {

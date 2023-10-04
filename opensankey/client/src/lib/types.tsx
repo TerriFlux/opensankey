@@ -283,6 +283,7 @@ export const SankeyDataPropTypes = {
   colorMap: PropTypes.string.isRequired,
 
   legend_width:PropTypes.number.isRequired,
+  node_label_separator:PropTypes.string.isRequired
 }
 
 export type SankeyData = InferProps<typeof SankeyDataPropTypes>
