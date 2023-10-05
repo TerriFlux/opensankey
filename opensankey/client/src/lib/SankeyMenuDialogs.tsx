@@ -735,7 +735,7 @@ export const OpenSankeyDiagramSelector = (
   set_sankey_data: (s:SankeyData)=>null,
   prev_sankey_data: SankeyData,
   set_prev_sankey_data: (s:SankeyData)=>void, 
-  updateLayout: (data: SankeyData,new_layout: SankeyData,mode:string[])=>void, 
+  updateLayout: (data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void, 
   elementToDispose : string[]
 ) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
@@ -767,7 +767,7 @@ export const OpenSankeyDiagramSelector = (
                     convert_data(new_layout)
                     complete_sankey_data(new_layout, default_sankey_data, default_node, default_link)
                     set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
-                    updateLayout(sankey_data, new_layout, elementToDispose)
+                    updateLayout(sankey_data, new_layout, elementToDispose, true)
                     set_sankey_data({ ...sankey_data })
                   }
                 }
