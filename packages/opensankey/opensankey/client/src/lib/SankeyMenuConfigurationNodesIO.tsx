@@ -459,7 +459,9 @@ export const SankeyMenuConfigurationNodesIO = (
       <path d="M483.914,188.117l-82.816-82.752c-12.501-12.495-32.764-12.49-45.259,0.011s-12.49,32.764,0.011,45.259l72.789,72.768   L138.698,224c-17.673,0-32,14.327-32,32s14.327,32,32,32l0,0l291.115-0.533l-73.963,73.963   c-12.042,12.936-11.317,33.184,1.618,45.226c12.295,11.445,31.346,11.436,43.63-0.021l82.752-82.752   c37.491-37.49,37.491-98.274,0.001-135.764c0,0-0.001-0.001-0.001-0.001L483.914,188.117z"/>
     </g>
   </svg>
-  const content=<>
+
+  // Content to reorganize the i/o of only 1 node at the time
+  const content_for_one_node=multi_selected_nodes.current.length===1?<>
 
     {/* Choisir un lien entrant / sortant */}
     <InputGroup>
@@ -604,74 +606,80 @@ export const SankeyMenuConfigurationNodesIO = (
     {/* Table montrant les noeuds selectionnés  */}
     {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored,getLinkValue)}
 
+  </>:<></>
+
+  const content_always_present=<InputGroup>
     {/* Boutons de rérrangement / selection des flux  */}
-    <InputGroup>
-      <ButtonGroup>
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.7'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            style={{width:'33.3%'}}
-            variant='primary'
-            onClick={() => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                reorganize_node_inputLinksId(data,d, data.nodes, data.links)
-                reorganize_node_outputLinksId(data,d, data.nodes, data.links)
-              })
-              set_data({ ...data })
-            }}>
-            {t('Noeud.Reorg')}
-          </Button>
-        </OverlayTrigger>
+    <ButtonGroup>
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.7'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'33.3%'}}
+          variant='primary'
+          onClick={() => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+              reorganize_node_inputLinksId(data,d, data.nodes, data.links)
+              reorganize_node_outputLinksId(data,d, data.nodes, data.links)
+            })
+            set_data({ ...data })
+          }}>
+          {t('Noeud.Reorg')}
+        </Button>
+      </OverlayTrigger>
 
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.8'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            style={{width:'33.3%'}}
-            variant='primary'
-            onClick={() => {
-              multi_selected_links.current = []
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-                const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
-                set_display_link_opacity(opacity)
-              })
-              multi_selected_links.current.forEach(l=>select_visualy_links(l))
-            }}>
-            {t('Noeud.SlctOutLink')}
-          </Button>
-        </OverlayTrigger>
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.8'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'33.3%'}}
+          variant='primary'
+          onClick={() => {
+            multi_selected_links.current = []
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
+              const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              set_display_link_opacity(opacity)
+            })
+            multi_selected_links.current.forEach(l=>select_visualy_links(l))
+          }}>
+          {t('Noeud.SlctOutLink')}
+        </Button>
+      </OverlayTrigger>
 
-        <OverlayTrigger
-          key={'menu.tooltips.noeud.9'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            style={{width:'33.4%'}}
-            variant='primary'
-            onClick={() => {
-              multi_selected_links.current = []
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-                const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
-                set_display_link_opacity(opacity)
-              })
-              multi_selected_links.current.forEach(l=>select_visualy_links(l))
-            }}>
-            {t('Noeud.SlctInLink')}
-          </Button>
-        </OverlayTrigger>
-      </ButtonGroup>
-    </InputGroup>
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.9'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
+        <Button
+          className='btn_menu_config'
+          style={{width:'33.4%'}}
+          variant='primary'
+          onClick={() => {
+            multi_selected_links.current = []
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
+              const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              set_display_link_opacity(opacity)
+            })
+            multi_selected_links.current.forEach(l=>select_visualy_links(l))
+          }}>
+          {t('Noeud.SlctInLink')}
+        </Button>
+      </OverlayTrigger>
+    </ButtonGroup>
+  </InputGroup>
+
+  const content=<>
+    {content_for_one_node}
+    {content_always_present}
   </>
 
   return menu_for_modal?content:<Tab key="node_link_io" eventKey="node_link_io" title={t('Noeud.PF.PF')}>{content}</Tab>
