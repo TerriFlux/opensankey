@@ -123,16 +123,16 @@ export const OpenSankeyDefaultModalePreferenceContent=(
 
     ],
     'node_label_sep':<OverlayTrigger
-    key={'Banner.ndd_lst.1'}
-    placement={'top'}
-    delay={500}
-    overlay={<Tooltip id={'node_label_sep'}>{t('Menu.tooltips.node_label_sep')} </Tooltip>}><InputGroup>
-      <InputGroup.Text>{t('Menu.node_label_sep')}</InputGroup.Text>
-      <Form.Control type='text' value={data.node_label_separator} onChange={(evt)=>{
-        data.node_label_separator=evt.target.value
-        set_data({...data})
-      }}></Form.Control>
-    </InputGroup></OverlayTrigger>
+      key={'Banner.ndd_lst.1'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'node_label_sep'}>{t('Menu.tooltips.node_label_sep')} </Tooltip>}><InputGroup>
+        <InputGroup.Text>{t('Menu.node_label_sep')}</InputGroup.Text>
+        <Form.Control type='text' value={data.node_label_separator} onChange={(evt)=>{
+          data.node_label_separator=evt.target.value
+          set_data({...data})
+        }}></Form.Control>
+      </InputGroup></OverlayTrigger>
 
 
   }

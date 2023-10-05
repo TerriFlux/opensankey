@@ -485,7 +485,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   if(show_menu_node_io && multi_selected_nodes.current.length!==1){
     set_show_menu_node_io(false)
   }
-  const menu_node_io=multi_selected_nodes.current.length==1?SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.getLinkValue,multi_selected_links,set_display_link_opacity,true):<></>
+  const menu_node_io=SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.getLinkValue,multi_selected_links,set_display_link_opacity,true)
   const dragNodeIO=show_menu_node_io?menu_draggable(menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),set_show_menu_node_io):<></>
 
 

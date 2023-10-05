@@ -50,9 +50,9 @@ export const OpenSankeyMenuConfigurationNodes = (
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
     ui['Tags'] = SankeyMenuConfigurationNodesTags(t,data,set_data,multi_selected_nodes,tags_group_key,set_tags_group_key)
   }
-  if (multi_selected_nodes.current.length == 1) {
-    ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue,multi_selected_links,set_display_link_opacity)
-  }
+  
+  ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue,multi_selected_links,set_display_link_opacity)
+  
   return ui
 }
 
