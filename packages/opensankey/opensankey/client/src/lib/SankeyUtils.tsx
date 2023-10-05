@@ -1107,7 +1107,7 @@ export const downloadExamples = (
  * @param {SankeyData} server_data
  * @returns {*}
  */
-export const processExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[])=>void,
+export const processExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void,
   convert_data:(d:SankeyData)=>void,
 
 ) => {
@@ -1121,7 +1121,7 @@ export const processExample = (server_data: SankeyData,updateLayout:(data: Sanke
     convert_data((data as SankeyData & layout_type).layout)
     complete_sankey_data((data as SankeyData & layout_type).layout,default_sankey_data,default_node,default_link)
     compute_default_input_outputLinksId(data.nodes, data.links)
-    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','posFlux','attrNode','attrFlux','tagNode','tagFlux','tagData','attrGeneral','freeLabels','Views'])
+    updateLayout(data, (data as SankeyData & layout_type).layout,['posNode','posFlux','attrNode','attrFlux','tagNode','tagFlux','tagData','attrGeneral','freeLabels','Views'],true)
     delete (data as SankeyData & { layout?: SankeyData }).layout
   }
   d3.select('.loading_auto_compute').remove()
