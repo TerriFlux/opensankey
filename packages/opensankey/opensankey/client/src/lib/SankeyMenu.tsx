@@ -52,7 +52,8 @@ import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinks'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import { repositionne_sidebar } from './SankeyDrawFunction'
+import { repositionne_sidebar,select_visualy_links} from './SankeyDrawFunction'
+
 
 declare const window: Window &
   typeof globalThis & {
@@ -1793,30 +1794,24 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
         <Button
           variant='light'
           onClick={() => {
-            multi_selected_links.current = [] as SankeyLink[]
-            multi_selected_links.current = Object.values(data.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink))
-            if (multi_selected_links.current.length === 0) {
-              return
-            }
-            const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
-            set_display_link_opacity(opacity)
-            set_contextualised_node(undefined)
-            set_data(data)
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
+              const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              set_display_link_opacity(opacity)
+            })
+            multi_selected_links.current.forEach(l=>select_visualy_links(l))
           }}>
           {t('Noeud.SlctOutLink')}
         </Button>
         <Button
           variant='light'
           onClick={() => {
-            multi_selected_links.current = [] as SankeyLink[]
-            multi_selected_links.current = Object.values(data.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink))
-            if (multi_selected_links.current.length === 0) {
-              return
-            }
-            const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
-            set_display_link_opacity(opacity)
-            set_contextualised_node(undefined)
-            set_data(data)
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
+              const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              set_display_link_opacity(opacity)
+            })
+            multi_selected_links.current.forEach(l=>select_visualy_links(l))
           }}>
           {t('Noeud.SlctInLink')}
         </Button>
