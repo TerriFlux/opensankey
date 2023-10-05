@@ -641,7 +641,6 @@ export const SankeyMenuConfigurationNodesIO = (
           style={{width:'33.3%'}}
           variant='primary'
           onClick={() => {
-            multi_selected_links.current = []
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
               multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
               const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
@@ -663,7 +662,6 @@ export const SankeyMenuConfigurationNodesIO = (
           style={{width:'33.4%'}}
           variant='primary'
           onClick={() => {
-            multi_selected_links.current = []
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
               multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
               const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
