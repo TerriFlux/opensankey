@@ -905,10 +905,12 @@ export const synchronizeNodesandLinksId = (
 export const updateLayout = (
   data: SankeyData,
   new_layout: SankeyData,
-  mode:string[]
+  mode:string[],
+  synchronize = false
 ) => {
-
-  synchronizeNodesandLinksId(data, new_layout)
+  if (synchronize) {
+    synchronizeNodesandLinksId(data, new_layout)
+  }
   /* eslint-disable */
   // @ts-ignore
   const deep_diff = require('deep-diff')
