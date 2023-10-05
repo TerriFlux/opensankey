@@ -83,6 +83,7 @@ export const import_image_as_svg_BG=(
           style={{display:'none'}}
           accept='image/*'
           type="file"
+          value={''}
           disabled={!has_open_sankey_plus}
           onChange={(evt: ChangeEvent) => {
             const files = (evt.target as HTMLFormElement).files
