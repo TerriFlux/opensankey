@@ -1769,13 +1769,13 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
-        }}>Aggregation</Button>:<></>}
+        }}>Aggrégation</Button>:<></>}
         {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.node_context_has_desaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
           SankeyUtils.desaggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
-        }}>Desaggregation</Button>:<></>}
+        }}>Désaggregation</Button>:<></>}
         {sep}
         {button_edit_label_node}
         {sep}
