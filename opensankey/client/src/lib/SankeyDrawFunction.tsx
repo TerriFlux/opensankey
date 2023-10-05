@@ -631,6 +631,7 @@ export const drawArrows = (
   let cum_v_right = 0
   let cum_h_bottom = 0
   let is_v = true
+  const is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
 
   const res = compute_total_offsets(inv_scale,n, data, display_nodes, test_link_value,undefined,getLinkValue)
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
@@ -704,9 +705,9 @@ export const drawArrows = (
               return SankeyShapes.draw_arrow(scale(total_height_right) / 2, p5, scale(link_value), scale(cum_v_right), true, true,arrow_length)
             }
           } else if (ori === 'vv' || ori === 'hv') {
-            if (n.y > source_node.y) {
-              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2
-              yt = +n.y
+            if (n.y > source_node.y || is_exportation_node) {
+              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2 +((is_exportation_node)?+source_node.x + +d3.select('#shape_' + source_node.idNode).attr('width'):0)
+              yt = +n.y +((is_exportation_node)?+source_node.y+ +d3.select('#shape_' + source_node.idNode).attr('height'):0)
               p5 = [xt, yt]
               is_v = false
               return SankeyShapes.draw_arrow(scale(total_width_top) / 2, p5, scale(link_value), scale(cum_h_top), false, false,arrow_length)
