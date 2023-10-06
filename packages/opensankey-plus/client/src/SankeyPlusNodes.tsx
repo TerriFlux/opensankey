@@ -14,6 +14,7 @@ import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType,DiffType, SankeyPlusD
 import { filter_view,get_data_from_view } from './SankeyPlusViews'
 
 import { FaEyeSlash, FaEye} from 'react-icons/fa'
+import { faIcons} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare, faLock } from '@fortawesome/free-solid-svg-icons'
 
@@ -34,7 +35,8 @@ export const SankeyPlusNodeIcon = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   radio_selected:string,
   is_activated:boolean,
-  menu_for_modal=false
+  menu_for_modal=false,
+  set_show_modal_import_icons:(b:boolean)=>void
 )=> {
   const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
@@ -99,7 +101,8 @@ export const SankeyPlusNodeIcon = (
       </InputGroup>
     </OverlayTrigger>
 
-    {isAllIconVisible()?<>
+   
+    {isAllIconVisible() && Object.keys(data.icon_catalog).length>0?<>
       <OverlayTrigger
         key={'iconDisabled2'}
         placement={'top'}
@@ -111,30 +114,18 @@ export const SankeyPlusNodeIcon = (
             style={{
               color:(!is_activated)?'#666666':'',
               backgroundColor:(!is_activated)?'#cccccc':'',
-              // width:(!is_activated)?'60%':'40%'}}
-              width:'40%'}}
+              width:'75%'}}
           >
-            {t('Noeud.icon.si')}
+            {t('Noeud.icon.icon_catalog')}
           </InputGroup.Text>
-          <Form.Select
-            style={{width:(!is_activated)?'40%':'60%'}}
+
+          <Button style={{width:'25%'}}
+            className='btn_menu_config'
             disabled={!is_activated}
-            onChange={(evt : React.ChangeEvent<HTMLSelectElement>) => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.iconName = evt.target.value
-              })
-              set_data({ ...data })
-            }}
-            value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].iconName:'None'}
-          >
-            <option key={0} value={'none'}>{t('Menu.Aucun')}</option>
-            {Object.keys(data.icon_catalog).sort((a,b) => (a > b) ? 1 : ((b > a) ? -1 : 0)).map((n, i) => {
-              return <option key={i + 1} value={n}>{n}</option>
-            })}
-          </Form.Select>
+            variant={'outline-primary'}
+            onClick={() => { set_show_modal_import_icons(true) }}>{<FontAwesomeIcon icon={faIcons} />}</Button>
         </InputGroup>
       </OverlayTrigger>
-
       <OverlayTrigger
         key={'iconDisabled3'}
         placement={'top'}
@@ -805,9 +796,6 @@ export const SankeyPlusDrawNodesIcon = (
   
 
 }
-
-
-
 
 
 export const context_node_icon=(contextualised_node:SankeyPlusNode,
