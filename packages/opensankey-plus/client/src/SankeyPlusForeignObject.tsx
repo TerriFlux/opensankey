@@ -6,7 +6,6 @@ import * as d3 from 'd3'
 import { SankeyPlusData, SankeyPlusNode } from './types'
 
 import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
 
 import { node_displayed} from 'open-sankey/dist/SankeyUtils'
 
@@ -47,7 +46,6 @@ export const SankeyPlusNodeFO = (
   const modules = {
     toolbar: [
       [{ 'font': [] }],
-      [{ 'header': [1, 2, 3, 4, 5, false] }],
       ['bold', 'italic', 'underline','strike'],
       [{ 'size': ['small', false, 'large', 'huge'] }],
       [{ 'color': [] }, { 'background': [] }],
@@ -58,8 +56,7 @@ export const SankeyPlusNodeFO = (
     ],
   }
 
-  const formats = ['font',
-    'header','size',
+  const formats = ['font','size',
     'bold', 'italic', 'underline', 'strike','color','background',
     'list', 'bullet','align'
   ]
@@ -288,6 +285,7 @@ export const SankeyPlusDrawNodesFO = (
         sankeyTooltip.style('opacity', 0)
       })
       .append('xhtml:div')
+      .attr('class','ql-editor')
       .html((d)=>d.FO_content)
   }
   add_nodes_fo()

@@ -180,7 +180,6 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   const modules = {
     toolbar: [
       [{ 'font': [] }],
-      [{ 'header': [1, 2, 3, 4, 5, false] }],
       ['bold', 'italic', 'underline','strike'],
       [{ 'size': ['small', false, 'large', 'huge'] }],
       [{ 'color': [] }, { 'background': [] }],
@@ -190,8 +189,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     ],
   }
 
-  const formats = ['font',
-    'header','size',
+  const formats = ['font','size',
     'bold', 'italic', 'underline', 'strike','color','background',
     'list', 'bullet','align'
   ]

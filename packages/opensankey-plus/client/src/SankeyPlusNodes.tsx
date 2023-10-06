@@ -36,7 +36,7 @@ export const SankeyPlusNodeIcon = (
   is_activated:boolean,
   menu_for_modal=false
 )=> {
-  const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('icon')
+  const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
 
   const valueAllIconRatio = () => {
@@ -261,7 +261,7 @@ export const SankeyPlusNodeIcon = (
     </OverlayTrigger>
 
     {/* Import image */}
-    <OverlayTrigger
+    {allNodeImage?<OverlayTrigger
       key={'imageDisabled2'}
       placement={'top'}
       delay={500}
@@ -280,6 +280,7 @@ export const SankeyPlusNodeIcon = (
         <Form.Control
           accept='image/*'
           type="file"
+          value=''
           disabled={!is_activated}
           onChange={(evt: ChangeEvent) => {
             const files = (evt.target as HTMLFormElement).files
@@ -300,7 +301,8 @@ export const SankeyPlusNodeIcon = (
         />
 
       </InputGroup>
-    </OverlayTrigger>
+    </OverlayTrigger>:<></>}
+    
   </>
 
   // Content of the tab that change depending on the illustration we want to make
@@ -336,7 +338,7 @@ export const SankeyPlusNodeIcon = (
         variant={button_icon_or_image==='icon'?'primary':'outline-primary'}
         onClick={() => {
           set_button_icon_or_image('icon')
-        }}>Icon</Button>
+        }}>{t('Noeud.icon.icon')}</Button>
 
       <Button
         className='btn_menu_config'
@@ -446,7 +448,7 @@ export const SankeyPlusHyperLink=( t:TFunction,
     key="hyperlink"
     eventKey="hyperlink"
     title={<>
-      Hyperlink
+      {t('Noeud.HL')}
       {(!is_activated)?
         <OverlayTrigger
           key={'textZoneDisabled'}
@@ -526,6 +528,16 @@ const node_mouse_click=(
     setTimeout(function () {
       set_animating(false)
     }, time_to_animate)
+  }else if(window.SankeyToolsStatic===true){
+    const n=d as SankeyPlusNode
+    if(n.hyperlink!==undefined && n.hyperlink!==''){
+      window.open(n.hyperlink)
+    }
+  }else if(window.SankeyToolsStatic===false && event.altKey) {
+    const n=d as SankeyPlusNode
+    if(n.hyperlink!==undefined && n.hyperlink!==''){
+      window.open(n.hyperlink)
+    }
   }
 }
 
@@ -790,14 +802,8 @@ export const SankeyPlusDrawNodesIcon = (
 
   add_nodes_icon()
   add_nodes_image()
+  
 
-  if(window.SankeyToolsStatic===true){
-    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>)
-    ggg_nodes
-      .filter(d => d.hyperlink!==undefined && d.hyperlink!=='')
-      .attr('cursor','alias')
-      .on('click',n=>window.open(n.hyperlink))
-  }
 }
 
 
