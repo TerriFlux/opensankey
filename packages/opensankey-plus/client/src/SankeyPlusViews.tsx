@@ -780,59 +780,17 @@ export const viewsAccordion = (
                           ind = (v.id === d.id) ? i : ind
                         })
                         master_data.view.splice(ind, 1)
-                        set_view('none')
+                        if(master_data.current_view==d.id){
+                          set_view('none')
+                          set_data({ ...master_data })
+                        }
                         set_master_data({...master_data})
-                        set_data({ ...master_data })
+                        
+                        
                       }
                     }
                   ><FaMinus /></Button></td>
-                  {/* <td><Button
-                    disabled={!is_activated}
-                    size="sm"
-                    variant='success'
-                    onClick={
-                      () => {
-                        // Create a copy of the view
-                        const cur_view = d
-                        const copy_view_data = JSON.parse(JSON.stringify(cur_view.view_data))
-                        const new_ind = 'view_' + String(new Date().getTime())
-
-                        copy_view_data.view = []
-                        master_data.view.push({
-                          id: new_ind,
-                          view_data: copy_view_data,
-                          nom: 'copy of ' + cur_view.nom,
-                          details: ''
-                        })
-                        set_view(new_ind)
-                        set_master_data({...master_data})
-                        set_data(get_data_from_view(master_data,new_ind))
-                      }
-                    }
-                  ><FaCopy /></Button></td>
-                  <td><Button
-                    size="sm"
-                    variant='secondary'
-                    onClick={
-                      () => {
-                        // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
-                        if (_load_json.current) {
-                          _load_json.current.name = ''
-                          _load_json.current.click()
-                          _load_json.current.id = d.id
-                        }
-                      }
-                    }
-                  ><FaFileImport /></Button></td>
-                  <td>
-                    <Button variant='warning'
-                      onClick={()=>{
-                        const to_download=get_data_from_view(master_data,d.id)
-                        to_download.view=[]
-                        clickSaveDiagram(to_download,d.nom)
-                      }}
-                    ><FaFileExport/></Button>
-                  </td> */}
+                  
 
                 </tr>
               )
@@ -840,40 +798,6 @@ export const viewsAccordion = (
           </tbody>
         </Table>
       </Form>
-      {/* L'import/export de multiple vue est jugé inutile */}
-      {/* <InputGroup>
-        <Button
-          style={{width:'50%', height:'2.5em'}}
-          className='btn_menu_config'
-          disabled={!is_activated}
-          variant={is_activated?'outline-primary':'primary'}
-          onClick={()=>{
-            master_data.view.forEach(v=>{
-              const to_download=get_data_from_view(master_data,v.id)
-              to_download.view=[]
-              clickSaveDiagram(to_download,v.nom)
-            })
-          }}>
-          {t('view.exportAll')}
-        </Button>
-        <Button
-          style={{width:'50%', height:'2.5em'}}
-          className='btn_menu_config'
-          disabled={!is_activated}
-          variant={is_activated?'outline-primary':'primary'}
-          onClick={
-            () => {
-              // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
-              if (_load_multiple_json.current) {
-                _load_multiple_json.current.name = ''
-                _load_multiple_json.current.click()
-              }
-            }
-          }
-        >
-          {t('view.importMultiple')}
-        </Button>
-      </InputGroup> */}
     </Accordion.Body>
   </Accordion.Item>
 
@@ -913,68 +837,6 @@ export const viewsAccordion = (
     }}
   />
 
-  {/* <Form.Control
-    multiple
-    className='multipleImport'
-    type="file"
-    ref={_load_multiple_json}
-    style={{ display: 'none' }}
-    onChange={(evt: ChangeEvent) => {
-      const files = (evt.target as HTMLFormElement).files
-
-      master_data=(master_data)?master_data:JSON.parse(JSON.stringify(data))
-      // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
-      for(const i in files){
-        const reader = new FileReader()
-        reader.onload = (() => {
-          return (e: ProgressEvent<FileReader>) => {
-            const result = String((e.target as FileReader).result)
-            const result_data = JSON.parse(result)
-            const imported_data=JSON.parse(JSON.stringify(result_data)) as SankeyPlusData
-
-            const keep_visible_nodes = true
-            if (keep_visible_nodes) {
-              const initial_nodes = JSON.parse(JSON.stringify(imported_data.nodes))
-              const visible_nodes = Object.values(imported_data.nodes).filter(n => node_displayed(data,n))
-              const visible_links = Object.values(imported_data.links).filter(l =>
-                node_displayed(imported_data,imported_data.nodes[l.idSource]) && node_displayed(imported_data,imported_data.nodes[l.idTarget])
-              )
-              imported_data.nodes = Object.assign({}, ...visible_nodes.map(n => ({ [n.idNode]: { ...n } })))
-              imported_data.links = Object.assign({}, ...visible_links.map(l => ({ [l.idLink]: { ...l } })))
-              apply_input_outputLinksId(initial_nodes,imported_data)
-            }
-
-            imported_data.view=[]
-            convert_data(imported_data)
-            let difference = deep_diff.diff(master_data,imported_data)
-            difference=JSON.parse(JSON.stringify((difference !== undefined)?difference:[]))
-            difference=filter_view(difference)
-
-            const new_ind = 'view_' + String(new Date().getTime())
-            const copy_data = {diff:difference}
-            master_data.view.push({
-              id: new_ind,
-              view_data: copy_data,
-              nom: (files[i].name).replace('.json',''),
-              details: '',
-              heredited_attr_from_master:[]
-
-            })
-
-          }
-        })()
-        // Permet d'executer la transformation des blob en vues tout en evitant la var length
-        //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
-        if(!isNaN(+i)){
-          reader.readAsText(files[i])
-        }
-      }
-      set_data({...master_data})
-      set_master_data({...master_data})
-      set_view('none')
-
-    }}
-  /> */}
 
   </>
 }
