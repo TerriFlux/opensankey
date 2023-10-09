@@ -646,7 +646,8 @@ export const default_sankey_data = (): SankeyData => {
     colorMap: 'no_colormap',
 
     legend_width:180,
-    legend_position: [window.innerWidth-240, 10],
+    legend_position: [0,0],
+    mask_legend:false,
     display_legend_scale:false,
     legend_police:16,
     node_label_separator:' - '
