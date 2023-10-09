@@ -5,7 +5,7 @@ import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData} from './types
 import PropTypes, { InferProps } from 'prop-types'
 import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,drawGrid,update_scale,deselect_visualy_links,deselect_visualy_nodes,svgDragMiddleMouseStart,svgDragMiddleMouseMove, select_visualy_nodes} from './SankeyDrawFunction'
+import { removeAnimate,drawGrid,update_scale,select_visualy_links,deselect_visualy_links,deselect_visualy_nodes,svgDragMiddleMouseStart,svgDragMiddleMouseMove, select_visualy_nodes} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 
 
@@ -354,6 +354,10 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     multi_selected_nodes.current=Object.values(data.nodes)
     multi_selected_nodes.current.forEach(n=>{
       select_visualy_nodes(n)
+    })
+    multi_selected_links.current=Object.values(data.links)
+    multi_selected_links.current.forEach(l=>{
+      select_visualy_links(l)
     })
 
   }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && document.activeElement?.className.includes('form-control')){
