@@ -307,8 +307,11 @@ export const OpenSankeyDrawLegend = (
   
 
   }
-
-  drawLegend()
+  if(!data.mask_legend){
+    drawLegend()
+  }else{
+    d3.select(' .opensankey #g_legend').selectAll('*').remove()
+  }
         
   return (
     <g className='g_legend' id='g_legend'></g>

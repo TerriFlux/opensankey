@@ -123,6 +123,27 @@ export const OpenSankeyMenuConfigurationLayout = (
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />,
 
     <h5>{t('Menu.Leg')}</h5>,
+
+    <InputGroup>
+      <InputGroup.Text style={{width:'60%'}} >{t('MEP.SLIP')}</InputGroup.Text>
+
+      <OverlayTrigger
+        key={'MEP.tooltips.SLIP'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'MEP.tooltips.SLIP'}>{t('MEP.tooltips.SLIP')} </Tooltip>}>
+        <Button
+          style={{width:'40%'}}
+          variant={data.mask_legend?'primary':'outline-primary'}
+          onClick={() => {
+            data.mask_legend = !data.mask_legend
+            set_data({ ...data })
+          }}>{data.mask_legend?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      </OverlayTrigger>
+      
+    </InputGroup>,
+
     /* Position X de la legende  */
     <InputGroup>
       

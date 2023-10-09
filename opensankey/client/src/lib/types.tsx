@@ -261,6 +261,7 @@ export const SankeyDataPropTypes = {
   legend_position: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
   display_legend_scale:PropTypes.bool.isRequired,
   legend_police:PropTypes.number.isRequired,
+  mask_legend:PropTypes.bool.isRequired,
 
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
