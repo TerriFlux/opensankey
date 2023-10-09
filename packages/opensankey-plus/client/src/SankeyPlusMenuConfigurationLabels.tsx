@@ -204,8 +204,8 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     'list', 'bullet','align'
   ]
 
-  const disable_options = !(is_activated && (multi_selected_label.current.length === 1))
-  const disable_editor = !(is_activated && (multi_selected_label.current.length >= 1))
+  const disable_options = is_activated? (multi_selected_label.current.length === 0):true
+ 
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
@@ -218,10 +218,10 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     theme="snow"
     modules={modules}
     formats={formats}
-    readOnly={disable_editor}
+    readOnly={disable_options}
     style={{
-      color:(disable_editor)?'#666666':'',
-      backgroundColor:(disable_editor)?'#cccccc':''}}
+      color:(disable_options)?'#666666':'',
+      backgroundColor:(disable_options)?'#cccccc':''}}
   />
 
   const content_wysiwyg=<Form>
@@ -328,8 +328,8 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         <Button size="sm"
           style={{width:'10%'}}
           className='btn_menu_config'
-          variant={disable_editor?'outline-primary':'primary'}
-          disabled={disable_editor}
+          variant={disable_options?'outline-primary':'primary'}
+          disabled={disable_options}
           onClick={() => {
             data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
             multi_selected_label.current = []
