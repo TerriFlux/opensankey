@@ -10,7 +10,7 @@ import 'react-quill/dist/quill.snow.css'
 import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
-
+import { Quill } from 'react-quill'
 
 import {  preferenceCheck } from 'open-sankey/dist/SankeyMenuPreferences'
 
@@ -177,11 +177,21 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   }
   const valAllLabelBorderTransparent=allLabelBorderTransparent()
 
+  // Create a custom size list of font-size
+  const list_size=[]
+  for(let i=6;i<=50;i++){
+    list_size.push(i+'px')
+  }
+
+  const Size = Quill.import('attributors/style/size')
+  Size.whitelist = list_size
+  Quill.register(Size, true)
+
   const modules = {
     toolbar: [
       [{ 'font': [] }],
       ['bold', 'italic', 'underline','strike'],
-      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'size': list_size }],
       [{ 'color': [] }, { 'background': [] }],
       [{'list': 'ordered'}, {'list': 'bullet'}],
       [{'align':[]}],

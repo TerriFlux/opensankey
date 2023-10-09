@@ -13,6 +13,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faLock } from '@fortawesome/free-solid-svg-icons'
+import { Quill } from 'react-quill'
 
 declare const window: Window &
 typeof globalThis & {
@@ -43,11 +44,21 @@ export const SankeyPlusNodeFO = (
     return visible
   }
 
+  // Create a custom size list of font-size
+  const list_size=[]
+  for(let i=6;i<=50;i++){
+    list_size.push(i+'px')
+  }
+  
+  const Size = Quill.import('attributors/style/size')
+  Size.whitelist = list_size
+  Quill.register(Size, true)
+
   const modules = {
     toolbar: [
       [{ 'font': [] }],
       ['bold', 'italic', 'underline','strike'],
-      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'size': list_size }],
       [{ 'color': [] }, { 'background': [] }],
       [{'list': 'ordered'}, {'list': 'bullet'}],
       [{'align':[]}],
