@@ -463,16 +463,17 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'Menu.tooltips.flux.upup'}>{t('Flux.tooltips.upup')} </Tooltip>}>
-          <Button  variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length<1}
             className='btn_menu_config'
             onClick={() => {
-              multi_selected_links.current.map(l => {
+              const tab_toshift:string[]=[]
+              const list_link_id_selected=multi_selected_links.current.map(l=>l.idLink)
 
-                const posElemt = data.linkZIndex.indexOf(l.idLink)
-                data.linkZIndex.splice(posElemt, 1)
-                data.linkZIndex.splice(data.linkZIndex.length, 0, l.idLink)
-
+              data.linkZIndex.filter(l=>list_link_id_selected.includes(l)).forEach(l=>{
+                const posElemt = data.linkZIndex.indexOf(l)
+                tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
               })
+              tab_toshift.forEach(l=>data.linkZIndex.push(l))
               set_data({ ...data })
             }}>
             <FaAngleDoubleUp />
@@ -503,15 +504,21 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'Menu.tooltips.flux.dwndwn'}>{t('Flux.tooltips.dwndwn')} </Tooltip>}>
-          <Button  variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length<1}
             className='btn_menu_config'
             onClick={() => {
-              multi_selected_links.current.map(l => {
-                const posElemt = data.linkZIndex.indexOf(l.idLink)
-                data.linkZIndex.splice(posElemt, 1)
-                data.linkZIndex.splice(0, 0, l.idLink)
-              })
+              const tab_toshift:string[]=[]
+              const list_link_id_selected=multi_selected_links.current.map(l=>l.idLink)
+
+              data.linkZIndex.filter(l=>list_link_id_selected.includes(l)).forEach(l=>{
+                const posElemt = data.linkZIndex.indexOf(l)
+                tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
+              });
+              const reverse_linkzindex=data.linkZIndex.reverse();
+              (tab_toshift.reverse()).forEach(l=>reverse_linkzindex.push(l))
+              data.linkZIndex=reverse_linkzindex.reverse()
               set_data({ ...data })
+
             }}>
             <FaAngleDoubleDown />
           </Button>
