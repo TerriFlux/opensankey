@@ -107,7 +107,6 @@ export const import_image_as_svg_BG=(
 }
 
 export const set_svg_bg=(data:SankeyPlusData)=>{
-  console.log(data.background_image)
   d3.select('#svg')
     .filter(()=>data.background_image===undefined || data.background_image==='')
     .style('background-image',null)
