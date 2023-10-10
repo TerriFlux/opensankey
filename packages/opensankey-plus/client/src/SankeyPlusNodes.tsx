@@ -535,7 +535,6 @@ const node_mouse_click=(
   accept_simple_click:{current:boolean},
   
 )=>{
-  console.log(d)
   if (event.shiftKey) {
     event.preventDefault()
     set_animating(true)
