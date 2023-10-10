@@ -513,7 +513,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               data.linkZIndex.filter(l=>list_link_id_selected.includes(l)).forEach(l=>{
                 const posElemt = data.linkZIndex.indexOf(l)
                 tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
-              });
+              })
               const reverse_linkzindex=data.linkZIndex.reverse();
               (tab_toshift.reverse()).forEach(l=>reverse_linkzindex.push(l))
               data.linkZIndex=reverse_linkzindex.reverse()
