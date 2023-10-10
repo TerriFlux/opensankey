@@ -310,16 +310,21 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:(d:Sanke
   return d3.drag<SVGRectElement, SankeyNode>()
     .subject(Object).on('drag', function (event, node) {
       if(event.dx<100){
-        let pos_node=d3.select(' .opensankey #ggg_' + node.idNode).attr('transform').replace('translate(','')
-        pos_node=pos_node.split(',')[0]
+        // let pos_node=d3.select(' .opensankey #ggg_' + node.idNode).attr('transform').replace('translate(','')
+        const pos_node=Number(d3.select(' .opensankey #shape_' + node.idNode).attr('width'))/2
+        d3.select(' .opensankey #ggg_' + node.idNode)
+        // pos_node=pos_node.split(',')[0]
         const tmp=return_value_node(data,data.nodes[node.idNode],'label_box_width') as number
-
+        const old_x=Number(d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('x'))
         if(event.x<pos_node){
+          d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('x',old_x+event.dx/2)
+          d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('width',tmp+event.dx/2)
           assign_node_local_attribute(data.nodes[node.idNode],'label_box_width',tmp-event.dx)
         }else{
-          assign_node_local_attribute(data.nodes[node.idNode],'label_box_width',tmp-event.dx)
+          d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('x',old_x-event.dx/2)
+          d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('width',tmp-event.dx/2)
+          assign_node_local_attribute(data.nodes[node.idNode],'label_box_width',tmp+event.dx)
         }
-        
       }
     }).on('end',()=>{
       set_data({...data})
