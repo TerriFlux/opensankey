@@ -4,8 +4,8 @@ import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 
 import {node_color,node_displayed,return_value_node} from './SankeyUtils'
-import { scale,inv_scale,eventNodeClick,setNodeHeight,eventOnMouseUpAddNodesAndLink,
-  eventNodeContextMenu,nodeTransform,node_stroke_width } from './SankeyDrawFunction'
+import { scale,inv_scale,setNodeHeight,eventOnMouseUpAddNodesAndLink,
+  eventNodeContextMenu,nodeTransform,node_stroke_width,simpleGNodeClick } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
 
 declare const window: Window &
@@ -122,18 +122,7 @@ export const OpenSankeyDrawNodes = (
       // Add event listener to click 
       // When we Ctrl + click a node, it select it and open a menu 
 
-      const simpleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
-
-        if((event.target as HTMLSpanElement).tagName==='tspan'){
-          setTimeout(()=>{
-            if(accept_simple_click.current){
-              eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
-            }
-          },200)
-        }else{
-          eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
-        }
-      }
+      
 
 
       const DoubleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode)=>{
@@ -153,7 +142,7 @@ export const OpenSankeyDrawNodes = (
       }
 
       ggg_nodes
-        .on('click', (event, d) => simpleGNodeClick(event,d))
+        .on('click', (event, d) => simpleGNodeClick(event,d,data,set_data,nodes_accordion_ref,multi_selected_nodes,mode_selection,accordion_ref,button_ref,accept_simple_click))
         .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
 
       if (mode_selection.current == 'ln') {
