@@ -470,21 +470,7 @@ export const SankeyMenuConfigurationNodesIO = (
       </InputGroup.Text>
 
       <ButtonGroup style={{width:'60%'}}>
-        {/* Choisir un lien entrant */}
-        <OverlayTrigger
-          key={'noeud.pf.tooltips.1'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.pf.tooltips.1'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            variant={(link_io=='output')?'primary':'outline-primary'}
-            onClick={() => {
-              set_link_io('output')
-              set_link_pos('')
-            }}>{logo_exit}</Button>
-        </OverlayTrigger>
-
+        
         {/* Choisir un lien entrant */}
         <OverlayTrigger
           key={'noeud.pf.tooltips.2'}
@@ -498,6 +484,21 @@ export const SankeyMenuConfigurationNodesIO = (
               set_link_io('input')
               set_link_pos('')
             }}>{logo_enter}</Button>
+        </OverlayTrigger>
+
+        {/* Choisir un lien entrant */}
+        <OverlayTrigger
+          key={'noeud.pf.tooltips.1'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'noeud.pf.tooltips.1'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant={(link_io=='output')?'primary':'outline-primary'}
+            onClick={() => {
+              set_link_io('output')
+              set_link_pos('')
+            }}>{logo_exit}</Button>
         </OverlayTrigger>
       </ButtonGroup>
     </InputGroup>

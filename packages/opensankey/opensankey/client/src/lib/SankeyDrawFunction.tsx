@@ -2256,3 +2256,27 @@ export const zoom_function=(evt:d3.D3ZoomEvent<SVGElement,unknown>,data:SankeyDa
 
   // repositionne_sidebar()
 }
+
+export const simpleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
+  data:SankeyData, 
+  set_data:(d:SankeyData)=>void,
+  nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
+  multi_selected_nodes:{current: SankeyNode[] },
+  mode_selection:{current:string},
+  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
+  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
+  accept_simple_click:{current:boolean},
+
+)=>{
+  const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
+
+  if((event.target as HTMLSpanElement).tagName==='tspan'){
+    setTimeout(()=>{
+      if(accept_simple_click.current){
+        eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
+      }
+    },200)
+  }else{
+    eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
+  }
+}
