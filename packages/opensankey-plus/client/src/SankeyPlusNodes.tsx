@@ -1,11 +1,11 @@
-import React,{ChangeEvent, useState} from 'react'
+import React,{ChangeEvent, useState,useRef} from 'react'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge,Dropdown,ButtonGroup, Container} from 'react-bootstrap'
 import { SankeyLinkValue } from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 
-import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg} from 'open-sankey/dist/SankeyDrawFunction'
+import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg,simpleGNodeClick} from 'open-sankey/dist/SankeyDrawFunction'
 import {  getLinkValue,node_color,link_color,return_value_node,return_value_link,node_displayed,link_text,link_visible,is_node_diplaying_value_local,is_all_node_attr_same_value,assign_node_value_to_correct_var } from 'open-sankey/dist/SankeyUtils'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
 import { menu_draggable} from 'open-sankey/dist/SankeyMenu'
@@ -13,10 +13,10 @@ import { menu_draggable} from 'open-sankey/dist/SankeyMenu'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType,DiffType, SankeyPlusData,SankeyPlusNode, ViewType} from './types'
 import { filter_view,get_data_from_view } from './SankeyPlusViews'
 
-import { FaEyeSlash, FaEye} from 'react-icons/fa'
+import { FaEyeSlash, FaEye,FaFileImport} from 'react-icons/fa'
 import { faIcons} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare, faLock } from '@fortawesome/free-solid-svg-icons'
+import { faUpRightFromSquare, faLock,faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 
 /* eslint-disable */
 // @ts-ignore
@@ -40,6 +40,7 @@ export const SankeyPlusNodeIcon = (
 )=> {
   const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
+  const _load_image = useRef<HTMLInputElement>(null)
 
   const valueAllIconRatio = () => {
     let display_ratio = true
@@ -102,7 +103,7 @@ export const SankeyPlusNodeIcon = (
     </OverlayTrigger>
 
    
-    {isAllIconVisible() && Object.keys(data.icon_catalog).length>0?<>
+    {isAllIconVisible()?<>
       <OverlayTrigger
         key={'iconDisabled2'}
         placement={'top'}
@@ -268,10 +269,33 @@ export const SankeyPlusNodeIcon = (
           {t('Noeud.img_src')}
         </InputGroup.Text>
 
+        <Button
+          variant='outline-primary'
+          style={{width:'30%'}}
+          className='btn_menu_config'
+          onClick={()=>{
+            if (_load_image.current) {
+              _load_image.current.name = ''
+              _load_image.current.click()
+            }
+          }}
+        ><FaFileImport/></Button>
+        <Button
+          variant='outline-primary'
+          style={{width:'30%'}}
+          className='btn_menu_config'
+          onClick={()=>{
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              .forEach(n=>n.image_src='')
+            set_data({...data})
+          }}
+        ><FontAwesomeIcon icon={faDeleteLeft}/></Button>
+
         <Form.Control
+          ref={_load_image}
+          style={{display:'none'}}
           accept='image/*'
           type="file"
-          value=''
           disabled={!is_activated}
           onChange={(evt: ChangeEvent) => {
             const files = (evt.target as HTMLFormElement).files
@@ -290,7 +314,6 @@ export const SankeyPlusNodeIcon = (
             reader.readAsDataURL(files[0])
           }}
         />
-
       </InputGroup>
     </OverlayTrigger>:<></>}
     
@@ -328,7 +351,14 @@ export const SankeyPlusNodeIcon = (
         style={{width:'30%'}}
         variant={button_icon_or_image==='icon'?'primary':'outline-primary'}
         onClick={() => {
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+            .forEach(d => {
+              d.is_image = false
+              d.iconVisible=true
+            })
+
           set_button_icon_or_image('icon')
+          set_data({...data})
         }}>{t('Noeud.icon.icon')}</Button>
 
       <Button
@@ -336,7 +366,13 @@ export const SankeyPlusNodeIcon = (
         style={{width:'30%'}}
         variant={button_icon_or_image==='image'?'primary':'outline-primary'}
         onClick={() => {
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+            .forEach(d => {
+              d.is_image=true
+              d.iconVisible = false
+            })
           set_button_icon_or_image('image')
+          set_data({...data})
         }}>Image</Button>
     </InputGroup>
     {button_icon_or_image==='icon'?content_icon:content_image}
@@ -489,7 +525,17 @@ const calcPath = (
 const node_mouse_click=(
   data:SankeyPlusData,
   set_animating:(b:boolean)=>void,
-  event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
+  event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,
+  set_data:(d:SankeyPlusData)=>void,
+  nodes_accordion_ref:{ current: HTMLDivElement }| null,
+  multi_selected_nodes:{current: SankeyPlusNode[] },
+  mode_selection:{current:string},
+  accordion_ref:{ current: HTMLDivElement},
+  button_ref:{ current: HTMLLabelElement},
+  accept_simple_click:{current:boolean},
+  
+)=>{
+  console.log(d)
   if (event.shiftKey) {
     event.preventDefault()
     set_animating(true)
@@ -529,6 +575,9 @@ const node_mouse_click=(
     if(n.hyperlink!==undefined && n.hyperlink!==''){
       window.open(n.hyperlink)
     }
+  }else{
+    simpleGNodeClick(event,d,data,set_data,nodes_accordion_ref,multi_selected_nodes,mode_selection,accordion_ref,button_ref,accept_simple_click)
+
   }
 }
 
@@ -628,12 +677,25 @@ const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target
 export const SankeyPlusNodeClickEvent=(
   data:SankeyPlusData,
   set_animating:(b:boolean)=>void,
-  sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>
+  sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>,
+  set_data:(d:SankeyPlusData)=>void,
+  nodes_accordion_ref:{ current: HTMLDivElement }| null,
+  multi_selected_nodes:{current: SankeyPlusNode[] },
+  mode_selection:{current:string},
+  accordion_ref:{ current: HTMLDivElement},
+  button_ref:{ current: HTMLLabelElement},
+  accept_simple_click:{current:boolean},
 )=>{
-  d3.selectAll(' .opensankey .node')
+  d3.selectAll(' .opensankey .ggg_nodes')
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
-      node_mouse_click(data,set_animating,event,d,sankeyTooltip)
+      node_mouse_click(data,set_animating,event,d,sankeyTooltip,set_data,
+        nodes_accordion_ref,
+        multi_selected_nodes,
+        mode_selection,
+        accordion_ref,
+        button_ref,
+        accept_simple_click)
     })
 }
 

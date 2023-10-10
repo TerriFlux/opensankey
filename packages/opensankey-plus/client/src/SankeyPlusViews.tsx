@@ -780,13 +780,11 @@ export const viewsAccordion = (
                           ind = (v.id === d.id) ? i : ind
                         })
                         master_data.view.splice(ind, 1)
-                        if(master_data.current_view==d.id){
+                        if(master_data.current_view===d.id){
                           set_view('none')
                           set_data({ ...master_data })
                         }
                         set_master_data({...master_data})
-                        
-                        
                       }
                     }
                   ><FaMinus /></Button></td>
