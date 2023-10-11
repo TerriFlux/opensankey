@@ -5,9 +5,9 @@ import LZString from 'lz-string'
 
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup, Overlay } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCopy, FaFileInvoice,FaCheck,FaBars} from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaBars} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileCircleExclamation, faFileCircleCheck, faLock, faFile,faListCheck, faXmark, faSquarePen} from '@fortawesome/free-solid-svg-icons'
+import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
 import { adjust_sankey_zone} from 'open-sankey/dist/SankeyUtils'
@@ -194,6 +194,7 @@ export const recompute_views = (
 }
 
 export const keyHandler = (
+  t:TFunction,
   e: KeyboardEvent,
   master:boolean,
   master_data:SankeyPlusData,
@@ -258,7 +259,7 @@ export const keyHandler = (
       master_data.view.push({
         id: new_ind,
         view_data: copy_data,
-        nom: 'copy of '+current_view_object.nom,
+        nom: t('view.prefix_copy')+' '+current_view_object.nom,
         details: '',
         heredited_attr_from_master:[]
 
@@ -515,9 +516,16 @@ const selecteur_view=(data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
+  connected:boolean,
+  value_editor_name_view:string,
+  set_value_editor_name_view:(s:string)=>void,
+  select_or_edit:'select'|'edit',
+  set_select_or_edit:(s:'select'|'edit')=>void
   // fullscreen=false
 )=>{
-  return <Form.Select id="selectionNode"
+
+  const selecteur=<Form.Select id="selectionNode"
+    onDoubleClick={()=>connected && master_data && master_data.current_view!=='none' ?set_select_or_edit('edit'):<></>}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
@@ -578,6 +586,20 @@ const selecteur_view=(data:SankeyPlusData,
       return <option key={d.id} value={d.id}>{d.nom}</option>
     }) : <></>}
   </Form.Select>
+
+  const editeur_name=<Form.Control type='text'
+    value={value_editor_name_view}
+    onChange={(evt)=>{
+      set_value_editor_name_view(evt.target.value)
+    }}
+    onBlur={()=>{
+      master_data.view.filter(v=>v.id===view)[0].nom=value_editor_name_view
+      set_master_data({...master_data})
+      set_select_or_edit('select')
+    }}
+  />
+
+  return connected && select_or_edit==='edit'?editeur_name:selecteur
 }
 export const viewsAccordion = (
   data:SankeyPlusData,
@@ -595,50 +617,18 @@ export const viewsAccordion = (
   t:TFunction,
   is_activated:boolean,
   set_view_not_saved:(s:string)=>void,
-  convert_data:(d:SankeyPlusData)=>void
-
+  convert_data:(d:SankeyPlusData)=>void,
+  value_editor_name_view:string,
+  set_value_editor_name_view:(s:string)=>void,
+  select_or_edit:'select'|'edit',
+  set_select_or_edit:(s:'select'|'edit')=>void
 ) => {
 
   // const _load_multiple_json = useRef<HTMLInputElement>(null)
 
-  const selector=selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)
+  const selector=selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,false,value_editor_name_view,set_value_editor_name_view,select_or_edit,set_select_or_edit)
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
-  const popover_for_apply_display_from_view=<Popover id="popover-apply_display" style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">{t('view.applyDisplayFromView')}</Popover.Header>
-    <Popover.Body >
-      <Form.Select id="selectionNode"
-        onChange={
-          (evt: React.ChangeEvent<HTMLSelectElement>) => {
-            multi_selected_nodes.current = []
-            multi_selected_links.current = []
-            multi_selected_label.current = []
 
-            const paramerters=['posNode','attrNode','attrFlux','tagNode','tagFlux','attrGeneral']
-
-            if (evt.target.value === '') {
-              return
-            }else if(evt.target.value !== 'none'){
-              const data_view=get_data_from_view(master_data,evt.target.value)
-              data_view.view=[]
-              updateLayout(data,data_view,paramerters)
-              set_data({...data})
-            } else if(evt.target.value === 'none'){
-              const copy_master=JSON.parse(JSON.stringify(master_data))
-              copy_master.view=[]
-              updateLayout(data,copy_master,paramerters)
-              set_data({...data})
-            }
-          }
-        }
-        value={view}
-      >
-        {view !== 'none'}<option disabled={view === 'none'} value={'none'}>{t('view.actual')}</option>
-        {master_data ? master_data.view.map(d => {
-          return <option key={d.id} disabled={view === d.id} value={d.id}>{d.nom}</option>
-        }) : <></>}
-      </Form.Select>
-    </Popover.Body>
-  </Popover>
 
   return <><Accordion.Item
     id='Visualisation'
@@ -654,7 +644,7 @@ export const viewsAccordion = (
       }
     }>
     <Accordion.Header>
-      Storytelling
+      {t('view.storytelling')}
       {(!is_activated)?
         <OverlayTrigger
           key={'textZoneDisabled'}
@@ -674,30 +664,18 @@ export const viewsAccordion = (
         <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge>}
     </Accordion.Header>
     <Accordion.Body>
-      <OverlayTrigger
-        key={'tooltip-apply_display'}
-        placement={'left'}
-        trigger={'click'}
-        rootClose
-        overlay={popover_for_apply_display_from_view}>
-        <InputGroup>
-          <InputGroup.Text
-            style={{
-              color:!(is_activated)?'#666666':'',
-              backgroundColor:!(is_activated)?'#cccccc':'',
-              width:'30%'}}>
-            {t('view.select')}
-          </InputGroup.Text>
-          <>{selector}</>
-          <Button
-            variant='light'
-            style={{width:'20%'}}
-            disabled={!is_activated}
-            id='button-apply_display' >
-            <FaFileInvoice/>
-          </Button>
-        </InputGroup>
-      </OverlayTrigger>
+
+      <InputGroup>
+        <InputGroup.Text
+          style={{
+            color:!(is_activated)?'#666666':'',
+            backgroundColor:!(is_activated)?'#cccccc':'',
+            width:'50%'}}>
+          {t('view.select')}
+        </InputGroup.Text>
+        <>{selector}</>
+          
+      </InputGroup>
 
       <Form>
         <Table bordered size='sm'
@@ -894,12 +872,14 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   _load_json:{current:HTMLInputElement},
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
   show_modal_selection_link_ref_in_unitary_sankey:boolean,
-  set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void
-
+  set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
+  value_editor_name_view:string,
+  set_value_editor_name_view:(s:string)=>void,
+  select_or_edit:'select'|'edit',
+  set_select_or_edit:(s:'select'|'edit')=>void
 )=>{
 
   const m_d=master_data?master_data:data
-  const current_view = m_d.view.filter(v=>v.id===m_d.current_view)[0]
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
   const target_popover_modify_view_name=useRef(null)
 
@@ -915,7 +895,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     }
   }
 
-  const has_views = master_data?true:false
+  const has_views = master_data?master_data.view.length>0:false
   const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
   const prev_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')
 
@@ -981,11 +961,11 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
           }
         }}
       >
-        {!connected?<>
-          <Col><FontAwesomeIcon
-            icon={faFile}
-            style={{opacity:(!connected)?'0.6':'1'}}/>
-          </Col>
+        <Col><FontAwesomeIcon
+          icon={faFloppyDisk}
+          style={{opacity:(!connected)?'0.6':'1'}}/>
+        </Col>
+        {!connected?<>          
           <Col>
             <FontAwesomeIcon
               icon={faLock}
@@ -997,10 +977,17 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
                 color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           </Col></>
           :<Col>{is_different?
-            <FontAwesomeIcon icon={faFileCircleExclamation}/>:
-            <FontAwesomeIcon icon={faFileCircleCheck} />}
+            <FontAwesomeIcon
+              icon={faExclamation}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.5em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-danger-rgb), var(--bs-bg-opacity))'}} />
+            :<></>}
           </Col>}
-        <Col style={{'fontSize':'9px'}}>{t('Menu.updateView')}</Col>
+        <Col style={{'fontSize':'9px'}}>{t('Menu.check')}</Col>
       </Button>
     </span>
   </OverlayTrigger>
@@ -1046,59 +1033,59 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </OverlayTrigger>
 
 
-  const button_clone_view=<OverlayTrigger
-    key={'buttonCloneViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonCloneViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonCloneView'}>{t('Menu.tooltips.buttonCloneView')} </Tooltip>}
-  >
-    <span>
-      <Button
-        size='sm'
-        variant='light'
-        disabled={!connected}
-        onClick={
-          () => {
-            // Create a copy of the view
-            const copy_view_data = JSON.parse(JSON.stringify(current_view.view_data))
-            const new_ind = 'view_' + String(new Date().getTime())
+  // const button_clone_view=<OverlayTrigger
+  //   key={'buttonCloneViewDisabled'}
+  //   placement={'bottom'}
+  //   delay={500}
+  //   overlay={(!connected)?(
+  //     <Tooltip id={'buttonCloneViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+  //     <Tooltip id={'buttonCloneView'}>{t('Menu.tooltips.buttonCloneView')} </Tooltip>}
+  // >
+  //   <span>
+  //     <Button
+  //       size='sm'
+  //       variant='light'
+  //       disabled={!connected}
+  //       onClick={
+  //         () => {
+  //           // Create a copy of the view
+  //           const copy_view_data = JSON.parse(JSON.stringify(current_view.view_data))
+  //           const new_ind = 'view_' + String(new Date().getTime())
 
-            copy_view_data.view = []
-            master_data.view.push({
-              id: new_ind,
-              view_data: copy_view_data,
-              nom: 'copy of ' + current_view.nom,
-              details: '',
-              heredited_attr_from_master:[]
+  //           copy_view_data.view = []
+  //           master_data.view.push({
+  //             id: new_ind,
+  //             view_data: copy_view_data,
+  //             nom: 'copy of ' + current_view.nom,
+  //             details: '',
+  //             heredited_attr_from_master:[]
 
-            })
-            set_view(new_ind)
-            set_master_data({...master_data})
-            set_data(get_data_from_view(master_data,new_ind))
-          }
-        }
-      >
-        <Col><FaCopy
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        </Col>
-        {!connected?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
-          :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('view.copy')}</Col>
-      </Button>
-    </span>
-  </OverlayTrigger>
+  //           })
+  //           set_view(new_ind)
+  //           set_master_data({...master_data})
+  //           set_data(get_data_from_view(master_data,new_ind))
+  //         }
+  //       }
+  //     >
+  //       <Col><FaCopy
+  //         style={{opacity:(!connected)?'0.6':'1'}}/>
+  //       </Col>
+  //       {!connected?
+  //         <Col>
+  //           <FontAwesomeIcon
+  //             icon={faLock}
+  //             style={{
+  //               fontSize:'1em',
+  //               position: 'absolute',
+  //               right: '0.1em',
+  //               bottom: '0em',
+  //               color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+  //         </Col>
+  //         :<></>}
+  //       <Col style={{'fontSize':'9px'}}>{t('view.copy')}</Col>
+  //     </Button>
+  //   </span>
+  // </OverlayTrigger>
 
   // Button to display a modal where we chose refrence link in the unitary sankey (for more info look func modal_unitary_sankey_sector_node in SankeyPlusNodes)
   const button_open_modal_unitary_sankey_sector_node=<span><Button variant='light'
@@ -1106,6 +1093,38 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   ><Col><FaBars/></Col>
     <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.choose_link_ref_sankey_unit')}</Col>
   </Button></span>
+
+  const button_delete_actual_view=<span><Button
+    variant='light'
+    disabled={!connected}
+    onClick={
+    // Delete the view
+      () => {
+        let ind = -1
+        master_data.view.map((v, i) => {
+          ind = (v.id === view) ? i : ind
+        })
+        master_data.view.splice(ind, 1)
+        if(master_data.current_view===view){
+          set_view('none')
+          set_data({ ...master_data })
+        }
+        set_master_data({...master_data})
+      }
+    }
+  ><Col><FaMinus/></Col>{!connected?
+      <Col>
+        <FontAwesomeIcon
+          icon={faLock}
+          style={{
+            fontSize:'1em',
+            position: 'absolute',
+            right: '0.1em',
+            bottom: '0em',
+            color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+      </Col>
+      :<></>}
+    <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.delete')}</Col></Button></span>
 
   // -- NOT REALLY USEFULL ANYMORE WITH THE IMPORT LAYOUT 
   // const button_import_view=<OverlayTrigger
@@ -1209,28 +1228,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </Popover.Body>
   </Popover>
   
-  const button_modify_name=<span><Button ref={target_popover_modify_view_name} variant='light' id='button-filter-link'
-    onClick={()=>{
-      set_show_modify_name_view(!show_modify_name_view)
-    }}
-  >
-    <Col><FontAwesomeIcon icon={faSquarePen} /></Col>
-    {!connected?
-      <Col>
-        <FontAwesomeIcon
-          icon={faLock}
-          style={{
-            fontSize:'1em',
-            position: 'absolute',
-            right: '0.1em',
-            bottom: '0em',
-            color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-      </Col>
-      :<></>}
-    <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.edit_name')}</Col>
-  </Button>
-
-  </span>
+  
   const has_sector_ref_node_ins_unitary_view=data.unitary_node.length>0 && data.unitary_node.filter(nid=>data.nodes[nid].tags['Type de noeud']&&data.nodes[nid].tags['Type de noeud'].includes('secteur')).length>0
 
   return <><Overlay
@@ -1264,7 +1262,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
           }
         }}>
         <Col><FaHome
-          style={{opacity:(!connected && !has_views)?'0.6':'1'}}/>
+          style={{opacity:(connected && has_views)?'1':'0.6'}}/>
         </Col>
         {(!connected && !has_views)?
           <Col>
@@ -1365,12 +1363,11 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       </Button>
     </span>
   </OverlayTrigger>
-  {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved)}</>:<></>}
+  {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,connected,value_editor_name_view,set_value_editor_name_view,select_or_edit,set_select_or_edit)}</>:<></>}
   {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data.current_view!=='none' && !window.SankeyToolsStatic?<>
-      
+    {button_delete_actual_view}
     {button_heredited_attr_from_master}
-    {button_clone_view}
-    {button_modify_name}
+    {/* {button_clone_view} */}
     {has_sector_ref_node_ins_unitary_view? button_open_modal_unitary_sankey_sector_node:<></>}
     {/* {button_import_view}
       {button_export_view} */}
@@ -1480,7 +1477,11 @@ export const toolbar_fullscreen=(data:SankeyPlusData,
   _load_json:{current:HTMLInputElement},
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
   show_modal_selection_link_ref_in_unitary_sankey:boolean,
-  set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void
+  set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
+  value_editor_name_view:string,
+  set_value_editor_name_view:(s:string)=>void,
+  select_or_edit:'select'|'edit',
+  set_select_or_edit:(s:'select'|'edit')=>void
 )=>{
   const buttons_view= SankeyPlusBannerView(data,set_data,
     view,set_view,
@@ -1489,7 +1490,9 @@ export const toolbar_fullscreen=(data:SankeyPlusData,
     t,
     connected,set_view_not_saved,
     _load_json,set_show_modal_transparent_view_attr,
-    show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey)
+    show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,value_editor_name_view,set_value_editor_name_view,
+    select_or_edit,set_select_or_edit
+  )
   const group_btn=<ButtonGroup>
     {buttons_view}
   </ButtonGroup>
