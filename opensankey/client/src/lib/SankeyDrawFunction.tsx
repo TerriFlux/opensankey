@@ -777,6 +777,7 @@ export const eventOnSankeyZoneMouseDown=(
           const pos = d3.pointer(event)
           new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
           new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+          start_point.current=pos
           set_first_selected_node(new_node1)
           set_data({ ...data })
         }
@@ -948,6 +949,7 @@ export const eventOnSankeyZoneMouseUp=(
   // si le token de connexion est à false alors ne crée pas de second noeud
   //si le mode de souris est noeud+flux alors crée un second noeud au relachement
   //et crée un lien entre le premier noeud crée lors du click et ce dernier
+  const pos = d3.pointer(evt)
   if(mode_selection.current=='ln'){
     if(!token && Object.keys(data.nodes).length>15 ){
       Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
@@ -957,6 +959,12 @@ export const eventOnSankeyZoneMouseUp=(
       setTimeout(function () {
         set_show_toast_limit_node(false)
       }, 3000)
+    }else if((pos[0]===start_point.current[0] && pos[1]===start_point.current[1])){
+      // If we release the mouse at the same point of when we pressed it then don't create a second node,
+      // it can happend when we click just to create 1 node and the application think we release the button on the draw zone (the first node didn't have time to appear and trigger the mouse release on the first node created)
+      if(d3.selectAll('.opensankey #svg #path-flux').nodes().length>0){
+        d3.selectAll('.opensankey #svg #path-flux').remove()
+      }
     }else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt_recast).attr('class')!='node node_shape') {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
@@ -974,7 +982,6 @@ export const eventOnSankeyZoneMouseUp=(
         new_node1.x = 200
       }
       data.nodes[new_node1.idNode] = new_node1
-      const pos = d3.pointer(evt)
       new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
       new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
       //Ajout du lien entre les deux noeuds créés
@@ -1001,7 +1008,6 @@ export const eventOnSankeyZoneMouseUp=(
       set_first_selected_node({})
       set_data({...data})
     }else if((!evt.ctrlKey && !evt.metaKey) && Object.keys(first_selected_node).length > 0 && d3.select(evt_recast).attr('class')!='node node_shape'){
-
 
       const n_link = default_link(data)
       const n_node = default_node(data)
