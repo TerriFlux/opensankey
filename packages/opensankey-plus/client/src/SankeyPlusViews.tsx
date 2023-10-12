@@ -5,7 +5,7 @@ import LZString from 'lz-string'
 
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup, Overlay } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaBars} from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaBars,FaCopy} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
@@ -758,9 +758,21 @@ export const viewsAccordion = (
                           ind = (v.id === d.id) ? i : ind
                         })
                         master_data.view.splice(ind, 1)
-                        if(master_data.current_view===d.id){
+                        // If master is not a catalog & we delete the current view then we go to master
+                        // If master is a catalog and the catalog of view is empty then we got to master 
+                        if((master_data.current_view===view && master_data.is_catalog===false) || (master_data.view.length===0 && master_data.is_catalog===true)){
                           set_view('none')
                           set_data({ ...master_data })
+                        }else if(master_data.is_catalog && master_data.view.length>0){
+                        // If master is a catalog and the catalog is not empty then we got to the first view 
+                          set_view(master_data.view[0].id)
+                          const tmp=get_data_from_view(master_data,master_data.view[0].id)
+                          set_data({ ...tmp })
+                        }
+                        if(master_data.view.length===0){
+                          master_data.is_catalog=false
+                          set_data({...master_data})
+
                         }
                         set_master_data({...master_data})
                       }
@@ -870,13 +882,15 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
+  _load_json_catalog:{current:HTMLInputElement},
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
   show_modal_selection_link_ref_in_unitary_sankey:boolean,
   set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
   value_editor_name_view:string,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void
+  set_select_or_edit:(s:'select'|'edit')=>void,
+  convert_data:(d:SankeyPlusData)=>void
 )=>{
 
   const m_d=master_data?master_data:data
@@ -1087,6 +1101,47 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   //   </span>
   // </OverlayTrigger>
 
+  const create_data_catalog=<OverlayTrigger
+    key={'buttonCloneViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonCloneViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'catalog_data'}>{t('view.tooltips.catalog_data')} </Tooltip>}>
+    <span>
+      <Button
+        size='sm'
+        variant= {master_data && master_data.is_catalog?'outline-info':'light'}
+        disabled={!connected}
+        onClick={
+          () => {
+            if (_load_json_catalog.current) {
+              _load_json_catalog.current.name = ''
+              _load_json_catalog.current.click()
+            }
+          }
+        }
+      >
+        <Col><FaCopy
+          style={{opacity:(!connected)?'0.6':'1'}}/>
+        </Col>
+        {!connected?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
+        <Col style={{'fontSize':'9px'}}>{t('view.catalog')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
+
   // Button to display a modal where we chose refrence link in the unitary sankey (for more info look func modal_unitary_sankey_sector_node in SankeyPlusNodes)
   const button_open_modal_unitary_sankey_sector_node=<span><Button variant='light'
     onClick={()=>set_show_modal_selection_link_ref_in_unitary_sankey(true)}
@@ -1105,9 +1160,20 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
           ind = (v.id === view) ? i : ind
         })
         master_data.view.splice(ind, 1)
-        if(master_data.current_view===view){
+        // If master is not a catalog & we delete the current view then we go to master
+        // If master is a catalog and the catalog of view is empty then we got to master 
+        if((master_data.current_view===view && master_data.is_catalog===false) || (master_data.view.length===0 && master_data.is_catalog===true)){
           set_view('none')
           set_data({ ...master_data })
+        }else if(master_data.is_catalog && master_data.view.length>0){
+          // If master is a catalog and the catalog is not empty then we got to the first view 
+          set_view(master_data.view[0].id)
+          const tmp=get_data_from_view(master_data,master_data.view[0].id)
+          set_data({ ...tmp })
+        }
+        if(master_data.view.length===0){
+          master_data.is_catalog=false
+          set_data({...master_data})
         }
         set_master_data({...master_data})
       }
@@ -1230,7 +1296,84 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   
   
   const has_sector_ref_node_ins_unitary_view=data.unitary_node.length>0 && data.unitary_node.filter(nid=>data.nodes[nid].tags['Type de noeud']&&data.nodes[nid].tags['Type de noeud'].includes('secteur')).length>0
+  const file_reder_for_catalog=<Form.Control
+    type="file"
+    multiple
+    accept='.json'
+    ref={_load_json_catalog}
+    style={{ display: 'none' }}
+    onChange={(evt: ChangeEvent) => {
+      const files = (evt.target as HTMLFormElement).files
+      master_data=(master_data)?master_data:JSON.parse(JSON.stringify(data))
+      master_data.is_catalog=true
+      master_data.nodeTags={}
+      master_data.fluxTags={}
+      master_data.dataTags={}
+      master_data.nodes={}
+      master_data.links={}
+      master_data.labels={}
+      master_data.linkZIndex=[]
 
+      // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
+      for(const i in files){
+        const reader = new FileReader()
+        reader.onload = (() => {
+          return (e: ProgressEvent<FileReader>) => {
+            const result = String((e.target as FileReader).result)
+            const result_data = JSON.parse(result)
+            const imported_data=JSON.parse(JSON.stringify(result_data)) as SankeyPlusData
+            convert_data(imported_data)
+            let new_ind = 'view_' + String(new Date().getTime())
+            let first_data={} as SankeyPlusData
+            if(imported_data.view && imported_data.view.length>0){
+              // Import all view from the coming file
+              imported_data.view.forEach((v,i2)=>{
+                const view_from_imported_data=get_data_from_view(imported_data,v.id)
+                convert_data(view_from_imported_data)
+
+                if(i2===0 && i==='0'){
+                  new_ind=v.id
+                  first_data=view_from_imported_data
+                }
+                master_data.view.push({
+                  id: v.id,
+                  view_data: view_from_imported_data,
+                  nom: (files[i].name).replace('.json','')+' '+v.nom,
+                  details: '',
+                  heredited_attr_from_master:[]
+                })
+              })
+            }else{
+              // Import only master data  when it doesn't have view
+              imported_data.view=[]
+              first_data=imported_data
+              master_data.view.push({
+                id: new_ind,
+                view_data: imported_data,
+                nom: (files[i].name).replace('.json',''),
+                details: '',
+                heredited_attr_from_master:[]
+              })
+            }
+            console.log(i,i==='0')
+            if(i==='0'){
+
+              set_view(new_ind)
+              master_data.current_view=new_ind
+              set_data({...first_data})
+            }
+            set_master_data({...master_data})
+
+          }
+        })()
+        // Permet d'executer la transformation des blob en vues tout en evitant la var length
+        //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
+        if(!isNaN(+i)){
+          reader.readAsText(files[i])
+        }
+      }
+    }}
+  />
   return <><Overlay
     key={'popover-link-filter'}
     placement={'bottom'}
@@ -1241,6 +1384,8 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   >
     {popover_modify_view_name}
   </Overlay>
+  {file_reder_for_catalog}
+  {create_data_catalog}
   <OverlayTrigger
     key={'buttonHomeViewDisabled'}
     placement={'bottom'}
@@ -1253,7 +1398,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
       <Button
         size='sm'
         variant='light'
-        disabled={(!connected && !has_views)}
+        disabled={((!connected && !has_views)||(master_data && master_data.is_catalog))}
         onClick={() => {
           const ev = document
           const tmp = { key: 'F7' }
@@ -1262,7 +1407,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
           }
         }}>
         <Col><FaHome
-          style={{opacity:(connected && has_views)?'1':'0.6'}}/>
+          style={{opacity:((connected && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/>
         </Col>
         {(!connected && !has_views)?
           <Col>
@@ -1366,7 +1511,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,connected,value_editor_name_view,set_value_editor_name_view,select_or_edit,set_select_or_edit)}</>:<></>}
   {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data.current_view!=='none' && !window.SankeyToolsStatic?<>
     {button_delete_actual_view}
-    {button_heredited_attr_from_master}
+    {master_data && !master_data.is_catalog?button_heredited_attr_from_master:<></>}
     {/* {button_clone_view} */}
     {has_sector_ref_node_ins_unitary_view? button_open_modal_unitary_sankey_sector_node:<></>}
     {/* {button_import_view}
@@ -1475,13 +1620,16 @@ export const toolbar_fullscreen=(data:SankeyPlusData,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
+  _load_json_catalog:{current:HTMLInputElement},
+
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
   show_modal_selection_link_ref_in_unitary_sankey:boolean,
   set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
   value_editor_name_view:string,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void
+  set_select_or_edit:(s:'select'|'edit')=>void,
+  convert_data:(d:SankeyPlusData)=>void
 )=>{
   const buttons_view= SankeyPlusBannerView(data,set_data,
     view,set_view,
@@ -1489,9 +1637,9 @@ export const toolbar_fullscreen=(data:SankeyPlusData,
     master_data,set_master_data,
     t,
     connected,set_view_not_saved,
-    _load_json,set_show_modal_transparent_view_attr,
+    _load_json,_load_json_catalog,set_show_modal_transparent_view_attr,
     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,value_editor_name_view,set_value_editor_name_view,
-    select_or_edit,set_select_or_edit
+    select_or_edit,set_select_or_edit,convert_data
   )
   const group_btn=<ButtonGroup>
     {buttons_view}

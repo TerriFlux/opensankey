@@ -14,6 +14,7 @@ export interface SankeyPlusData extends SankeyData {
     unitary_node:string[],
     process_transfo_ref:{[x: string]:string[]},
     background_image:string
+    is_catalog:boolean,
 
 }
 
