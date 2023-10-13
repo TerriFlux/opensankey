@@ -59,19 +59,25 @@ export const OpenSankeyDrawLinks = (
     mode_selection.current='s'
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
       sankeyTooltip.style('opacity', 0)
-      if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
-        button_ref.current.click()
-      }
       multi_selected_links.current = multi_selected_links.current.filter(d => (d != null && d.idLink != ''))
-      
-      if (multi_selected_links.current.includes(d)) {
-        multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
-        deselect_visualy_links(d)
-      } else {
-        multi_selected_links.current.push(d)
-        set_display_link_opacity(return_value_link(data,multi_selected_links.current[0],'opacity') as string)
+      if(!event.ctrlKey){
+      // If we click a link without pressing Ctrl then we select only the link cliked
+        multi_selected_links.current=[d]
+      }else{
+      // If we click a link while pressing Ctrl then we either select the link if it's not selected or we deselect it
+        if (multi_selected_links.current.includes(d)) {
+          multi_selected_links.current.splice(multi_selected_links.current.indexOf(d), 1)
+          deselect_visualy_links(d)
+        } else {
+          multi_selected_links.current.push(d)
+          set_display_link_opacity(return_value_link(data,multi_selected_links.current[0],'opacity') as string)
+        }
+
       }
       if((event.ctrlKey || event.metaKey)){
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+          button_ref.current.click()
+        }
         if ( accordion_ref && accordion_ref.current) {
           for ( const child in accordion_ref.current.children) {
             if (accordion_ref.current.children[child].id === 'Flux') {
