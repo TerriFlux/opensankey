@@ -210,6 +210,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<ReactQuill
+    className='quill_editor'
     value={editor_content_fo_zdt}
     onChange={(evt) => {
       set_editor_content_fo_zdt(evt)
