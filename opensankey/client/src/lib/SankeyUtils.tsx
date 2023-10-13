@@ -1337,12 +1337,24 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
   zoom.scaleTo(d3.select(' .opensankey #svg'),scale)
   document.getElementsByTagName ('html')[0]?.scrollTo(0,0)
 }
+interface DataSuiteType{
+  is_catalog?:boolean,
+  view?:{id: string,view_data: object,nom:string,details:string}[],
+} 
 
 export const clickSaveDiagram = (data:SankeyData,name='sankey_diagram') => {
   const data_to_save = { ...data }
   const str_data = JSON.stringify(data_to_save)
 
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
+  const dataAsSuite=(data as DataSuiteType)
+  if(dataAsSuite.view && dataAsSuite.view.length>0 && !dataAsSuite.is_catalog){
+    name='Diagramme de Sankey avec vues'
+  }else if(dataAsSuite.is_catalog===true){
+    name='Catalogue de vues de diagrammes de Sankey'
+  }else{
+    name='Diagramme de Sankey'
+  }
   FileSaver.saveAs(blob, name+'.json')
 }
 
