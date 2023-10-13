@@ -756,6 +756,16 @@ export const eventOnSankeyZoneMouseDown=(
   //si le mode de souris est noeud+flux alors crée le premier noeuds
   if(evt.which==1){
 
+    if(d3.select('.sankey-menu').node()!==null){
+      // blur all the input of the config menu in case we modify a value from an input (where the value is truly apply on blur) 
+      // and click on the drawing zone wich normally doesn't count as a blur of the input
+      for(const item of document.getElementsByTagName('input')){
+        if(item.className.includes('form-control') && (item.type=='text' || item.type=='number')){
+          item.blur()
+        }
+      }
+    }
+
     if(d3.select(evt.target).attr('class')!='node node_shape' && mode_selection.current == 'ln'){
 
       if ((!evt.ctrlKey && !evt.metaKey) ) {
