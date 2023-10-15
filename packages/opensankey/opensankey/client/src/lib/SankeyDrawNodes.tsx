@@ -16,6 +16,8 @@ typeof globalThis & {
 export const OpenSankeyDrawNodes = (
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
   nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   multi_selected_nodes:{current: SankeyNode[] },
@@ -38,20 +40,20 @@ export const OpenSankeyDrawNodes = (
   pointer_pos:{current:number[]}
 
 ) => {
-  const display_links=Object.keys(data.links)
-    .filter((key) => node_displayed(data,data.nodes[data.links[key].idSource])&&node_displayed(data,data.nodes[data.links[key].idTarget]))
-    .reduce((obj, key) => {
-      return Object.assign(obj, {
-        [key]: data.links[key]
-      })
-    }, {}) as {[idLink:string]:SankeyLink}
-  const display_nodes = Object.keys(data.nodes)
-    .filter((key) => node_displayed(data,data.nodes[key]))
-    .reduce((obj, key) => {
-      return Object.assign(obj, {
-        [key]: data.nodes[key]
-      })
-    }, {}) as {[idNode:string]:SankeyNode}
+  // const display_nodes = Object.keys(data.nodes)
+  //   .filter((key) => node_displayed(data,data.nodes[key]))
+  //   .reduce((obj, key) => {
+  //     return Object.assign(obj, {
+  //       [key]: data.nodes[key]
+  //     })
+  //   }, {}) as {[idNode:string]:SankeyNode}
+  // const display_links=Object.keys(data.links)
+  // .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
+  // .reduce((obj, key) => {
+  //   return Object.assign(obj, {
+  //     [key]: data.links[key]
+  //   })
+  // }, {}) as {[idLink:string]:SankeyLink}
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic ||event.shiftKey)) {
