@@ -423,8 +423,23 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       })
       /* eslint-enable */
   useEffect(()=>{
+    const display_nodes = Object.keys(data.nodes)
+    .filter((key) => SankeyUtils.node_displayed(data,data.nodes[key]))
+    .reduce((obj, key) => {
+      return Object.assign(obj, {
+        [key]: data.nodes[key]
+      })
+    }, {}) as {[idNode:string]:SankeyNode}
+    const display_links=Object.keys(data.links)
+    .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
+    .reduce((obj, key) => {
+      return Object.assign(obj, {
+        [key]: data.links[key]
+      })
+    }, {}) as {[idLink:string]:SankeyLink}
   // Call the function that add nodes to the sankey
     OpenSankeyDrawNodes(data,set_data,
+      display_nodes,display_links,
       nodes_accordion_ref,links_accordion_ref,
       multi_selected_nodes,multi_selected_links,
       mode_selection,
@@ -438,7 +453,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
     // Call the function that add links to the sankey
     OpenSankeyDrawLinks(
-      data,links_accordion_ref,
+      data,
+      display_nodes,
+      display_links,
+      links_accordion_ref,
       multi_selected_links,
       mode_selection,
       accordion_ref,
