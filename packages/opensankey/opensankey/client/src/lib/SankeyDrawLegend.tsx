@@ -285,20 +285,41 @@ export const OpenSankeyDrawLegend = (
     })
 
     // DRAW SCALE
-    d3.selectAll(' .opensankey #svg .g_scale').remove()
-    dy+=60
-    const g_scale=legend.filter(()=>data.display_legend_scale).append('g').attr('class','g_scale').style('transform', 'translate(0,' + (dy) + 'px)')
-    g_scale.append('text').text(t('scale')+':').style('font-size',data.legend_police+'px')
+    if(data.display_legend_scale){
+      d3.selectAll(' .opensankey #svg .g_scale').remove()
+      dy+=60
+      const g_scale=legend.append('g').attr('class','g_scale').style('transform', 'translate(0,' + (dy) + 'px)')
+      g_scale.append('text').text(t('scale')+':').style('font-size',data.legend_police+'px')
+  
+      const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate(80px, -30px)')
+      g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
+      g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
+  
+  
+      g_draggable.call(d3.drag<SVGGElement,unknown>()
+        .subject(Object).on('drag', function (event) {
+          d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
+        }))
+    }
+  
 
-    const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate(80px, -30px)')
-    g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
-    g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
 
-
-    g_draggable.call(d3.drag<SVGGElement,unknown>()
-      .subject(Object).on('drag', function (event) {
-        d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
-      }))
+    // Write information in the legend depending to the diagram representation:
+    // - when diagramme type is : data reconciled + indetermined links (values), we explain the meaning of "*" in the link label
+    // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
+    if(data.show_structure==='free_value'){
+      dy+=60
+      legend.append('g').attr('class','g_legend_free_value').style('transform', 'translate(0,' + (dy) + 'px)')
+        .append('text')
+        .text(t('MEP.show_legend_free_value'))
+        .call(wrap)
+    }else if(['reconciled','data'].includes(data.show_structure)){
+      dy+=60
+      legend.append('g').attr('class','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)')
+        .append('text')
+        .text(t('MEP.legend_dashed_links'))
+        .call(wrap)
+    }
 
     
     let h=document.getElementById('g_legend')?.getBoundingClientRect().height
