@@ -3,7 +3,7 @@ import { SankeyLink, SankeyData, SankeyNode,SankeyLinkValue} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 
-import {node_color,node_displayed,return_value_node} from './SankeyUtils'
+import {node_color,return_value_node} from './SankeyUtils'
 import { scale,inv_scale,setNodeHeight,eventOnMouseUpAddNodesAndLink,
   eventNodeContextMenu,nodeTransform,node_stroke_width,simpleGNodeClick } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'

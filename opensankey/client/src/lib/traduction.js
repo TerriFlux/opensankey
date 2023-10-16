@@ -232,6 +232,8 @@ export const open_resources = {
         factExpV:'Vertical expansion factor',
         stretchH:'Apply',
         stretchV:'Apply',
+        show_legend_free_value:'"*" in link value label means it value is contained in an interval',
+        legend_dashed_links:'Dashed links represent links without specified values',
         tooltips: {
           Echelle:'Change the scale of the links and nodes',
           MaxFlux:'Change the maximum size (in pixels) for the display of the links',
@@ -811,6 +813,8 @@ export const open_resources = {
         factExpV:'Facteur d\'expansion verticale',
         stretchH:'Appliquer',
         stretchV:'Appliquer',
+        show_legend_free_value:'"*" dans le label des flux signifie que sa valeur est contenue dans un intervalle',
+        legend_dashed_links:'Les flux hachurés représentent des flux avec des valeurs non-renseignées',
         tooltips: {
           Echelle:'Modifier l\'échelle des flux et noeuds',
           MaxFlux:'Modifier la taille maximale (en pixel) pour l\'affichage des flux',
