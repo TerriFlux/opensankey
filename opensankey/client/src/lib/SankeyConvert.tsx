@@ -832,10 +832,10 @@ export const convert_nodes = (
         n.local.label_visible=(n_convert.label_visible as boolean)
       }
       if (n_convert.node_visible !== undefined && n_convert.display !== undefined) {
-        if (node_displayed(data,n,false) !== (n_convert.node_visible&&n_convert.display) ) {
-          n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-          n.local.local_aggregation = (n_convert.node_visible&&n_convert.display)
-        }
+        // if (node_displayed(data,n,false) !== (n_convert.node_visible&&n_convert.display) ) {
+        //   n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+        //   n.local.local_aggregation = (n_convert.node_visible&&n_convert.display)
+        // }
         delete n_convert.node_visible
         delete n_convert.display
       }
