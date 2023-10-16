@@ -368,9 +368,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
-      deselect_visualy_nodes(d)
     } else {
-      d3.select(' .opensankey #shape_' + d.idNode).attr('stroke-width',2)
       multi_selected_nodes.current.push(d)
       if(multi_selected_nodes.current.length==1){
         d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
@@ -388,19 +386,16 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
       (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
     }
-    //set_data({...data})
+    set_data({...data})
   }else if(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  !event.ctrlKey){
     // If we click a node without pressing Ctrl then we select only the node cliked
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
-      deselect_visualy_nodes(d)
     } else {
       multi_selected_nodes.current=[d]
-      d3.select(' .opensankey #shape_' + d.idNode).attr('stroke-width',2)
-      d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
+    set_data({...data})
     }
-    //set_data({...data})
   }
 }
 
