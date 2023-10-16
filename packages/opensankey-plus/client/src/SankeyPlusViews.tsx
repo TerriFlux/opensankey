@@ -1523,9 +1523,9 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </>
 }
 
-export const SankeyPlusMenuPreferenceView=(data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
+export const SankeyPlusMenuPreferenceView=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
   return <InputGroup>
-    <InputGroup.Text style={{width:'30%'}}>Storytelling</InputGroup.Text>
+    <InputGroup.Text style={{width:'30%'}}>{t('view.storytelling')}</InputGroup.Text>
     <Button style={{width:'10%'}} className='btn_menu_config' key='Vis' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('Vis')?'primary':'outline-primary'} onClick={() => {
       preferenceCheck('Vis',data)
       set_data({ ...data })
