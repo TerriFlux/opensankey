@@ -14,6 +14,8 @@ typeof globalThis & {
 
 export const OpenSankeyDrawLinks = (
   data:SankeyData,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   multi_selected_links:{current: SankeyLink[] },
   mode_selection:{current:string},
@@ -169,6 +171,8 @@ export const OpenSankeyDrawLinks = (
 
 
   const add_links = (
+    display_nodes:{ [node_id: string]: SankeyNode },
+    display_links:{ [link_id: string]: SankeyLink },
     linkStroke:(l:SankeyLink,
       data:SankeyData,
       getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
@@ -183,24 +187,24 @@ export const OpenSankeyDrawLinks = (
     //- rect :
     //- arrow :
     //const display_nodes=data.nodes
-    const pre_display_links=Object.keys(data.links)
-      .filter((key) => node_displayed(data,data.nodes[data.links[key].idSource])&&node_displayed(data,data.nodes[data.links[key].idTarget]))
-      .reduce((obj, key) => {
-        return Object.assign(obj, {
-          [key]: data.links[key]
-        })
-      }, {}) as {[idLink:string]:SankeyLink}
-    const pre_link_key=Object.keys(pre_display_links)
-    const display_links={} as {[idLink:string]:SankeyLink}
-    data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
+    // const pre_display_links=Object.keys(data.links)
+    //   .filter((key) => node_displayed(data,data.nodes[data.links[key].idSource])&&node_displayed(data,data.nodes[data.links[key].idTarget]))
+    //   .reduce((obj, key) => {
+    //     return Object.assign(obj, {
+    //       [key]: data.links[key]
+    //     })
+    //   }, {}) as {[idLink:string]:SankeyLink}
+    // const pre_link_key=Object.keys(pre_display_links)
+    // const display_links={} as {[idLink:string]:SankeyLink}
+    // data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
 
-    const display_nodes = Object.keys(data.nodes)
-      .filter((key) => node_displayed(data,data.nodes[key]))
-      .reduce((obj, key) => {
-        return Object.assign(obj, {
-          [key]: data.nodes[key]
-        })
-      }, {}) as {[idNode:string]:SankeyNode}
+    // const display_nodes = Object.keys(data.nodes)
+    //   .filter((key) => node_displayed(data,data.nodes[key]))
+    //   .reduce((obj, key) => {
+    //     return Object.assign(obj, {
+    //       [key]: data.nodes[key]
+    //     })
+    //   }, {}) as {[idNode:string]:SankeyNode}
   
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
@@ -446,24 +450,6 @@ export const OpenSankeyDrawLinks = (
         }
       })
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   /**
  * Function triggerd when a link is dragged, it identify if the mouse is closer of the target or the source and return the closest node of the two
@@ -714,7 +700,8 @@ export const OpenSankeyDrawLinks = (
  * @param {boolean} alt_key_pressed
  * @returns {*}
  */
-  const dragLinkTextEvent=(alt_key_pressed:boolean,
+  const dragLinkTextEvent=(
+    alt_key_pressed:boolean,
   )=>{
     return d3.drag<SVGTextElement, SankeyLink>()
       .subject(Object).on('drag', function (event, link) {
@@ -745,7 +732,7 @@ export const OpenSankeyDrawLinks = (
     link.local.label_position = 'frozen'
   }
 
-  add_links(linkStroke,drawArrows,set_contextualised_link,pointer_pos)
+  add_links(display_nodes,display_links,linkStroke,drawArrows,set_contextualised_link,pointer_pos)
   
   return (<>
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>

@@ -899,6 +899,14 @@ export const synchronizeNodesandLinksId = (
   Object.values(dataModify.links).forEach(l=>l.idLink=idLinksMap[l.idLink])
   dataModify.links = Object.assign({}, ...Object.values(dataModify.links).map(lModify => ({ [lModify.idLink]: { ...lModify } })))
 
+  Object.values(dataModify.nodes).forEach(n=>{
+    const newInputLinksId : string[] = []
+    n.inputLinksId.forEach(linkId=>newInputLinksId.push(idLinksMap[linkId]))
+    n.inputLinksId = newInputLinksId
+    const newOutputLinksId : string[] = []
+    n.outputLinksId.forEach(linkId=>newOutputLinksId.push(idLinksMap[linkId]))
+    n.outputLinksId = newOutputLinksId
+  })
   // compute_default_input_outputLinksId(dataModify.nodes, dataModify.links)
 }
 
