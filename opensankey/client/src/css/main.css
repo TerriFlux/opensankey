@@ -1093,6 +1093,10 @@ textarea {
 	padding-right: 0px;
 	height: 45px;
 }
+.MenuNavigation.container .subMenu.afm .buttonSubNav.dropend{
+	width: 100%
+}
+
 .MenuNavigation.container .subMenu .buttonSubNav.dropend{
 	margin-right: 0px;
 	margin-left: 0px;
@@ -1111,7 +1115,7 @@ textarea {
 }
 /* Width afm subnav button */
 .MenuNavigation.container .subMenu.afm .col{
-	width: 100px;
+	width: 100%;
 }
 /* Button dropdown reconciliation */
 .MenuNavigation.container .subMenu.afm #reconciliation svg{
