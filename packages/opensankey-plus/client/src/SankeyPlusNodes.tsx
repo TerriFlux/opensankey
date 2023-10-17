@@ -42,18 +42,7 @@ export const SankeyPlusNodeIcon = (
   data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
   const _load_image = useRef<HTMLInputElement>(null)
 
-  const valueAllIconRatio = () => {
-    let display_ratio = true
-    let ratio = 100
-    if (multi_selected_nodes.current.length !== 0) {
-      ratio = multi_selected_nodes.current[0].iconRatio
-    }
-    multi_selected_nodes.current.map((d) => {
-      display_ratio = (d.iconRatio === ratio) ? display_ratio : false
-    })
-    const d = (ratio === 0) ? '' : ratio
-    return (display_ratio) ? d : 100
-  }
+
   const isAllIconVisible = () => {
     let visible = false
     multi_selected_nodes.current.map(
@@ -164,44 +153,7 @@ export const SankeyPlusNodeIcon = (
         </InputGroup>
       </OverlayTrigger>
 
-      <OverlayTrigger
-        key={'iconDisabled4'}
-        placement={'top'}
-        delay={500}
-        overlay={(!is_activated)?(<Tooltip id={'iconDisabled4'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-      >
-        <InputGroup>
-          <InputGroup.Text
-            style={{
-              color:(!is_activated)?'#666666':'',
-              backgroundColor:(!is_activated)?'#cccccc':'',
-              // width:(!is_activated)?'70%':'50%'}}
-              width:'50%'}}
-          >
-            {t('Noeud.icon.rIN')}
-          </InputGroup.Text>
-          <Form.Control
-            type='number'
-            disabled={!is_activated?true:(radio_selected !== 'local')}
-            value={valueAllIconRatio()}
-            onChange={evt => {
-              let ratio = +evt.target.value
-              ratio = (ratio > 100) ? 100 : ratio
-              ratio = (ratio < 0) ? 0 : ratio
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconRatio = ratio)
-              set_data({ ...data })
-            }}
-          />
-          <InputGroup.Text
-            style={{
-              color:(!is_activated)?'#666666':'',
-              backgroundColor:(!is_activated)?'#cccccc':'',
-              width:'10%'}}
-          >
-            %
-          </InputGroup.Text>
-        </InputGroup>
-      </OverlayTrigger>
+
     </>:<></>}
   </>
 
@@ -798,14 +750,14 @@ export const SankeyPlusDrawNodesIcon = (
     ggg_nodes
       .filter(d => d.iconName !== 'none' && d.iconVisible)
       .append('svg')
-      .attr('viewBox', '0, 0, 1000, 1000')
+      .attr('viewBox',d=> d.iconViewBox?d.iconViewBox:'0 0 1000 1000')
       .attr('transform', n => {
-        const shiftV = (+d3.select(' .opensankey #shape_' + n.idNode).attr('height') * (100 - n.iconRatio) / 100) / 2
-        const shiftH = (+d3.select(' .opensankey #shape_' + n.idNode).attr('width') * (100 - n.iconRatio) / 100) / 2
+        const shiftV = (+d3.select(' .opensankey #shape_' + n.idNode).attr('height') ) / 2
+        const shiftH = (+d3.select(' .opensankey #shape_' + n.idNode).attr('width') ) / 2
         return 'translate(' + shiftH + ',' + shiftV + ')'
       })
-      .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height') * (n.iconRatio) / 100)
-      .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width') * (n.iconRatio) / 100)
+      .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
+      .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
       .attr('x', 0)
       .append('g')
       .append('path')

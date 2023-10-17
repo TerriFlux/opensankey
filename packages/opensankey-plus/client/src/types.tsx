@@ -43,8 +43,8 @@ export interface SankeyPlusLinkStyle extends SankeyLinkStyle{
 export interface SankeyPlusNode extends SankeyNode{
     iconName: string,
     iconColor: string,
-    iconRatio: number,
     iconVisible: boolean,
+    iconViewBox?:string,
 
     has_FO:boolean,
     is_FO_raw:boolean,

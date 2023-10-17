@@ -358,11 +358,10 @@ export const plus_sankey_layout=(
       }
 
       // Add icon fromm imported layout if it has all the attribut 
-      if(layoutNode.iconVisible!==undefined && layoutNode.iconColor && layoutNode.iconName && layoutNode.iconRatio ){
+      if(layoutNode.iconVisible!==undefined && layoutNode.iconColor && layoutNode.iconName ){
         node.iconVisible=layoutNode.iconVisible
         node.iconColor=layoutNode.iconColor
         node.iconName=layoutNode.iconName
-        node.iconRatio=layoutNode.iconRatio
       }
       // Add ForeignObject from imported layout if it has all the attribut 
       if(layoutNode.has_FO!==undefined && layoutNode.is_FO_raw && layoutNode.FO_content ){
