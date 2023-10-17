@@ -394,7 +394,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
     } else {
       multi_selected_nodes.current=[d]
-    set_data({...data})
+      set_data({...data})
     }
   }
 }
