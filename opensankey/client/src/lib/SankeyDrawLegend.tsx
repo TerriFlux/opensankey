@@ -304,21 +304,33 @@ export const OpenSankeyDrawLegend = (
   
 
 
+    const sankey_has_interval_value=d3.selectAll('.link_value').nodes().filter(lv=>d3.select(lv).html().includes('*')).length>0
+    const sankey_has_dashed_links=d3.selectAll('.gg_links').nodes().filter(lv=> d3.select(lv).attr('stroke-dasharray')!=='').length>0
     // Write information in the legend depending to the diagram representation:
     // - when diagramme type is : data reconciled + indetermined links (values), we explain the meaning of "*" in the link label
     // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
-    if(data.show_structure==='free_value'){
+    if(sankey_has_interval_value){
       dy+=60
       legend.append('g').attr('class','g_legend_free_value').style('transform', 'translate(0,' + (dy) + 'px)')
         .append('text')
         .text(t('MEP.show_legend_free_value'))
         .call(wrap)
-    }else if(['reconciled','data'].includes(data.show_structure)){
+    }
+    if(sankey_has_dashed_links){
       dy+=60
-      legend.append('g').attr('class','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)')
-        .append('text')
+      const dashed_link=legend.append('g').attr('class','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)')
+
+      dashed_link.append('path').attr('d','M 0 0 L 50 0  Z')
+        .attr('fill','none')
+        .attr('stroke-width','5')
+        .attr('stroke','#aaa')
+        .attr('stroke-opacity',0.85)
+        .attr('stroke-dasharray','5,3')
+      
+      dashed_link.append('text')
         .text(t('MEP.legend_dashed_links'))
         .call(wrap)
+      dashed_link.select('text').attr('x','50')
     }
 
     
