@@ -284,23 +284,7 @@ export const OpenSankeyDrawLegend = (
 
     // })
 
-    // DRAW SCALE
-    if(data.display_legend_scale){
-      d3.selectAll(' .opensankey #svg .g_scale').remove()
-      dy+=60
-      const g_scale=legend.append('g').attr('class','g_scale').style('transform', 'translate(0,' + (dy) + 'px)')
-      g_scale.append('text').text(t('scale')+':').style('font-size',data.legend_police+'px')
   
-      const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate(80px, -30px)')
-      g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
-      g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
-  
-  
-      g_draggable.call(d3.drag<SVGGElement,unknown>()
-        .subject(Object).on('drag', function (event) {
-          d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
-        }))
-    }
   
 
 
@@ -318,7 +302,7 @@ export const OpenSankeyDrawLegend = (
     }
 
     if(sankey_has_dashed_links){
-      dy+=60
+      dy+=sankey_has_interval_value?30:60
       const dashed_link=legend.append('g').attr('class','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
 
       dashed_link.append('path').attr('d','M 0 0 L 25 0  Z')
@@ -332,6 +316,24 @@ export const OpenSankeyDrawLegend = (
         .text(t('MEP.legend_dashed_links'))
         .call(wrap)
       dashed_link.select('text').attr('x','35')
+    }
+
+    // DRAW SCALE
+    if(data.display_legend_scale){
+      d3.selectAll(' .opensankey #svg .g_scale').remove()
+      dy+=60
+      const g_scale=legend.append('g').attr('class','g_scale').style('transform', 'translate(0,' + (dy) + 'px)')
+      g_scale.append('text').text(t('scale')+':').style('font-size',data.legend_police+'px')
+    
+      const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate(80px, -30px)')
+      g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
+      g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
+    
+    
+      g_draggable.call(d3.drag<SVGGElement,unknown>()
+        .subject(Object).on('drag', function (event) {
+          d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
+        }))
     }
 
     
