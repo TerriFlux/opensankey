@@ -20,7 +20,6 @@ export const SankeyPlusDrawLabels = (
   multi_selected_label:{current: SankeyPlusLabel[] },
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
-  alt_key_pressed:boolean,
   min_width_and_height:(data:SankeyPlusData)=>number[],
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
@@ -38,8 +37,6 @@ export const SankeyPlusDrawLabels = (
 ) => {
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
-    const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
-
 
     Object.values(data.labels).map(d => {
       const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y)
@@ -60,7 +57,7 @@ export const SankeyPlusDrawLabels = (
 
       draw_text_zone_handles(data,d,multi_selected_label,set_data)
 
-      gg_label.on('click', (event) => eventLabelClick(event,d,data,sankeyTooltip,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
+      gg_label.on('click', (event) => eventLabelClick(event,d,data,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
       gg_label.on('mousedown',()=>closeAllMenuContext())
       gg_label.on('contextmenu',evt=>{
         if(!window.SankeyToolsStatic){
@@ -122,7 +119,7 @@ export const SankeyPlusDrawLabels = (
 
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
-export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyPlusLabel,data:SankeyPlusData,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   multi_selected_label:{current:SankeyPlusLabel[]},
@@ -131,6 +128,8 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
   multi_selected_links:{current:SankeyPlusLink[]},
 )=>{
   if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
+    const sankeyTooltip=d3.select('.sankey-tooltip')
+
     sankeyTooltip.style('opacity', 0)
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
       button_ref.current.click()
