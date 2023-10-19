@@ -1061,46 +1061,7 @@ export const return_out_of_bound_element_plus=(dragged:SankeyPlusNode|SankeyPlus
 
 }
 
-export const menu_preference_icon_catalog=(data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,t:TFunction)=>{
-  const [file_name,set_file_name]=useState<Blob>()
-  return <InputGroup>
-    <InputGroup.Text>{t('MEP.load_icon')}</InputGroup.Text>
-    <Form.Control
-      accept='.json'
-      type="file"
-      onChange={(evt: ChangeEvent) => {
-        const files = (evt.target as HTMLFormElement).files
-        set_file_name(files[0])
-      }}      
-    />
 
-    <Button onClick={()=>{
-      const reader = new FileReader()
-      reader.onload = (() => {
-        return (e: ProgressEvent<FileReader>) => {
-          const result = String((e.target as FileReader).result)
-          const result_data = JSON.parse(result)
-          if(result_data.icons){
-            if(data.icon_catalog===undefined || data.icon_catalog===null){
-              data.icon_catalog={}
-            }
-            Object.values(result_data.icons).forEach(v=>{
-              const i =(v as {properties:{name:string},icon:{paths:string[]}})
-              data.icon_catalog[i.properties.name]=i.icon.paths[0]
-            })
-            set_file_name(undefined)
-            set_data({...data})
-          }
-        }
-      })()
-      if(file_name!==undefined){
-        reader.readAsText(file_name)
-      }
-
-    }}>{t('Menu.ouvrir')}</Button>
-  </InputGroup>
-
-}
 
 
 export const context_node_view_node_unitary=(
