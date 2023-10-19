@@ -232,7 +232,7 @@ export const open_resources = {
         factExpV:'Vertical expansion factor',
         stretchH:'Apply',
         stretchV:'Apply',
-        show_legend_free_value:'"*" : Value is contained in an interval',
+        show_legend_free_value:'Value is contained in an interval',
         legend_dashed_links:'Thickness doesn\'t represent link\'s value',
         tooltips: {
           Echelle:'Change the scale of the links and nodes',
@@ -813,7 +813,7 @@ export const open_resources = {
         factExpV:'Facteur d\'expansion verticale',
         stretchH:'Appliquer',
         stretchV:'Appliquer',
-        show_legend_free_value:'"*": Valeur contenue dans un intervalle',
+        show_legend_free_value:'Valeur contenue dans un intervalle',
         legend_dashed_links:'Épaisseur non-représentative de la valeur du flux',
         tooltips: {
           Echelle:'Modifier l\'échelle des flux et noeuds',

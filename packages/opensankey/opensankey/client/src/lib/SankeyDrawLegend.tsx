@@ -222,67 +222,67 @@ export const OpenSankeyDrawLegend = (
 
     })
 
-    dy+=(dy==0)?-30:30
+    // dy+=(dy==0)?-30:30
     
-    const data_tags = Object.assign({},data.dataTags)
-    const show_data=Object.values(data_tags).filter(d=>d.show_legend).length>0
-    Object.entries(data_tags).forEach(tag_group => {
-      const intro_group_data_tags=((!show_data)?(' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')):'')
-      // Ajout du tagGroup.name  
-      legend.append('text')
-        .attr('transform', function () {
-          dy+=30
-          return 'translate(' + 0 + ', '+dy+' )'
-        })
-        .attr('x', 0)
-        .attr('y', 20)
-        .text((tag_group[1].group_name+intro_group_data_tags))
-        .attr('style', ('font-size:'+data.legend_police+'px;'+((show_data)?'font-weight:bold;':'')))
-        .call(wrap)
+    // const data_tags = Object.assign({},data.dataTags)
+    // const show_data=Object.values(data_tags).filter(d=>d.show_legend).length>0
+    // Object.entries(data_tags).forEach(tag_group => {
+    //   const intro_group_data_tags=((!show_data)?(' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')):'')
+    //   // Ajout du tagGroup.name  
+    //   legend.append('text')
+    //     .attr('transform', function () {
+    //       dy+=30
+    //       return 'translate(' + 0 + ', '+dy+' )'
+    //     })
+    //     .attr('x', 0)
+    //     .attr('y', 20)
+    //     .text((tag_group[1].group_name+intro_group_data_tags))
+    //     .attr('style', ('font-size:'+data.legend_police+'px;'+((show_data)?'font-weight:bold;':'')))
+    //     .call(wrap)
       
-      if(show_data){
-        const legendElements = legend.append('g')
-          .selectAll('g')
-          // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
-          .data(Object.entries(tag_group[1].tags)
-            .filter(tag=>{
-              return tag[1].selected
-            }))
-          .enter()
-          .append('svg:g')
-          // on filtre les tags avec selected à true (Visible)
-          .attr('id',d=>{
-            return 'tag_'+d[1].name.replaceAll(' ','__')
-          })
-          .attr('transform', function (d, i) {
-            dy+=(i * 30 + 30)
-            return 'translate(' + 0 + ',' +dy + ')'
-          })
+    //   if(show_data){
+    //     const legendElements = legend.append('g')
+    //       .selectAll('g')
+    //       // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
+    //       .data(Object.entries(tag_group[1].tags)
+    //         .filter(tag=>{
+    //           return tag[1].selected
+    //         }))
+    //       .enter()
+    //       .append('svg:g')
+    //       // on filtre les tags avec selected à true (Visible)
+    //       .attr('id',d=>{
+    //         return 'tag_'+d[1].name.replaceAll(' ','__')
+    //       })
+    //       .attr('transform', function (d, i) {
+    //         dy+=(i * 30 + 30)
+    //         return 'translate(' + 0 + ',' +dy + ')'
+    //       })
 
 
-        // Ajout du shape  
-        legendElements.append('rect')
-          .attr('width', 20)
-          .attr('height', 20)
-          .attr('x', 0)
-          .attr('y', 10)
-          .attr('rx', 3)
-          .attr('ry', 3)
-          .style('fill', (d) => { return (d as [string, { color: string }])[1].color })
-          .style('fill-opacity', 1)
+    //     // Ajout du shape  
+    //     legendElements.append('rect')
+    //       .attr('width', 20)
+    //       .attr('height', 20)
+    //       .attr('x', 0)
+    //       .attr('y', 10)
+    //       .attr('rx', 3)
+    //       .attr('ry', 3)
+    //       .style('fill', (d) => { return (d as [string, { color: string }])[1].color })
+    //       .style('fill-opacity', 1)
           
-        // Ajout du label
-        legendElements.append('text')
-          .attr('x', show_data?35:0)
-          .attr('y', 26)
-          .attr('font-size',data.legend_police+'px')
-          .text((d)=>d[1].name)
-          .call(wrap)
-      } 
+    //     // Ajout du label
+    //     legendElements.append('text')
+    //       .attr('x', show_data?35:0)
+    //       .attr('y', 26)
+    //       .attr('font-size',data.legend_police+'px')
+    //       .text((d)=>d[1].name)
+    //       .call(wrap)
+    //   } 
 
-      dx = dx + pas
+    //   dx = dx + pas
 
-    })
+    // })
 
     // DRAW SCALE
     if(data.display_legend_scale){
@@ -311,26 +311,27 @@ export const OpenSankeyDrawLegend = (
     // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
     if(sankey_has_interval_value){
       dy+=60
-      legend.append('g').attr('class','g_legend_free_value').style('transform', 'translate(0,' + (dy) + 'px)')
-        .append('text')
-        .text(t('MEP.show_legend_free_value'))
-        .call(wrap)
+      const free_value=legend.append('g').attr('class','g_legend_free_value').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
+      
+      free_value.append('text').text('*').attr('x','5')
+      free_value.append('text').attr('x','35').text(t('MEP.show_legend_free_value')).call(wrap)
     }
+
     if(sankey_has_dashed_links){
       dy+=60
-      const dashed_link=legend.append('g').attr('class','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)')
+      const dashed_link=legend.append('g').attr('class','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
 
-      dashed_link.append('path').attr('d','M 0 0 L 50 0  Z')
+      dashed_link.append('path').attr('d','M 0 0 L 25 0  Z')
         .attr('fill','none')
         .attr('stroke-width','5')
         .attr('stroke','#aaa')
         .attr('stroke-opacity',0.85)
-        .attr('stroke-dasharray','5,3')
+        .attr('stroke-dasharray','3,3')
       
       dashed_link.append('text')
         .text(t('MEP.legend_dashed_links'))
         .call(wrap)
-      dashed_link.select('text').attr('x','50')
+      dashed_link.select('text').attr('x','35')
     }
 
     

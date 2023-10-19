@@ -158,7 +158,7 @@ const MenuPropTypes = {
   DiagramSelector: PropTypes.func.isRequired,
   is_computing:PropTypes.bool.isRequired,
   setIsComputing:PropTypes.func.isRequired,
-
+  set_tags_selected:PropTypes.func.isRequired,
 }
 
 
@@ -419,37 +419,7 @@ export const OpenSankeyMenus = (
 
 
 
-  // Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link
-  const recursionDataTag=(DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
-    const DT_l=Object.values(DT).length
-    Object.values((Object.values(DT)[ind] as {group_name:string,show_legend:boolean,color_map:string,tags:Record<string,unknown>}).tags)
-      .filter(t=>(t  as {selected:boolean}).selected).forEach((d,i)=>{
-        const n_suffix= suffix+'_'+i
-        // Depth search of group_dataTag, if it the deepest, a link is created with a specific id to retrieve the right value of the link in getLinkValue
-        // (Deepest= last group_dataTag )
-        if(ind==DT_l-1){
-          const n_l=JSON.parse(JSON.stringify(link_to_copy))
-          n_l.idLink=n_l.idLink+n_suffix
-          new_links[n_l.idLink]=n_l
 
-          //Ajoute dans les noeuds source/target les id de flux
-          const ind_in_src=data.nodes[link_to_copy.idSource].outputLinksId.indexOf(link_to_copy.idLink)
-          if(ind_in_src>=0){
-            data.nodes[link_to_copy.idSource].outputLinksId.splice(ind_in_src,1)
-          }
-          const ind_in_trgt=data.nodes[link_to_copy.idTarget].inputLinksId.indexOf(link_to_copy.idLink)
-          if(ind_in_trgt>=0){
-            data.nodes[link_to_copy.idTarget].inputLinksId.splice(ind_in_trgt,1)
-          }
-          data.nodes[link_to_copy.idSource].outputLinksId.push(n_l.idLink)
-          data.nodes[link_to_copy.idTarget].inputLinksId.push(n_l.idLink)
-        }
-        else {
-          recursionDataTag(DT,ind+1,n_suffix,link_to_copy,new_links)
-        }
-
-      })
-  }
   // Function that return a simple or multiple dropdown of groupTag of data and links
   // This allow us to choose wich grouptag to select and wich tag of these group to display
   const addAllDropDownLinks = () => {
@@ -545,7 +515,7 @@ export const OpenSankeyMenus = (
 
                   Object.values(pureLinks).forEach(l=>{
                     const suffix=''
-                    recursionDataTag(data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                    SankeyUtils.recursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
                   })
                   data.links=new_links
                   set_data({...data})
@@ -872,7 +842,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     node_vspace,set_node_vspace,
     apply_transformation_additional_elements,
     DiagramSelector,
-    is_computing, setIsComputing
+    is_computing, setIsComputing,
+    set_tags_selected
+
   }
 ) => {
 
@@ -1156,6 +1128,13 @@ const Menu: FunctionComponent<MenuTypes> = (
     </Modal.Body>
   </Modal>
 
+  const data_tags = Object.assign({},data.dataTags)
+  const show_data=Object.values(data_tags).length>0
+  let DDDT=[] as (JSX.Element|undefined)[]
+  if(show_data){
+    DDDT=dataTagsDDNavBar(data,set_data,set_tags_selected)
+  }
+  console.log(DDDT)
 
 
   return (
@@ -1177,6 +1156,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
           <Navbar.Brand /*onClick={()=>set_welcome_text(window.sankey.welcome_text)}*/><img src={logo} width={logo_width ? logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
           {menu_nav}
+          {DDDT}
+
           {Object.keys(menus).includes('unité')?<>
             {menus['unité']}
           </>:<></>}
@@ -2319,4 +2300,113 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
       </ButtonGroup>
     </Popover.Body>
   </Popover>:<></>
+}
+
+const  dataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tags_selected:(o:{[x:string]:string})=>void) => {
+  const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
+  const allDD = banner_grouptag.map(([, tags_group]) => {
+    if (tags_group.banner == 'one') {
+      let selected = ''
+      if ( Object.entries(tags_group.tags).filter(([,v])=>v.selected).length>0 ) {
+        selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
+      }
+      return (
+        <><Form.Group>
+          <Col><FormLabel style={{justifyContent: 'center',fontWeight:'bold'}}>{tags_group.group_name}</FormLabel></Col>
+          <Col>
+            {<Form.Select key={tags_group.group_name} 
+              style={{ color:'black' }}
+              placeholder='all' value={selected} 
+              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                const pl=Object.entries(data.links).map(l=>{
+                  const suffixeStart= l[0].indexOf('_')
+                  if(suffixeStart>=0){
+                    l[0]=l[0].slice(0,suffixeStart)
+                    l[1].idLink=l[0]
+                    data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                    data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
+
+                    //Ajoute dans les noeuds source/target les id de flux
+                    const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
+                    if(ind_in_src==-1){
+                      data.nodes[l[1].idSource].outputLinksId.push(l[0])
+                    }
+                    const ind_in_trgt=data.nodes[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
+                    if(ind_in_trgt==-1){
+                      data.nodes[l[1].idTarget].inputLinksId.push(l[0])
+                    }
+                  }
+                  return l
+                })
+                // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
+                const pureLinks=Object.fromEntries(pl)
+                data.links=pureLinks
+                handleSimpleDropdown(evt, tags_group,data,set_data)
+                const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+                  return (Object.keys(dataTag.tags).length > 0) ? [
+                    dataTagKey,
+                    Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+                }))
+                const dataTagsSelected = Object.fromEntries(newEntries)
+                set_tags_selected(dataTagsSelected)
+              }}>
+              {
+                Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                  return (<option key={i} value={tag_key} >{tag.name}</option>)
+                })}
+            </Form.Select>}
+          </Col>
+        </Form.Group>
+        </>)
+    }
+    else if (tags_group.banner == 'multi') {
+      const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
+      const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name ,'disabled':((selected.length<2 && tag[1].name==selected[0].label))} })
+      return (
+        <>
+          <Form.Group>
+            <Col><FormLabel style={{justifyContent: 'center',fontWeight:'bold'}}>{tags_group.group_name}</FormLabel></Col>
+            <Col><MultiSelect
+              className={'multidropdown_filter_node_link'}
+              style={{ color: 'black'}}
+              labelledBy={'dropdown_link_filter'}
+              overrideStrings={{
+                'selectAll': 'Tout sélectionner',
+              }}
+              value={selected}
+              options={options}
+              onChange={(selected: [{ label: string, value: string }]) => {
+                handleMultiDropdown(selected, tags_group, data, set_data)
+
+                //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
+                if(Object.keys(data.dataTags).length>0){
+
+                  const pl=Object.entries(data.links).map(l=>{
+                    const suffixeStart= l[0].indexOf('_')
+                    if(suffixeStart>=0){
+                      l[0]=l[0].slice(0,suffixeStart)
+                      l[1].idLink=l[0]
+                      data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                      data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
+                    }
+                    return l
+                  })
+                  // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
+                  const pureLinks=Object.fromEntries(pl)
+
+                  const new_links={} as { [link_id: string]: SankeyLink }
+
+                  Object.values(pureLinks).forEach(l=>{
+                    const suffix=''
+                    SankeyUtils.recursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                  })
+                  data.links=new_links
+                  set_data({...data})
+                }
+              }} /></Col>
+          </Form.Group>
+        </>)
+    }
+  })
+  return allDD
 }
