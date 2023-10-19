@@ -1134,8 +1134,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   if(show_data){
     DDDT=dataTagsDDNavBar(data,set_data,set_tags_selected)
   }
-  console.log(DDDT)
-
 
   return (
     <>

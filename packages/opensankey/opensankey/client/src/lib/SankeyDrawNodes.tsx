@@ -54,17 +54,20 @@ export const OpenSankeyDrawNodes = (
   //     [key]: data.links[key]
   //   })
   // }, {}) as {[idLink:string]:SankeyLink}
-  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
+  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic ||event.shiftKey)) {
+      const sankeyTooltip=d3.select('.sankey-tooltip')
+
       sankeyTooltip
         .style('opacity', 1)
         .html(nodeTooltipsContent(data, d as SankeyNode,getLinkValue))
     }
   }
     
-  const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
+  const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>)=>{
     if ((window.SankeyToolsStatic ||event.shiftKey)) {
+      const sankeyTooltip=d3.select('.sankey-tooltip')
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))     
       let pos_tooltip_y= event.clientY
       const size_browser=window.innerHeight 
@@ -74,7 +77,6 @@ export const OpenSankeyDrawNodes = (
       let pos_tooltip_x= event.clientX
       const size_browser_w=window.innerWidth 
       pos_tooltip_x=((w_tooltip+pos_tooltip_x)>size_browser_w)?event.pageX-w_tooltip-30:event.pageX+30
-            
       sankeyTooltip
         .style('top',pos_tooltip_y + 'px')
         .style('left',pos_tooltip_x + 'px')
@@ -83,17 +85,15 @@ export const OpenSankeyDrawNodes = (
     
   
     
-  const node_mouse_out=(d:unknown,sankeyTooltip:d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)=>{
-    if (return_value_node(data,(d as SankeyNode),'shape_visible')) {
-      sankeyTooltip.style('opacity', 0)
-    }
+  const node_mouse_out=()=>{
+    const sankeyTooltip=d3.select('.sankey-tooltip')
+    sankeyTooltip.style('opacity', 0)
   }
   
     
   const add_nodes = (
     pointer_pos:{current:number[]}
   ) => {
-    const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
         
     // The majority of data used to design the node are located in data['nodes']
     // Or if you want information about the type of these variable, you can find them in file types.tsx
@@ -216,14 +216,14 @@ export const OpenSankeyDrawNodes = (
     d3.selectAll(' .opensankey .gg_nodes')
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
-        node_mouse_over(data,this,mode_selection,event,d,sankeyTooltip)
+        node_mouse_over(data,this,mode_selection,event,d)
       })
-      .on('mousemove', function (event, d) {
+      .on('mousemove', function (event) {
         // Triggered when the mouse move over the node
-        node_mouse_move(event,d,sankeyTooltip)
+        node_mouse_move(event)
       })
-      .on('mouseout', function (event, d) {
-        node_mouse_out(d,sankeyTooltip)
+      .on('mouseout', function () {
+        node_mouse_out()
       })
 
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
