@@ -621,6 +621,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             DiagramSelector={OpenSankeyDiagramSelector}
             is_computing={is_computing}
             setIsComputing={setIsComputing}
+            set_tags_selected={set_tags_selected}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
