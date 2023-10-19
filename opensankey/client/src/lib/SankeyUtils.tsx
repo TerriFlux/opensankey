@@ -1,4 +1,4 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup,SankeyNodeAttrLocal,SankeyNodeStyle,SankeyLinkAttrLocal,SankeyLinkStyle } from './types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup,SankeyNodeAttrLocal,SankeyNodeStyle,SankeyLinkAttrLocal,SankeyLinkStyle, TagsCatalog } from './types'
 import FileSaver from 'file-saver'
 import { complete_sankey_data } from './SankeyConvert'
 import {  compute_auto_sankey,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
@@ -1874,4 +1874,36 @@ export const add_new_node = (data:SankeyData,
   multi_selected_nodes.current = [node]
   apply_style_to_nodes(data,set_data,multi_selected_nodes)
   set_data({...data})
+}
+
+// Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link
+export const recursionDataTag=(data:SankeyData,DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
+  const DT_l=Object.values(DT).length
+  Object.values((Object.values(DT)[ind] as {group_name:string,show_legend:boolean,color_map:string,tags:Record<string,unknown>}).tags)
+    .filter(t=>(t  as {selected:boolean}).selected).forEach((d,i)=>{
+      const n_suffix= suffix+'_'+i
+      // Depth search of group_dataTag, if it the deepest, a link is created with a specific id to retrieve the right value of the link in getLinkValue
+      // (Deepest= last group_dataTag )
+      if(ind==DT_l-1){
+        const n_l=JSON.parse(JSON.stringify(link_to_copy))
+        n_l.idLink=n_l.idLink+n_suffix
+        new_links[n_l.idLink]=n_l
+
+        //Ajoute dans les noeuds source/target les id de flux
+        const ind_in_src=data.nodes[link_to_copy.idSource].outputLinksId.indexOf(link_to_copy.idLink)
+        if(ind_in_src>=0){
+          data.nodes[link_to_copy.idSource].outputLinksId.splice(ind_in_src,1)
+        }
+        const ind_in_trgt=data.nodes[link_to_copy.idTarget].inputLinksId.indexOf(link_to_copy.idLink)
+        if(ind_in_trgt>=0){
+          data.nodes[link_to_copy.idTarget].inputLinksId.splice(ind_in_trgt,1)
+        }
+        data.nodes[link_to_copy.idSource].outputLinksId.push(n_l.idLink)
+        data.nodes[link_to_copy.idTarget].inputLinksId.push(n_l.idLink)
+      }
+      else {
+        recursionDataTag(data,DT,ind+1,n_suffix,link_to_copy,new_links)
+      }
+
+    })
 }
