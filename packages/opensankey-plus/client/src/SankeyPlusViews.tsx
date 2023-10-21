@@ -871,7 +871,7 @@ export const check_current_view_saved=(
   difference=(difference !== undefined)?difference:[]
   difference=difference.filter((d:{path:string[],kind:string,item:{kind:string}})=>{
     // Ne prend pas en compte les modif de vue, de la largeur ou hauteur du sankey
-    return d.path[0] !== 'current_view' && d.path[0] !== 'view'  && d.path[0] !== 'width' && d.path[0] !== 'height'
+    return d.path[0] !== 'current_view' && d.path[0] !== 'view'  && d.path[0] !== 'width' && d.path[0] !== 'height' && !(d.path.length === 4 && d.path[3] === 'vert_shift')
   })
   return difference
 }
