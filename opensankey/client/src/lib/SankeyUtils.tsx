@@ -49,7 +49,7 @@ export const addDataTags = (
 
 
 export const cut_name = (t: string, n: number) => {
-  return (t.length > n) ? t.slice(0, n) + '...' : t
+  return (t && t.length > n) ? t.slice(0, n) + '...' : t
 }
 
 
@@ -1653,6 +1653,9 @@ export const get_link_attribute_value_from_style=(data:SankeyData,l:SankeyLinkSt
 
 // Return value of local link variable attribute that can be undefined ('local' and 'local[key]' can be undefined)
 export const return_local_link_value=(l:SankeyLink,key:keyof SankeyLinkAttrLocal)=>{
+  if (l===undefined) {
+    return undefined
+  }
   if(l.local===undefined || l.local===null){
     return undefined
   }else{
