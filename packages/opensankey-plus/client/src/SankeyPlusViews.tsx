@@ -11,7 +11,7 @@ import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawes
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
 import { adjust_sankey_zone} from 'open-sankey/dist/SankeyUtils'
-import { updateLayout } from 'open-sankey/dist/SankeyLayout'
+import { updateLayout,compute_default_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
 
 import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType, DiffType, ViewType } from './types'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
@@ -40,7 +40,7 @@ export const setDiagram = (
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
       set_master_data(new_data)
       set_view(new_data.view[0].id)
-      set_data(get_data_from_view(new_data,new_data.view[0].id))
+      set_data(get_data_from_view(new_data,new_data.view[0].id) as SankeyPlusData)
     } else {
       set_master_data(undefined)
       set_data(new_data)
@@ -92,7 +92,7 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   }
   const copy_master_data= {...master_data}
   copy_master_data.view = []
-  let data_init=JSON.parse(JSON.stringify(copy_master_data))
+  let data_init=JSON.parse(JSON.stringify(copy_master_data)) as SankeyPlusData
   // Get the difference from the view
   if (master_data.view.filter(v=>v.id === id_view_to_see).length === 0) {
     alert('view not found')
@@ -110,6 +110,30 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
     data_init=view_object.view_data as SankeyPlusData
   }
   updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
+  // let something_wrong = false
+
+
+  // Object.values(data_init.nodes).forEach(n=>n.inputLinksId.forEach(idLink=> {
+  //   if (!data_init.links[idLink]) {
+  //      something_wrong = true
+  //   }}
+  // ))
+  // Object.values(data_init.nodes).forEach(n=>n.outputLinksId.forEach(idLink=> {
+  //   if (!data_init.links[idLink]) {
+  //      something_wrong = true
+  //   }}
+  // ))
+
+  // if (something_wrong) {
+  //   compute_default_input_outputLinksId(data_init.nodes, data_init.links)
+  // }
+
+  // Object.values(data_init.links).forEach(l=>{
+  //   if (!data_init.nodes[l.idSource] || !data_init.nodes[l.idTarget]) {
+  //      something_wrong = true
+  //   }}
+  // )
+
   return data_init
   // const del_node_views = diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] === 'nodes' && d.kind === 'D' && d.path.length === 2))
   // del_node_views.forEach((d:{path:string[],kind:string,rhs:boolean|string})=>{
@@ -525,7 +549,7 @@ const selecteur_view=(data:SankeyPlusData,
 )=>{
 
   const selecteur=<Form.Select id="selectionNode"
-    onDoubleClick={()=>connected && master_data && master_data.current_view!=='none' ?set_select_or_edit('edit'):<></>}
+    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?set_select_or_edit('edit'):<></>}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
@@ -766,7 +790,7 @@ export const viewsAccordion = (
                         }else if(master_data.is_catalog && master_data.view.length>0){
                         // If master is a catalog and the catalog is not empty then we got to the first view 
                           set_view(master_data.view[0].id)
-                          const tmp=get_data_from_view(master_data,master_data.view[0].id)
+                          const tmp=get_data_from_view(master_data,master_data.view[0].id) as SankeyPlusData
                           set_data({ ...tmp })
                         }
                         if(master_data.view.length===0){
@@ -831,15 +855,19 @@ export const viewsAccordion = (
 
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
-export const check_current_view_saved=(master_data:SankeyPlusData,data:SankeyPlusData,view:string)=>{
-  const original_diff=get_data_from_view(master_data,view)
-  const data_updated_layout=JSON.parse(JSON.stringify(data))
-  const updated_diff=JSON.parse(JSON.stringify(original_diff))
+export const check_current_view_saved=(
+  master_data:SankeyPlusData,
+  data:SankeyPlusData,
+  view:string
+)=>{
+  const view_data = get_data_from_view(master_data,view)
+  //const data=JSON.parse(JSON.stringify(data))
+  //const updated_diff=JSON.parse(JSON.stringify(original_diff))
 
-  updateLayout(data_updated_layout,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
-  updateLayout(updated_diff,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
+  //updateLayout(data_updated_layout,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
+  //updateLayout(updated_diff,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
 
-  let difference = deep_diff.diff(updated_diff, data_updated_layout)
+  let difference = deep_diff.diff(view_data, data)
   difference=(difference !== undefined)?difference:[]
   difference=difference.filter((d:{path:string[],kind:string,item:{kind:string}})=>{
     // Ne prend pas en compte les modif de vue, de la largeur ou hauteur du sankey
@@ -873,6 +901,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
+  view_not_saved:string,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
@@ -902,7 +931,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   //  - if there is no differences between the the saved view and the current view, then the logo has a check
   //  - else if it contain difference, the logo contain an exclamation point
   let is_different=false
-  if(view !== 'none' && master_data && connected){
+  if(view !== 'none' && view_not_saved =='' && master_data && connected){
     const diff=check_current_view_saved(master_data,data,view)
     if(diff.length>0){
       is_different=true
@@ -1168,7 +1197,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
         }else if(master_data.is_catalog && master_data.view.length>0){
           // If master is a catalog and the catalog is not empty then we got to the first view 
           set_view(master_data.view[0].id)
-          const tmp=get_data_from_view(master_data,master_data.view[0].id)
+          const tmp=get_data_from_view(master_data,master_data.view[0].id) as SankeyPlusData
           set_data({ ...tmp })
         }
         if(master_data.view.length===0){
@@ -1283,7 +1312,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     <Popover.Body >
       <Form.Control 
         type='text'
-        value={master_data&& master_data.current_view!=='none'?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:''}
+        value={master_data && master_data.current_view && master_data.current_view!=='none'?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:''}
         onChange={(evt)=>{
           master_data?master_data.view.filter(v=>v.id===master_data.current_view).forEach(v=>v.nom=evt.target.value):''
           set_data({...data})
@@ -1328,7 +1357,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
             if(imported_data.view && imported_data.view.length>0){
               // Import all view from the coming file
               imported_data.view.forEach((v,i2)=>{
-                const view_from_imported_data=get_data_from_view(imported_data,v.id)
+                const view_from_imported_data=get_data_from_view(imported_data,v.id) as SankeyPlusData
                 convert_data(view_from_imported_data)
 
                 if(i2===0 && i==='0'){
@@ -1607,46 +1636,47 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
     </Modal>)
 }
 
-export const toolbar_fullscreen=(data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  view:string,
-  set_view:(s:string)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
-  t:TFunction,
-  connected:boolean,
-  set_view_not_saved:(s:string)=>void,
-  _load_json:{current:HTMLInputElement},
-  _load_json_catalog:{current:HTMLInputElement},
+// export const toolbar_fullscreen=(data:SankeyPlusData,
+//   set_data:(d:SankeyPlusData)=>void,
+//   view:string,
+//   set_view:(s:string)=>void,
+//   multi_selected_nodes:{current:SankeyPlusNode[]},
+//   multi_selected_links:{current:SankeyPlusLink[]},
+//   multi_selected_label:{current:SankeyPlusLabel[]},
+//   master_data:SankeyPlusData,
+//   set_master_data:(d:SankeyPlusData)=>void,
+//   t:TFunction,
+//   connected:boolean,
+//   view_not_saved:string,
+//   set_view_not_saved:(s:string)=>void,
+//   _load_json:{current:HTMLInputElement},
+//   _load_json_catalog:{current:HTMLInputElement},
 
-  set_show_modal_transparent_view_attr:(b:boolean)=>void,
-  show_modal_selection_link_ref_in_unitary_sankey:boolean,
-  set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
-  value_editor_name_view:string,
-  set_value_editor_name_view:(s:string)=>void,
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void,
-  convert_data:(d:SankeyPlusData)=>void
-)=>{
-  const buttons_view= SankeyPlusBannerView(data,set_data,
-    view,set_view,
-    multi_selected_nodes,multi_selected_links,multi_selected_label,
-    master_data,set_master_data,
-    t,
-    connected,set_view_not_saved,
-    _load_json,_load_json_catalog,set_show_modal_transparent_view_attr,
-    show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,value_editor_name_view,set_value_editor_name_view,
-    select_or_edit,set_select_or_edit,convert_data
-  )
-  const group_btn=<ButtonGroup>
-    {buttons_view}
-  </ButtonGroup>
-  return <>{group_btn}</>
+//   set_show_modal_transparent_view_attr:(b:boolean)=>void,
+//   show_modal_selection_link_ref_in_unitary_sankey:boolean,
+//   set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
+//   value_editor_name_view:string,
+//   set_value_editor_name_view:(s:string)=>void,
+//   select_or_edit:'select'|'edit',
+//   set_select_or_edit:(s:'select'|'edit')=>void,
+//   convert_data:(d:SankeyPlusData)=>void
+// )=>{
+//   const buttons_view= SankeyPlusBannerView(data,set_data,
+//     view,set_view,view_not_saved,
+//     multi_selected_nodes,multi_selected_links,multi_selected_label,
+//     master_data,set_master_data,
+//     t,
+//     connected,set_view_not_saved,
+//     _load_json,_load_json_catalog,set_show_modal_transparent_view_attr,
+//     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,value_editor_name_view,set_value_editor_name_view,
+//     select_or_edit,set_select_or_edit,convert_data
+//   )
+//   const group_btn=<ButtonGroup>
+//     {buttons_view}
+//   </ButtonGroup>
+//   return <>{group_btn}</>
 
-}
+// }
 
 export const modal_transparent_view_attr=(show_modal_transparent_view_attr:boolean,
   set_show_modal_transparent_view_attr:(b:boolean)=>void,

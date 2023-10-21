@@ -96,6 +96,7 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
+      convert_data(v.view_data as unknown as SankeyPlusData)
       plus_convert_data((v.view_data as unknown as SankeyPlusData ))
       // let difference = deep_diff.diff(data, v.view_data)
       // difference=(difference!==undefined)?difference:[]
@@ -118,7 +119,7 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
 
 
     } else if((v.view_data as unknown as DiffType).diff!==undefined){
-      const d_view=get_data_from_view(data,v.id)
+      const d_view=get_data_from_view(data,v.id) as SankeyPlusData
       convert_data(d_view)
       plus_convert_data(d_view)
       const copy_data={...data}
@@ -213,7 +214,7 @@ export const OpenSankeyPlusDiagramSelector = (
                 // No update of view by itself
                 return
               }                
-              const data_view=get_data_from_view(master_data,view_selected)
+              const data_view=get_data_from_view(master_data,view_selected) as SankeyPlusData
               updateLayout(sankey_data,data_view,elementToDispose)
               const copy_data = JSON.parse(JSON.stringify(sankey_data))
               set_sankey_data(copy_data)
