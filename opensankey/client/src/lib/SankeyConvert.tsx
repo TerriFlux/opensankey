@@ -1420,10 +1420,16 @@ export const convert_data = (
   Object.entries(data.style_link).forEach(s=>{
     s[1]=Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])),s[1])
     data.style_link[s[0]]=s[1]
+    if (s[1].idLink === 'par défaut') {
+      s[1].idLink = 'default'
+    }
   })
   Object.entries(data.style_node).forEach(s=>{
     s[1]=Object.assign(JSON.parse(JSON.stringify(defaut_data.style_node['default'])),s[1])
     data.style_node[s[0]]=s[1]
+    if (s[1].idNode === 'par défaut') {
+      s[1].idNode = 'default'
+    }
   })
 
   const attributes_to_remove = ['agregated_level','show_data','trade_close','sankey_type','previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']
