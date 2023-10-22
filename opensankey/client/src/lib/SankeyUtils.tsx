@@ -757,14 +757,13 @@ export const link_visible = (l: SankeyLink, data: SankeyData,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const { dataTags, fluxTags } = data
-
+  if (!l) {
+    return false
+  }
   if (data.show_structure === 'structure') {
     if (data.nodes[l.idSource].position === 'relative' || data.nodes[l.idTarget].position === 'relative') {
       return false
     }
-  }
-  if (!l) {
-    return false
   }
   if (!data.nodes[l.idSource] || !node_displayed(data,data.nodes[l.idSource]) || !data.nodes[l.idTarget] || !node_displayed(data,data.nodes[l.idTarget])) {
     return false
