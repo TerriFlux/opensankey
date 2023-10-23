@@ -40,7 +40,9 @@ def parse_folder(current_dir):
     for file_or_folder in folder_content:
         if 'conversions' in file_or_folder or 'mfadata' in file_or_folder or 'sankeylayout' in file_or_folder \
             or '.git' in file_or_folder or '.md' in file_or_folder or 'Archive' in file_or_folder \
-                or 'OptimSankey' in file_or_folder or 'not_tested' in file_or_folder or 'artefacts' in file_or_folder:
+                or 'OptimSankey' in file_or_folder or 'not_tested' in file_or_folder or 'artefacts' in file_or_folder\
+                or 'BACCFIRE' in file_or_folder\
+                or 'EtudesEnCours' in file_or_folder:
             continue
         if os.path.isfile(os.path.join(current_dir, file_or_folder)):
             file_name = os.path.join(current_dir, file_or_folder)
@@ -76,7 +78,9 @@ def fill_test_parameters(current_dir):
     for file_or_folder in folder_content:
         if 'mfadata' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder \
             or 'Archive' in file_or_folder or 'OptimSankey' in file_or_folder or 'not_tested' in file_or_folder \
-                or 'artefacts' in file_or_folder:
+                or 'artefacts' in file_or_folder\
+                or 'BACCFIRE' in file_or_folder\
+                or 'EtudesEnCours' in file_or_folder:
             continue
         if os.path.isfile(os.path.join(current_dir, file_or_folder)):
             file_stats = os.stat(os.path.join(current_dir, file_or_folder))
