@@ -1085,7 +1085,7 @@ export const downloadExamples = (
   filetype: string
 ) => {
   const root = window.location.href
-  const url = root + the_url_prefix + 'sankey/download_examples'
+  const url = root + '/opensankey/sankey/download_examples'
   const fetchData = {
     method: 'POST',
     body: file_name
