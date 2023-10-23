@@ -1100,9 +1100,9 @@ export const updateLayout = (
 
   //- Sanity check
   const nodes_to_remove = Object.entries(data.nodes).filter(([,n])=>!n.idNode)
-  nodes_to_remove.forEach(([key,val])=>delete data.nodes[key])
+  nodes_to_remove.forEach(([key])=>delete data.nodes[key])
   const links_to_remove = Object.entries(data.links).filter(([,l])=>!l.idLink)
-  links_to_remove.forEach(([key,val])=>delete data.links[key])
+  links_to_remove.forEach(([key])=>delete data.links[key])
   if (links_to_remove.length>0) {
     compute_default_input_outputLinksId(data.nodes, data.links)
   }
