@@ -56,7 +56,7 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
         }
         delete ((l as unknown) as SankeyPlusLabelToConvert ).name
       }
-      const keys = ['idLabel','title','content','opacity','color','color_border','transparent_border','label_width','label_height','x','y','x_label','y_label']
+      const keys = ['idLabel','title','content','opacity','color','color_border','transparent_border','label_width','label_height','x','y','x_label','y_label','is_image','image_src']
       const keys_to_remove : string[]=[]
       Object.keys(l).forEach(key=>{
         if (!keys.includes(key)) {
