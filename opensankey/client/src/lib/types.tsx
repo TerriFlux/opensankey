@@ -334,3 +334,9 @@ export type drawArrowsType = (
 ) => void
 
 
+export interface treeFolderType{
+  id:string
+  name:string,
+  children?:treeFolderType[],
+  checked?:1|0.5|0
+}

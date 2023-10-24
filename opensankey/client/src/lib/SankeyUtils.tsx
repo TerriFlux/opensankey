@@ -5,7 +5,7 @@ import {  compute_auto_sankey,compute_default_input_outputLinksId,agregation,des
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from './SankeyMenu'
-
+import React from 'react'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -1909,4 +1909,15 @@ export const recursionDataTag=(data:SankeyData,DT:TagsCatalog,ind:number,suffix:
       }
 
     })
+}
+
+// Create emptyicon for treefolder component
+export const FileIcon = () => {
+  return <></>
+}
+export const FolderIcon = () => {
+  return <></>
+}
+export const FolderOpenIcon = () => {
+  return <></>
 }

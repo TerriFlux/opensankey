@@ -1,8 +1,8 @@
 import React, { FunctionComponent, useState,useRef} from 'react'
 import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup,Overlay,Popover } from 'react-bootstrap'
 import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
-import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLinkValue,SankeyLink } from './types'
-import { delete_node,return_value_node,apply_style_to_nodes,add_new_node,cut_name} from './SankeyUtils'
+import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLinkValue,SankeyLink,treeFolderType} from './types'
+import { delete_node,return_value_node,apply_style_to_nodes,add_new_node,cut_name,FolderIcon,FolderOpenIcon,FileIcon} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus, FaEye,} from 'react-icons/fa'
 // import { MultiSelect } from 'react-multi-select-component'
@@ -104,16 +104,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
 
   const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes,node_visible_on_svg())
-  // Create emptyicon for treefolder component
-  const FileIcon = () => {
-    return <></>
-  }
-  const FolderIcon = () => {
-    return <></>
-  }
-  const FolderOpenIcon = () => {
-    return <></>
-  }
+
 
 
 
@@ -338,12 +329,7 @@ SankeyNodeEdition.propTypes = SankeyNodeEditionPropTypes
 export default SankeyNodeEdition
 
 
-interface treeFolderType{
-  id:string
-  name:string,
-  children?:treeFolderType[],
-  checked?:1|0.5|0
-}
+
 
 const tree_data_nodes=(t:TFunction,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[])=>{
   const root_checked=(Object.values(data.nodes).filter(n=>data.displayed_node_selector?node_visible.includes(n.idNode):true).map(n=>n).length===multi_selected_nodes.current.length)?1:0
