@@ -7,14 +7,16 @@ import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,Ov
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaBars,FaCopy} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
+import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk,faSquarePlus} from '@fortawesome/free-solid-svg-icons'
 
-import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { adjust_sankey_zone} from 'open-sankey/dist/SankeyUtils'
-import { updateLayout,compute_default_input_outputLinksId } from 'open-sankey/dist/SankeyLayout'
+import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup,treeFolderType} from 'open-sankey/src/lib/types'
+import { adjust_sankey_zone,FolderIcon,FolderOpenIcon,FileIcon} from 'open-sankey/dist/SankeyUtils'
+import { updateLayout } from 'open-sankey/dist/SankeyLayout'
 
 import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType, DiffType, ViewType } from './types'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
+import { create_view_node_unitary } from './SankeyPlusNodes'
+import FolderTree from 'react-folder-tree'
 /* eslint-disable */
 // @ts-ignore
 const deep_diff = require('deep-diff')
@@ -919,19 +921,20 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
   set_select_or_edit:(s:'select'|'edit')=>void,
-  convert_data:(d:SankeyPlusData)=>void
+  convert_data:(d:SankeyPlusData)=>void,
 )=>{
 
   const m_d=master_data?master_data:data
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
   const target_popover_modify_view_name=useRef(null)
-
+  const target_node_selector=useRef(null)
+  const [show_node_unitary_selector,set_show_node_unitary_selector]=useState(false)
 
   // Boolean used to change the logo of the button to save the current view :
   //  - if there is no differences between the the saved view and the current view, then the logo has a check
   //  - else if it contain difference, the logo contain an exclamation point
   let is_different=false
-  if(view !== 'none' && view_not_saved =='' && master_data && connected){
+  if(view !== 'none' && view_not_saved ==='' && master_data && connected){
     const diff=check_current_view_saved(master_data,data,view)
     if(diff.length>0){
       is_different=true
@@ -948,7 +951,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected)?(
       <Tooltip id={'buttonCreateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonCreateView'}>{t('Menu.tooltips.buttonCreateView')} </Tooltip>}
+      <Tooltip id={'buttonCreateView'}>{t('view.tooltips.buttonCreateView')} </Tooltip>}
   >
     <span>
       <Button
@@ -983,13 +986,89 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </span>
   </OverlayTrigger>
 
+  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes)
+
+  const overlayNodeSlector= <Overlay
+    key={'popover-nodes-level'}
+    placement={'bottom'}
+    target={target_node_selector}
+    rootClose
+    show={show_node_unitary_selector}
+    onHide={()=>{set_show_node_unitary_selector(false)}}
+  >
+    <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
+      <Popover.Header as="h3">{t('view.selectNodeForUnitaryView')}</Popover.Header>
+      <Popover.Body style={{ maxHeight:'500px',overflowY:'auto' }}>
+
+        <FolderTree
+          iconComponents={{
+            FileIcon,
+            FolderIcon,
+            FolderOpenIcon
+          }}
+          showCheckbox={false}
+          initCheckedStatus='custom'
+          indentPixels={20}
+          onNameClick={({defaultOnClick,nodeData})=>{
+            defaultOnClick
+            // Create a unitary sankey from the node selected
+            if(master_data===undefined){
+              master_data=JSON.parse(JSON.stringify(data))
+            }
+            create_view_node_unitary(t,data,set_data,master_data,set_master_data,data.nodes[nodeData.id],set_view,data.nodes,'')
+            set_show_node_unitary_selector(false)
+          }}
+
+          data={ tree_of_nodes }
+        />
+      </Popover.Body>
+    </Popover>
+  </Overlay>
+
+  const buttonCreateUnitaryView=<OverlayTrigger
+    key={'buttonCreateViewUnitaryDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonCreateViewUnitaryDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonCreateViewUnitary'}>{t('view.tooltips.buttonCreateViewUnitary')} </Tooltip>}
+  >
+    <span>
+      <Button
+        size='sm'
+        variant='light'
+        ref={target_node_selector}
+        disabled={!connected}
+        onClick={()=>{set_show_node_unitary_selector(!show_node_unitary_selector)}}
+      >
+        <Col><FontAwesomeIcon
+          icon={faSquarePlus}
+          style={{opacity:(!connected)?'0.6':'1'}}/>
+        </Col>
+        {!connected?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
+        <Col style={{'fontSize':'9px'}}>{t('view.unit')}</Col>
+      </Button>
+    </span>
+  </OverlayTrigger>
+
   const buttonUpdateView=<OverlayTrigger
     key={'buttonUpdateViewDisabled'}
     placement={'bottom'}
     delay={500}
     overlay={(!connected)?(
       <Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonSaveView'}>{t('Menu.tooltips.saveView')} </Tooltip>}
+      <Tooltip id={'buttonSaveView'}>{t('view.tooltips.saveView')} </Tooltip>}
   >
     <span>
       <Button
@@ -1384,7 +1463,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
                 heredited_attr_from_master:[]
               })
             }
-            console.log(i,i==='0')
             if(i==='0'){
 
               set_view(new_ind)
@@ -1421,7 +1499,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected && !has_views)?
       <Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-      <Tooltip id={'buttonHme'}>{t('Menu.tooltips.home')} </Tooltip>}
+      <Tooltip id={'buttonHme'}>{t('view.tooltips.home')} </Tooltip>}
   >
     <span>
       <Button
@@ -1456,6 +1534,8 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </OverlayTrigger>
 
   {buttonCreateView}
+  {buttonCreateUnitaryView}
+  {overlayNodeSlector}
   {buttonUpdateView}
 
   <OverlayTrigger
@@ -1464,7 +1544,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected && !has_views)?
       <Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-      <Tooltip id={'buttonPrevView'}>{t('Menu.tooltips.PrevViewButton')} </Tooltip>}
+      <Tooltip id={'buttonPrevView'}>{t('view.tooltips.PrevViewButton')} </Tooltip>}
   >
     <span>
       <Button
@@ -1504,7 +1584,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     delay={500}
     overlay={(!connected && !has_views)?(
       <Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonNextView'}>{t('Menu.tooltips.NextViewButton')} </Tooltip>}
+      <Tooltip id={'buttonNextView'}>{t('view.tooltips.NextViewButton')} </Tooltip>}
   >
     <span>
       <Button
@@ -1978,7 +2058,7 @@ export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_on
       key={'buttonExportViewDisabled'}
       placement={'bottom'}
       delay={500}
-      overlay={<Tooltip id={'buttonExportView'}>{t('Menu.tooltips.buttonExportView')} </Tooltip>}
+      overlay={<Tooltip id={'buttonExportView'}>{t('view.tooltips.buttonExportView')} </Tooltip>}
     >
       <Button
         style={{width:'40%'}}
@@ -1989,3 +2069,65 @@ export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_on
       </Button></OverlayTrigger>
   </InputGroup>
 }
+
+
+const tree_data_nodes=(t:TFunction,data:SankeyPlusData,multi_selected_nodes:{current:SankeyPlusNode[]})=>{
+  const tree:treeFolderType={id:'root',name:t('Noeud.TS'),children:[]}
+  Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n)).forEach(n=>{
+    const sub_tree={id:n.idNode,name:n.name} as treeFolderType
+
+
+    tree.children?tree.children.push(sub_tree):tree.children=[sub_tree]})
+
+  tree.children?.forEach(t=>{
+    const child_t=add_children(data.nodes,data.nodes[t.id],multi_selected_nodes)
+    if(child_t.length>0){
+      t.children=child_t
+    }
+  })
+  return tree
+}
+
+const check_node_has_no_valid_dimensions=(n:SankeyPlusNode)=>{
+  if(!n.dimensions){
+    return true
+  }
+  let invalid=true
+  Object.entries(n.dimensions).filter(nd=>nd[0]!=='Primaire').forEach(value_dim=>{
+    if(value_dim[1].parent_name!==undefined){
+      invalid=false
+    }
+
+  })
+  return invalid
+}
+
+const add_children=(nodes:{[x:string]:SankeyPlusNode},n:SankeyPlusNode,multi_selected_nodes:{current:SankeyPlusNode[]})=>{
+  const children:treeFolderType[]=[]
+  Object.entries(nodes).forEach(nn=>{
+    if(nn[1].dimensions){
+      Object.entries(nn[1].dimensions).filter(nd=>nd[0]!=='Primaire' && nd[1].parent_name===n.idNode).forEach(()=>{
+        const c:treeFolderType={id:nn[0],name:nn[1].name}        
+        const child=add_children(nodes,nn[1],multi_selected_nodes)
+        if(child.length!==0){
+          c.children=child
+        }
+        children.push(c)
+
+      })
+    }
+  })
+  return children
+}
+
+// const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
+      
+//   if(tree.children && path.length>0){
+//     const index=path.shift()??-1
+//     const sub_tree=tree.children[index]
+//     return getNodeFromTree(path,sub_tree)
+//   }else{
+//     const id=tree.id,checked=tree.checked
+//     return {id,checked}
+//   }
+// }

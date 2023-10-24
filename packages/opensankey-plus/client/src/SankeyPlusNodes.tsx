@@ -6,10 +6,10 @@ import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 
 import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg,simpleGNodeClick} from 'open-sankey/dist/SankeyDrawFunction'
-import {  getLinkValue,node_color,link_color,return_value_node,return_value_link,node_displayed,link_text,link_visible,is_node_diplaying_value_local,is_all_node_attr_same_value,assign_node_value_to_correct_var } from 'open-sankey/dist/SankeyUtils'
+import {  getLinkValue,node_color,link_color,return_value_node,return_value_link,node_displayed,link_text,link_visible,is_node_diplaying_value_local,is_all_node_attr_same_value,assign_node_value_to_correct_var,compute_total_offsets, test_link_value} from 'open-sankey/dist/SankeyUtils'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
 import { menu_draggable} from 'open-sankey/dist/SankeyMenu'
-
+import {compute_auto_sankey} from 'open-sankey/dist/SankeyLayout'
 import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType,DiffType, SankeyPlusData,SankeyPlusNode, ViewType} from './types'
 import { filter_view,get_data_from_view } from './SankeyPlusViews'
 
@@ -1073,317 +1073,10 @@ export const context_node_view_node_unitary=(
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
   set_view:(s:string)=>void,
-  t:TFunction
+  t:TFunction,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
 )=>{
-  const create_view_node_unitary=(view_name='')=>{
-
-    const new_unitary_sankey=JSON.parse(JSON.stringify(data)) as SankeyPlusData
-
-    const n_v=node_visible_on_svg()
-    // const l_v=link_visible_on_svg()
-    const n_link_s=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink)&& n_v.includes(l.idSource)).map(l=>l.idSource)
-    const n_link_t=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink)&& n_v.includes(l.idTarget)).map(l=>l.idTarget)
-
-    const nodes_visible_to_keep= Object.fromEntries(Object.entries(new_unitary_sankey.nodes).filter(ne=>{
-      // Keep only the node contextualised,
-      // or the node linked to it (and visible on the svg)
-      return ne[1].idNode===contextualised_node.idNode || ((n_link_s.includes(ne[1].idNode) || n_link_t.includes(ne[1].idNode) ) && n_v.includes(ne[1].idNode))
-    }).map(n=>n))
-
-
-    // Get all the parents & sons (aggregation speaking) of all_nodes_in_unitary_sankey
-    let center_sankey_node_unitary=[contextualised_node.idNode]
-    let aggregate_nodes_to_keep=[] as string[]
-    Object.entries(nodes_visible_to_keep).forEach(ne=>{
-      
-      const parent=return_aggregation_tree_of_node(ne[1],data.nodes)
-      aggregate_nodes_to_keep=[...aggregate_nodes_to_keep,...JSON.parse(JSON.stringify(parent))]
-      // Add parents & sons to node reference 
-      if(ne[1].idNode===contextualised_node.idNode){
-        center_sankey_node_unitary=[...center_sankey_node_unitary,...parent]
-      }
-    })
-    aggregate_nodes_to_keep=[...new Set(aggregate_nodes_to_keep)]
-
-    // Add nodes not visible but that have an aggregation link to one visible
-    const all_nodes_in_unitary_sankey=JSON.parse(JSON.stringify(nodes_visible_to_keep)) as {[x:string]:SankeyPlusNode}
-    aggregate_nodes_to_keep.forEach(kn=>{
-      all_nodes_in_unitary_sankey[kn]=new_unitary_sankey.nodes[kn]
-    })
-
-    const key_of_nodes_in_unitary_sankey=Object.values(all_nodes_in_unitary_sankey).map(n=>n.idNode)
-
-    // Get key of link that are connected to 2 nodes of the nodes to keep  
-    const n_link=Object.values(new_unitary_sankey.links).filter(l=>key_of_nodes_in_unitary_sankey.includes(l.idSource) && key_of_nodes_in_unitary_sankey.includes(l.idSource) ).map(l=>l.idSource)
-
-    const links_to_keep=Object.fromEntries(Object.entries(new_unitary_sankey.links).filter(l=>n_link.includes(l[1].idSource) && n_link.includes(l[1].idTarget)).map(l=>{
-      l[1].value=getLinkValue(new_unitary_sankey,l[1].idLink)
-      l[1].colorTag='no_colormap'
-      return l
-    }))
-    const k_l_t_k=Object.keys(links_to_keep)
-
-    // Key levelTag
-    const k_level_tag=Object.keys(new_unitary_sankey.levelTags)
-
-
-    Object.entries(all_nodes_in_unitary_sankey).map(n=>{
-      // Filter output/input link id by removing link no longer present in data
-      n[1].outputLinksId=n[1].outputLinksId.filter(ol=>k_l_t_k.includes(ol))
-      n[1].inputLinksId=n[1].inputLinksId.filter(il=>k_l_t_k.includes(il))
-
-      // Keep tag that refernece levelTag && tag of group tag 'Type de noeud'
-      n[1].tags=Object.fromEntries(Object.entries(n[1].tags).filter(nt=>nt[0]==='Type de noeud' || k_level_tag.includes(nt[0])))
-
-      n[1].colorTag='no_colormap'
-      n[1].colorParameter='local'
-      // n[1].dimensions={}
-
-      return n
-    })
-
-
-
-    const nodes_to_keep=all_nodes_in_unitary_sankey
-
-    // Normalize data
-    new_unitary_sankey.nodeTags=Object.fromEntries(Object.entries(new_unitary_sankey.nodeTags).filter(nt=>nt[0]==='Type de noeud').map(nt=>nt))
-    new_unitary_sankey.fluxTags={}
-    new_unitary_sankey.dataTags={}
-    // new_unitary_sankey.levelTags={}
-    new_unitary_sankey.labels={}
-    new_unitary_sankey.colorMap='no_colormap'
-    new_unitary_sankey.linkZIndex=new_unitary_sankey.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
-    new_unitary_sankey.nodes=nodes_to_keep
-    new_unitary_sankey.links=links_to_keep
-
-    // ======Add ZDT====== 
-    // Get dimensions for labels 
-
-    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-
-    const min_x_node=Object.values(nodes_visible_to_keep).filter(n=>n.position==='absolute').sort((a,b)=>{
-
-      const pos_labe_h_a=return_value_node(data,a,'label_horiz')
-      let a_shift_left=0
-      if(pos_labe_h_a==='left'){
-        a_shift_left=document.getElementById('text_'+a.idNode)?.getBoundingClientRect().width??0/scale_svg
-      }else if(pos_labe_h_a==='middle'){
-        a_shift_left=((document.getElementById('text_'+a.idNode)?.getBoundingClientRect().width??0)/2)/scale_svg
-      }
-
-      const pos_labe_h_b=return_value_node(data,b,'label_horiz')
-      let b_shift_left=0
-      if(pos_labe_h_b==='left'){
-        b_shift_left=document.getElementById('text_'+b.idNode)?.getBoundingClientRect().width??0/scale_svg
-      }else if(pos_labe_h_b==='middle'){
-        b_shift_left=((document.getElementById('text_'+b.idNode)?.getBoundingClientRect().width??0)/2)/scale_svg
-      }
-
-      return (a.x-a_shift_left)-(b.x-b_shift_left)
-    
-    })[0]
-
-    const pos_labe_h=return_value_node(data,min_x_node,'label_horiz')
-    let shift_left=0
-    if(pos_labe_h==='left'){
-      shift_left=document.getElementById('text_'+min_x_node.idNode)?.getBoundingClientRect().width??0/scale_svg
-    }else if(pos_labe_h==='middle'){
-      shift_left=((document.getElementById('text_'+min_x_node.idNode)?.getBoundingClientRect().width??0)/2)/scale_svg
-    }
-
-    const min_x=min_x_node.x-(shift_left/scale_svg)
-
-    const min_y_node=Object.values(nodes_visible_to_keep).filter(n=>n.position==='absolute').sort((a,b)=>{
-      const a_shift_top=return_value_node(data,a,'label_vert')==='top'?document.getElementById('text_'+a.idNode)?.getBoundingClientRect().height??0:0
-      const b_shift_top=return_value_node(data,b,'label_vert')==='top'?document.getElementById('text_'+b.idNode)?.getBoundingClientRect().height??0:0
-      
-      return (a.y-a_shift_top)-(b.y-b_shift_top)
-    
-    })[0]
-    const min_y=min_y_node.y-(return_value_node(data,min_x_node,'label_vert')==='top'?document.getElementById('text_'+min_x_node.idNode)?.getBoundingClientRect().height??0:0)/scale_svg
-
-    let max_x=min_x
-    let max_y=min_y
-    Object.values(nodes_visible_to_keep).filter(n=>n.position==='absolute').forEach(n=>{
-      const boxX=n.x
-      const boxY=n.y
-      const boxW=Number(d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
-      const boxH=Number(d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
-      
-      // Get HTML Box size of node label to add to the maximum size of the unitary sankey
-      const pos_labe_h=return_value_node(data,n,'label_horiz')
-      let text_box_h=0
-      if(pos_labe_h==='right'){
-        text_box_h=document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0/scale_svg
-      }else if(pos_labe_h==='middle'){
-        text_box_h=((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0)/2)/scale_svg
-      }
-
-      const pos_labe_v=return_value_node(data,n,'label_horiz')
-      let text_box_v=0
-      if(pos_labe_v==='bottom'){
-        (text_box_v=document.getElementById('text_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
-      }
-
-      
-      max_x=((boxX+boxW+text_box_h)>max_x)?(boxX+boxW+text_box_h):max_x
-      max_y=((boxY+boxH+text_box_v)>max_y)?(boxY+boxH+text_box_v):max_y
-    })
-
-
-    // Info from data source in ZDT
-    let content_zdt=''
-    const type_node=(contextualised_node.tags['Type de noeud']!==undefined)?('('+contextualised_node.tags['Type de noeud'].join(',')+')'):''
-    const name_view=(master_data.current_view && master_data.current_view!=='none')?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:t('Menu.home')
-    content_zdt='<p>'+t('view.template_unitary_zdt_content')+' <strong>'+name_view+' </strong></p>'
-    content_zdt+='<p>'+t('view.template_unitary_zdt_content_of_node')+' <strong>'+contextualised_node.name+type_node+' </strong></p>'
-
-    const data_tags = Object.assign({},data.dataTags)
-    Object.entries(data_tags).forEach(tag_group => {
-      const intro_group_data_tags=' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')
-      content_zdt+='<p>'+tag_group[1].group_name+intro_group_data_tags+'</p>'
-    })
-
-
-    // Create the zdt  
-    const n_label={
-      idLabel: 'label_' + String(new Date().getTime()),
-      title:'Description',
-      content: content_zdt,
-      label_width: ((max_x-min_x)+10),
-      label_height: ((max_y-min_y)+10),
-      color: 'white',
-      color_border: 'black',
-      opacity: 100,
-      transparent_border: false,
-      x: min_x-5,
-      y: min_y-5,
-      is_image:false,
-      image_src:''
-
-    }
  
-    // Perform some configuration if the unitary go to a new view or an existing view
-    if(view_name===''){
-
-      new_unitary_sankey.labels[n_label.idLabel]=n_label
-
-      // Add the contextualised node to list of explored nodes (to use in the process of link_text)
-      new_unitary_sankey.unitary_node=[...new_unitary_sankey.unitary_node,...center_sankey_node_unitary]
-
-      let difference = deep_diff.diff(master_data, new_unitary_sankey)
-      difference=(difference !== undefined)?difference:[]
-      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      difference=filter_view(difference)
-  
-      const new_id='view_' + String(new Date().getTime())
-      master_data.view.push({
-        id: new_id,
-        view_data: {diff:difference},
-        nom: 'Exploration view of node '+contextualised_node.name,
-        details: '',
-        heredited_attr_from_master:[]
-      })
-
-      set_view(new_id)
-      set_data({...new_unitary_sankey})
-
-
-    }else{
-      // If the unitary sankey go to an existing view then we perform some ajustement :
-      // - We change the id of links and nodes to avoid corruption of the other unitary sankey in the view
-      // - We shift the explainatory ZDT  and new unitary sankey under the existing one 
-
-      // Search for the view to add the new exploration node
-      let ind = -1
-      master_data.view.map((v, i) => {
-        ind = (v.id === view_name) ? i : ind
-      })
-      const data_view=get_data_from_view(master_data,master_data.view[ind].id) as SankeyPlusData
-
-      // =====Update data icon catalog=====
-      Object.entries(new_unitary_sankey.icon_catalog).forEach(i=>{
-        data_view.icon_catalog[i[0]]=i[1]
-      })
-      
-      // =====Update the ZDT to verticaly align it with the last one in the view=====
-      const last_label_pos_in_view=Object.values(data_view.labels)[Object.values(data_view.labels).length-1]
-      n_label.x=last_label_pos_in_view.x
-      n_label.y=last_label_pos_in_view.y+last_label_pos_in_view.label_height+5
-
-
-      // =====Update nodes & links=====
-      // Create unique key to use in the suffix
-      const unique_key=String(new Date().getTime())
-      // Add a unique suffix to nodes & links in case we add node/link who have the same id of some in the view
-      Object.entries(new_unitary_sankey.nodes).map(n=>{
-        n[0]=n[0]+'_'+unique_key
-        n[1].idNode=n[0]
-        n[1].inputLinksId=n[1].inputLinksId.map(l=>l+'_'+unique_key)
-        n[1].outputLinksId=n[1].outputLinksId.map(l=>l+'_'+unique_key)
-
-        n[1].x-=(min_x-n_label.x)
-        n[1].y-=(min_y-n_label.y)
-
-        n[1].style=n[1].style+'_'+unique_key
-
-        return n
-      }).forEach(n=>{
-        data_view.nodes[n[0]]=n[1]
-      })
-
-      Object.entries(new_unitary_sankey.links).map(l=>{
-        l[0]=l[0]+'_'+unique_key
-        l[1].idLink=l[0]
-        l[1].idSource=l[1].idSource+'_'+unique_key
-        l[1].idTarget=l[1].idTarget+'_'+unique_key
-
-        l[1].style=l[1].style+'_'+unique_key
-
-        return l
-      }).forEach(l=>{
-        data_view.linkZIndex.push(l[1].idLink)
-        data_view.links[l[0]]=l[1]
-      })
-
-      // Update style ID in case it has different value with the samez id 
-      Object.entries(new_unitary_sankey.style_node).forEach(ns=>{
-        data_view.style_node[ns[0]+'_'+unique_key]=ns[1]
-      })
-
-      Object.entries(new_unitary_sankey.style_link).forEach(ls=>{
-        data_view.style_link[ls[0]+'_'+unique_key]=ls[1]
-      })
-
-      // =====Add the new ZDT=====
-      data_view.labels[n_label.idLabel]=n_label
-
-      // =====Add the contextualised node to list of explored nodes (to use in the process of link_text)=====
-      const process_name_unitary_node=center_sankey_node_unitary.map(k=>k+'_'+unique_key)
-      data_view.unitary_node=[...data_view.unitary_node,...process_name_unitary_node]
-
-
-      // ------------------------------------------------------------
-      // =====Update the view=====
-      let difference = deep_diff.diff(master_data, data_view)
-      difference=(difference !== undefined)?difference:[]
-      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      difference=filter_view(difference)
-
-      master_data.view[ind].view_data={diff:difference}
-    
-      set_view(view_name)
-      set_data({...data_view})
-
-    }
-
-    // Save master data with the view we are currently working on updated
-    set_master_data({...master_data})
-
-      
-  }
   // Search if master data has view with unitary sankey
   const has_unitary_view=master_data.view.filter(v=>{
     if((v.view_data as DiffType).diff!==undefined){
@@ -1409,7 +1102,7 @@ export const context_node_view_node_unitary=(
         
         return <Dropdown.Item as={Button} variant='light' 
           onClick={()=>{
-            create_view_node_unitary(v.id)
+            create_view_node_unitary(t,data,set_data,master_data,set_master_data,contextualised_node,set_view,display_nodes,v.id)
             set_contextualised_node(undefined)
           }}
         >
@@ -1426,7 +1119,7 @@ export const context_node_view_node_unitary=(
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
       <Dropdown.Item  as={Button} variant='light' onClick={()=>{
-        create_view_node_unitary()
+        create_view_node_unitary(t,data,set_data,master_data,set_master_data,contextualised_node,set_view,display_nodes)
       }}>{t('view.in_new')}</Dropdown.Item>
       {has_unitary_view?dropdown_c_n_explore_node_add_to_view:<></>}
 
@@ -1555,7 +1248,7 @@ const return_aggregation_tree_of_node=(n:SankeyPlusNode,nodes:{[x:string]:Sankey
 const return_aggregation_parents_of_node=(n:SankeyPlusNode,nodes:{[x:string]:SankeyPlusNode},found_fathers:string[])=>{
   if(n.dimensions){
     Object.entries(n.dimensions).forEach(nd=>{
-      if(nd[1].parent_name!==undefined && nd[1].parent_name!==null ){
+      if(nd[1].parent_name!==undefined && nd[1].parent_name!==null  && nd[0]!=='Primaire'){
         found_fathers.push(nd[1].parent_name)
         return_aggregation_parents_of_node(nodes[nd[1].parent_name],nodes,found_fathers)
       }
@@ -1569,7 +1262,7 @@ const return_aggregation_sons_of_node=((n:SankeyPlusNode,nodes:{[x:string]:Sanke
     if(nn.dimensions){
       // Si le noeud (nn) a pour parents le noeud que l'on recherche (n) alors on l'ajoute à found_sons puis recherche les enfants de ce noeud là (nn)
       Object.entries(nn.dimensions).forEach(nd=>{
-        if( nd[1].parent_name===n.idNode  ){
+        if( nd[1].parent_name===n.idNode && nd[0]!=='Primaire' ){
           found_sons.push(nn.idNode)
           return_aggregation_sons_of_node(nn,nodes,found_sons)
         }
@@ -1665,4 +1358,328 @@ export const modal_unitary_sankey_sector_node=(data:SankeyPlusData,set_data:(d:S
 
   const dragLayout=show_modal_selection_link_ref_in_unitary_sankey?menu_draggable(content_slectlink_ref,{current:[window.innerWidth/4,window.innerHeight/4]},t('view.view_title_modal_select_link_ref_in_unitary_sankey'),set_show_modal_selection_link_ref_in_unitary_sankey,40):<></>
   return dragLayout
+}
+
+export const scale = d3.scaleLinear()
+  .domain([0, 100])
+  .range([0, 100])
+
+export const inv_scale = d3.scaleLinear()
+  .domain([0, 100])
+  .range([0, 100])
+
+export const create_view_node_unitary=(t:TFunction,
+  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData,set_master_data:(d:SankeyPlusData)=>void,
+  contextualised_node:SankeyPlusNode,
+  set_view:(s:string)=>void,
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  view_name='')=>{
+
+  const new_unitary_sankey=JSON.parse(JSON.stringify(data)) as SankeyPlusData
+
+  const n_link_s=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink)).map(l=>l.idSource)
+  const n_link_t=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink)).map(l=>l.idTarget)
+
+  const nodes_visible_to_keep= Object.fromEntries(Object.entries(new_unitary_sankey.nodes).filter(ne=>{
+    // Keep only the node contextualised,
+    // or the node linked to it (and visible on the svg)
+    return ne[1].idNode===contextualised_node.idNode || ((n_link_s.includes(ne[1].idNode) || n_link_t.includes(ne[1].idNode) ) )
+  }).map(n=>n))
+
+
+
+  // Get all the parents & sons (aggregation speaking) of all_nodes_in_unitary_sankey
+  let center_sankey_node_unitary=[contextualised_node.idNode]
+  let aggregate_nodes_to_keep=[] as string[]
+  Object.entries(nodes_visible_to_keep).forEach(ne=>{
+    
+    const parent=return_aggregation_tree_of_node(ne[1],data.nodes)
+    aggregate_nodes_to_keep=[...aggregate_nodes_to_keep,...JSON.parse(JSON.stringify(parent))]
+    // Add parents & sons to node reference 
+    if(ne[1].idNode===contextualised_node.idNode){
+      center_sankey_node_unitary=[...center_sankey_node_unitary,...parent]
+    }
+  })
+  aggregate_nodes_to_keep=[...new Set(aggregate_nodes_to_keep)]
+
+  // Add nodes not visible but that have an aggregation link to one visible
+
+  const all_nodes_in_unitary_sankey=JSON.parse(JSON.stringify(nodes_visible_to_keep)) as {[x:string]:SankeyPlusNode}
+  aggregate_nodes_to_keep.forEach(kn=>{
+    all_nodes_in_unitary_sankey[kn]=new_unitary_sankey.nodes[kn]
+  })
+
+  const key_of_nodes_in_unitary_sankey=Object.values(all_nodes_in_unitary_sankey).map(n=>n.idNode)
+
+
+  // Get key of link that are connected to 2 nodes of the nodes to keep  
+  const n_link:string[]=[]
+  Object.values(new_unitary_sankey.links).filter(l=>key_of_nodes_in_unitary_sankey.includes(l.idSource) && key_of_nodes_in_unitary_sankey.includes(l.idTarget) ).forEach(l=>{
+    
+    n_link.push(l.idSource)
+    n_link.push(l.idTarget)
+  
+    if(center_sankey_node_unitary.includes(l.idTarget)){
+      assign_node_value_to_correct_var(all_nodes_in_unitary_sankey[l.idSource],'label_horiz','left',false)
+    }else if(center_sankey_node_unitary.includes(l.idSource)){
+      assign_node_value_to_correct_var(all_nodes_in_unitary_sankey[l.idTarget],'label_horiz','right',false)
+    }
+    
+  })
+
+  const links_to_keep=Object.fromEntries(Object.entries(new_unitary_sankey.links).filter(l=>n_link.includes(l[1].idSource) && n_link.includes(l[1].idTarget)).map(l=>{
+    l[1].value=getLinkValue(new_unitary_sankey,l[1].idLink)
+    l[1].colorTag='no_colormap'
+    return l
+  }))
+  const k_l_t_k=Object.keys(links_to_keep)
+
+  // Key levelTag
+  const k_level_tag=Object.keys(new_unitary_sankey.levelTags)
+
+
+  Object.entries(all_nodes_in_unitary_sankey).map(n=>{
+    // Filter output/input link id by removing link no longer present in data
+    n[1].outputLinksId=n[1].outputLinksId.filter(ol=>k_l_t_k.includes(ol))
+    n[1].inputLinksId=n[1].inputLinksId.filter(il=>k_l_t_k.includes(il))
+
+    // Keep tag that refernece levelTag && tag of group tag 'Type de noeud'
+    n[1].tags=Object.fromEntries(Object.entries(n[1].tags).filter(nt=>nt[0]==='Type de noeud' || k_level_tag.includes(nt[0])))
+
+    n[1].colorTag='no_colormap'
+    n[1].colorParameter='local'
+
+    return n
+  })
+
+  const nodes_to_keep=all_nodes_in_unitary_sankey
+
+  // Normalize data
+  new_unitary_sankey.nodeTags=Object.fromEntries(Object.entries(new_unitary_sankey.nodeTags).filter(nt=>nt[0]==='Type de noeud').map(nt=>nt))
+  new_unitary_sankey.fluxTags={}
+  new_unitary_sankey.dataTags={}
+  new_unitary_sankey.labels={}
+  new_unitary_sankey.colorMap='no_colormap'
+  new_unitary_sankey.linkZIndex=new_unitary_sankey.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
+  new_unitary_sankey.nodes=nodes_to_keep
+
+
+  new_unitary_sankey.links=links_to_keep
+  
+  // Reposition visible node 
+  compute_auto_sankey(new_unitary_sankey, new_unitary_sankey.h_space ? new_unitary_sankey.h_space : 200)
+
+  // ======Add ZDT====== 
+  // Get dimensions for labels
+
+  // Get the node the most at left
+  const min_x_node=Object.values(nodes_to_keep).filter(n=>n.position==='absolute').sort((a,b)=>{
+    return (a.x)-(b.x)
+  })[0]
+
+
+  const min_x=min_x_node.x
+
+  // Get the node the most at top
+  const min_y_node=Object.values(nodes_to_keep).filter(n=>n.position==='absolute').sort((a,b)=>{
+    return (a.y)-(b.y)
+  
+  })[0]
+  const min_y=min_y_node.y
+
+  let max_x=min_x
+  let max_y=min_y
+  Object.values(nodes_to_keep).filter(n=>n.position==='absolute').forEach(n=>{
+    const boxX=n.x
+    const boxY=n.y
+
+    const res = compute_total_offsets(inv_scale,n, data, display_nodes, test_link_value,undefined,getLinkValue)
+    const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
+    let node_size_s_height = Math.max(
+      inv_scale((return_value_node(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
+    )
+    let node_size_s_width = Math.max(
+      inv_scale((return_value_node(data,n,'node_width') as number)), total_offset_width_top, total_offset_width_bottom
+    )
+    //Hauteur des noeuds
+    if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure === 'structure') {
+      node_size_s_height = inv_scale((return_value_node(data,n,'node_height') as number))
+      node_size_s_width = inv_scale((return_value_node(data,n,'node_width') as number))
+    }
+
+    const boxW=node_size_s_width
+    const boxH=node_size_s_height
+    
+
+    max_x=((boxX+boxW)>max_x)?(boxX+boxW):max_x
+    max_y=((boxY+boxH)>max_y)?(boxY+boxH):max_y
+  })
+
+  // Info from data source in ZDT
+
+  // customize the info to add in the zdt
+  let content_zdt=''
+  const type_node=(contextualised_node.tags['Type de noeud']!==undefined && contextualised_node.tags['Type de noeud'].length>0)?(contextualised_node.tags['Type de noeud'][0]):undefined
+  let type_process=''
+  if(type_node==='produit' || type_node==='secteur'){
+    if(type_node==='produit'){
+      type_process='Process de marché'
+    }else{
+      type_process='Process de transformation'
+    }
+  }else{
+    type_process=t('view.template_unitary_zdt_content_of_node')
+  }
+
+  // Add the info to the zdt
+  const name_view=(master_data.current_view && master_data.current_view!=='none')?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:t('Menu.home')
+  content_zdt+='<p class="ql-align-center"><u>'+type_process+': <strong>'+contextualised_node.name+'</strong></u></p>'
+  content_zdt+='<p>'+t('view.template_unitary_zdt_content')+' <strong>'+name_view+' </strong></p>'
+
+  // Add additional info concerning the dataTag at the moment of the creation of the unitary sankey
+  // because once the unitary sankey is created, we delete the datatags  
+  const data_tags = Object.assign({},data.dataTags)
+  Object.entries(data_tags).forEach(tag_group => {
+    const intro_group_data_tags=' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')
+    content_zdt+='<p>'+tag_group[1].group_name+intro_group_data_tags+'</p>'
+  })
+
+
+  // Create the zdt  
+  const n_label={
+    idLabel: 'label_' + String(new Date().getTime()),
+    title:'Description',
+    content: content_zdt,
+    label_width: ((max_x-min_x)+10),
+    label_height: ((max_y-min_y)+10),
+    color: 'white',
+    color_border: 'black',
+    opacity: 100,
+    transparent_border: false,
+    x: min_x-5,
+    y: min_y-5,
+    is_image:false,
+    image_src:''
+
+  }
+
+  // Perform some configuration if the unitary go to a new view or an existing view
+  if(view_name===''){
+
+    new_unitary_sankey.labels[n_label.idLabel]=n_label
+
+    // Add the contextualised node to list of explored nodes (to use in the process of link_text)
+    new_unitary_sankey.unitary_node=[...new_unitary_sankey.unitary_node,...center_sankey_node_unitary]
+
+    let difference = deep_diff.diff(master_data, new_unitary_sankey)
+    difference=(difference !== undefined)?difference:[]
+    difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+    difference=filter_view(difference)
+
+    const new_id='view_' + String(new Date().getTime())
+    master_data.view.push({
+      id: new_id,
+      view_data: {diff:difference},
+      nom: 'Exploration view of node '+contextualised_node.name,
+      details: '',
+      heredited_attr_from_master:[]
+    })
+
+    set_view(new_id)
+    set_data({...new_unitary_sankey})
+
+
+  }else{
+    // If the unitary sankey go to an existing view then we perform some ajustement :
+    // - We change the id of links and nodes to avoid corruption of the other unitary sankey in the view
+    // - We shift the explainatory ZDT  and new unitary sankey under the existing one 
+
+    // Search for the view to add the new exploration node
+    let ind = -1
+    master_data.view.map((v, i) => {
+      ind = (v.id === view_name) ? i : ind
+    })
+    const data_view=get_data_from_view(master_data,master_data.view[ind].id) as SankeyPlusData
+
+    // =====Update data icon catalog=====
+    Object.entries(new_unitary_sankey.icon_catalog).forEach(i=>{
+      data_view.icon_catalog[i[0]]=i[1]
+    })
+    
+    // =====Update the ZDT to verticaly align it with the last one in the view=====
+    const last_label_pos_in_view=Object.values(data_view.labels)[Object.values(data_view.labels).length-1]
+    n_label.x=last_label_pos_in_view.x
+    n_label.y=last_label_pos_in_view.y+last_label_pos_in_view.label_height+5
+
+
+    // =====Update nodes & links=====
+    // Create unique key to use in the suffix
+    const unique_key=String(new Date().getTime())
+    // Add a unique suffix to nodes & links in case we add node/link who have the same id of some in the view
+    Object.entries(new_unitary_sankey.nodes).map(n=>{
+      n[0]=n[0]+'_'+unique_key
+      n[1].idNode=n[0]
+      n[1].inputLinksId=n[1].inputLinksId.map(l=>l+'_'+unique_key)
+      n[1].outputLinksId=n[1].outputLinksId.map(l=>l+'_'+unique_key)
+
+      n[1].x-=(min_x-n_label.x)
+      n[1].y-=(min_y-n_label.y)
+
+      n[1].style=n[1].style+'_'+unique_key
+
+      return n
+    }).forEach(n=>{
+      data_view.nodes[n[0]]=n[1]
+    })
+
+    Object.entries(new_unitary_sankey.links).map(l=>{
+      l[0]=l[0]+'_'+unique_key
+      l[1].idLink=l[0]
+      l[1].idSource=l[1].idSource+'_'+unique_key
+      l[1].idTarget=l[1].idTarget+'_'+unique_key
+
+      l[1].style=l[1].style+'_'+unique_key
+
+      return l
+    }).forEach(l=>{
+      data_view.linkZIndex.push(l[1].idLink)
+      data_view.links[l[0]]=l[1]
+    })
+
+    // Update style ID in case it has different value with the samez id 
+    Object.entries(new_unitary_sankey.style_node).forEach(ns=>{
+      data_view.style_node[ns[0]+'_'+unique_key]=ns[1]
+    })
+
+    Object.entries(new_unitary_sankey.style_link).forEach(ls=>{
+      data_view.style_link[ls[0]+'_'+unique_key]=ls[1]
+    })
+
+    // =====Add the new ZDT=====
+    data_view.labels[n_label.idLabel]=n_label
+
+    // =====Add the contextualised node to list of explored nodes (to use in the process of link_text)=====
+    const process_name_unitary_node=center_sankey_node_unitary.map(k=>k+'_'+unique_key)
+    data_view.unitary_node=[...data_view.unitary_node,...process_name_unitary_node]
+
+
+    // ------------------------------------------------------------
+    // =====Update the view=====
+    let difference = deep_diff.diff(master_data, data_view)
+    difference=(difference !== undefined)?difference:[]
+    difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+    difference=filter_view(difference)
+
+    master_data.view[ind].view_data={diff:difference}
+  
+    set_view(view_name)
+    set_data({...data_view})
+
+  }
+
+  // Save master data with the view we are currently working on updated
+  set_master_data({...master_data})
+
+    
 }
