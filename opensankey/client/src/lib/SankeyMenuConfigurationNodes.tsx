@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState,useRef} from 'react'
-import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup,Overlay,Popover } from 'react-bootstrap'
+import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup,Overlay,Popover, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLinkValue,SankeyLink,treeFolderType} from './types'
 import { delete_node,return_value_node,apply_style_to_nodes,add_new_node,cut_name,FolderIcon,FolderOpenIcon,FileIcon} from './SankeyUtils'
@@ -43,7 +43,6 @@ export const OpenSankeyMenuConfigurationNodes = (
   set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
 ) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
-
   const ui : {[s:string] : JSX.Element}= {
     'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
     'Tooltip'         : SankeyMenuConfigurationNodesTooltip(t,data,set_data,multi_selected_nodes),
@@ -66,6 +65,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?node_visible.includes(d.idNode):true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
   const target_node_selector=useRef(null)
   const [show_node_selector,set_show_node_selector]=useState(false)
+
+  const has_node_type=Object.values(data.nodeTags).filter(t=>t.group_name==='Type de noeud').length>0
+  const pre_filter_node=(has_node_type)?Object.keys(data.nodeTags['Type de noeud'].tags):[]
+  const [filter_node_selector,set_filter_node_selector]=useState<string[]>(pre_filter_node)
+
+  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes,node_visible_on_svg(),filter_node_selector)
 
   // const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
   //Renvoie le menu déroulant pour la sélection des noeuds
@@ -99,14 +104,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   //   return DD
   // }
 
-  
-
-
-
-  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes,node_visible_on_svg())
-
-
-
 
 
   const overlayNodeSlector= <Overlay
@@ -118,8 +115,40 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     onHide={()=>{set_show_node_selector(false)}}
   >
     <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
-      <Popover.Header as="h3">{t('Banner.ndd')}</Popover.Header>
+      <Popover.Header as="h3">{t('Noeud.selector')}</Popover.Header>
       <Popover.Body style={{  marginLeft: '5px',maxHeight:'500px',overflowY:'auto' }}>
+        {has_node_type?<InputGroup style={{width:'100%'}} as={ButtonGroup}>
+          {pre_filter_node.includes('produit')?<Button className='btn_menu_config' variant={filter_node_selector.includes('produit')?'primary':'outline-primary'} onClick={()=>{
+            if(!filter_node_selector.includes('produit')){
+              filter_node_selector.push('produit')
+            }else{
+              filter_node_selector.splice(filter_node_selector.indexOf('produit'), 1)
+            }
+            set_filter_node_selector(filter_node_selector)
+            set_data({...data})
+          }}>{t('Noeud.product')}</Button>:<></>}
+
+          {pre_filter_node.includes('secteur')?<Button className='btn_menu_config' variant={filter_node_selector.includes('secteur')?'primary':'outline-primary'} onClick={()=>{
+            if(!filter_node_selector.includes('secteur')){
+              filter_node_selector.push('secteur')
+            }else{
+              filter_node_selector.splice(filter_node_selector.indexOf('secteur'), 1)
+            }
+            set_filter_node_selector(filter_node_selector)
+            set_data({...data})
+          }}>{t('Noeud.sector')}</Button>:<></>}
+
+          {pre_filter_node.includes('echange')?<Button className='btn_menu_config' variant={filter_node_selector.includes('echange')?'primary':'outline-primary'} onClick={()=>{
+            if(!filter_node_selector.includes('echange')){
+              filter_node_selector.push('echange')
+            }else{
+              filter_node_selector.splice(filter_node_selector.indexOf('echange'), 1)
+            }
+            set_filter_node_selector(filter_node_selector)
+            set_data({...data})
+          }}>{t('Noeud.exchange')}</Button>:<></>}
+
+        </InputGroup>:<></>}
 
         <FolderTree
           iconComponents={{
@@ -138,7 +167,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           onChange={ (state, event) => {
             const ev=event as {type:string,path:number[],params:number[]}
             const node_visible=node_visible_on_svg()
-            const root_is_checked=Object.values(data.nodes).filter(n=>data.displayed_node_selector?node_visible.includes(n.idNode):true).map(n=>n).length===multi_selected_nodes.current.length
+            const root_is_checked=Object.values(data.nodes).filter(n=>(data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)).map(n=>n).length===multi_selected_nodes.current.length
+            if(state.checked===0.5){
+              state.checked=0
+            }
             if(ev.path && ev.path.length>0 && ev.type==='checkNode'){
               // check or uncheck node in tree folder depending on if it's already selected
               const idNodeSelected=getNodeFromTree(ev.path,tree_of_nodes)
@@ -152,9 +184,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               }
               set_data({...data})
               
-            }else if(ev.type==='checkNode' &&ev.path && ev.path.length==0 && state.checked!==0 && !root_is_checked){
+            }else if(ev.type==='checkNode' &&ev.path && ev.path.length==0 && state.checked===1 && !root_is_checked){
               // select all nodes
-              multi_selected_nodes.current=Object.values(data.nodes).filter(n=>data.displayed_node_selector?node_visible.includes(n.idNode):true).map(n=>n)
+              multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)).map(n=>n)
               set_data({...data})
             }else if(ev.type==='checkNode' &&ev.path && ev.path.length==0 && state.checked===0 && root_is_checked){
               // Deselect all nodes
@@ -331,10 +363,13 @@ export default SankeyNodeEdition
 
 
 
-const tree_data_nodes=(t:TFunction,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[])=>{
-  const root_checked=(Object.values(data.nodes).filter(n=>data.displayed_node_selector?node_visible.includes(n.idNode):true).map(n=>n).length===multi_selected_nodes.current.length)?1:0
+const tree_data_nodes=(t:TFunction,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
+  filter_node_selector:string[]
+)=>{
+
+  const root_checked=(Object.values(data.nodes).filter(n=>(data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)).map(n=>n).length===multi_selected_nodes.current.length)?1:0
   const tree:treeFolderType={id:'root',name:t('Noeud.TS'),children:[],checked:root_checked}
-  Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n)).forEach(n=>{
+  Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n) && check_node_has_node_type(n,filter_node_selector)).forEach(n=>{
     const sub_tree={id:n.idNode,name:n.name,checked:multi_selected_nodes.current.includes(n)?1:0} as treeFolderType
 
     if(data.displayed_node_selector && !node_visible.includes(n.idNode)){
@@ -343,7 +378,7 @@ const tree_data_nodes=(t:TFunction,data:SankeyData,multi_selected_nodes:{current
     tree.children?tree.children.push(sub_tree):tree.children=[sub_tree]})
 
   tree.children?.forEach(t=>{
-    const child_t=add_children(data.nodes,data.nodes[t.id],multi_selected_nodes,data.displayed_node_selector,node_visible)
+    const child_t=add_children(data.nodes,data.nodes[t.id],multi_selected_nodes,data.displayed_node_selector,node_visible,filter_node_selector)
     if(child_t.length>0){
       t.children=child_t
     }
@@ -365,24 +400,26 @@ const check_node_has_no_valid_dimensions=(n:SankeyNode)=>{
   return invalid
 }
 
-const add_children=(nodes:{[x:string]:SankeyNode},n:SankeyNode,multi_selected_nodes:{current:SankeyNode[]},displayed_node_selector:boolean,node_visible:string[])=>{
+const add_children=(nodes:{[x:string]:SankeyNode},n:SankeyNode,multi_selected_nodes:{current:SankeyNode[]},displayed_node_selector:boolean,node_visible:string[],filter_node_selector:string[])=>{
   const children:treeFolderType[]=[]
-  Object.entries(nodes).forEach(nn=>{
-    if(nn[1].dimensions){
-      Object.entries(nn[1].dimensions).filter(nd=>nd[0]!=='Primaire' && nd[1].parent_name===n.idNode).forEach(()=>{
-        const c:treeFolderType={id:nn[0],name:nn[1].name,checked:multi_selected_nodes.current.includes(nn[1])?1:0}        
-        const child=add_children(nodes,nn[1],multi_selected_nodes,displayed_node_selector,node_visible)
-        if(child.length!=0){
-          c.children=child
-        }
-        if(displayed_node_selector && !node_visible.includes(nn[0])){
-          c.checked=0.5
-        }
-        children.push(c)
+  Object.entries(nodes)
+    .filter(nd=> check_node_has_node_type(nd[1] as SankeyNode,filter_node_selector))
+    .forEach(nn=>{
+      if(nn[1].dimensions){
+        Object.entries(nn[1].dimensions).filter(nd=>nd[0]!=='Primaire' && nd[1].parent_name===n.idNode ).forEach(()=>{
+          const c:treeFolderType={id:nn[0],name:nn[1].name,checked:multi_selected_nodes.current.includes(nn[1])?1:0}        
+          const child=add_children(nodes,nn[1],multi_selected_nodes,displayed_node_selector,node_visible,filter_node_selector)
+          if(child.length!=0){
+            c.children=child
+          }
+          if(displayed_node_selector && !node_visible.includes(nn[0])){
+            c.checked=0.5
+          }
+          children.push(c)
 
-      })
-    }
-  })
+        })
+      }
+    })
   return children
 }
 
@@ -395,5 +432,13 @@ const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:nu
   }else{
     const id=tree.id,checked=tree.checked
     return {id,checked}
+  }
+}
+
+const check_node_has_node_type=(n:SankeyNode,filter_node_selector:string[])=>{
+  if(n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'].length>0 && filter_node_selector.length>0){
+    return (filter_node_selector.includes(n.tags['Type de noeud'][0]))
+  }else{
+    return true
   }
 }
