@@ -68,6 +68,18 @@ export const ApplyLayoutDialog = ({
     'tagNode', 'tagFlux', 'tagData', 'tagLevel',
     'attrGeneral'
   ]
+  const advanced_element_to_transform = [
+    'addNode', 'addFlux', 'removeNode', 'removeFlux',
+    'posNode', 'posFlux', 
+    'Values', 
+    'attrNode', 'attrFlux', 
+    'attrGeneral'
+  ]
+  const simple_element_to_transform = [
+    'posNode', 'posFlux', 
+    'attrNode', 'attrFlux', 
+    'attrGeneral'
+  ]
   const default_element_to_transform = [
     'posNode', 'posFlux',  
     'attrNode', 'attrFlux',
@@ -126,7 +138,13 @@ export const ApplyLayoutDialog = ({
             variant='outline-primary' 
             onClick={() => {
               elementToDispose.length = 0
-              all_element_to_transform.forEach(el=>elementToDispose.push(el))
+              if(mode_trans==='simple'){
+                simple_element_to_transform.forEach(el=>elementToDispose.push(el))
+              }else if(mode_trans==='avancé'){
+                advanced_element_to_transform.forEach(el=>elementToDispose.push(el))
+              }else{
+                all_element_to_transform.forEach(el=>elementToDispose.push(el))
+              }
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.selectAll')}</Button>
