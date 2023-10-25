@@ -645,6 +645,7 @@ export const drawArrows = (
     if (link_value === undefined) {
       continue
     }
+    link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
     const extension = getLinkValue(data, n.inputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
