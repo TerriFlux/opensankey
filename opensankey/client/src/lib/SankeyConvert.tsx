@@ -1218,6 +1218,11 @@ export const convert_links = (
 
     }
 
+    if(l_convert.dashed===0){
+      assign_link_local_attribute(l,'dashed',false)
+    }else if(l_convert.dashed==1){
+      assign_link_local_attribute(l,'dashed',true)
+    }
 
     // Assign missing variable
     Object.keys(SankeyLinkAttrLocalTypes).forEach((k) =>{
