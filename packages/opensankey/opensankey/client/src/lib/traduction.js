@@ -305,6 +305,11 @@ export const open_resources = {
         align_horiz_right:'Align to its right',
         align_vert_top:'Align to its top',
         align_vert_bottom:'Align to its bottom',
+        product:'Product',
+        sector:'Sector',
+        exchange:'Exchange',
+        selector:'Select nodes',
+
         tooltips:{
           Nom:'Change the name of the selected node. If several nodes are selected, this field is disabled',
           AS:'Allow to apply a predefined style in the preference menu to the selected node(s)',
@@ -886,6 +891,10 @@ export const open_resources = {
         align_horiz_right:'À son côté droit',
         align_vert_top:'À son côté du dessus',
         align_vert_bottom:'À son côté du dessous',
+        product:'Produit',
+        sector:'Secteur',
+        exchange:'Échange',
+        selector:'Selectionner des noeuds',
         tooltips:{
           Nom:'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
           AS:'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
