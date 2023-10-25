@@ -238,12 +238,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [active_page,set_active_page]=useState('intro')
   const style_border='solid 1px grey'
   const src_intro_static = 'intro_static.png'
-  const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
-  const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
-  const buttons_filter=<>{(node_filter)?<Button size='sm' variant='light'>{t('Menu.Noeuds')}</Button>:<></>}
 
-    {(flux_filter)?<Button size='sm' variant='light' >{t('Menu.flux')}</Button>:<></>}
-    {(Object.values(data.dataTags).length>0)?<Button size='sm' variant='light'>{t('Banner.data')}</Button>:<></>}</>
+
 
   const intro=<div>
     {window.SankeyToolsStatic ?<img src={src_intro_static} alt='intro carousel' style={{'objectFit':'contain','width':'100%'}}/>:content_carousel}
@@ -258,10 +254,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'danger'}><FontAwesomeIcon icon={faSliders} /></Button></td><td style={{'border':style_border}}>{t('welcome.4')}</td></tr>
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><ButtonGroup><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsUpDown} /></Button><Button size='sm' variant={'dark'}><FontAwesomeIcon icon={faArrowsLeftRight} /></Button></ButtonGroup></td><td style={{'border':style_border}}>{t('welcome.5')}</td></tr>
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FontAwesomeIcon icon={faDiagramProject} /></Button></td><td style={{'border':style_border}}>{t('welcome.6')}</td></tr>
-        <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'info'}> ?</Button></td><td style={{'border':style_border}}>{t('welcome.7')}</td></tr>
         <tr style={{'border':style_border}}><td style={{'border':style_border}}><Button size='sm' variant={'success'}><FaAngleDoubleLeft/></Button></td><td style={{'border':style_border}}>{t('welcome.10')}</td></tr>
         {window.SankeyToolsStatic && window.sankey && window.sankey.excel?<tr style={{'border':style_border}}><td style={{'border':style_border}}><Button variant='link'>{t('Banner.tl')}</Button></td><td style={{'border':style_border}}>{t('welcome.excel')}</td></tr>:<></>}
-        <tr style={{'border':style_border}}><td style={{'border':style_border}}>{buttons_filter}</td><td style={{'border':style_border}}>{t('welcome.2')}</td></tr>
       </tbody>
     </table>
   </div>
