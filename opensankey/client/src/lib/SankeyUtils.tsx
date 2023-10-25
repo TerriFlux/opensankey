@@ -924,6 +924,7 @@ export const default_link_style=()=>{
     label_unit:'',
     custom_digit:false,
     nb_digit:0,
+    dashed:false
 
   }
 }
@@ -989,6 +990,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
 
     colorTag: '',
     style:'default',
+    local:{dashed:true}
   }
 }
 /**

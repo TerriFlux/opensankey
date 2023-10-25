@@ -140,7 +140,7 @@ export const SankeyLinkAttrLocalTypes ={
   arrow:PropTypes.bool,
   color:PropTypes.string,
   opacity:PropTypes.number,
-
+  dashed: PropTypes.bool,
   //Attributes link labels
   label_visible:PropTypes.bool,
   label_font_size:PropTypes.number,
@@ -171,7 +171,7 @@ export const SankeyLinkStyleTypes ={
   curved: PropTypes.bool.isRequired,
   recycling: PropTypes.bool.isRequired,
   arrow_size:PropTypes.number.isRequired,
-
+  dashed: PropTypes.bool.isRequired,
   // Label
   label_position: PropTypes.string.isRequired,
   orthogonal_label_position: PropTypes.string.isRequired,
