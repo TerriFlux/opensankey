@@ -537,10 +537,13 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const { dataTags } = data
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   if (data.show_structure == 'structure' ) {
-    const inv_scale = d3.scaleLinear()
-      .domain([0, 100])
-      .range([0, data.user_scale])
     return inv_scale(5)
   }
   if (data.show_structure == 'data' ) {
@@ -592,11 +595,11 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
   if (val === undefined) {
     return 0
   }
-  if ( data.maximum_flux && ((val as unknown) as SankeyLinkValue).value > data.maximum_flux) {
-    return data.maximum_flux
+  if ( data.maximum_flux && scale(((val as unknown) as SankeyLinkValue).value) > data.maximum_flux) {
+    return inv_scale(data.maximum_flux)
   }
-  if ( data.minimum_flux && ((val as unknown) as SankeyLinkValue).value < data.minimum_flux) {
-    return data.minimum_flux
+  if ( data.minimum_flux && scale(((val as unknown) as SankeyLinkValue).value) < data.minimum_flux) {
+    return inv_scale(data.minimum_flux)
   }
   return ((val as unknown) as SankeyLinkValue).value
 }
