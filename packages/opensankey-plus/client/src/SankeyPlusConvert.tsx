@@ -29,6 +29,9 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
   if (!data.labels) {
     data.labels = {}
   }
+  if(!data.accordeonToShow.includes('LL') && Object.keys(data.labels).length>0){
+    data.accordeonToShow.push('LL')
+  }
   if(data.labels){
     Object.values(data.labels).forEach((l:SankeyPlusLabelToConvert)=>{
       if(l.title===undefined){
