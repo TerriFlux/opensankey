@@ -377,7 +377,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     e.preventDefault()
     set_data({...data})
     clickSaveDiagram(data)
-  }else  if((e.key==='f') && e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
+  }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
     e.preventDefault()
 
     if (!document.fullscreenElement) {
