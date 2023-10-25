@@ -201,7 +201,7 @@ export const compute_total_offsets = (
   display_nodes:{ [node_id: string]: SankeyNode },
   test_link_value: (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
     getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-  ) => SankeyLinkValue | object | string,
+  ) => number,
   ref_link: SankeyLink | undefined = undefined,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
@@ -333,10 +333,12 @@ export const compute_total_offsets = (
       if (top_order !== -1) {
         the_id = top_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id],getLinkValue)
-      if (v === undefined || v=='') {
+
+      let v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined) {
         return
       }
+      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -366,10 +368,11 @@ export const compute_total_offsets = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id],getLinkValue)
-      if (v === undefined || v=='') {
+      let v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined) {
         return
       }
+      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -400,10 +403,11 @@ export const compute_total_offsets = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id],getLinkValue)
-      if (v === undefined || v=='') {
+      let v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined) {
         return
       }
+      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -434,10 +438,11 @@ export const compute_total_offsets = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      const v = test_link_value(data, nodes, links[the_id],getLinkValue)
-      if (v === undefined || v=='') {
+      let v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      if (v === undefined) {
         return
       }
+      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
       const extension = getLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
