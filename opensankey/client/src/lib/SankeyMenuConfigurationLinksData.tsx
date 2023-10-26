@@ -19,6 +19,15 @@ export const SankeyMenuConfigurationLinksData = (
   set_displayed_input_link_value:(s:string)=>void,
   menu_for_modal=false
 )=>{
+  let is_link_data_invalid=false
+  if(multi_selected_links.current.length>0){
+    const curr_val=value_selected_parameter(data,multi_selected_links,tags_selected).value
+    if(curr_val==='' && displayed_input_link_value===''){
+      is_link_data_invalid=false
+    }else{
+      is_link_data_invalid=curr_val!==Number(displayed_input_link_value)
+    }
+  }
 
   const content=<Form >
     {
@@ -57,7 +66,7 @@ export const SankeyMenuConfigurationLinksData = (
       })}
 
     {/* Valeur du flux pour les parametre (flitres) choisi  */}
-    <InputGroup>
+    <InputGroup hasValidation>
       <InputGroup.Text style={{width:'40%'}}>
         {t('Flux.data.vpp')}
       </InputGroup.Text>
@@ -73,6 +82,7 @@ export const SankeyMenuConfigurationLinksData = (
           style={{width:'60%'}}
           type='text'
           value={displayed_input_link_value}
+          isInvalid={is_link_data_invalid}
           onChange={
             evt => {
               set_displayed_input_link_value(evt.target.value)
@@ -127,6 +137,7 @@ export const SankeyMenuConfigurationLinksData = (
             }
           }}/>
       </OverlayTrigger>
+      <Form.Control.Feedback type='invalid'>{t('MEP.onBlur')}</Form.Control.Feedback>
     </InputGroup>
 
 
