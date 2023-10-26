@@ -1133,7 +1133,7 @@ export const processExample = (server_data: SankeyData,updateLayout:(data: Sanke
     compute_default_input_outputLinksId(data.nodes, data.links)
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData }).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData }).layout
-    updateLayout(data, data_layout,['posNode','posFlux','attrNode','attrFlux','tagNode','tagFlux','tagData','attrGeneral','freeLabels','Views'],true)
+    updateLayout(data, data_layout,['posNode','posFlux','attrNode','attrFlux','attrGeneral','freeLabels','Views'],true)
   }
   d3.select('.loading_auto_compute').remove()
 
