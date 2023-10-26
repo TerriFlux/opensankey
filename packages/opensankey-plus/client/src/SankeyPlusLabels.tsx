@@ -4,7 +4,7 @@ import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import { SankeyLinkValue} from 'open-sankey/src/lib/types'
 
-import {drawGrid,min_width_and_height,node_visible_on_svg,deselect_visualy_nodes,select_visualy_nodes,deselect_visualy_links} from 'open-sankey/dist/SankeyDrawFunction'
+import {drawGrid,min_width_and_height,node_visible_on_svg,link_visible_on_svg,deselect_visualy_nodes} from 'open-sankey/dist/SankeyDrawFunction'
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
 declare const window: Window &
 typeof globalThis & {
@@ -247,6 +247,7 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
         const z_w=Number(d3.select('.selection_zone rect').attr('width'))
         const z_h=Number(d3.select('.selection_zone rect').attr('height'))
         const node_visible=node_visible_on_svg()
+        const link_visible=link_visible_on_svg()
         if(evt.shiftKey){
           Object.values(data.nodes).filter(n=>{
             const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
@@ -254,16 +255,23 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
             return !multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
           }
           ).forEach(n=>multi_selected_nodes.current.push(n))
+          const id_node_selected=multi_selected_nodes.current.map(n=>n.idNode)
+          const id_link_selected=multi_selected_links.current.map(l=>l.idLink)
+          // Select links who have both nodeSource and nodeTarget selected
+          link_visible.filter((lid:string)=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget) && !id_link_selected.includes(lid)).forEach((lid:string)=>multi_selected_links.current.push(data.links[lid]))
         }else{
           multi_selected_nodes.current=Object.values(data.nodes).filter(n=>{
             const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
             const height_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
             return node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
           })
+          const id_node_selected=multi_selected_nodes.current.map(n=>n.idNode)
+          // Select links who have both nodeSource and nodeTarget selected
+          multi_selected_links.current=link_visible.filter((lid:string)=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget)).map((lid:string)=>data.links[lid])
         }
-        multi_selected_nodes.current.forEach(n=>select_visualy_nodes(n))
-        multi_selected_links.current.forEach(l=>deselect_visualy_links(l))
-        multi_selected_links.current=[]
+        // multi_selected_nodes.current.forEach(n=>select_visualy_nodes(n))
+        // multi_selected_links.current.forEach(l=>deselect_visualy_links(l))
+        // multi_selected_links.current=[]
         start_point.current=[0,0]
         
         d3.selectAll('.selection_zone').remove()
