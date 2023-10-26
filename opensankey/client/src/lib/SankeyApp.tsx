@@ -424,13 +424,18 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           [key]: data.nodes[key]
         })
       }, {}) as {[idNode:string]:SankeyNode}
-    const display_links=Object.keys(data.links)
+
+    const pre_display_links=Object.keys(data.links)
       .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
       .reduce((obj, key) => {
         return Object.assign(obj, {
           [key]: data.links[key]
         })
       }, {}) as {[idLink:string]:SankeyLink}
+    const pre_link_key=Object.keys(pre_display_links)
+    const display_links={} as {[idLink:string]:SankeyLink}
+    data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
+      
     // Call the function that add nodes to the sankey
     OpenSankeyDrawNodes(data,set_data,
       display_nodes,display_links,
