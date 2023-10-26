@@ -5,7 +5,7 @@ import { TFunction } from 'i18next'
 import * as d3 from 'd3'
 import { MultiSelect } from 'react-multi-select-component'
 
-import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg,simpleGNodeClick} from 'open-sankey/dist/SankeyDrawFunction'
+import {removeAnimate, drawArrows,svgDragMiddleMouseStart,svgDragMiddleMouseMove,node_visible_on_svg,link_visible_on_svg,simpleGNodeClick} from 'open-sankey/dist/SankeyDrawFunction'
 import {  getLinkValue,node_color,link_color,return_value_node,return_value_link,node_displayed,link_text,link_visible,is_node_diplaying_value_local,is_all_node_attr_same_value,assign_node_value_to_correct_var,compute_total_offsets, test_link_value} from 'open-sankey/dist/SankeyUtils'
 import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
 import { menu_draggable} from 'open-sankey/dist/SankeyMenu'
@@ -1377,9 +1377,9 @@ export const create_view_node_unitary=(t:TFunction,
   view_name='')=>{
 
   const new_unitary_sankey=JSON.parse(JSON.stringify(data)) as SankeyPlusData
-
-  const n_link_s=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink)).map(l=>l.idSource)
-  const n_link_t=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink)).map(l=>l.idTarget)
+  const link_visible=link_visible_on_svg()
+  const n_link_s=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink) && link_visible.includes(l.idLink)).map(l=>l.idSource)
+  const n_link_t=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink) && link_visible.includes(l.idLink)).map(l=>l.idTarget)
 
   const nodes_visible_to_keep= Object.fromEntries(Object.entries(new_unitary_sankey.nodes).filter(ne=>{
     // Keep only the node contextualised,

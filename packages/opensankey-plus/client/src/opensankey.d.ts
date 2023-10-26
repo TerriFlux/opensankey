@@ -25,3 +25,4 @@ declare module 'open-sankey/dist/SankeyMenuConfigurationLinksAppearence';
 declare module 'open-sankey/dist/SankeyMenuConfigurationLinksLabel';
 declare module 'open-sankey/dist/SankeyDrawLegend';
 declare module 'sankeyicons/dist/SankeyIconsUtils';
+declare module 'open-sankey/dist/SankeyMenuConfigurationNodes'

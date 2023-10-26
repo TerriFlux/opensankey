@@ -11,6 +11,7 @@ import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk,faSquarePlus} fr
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup,treeFolderType} from 'open-sankey/src/lib/types'
 import { adjust_sankey_zone,FolderIcon,FolderOpenIcon,FileIcon} from 'open-sankey/dist/SankeyUtils'
+import { check_node_has_node_type} from 'open-sankey/dist/SankeyMenuConfigurationNodes'
 import { updateLayout } from 'open-sankey/dist/SankeyLayout'
 
 import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType, DiffType, ViewType } from './types'
@@ -931,6 +932,10 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   const target_node_selector=useRef(null)
   const [show_node_unitary_selector,set_show_node_unitary_selector]=useState(false)
 
+  const has_node_type=Object.values(data.nodeTags).filter(t=>t.group_name==='Type de noeud').length>0
+  const pre_filter_node=(has_node_type)?Object.keys(data.nodeTags['Type de noeud'].tags):[]
+  const [filter_node_selector,set_filter_node_selector]=useState<string[]>(pre_filter_node)
+
   // Boolean used to change the logo of the button to save the current view :
   //  - if there is no differences between the the saved view and the current view, then the logo has a check
   //  - else if it contain difference, the logo contain an exclamation point
@@ -987,7 +992,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </span>
   </OverlayTrigger>
 
-  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes)
+  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes,filter_node_selector)
 
   const overlayNodeSlector= <Overlay
     key={'popover-nodes-level'}
@@ -1000,7 +1005,38 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
       <Popover.Header as="h3">{t('view.selectNodeForUnitaryView')}</Popover.Header>
       <Popover.Body style={{ maxHeight:'500px',overflowY:'auto' }}>
+        {has_node_type?<InputGroup style={{width:'100%'}} as={ButtonGroup}>
+          {pre_filter_node.includes('produit')?<Button className='btn_menu_config' variant={filter_node_selector.includes('produit')?'primary':'outline-primary'} onClick={()=>{
+            if(!filter_node_selector.includes('produit')){
+              filter_node_selector.push('produit')
+            }else{
+              filter_node_selector.splice(filter_node_selector.indexOf('produit'), 1)
+            }
+            set_filter_node_selector(filter_node_selector)
+            set_data({...data})
+          }}>{t('Noeud.product')}</Button>:<></>}
 
+          {pre_filter_node.includes('secteur')?<Button className='btn_menu_config' variant={filter_node_selector.includes('secteur')?'primary':'outline-primary'} onClick={()=>{
+            if(!filter_node_selector.includes('secteur')){
+              filter_node_selector.push('secteur')
+            }else{
+              filter_node_selector.splice(filter_node_selector.indexOf('secteur'), 1)
+            }
+            set_filter_node_selector(filter_node_selector)
+            set_data({...data})
+          }}>{t('Noeud.sector')}</Button>:<></>}
+
+          {pre_filter_node.includes('echange')?<Button className='btn_menu_config' variant={filter_node_selector.includes('echange')?'primary':'outline-primary'} onClick={()=>{
+            if(!filter_node_selector.includes('echange')){
+              filter_node_selector.push('echange')
+            }else{
+              filter_node_selector.splice(filter_node_selector.indexOf('echange'), 1)
+            }
+            set_filter_node_selector(filter_node_selector)
+            set_data({...data})
+          }}>{t('Noeud.exchange')}</Button>:<></>}
+
+        </InputGroup>:<></>}
         <FolderTree
           iconComponents={{
             FileIcon,
@@ -2072,16 +2108,16 @@ export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_on
 }
 
 
-const tree_data_nodes=(t:TFunction,data:SankeyPlusData,multi_selected_nodes:{current:SankeyPlusNode[]})=>{
+const tree_data_nodes=(t:TFunction,data:SankeyPlusData,multi_selected_nodes:{current:SankeyPlusNode[]},filter_node_selector:string[])=>{
   const tree:treeFolderType={id:'root',name:t('Noeud.TS'),children:[]}
-  Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n)).forEach(n=>{
+  Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n) && check_node_has_node_type(n,filter_node_selector)).forEach(n=>{
     const sub_tree={id:n.idNode,name:n.name} as treeFolderType
 
 
     tree.children?tree.children.push(sub_tree):tree.children=[sub_tree]})
 
   tree.children?.forEach(t=>{
-    const child_t=add_children(data.nodes,data.nodes[t.id],multi_selected_nodes)
+    const child_t=add_children(data.nodes,data.nodes[t.id],multi_selected_nodes,filter_node_selector)
     if(child_t.length>0){
       t.children=child_t
     }
@@ -2103,21 +2139,23 @@ const check_node_has_no_valid_dimensions=(n:SankeyPlusNode)=>{
   return invalid
 }
 
-const add_children=(nodes:{[x:string]:SankeyPlusNode},n:SankeyPlusNode,multi_selected_nodes:{current:SankeyPlusNode[]})=>{
+const add_children=(nodes:{[x:string]:SankeyPlusNode},n:SankeyPlusNode,multi_selected_nodes:{current:SankeyPlusNode[]},filter_node_selector:string[])=>{
   const children:treeFolderType[]=[]
-  Object.entries(nodes).forEach(nn=>{
-    if(nn[1].dimensions){
-      Object.entries(nn[1].dimensions).filter(nd=>nd[0]!=='Primaire' && nd[1].parent_name===n.idNode).forEach(()=>{
-        const c:treeFolderType={id:nn[0],name:nn[1].name}        
-        const child=add_children(nodes,nn[1],multi_selected_nodes)
-        if(child.length!==0){
-          c.children=child
-        }
-        children.push(c)
+  Object.entries(nodes)
+    .filter(n=>check_node_has_node_type(n,filter_node_selector))
+    .forEach(nn=>{
+      if(nn[1].dimensions){
+        Object.entries(nn[1].dimensions).filter(nd=>nd[0]!=='Primaire' && nd[1].parent_name===n.idNode).forEach(()=>{
+          const c:treeFolderType={id:nn[0],name:nn[1].name}        
+          const child=add_children(nodes,nn[1],multi_selected_nodes,filter_node_selector)
+          if(child.length!==0){
+            c.children=child
+          }
+          children.push(c)
 
-      })
-    }
-  })
+        })
+      }
+    })
   return children
 }
 
