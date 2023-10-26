@@ -1106,6 +1106,28 @@ export const updateLayout = (
   if (links_to_remove.length>0) {
     compute_default_input_outputLinksId(data.nodes, data.links)
   }
+  Object.values(data.nodes).forEach(n=>{
+    const newInputLinksId : string[] = []
+    n.inputLinksId.forEach(linkId=> {
+      if (data.links[linkId]) {
+        newInputLinksId.push(linkId)
+      }
+      // } else {
+      //   console.log('tutu1')
+      // }
+    })
+    n.inputLinksId = newInputLinksId
+    const newOutputLinksId : string[] = []
+    n.outputLinksId.forEach(linkId=> {
+      if (data.links[linkId]) {
+        newOutputLinksId.push(linkId)
+      }
+      // } else {
+      //   console.log('tutu2')
+      // }
+    })
+    n.outputLinksId = newOutputLinksId
+  })
 }
 
 /**
