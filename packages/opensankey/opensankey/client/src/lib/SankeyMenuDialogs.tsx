@@ -5,14 +5,13 @@ import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayT
 import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { complete_sankey_data } from './SankeyConvert'
 import { default_link, default_node, default_sankey_data } from './SankeyUtils'
-import { node_visible_on_svg } from './SankeyDrawFunction'
+import { node_visible_on_svg,link_visible_on_svg } from './SankeyDrawFunction'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { menu_draggable } from './SankeyMenu'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
-import * as d3 from 'd3'
 /**
  * Define ApplyLayoutDialog
  *
@@ -652,7 +651,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
             () => {
               // Crée une copie pour d'abord enregitrer avec les changements
               // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-              const cpy=JSON.parse(JSON.stringify(sankey_data))
+              const cpy:SankeyData=JSON.parse(JSON.stringify(sankey_data))
               if(!mode_save){
                 Object.values(cpy.links).forEach(d=>{
                   (d as SankeyLink).value={}
@@ -660,14 +659,23 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
               }
               if(mode_visible_element){
                 // Si l'on enregistre que les element visible alors on cherche les élements visible dasns le svg
-                const link_present=[] as string[]
-                d3.selectAll('.gg_links .link').each(s=>{
-                  const d=s as SankeyLink
-                  link_present.push(d.idLink)
-                })
+                const link_present=link_visible_on_svg()
                 const node_visible=node_visible_on_svg()
                 cpy.links=Object.fromEntries(Object.entries(cpy.links).filter(l=>link_present.includes(l[0])).map(l=>l))
-                cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>n))
+                const key_level_tags=Object.keys(sankey_data.levelTags)
+                cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>{
+                  key_level_tags.forEach(klt=>{
+                    delete n[1].tags[klt]
+                  })
+                  n[1].dimensions={}
+                  n[1].inputLinksId=n[1].inputLinksId.filter(lid=>link_present.includes(lid))
+                  n[1].outputLinksId=n[1].outputLinksId.filter(lid=>link_present.includes(lid))
+                  return n
+                }))
+                cpy.levelTags={}
+                cpy.linkZIndex=link_present;
+                
+                (cpy as unknown as {view:[]}).view=[]
               }
 
               // set_sankey_data({...sankey_data})
