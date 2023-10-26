@@ -205,7 +205,8 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   ]
 
   const disable_options = is_activated? (multi_selected_label.current.length === 0):true
- 
+  const isQuill_invalid=multi_selected_label.current.length>0?multi_selected_label.current[0].content!==editor_content_fo_zdt:false
+
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
@@ -214,6 +215,12 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     value={editor_content_fo_zdt}
     onChange={(evt) => {
       set_editor_content_fo_zdt(evt)
+    }}
+    onBlur={()=>{
+      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
+        d.content = editor_content_fo_zdt
+      })
+      set_data({...data})
     }}
 
     theme="snow"
@@ -230,14 +237,17 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       <Form.Group>
         {editor_fo}
       </Form.Group>
-      <Button
+      {/* <Button
         onClick={()=>{
           Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
             d.content = editor_content_fo_zdt
           })
           set_data({...data})
         }}
-      >{t('Menu.updateFOZdd')}</Button>
+      >{t('Menu.updateFOZdd')}</Button> */}
+      <Form.Control type='text' isInvalid={isQuill_invalid} style={{display:'none'}}/>
+      <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
+
     </Form>
 
 
