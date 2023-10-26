@@ -277,6 +277,7 @@ export const keyHandler = (
       setTimeout(function () {
         set_show_toast_new_view(false)
       }, 3000)
+      set_view(new_ind)
     } else {
       const new_ind = 'view_' + String(new Date().getTime())
       const current_view_object=master_data.view.filter(v=>v.id === view)[0]
