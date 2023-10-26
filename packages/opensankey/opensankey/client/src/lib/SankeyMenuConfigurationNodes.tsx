@@ -435,7 +435,7 @@ const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:nu
   }
 }
 
-const check_node_has_node_type=(n:SankeyNode,filter_node_selector:string[])=>{
+export const check_node_has_node_type=(n:SankeyNode,filter_node_selector:string[])=>{
   if(n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'].length>0 && filter_node_selector.length>0){
     return (filter_node_selector.includes(n.tags['Type de noeud'][0]))
   }else{
