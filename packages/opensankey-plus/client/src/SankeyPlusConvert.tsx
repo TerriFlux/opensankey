@@ -337,12 +337,16 @@ export const plus_sankey_layout=(
       new_layout.view.forEach ((view_of_new_layout:ViewType )=> {
         const view_data=JSON.parse(JSON.stringify(new_layout))
         if (data.view.filter(d_view=>d_view.nom === view_of_new_layout.nom ).length===0) {
-          if((view_of_new_layout.view_data as SankeyPlusData ).version){
+          if((view_of_new_layout.view_data as SankeyPlusData ).version) {
+            // Views are copied identical to what they were
+            view_of_new_layout.heredited_attr_from_master = ['']
             data.view.push(view_of_new_layout)
-          }else if((view_of_new_layout.view_data as DiffType).diff!==undefined){
+          } else if((view_of_new_layout.view_data as DiffType).diff!==undefined){
             (view_of_new_layout.view_data as DiffType).diff.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(view_data, {}, diff))
             const data_view_diff = deep_diff.diff(data,view_data) as {path:string[],kind:string,rhs:string}[]
             (view_of_new_layout.view_data as DiffType).diff = data_view_diff.filter((d:{path:string[]}) => !d.path.includes('view'))
+            // Views are copied identical to what they were
+            view_of_new_layout.heredited_attr_from_master = ['']
             data.view.push(view_of_new_layout)
           }
            
