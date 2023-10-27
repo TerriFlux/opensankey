@@ -11,6 +11,7 @@ import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 import { Quill } from 'react-quill'
+import * as d3 from 'd3'
 
 import {  preferenceCheck } from 'open-sankey/dist/SankeyMenuPreferences'
 
@@ -55,6 +56,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   menu_for_modal:boolean,
   editor_content_fo_zdt:string,
   set_editor_content_fo_zdt:(s:string)=>void,
+  refWysiwygZDT:{current:ReactQuill}
 ) => {
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
@@ -213,6 +215,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
   const editor_fo=<ReactQuill
     className='quill_editor'
     value={editor_content_fo_zdt}
+    ref={refWysiwygZDT}
     onChange={(evt) => {
       set_editor_content_fo_zdt(evt)
     }}
@@ -655,3 +658,10 @@ export const context_zdt=(show_context_zdt:boolean,set_show_context_zdt:(b:boole
 }
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
+
+export const blur_ZDT_wysiwyg=(refWysiwygZDT:{current:ReactQuill})=>{
+  if(refWysiwygZDT && refWysiwygZDT.current && (d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??false)){
+    refWysiwygZDT.current.getEditor().focus()
+    refWysiwygZDT.current.getEditor().blur()
+  }
+}

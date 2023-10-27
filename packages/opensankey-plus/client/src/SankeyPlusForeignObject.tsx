@@ -82,13 +82,14 @@ export const SankeyPlusNodeFO = (
     value={editor_content_fo_node}
     onChange={(evt,_,s) => {
       if(s==='user'){
-        // Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-        //   d.FO_content = evt
-        //   const node_width = return_value_node(data,d,'node_width') as number
-        //   d.FO_content = d.FO_content.replace('<img src=','<img width="'+node_width+'" src=')
-        // })
         set_editor_content_fo_node(evt)
       }
+    }}
+    onBlur={()=>{
+      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+        d.FO_content = editor_content_fo_node
+      })
+      set_data({...data})
     }}
     theme="snow"
     modules={modules}
@@ -220,7 +221,7 @@ export const SankeyPlusNodeFO = (
       >
         <Form className='FO_node_editeur'>
           <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
-          <Button
+          {/* <Button
             onClick={()=>{
 
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
@@ -228,7 +229,7 @@ export const SankeyPlusNodeFO = (
               })
               set_data({...data})
             }}
-          >{t('Menu.updateFOZdd')}</Button>
+          >{t('Menu.updateFOZdd')}</Button> */}
         </Form>
       </OverlayTrigger>
       :<></>}
