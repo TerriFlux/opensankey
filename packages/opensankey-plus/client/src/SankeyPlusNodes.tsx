@@ -1102,7 +1102,7 @@ export const context_node_view_node_unitary=(
         
         return <Dropdown.Item as={Button} variant='light' 
           onClick={()=>{
-            create_view_node_unitary(t,data,set_data,master_data,set_master_data,contextualised_node,set_view,display_nodes,v.id)
+            create_view_node_unitary(t,data,set_data,master_data,set_master_data,contextualised_node,set_view,display_nodes,true,v.id)
             set_contextualised_node(undefined)
           }}
         >
@@ -1119,7 +1119,7 @@ export const context_node_view_node_unitary=(
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
       <Dropdown.Item  as={Button} variant='light' onClick={()=>{
-        create_view_node_unitary(t,data,set_data,master_data,set_master_data,contextualised_node,set_view,display_nodes)
+        create_view_node_unitary(t,data,set_data,master_data,set_master_data,contextualised_node,set_view,display_nodes,true)
       }}>{t('view.in_new')}</Dropdown.Item>
       {has_unitary_view?dropdown_c_n_explore_node_add_to_view:<></>}
 
@@ -1374,10 +1374,11 @@ export const create_view_node_unitary=(t:TFunction,
   contextualised_node:SankeyPlusNode,
   set_view:(s:string)=>void,
   display_nodes:{ [node_id: string]: SankeyPlusNode },
+  from_zdd:boolean,
   view_name='')=>{
 
   const new_unitary_sankey=JSON.parse(JSON.stringify(data)) as SankeyPlusData
-  const link_visible=link_visible_on_svg()
+  const link_visible=from_zdd?link_visible_on_svg():Object.values(data.links).map(l=>l.idLink)
   const n_link_s=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink) && link_visible.includes(l.idLink)).map(l=>l.idSource)
   const n_link_t=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink) && link_visible.includes(l.idLink)).map(l=>l.idTarget)
 

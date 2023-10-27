@@ -1055,7 +1055,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
             if(master_data===undefined){
               master_data=JSON.parse(JSON.stringify(data))
             }
-            create_view_node_unitary(t,data,set_data,master_data,set_master_data,data.nodes[nodeData.id],set_view,data.nodes,'')
+            create_view_node_unitary(t,data,set_data,master_data,set_master_data,data.nodes[nodeData.id],set_view,data.nodes,false,'')
             set_show_node_unitary_selector(false)
           }}
 
