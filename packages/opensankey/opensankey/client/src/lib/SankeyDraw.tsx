@@ -378,13 +378,15 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     set_data({...data})
     clickSaveDiagram(data)
   }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
-    e.preventDefault()
-
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen()
+    if((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??true)){
+      e.preventDefault()
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
     }
+    
   }
 }
 
