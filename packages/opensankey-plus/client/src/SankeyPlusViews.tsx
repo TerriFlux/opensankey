@@ -279,6 +279,8 @@ export const keyHandler = (
         set_show_toast_new_view(false)
       }, 3000)
       set_view(new_ind)
+      new_master_data.current_view=new_ind
+      set_master_data({...new_master_data})
     } else {
       const new_ind = 'view_' + String(new Date().getTime())
       const current_view_object=master_data.view.filter(v=>v.id === view)[0]
@@ -295,8 +297,9 @@ export const keyHandler = (
       
      
       // master data is now set
-      //set_master_data({...master_data})
+      master_data.current_view=new_ind
       set_view(new_ind)
+      set_master_data({...master_data})
     }
   }
 
