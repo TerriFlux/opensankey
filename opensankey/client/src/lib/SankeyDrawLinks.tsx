@@ -331,7 +331,7 @@ export const OpenSankeyDrawLinks = (
         if(+linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,getLinkValue)<15){
           d3.select('.link#path_'+d.idLink).attr('stroke-width','15')
           if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
-            d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 5')
+            d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 2')
           }
         }
         if (!window.SankeyToolsStatic && !event.shiftKey) {
@@ -361,7 +361,7 @@ export const OpenSankeyDrawLinks = (
         if(+linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,getLinkValue)<15){
           d3.select('.link#path_'+d.idLink).attr('stroke-width',linkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,getLinkValue))
           if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
-            d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','5, 5')
+            d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 2')
           }
         }
         sankeyTooltip.style('opacity', 0)
