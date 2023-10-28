@@ -23,7 +23,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
   if (data.show_structure === 'structure') {
-    return '5, 5'
+    return '10, 2'
   }
   const link_values = getLinkValue(data, d.idLink)
   if (link_values === undefined) {
@@ -31,7 +31,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
   }
   if (data.show_structure === 'data' ) {
     if (!(link_values as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
-      return '5, 5'
+      return '10, 2'
     }
   }
 
@@ -44,7 +44,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
                  data.show_structure !== 'free_interval'  &&
                  !link_values.extension?.free_visible
   if (return_value_link(data,d,'dashed') || link_values.value=='' || is_free || link_values.extension?.display_thin) {
-    return '5, 5'
+    return '10, 2'
   } else {
     return ''
   }
