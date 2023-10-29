@@ -1465,10 +1465,10 @@ export const convert_data = (
   // Convert style of node and link
   // Previously tehy were object identical to SankeyNode or SankeyLink, now they are like local attribute  
   if(Object.keys(data_to_convert.style_link['default'])!== Object.keys(SankeyLinkStyleTypes) ){
-    data.style_link={'default':default_link_style()}
+    data.style_link['default'] = default_link_style()
   }
   if(Object.keys(data_to_convert.style_node['default'])!== Object.keys(SankeyNodeStyleTypes) ){
-    data.style_node={'default':default_node_style()}
+    data.style_node['default'] = default_node_style()
   }
 
   if(!data.accordeonToShow.includes('EN') && Object.keys(data.nodeTags).length>0){
