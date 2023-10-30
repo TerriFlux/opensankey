@@ -164,7 +164,8 @@ class DictResultTest(unittest.TestCase):
         if len( [test_to_skip for test_to_skip in tests_to_skip if test_to_skip in self._testMethodName]) > 0:
             return
         sankey = Sankey()
-        io_excel.load_sankey_from_excel_file(os.path.join(mfa_data_dir, file_name), sankey)
+        excel_book = {}
+        io_excel.load_sankey_from_excel_file(os.path.join(mfa_data_dir, file_name), sankey, excel_book)
         sankey_json = converter.extract_json_from_sankey(sankey)
         if not self.generate_results:
             self.check_dict(sankey_json, expected_results)
