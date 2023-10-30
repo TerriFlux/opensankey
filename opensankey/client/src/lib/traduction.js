@@ -216,7 +216,7 @@ export const open_resources = {
         },
       },
       MEP:{
-        onBlur:'Value is applied when we leave the input',
+        onBlur:'Value is applied when we leave the input or we press enter',
         Echelle:'Scale of diagram',
         MaxFlux:'Maximal thickness for links (px)',
         MinFlux:'Minimal thickness for links (px)',
@@ -802,7 +802,7 @@ export const open_resources = {
 
       },
       MEP:{
-        onBlur:'La valeur sera appliqué dès que l\'on quitte l\'input',
+        onBlur:'La valeur sera appliqué dès que l\'on quitte l\'input ou presser la touche entrée',
         Echelle:'Echelle du diagramme',
         MaxFlux:'Taille maximale des flux (px)',
         MinFlux:'Taille minimale des flux (px)',
