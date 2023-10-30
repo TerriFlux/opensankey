@@ -199,7 +199,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const width_to_display=((data.width) ? data.width : window.innerWidth*0.975)
   return (
     <>
-      <div className="span12" style={{ 'color': 'black','display': 'inline' }} id='visualization_div' >
+      <div className="span12" id='visualization_div' >
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <div className='scroll_zone' >
             <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
