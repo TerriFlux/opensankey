@@ -45,7 +45,8 @@ export const SankeyPlusDrawLabels = (
         .attr('transform', 'translate(' + d.x + ',' + d.y + ')')
 
       gg_label.append('rect')
-        .attr('width', d.label_width).attr('height', d.label_height)
+        .attr('width', d.label_width)
+        .attr('height', d.label_height)
         .attr('fill', d.color)
         .style('fill-opacity', +(d.opacity/100))
         .attr('stroke', d.color_border)
@@ -81,6 +82,8 @@ export const SankeyPlusDrawLabels = (
         .append('foreignObject')
         .attr('width',d.label_width)
         .attr('height',d.label_height)
+        .style('width',d.label_width)
+        .style('height',d.label_height)
         .attr('id', d.idLabel + '_text')
         .append('xhtml:div')
         .attr('class','ql-editor')
@@ -91,6 +94,8 @@ export const SankeyPlusDrawLabels = (
         .append('image')
         .attr('width',d.label_width)
         .attr('height',d.label_height)
+        .style('width',d.label_width)
+        .style('height',d.label_height)
         .attr('id', d.idLabel + '_img')
         .attr('href',d.image_src)
 
