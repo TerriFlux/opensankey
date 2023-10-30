@@ -1217,6 +1217,9 @@ export const agregation = (
   const cur_parentId = desagregated_node.dimensions[cur_dimension].parent_name
   const dim_desagregated_nodes = Object.values(data.nodes).filter( n => {
     const cur_n_dim = n.dimensions[cur_dimension]
+    if (cur_n_dim.parent_name && !data.nodes[cur_n_dim.parent_name]) {
+      return
+    }
     return cur_n_dim && (
       cur_n_dim.parent_name === cur_parentId ||
         (cur_n_dim.parent_name && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension] && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension].parent_name === cur_parentId)

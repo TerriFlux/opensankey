@@ -242,7 +242,8 @@ def upload_excel_thread(
     trace.logger.debug("File to load : {}".format(excel_input_filename.split('/')[-1]))
     # Parse to sankey struct
     sankey = Sankey()
-    ok_load, log_load = io_excel.load_sankey_from_excel_file(excel_input_filename, sankey)
+    excel_book = {}
+    ok_load, log_load = io_excel.load_sankey_from_excel_file(excel_input_filename, sankey, excel_book)
     if (ok_load):
         trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
     else:
