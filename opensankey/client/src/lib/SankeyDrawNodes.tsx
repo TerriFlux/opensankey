@@ -205,8 +205,8 @@ export const OpenSankeyDrawNodes = (
       .attr('id', d => 'shape_'+(d as SankeyNode).idNode)
       .attr('fill-opacity', d => return_value_node(data,(d as SankeyNode),'shape_visible') ? '1' : '0')
       .attr('fill', d => node_color(d as SankeyNode,data) as string)
-      .attr('stroke', 'black')
-      .attr('stroke-width', d => {
+      .style('stroke', 'black')
+      .style('stroke-width', d => {
         const dd = (d as SankeyNode)
         return node_stroke_width(dd,multi_selected_nodes)
       }

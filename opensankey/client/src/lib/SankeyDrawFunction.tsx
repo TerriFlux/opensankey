@@ -2065,11 +2065,11 @@ export const select_visualy_links=(d:SankeyLink)=>{
 }
 
 export const deselect_visualy_nodes=(n:SankeyNode)=>{
-  d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',0)
+  d3.select(' .opensankey #shape_' + n.idNode).style('stroke-width',0)
   d3.select(' .opensankey #ggg_' + n.idNode+' .box_width_threshold').attr('visibility','hidden')
 }
 export const select_visualy_nodes=(n:SankeyNode)=>{
-  d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',2)
+  d3.select(' .opensankey #shape_' + n.idNode).style('stroke-width',2)
 }
 
 export const repositionne_sidebar=()=>{
