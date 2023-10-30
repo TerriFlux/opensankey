@@ -75,30 +75,38 @@ export const SankeyPlusNodeFO = (
   const is_all_fo_visible = isAllFOVisible()
   const is_all_fo_raw = isAllFORaw()
 
+  const isQuill_invalid=multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content!==editor_content_fo_node:false
+
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
-  const editor_fo=<ReactQuill
-    value={editor_content_fo_node}
-    onChange={(evt,_,s) => {
-      if(s==='user'){
-        set_editor_content_fo_node(evt)
-      }
-    }}
-    onBlur={()=>{
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-        d.FO_content = editor_content_fo_node
-      })
-      set_data({...data})
-    }}
-    theme="snow"
-    modules={modules}
-    formats={formats}
-    readOnly={!is_activated?true:!is_all_fo_visible}
-    style={{
-      color:(!is_activated || !is_all_fo_visible )?'#666666':'',
-      backgroundColor:(!is_activated || !is_all_fo_visible)?'#cccccc':''}}
-  />
+  const editor_fo=<Form className='FO_zdt_editeur'>
+    <Form.Group><ReactQuill
+      value={editor_content_fo_node}
+      onChange={(evt,_,s) => {
+        if(s==='user'){
+          set_editor_content_fo_node(evt)
+        }
+      }}
+      onBlur={()=>{
+        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+          d.FO_content = editor_content_fo_node
+        })
+        set_data({...data})
+      }}
+      theme="snow"
+      modules={modules}
+      formats={formats}
+      readOnly={!is_activated?true:!is_all_fo_visible}
+      style={{
+        color:(!is_activated || !is_all_fo_visible )?'#666666':'',
+        backgroundColor:(!is_activated || !is_all_fo_visible)?'#cccccc':''}}
+    /></Form.Group>
+    <Form.Control type='text' isInvalid={isQuill_invalid} style={{display:'none'}}/>
+    <Form.Control.Feedback type='invalid'>{t('MEP.onBlurNoEnter')}</Form.Control.Feedback>
+
+  </Form>
+
   const editor_fo_raw=<Form.Control
     as="textarea"
     rows={5}

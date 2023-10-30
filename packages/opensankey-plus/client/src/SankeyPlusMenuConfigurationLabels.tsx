@@ -249,7 +249,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       >{t('Menu.updateFOZdd')}</Button> */}
       <Form.Control type='text' isInvalid={isQuill_invalid} style={{display:'none'}}/>
-      <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
+      <FormControl.Feedback type='invalid'>{t('MEP.onBlurNoEnter')}</FormControl.Feedback>
 
     </Form>
 
