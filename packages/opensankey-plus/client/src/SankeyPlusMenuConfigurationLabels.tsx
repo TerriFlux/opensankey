@@ -105,7 +105,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
       <div id='DD_multi_label' style={{
         color:(!is_activated)?'#666666':'',
         backgroundColor:(!is_activated)?'#cccccc':'',
-        width:'60%'}}
+        width:'60%',zIndex:'3'}}
       >
         <MultiSelect
           disabled={!is_activated}
@@ -121,7 +121,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
             multi_selected_label.current = m_s
-            setForceUpdate(!forceUpdate)
+            set_data({...data})
           }}
           labelledBy={'hello'}
         />
