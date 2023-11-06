@@ -6,6 +6,7 @@ import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from './SankeyMenu'
 import React from 'react'
+import { FaCaretRight } from 'react-icons/fa'
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -1923,7 +1924,7 @@ export const recursionDataTag=(data:SankeyData,DT:TagsCatalog,ind:number,suffix:
 
 // Create emptyicon for treefolder component
 export const FileIcon = () => {
-  return <></>
+  return <FaCaretRight style={{opacity:0}}/>
 }
 export const FolderIcon = () => {
   return <></>
