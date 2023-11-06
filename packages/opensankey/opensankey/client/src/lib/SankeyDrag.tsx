@@ -1114,15 +1114,18 @@ export const drag_elements=(
 
 
   if(multi_selected_nodes.current.length>0){
+    // We redraw each arrows linked to a selected nodes after shifting it
     multi_selected_nodes.current.filter(n=>n.position!=='relative').forEach(n=>[
       drawArrows(n as SankeyNode,data,display_nodes,scale,inv_scale,getLinkValue,data.display_style)
     ])
+    // we redraw link linked to dragged nodes
     multi_selected_nodes.current.forEach(n=>{
       Object.values(data.links).filter(l=>n.outputLinksId.includes(l.idLink)||n.inputLinksId.includes(l.idLink)).forEach(l=>{
         d3.select(' .opensankey #path_' + l.idLink).attr('d',drawCurveFunction.curve(data,set_data,
           display_nodes, display_links, data.display_style,
           data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
         ))
+        
       })
     })
   }else if(Object.keys(node).length>0){
@@ -1134,6 +1137,12 @@ export const drag_elements=(
         data.nodeTags, l, error_msg,multi_selected_links,link_text,min_width_and_height,getLinkValue
       ))
       d3.select(' .opensankey #path_' + l.idLink).attr('stroke-width',linkStrokeWidth(l,data,scale,inv_scale,2,data.nodes,getLinkValue))
+      // if the target is an export node and it has trad_close variable at true then we redraw this node arrow too
+      const node_t=(data.nodes[l.idTarget] as unknown as {trade_close:boolean})
+      if(node_t!==undefined && node_t.trade_close){
+        drawArrows(node_t as unknown as SankeyNode,data,display_nodes,scale,inv_scale,getLinkValue,data.display_style)
+
+      }
     })
   } 
 }
