@@ -1213,3 +1213,6 @@ textarea {
 .accordion_new_welcome .accordion-button{
 	background-color:#eeeeee;
 }
+.typeIconContainer:not(:has(svg)){
+	display: none;
+}
