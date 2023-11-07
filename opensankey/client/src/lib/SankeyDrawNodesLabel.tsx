@@ -86,6 +86,7 @@ export const OpenSankeyDrawNodesLabel = (
       (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
         .append('foreignObject')
         .attr('id',d=>'fo_input_label_'+d.idNode)
+        .attr('class','fo_input_label')
         .attr('x',(n)=>node_label_posX(data,n as SankeyNode))
         .attr('y',(n)=>node_label_posY(n as SankeyNode,data))
         .style('width',d=>((d.name.length))+'rem')
