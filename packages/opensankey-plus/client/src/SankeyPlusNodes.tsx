@@ -1378,7 +1378,7 @@ export const create_view_node_unitary=(t:TFunction,
   view_name='')=>{
 
   const new_unitary_sankey=JSON.parse(JSON.stringify(data)) as SankeyPlusData
-  const link_visible=from_zdd?link_visible_on_svg():Object.values(data.links).map(l=>l.idLink)
+  const link_visible=from_zdd?link_visible_on_svg():Object.values(new_unitary_sankey.links).map(l=>l.idLink)
   const n_link_s=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.inputLinksId.includes(l.idLink) && link_visible.includes(l.idLink)).map(l=>l.idSource)
   const n_link_t=Object.values(new_unitary_sankey.links).filter(l=>contextualised_node.outputLinksId.includes(l.idLink) && link_visible.includes(l.idLink)).map(l=>l.idTarget)
 
@@ -1388,6 +1388,13 @@ export const create_view_node_unitary=(t:TFunction,
     return ne[1].idNode===contextualised_node.idNode || ((n_link_s.includes(ne[1].idNode) || n_link_t.includes(ne[1].idNode) ) )
   }).map(n=>n))
 
+  if(!from_zdd && contextualised_node.dimensions){
+    // Set the level tags to aggreagation level of the contextualised node (only if we select the node from the menu Unit.)
+    const key_level_tag=Object.keys(new_unitary_sankey.levelTags).filter(klt=>klt!=='Primaire')
+    key_level_tag.forEach(klt=>Object.values(new_unitary_sankey.levelTags[klt].tags).forEach(kltt=>kltt.selected=false))
+    Object.entries(contextualised_node.tags).filter(en=> key_level_tag.includes(en[0]) && en[1].length>0).forEach(en=>Object.entries(new_unitary_sankey.levelTags[en[0]].tags).forEach(kltt=>{
+      kltt[1].selected=(kltt[0]===en[1][0])}))
+  }
 
 
   // Get all the parents & sons (aggregation speaking) of all_nodes_in_unitary_sankey
@@ -1404,6 +1411,26 @@ export const create_view_node_unitary=(t:TFunction,
   })
   aggregate_nodes_to_keep=[...new Set(aggregate_nodes_to_keep)]
 
+  if(!from_zdd){
+    // If we select the contextualised node from the menu then we desaggregate all nodes linked to it
+
+    aggregate_nodes_to_keep
+      .filter(kn=>!center_sankey_node_unitary.includes(kn))
+      .map(kn=>{
+      // First put all nodes has not visible (local_aggragation to false put them invisible)
+        const loc=new_unitary_sankey.nodes[kn].local
+        loc?loc.local_aggregation=false:new_unitary_sankey.nodes[kn].local={local_aggregation:false}
+        return kn
+      })
+      .filter(kn=>{
+      // Then filter to keep only the leaf
+        return is_leaf(new_unitary_sankey,kn)
+      }).forEach(kn=>{
+      // Finally put local_aggragation value of all nodes that are leaf and linked to the unitary node to true 
+        const loc=new_unitary_sankey.nodes[kn].local
+        loc?loc.local_aggregation=true:new_unitary_sankey.nodes[kn].local={local_aggregation:true}
+      })
+  }
   // Add nodes not visible but that have an aggregation link to one visible
 
   const all_nodes_in_unitary_sankey=JSON.parse(JSON.stringify(nodes_visible_to_keep)) as {[x:string]:SankeyPlusNode}
@@ -1683,4 +1710,16 @@ export const create_view_node_unitary=(t:TFunction,
   set_master_data({...master_data})
 
     
+}
+
+const is_leaf=(data:SankeyPlusData,kn:string)=>{
+  // Check if some nodes has kn for parent if yes then kn is not a leaf otherwise it is a leaf
+
+  return Object.values(data.nodes).filter(n=>{
+    if(n.dimensions===undefined){
+      return false
+    }else{
+      return (Object.entries(n.dimensions).filter(en=>en[0]!=='Primaire' && en[1].parent_name===kn).length>0)
+    }
+  }).length===0
 }
