@@ -3,6 +3,7 @@ import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
 import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
 import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
+import { synchronizeNodesandLinksId } from 'open-sankey/dist/SankeyLayout'
 import { InputGroup, Button, Form } from 'react-bootstrap'
 import React, { useState } from 'react'
 import { TFunction } from 'i18next'
@@ -343,9 +344,13 @@ export const plus_sankey_layout=(
           if((view_of_new_layout.view_data as SankeyPlusData ).version) {
             // Views are copied identical to what they were
             view_of_new_layout.heredited_attr_from_master = ['']
+            // nodeId and linkId must be synchronized with new master
+            synchronizeNodesandLinksId(view_of_new_layout.view_data,data)
             data.view.push(view_of_new_layout)
           } else if((view_of_new_layout.view_data as DiffType).diff!==undefined){
             (view_of_new_layout.view_data as DiffType).diff.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(view_data, {}, diff))
+            // nodeId and linkId must be synchronized with new master
+            synchronizeNodesandLinksId(view_data,data)
             const data_view_diff = deep_diff.diff(data,view_data) as {path:string[],kind:string,rhs:string}[]
             (view_of_new_layout.view_data as DiffType).diff = data_view_diff.filter((d:{path:string[]}) => !d.path.includes('view'))
             // Views are copied identical to what they were
