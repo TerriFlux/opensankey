@@ -906,6 +906,7 @@ declare const window: Window &
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export const SankeyPlusBannerView=(data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
+  display_nodes:{[s:string]:SankeyPlusNode},
   view:string,
   set_view:(s:string)=>void,
   view_not_saved:string,
@@ -1055,7 +1056,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
             if(master_data===undefined){
               master_data=JSON.parse(JSON.stringify(data))
             }
-            create_view_node_unitary(t,data,set_data,master_data,set_master_data,data.nodes[nodeData.id],set_view,data.nodes,false,'')
+            create_view_node_unitary(t,data,set_data,master_data,set_master_data,data.nodes[nodeData.id],set_view,display_nodes,false,'')
             set_show_node_unitary_selector(false)
           }}
 
