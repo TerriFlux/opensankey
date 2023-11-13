@@ -1155,7 +1155,7 @@ export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
   // Si le flux n'est pas relié à un noeud unitaire alors sa valeur est de 100% 
   if(k_n_u===undefined){
     return '100%'
-  }else if(data.nodes[k_n_u].tags['Type de noeud'] && data.nodes[k_n_u].tags['Type de noeud'].includes('produit')){
+  }else if( link_ref.length == 0 ){
   // Si le flux est relié à un noeud unitaire et que ce noeud est un produit
   // alors sa valeur est en % par rapport à la somme des flux entrant ou sortant
 
@@ -1195,7 +1195,7 @@ export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
     const formated_value=(Number.isInteger(part_value)?Math.round(part_value):(part_value).toFixed(3))
     return formated_value+link_unit
 
-  }else{
+  } else{
     // le noeud unitaire est un secteur mais qu'il n'a pas de flux de référence ou qu'il n'ai pas l'étiquette 'Type de noeud'
     // alors il les affiche normalement 
     return link_text(data,d,getLinkValue)
@@ -1249,6 +1249,10 @@ const return_aggregation_parents_of_node=(n:SankeyPlusNode,nodes:{[x:string]:San
   if(n.dimensions){
     Object.entries(n.dimensions).forEach(nd=>{
       if(nd[1].parent_name!==undefined && nd[1].parent_name!==null  && nd[0]!=='Primaire'){
+        if (!nodes[nd[1].parent_name]) {
+          // Sanity check. Not sure it should happen
+          return
+        }
         found_fathers.push(nd[1].parent_name)
         return_aggregation_parents_of_node(nodes[nd[1].parent_name],nodes,found_fathers)
       }
@@ -1360,14 +1364,6 @@ export const modal_unitary_sankey_sector_node=(data:SankeyPlusData,set_data:(d:S
   return dragLayout
 }
 
-export const scale = d3.scaleLinear()
-  .domain([0, 100])
-  .range([0, 100])
-
-export const inv_scale = d3.scaleLinear()
-  .domain([0, 100])
-  .range([0, 100])
-
 export const create_view_node_unitary=(t:TFunction,
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   master_data:SankeyPlusData,set_master_data:(d:SankeyPlusData)=>void,
@@ -1376,6 +1372,13 @@ export const create_view_node_unitary=(t:TFunction,
   display_nodes:{ [node_id: string]: SankeyPlusNode },
   from_zdd:boolean,
   view_name='')=>{
+
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
 
   const new_unitary_sankey=JSON.parse(JSON.stringify(data)) as SankeyPlusData
   const link_visible=from_zdd?link_visible_on_svg():Object.values(new_unitary_sankey.links).map(l=>l.idLink)
@@ -1491,13 +1494,37 @@ export const create_view_node_unitary=(t:TFunction,
   new_unitary_sankey.colorMap='no_colormap'
   new_unitary_sankey.linkZIndex=new_unitary_sankey.linkZIndex.filter(lz=>k_l_t_k.includes(lz)).map(l=>l)
   new_unitary_sankey.nodes=nodes_to_keep
-
-
+  // attributes are standardized
+  Object.values(new_unitary_sankey.nodes).forEach(node=>{
+    node.local = {
+      //show_value : true,
+      //label_vert : 'bottom',
+      //label_horiz : 'middle'
+    }
+    node.x = 0
+    node.y = 0
+    delete node.x_label
+    delete node.y_label
+    if (node.position === 'relative') {
+      node.name = node.name.split(data.node_label_separator).slice(1).join(' ')
+    }
+    node.position = 'absolute'
+  })
   new_unitary_sankey.links=links_to_keep
+  // attributes are standardized
+  Object.values(new_unitary_sankey.links).forEach(link=>{
+    link.local = {}
+  })
+
   
   // Reposition visible node 
-  compute_auto_sankey(new_unitary_sankey, new_unitary_sankey.h_space ? new_unitary_sankey.h_space : 200)
+  compute_auto_sankey(new_unitary_sankey, new_unitary_sankey.h_space ? new_unitary_sankey.h_space : 400)
 
+  new_unitary_sankey.nodes[contextualised_node.idNode].local = {
+    label_vert : 'bottom',
+    label_horiz : 'middle',
+    label_background : false
+  }
   // ======Add ZDT====== 
   // Get dimensions for labels
 
@@ -1536,13 +1563,14 @@ export const create_view_node_unitary=(t:TFunction,
       node_size_s_width = inv_scale((return_value_node(data,n,'node_width') as number))
     }
 
-    const boxW=node_size_s_width
-    const boxH=node_size_s_height
+    const boxW=scale(node_size_s_width)
+    const boxH=scale(node_size_s_height)
     
 
     max_x=((boxX+boxW)>max_x)?(boxX+boxW):max_x
     max_y=((boxY+boxH)>max_y)?(boxY+boxH):max_y
   })
+  max_x = max_x+200
 
   // Info from data source in ZDT
 
@@ -1600,15 +1628,10 @@ export const create_view_node_unitary=(t:TFunction,
     // Add the contextualised node to list of explored nodes (to use in the process of link_text)
     new_unitary_sankey.unitary_node=[...new_unitary_sankey.unitary_node,...center_sankey_node_unitary]
 
-    let difference = deep_diff.diff(master_data, new_unitary_sankey)
-    difference=(difference !== undefined)?difference:[]
-    difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-    difference=filter_view(difference)
-
     const new_id='view_' + String(new Date().getTime())
     master_data.view.push({
       id: new_id,
-      view_data: {diff:difference},
+      view_data: new_unitary_sankey,
       nom: 'Exploration view of node '+contextualised_node.name,
       details: '',
       heredited_attr_from_master:[]
@@ -1694,12 +1717,8 @@ export const create_view_node_unitary=(t:TFunction,
 
     // ------------------------------------------------------------
     // =====Update the view=====
-    let difference = deep_diff.diff(master_data, data_view)
-    difference=(difference !== undefined)?difference:[]
-    difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-    difference=filter_view(difference)
 
-    master_data.view[ind].view_data={diff:difference}
+    master_data.view[ind].view_data=data_view
   
     set_view(view_name)
     set_data({...data_view})
