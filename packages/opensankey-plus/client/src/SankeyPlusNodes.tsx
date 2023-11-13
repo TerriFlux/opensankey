@@ -1155,7 +1155,7 @@ export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
   // Si le flux n'est pas relié à un noeud unitaire alors sa valeur est de 100% 
   if(k_n_u===undefined){
     return '100%'
-  }else if(data.nodes[k_n_u].tags['Type de noeud'] && data.nodes[k_n_u].tags['Type de noeud'].includes('produit')){
+  }else if( link_ref.length == 0 ){
   // Si le flux est relié à un noeud unitaire et que ce noeud est un produit
   // alors sa valeur est en % par rapport à la somme des flux entrant ou sortant
 
@@ -1195,7 +1195,7 @@ export const SankeyPlus_link_text=(data:SankeyPlusData,d:SankeyPlusLink,
     const formated_value=(Number.isInteger(part_value)?Math.round(part_value):(part_value).toFixed(3))
     return formated_value+link_unit
 
-  }else{
+  } else{
     // le noeud unitaire est un secteur mais qu'il n'a pas de flux de référence ou qu'il n'ai pas l'étiquette 'Type de noeud'
     // alors il les affiche normalement 
     return link_text(data,d,getLinkValue)
