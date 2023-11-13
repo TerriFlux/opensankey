@@ -191,7 +191,12 @@ export const addAllDropDownNode = (
                     checked={tags_group.activated}
                     onChange={evt => {
                       tags_group.activated = evt.target.checked
-                      tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = false)
+                      const first_antagonist_tag = data.levelTags[tags_group.siblings[0]]
+                      // Respectively activate and desactivate in the two antagonist tags  group
+                      // Same as of current tag group
+                      first_antagonist_tag.siblings.forEach(sibling=>data.levelTags[sibling].activated = tags_group.activated)
+                      // Opposed to current tag group
+                      tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = !tags_group.activated)
                       set_data({ ...data })
                     }}
                   />
