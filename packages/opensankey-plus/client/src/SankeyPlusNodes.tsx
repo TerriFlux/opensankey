@@ -1249,6 +1249,10 @@ const return_aggregation_parents_of_node=(n:SankeyPlusNode,nodes:{[x:string]:San
   if(n.dimensions){
     Object.entries(n.dimensions).forEach(nd=>{
       if(nd[1].parent_name!==undefined && nd[1].parent_name!==null  && nd[0]!=='Primaire'){
+        if (!nodes[nd[1].parent_name]) {
+          // Sanity check. Not sure it should happen
+          return
+        }
         found_fathers.push(nd[1].parent_name)
         return_aggregation_parents_of_node(nodes[nd[1].parent_name],nodes,found_fathers)
       }
