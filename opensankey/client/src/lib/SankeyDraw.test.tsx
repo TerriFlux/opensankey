@@ -72,6 +72,7 @@ test.each(the_tests)( 'tyty',(full_path) => {
   const component = render(
     <SankeyDraw
       data={(new_data as unknown) as SankeyData}
+      display_nodes={new_data.nodes}
       // test_link_value= {(nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => 10}
       {...SankeyDrawDefaultProps}
     />
