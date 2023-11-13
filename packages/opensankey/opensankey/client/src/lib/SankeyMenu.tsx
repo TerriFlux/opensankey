@@ -1453,6 +1453,7 @@ const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
+  display_nodes:{[id:string]:SankeyNode},
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
@@ -1750,7 +1751,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           set_contextualised_node(undefined)
         }}>Agrégation</Button>:<></>}
         {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.node_context_has_desaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          SankeyUtils.desaggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
+          SankeyUtils.desaggregate(contextualised_node,data,display_nodes,set_agregation_node,set_is_agregation,set_show_agregation)
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)

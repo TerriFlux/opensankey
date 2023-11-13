@@ -416,15 +416,15 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       repositionne_sidebar()
       })
       /* eslint-enable */
-  useEffect(()=>{
-    const display_nodes = Object.keys(data.nodes)
-      .filter((key) => SankeyUtils.node_displayed(data,data.nodes[key]))
-      .reduce((obj, key) => {
-        return Object.assign(obj, {
-          [key]: data.nodes[key]
-        })
-      }, {}) as {[idNode:string]:SankeyNode}
 
+  const display_nodes = Object.keys(data.nodes)
+  .filter((key) => SankeyUtils.node_displayed(data,data.nodes[key]))
+  .reduce((obj, key) => {
+    return Object.assign(obj, {
+      [key]: data.nodes[key]
+    })
+  }, {}) as {[idNode:string]:SankeyNode}
+  useEffect(()=>{
     const pre_display_links=Object.keys(data.links)
       .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
       .reduce((obj, key) => {
@@ -510,7 +510,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
 
-  const context_n=context_menu_node(contextualised_node,set_contextualised_node,data,set_data,multi_selected_nodes,multi_selected_links,t,
+  const context_n=context_menu_node(contextualised_node,set_contextualised_node,data,set_data,display_nodes,multi_selected_nodes,multi_selected_links,t,
     set_show_menu_node_apparence,set_show_menu_node_io,
     set_agregation_node,set_is_agregation,set_show_agregation,
     set_display_link_opacity,
@@ -651,6 +651,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         <SankeyDraw
           data={data}
           set_data={set_data}
+          display_nodes={display_nodes}
           animation={false}
           mode_selection={mode_selection}
           show_agregation={show_agregation}
