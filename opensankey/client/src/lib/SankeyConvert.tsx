@@ -916,6 +916,14 @@ export const convert_nodes = (
       }
       delete n.tags['Exchanges']
 
+      // Nodes with type Echanges did not have the correct dimensions
+      if ( n.tags['Echanges'] ) {
+        let new_dimensions = {
+          'Primaire' : n.dimensions['Primaire'],
+          'Echanges' : n.dimensions['Echanges']
+        }
+        n.dimensions = new_dimensions
+      }
 
     
       // Filter out variable in the node that are null or undefined so they can be attribued the default value

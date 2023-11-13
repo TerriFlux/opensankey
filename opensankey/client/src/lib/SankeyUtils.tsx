@@ -1788,7 +1788,14 @@ export const aggregate=(n:SankeyNode,data:SankeyData,set_agregation_node:(s:stri
 
 }
 
-export const desaggregate=(n:SankeyNode,data:SankeyData,set_agregation_node:(s:string)=>void,set_is_agregation:(b:boolean)=>void,set_show_agregation:(b:boolean)=>void)=>{
+export const desaggregate=(
+  n:SankeyNode,
+  data:SankeyData,
+  display_nodes: {[id:string]:SankeyNode},
+  set_agregation_node:(s:string)=>void,
+  set_is_agregation:(b:boolean)=>void,
+  set_show_agregation:(b:boolean)=>void
+)=>{
   const child_names: string[] = []
   const dim_names: string[] = []
   Object.values(data.nodes).forEach(n2 => {
@@ -1815,7 +1822,7 @@ export const desaggregate=(n:SankeyNode,data:SankeyData,set_agregation_node:(s:s
     set_is_agregation(false)
     set_show_agregation(true)
   } else {
-    desagregation(data, n.idNode, dim_names[0])
+    desagregation(data, display_nodes, n.idNode, dim_names[0])
   }
 
 }
