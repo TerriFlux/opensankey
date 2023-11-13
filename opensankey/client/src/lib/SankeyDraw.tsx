@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData} from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes} from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
@@ -18,6 +18,7 @@ typeof globalThis & {
 const SankeyDrawPropTypes = {
   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data: PropTypes.func.isRequired,
+  display_nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   animation:PropTypes.bool.isRequired,
   mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
   show_agregation:PropTypes.bool.isRequired, set_show_agregation:PropTypes.func.isRequired,
@@ -56,6 +57,7 @@ type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
   set_data = SankeyDrawDefaultProps.set_data,
+  display_nodes,
   animation,
   mode_selection,
   show_agregation, set_show_agregation,
@@ -217,6 +219,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           show_agregation={show_agregation}
           data={data}
           set_data={set_data}
+          display_nodes={display_nodes}
           agregation_node={agregation_node}
           set_agregation_node={set_agregation_node}
           set_show_agregation={set_show_agregation}

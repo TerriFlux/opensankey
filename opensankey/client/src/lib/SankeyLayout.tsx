@@ -4,7 +4,8 @@ import {
   SankeyDataPropTypes,
   SankeyLink,
   SankeyLinkValue,
-  SankeyNode
+  SankeyNode,
+  SankeyNodePropTypes
 } from './types'
 import {
   assign_link_local_attribute,
@@ -454,6 +455,7 @@ export const arrangeNodes = (
  *
  * @param {SankeyNode} node Node to compute height from
  * @param {SankeyData} data
+ * @param {{ [node_id: string]: SankeyNode }} display_nodes Visible nodes
  * @param {Function} inv_scale
  * @param {Function} scale
  * @param {Function} getLinkValue
@@ -461,6 +463,7 @@ export const arrangeNodes = (
 export const nodeHeight = (
   node: SankeyNode,
   data:SankeyData,
+  display_nodes:{ [node_id: string]: SankeyNode },
   inv_scale: (t:number)=>number,
   scale: (t:number)=>number,
   getLinkValue: (data: SankeyData, idLink: string, up?: boolean)=>SankeyLinkValue
@@ -469,7 +472,7 @@ export const nodeHeight = (
     inv_scale,
     node,
     data,
-    data.nodes,
+    display_nodes,
     test_link_value,
     undefined,
     getLinkValue)
@@ -500,6 +503,13 @@ export const compute_auto_sankey = (
   data: SankeyData,
   h_space : number,
 ) => {
+  const display_nodes = Object.keys(data.nodes)
+    .filter((key) => node_displayed(data,data.nodes[key]))
+    .reduce((obj, key) => {
+      return Object.assign(obj, {
+        [key]: data.nodes[key]
+      })
+    }, {}) as {[idNode:string]:SankeyNode}
 
   // Positionning values
   const v_space = data.v_space
@@ -641,6 +651,7 @@ export const compute_auto_sankey = (
         const node_height = nodeHeight(
           node,
           data,
+          display_nodes,
           v_scale_inv,
           v_scale,
           getLinkValue)
@@ -803,6 +814,7 @@ export const compute_auto_sankey = (
     .forEach(n =>
       desagregation(
         data,
+        display_nodes,
         n.idNode,
         (Object.keys(n.dimensions).length == 1 ?
           'Primaire' :
@@ -1140,6 +1152,7 @@ export const updateLayout = (
  */
 export const desagregation = (
   data: SankeyData,
+  display_nodes:{ [node_id: string]: SankeyNode },
   idNode: string,
   cur_dimension: string,
   compute_auto_sankey=false
@@ -1156,15 +1169,15 @@ export const desagregation = (
     .domain([0, data.user_scale])
   const nb_desagregated = dim_desagregate_nodes.length
   let nodes_heights = 0
-  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,data,inv_scale,scale,getLinkValue))
-  const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],data,inv_scale,scale,getLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
+  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,data,display_nodes,inv_scale,scale,getLinkValue))
+  const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],data,display_nodes,inv_scale,scale,getLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
   let delta_y = 0
   dim_desagregate_nodes.forEach(n => {
     if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idNode].x !==0 && data.nodes[idNode].y !==0 )) {
       n.x = data.nodes[idNode].x
       n.y = start_point + delta_y
     }
-    delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,data,inv_scale,scale,getLinkValue)
+    delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,data,display_nodes,inv_scale,scale,getLinkValue)
 
     if(n.local==undefined || n.local==null) {
       n.local = {}
@@ -1258,6 +1271,7 @@ export const agregation = (
 const AgregationModalPropTypes = {
   data : PropTypes.shape(SankeyDataPropTypes).isRequired,
   set_data : PropTypes.func.isRequired,
+  display_nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   agregation_node : PropTypes.string.isRequired,
   set_agregation_node : PropTypes.func.isRequired,
   set_show_agregation : PropTypes.func.isRequired,
@@ -1268,7 +1282,7 @@ const AgregationModalPropTypes = {
 type  AgregationModalTypes = InferProps<typeof  AgregationModalPropTypes>
 
 export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
-  {data, set_data, agregation_node,set_agregation_node, set_show_agregation,show_agregation,is_agregation}
+  {data, set_data, display_nodes, agregation_node,set_agregation_node, set_show_agregation,show_agregation,is_agregation}
 ) => {
   const n = data.nodes[agregation_node]
   const [dim_name,set_dim_name] = useState('')
@@ -1406,7 +1420,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Button
             variant="secondary"
             onClick={()=> {
-              desagregation(data,agregation_node,dim_name)
+              desagregation(data,display_nodes,agregation_node,dim_name)
               set_data({...data})
               set_show_agregation(false)
               set_dim_name('')
@@ -1434,13 +1448,19 @@ const setLocalAgregation = (
   n.inputLinksId.forEach(linkId => {
     const node_types = data.nodes[data.links[linkId].idSource].tags['Type de noeud']
     if (node_types && node_types.includes('echange')) {
-      data.nodes[data.links[linkId].idSource].local = { local_aggregation: local_aggregation }
+      if (data.nodes[data.links[linkId].idSource].local == undefined ) {
+        data.nodes[data.links[linkId].idSource].local = {}
+      }
+      data.nodes[data.links[linkId].idSource].local!['local_aggregation'] = local_aggregation
     }
   })
   n.outputLinksId.forEach(linkId => {
     const node_types = data.nodes[data.links[linkId].idTarget].tags['Type de noeud']
     if (node_types && node_types.includes('echange')) {
-      data.nodes[data.links[linkId].idTarget].local = { local_aggregation: local_aggregation }
+      if (data.nodes[data.links[linkId].idTarget].local == undefined ) {
+        data.nodes[data.links[linkId].idTarget].local = {}
+      }
+      data.nodes[data.links[linkId].idTarget].local!['local_aggregation'] = local_aggregation
     }
   })
 }
