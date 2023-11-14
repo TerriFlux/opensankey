@@ -976,6 +976,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     'excel',
     'filter',
     'view',
+    'unit',
     'afm',
     'formation',
     'demo',
