@@ -278,6 +278,7 @@ export const keyHandler = (
       set_view(new_ind)
       new_master_data.current_view=new_ind
       set_master_data({...new_master_data})
+      set_data({...copy_data})
     } else {
       const new_ind = 'view_' + String(new Date().getTime())
       const current_view_object=master_data.view.filter(v=>v.id === view)[0]
@@ -297,6 +298,11 @@ export const keyHandler = (
       master_data.current_view=new_ind
       set_view(new_ind)
       set_master_data({...master_data})
+      // get view data & set_data to avoid synchronisation problem
+      const n_data=get_data_from_view(master_data,new_ind)
+      if(n_data){
+        set_data({...n_data})
+      }
     }
   }
 
