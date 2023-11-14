@@ -5,19 +5,16 @@ import LZString from 'lz-string'
 
 import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup, Overlay } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaBars,FaCopy} from 'react-icons/fa'
+import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaCopy} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk,faSquarePlus} from '@fortawesome/free-solid-svg-icons'
+import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
-import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup,treeFolderType} from 'open-sankey/src/lib/types'
-import { adjust_sankey_zone,FolderIcon,FolderOpenIcon,FileIcon} from 'open-sankey/dist/SankeyUtils'
-import { check_node_has_node_type} from 'open-sankey/dist/SankeyMenuConfigurationNodes'
+import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
+import { adjust_sankey_zone} from 'open-sankey/dist/SankeyUtils'
 import { updateLayout } from 'open-sankey/dist/SankeyLayout'
 
 import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType, DiffType, ViewType } from './types'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
-import { create_view_node_unitary } from './SankeyPlusNodes'
-import FolderTree from 'react-folder-tree'
 /* eslint-disable */
 // @ts-ignore
 const deep_diff = require('deep-diff')
@@ -536,7 +533,7 @@ export const keyHandler = (
   }
 }
 
-const selecteur_view=(data:SankeyPlusData,
+export const selecteur_view=(data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
@@ -904,9 +901,8 @@ declare const window: Window &
 // - a button to choose variable of the view that get their value from master
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
-export const SankeyPlusBannerView=(data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{[s:string]:SankeyPlusNode},
+export const SankeyPlusBannerView=(
+  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
   view_not_saved:string,
@@ -921,8 +917,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   _load_json:{current:HTMLInputElement},
   _load_json_catalog:{current:HTMLInputElement},
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
-  show_modal_selection_link_ref_in_unitary_sankey:boolean,
-  set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
   value_editor_name_view:string,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
@@ -933,12 +927,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   const m_d=master_data?master_data:data
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
   const target_popover_modify_view_name=useRef(null)
-  const target_node_selector=useRef(null)
-  const [show_node_unitary_selector,set_show_node_unitary_selector]=useState(false)
 
-  const has_node_type=Object.values(data.nodeTags).filter(t=>t.group_name==='Type de noeud').length>0
-  const pre_filter_node=(has_node_type)?Object.keys(data.nodeTags['Type de noeud'].tags):[]
-  const [filter_node_selector,set_filter_node_selector]=useState<string[]>(pre_filter_node)
 
   // Boolean used to change the logo of the button to save the current view :
   //  - if there is no differences between the the saved view and the current view, then the logo has a check
@@ -996,112 +985,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </span>
   </OverlayTrigger>
 
-  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes,filter_node_selector)
 
-  const overlayNodeSlector= <Overlay
-    key={'popover-nodes-level'}
-    placement={'bottom'}
-    target={target_node_selector}
-    rootClose
-    show={show_node_unitary_selector}
-    onHide={()=>{set_show_node_unitary_selector(false)}}
-  >
-    <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
-      <Popover.Header as="h3">{t('view.selectNodeForUnitaryView')}</Popover.Header>
-      <Popover.Body style={{ maxHeight:'500px',overflowY:'auto' }}>
-        {has_node_type?<InputGroup style={{width:'100%'}} as={ButtonGroup}>
-          {pre_filter_node.includes('produit')?<Button className='btn_menu_config' variant={filter_node_selector.includes('produit')?'primary':'outline-primary'} onClick={()=>{
-            if(!filter_node_selector.includes('produit')){
-              filter_node_selector.push('produit')
-            }else{
-              filter_node_selector.splice(filter_node_selector.indexOf('produit'), 1)
-            }
-            set_filter_node_selector(filter_node_selector)
-            set_data({...data})
-          }}>{t('Noeud.product')}</Button>:<></>}
-
-          {pre_filter_node.includes('secteur')?<Button className='btn_menu_config' variant={filter_node_selector.includes('secteur')?'primary':'outline-primary'} onClick={()=>{
-            if(!filter_node_selector.includes('secteur')){
-              filter_node_selector.push('secteur')
-            }else{
-              filter_node_selector.splice(filter_node_selector.indexOf('secteur'), 1)
-            }
-            set_filter_node_selector(filter_node_selector)
-            set_data({...data})
-          }}>{t('Noeud.sector')}</Button>:<></>}
-
-          {pre_filter_node.includes('echange')?<Button className='btn_menu_config' variant={filter_node_selector.includes('echange')?'primary':'outline-primary'} onClick={()=>{
-            if(!filter_node_selector.includes('echange')){
-              filter_node_selector.push('echange')
-            }else{
-              filter_node_selector.splice(filter_node_selector.indexOf('echange'), 1)
-            }
-            set_filter_node_selector(filter_node_selector)
-            set_data({...data})
-          }}>{t('Noeud.exchange')}</Button>:<></>}
-
-        </InputGroup>:<></>}
-        <FolderTree
-          iconComponents={{
-            FileIcon,
-            FolderIcon,
-            FolderOpenIcon
-          }}
-          showCheckbox={false}
-          initCheckedStatus='custom'
-          indentPixels={20}
-          onNameClick={({defaultOnClick,nodeData})=>{
-            defaultOnClick
-            // Create a unitary sankey from the node selected
-            if(master_data===undefined){
-              master_data=JSON.parse(JSON.stringify(data))
-            }
-            create_view_node_unitary(t,data,set_data,master_data,set_master_data,data.nodes[nodeData.id],set_view,display_nodes,false,'')
-            set_show_node_unitary_selector(false)
-          }}
-
-          data={ tree_of_nodes }
-        />
-      </Popover.Body>
-    </Popover>
-  </Overlay>
-
-  const buttonCreateUnitaryView=<OverlayTrigger
-    key={'buttonCreateViewUnitaryDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonCreateViewUnitaryDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonCreateViewUnitary'}>{t('view.tooltips.buttonCreateViewUnitary')} </Tooltip>}
-  >
-    <span>
-      <Button
-        size='sm'
-        variant='light'
-        ref={target_node_selector}
-        disabled={!connected}
-        onClick={()=>{set_show_node_unitary_selector(!show_node_unitary_selector)}}
-      >
-        <Col><FontAwesomeIcon
-          icon={faSquarePlus}
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        </Col>
-        {!connected?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
-          :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('view.unit')}</Col>
-      </Button>
-    </span>
-  </OverlayTrigger>
 
   const buttonUpdateView=<OverlayTrigger
     key={'buttonUpdateViewDisabled'}
@@ -1291,12 +1175,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     </span>
   </OverlayTrigger>
 
-  // Button to display a modal where we chose refrence link in the unitary sankey (for more info look func modal_unitary_sankey_sector_node in SankeyPlusNodes)
-  const button_open_modal_unitary_sankey_sector_node=<span><Button variant='light'
-    onClick={()=>set_show_modal_selection_link_ref_in_unitary_sankey(true)}
-  ><Col><FaBars/></Col>
-    <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.choose_link_ref_sankey_unit')}</Col>
-  </Button></span>
 
   const button_delete_actual_view=<span><Button
     variant='light'
@@ -1444,7 +1322,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </Popover>
   
   
-  const has_sector_ref_node_ins_unitary_view=data.unitary_node.length>0 && data.unitary_node.filter(nid=>data.nodes[nid].tags['Type de noeud']&&data.nodes[nid].tags['Type de noeud'].includes('secteur')).length>0
   const file_reder_for_catalog=<Form.Control
     type="file"
     multiple
@@ -1575,8 +1452,7 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
   </OverlayTrigger>
 
   {buttonCreateView}
-  {buttonCreateUnitaryView}
-  {overlayNodeSlector}
+
   {buttonUpdateView}
 
   <OverlayTrigger
@@ -1663,7 +1539,6 @@ export const SankeyPlusBannerView=(data:SankeyPlusData,
     {button_delete_actual_view}
     {master_data && !master_data.is_catalog?button_heredited_attr_from_master:<></>}
     {/* {button_clone_view} */}
-    {has_sector_ref_node_ins_unitary_view? button_open_modal_unitary_sankey_sector_node:<></>}
     {/* {button_import_view}
       {button_export_view} */}
   </>
@@ -2112,56 +1987,10 @@ export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_on
 }
 
 
-const tree_data_nodes=(t:TFunction,data:SankeyPlusData,multi_selected_nodes:{current:SankeyPlusNode[]},filter_node_selector:string[])=>{
-  const tree:treeFolderType={id:'root',name:t('Noeud.TS'),children:[]}
-  Object.values(data.nodes).filter(n=>check_node_has_no_valid_dimensions(n) && check_node_has_node_type(n,filter_node_selector)).forEach(n=>{
-    const sub_tree={id:n.idNode,name:n.name} as treeFolderType
 
 
-    tree.children?tree.children.push(sub_tree):tree.children=[sub_tree]})
 
-  tree.children?.forEach(t=>{
-    const child_t=add_children(data.nodes,data.nodes[t.id],multi_selected_nodes,filter_node_selector)
-    if(child_t.length>0){
-      t.children=child_t
-    }
-  })
-  return tree
-}
 
-const check_node_has_no_valid_dimensions=(n:SankeyPlusNode)=>{
-  if(!n.dimensions){
-    return true
-  }
-  let invalid=true
-  Object.entries(n.dimensions).filter(nd=>nd[0]!=='Primaire').forEach(value_dim=>{
-    if(value_dim[1].parent_name!==undefined){
-      invalid=false
-    }
-
-  })
-  return invalid
-}
-
-const add_children=(nodes:{[x:string]:SankeyPlusNode},n:SankeyPlusNode,multi_selected_nodes:{current:SankeyPlusNode[]},filter_node_selector:string[])=>{
-  const children:treeFolderType[]=[]
-  Object.entries(nodes)
-    .filter(n=>check_node_has_node_type(n,filter_node_selector))
-    .forEach(nn=>{
-      if(nn[1].dimensions){
-        Object.entries(nn[1].dimensions).filter(nd=>nd[0]!=='Primaire' && nd[1].parent_name===n.idNode).forEach(()=>{
-          const c:treeFolderType={id:nn[0],name:nn[1].name}        
-          const child=add_children(nodes,nn[1],multi_selected_nodes,filter_node_selector)
-          if(child.length!==0){
-            c.children=child
-          }
-          children.push(c)
-
-        })
-      }
-    })
-  return children
-}
 
 // const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
       

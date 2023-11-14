@@ -76,12 +76,6 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
     })
   }
 
-  if(data.unitary_node===undefined){
-    data.unitary_node=[]
-  }
-  if(data.process_transfo_ref===undefined){
-    data.process_transfo_ref={}
-  }
 
   if (!data.view) {
     return
