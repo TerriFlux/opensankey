@@ -1151,8 +1151,6 @@ export const processExample = (server_data: SankeyData,updateLayout:(data: Sanke
  * @returns {void, set_show_excel_dialog: (b: boolean) => void, input_file: any, the_url_prefix: string) => void}
  */
 export const uploadExcelImpl = (
-  data: SankeyData,
-  set_data: (data: SankeyData) => void,
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
   the_url_prefix: string
@@ -1938,4 +1936,64 @@ export const FolderIcon = () => {
 }
 export const FolderOpenIcon = () => {
   return <></>
+}
+
+export const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
+  d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
+  d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
+  d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
+
+export const getRandomInt=(max:number) =>{
+  return Math.floor(Math.random() * max)
+}
+
+export const retrieve_excel_results=(text:string,
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  updateLayout:(data: SankeyData, new_layout: SankeyData, mode: string[], synchronize?: boolean) => void,
+  callback: (server_data: SankeyData) => number,
+  min_width_and_height:(data: SankeyData) => number[],
+  convert_data:(d:SankeyData)=>void
+)=>{
+  
+  const server_data = JSON.parse(text)
+  let default_nstyle = data.style_node['default']
+  let default_lstyle = data.style_link['default']
+  server_data.h_space = data.h_space
+  server_data.v_space = data.v_space
+  if ((data as SankeyData & { layout?: SankeyData }).layout ) {
+    server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
+  } else {
+    default_nstyle = JSON.parse(JSON.stringify(data.style_node['default']))
+    default_lstyle = JSON.parse(JSON.stringify(data.style_link['default']))
+  }
+  const new_data=Object.assign(default_sankey_data(),processExample(server_data,updateLayout,convert_data)) as SankeyData
+  new_data.style_node['default'] = default_nstyle
+  new_data.style_link['default'] = default_lstyle
+  callback(new_data)
+  delete (new_data as SankeyData & { layout?: SankeyData }).layout
+  if (Object.values(new_data.nodeTags).filter(tagg=>tagg.show_legend).length>0) {
+    new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg=>tagg[1].show_legend)[0][0]
+    Object.values(new_data.nodes).forEach(el => {
+      el.colorParameter = 'groupTag'
+      el.colorTag = new_data.colorMap
+    })
+  }
+  if (Object.keys(new_data.nodeTags).filter(t=>new_data.nodeTags[t].show_legend).length == 0 &&
+      Object.keys(new_data.fluxTags).filter(tag=>tag === 'flux_type').length == 0 &&
+      Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0 &&
+      Object.values(new_data.links).filter(l=>l.local && l.local.color).length == 0
+  ) {
+    const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
+    const n_keys=Object.keys(new_data.nodes)
+    const size_color=n_keys.length
+
+    for(const i in d3.range(size_color)){
+      assign_node_local_attribute(new_data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
+    }
+  }
+  set_data({ ...new_data })
+  setTimeout(()=>{
+    adjust_sankey_zone(data,min_width_and_height)
+  },100)
 }

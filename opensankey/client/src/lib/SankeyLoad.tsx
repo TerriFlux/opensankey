@@ -170,7 +170,7 @@ const SankeyLoad = ({
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}) => {
+export const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}) => {
   useEffect(() =>{
     const interval = setInterval(() => {
       const root = window.location.href
@@ -192,7 +192,7 @@ const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_p
     }, 5000)
     return () => clearInterval(interval)
   })
-  const infos = result !== undefined ? result.split('\n') : []
+  const infos = (result !== undefined) ? result.split('\n') : []
   if ( infos.length > 2) {
     if (result.includes('FINISHED')) {
       //console.log('finished')

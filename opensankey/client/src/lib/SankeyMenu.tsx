@@ -77,89 +77,6 @@ export const menu_config_width=450
  * @type {{ data: any; set_data: any; right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
 
-const MenuPropTypes = {
-  t:PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  default_sankey_data:PropTypes.func.isRequired,
-  logo: PropTypes.string.isRequired,
-  logo_terriflux: PropTypes.string.isRequired,
-  logo_width: PropTypes.number,
-  app_name: PropTypes.string.isRequired,
-
-  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
-  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
-
-  example_menu: PropTypes.element,
-  formations_menu: PropTypes.object.isRequired,
-  url_prefix: PropTypes.string.isRequired,
-
-
-  nav_item_active: PropTypes.string.isRequired,
-
-  mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
-
-  style_to_apply: PropTypes.string.isRequired,
-  set_style_to_apply: PropTypes.func.isRequired,
-
-  callback:PropTypes.func.isRequired,
-
-  show_load: PropTypes.bool.isRequired,
-  set_show_load: PropTypes.func.isRequired,
-  processing : PropTypes.bool.isRequired,
-  setProcessing : PropTypes.func.isRequired,
-  failure : PropTypes.bool.isRequired,
-  setFailure : PropTypes.func.isRequired,
-  not_started : PropTypes.bool.isRequired,
-  setNotStarted : PropTypes.func.isRequired,
-  result : PropTypes.string.isRequired,
-  setResult : PropTypes.func.isRequired,
-  path: PropTypes.string.isRequired,
-  launch: PropTypes.func.isRequired,
-  configurations_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-
-  show_nav: PropTypes.bool.isRequired,
-  set_show_nav: PropTypes.func.isRequired,
-  show_excel_dialog: PropTypes.bool.isRequired,
-  set_show_excel_dialog: PropTypes.func.isRequired,
-  show_apply_layout: PropTypes.bool.isRequired,
-  set_show_apply_layout: PropTypes.func.isRequired,
-  show_save_json: PropTypes.bool.isRequired,
-  set_show_save_json: PropTypes.func.isRequired,
-  showPreference: PropTypes.bool.isRequired,
-  setShowPreference: PropTypes.func.isRequired,
-  show_publish_dialog:PropTypes.bool.isRequired,
-  set_show_publish_dialog: PropTypes.func.isRequired,
-
-  menus: PropTypes.objectOf(PropTypes.element.isRequired).isRequired,
-  show_modalTemplate:PropTypes.bool.isRequired,
-  set_show_modalTemplate:PropTypes.func.isRequired,
-  cardsTemplate:PropTypes.element.isRequired,
-  external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  min_width_and_height :PropTypes.func.isRequired,
-  reinitialization:PropTypes.func.isRequired,
-  set_show_modale_tuto:PropTypes.func.isRequired,
-  show_modale_tuto:PropTypes.bool.isRequired,
-  show_modale_support:PropTypes.bool.isRequired,
-  set_show_modale_support:PropTypes.func.isRequired,
-  additional_nav_item:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-
-  set_contextualised_node:PropTypes.func.isRequired,
-  set_contextualised_link:PropTypes.func.isRequired,
-  set_tag_contextualised:PropTypes.func.isRequired,
-  set_show_context_zdd:PropTypes.func.isRequired,
-  updateLayout:PropTypes.func.isRequired,
-  convert_data:PropTypes.func.isRequired,
-  node_hspace:PropTypes.number.isRequired,
-  set_node_hspace:PropTypes.func.isRequired,
-  node_vspace:PropTypes.number.isRequired,
-  set_node_vspace:PropTypes.func.isRequired,
-  apply_transformation_additional_elements: PropTypes.func.isRequired,
-  DiagramSelector: PropTypes.func.isRequired,
-  is_computing:PropTypes.bool.isRequired,
-  setIsComputing:PropTypes.func.isRequired,
-  set_tags_selected:PropTypes.func.isRequired,
-}
 
 
 const goToUserDoc = () => {
@@ -781,6 +698,92 @@ export const OpenSankeyMenus = (
 
 }
 
+
+
+
+const MenuPropTypes = {
+  t:PropTypes.func.isRequired,
+  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_data: PropTypes.func.isRequired,
+  logo: PropTypes.string.isRequired,
+  logo_terriflux: PropTypes.string.isRequired,
+  logo_width: PropTypes.number,
+  app_name: PropTypes.string.isRequired,
+
+  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
+
+  example_menu: PropTypes.element,
+  formations_menu: PropTypes.object.isRequired,
+  url_prefix: PropTypes.string.isRequired,
+
+
+  nav_item_active: PropTypes.string.isRequired,
+
+  mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
+
+  style_to_apply: PropTypes.string.isRequired,
+  set_style_to_apply: PropTypes.func.isRequired,
+
+  callback:PropTypes.func.isRequired,
+
+  show_load: PropTypes.bool.isRequired,
+  set_show_load: PropTypes.func.isRequired,
+  processing : PropTypes.bool.isRequired,
+  setProcessing : PropTypes.func.isRequired,
+  failure : PropTypes.bool.isRequired,
+  setFailure : PropTypes.func.isRequired,
+  not_started : PropTypes.bool.isRequired,
+  setNotStarted : PropTypes.func.isRequired,
+  result : PropTypes.string.isRequired,
+  setResult : PropTypes.func.isRequired,
+  path: PropTypes.string.isRequired,
+  launch: PropTypes.func.isRequired,
+  configurations_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+
+  show_nav: PropTypes.bool.isRequired,
+  set_show_nav: PropTypes.func.isRequired,
+  show_excel_dialog: PropTypes.bool.isRequired,
+  set_show_excel_dialog: PropTypes.func.isRequired,
+  show_apply_layout: PropTypes.bool.isRequired,
+  set_show_apply_layout: PropTypes.func.isRequired,
+  show_save_json: PropTypes.bool.isRequired,
+  set_show_save_json: PropTypes.func.isRequired,
+  showPreference: PropTypes.bool.isRequired,
+  setShowPreference: PropTypes.func.isRequired,
+  show_publish_dialog:PropTypes.bool.isRequired,
+  set_show_publish_dialog: PropTypes.func.isRequired,
+
+  menus: PropTypes.objectOf(PropTypes.element.isRequired).isRequired,
+  show_modalTemplate:PropTypes.bool.isRequired,
+  set_show_modalTemplate:PropTypes.func.isRequired,
+  cardsTemplate:PropTypes.element.isRequired,
+  external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  min_width_and_height :PropTypes.func.isRequired,
+  reinitialization:PropTypes.func.isRequired,
+  set_show_modale_tuto:PropTypes.func.isRequired,
+  show_modale_tuto:PropTypes.bool.isRequired,
+  show_modale_support:PropTypes.bool.isRequired,
+  set_show_modale_support:PropTypes.func.isRequired,
+  additional_nav_item:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+
+  set_contextualised_node:PropTypes.func.isRequired,
+  set_contextualised_link:PropTypes.func.isRequired,
+  set_tag_contextualised:PropTypes.func.isRequired,
+  set_show_context_zdd:PropTypes.func.isRequired,
+  updateLayout:PropTypes.func.isRequired,
+  convert_data:PropTypes.func.isRequired,
+  node_hspace:PropTypes.number.isRequired,
+  set_node_hspace:PropTypes.func.isRequired,
+  node_vspace:PropTypes.number.isRequired,
+  set_node_vspace:PropTypes.func.isRequired,
+  apply_transformation_additional_elements: PropTypes.func.isRequired,
+  DiagramSelector: PropTypes.func.isRequired,
+  is_computing:PropTypes.bool.isRequired,
+  setIsComputing:PropTypes.func.isRequired,
+  set_tags_selected:PropTypes.func.isRequired,
+  retrieve_excel_results:PropTypes.func.isRequired,
+}
 /**
  * Description placeholder
  *
@@ -801,7 +804,6 @@ type MenuTypes = InferProps<typeof MenuPropTypes>
 const Menu: FunctionComponent<MenuTypes> = (
   { t,
     data, set_data,
-    default_sankey_data,
     nav_item_active,
     show_nav,
     set_show_nav,
@@ -843,8 +845,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     apply_transformation_additional_elements,
     DiagramSelector,
     is_computing, setIsComputing,
-    set_tags_selected
-
+    set_tags_selected,
+    retrieve_excel_results
   }
 ) => {
 
@@ -860,14 +862,6 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
-    d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
-    d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
-    d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
-
-  const getRandomInt=(max:number) =>{
-    return Math.floor(Math.random() * max)
-  }
   if (not_started == false && processing == false) {
     const path = window.location.href
     const url = path + url_prefix + 'loads_retrieves_result'
@@ -879,46 +873,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     fetch(url, fetchData).then(response => {
       response.text().then(text => {
         try {
-          const server_data = JSON.parse(text)
-          let default_nstyle = data.style_node['default']
-          let default_lstyle = data.style_link['default']
-          server_data.h_space = data.h_space
-          server_data.v_space = data.v_space
-          if ((data as SankeyData & { layout?: SankeyData }).layout ) {
-            server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
-          } else {
-            default_nstyle = JSON.parse(JSON.stringify(data.style_node['default']))
-            default_lstyle = JSON.parse(JSON.stringify(data.style_link['default']))
-          }
-          const new_data=Object.assign(default_sankey_data(),SankeyUtils.processExample(server_data,updateLayout,convert_data)) as SankeyData
-          new_data.style_node['default'] = default_nstyle
-          new_data.style_link['default'] = default_lstyle
-          callback(new_data)
-          delete (new_data as SankeyData & { layout?: SankeyData }).layout
-          if (Object.values(new_data.nodeTags).filter(tagg=>tagg.show_legend).length>0) {
-            new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg=>tagg[1].show_legend)[0][0]
-            Object.values(new_data.nodes).forEach(el => {
-              el.colorParameter = 'groupTag'
-              el.colorTag = new_data.colorMap
-            })
-          }
-          if (Object.keys(new_data.nodeTags).filter(t=>new_data.nodeTags[t].show_legend).length == 0 &&
-              Object.keys(new_data.fluxTags).filter(tag=>tag === 'flux_type').length == 0 &&
-              Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0 &&
-              Object.values(new_data.links).filter(l=>l.local && l.local.color).length == 0
-          ) {
-            const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
-            const n_keys=Object.keys(new_data.nodes)
-            const size_color=n_keys.length
-
-            for(const i in d3.range(size_color)){
-              SankeyUtils.assign_node_local_attribute(new_data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
-            }
-          }
-          set_data({ ...new_data })
-          setTimeout(()=>{
-            SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
-          },100)
+          retrieve_excel_results(text)
         } catch(err) {
           alert(err)
         }
@@ -1250,8 +1205,6 @@ const Menu: FunctionComponent<MenuTypes> = (
         launch={launch}
         handleCloseDialog={() => set_show_excel_dialog(false)}
         uploadExcelImpl={SankeyUtils.uploadExcelImpl}
-        set_data={set_data}
-        data={data}
         show_excel_dialog={show_excel_dialog}
         set_show_excel_dialog={set_show_excel_dialog}
         url_prefix={url_prefix}
