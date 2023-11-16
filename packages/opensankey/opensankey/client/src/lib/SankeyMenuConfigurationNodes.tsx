@@ -363,7 +363,7 @@ export default SankeyNodeEdition
 
 
 
-const tree_data_nodes=(t:TFunction,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
+export const tree_data_nodes=(t:TFunction,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
   filter_node_selector:string[]
 )=>{
 
@@ -400,7 +400,7 @@ const check_node_has_no_valid_dimensions=(n:SankeyNode)=>{
   return invalid
 }
 
-const add_children=(nodes:{[x:string]:SankeyNode},n:SankeyNode,multi_selected_nodes:{current:SankeyNode[]},displayed_node_selector:boolean,node_visible:string[],filter_node_selector:string[])=>{
+export const add_children=(nodes:{[x:string]:SankeyNode},n:SankeyNode,multi_selected_nodes:{current:SankeyNode[]},displayed_node_selector:boolean,node_visible:string[],filter_node_selector:string[])=>{
   const children:treeFolderType[]=[]
   Object.entries(nodes)
     .filter(nd=> check_node_has_node_type(nd[1] as SankeyNode,filter_node_selector))
@@ -423,7 +423,7 @@ const add_children=(nodes:{[x:string]:SankeyNode},n:SankeyNode,multi_selected_no
   return children
 }
 
-const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
+export const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
       
   if(tree.children && path.length>0){
     const index=path.shift()??-1

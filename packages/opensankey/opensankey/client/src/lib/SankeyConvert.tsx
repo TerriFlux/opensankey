@@ -918,7 +918,7 @@ export const convert_nodes = (
 
       // Nodes with type Echanges did not have the correct dimensions
       if ( n.tags['Echanges'] ) {
-        let new_dimensions = {
+        const new_dimensions = {
           'Primaire' : n.dimensions['Primaire'],
           'Echanges' : n.dimensions['Echanges']
         }

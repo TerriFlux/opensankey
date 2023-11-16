@@ -1216,3 +1216,8 @@ textarea {
 .typeIconContainer:not(:has(svg)){
 	display: none;
 }
+
+/* Style for tabs in Unit. button from view banner */
+#popover-creation_unitary_view .navbar-nav{
+flex-direction: initial;
+}
