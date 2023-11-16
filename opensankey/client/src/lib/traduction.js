@@ -210,7 +210,7 @@ export const open_resources = {
           LegY:'Vertical distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegWidth:'Width (in px) for the legend space',
           BgC:'Change the background color of the interactive graphic space',
-          checkpoint:'Save the data in the browser to not lost it when you leave the application',
+          checkpoint:'Local data saving on the browser (cache memory)',
           fontSize:'Change the size of the font in the legend',
           node_label_sep:'String of text that will be used to hide some part of a node label, exemple: separator is " - " and node name is "node1 - subinfo" the node label displayed in the drawing area will be "node1"'
         },
@@ -371,7 +371,7 @@ export const open_resources = {
             Milieu_ph_val:'Displays the associated value in the middle (horizontally) of the selected node(s)',
             droite_val:'Displays the associated value to the right of the selected node(s)',
           }
-        },       
+        },
         tags_node:{
           tags:'Tags',
           Appartenance:'Affiliations'
@@ -540,21 +540,20 @@ export const open_resources = {
         visible:'Visible',
         hlp_1:'Sankey diagram',
         hlp_1_txt_1:'The thickness of an arrow is proportional to the value of the flux it represents.',
-        hlp_1_txt_2:'The diagram can be viewed with different levels of aggregation using the Level of Detail> selector',
+        hlp_1_txt_2:'Choose the displayed level of aggregation for all the diagram\'s nodes',
         hlp_1_txt_3:'Filters can be used to display only parts of the diagram. To do this use the selectors',
         hlp_1_txt_4:'Different color palettes can be used to color nodes and links using the Color Palette selector',
         hlp_1_txt_5:'The diagram structure (without link thickness) can be displayed by checking Diagram structure',
         hlp_1_txt_6:'The diagram can be adjusted on screen by checking Adjust on screen',
         hlp_1_txt_7:'To get information about each link, press shift and move the mouse over the link',
-        hlp_1_txt_8:'Setting setting some visual parameters for the elements of the sankey',
+        hlp_1_txt_8:'Links visualisations settings',
         hlp_1_txt_9:'Dropdown to filter node/link/data according to their group tag or to choose to display the diagram with color palette from a tag group.',
         tooltipAdjust:'Readjust the drawing area to the screen size',
-        tooltipStructure:'Allows to display the structure of the diagram without proportion of the links according to their value',
-        tooltipData:'Allows to display the data of the diagram',
+        tooltipStructure:'Visualisation settings for the diagram\'s structure',
         tooltipSelection:'Allows to drag the nodes',
         tooltipHelp:'Show the help dialog',
         tooltipAjoutNode:'Adds a node to the mouse click',
-        tooltipLiason:'Allows to create links between two existing nodes, from an existing node or to an existing node'
+        tooltipLiason:'Create node(s) or link(s)'
       },
       welcome:{
         welcome:'Welcome to OpenSankey web application',
@@ -794,12 +793,10 @@ export const open_resources = {
           LegY:'Ecart vertical (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
           LegWidth:'Largeur (en px) de l\'espace de la légende',
           BgC:'Changer la couleur fond de l\'espace graphique interactif',
-          checkpoint:'Enregistre les données dans le navigateur pour ne pas les perdre les quand vous quittez l\'application',
-          fontSize:'Modilie la taille de la font dans la légende',
+          checkpoint:'Sauvegarde locale sur le navigateur (mémoire cache)',
+          fontSize:'Modifie la taille de la police pour la légende',
           node_label_sep:'Chaine de caractère qui permettra de masquer une partie d\'un label de noeud, exemple : le séparateur est " - " et le nom du noeud est " noeud1 - sousinfo" alors le label du noeud affiché dans la zone de dessin sera "noeud1"',
         },
-
-
       },
       MEP:{
         onBlur:'La valeur sera appliqué dès que l\'on quitte l\'input ou presser la touche entrée',
@@ -1127,20 +1124,19 @@ export const open_resources = {
         visible:'Visible',
         hlp_1:'Les diagrammes de Sankey',
         hlp_1_txt_1:'L\'épaisseur d\'une flèche est proportionnelle à la valeur du flux qu\'elle représente.',
-        hlp_1_txt_2:'Le diagramme peut être visualisé avec différents niveaux d\'agrégations en utilisant le sélecteur Niveau de détail',
+        hlp_1_txt_2:'Choisir le niveau d\'agrégation des noeuds du diagramme',
         hlp_1_txt_3:'Des filtres peuvent être utilisés pour n\'afficher que des parties du diagramme. Pour cela utiliser les selecteurs',
         hlp_1_txt_4:'Différents palettes de couleurs peuvent être utiliser pour colorer les noeuds et les flux en utilisant le sélecteur Palette de Couleurs',
         hlp_1_txt_5:'La structure du diagramme (sans épaisseur de flux) peut être affiché en cochant Structure du diagramme',
         hlp_1_txt_6:'Le diagramme peut être ajusté à l\'écran en cochant Ajuster à l\'écran',
         hlp_1_txt_7:'Pour obtenir des informations sur chaque flux, appuyer sur shift et passer la souris sur le flux.',
-        hlp_1_txt_8:'Pour gérer des paramètres sur les éléments visibles du sankey',
+        hlp_1_txt_8:'Paramétrage visuel des flux',
         hlp_1_txt_9:'Menu déroulant pour filtrer les noeuds/flux/données selon leur groupe d\'étiquette associée ou bien pour appliquer des couleurs au diagramme avec la palette de couleurs du groupe d\'étiquette.',
-        tooltipAdjust:'Permet de réajuster la zone de dessin à la taille de l\'écran',
-        tooltipStructure:'Permet d\'afficher la structure du diagramme sans proportion des flux selon leur valeur',
-        tooltipData:'Permet d\'afficher les données du diagramme',
-        tooltipSelection:'Permet de sélectionner ou de déplacer les noeuds',
+        tooltipAdjust:'Réajuster la zone de dessin à la taille de l\'écran',
+        tooltipStructure:'Paramétrage visuel de la structure du diagramme',
+        tooltipSelection:'Sélectionner ou de déplacer les noeuds',
         tooltipHelp:'Affiche le dialogue d\'aide',
-        tooltipLiason:'Permet de créer des flux entre deux noeuds existants, depuis un noeud existant ou vers un noeud existant'
+        tooltipLiason:'Créer un noeud ou un flux'
       },
       welcome:{
         welcome:'Bienvenue sur l\'application web OpenSankey',
