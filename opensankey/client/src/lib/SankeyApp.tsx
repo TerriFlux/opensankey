@@ -418,12 +418,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       /* eslint-enable */
 
   const display_nodes = Object.keys(data.nodes)
-  .filter((key) => SankeyUtils.node_displayed(data,data.nodes[key]))
-  .reduce((obj, key) => {
-    return Object.assign(obj, {
-      [key]: data.nodes[key]
-    })
-  }, {}) as {[idNode:string]:SankeyNode}
+    .filter((key) => SankeyUtils.node_displayed(data,data.nodes[key]))
+    .reduce((obj, key) => {
+      return Object.assign(obj, {
+        [key]: data.nodes[key]
+      })
+    }, {}) as {[idNode:string]:SankeyNode}
   useEffect(()=>{
     const pre_display_links=Object.keys(data.links)
       .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
@@ -545,6 +545,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   external_menu_modal.push(modale_style_node)
 
 
+  
+  const processExcel=(text:string)=>SankeyUtils.retrieve_excel_results(text,data,set_data,updateLayout,()=>0,min_width_and_height,convert_data)
+
+
+
+
   const d= (
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <>
@@ -553,7 +559,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             t={t}
             data={data}
             set_data={set_data}
-            default_sankey_data={SankeyUtils.default_sankey_data}
             show_nav={show_nav}
             set_show_nav={set_show_nav}
             nav_item_active={nav_item_active}
@@ -621,6 +626,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             is_computing={is_computing}
             setIsComputing={setIsComputing}
             set_tags_selected={set_tags_selected}
+            retrieve_excel_results={processExcel}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
