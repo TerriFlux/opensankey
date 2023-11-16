@@ -693,8 +693,6 @@ const ExcelModalPropTypes = {
   t:PropTypes.func.isRequired,
   uploadExcelImpl: PropTypes.func.isRequired,
   handleCloseDialog: PropTypes.func.isRequired,
-  set_data: PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
   show_excel_dialog: PropTypes.bool.isRequired,
   set_show_excel_dialog: PropTypes.func.isRequired,
   url_prefix: PropTypes.string.isRequired,
@@ -710,7 +708,7 @@ type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelImpl, handleCloseDialog, set_data, data,show_excel_dialog, set_show_excel_dialog,url_prefix,callback,launch }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelImpl, handleCloseDialog, show_excel_dialog, set_show_excel_dialog,url_prefix,callback,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
 
   return (
@@ -740,7 +738,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelIm
           onClick={
             () => {
               launch('')
-              uploadExcelImpl(data,set_data,set_show_excel_dialog,input_file_name,url_prefix,callback)
+              uploadExcelImpl(set_show_excel_dialog,input_file_name,url_prefix,callback)
             }
           }
         >Ouvrir</Button>
