@@ -2318,9 +2318,11 @@ const  dataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
               style={{ color:'black' }}
               placeholder='all' value={selected} 
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                let has_suffix=false
                 const pl=Object.entries(data.links).map(l=>{
                   const suffixeStart= l[0].indexOf('_')
                   if(suffixeStart>=0){
+                    has_suffix=true
                     l[0]=l[0].slice(0,suffixeStart)
                     l[1].idLink=l[0]
                     data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
@@ -2340,6 +2342,12 @@ const  dataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
                 })
                 // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
                 const pureLinks=Object.fromEntries(pl)
+
+                // Check si on avait des flux avec suffixes, si c'est le cas : reforme linksZIndex
+                if(has_suffix){
+                  data.linkZIndex=Object.keys(pureLinks)
+                }
+
                 data.links=pureLinks
                 handleSimpleDropdown(evt, tags_group,data,set_data)
                 const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
@@ -2401,6 +2409,7 @@ const  dataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
                     SankeyUtils.recursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
                   })
                   data.links=new_links
+                  data.linkZIndex=Object.keys(new_links)
                   set_data({...data})
                 }
               }} /></Col>
