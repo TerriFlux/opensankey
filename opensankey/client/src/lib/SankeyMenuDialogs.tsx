@@ -30,7 +30,8 @@ const ApplyLayoutDialogPropTypes = {
   node_vspace:PropTypes.number.isRequired,
   set_node_vspace:PropTypes.func.isRequired,
   diagramSelector: PropTypes.func.isRequired,
-  apply_transformation_additional_elements: PropTypes.func.isRequired,
+  elementToDispose:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  apply_transformation_additional_elements: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
 
 }
 
@@ -49,9 +50,9 @@ export const ApplyLayoutDialog = ({
   t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data,
   updateLayout,convert_data,node_hspace,set_node_hspace,node_vspace,set_node_vspace,
   diagramSelector,
+  elementToDispose,
   apply_transformation_additional_elements,
 }: ApplyLayoutDialogTypes) => {
-  const [elementToDispose, ] = useState([''])
   const [prev_sankey_data,set_prev_sankey_data] = useState(sankey_data)
   const [forceUpdate,setForceUpdate] = useState(true)
   const [stretchFactorH,set_stretchFactorH]=useState(1)
@@ -421,7 +422,7 @@ export const ApplyLayoutDialog = ({
             }
           >{elementToDispose.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
         </InputGroup></OverlayTrigger>
-      {apply_transformation_additional_elements(t,forceUpdate,setForceUpdate,elementToDispose).map((c:JSX.Element,i:number)=>{
+      {apply_transformation_additional_elements.map((c:JSX.Element,i:number)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>
       })}
     </Tab>
