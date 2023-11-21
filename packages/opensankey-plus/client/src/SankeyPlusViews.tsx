@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import LZString from 'lz-string'
 
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup, Overlay, Tabs, Tab } from 'react-bootstrap'
+import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup, Overlay } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaCopy} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -928,13 +928,7 @@ export const SankeyPlusBannerView=(
   select_or_edit:'select'|'edit',
   set_select_or_edit:(s:'select'|'edit')=>void,
   convert_data:(d:SankeyPlusData)=>void,
-  is_for_unitary_view:boolean,
-  set_is_for_unitary_view:(b:boolean)=>void,
-  set_show_excel_dialog:(b:boolean)=>void,
-  launch:(path: string) => void,
-  url_prefix:string,
-  callback:(server_data: SankeyPlusData) => number,
-  uploadExcelImpl: (set_show_excel_dialog: (b: boolean) => void, input_file: Blob|undefined, the_url_prefix: string,callback:(server_data: SankeyPlusData) => number) => void
+  
 )=>{
 
   const m_d=master_data?master_data:data
