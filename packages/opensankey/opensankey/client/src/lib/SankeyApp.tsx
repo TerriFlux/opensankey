@@ -84,6 +84,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [never_see_again,set_never_see_again]=useState((localStorage.getItem('dontSeeAggainWelcome')==='1'))
   const [show_modale_tuto,set_show_modale_tuto]=useState(false)
   const [show_modale_support,set_show_modale_support]=useState(false)
+  const [elementToDispose, ] = useState([''])
   const set_data=(ndata:SankeyData)=>{
     set_user_scale(ndata.user_scale)
     if(ndata.legend_position!==legend_position){
@@ -621,7 +622,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             set_node_hspace={set_node_hspace}
             node_vspace={node_vspace}
             set_node_vspace={set_node_vspace}
-            apply_transformation_additional_elements={()=>[]}
+            elementToDispose={elementToDispose}
+            apply_transformation_additional_elements={[]}
             DiagramSelector={OpenSankeyDiagramSelector}
             is_computing={is_computing}
             setIsComputing={setIsComputing}
