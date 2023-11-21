@@ -776,8 +776,9 @@ const MenuPropTypes = {
   node_hspace:PropTypes.number.isRequired,
   set_node_hspace:PropTypes.func.isRequired,
   node_vspace:PropTypes.number.isRequired,
-  set_node_vspace:PropTypes.func.isRequired,
-  apply_transformation_additional_elements: PropTypes.func.isRequired,
+  set_node_vspace:PropTypes.func.isRequired, 
+  elementToDispose:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  apply_transformation_additional_elements: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   DiagramSelector: PropTypes.func.isRequired,
   is_computing:PropTypes.bool.isRequired,
   setIsComputing:PropTypes.func.isRequired,
@@ -842,6 +843,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     convert_data,
     node_hspace,set_node_hspace,
     node_vspace,set_node_vspace,
+    elementToDispose,
     apply_transformation_additional_elements,
     DiagramSelector,
     is_computing, setIsComputing,
@@ -1196,6 +1198,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_node_hspace={set_node_hspace}
         node_vspace={node_vspace}
         set_node_vspace={set_node_vspace}
+        elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
       />
