@@ -4,7 +4,7 @@ import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_da
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
 import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
 import { synchronizeNodesandLinksId } from 'open-sankey/dist/SankeyLayout'
-import { InputGroup, Button, Form } from 'react-bootstrap'
+import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
 import { TFunction } from 'i18next'
 import { FaCheck } from 'react-icons/fa'
@@ -271,47 +271,64 @@ export const OpenSankeyPlusDiagramSelector = (
 }
 
 export const apply_transformation_opensankey_plus_elements = (
+  data:SankeyPlusData,
   t:TFunction,
   forceUpdate: boolean,
   setForceUpdate: (b:boolean)=>null,
   elementToDispose: string[]
-) => {return [
-  <InputGroup>
-    <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
-    <Button
-      className='btn_menu_config'
-      style={{width:'20%'}}
-      variant={elementToDispose.includes('freeLabels')?'primary':'outline-primary'} 
-      onClick={() => {
-        if(!elementToDispose.includes('freeLabels')){
-          elementToDispose.push('freeLabels')
-          setForceUpdate(!forceUpdate)
-        }else{
-          elementToDispose.splice(elementToDispose.indexOf('freeLabels'),1)
-          setForceUpdate(!forceUpdate)
-        }}
-      }
-    >{elementToDispose.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+) => {
+  // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
+  const is_current_data_master=data.current_view==='none'
+  return [
+    <InputGroup>
+      <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
+      <Button
+        className='btn_menu_config'
+        style={{width:'20%'}}
+        variant={elementToDispose.includes('freeLabels')?'primary':'outline-primary'} 
+        onClick={() => {
+          if(!elementToDispose.includes('freeLabels')){
+            elementToDispose.push('freeLabels')
+            setForceUpdate(!forceUpdate)
+          }else{
+            elementToDispose.splice(elementToDispose.indexOf('freeLabels'),1)
+            setForceUpdate(!forceUpdate)
+          }}
+        }
+      >{elementToDispose.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
     
-  </InputGroup>,
-  <InputGroup>
-    <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Views')}</InputGroup.Text>
-    <Button
-      className='btn_menu_config'
-      style={{width:'20%'}}
-      variant={elementToDispose.includes('Views')?'primary':'outline-primary'} 
-      onClick={() => {
-        if(!elementToDispose.includes('Views')){
-          elementToDispose.push('Views')
-          setForceUpdate(!forceUpdate)
-        }else{
-          elementToDispose.splice(elementToDispose.indexOf('Views'),1)
-          setForceUpdate(!forceUpdate)
-        }}
-      }
-    >{elementToDispose.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-  </InputGroup> 
-]}
+    </InputGroup>,
+    <OverlayTrigger
+      key={'noeud.apparence.tooltips.4'}
+      placement={'top'}
+      delay={500}
+      overlay={!is_current_data_master?<Tooltip id={'transformation_view'}>{t('Menu.Transformation.disabled_view')} </Tooltip>:<></>}>
+
+      <InputGroup>
+        <InputGroup.Text
+          style={{width:'20%',
+            color:(!is_current_data_master)?'#666666':'',
+            backgroundColor:(!is_current_data_master)?'#cccccc':'',
+          }}
+        >{t('Menu.Transformation.Views')}</InputGroup.Text>
+        <Button
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          disabled={!is_current_data_master}
+          variant={elementToDispose.includes('Views')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!elementToDispose.includes('Views')){
+              elementToDispose.push('Views')
+              setForceUpdate(!forceUpdate)
+            }else{
+              elementToDispose.splice(elementToDispose.indexOf('Views'),1)
+              setForceUpdate(!forceUpdate)
+            }}
+          }
+        >{elementToDispose.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      </InputGroup>
+    </OverlayTrigger>
+  ]}
 
 export const plus_sankey_layout=(
   data:SankeyPlusData,
