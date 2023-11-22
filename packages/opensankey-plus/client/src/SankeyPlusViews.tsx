@@ -1879,9 +1879,10 @@ export const modal_transparent_view_attr=(show_modal_transparent_view_attr:boole
               current_view.heredited_attr_from_master.push('tagNode')
             }else{
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'),1)
-                    
-    
-            }}
+            }
+            set_data({...data})
+            set_master_data({...master_data})
+          }
           }
         >{t('Menu.Transformation.tagNode')}</Button>
 
