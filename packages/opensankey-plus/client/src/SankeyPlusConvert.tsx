@@ -282,7 +282,6 @@ export const apply_transformation_opensankey_plus_elements = (
 ) => {
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
   const is_current_data_master=data.current_view==='none'
-  console.log(data.current_view)
   return [
     <InputGroup>
       <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
