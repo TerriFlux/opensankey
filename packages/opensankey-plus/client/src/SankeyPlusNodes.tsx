@@ -748,11 +748,6 @@ export const SankeyPlusDrawNodesIcon = (
       .filter(d => d.iconName !== 'none' && d.iconVisible)
       .append('svg')
       .attr('viewBox',d=> d.iconViewBox?d.iconViewBox:'0 0 1000 1000')
-      .attr('transform', n => {
-        const shiftV = (+d3.select(' .opensankey #shape_' + n.idNode).attr('height') ) / 2
-        const shiftH = (+d3.select(' .opensankey #shape_' + n.idNode).attr('width') ) / 2
-        return 'translate(' + shiftH + ',' + shiftV + ')'
-      })
       .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
       .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
       .attr('x', 0)
