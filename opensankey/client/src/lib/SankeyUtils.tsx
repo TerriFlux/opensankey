@@ -899,7 +899,7 @@ export const default_node_style=()=>{
     label_vert_valeur: 'top',
     label_horiz_valeur: 'middle',
     value_font_size:14,
-    label_box_width: 110,
+    label_box_width: 150,
     label_color:false,
 
   }
