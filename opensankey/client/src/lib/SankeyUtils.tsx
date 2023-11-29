@@ -620,6 +620,7 @@ export const default_sankey_data = (): SankeyData => {
     user_scale: 20,
 
     accordeonToShow: ['MEP'],
+    override_type_node_shape:false,
 
     width: window.innerWidth - 50,
     height: window.innerHeight - 50,

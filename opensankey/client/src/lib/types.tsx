@@ -282,6 +282,7 @@ export const SankeyDataPropTypes = {
   fluxTags: TagsCatalogPropTypes,
   levelTags:TagsCatalogPropTypes,
   colorMap: PropTypes.string.isRequired,
+  override_type_node_shape:PropTypes.bool.isRequired,
 
   legend_width:PropTypes.number.isRequired,
   node_label_separator:PropTypes.string.isRequired

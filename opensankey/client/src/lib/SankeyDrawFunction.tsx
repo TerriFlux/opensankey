@@ -546,7 +546,7 @@ export const setNodeHeight = (
   }
   d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))
-  if (n.tags['Type de noeud'] && n.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[n.tags['Type de noeud'][0]].shape === 'ellipse') {
+  if (!data.override_type_node_shape && n.tags['Type de noeud'] && n.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[n.tags['Type de noeud'][0]].shape === 'ellipse') {
     d3.select(' .opensankey #shape_' + n.idNode).attr('rx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #shape_' + n.idNode).attr('cx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #shape_' + n.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1215,7 +1215,7 @@ export const setNodesHeight = (
 
   d3.select(' .opensankey #shape_' + source_node.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #shape_' + source_node.idNode).attr('height', scale(node_size_s_height))
-  if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse' || !source_node.tags['Type de noeud'] && return_value_node(data,source_node,'shape')=='ellipse' ) {
+  if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse' || ((!source_node.tags['Type de noeud']  || data.override_type_node_shape)&& return_value_node(data,source_node,'shape')=='ellipse' )) {
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1224,7 +1224,7 @@ export const setNodesHeight = (
 
   d3.select(' .opensankey #shape_' + target_node.idNode).attr('width', scale(node_size_t_width))
   d3.select(' .opensankey #shape_' + target_node.idNode).attr('height', scale(node_size_t_height))
-  if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse'|| !target_node.tags['Type de noeud'] && return_value_node(data,target_node,'shape')=='ellipse') {
+  if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse'|| ((!target_node.tags['Type de noeud'] || data.override_type_node_shape) && return_value_node(data,target_node,'shape')=='ellipse')) {
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))

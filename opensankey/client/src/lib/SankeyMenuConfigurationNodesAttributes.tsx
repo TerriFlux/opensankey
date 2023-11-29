@@ -143,7 +143,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     set_data({ ...data })
   }
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
-  const has_NodeType_Tag= (!menu_for_style && multi_selected_nodes.current.length>0)?(Object.keys(multi_selected_nodes.current[0].tags).includes('Type de noeud') && multi_selected_nodes.current[0].tags['Type de noeud'].length>0 ):false
+  const has_NodeType_Tag= (!data.override_type_node_shape && !menu_for_style && multi_selected_nodes.current.length>0)?(Object.keys(multi_selected_nodes.current[0].tags).includes('Type de noeud') && multi_selected_nodes.current[0].tags['Type de noeud'].length>0 ):false
 
   const content_appearence=<Form.Group>
     {/* Visibilite du noeud */}
