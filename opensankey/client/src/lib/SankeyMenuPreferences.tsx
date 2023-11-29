@@ -4,7 +4,10 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form,  Modal, Button, ButtonGroup,Col,Row, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
 import { SankeyData } from './types'
 import { TFunction,i18n } from 'i18next'
-import { FaEyeSlash,FaEye } from 'react-icons/fa'
+import { FaEyeSlash,FaEye,FaCheck} from 'react-icons/fa'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
+
 const modalPreferencePropTypes = {
   showPreference: PropTypes.bool.isRequired,
   setShowPreference: PropTypes.func.isRequired,
@@ -132,7 +135,30 @@ export const OpenSankeyDefaultModalePreferenceContent=(
           data.node_label_separator=evt.target.value
           set_data({...data})
         }}></Form.Control>
-      </InputGroup></OverlayTrigger>
+      </InputGroup></OverlayTrigger>,
+
+      // Button to allow the user to choose the shape of the node even if it has the node tags 'Type de noeud'
+    'override_node_shape':<OverlayTrigger
+      key={'noeud.apparence.tooltips.ons'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.override_type_node_shape')} </Tooltip>}>
+
+      <InputGroup>
+        <InputGroup.Text
+          style={{width:'40%'}}>
+          {t('Noeud.apparence.override_type_node_shape')}
+        </InputGroup.Text>
+
+        <Button className='btn_menu_config'
+          style={{width:'10%'}}
+          variant={data.override_type_node_shape?'primary':'outline-primary'}
+          onClick={() => {
+            data.override_type_node_shape=!data.override_type_node_shape
+            set_data({ ...data })
+          }}>{data.override_type_node_shape?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      </InputGroup>
+    </OverlayTrigger>
 
 
   }
