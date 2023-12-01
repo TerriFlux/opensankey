@@ -4,7 +4,7 @@ import { Popover, Form,Pagination,Button,ButtonGroup,Carousel} from 'react-boots
 import * as d3 from 'd3'
 
 import SankeyDraw from './SankeyDraw'
-import Menu, { OpenSankeyMenus,OpenSankeyModalWelcome,context_menu_node,context_menu_link,menu_draggable,context_zdd} from './SankeyMenu'
+import Menu, { OpenSankeyMenus,OpenSankeyModalWelcome,context_menu_node,context_menu_link,menu_draggable,context_zdd,OpenSankeySaveButton,LastCheckpointTime} from './SankeyMenu'
 import { SankeySettingsEditionElementTags } from './SankeyMenuConfigurationTags'
 import * as SankeyUtils from './SankeyUtils'
 import {OpenSankeyConfigurationsMenus} from './SankeyMenuConfiguration'
@@ -339,6 +339,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     showPreference={showPreference}
     setShowPreference={setShowPreference}
     ui={elments_of_modale_preference}
+    t={t}
   />
   external_menu_modal.push(modale_preference)
   external_menu_modal.push(intro_modal)
@@ -549,7 +550,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   
   const processExcel=(text:string)=>SankeyUtils.retrieve_excel_results(text,data,set_data,updateLayout,()=>0,min_width_and_height,convert_data)
 
+  const additional_nav_item=[]
 
+  const checkpoint_time=LastCheckpointTime(t)
+  additional_nav_item.push(checkpoint_time)
+  const checkpoint_button=OpenSankeySaveButton(t)
+  additional_nav_item.push(checkpoint_button)
 
 
   const d= (
@@ -611,7 +617,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             show_modale_tuto={show_modale_tuto}
             show_modale_support={show_modale_support}
             set_show_modale_support={set_show_modale_support}
-            additional_nav_item={[] as JSX.Element[]}
+            additional_nav_item={additional_nav_item}
             set_contextualised_node={set_contextualised_node}
             set_contextualised_link={set_contextualised_link}
             set_tag_contextualised={set_tag_contextualised}
