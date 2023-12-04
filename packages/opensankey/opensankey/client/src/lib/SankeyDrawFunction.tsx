@@ -4,7 +4,18 @@ import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve,drawArrowsType } from './types'
 import { InferProps } from 'prop-types'
-import { compute_total_offsets, test_link_value,link_color,default_node,default_link,link_visible,get_vertical_marfin_for_sankey_zone,node_displayed,return_value_node,return_value_link, assign_link_local_attribute, toPrecision} from './SankeyUtils'
+import { ComputeTotalOffsets,
+  TestLinkValue,
+  LinkColor,
+  DefaultNode,
+  DefaultLink,
+  LinkVisible,
+  GetVerticalMarginForSankeyZone,
+  NodeDisplayed,
+  ReturnValueNode,
+  ReturnValueLink,
+  AssignLinkLocalAttribute,
+  ToPrecision} from './SankeyUtils'
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
 import { menu_config_width } from './SankeyMenu'
 import * as SankeyShapes from './SankeyShapes'
@@ -19,13 +30,13 @@ declare const window: Window &
     SankeyToolsStatic: boolean
    }
 
-export const strokeDasharray =(d:SankeyLink,data:SankeyData,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+export const StrokeDasharray =(d:SankeyLink,data:SankeyData,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
   if (data.show_structure === 'structure') {
     return '10, 2'
   }
-  const link_values = getLinkValue(data, d.idLink)
+  const link_values = GetLinkValue(data, d.idLink)
   if (link_values === undefined) {
     return ''
   }
@@ -43,7 +54,7 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
                  data.show_structure !== 'free_value' &&
                  data.show_structure !== 'free_interval'  &&
                  !link_values.extension?.free_visible
-  if (return_value_link(data,d,'dashed') || link_values.value=='' || is_free || link_values.extension?.display_thin) {
+  if (ReturnValueLink(data,d,'dashed') || link_values.value=='' || is_free || link_values.extension?.display_thin) {
     return '10, 2'
   } else {
     return ''
@@ -51,28 +62,28 @@ export const strokeDasharray =(d:SankeyLink,data:SankeyData,
 }
 
 // Function that return the Y position of link label
-export const textLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+export const TextLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
-  const orth_pos=return_value_link(data,l,'orthogonal_label_position')
+  const orth_pos=ReturnValueLink(data,l,'orthogonal_label_position')
   if (orth_pos === 'middle') {
     return '0.3em'
   } else if (orth_pos === 'below') {
-    const tmp=getLinkValue(data, l.idLink).value
+    const tmp=GetLinkValue(data, l.idLink).value
 
     return scale((tmp)?tmp:0) / 2 + 10 + 'px'
   } else if (orth_pos === 'above') {
-    const tmp=getLinkValue(data, l.idLink).value
+    const tmp=GetLinkValue(data, l.idLink).value
 
     return -scale((tmp)?tmp:0) / 2 + 'px'
   }
   return '0.3em'
 }
 // Function that return the side of link label
-export const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
-  const recy=return_value_link(data,link,'recycling')
-  const ori=return_value_link(data,link,'label_position')
-  const lab_pos=return_value_link(data,link,'orientation')
+export const TextLinkSide=(link:SankeyLink,data:SankeyData)=>{
+  const recy=ReturnValueLink(data,link,'recycling')
+  const ori=ReturnValueLink(data,link,'label_position')
+  const lab_pos=ReturnValueLink(data,link,'orientation')
 
   if (recy) {
     if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
@@ -93,13 +104,13 @@ export const textLinkSide=(link:SankeyLink,data:SankeyData)=>{
 
 // Function that return the link color
 // the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags)
-export const linkStroke=(l:SankeyLink,data:SankeyData,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+export const LinkStroke=(l:SankeyLink,data:SankeyData,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
-  return link_color(l,data,getLinkValue) as string
+  return LinkColor(l,data,GetLinkValue) as string
 }
 // Function that compute th position of the begining of the link and the position of where it end
-export const compute_end_points = (
+export const ComputeEndPoints = (
   source_node: SankeyNode,
   target_node: SankeyNode,
   link: SankeyLink,
@@ -109,20 +120,20 @@ export const compute_end_points = (
   data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
   if (!display_links) {
     return [0, 0, 0, 0]
   }
-  let link_value = test_link_value(data, display_nodes, link,getLinkValue)
+  let link_value = TestLinkValue(data, display_nodes, link,GetLinkValue)
   if (link_value === undefined) {
     return [0, 0, 0, 0]
   }
   //inv_scale(2) = epaisseur minimum d'un flux
   link_value=(link_value==0 || (+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
 
-  const theLinkValue = getLinkValue(data, link.idLink)
+  const theLinkValue = GetLinkValue(data, link.idLink)
   let is_structure = false
   if (source_node.position !== 'relative' && target_node.position !== 'relative' ) {
     if (data.show_structure === 'data' ) {
@@ -140,33 +151,33 @@ export const compute_end_points = (
     link_value = inv_scale(5)
   }
 
-  let res = compute_total_offsets(inv_scale,source_node, data, display_nodes, test_link_value,undefined,getLinkValue)
+  let res = ComputeTotalOffsets(inv_scale,source_node, data, display_nodes, TestLinkValue,undefined,GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-  res = compute_total_offsets(inv_scale,target_node, data,display_nodes, test_link_value,undefined,getLinkValue)
+  res = ComputeTotalOffsets(inv_scale,target_node, data,display_nodes, TestLinkValue,undefined,GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
-  let node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
-  let node_size_t_width = inv_scale(return_value_node(data,target_node,'node_width') as number)
+  let node_size_s_width = inv_scale((ReturnValueNode(data,source_node,'node_width') as number))
+  let node_size_t_width = inv_scale(ReturnValueNode(data,target_node,'node_width') as number)
   if (data.show_structure !== 'structure') {
     node_size_s_width = Math.max(
-      inv_scale((return_value_node(data,source_node,'node_width') as number)), s_total_offset_width_bottom, s_total_offset_width_top
+      inv_scale((ReturnValueNode(data,source_node,'node_width') as number)), s_total_offset_width_bottom, s_total_offset_width_top
     )
     node_size_t_width = Math.max(
-      inv_scale(return_value_node(data,target_node,'node_width') as number), t_total_offset_width_bottom, t_total_offset_width_top
+      inv_scale(ReturnValueNode(data,target_node,'node_width') as number), t_total_offset_width_bottom, t_total_offset_width_top
     )
   }
-  let node_size_s_height = inv_scale((return_value_node(data,source_node,'node_height') as number))
-  let node_size_t_height = inv_scale((return_value_node(data,target_node,'node_height') as number))
+  let node_size_s_height = inv_scale((ReturnValueNode(data,source_node,'node_height') as number))
+  let node_size_t_height = inv_scale((ReturnValueNode(data,target_node,'node_height') as number))
   if (data.show_structure !== 'structure') {
     node_size_s_height = Math.max(
-      inv_scale((return_value_node(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+      inv_scale((ReturnValueNode(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
     )
     node_size_t_height = Math.max(
-      inv_scale((return_value_node(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+      inv_scale((ReturnValueNode(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
     )
   }
-  res = compute_total_offsets(inv_scale,source_node, data,display_nodes, test_link_value, link,getLinkValue)
+  res = ComputeTotalOffsets(inv_scale,source_node, data,display_nodes, TestLinkValue, link,GetLinkValue)
   const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
-  res = compute_total_offsets(inv_scale,target_node, data,display_nodes , test_link_value, link,getLinkValue)
+  res = ComputeTotalOffsets(inv_scale,target_node, data,display_nodes , TestLinkValue, link,GetLinkValue)
   const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
   const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
   const delta_s_width_top = Math.max(0, (node_size_s_width - s_total_offset_width_top) / 2)
@@ -184,11 +195,11 @@ export const compute_end_points = (
   let ys = source_node_y
   let xt = target_node_x
   let yt = target_node_y
-  const tmp=getLinkValue(data, link.idLink).value
-  const ori=return_value_link(data,link,'orientation')
-  const recy=return_value_link(data,link,'recycling')
-  const l_arrow=return_value_link(data,link,'arrow')
-  const l_arrow_size=return_value_link(data,link,'arrow_size') as number 
+  const tmp=GetLinkValue(data, link.idLink).value
+  const ori=ReturnValueLink(data,link,'orientation')
+  const recy=ReturnValueLink(data,link,'recycling')
+  const l_arrow=ReturnValueLink(data,link,'arrow')
+  const l_arrow_size=ReturnValueLink(data,link,'arrow_size') as number 
 
   if (ori === 'hh') {
     //side to side
@@ -348,7 +359,7 @@ export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyN
 }
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
-export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
+export const EventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
@@ -399,7 +410,7 @@ export const eventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
   }
 }
 
-export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
+export const EventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
   set_contextualised_node:(n:SankeyNode)=>void,pointer_pos:{current:number[]},
   multi_selected_nodes:{current: SankeyNode[] },              
 )=>{
@@ -408,15 +419,15 @@ export const eventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:Sank
   if(multi_selected_nodes.current.includes(n)){
     set_contextualised_node(n)
   }else{
-    multi_selected_nodes.current.forEach(nn=>deselect_visualy_nodes(nn))
+    multi_selected_nodes.current.forEach(nn=>DeselectVisualyNodes(nn))
     multi_selected_nodes.current=[]
-    select_visualy_nodes(n)
+    SelectVisualyNodes(n)
     multi_selected_nodes.current.push(n)
     set_contextualised_node(n)
   }
 }
 
-export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:SankeyLink,set_contextualised_link:(l:SankeyLink)=>void,pointer_pos:{current:number[]},
+export const EventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:SankeyLink,set_contextualised_link:(l:SankeyLink)=>void,pointer_pos:{current:number[]},
   data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
   set_displayed_input_link_value:(s:string)=>void,
@@ -430,9 +441,9 @@ export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:Sank
   if(multi_selected_links.current.includes(l)){
     set_contextualised_link(l)
   }else{
-    multi_selected_links.current.forEach(ll=>deselect_visualy_links(ll))
+    multi_selected_links.current.forEach(ll=>DeselectVisualyLinks(ll))
     multi_selected_links.current=[]
-    select_visualy_links(l)
+    SelectVisualyLinks(l)
     multi_selected_links.current.push(l)
     set_contextualised_link(l)
   }
@@ -443,13 +454,13 @@ export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:Sank
     // Supprime le première élément du tableau qui ne contient que l'id du flux
     index_grp_tag.shift()
     new_tags_selected={}
-    // On fabrique un tags_selected pour récupérer la bonne valeur pour value_selected_parameter
+    // On fabrique un tags_selected pour récupérer la bonne valeur pour ValueSelectedParameter
     for(const i in index_grp_tag){
       const key=Object.keys(data.dataTags)[Number(i)]
       new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
     }
     set_tags_selected(new_tags_selected)
-    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value)
   }else if(Object.values(data.dataTags).length>0){
     // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
     const tmp=[] as string[]
@@ -460,20 +471,20 @@ export const eventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:Sank
     Object.keys(data.dataTags).forEach((dt,i)=>{
       n_t_s[dt]=tmp[i]
     })
-    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
+    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value)
   }else{
-    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value)
   }
 
 
-  set_display_link_opacity(return_value_link(data,l,'opacity') as string)
+  set_display_link_opacity(ReturnValueLink(data,l,'opacity') as string)
   set_data({...data})
 }
 
 // Function that wrap node text when the length of the label exceed the limit
-export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
+export const TextNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   const wrap = textwrap()
-    .bounds({ height: 100, width: ((return_value_node(data,d,'label_box_width') as number) != 0) ? (return_value_node(data,d,'label_box_width') as number) : 110 })
+    .bounds({ height: 100, width: ((ReturnValueNode(data,d,'label_box_width') as number) != 0) ? (ReturnValueNode(data,d,'label_box_width') as number) : 110 })
     .method('tspans')
   d3.select(' .opensankey #ggg_' + d.idNode + ' text')
     .call(wrap)
@@ -481,10 +492,10 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
       const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
 
-      if (return_value_node(data,d,'label_horiz')  == 'middle') {
+      if (ReturnValueNode(data,d,'label_horiz')  == 'middle') {
         return width / 2
-      } else if (return_value_node(data,d,'label_horiz')  == 'right') {
-        return return_value_node(data,d,'label_vert')  == 'middle' ? width : 0
+      } else if (ReturnValueNode(data,d,'label_horiz')  == 'right') {
+        return ReturnValueNode(data,d,'label_vert')  == 'middle' ? width : 0
       } else {
         return 0
       }
@@ -495,9 +506,9 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
     const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
     if (d.x_label) {
       return d.x_label
-    } else if (return_value_node(data,d,'label_horiz')  == 'middle') {
+    } else if (ReturnValueNode(data,d,'label_horiz')  == 'middle') {
       return width / 2
-    } else if (return_value_node(data,d,'label_horiz')  == 'right') {
+    } else if (ReturnValueNode(data,d,'label_horiz')  == 'right') {
       return width
     } else {
       return 0
@@ -506,15 +517,15 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
   //Nombre de tspan dans la balise text
   const ts_span_void=(d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text').html().indexOf('></tspan>')>0?1:0)
   const nb_tspan = d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').nodes().length
-  if (return_value_node(data,d,'label_vert')  == 'middle') {
+  if (ReturnValueNode(data,d,'label_vert')  == 'middle') {
     d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> {
-      const size_text=(return_value_node(data,(n as SankeyNode),'font_size') as number)
+      const size_text=(ReturnValueNode(data,(n as SankeyNode),'font_size') as number)
       const shift=(0.25 *(size_text))
       return'translate(0,' +(shift+(nb_tspan-1)*(-size_text/2)) + ')'})
-  } else if (return_value_node(data,d,'label_vert')  == 'bottom') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,'+((return_value_node(data,(n as SankeyNode),'font_size') as number)*(1-ts_span_void))+')')
-  } else if (return_value_node(data,d,'label_vert')  == 'top') {
-    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,' + ((return_value_node(data,(n as SankeyNode),'font_size') as number)*(-(nb_tspan - 1))) + ')')
+  } else if (ReturnValueNode(data,d,'label_vert')  == 'bottom') {
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,'+((ReturnValueNode(data,(n as SankeyNode),'font_size') as number)*(1-ts_span_void))+')')
+  } else if (ReturnValueNode(data,d,'label_vert')  == 'top') {
+    d3.select(' .opensankey #ggg_' + d.idNode + ' .node_text').attr('transform',n=> 'translate(0,' + ((ReturnValueNode(data,(n as SankeyNode),'font_size') as number)*(-(nb_tspan - 1))) + ')')
   }
 
 }
@@ -522,27 +533,27 @@ export const textNodeWrap=(d:SankeyNode,data:SankeyData)=>{
 // Function that compute the height and width of the node
 // if the sum of input/output links values is inferior to the min_height/min_width of the node then it return the min_width/height
 // if the sum of input/output links values is supperior to the min_height/min_width of the node then it return the maximum between the outputs and inputs link values scaled to the graph
-export const setNodeHeight = (
+export const SetNodeHeight = (
   n: SankeyNode,
   display_nodes: { [node_id: string]: SankeyNode },
   data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
-  const res = compute_total_offsets(inv_scale,n, data, display_nodes, test_link_value,undefined,getLinkValue)
+  const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, TestLinkValue,undefined,GetLinkValue)
   const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
   let node_size_s_height = Math.max(
-    inv_scale((return_value_node(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
+    inv_scale((ReturnValueNode(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale((return_value_node(data,n,'node_width') as number)), total_offset_width_top, total_offset_width_bottom
+    inv_scale((ReturnValueNode(data,n,'node_width') as number)), total_offset_width_top, total_offset_width_bottom
   )
   //Hauteur des noeuds
   if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
-    node_size_s_height = inv_scale((return_value_node(data,n,'node_height') as number))
-    node_size_s_width = inv_scale((return_value_node(data,n,'node_width') as number))
+    node_size_s_height = inv_scale((ReturnValueNode(data,n,'node_height') as number))
+    node_size_s_width = inv_scale((ReturnValueNode(data,n,'node_width') as number))
   }
   d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))
@@ -556,7 +567,7 @@ export const setNodeHeight = (
 
 
 // Function that remove animation (shift+click on node)
-export const removeAnimate = () => {
+export const RemoveAnimate = () => {
   // Si il y a des .tmp (notamment issus des animations)
   if (d3.selectAll(' .opensankey .tmp').nodes().length > 0) {
     // On remove tous les éléments temporaires
@@ -570,7 +581,7 @@ export const removeAnimate = () => {
   }
 }
 // Function used for the clipping of link arrow when there is multiple link incoming to a node
-const intersection = function (cp1: number[], cp2: number[], e: number[], s: number[]) {
+const Intersection = function (cp1: number[], cp2: number[], e: number[], s: number[]) {
   const dc = [cp1[0] - cp2[0], cp1[1] - cp2[1]],
     dp = [s[0] - e[0], s[1] - e[1]],
     n1 = cp1[0] * cp2[1] - cp1[1] * cp2[0],
@@ -579,7 +590,7 @@ const intersection = function (cp1: number[], cp2: number[], e: number[], s: num
   return [(n1 * dp[0] - n2 * dc[0]) * n3, (n1 * dp[1] - n2 * dc[1]) * n3]
 }
 
-const inside = function (p: number[], cp1: number[], cp2: number[]) {
+const Inside = function (p: number[], cp1: number[], cp2: number[]) {
   return (
     (cp2[0] - cp1[0]) * (p[1] - cp1[1]) > (cp2[1] - cp1[1]) * (p[0] - cp1[0])
   )
@@ -595,13 +606,13 @@ export const clip = (subjectPolygon: number[][], clipPolygon: number[][]) => {
     let s = JSON.parse(JSON.stringify(inputList[inputList.length - 1])) //last on the input list
     for (const i in inputList) {
       const e2 = inputList[i]
-      if (inside(e2, cp1, cp2)) {
-        if (!inside(s, cp1, cp2)) {
-          outputList2.push(intersection(cp1, cp2, e2, s))
+      if (Inside(e2, cp1, cp2)) {
+        if (!Inside(s, cp1, cp2)) {
+          outputList2.push(Intersection(cp1, cp2, e2, s))
         }
         outputList2.push(e2)
-      } else if (inside(s, cp1, cp2)) {
-        outputList2.push(intersection(cp1, cp2, e2, s))
+      } else if (Inside(s, cp1, cp2)) {
+        outputList2.push(Intersection(cp1, cp2, e2, s))
       }
       s = e2
     }
@@ -611,13 +622,13 @@ export const clip = (subjectPolygon: number[][], clipPolygon: number[][]) => {
 }
 
 // Function that add marker at the end of links, those marker are arrow
-export const drawArrows = (
+export const DrawArrows = (
   n: SankeyNode,
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   display_style: {filter: number}
 ) => {
   let cum_v_left = 0
@@ -627,26 +638,26 @@ export const drawArrows = (
   let is_v = true
   const is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
 
-  const res = compute_total_offsets(inv_scale,n, data, display_nodes, test_link_value,undefined,getLinkValue)
+  const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, TestLinkValue,undefined,GetLinkValue)
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
   for (let i = 0; i < n.inputLinksId.length; i++) {
     const l = data.links[n.inputLinksId[i]]
-    const ori=return_value_link(data,l,'orientation')
-    const recy=return_value_link(data,l,'recycling')
-    const l_arrow=return_value_link(data,l,'arrow')
-    if (!link_visible(l, data,getLinkValue)) {
+    const ori=ReturnValueLink(data,l,'orientation')
+    const recy=ReturnValueLink(data,l,'recycling')
+    const l_arrow=ReturnValueLink(data,l,'arrow')
+    if (!LinkVisible(l, data,GetLinkValue)) {
       continue
     }
     if(!l_arrow){
       continue
     }
-    let link_value = test_link_value(data,data.nodes, l, getLinkValue)
+    let link_value = TestLinkValue(data,data.nodes, l, GetLinkValue)
     if (link_value === undefined) {
       continue
     }
     link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
-    const extension = getLinkValue(data, n.inputLinksId[i]).extension
+    const extension = GetLinkValue(data, n.inputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
       if (display_free_as_dashed) {
@@ -675,7 +686,7 @@ export const drawArrows = (
     if (!display_style.filter || link_value >= display_style.filter) {
       //selection
       d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
-      setNodeHeight(n, display_nodes, data,scale,inv_scale,getLinkValue)
+      SetNodeHeight(n, display_nodes, data,scale,inv_scale,GetLinkValue)
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'arrow')
@@ -684,7 +695,7 @@ export const drawArrows = (
           let xt
           let yt
           let p5
-          const arrow_length=return_value_link(data,l,'arrow_size') as number
+          const arrow_length=ReturnValueLink(data,l,'arrow_size') as number
           if (ori === 'hh' || ori === 'vh') {
             if (n.x <= source_node.x && recy || n.x > source_node.x && !recy) {
               xt = +n.x
@@ -716,9 +727,9 @@ export const drawArrows = (
           }
           return ''
         })
-        .attr('fill', () => link_color(l, data,getLinkValue)??'none')
+        .attr('fill', () => LinkColor(l, data,GetLinkValue)??'none')
         .attr('fill-opacity', () => {
-          return return_value_link(data,l,'opacity')
+          return ReturnValueLink(data,l,'opacity')
 
         })
     }
@@ -736,7 +747,7 @@ export const drawArrows = (
 
 
 
-export const eventOnSankeyZoneMouseDown=(
+export const EventOnSankeyZoneMouseDown=(
   mode_selection:{current:string},
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -769,7 +780,7 @@ export const eventOnSankeyZoneMouseDown=(
             set_show_toast_limit_node(false)
           }, 3000)
         }else{
-          const new_node1 = default_node(data)
+          const new_node1 = DefaultNode(data)
           let idNode = Object.keys(data.nodes).length
           while (data.nodes['node'+idNode]) {
             idNode = idNode+1
@@ -778,8 +789,8 @@ export const eventOnSankeyZoneMouseDown=(
           new_node1.name = 'node_tmp'
           data.nodes[new_node1.idNode] = new_node1
           const pos = d3.pointer(event)
-          new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
-          new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+          new_node1.x = pos[0]-(ReturnValueNode(data,new_node1,'node_width') as number/2)
+          new_node1.y = pos[1]-(ReturnValueNode(data,new_node1,'node_height') as number/2)
           start_point.current=pos
           set_first_selected_node(new_node1)
           set_data({ ...data })
@@ -795,7 +806,7 @@ export const eventOnSankeyZoneMouseDown=(
  
 
 }
-export const eventOnSankeyZoneMouseMove=(
+export const EventOnSankeyZoneMouseMove=(
   mode_selection:{current:string},
   data:SankeyData,
   first_selected_node:object,
@@ -845,8 +856,8 @@ export const eventOnSankeyZoneMouseMove=(
       // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
       if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
         d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
-          .attr('x1', last_node.x + (return_value_node(data,last_node,'node_width') as number / 2))
-          .attr('y1', last_node.y + (return_value_node(data,last_node,'node_height') as number / 2))
+          .attr('x1', last_node.x + (ReturnValueNode(data,last_node,'node_width') as number / 2))
+          .attr('y1', last_node.y + (ReturnValueNode(data,last_node,'node_height') as number / 2))
           .attr('x2', pos[0])
           .attr('y2', pos[1])
           .style('stroke', '#d9af58')
@@ -865,8 +876,8 @@ export const eventOnSankeyZoneMouseMove=(
     if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
       // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
       d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
-        .attr('x1', fsn.x + (return_value_node(data,fsn,'node_width') as number / 2))
-        .attr('y1', fsn.y + (return_value_node(data,fsn,'node_height') as number / 2))
+        .attr('x1', fsn.x + (ReturnValueNode(data,fsn,'node_width') as number / 2))
+        .attr('y1', fsn.y + (ReturnValueNode(data,fsn,'node_height') as number / 2))
         .attr('x2', pos[0])
         .attr('y2', pos[1])
         .style('stroke', 'red')
@@ -878,7 +889,7 @@ export const eventOnSankeyZoneMouseMove=(
     }
   }
 }
-export const eventOnSankeyZoneMouseUp=(
+export const EventOnSankeyZoneMouseUp=(
   mode_selection:{current:string},
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -917,15 +928,15 @@ export const eventOnSankeyZoneMouseUp=(
   const evt_recast=((evt as unknown) as {target:string}).target
 
   if(mode_selection.current=='s' && d3.selectAll('.selection_zone').nodes().length>0){
-    node_visible_on_svg().forEach(k=>deselect_visualy_nodes(data.nodes[k]))
+    NodeVisibleOnsSvg().forEach(k=>DeselectVisualyNodes(data.nodes[k]))
     const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
     const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
     const z_x=Number(d3.select('.selection_zone rect').attr('x'))
     const z_y=Number(d3.select('.selection_zone rect').attr('y'))
     const z_w=Number(d3.select('.selection_zone rect').attr('width'))
     const z_h=Number(d3.select('.selection_zone rect').attr('height'))
-    const node_visible=node_visible_on_svg()
-    const link_visible=link_visible_on_svg()
+    const node_visible=NodeVisibleOnsSvg()
+    const link_visible_svg=LinkVisibleOnSvg()
     if(evt.shiftKey){
       Object.values(data.nodes).filter(n=>{
         const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
@@ -937,7 +948,7 @@ export const eventOnSankeyZoneMouseUp=(
       const id_node_selected=multi_selected_nodes.current.map(n=>n.idNode)
       const id_link_selected=multi_selected_links.current.map(l=>l.idLink)
       // Select links who have both nodeSource and nodeTarget selected
-      link_visible.filter(lid=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget) && !id_link_selected.includes(lid)).forEach(lid=>multi_selected_links.current.push(data.links[lid]))
+      link_visible_svg.filter(lid=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget) && !id_link_selected.includes(lid)).forEach(lid=>multi_selected_links.current.push(data.links[lid]))
 
     }else{
       multi_selected_nodes.current=Object.values(data.nodes).filter(n=>{
@@ -948,7 +959,7 @@ export const eventOnSankeyZoneMouseUp=(
       })
       const id_node_selected=multi_selected_nodes.current.map(n=>n.idNode)
       // Select links who have both nodeSource and nodeTarget selected
-      multi_selected_links.current=link_visible.filter(lid=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget)).map(lid=>data.links[lid])
+      multi_selected_links.current=link_visible_svg.filter(lid=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget)).map(lid=>data.links[lid])
     }
     start_point.current=[0,0]
     
@@ -978,7 +989,7 @@ export const eventOnSankeyZoneMouseUp=(
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
       //Création second noeud
-      const new_node1 = default_node(data)
+      const new_node1 = DefaultNode(data)
       let idNode = Object.keys(data.nodes).length
       while (data.nodes['node'+idNode]) {
         idNode = idNode+1
@@ -991,10 +1002,10 @@ export const eventOnSankeyZoneMouseUp=(
         new_node1.x = 200
       }
       data.nodes[new_node1.idNode] = new_node1
-      new_node1.x = pos[0]-(return_value_node(data,new_node1,'node_width') as number/2)
-      new_node1.y = pos[1]-(return_value_node(data,new_node1,'node_height') as number/2)
+      new_node1.x = pos[0]-(ReturnValueNode(data,new_node1,'node_width') as number/2)
+      new_node1.y = pos[1]-(ReturnValueNode(data,new_node1,'node_height') as number/2)
       //Ajout du lien entre les deux noeuds créés
-      const new_link = default_link(data)
+      const new_link = DefaultLink(data)
       let idLink = Object.keys(data.links).length
       while (data.links['link'+idLink]) {
         idLink = idLink+1
@@ -1005,7 +1016,7 @@ export const eventOnSankeyZoneMouseUp=(
       new_link.idSource = data.nodes[node_keys[node_keys.length - 2]].idNode
       new_link.idTarget = data.nodes[node_keys[node_keys.length - 1]].idNode
       if (new_link.idSource === new_link.idTarget) {
-        assign_link_local_attribute(new_link,'recycling',true)
+        AssignLinkLocalAttribute(new_link,'recycling',true)
         
       }
       data.nodes[node_keys[node_keys.length - 2]].outputLinksId.push(new_link.idLink)
@@ -1018,8 +1029,8 @@ export const eventOnSankeyZoneMouseUp=(
       set_data({...data})
     }else if((!evt.ctrlKey && !evt.metaKey) && Object.keys(first_selected_node).length > 0 && d3.select(evt_recast).attr('class')!='node node_shape'){
 
-      const n_link = default_link(data)
-      const n_node = default_node(data)
+      const n_link = DefaultLink(data)
+      const n_node = DefaultNode(data)
       let idNode = Object.keys(data.nodes).length
       while (data.nodes['node'+idNode]) {
         idNode = idNode+1
@@ -1028,8 +1039,8 @@ export const eventOnSankeyZoneMouseUp=(
       n_node.name = 'node'+idNode
       data.nodes[n_node.idNode] = n_node
       const pos = d3.pointer(event)
-      n_node.x = pos[0]-(return_value_node(data,n_node,'node_width') as number/2)
-      n_node.y = pos[1]-(return_value_node(data,n_node,'node_height') as number/2)
+      n_node.x = pos[0]-(ReturnValueNode(data,n_node,'node_width') as number/2)
+      n_node.y = pos[1]-(ReturnValueNode(data,n_node,'node_height') as number/2)
 
       const { links } = data
       const fsn = (first_selected_node as SankeyNode)
@@ -1042,10 +1053,10 @@ export const eventOnSankeyZoneMouseUp=(
       n_link.idSource = fsn.idNode
       n_link.idTarget = n_node.idNode
       if (n_link.idSource === n_link.idTarget) {
-        assign_link_local_attribute(n_link,'recycling',true)
+        AssignLinkLocalAttribute(n_link,'recycling',true)
       }
       fsn.outputLinksId.push(n_link.idLink)
-      fsn.outputLinksId=sort_outputLinksId_by_YPos(data,fsn)
+      fsn.outputLinksId=SortOutputLinksIdByYPos(data,fsn)
       n_node.inputLinksId.push(n_link.idLink)
       data.linkZIndex.push(n_link.idLink)
       set_displayed_input_link_value('')
@@ -1060,7 +1071,7 @@ export const eventOnSankeyZoneMouseUp=(
 }
 
 // Sort the outputLinksId tab of the node by using position of output node
-export const sort_outputLinksId_by_YPos=(data:SankeyData,n:SankeyNode)=>{
+export const SortOutputLinksIdByYPos=(data:SankeyData,n:SankeyNode)=>{
   return n.outputLinksId.filter(idL=>data.nodes[data.links[idL].idTarget].position!=='relative')
     .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y 
     )
@@ -1069,7 +1080,7 @@ export const sort_outputLinksId_by_YPos=(data:SankeyData,n:SankeyNode)=>{
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes,
 // or creating a nodes at first click then linking it to a already existing one or the opposite
-export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,
+export const EventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,data:SankeyData,
   set_data:(d:SankeyData)=>void,
   first_selected_node:object,
@@ -1088,7 +1099,7 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
       d.name=d.idNode
     }else{
       d3.selectAll(' .opensankey #svg #path-flux').remove()
-      const n_link = default_link(data)
+      const n_link = DefaultLink(data)
       const { links } = data
       const fsn = (first_selected_node as SankeyNode)
       let idLink = Object.keys(data.links).length
@@ -1101,7 +1112,7 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
       n_link.idSource = fsn.idNode
       n_link.idTarget = d.idNode
       if (n_link.idSource === n_link.idTarget) {
-        assign_link_local_attribute(n_link,'recycling',true)
+        AssignLinkLocalAttribute(n_link,'recycling',true)
       }
       fsn.outputLinksId.push(n_link.idLink)
       d.inputLinksId.push(n_link.idLink)
@@ -1136,7 +1147,7 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
 
     const tmp=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
     //Ajout du lien entre les deux noeuds créés
-    const new_link = default_link(data)
+    const new_link = DefaultLink(data)
     let idLink = Object.keys(data.links).length
     while (data.links['link'+idLink]) {
       idLink = idLink+1
@@ -1146,7 +1157,7 @@ export const eventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonEle
     new_link.idSource = tmp.idNode
     new_link.idTarget = d.idNode
     if (new_link.idSource === new_link.idTarget) {
-      assign_link_local_attribute(new_link,'recycling',true)
+      AssignLinkLocalAttribute(new_link,'recycling',true)
 
     }
     tmp.name='node_'+Object.keys(data.nodes).length
@@ -1169,11 +1180,11 @@ export const inv_scale = d3.scaleLinear()
 
 
 
-export const setNodesHeight = (
+export const SetNodesHeight = (
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
   d: SankeyLink,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
   let source_node = display_nodes[d.idSource]
@@ -1186,36 +1197,36 @@ export const setNodesHeight = (
     source_node = display_nodes[filter_idSource]
   }
 
-  const res_source = compute_total_offsets(inv_scale,source_node, data,display_nodes, test_link_value,undefined,getLinkValue)
+  const res_source = ComputeTotalOffsets(inv_scale,source_node, data,display_nodes, TestLinkValue,undefined,GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
-  const res_target = compute_total_offsets(inv_scale,target_node, data,display_nodes, test_link_value,undefined,getLinkValue)
+  const res_target = ComputeTotalOffsets(inv_scale,target_node, data,display_nodes, TestLinkValue,undefined,GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
   let node_size_s_height = Math.max(
-    inv_scale((return_value_node(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+    inv_scale((ReturnValueNode(data,source_node,'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
   )
   let node_size_t_height = Math.max(
-    inv_scale((return_value_node(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+    inv_scale((ReturnValueNode(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale((return_value_node(data,source_node,'node_width') as number)), s_total_offset_width_top, s_total_offset_width_bottom
+    inv_scale((ReturnValueNode(data,source_node,'node_width') as number)), s_total_offset_width_top, s_total_offset_width_bottom
   )
   let node_size_t_width = Math.max(
-    inv_scale(return_value_node(data,target_node,'node_width') as number), t_total_offset_width_top, t_total_offset_width_bottom
+    inv_scale(ReturnValueNode(data,target_node,'node_width') as number), t_total_offset_width_top, t_total_offset_width_bottom
   )
   // Hauteur des noeuds
   if ((res_source[0] === 0 && res_source[1] === 0 && res_source[2] === 0 && res_source[3] === 0) || data.show_structure == 'structure') {
-    node_size_s_height = inv_scale((return_value_node(data,source_node,'node_height') as number))
-    node_size_s_width = inv_scale((return_value_node(data,source_node,'node_width') as number))
+    node_size_s_height = inv_scale((ReturnValueNode(data,source_node,'node_height') as number))
+    node_size_s_width = inv_scale((ReturnValueNode(data,source_node,'node_width') as number))
   }
   if ((res_target[0] === 0 && res_target[1] === 0 && res_target[2] === 0 && res_target[3] === 0) || data.show_structure == 'structure') {
-    node_size_t_height = inv_scale((return_value_node(data,target_node,'node_height') as number))
-    node_size_t_width = inv_scale(return_value_node(data,target_node,'node_width') as number)
+    node_size_t_height = inv_scale((ReturnValueNode(data,target_node,'node_height') as number))
+    node_size_t_width = inv_scale(ReturnValueNode(data,target_node,'node_width') as number)
   }
 
   d3.select(' .opensankey #shape_' + source_node.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #shape_' + source_node.idNode).attr('height', scale(node_size_s_height))
-  if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse' || ((!source_node.tags['Type de noeud']  || data.override_type_node_shape)&& return_value_node(data,source_node,'shape')=='ellipse' )) {
+  if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse' || ((!source_node.tags['Type de noeud']  || data.override_type_node_shape)&& ReturnValueNode(data,source_node,'shape')=='ellipse' )) {
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1224,7 +1235,7 @@ export const setNodesHeight = (
 
   d3.select(' .opensankey #shape_' + target_node.idNode).attr('width', scale(node_size_t_width))
   d3.select(' .opensankey #shape_' + target_node.idNode).attr('height', scale(node_size_t_height))
-  if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse'|| ((!target_node.tags['Type de noeud'] || data.override_type_node_shape) && return_value_node(data,target_node,'shape')=='ellipse')) {
+  if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse'|| ((!target_node.tags['Type de noeud'] || data.override_type_node_shape) && ReturnValueNode(data,target_node,'shape')=='ellipse')) {
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
@@ -1232,10 +1243,10 @@ export const setNodesHeight = (
   }
 }
 
-// drawLinkText
+// DrawLinkText
 // Affichage de la valeur du flux dans le link en fonction des options
 // Position latérale ; middle, beginning, end et frozen
-const drawLinkText = (
+const DrawLinkText = (
   data: SankeyData,
   link: SankeyLink,
   links: { [link_id: string]: SankeyLink },
@@ -1245,28 +1256,28 @@ const drawLinkText = (
   ys: number,
   xt: number,
   yt: number,
-  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
   let x_pos = 0
   let y_pos = 0
-  const lab_pos=return_value_link(data,link,'label_position') as string
-  const orth_lab_pos=return_value_link(data,link,'orthogonal_label_position')
-  const label_on_path=return_value_link(data,link,'label_on_path')
-  const label_visible=return_value_link(data,link,'label_visible')
+  const lab_pos=ReturnValueLink(data,link,'label_position') as string
+  const orth_lab_pos=ReturnValueLink(data,link,'orthogonal_label_position')
+  const label_on_path=ReturnValueLink(data,link,'label_on_path')
+  const label_visible=ReturnValueLink(data,link,'label_visible')
 
   // middle : valeur par défault
   // est-ce necessaire car on force l'option middle à la création du flux
   if (!lab_pos) {
-    assign_link_local_attribute(link,'label_position','middle')
+    AssignLinkLocalAttribute(link,'label_position','middle')
 
   }
 
   if (lab_pos === 'beginning') {
     x_pos = xs + (xt - xs) / 10
   } else if (lab_pos === 'middle') {
-    const handles = handles_positions(data,links, link, xs, ys, xt, yt,getLinkValue)
+    const handles = HandlesPositions(data,links, link, xs, ys, xt, yt,GetLinkValue)
     if (handles.length >= 2) {
       const left_xpos = +handles[0].split(',')[0].substring(10)
       const right_xpos = +handles[1].split(',')[0].substring(10)
@@ -1281,7 +1292,7 @@ const drawLinkText = (
   if (lab_pos === 'beginning') {
     y_pos = ys - 6
   } else if (lab_pos === 'middle') {
-    const handles = handles_positions(data,links, link, xs, ys, xt, yt,getLinkValue)
+    const handles = HandlesPositions(data,links, link, xs, ys, xt, yt,GetLinkValue)
     if (handles.length >= 2) {
       const left_y_pos_str = handles[0].split(',')[1]
       const left_y_pos = +left_y_pos_str.substring(0, left_y_pos_str.length - 1)
@@ -1309,7 +1320,7 @@ const drawLinkText = (
     (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('x', () => lab_pos === 'frozen' && link.x_label ? link.x_label : x_pos)
       .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label : y_pos)
-      .text(d => link_text(data, d,getLinkValue ))
+      .text(d => LinkText(data, d,GetLinkValue ))
       .attr('visibility', label_visible ? 'visible' : 'hidden');
     (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
       if(orth_lab_pos=='above'){
@@ -1330,14 +1341,14 @@ const drawLinkText = (
     (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('startOffset', positions[lab_pos][0])
       .attr('text-anchor', positions[lab_pos][1])
-      .text(d => link_text(data, d,getLinkValue))
+      .text(d => LinkText(data, d,GetLinkValue))
       .attr('visibility', label_visible ? 'visible' : 'hidden')
   }
 }
 
 
 // Draw the center handle of each selected links
-const add_center_handle=(
+const AddCenterHandle=(
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -1345,12 +1356,12 @@ const add_center_handle=(
   link:SankeyLink,
   multi_selected_links:{current: SankeyLink[] },
   selected_tags: { [tag_group: string]: string[] },
-  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  min_width_and_height:(d:SankeyData)=>number[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
-  const recy=return_value_link(data,link,'recycling') as boolean
-  const ori=return_value_link(data,link,'orientation')
+  const recy=ReturnValueLink(data,link,'recycling') as boolean
+  const ori=ReturnValueLink(data,link,'orientation')
 
   d3.selectAll(' .opensankey #center_handle_' + link.idLink).remove()
   if (Object.values(display_links).map(d => d.idLink).includes(link.idLink)  && !recy ) {
@@ -1369,13 +1380,13 @@ const add_center_handle=(
     if (isNaN(target_node.y)) {
       target_node.y = 100
     }
-    const res = compute_end_points(source_node, target_node, link, display_nodes, display_links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,getLinkValue)
+    const res = ComputeEndPoints(source_node, target_node, link, display_nodes, display_links, (data.nodeTags as TagsCatalog),data,scale,inv_scale,GetLinkValue)
     const [, ys, xt, ] = res
     let [xs, , , yt] = res
     if (data.show_structure == 'structure') {
-      [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      [xs, yt] = [source_node.x + (ReturnValueNode(data,source_node,'node_height') as number) / 2, target_node.y + (ReturnValueNode(data,target_node,'node_height') as number) / 2]
     }
-    const pos_d=center_handle_position(data,link,xs,ys,xt,yt,getLinkValue)
+    const pos_d=CenterHandlePosition(data,link,xs,ys,xt,yt,GetLinkValue)
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('circle')
       .attr('id', 'center_handle_' + link.idLink)
@@ -1387,25 +1398,25 @@ const add_center_handle=(
       .attr('fill','black')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
-      .call(dragLinkCenterHandleEvent(multi_selected_links,link,display_links,display_nodes,data,set_data,selected_tags,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
+      .call(dragLinkCenterHandleEvent(multi_selected_links,link,display_links,display_nodes,data,set_data,selected_tags,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
       )
   }
 
 }
 
 // Compute the position of the center handle of links
-const center_handle_position=(data:SankeyData,link:SankeyLink,
+const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
   xs: number,
   ys: number,
   xt: number,
   yt: number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 )=>{
   const center_handle = 1/2
 
-  const handle_pos = handles_positions(data,data.links, link, xs, ys, xt, yt,getLinkValue)
-  const ori=return_value_link(data,link,'orientation')
+  const handle_pos = HandlesPositions(data,data.links, link, xs, ys, xt, yt,GetLinkValue)
+  const ori=ReturnValueLink(data,link,'orientation')
 
   if((ori=='hh' || ori=='vv')){
     const [xs2,ys2]=handle_pos[0].replace('translate(','').replace(')','').split(',')
@@ -1439,7 +1450,7 @@ const center_handle_position=(data:SankeyData,link:SankeyLink,
 
 
 // Draw the shift handle of each selected links
-const add_shift_handle = (
+const AddShiftHandle = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   link: SankeyLink,
@@ -1450,9 +1461,9 @@ const add_shift_handle = (
   selected_tags: { [tag_group: string]: string[] },
   shift_name: string,
   position: string,
-  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  min_width_and_height:(d:SankeyData)=>number[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)) {
@@ -1464,7 +1475,7 @@ const add_shift_handle = (
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
       .attr('cursor',(multi_selected_links.current.includes(link)&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'ew-resize':'pointer')
-      .call(dragLinkShiftHandleEvent(multi_selected_links,link,nodes,links,display_style,selected_tags,position,data,set_data,min_width_and_height,default_horiz_shift,drawGrid,scale,inv_scale,drawCurveFunction,link_text,getLinkValue)
+      .call(dragLinkShiftHandleEvent(multi_selected_links,link,nodes,links,display_style,selected_tags,position,data,set_data,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
       )
   }
 
@@ -1476,7 +1487,7 @@ export const update_scale = (user_scale: number) => {
   inv_scale.range([0, user_scale])
 }
 
-// Function that call add_shift_handle for the shift handle of each side of the links
+// Function that call AddShiftHandle for the shift handle of each side of the links
 const add_shift_handles = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -1490,13 +1501,13 @@ const add_shift_handles = (
   ys: number,
   xt: number,
   yt: number,
-  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  min_width_and_height:(d:SankeyData)=>number[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 
 ) => {
-  const recy=return_value_link(data,link,'recycling') as boolean
+  const recy=ReturnValueLink(data,link,'recycling') as boolean
   d3.select('.opensankey #g_link_handles').append('g').attr('class','gg_link_handles').attr('id','gg_link_handle_'+link.idLink)
   let shift_handles
   if (recy) {
@@ -1514,8 +1525,8 @@ const add_shift_handles = (
   for (let i = 0; i < shift_handles.length; i++) {
     const selection = d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
     if (selection.empty()) { // if the handle do not exist, create it
-      add_shift_handle(data,set_data,
-        link, multi_selected_links,nodes, links, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],link_text,min_width_and_height,getLinkValue
+      AddShiftHandle(data,set_data,
+        link, multi_selected_links,nodes, links, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
       )
     }
   }
@@ -1523,7 +1534,7 @@ const add_shift_handles = (
     // Draw handle at the correct position
     d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
       .attr('transform', () => {
-        const handle_pos = handles_positions(data,links, link, xs, ys, xt, yt,getLinkValue)
+        const handle_pos = HandlesPositions(data,links, link, xs, ys, xt, yt,GetLinkValue)
         return handle_pos[i] // 0 => vertical handle
       })
   }
@@ -1532,7 +1543,7 @@ const add_shift_handles = (
 }
 
 // DRAW LINK
-const drawCurve = (
+const DrawCurve = (
   data: SankeyData,
   set_data:(d:SankeyData)=>void,
   visible_nodes: { [node_id: string]: SankeyNode },
@@ -1542,25 +1553,25 @@ const drawCurve = (
   link: SankeyLink,
   error_msg: { text?: string } | undefined,
   multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  min_width_and_height:(d:SankeyData)=>number[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  drawArrows:drawArrowsType
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  DrawArrows:drawArrowsType
 
 
 ): string => {
-  if (!link_visible(link, data,getLinkValue)) {
+  if (!LinkVisible(link, data,GetLinkValue)) {
     return ''
   }
-  const link_value = test_link_value(data, visible_nodes, link,getLinkValue)
-  const val=getLinkValue(data,link.idLink)
-  const recy=return_value_link(data,link,'recycling') as boolean
-  const curved=return_value_link(data,link,'curved') as boolean
-  const ori=return_value_link(data,link,'orientation')
-  const curvature=return_value_link(data,link,'curvature') as number
-  const l_h_s=return_value_link(data,link,'left_horiz_shift') as number
-  const r_h_s=return_value_link(data,link,'right_horiz_shift') as number
-  const v_s=return_value_link(data,link,'vert_shift') as number
+  const link_value = TestLinkValue(data, visible_nodes, link,GetLinkValue)
+  const val=GetLinkValue(data,link.idLink)
+  const recy=ReturnValueLink(data,link,'recycling') as boolean
+  const curved=ReturnValueLink(data,link,'curved') as boolean
+  const ori=ReturnValueLink(data,link,'orientation')
+  const curvature=ReturnValueLink(data,link,'curvature') as number
+  const l_h_s=ReturnValueLink(data,link,'left_horiz_shift') as number
+  const r_h_s=ReturnValueLink(data,link,'right_horiz_shift') as number
+  const v_s=ReturnValueLink(data,link,'vert_shift') as number
 
   const source_node = visible_nodes[link.idSource]
   const target_node = visible_nodes[link.idTarget]
@@ -1583,21 +1594,21 @@ const drawCurve = (
     return ''
   }
 
-  let [xs, ys, xt, yt] = compute_end_points(source_node, target_node, link, visible_nodes, visible_links, nodeTags,data,scale,inv_scale,getLinkValue)
+  let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, visible_nodes, visible_links, nodeTags,data,scale,inv_scale,GetLinkValue)
   if(ori=='vv' ||ori=='hh'){
-    add_shift_handles(data,set_data,link,multi_selected_links, visible_nodes, visible_links,display_style, nodeTags, xs, ys, xt, yt,link_text,min_width_and_height,getLinkValue)
-    add_drag_link_zone(link,data,set_data,multi_selected_links,visible_nodes, visible_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,link_text,getLinkValue,drawArrows)
-    add_center_handle(data,set_data,visible_nodes,visible_links,link,multi_selected_links,nodeTags,link_text,min_width_and_height,getLinkValue)
+    add_shift_handles(data,set_data,link,multi_selected_links, visible_nodes, visible_links,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
+    add_drag_link_zone(link,data,set_data,multi_selected_links,visible_nodes, visible_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
+    AddCenterHandle(data,set_data,visible_nodes,visible_links,link,multi_selected_links,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
   }
 
 
   if (link_value > display_style.filter_label || val.extension?.free_visible) {
-    drawLinkText(data, link, visible_links, link_value, display_style, xs, ys, xt, yt,link_text,getLinkValue)
+    DrawLinkText(data, link, visible_links, link_value, display_style, xs, ys, xt, yt,LinkText,GetLinkValue)
   }
 
   if (ori === 'vh' && !recy) {
     if (data.show_structure == 'structure') {
-      [xs, yt] = [source_node.x + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      [xs, yt] = [source_node.x + (ReturnValueNode(data,source_node,'node_height') as number) / 2, target_node.y + (ReturnValueNode(data,target_node,'node_height') as number) / 2]
       if (source_node.x > target_node.x) {
         xt = xt + 30
       }
@@ -1627,9 +1638,9 @@ const drawCurve = (
   }
   if (ori === 'hh' && !recy) {
     if (data.show_structure == 'structure' ) {
-      [ys, yt] = [source_node.y + (return_value_node(data,source_node,'node_height') as number) / 2, target_node.y + (return_value_node(data,target_node,'node_height') as number) / 2]
+      [ys, yt] = [source_node.y + (ReturnValueNode(data,source_node,'node_height') as number) / 2, target_node.y + (ReturnValueNode(data,target_node,'node_height') as number) / 2]
       if (source_node.x > target_node.x) {
-        xt = xt + (return_value_node(data,target_node,'node_width') as number)
+        xt = xt + (ReturnValueNode(data,target_node,'node_width') as number)
       }
     }
     const left_horiz_shift = l_h_s ? l_h_s : 0
@@ -1647,7 +1658,7 @@ const drawCurve = (
   }
   if (ori === 'vv' && !recy) {
     if (data.show_structure == 'structure' ) {
-      [xs, xt] = [source_node.x + (return_value_node(data,source_node,'node_width') as number) / 2, target_node.x + (return_value_node(data,target_node,'node_width') as number / 2)]
+      [xs, xt] = [source_node.x + (ReturnValueNode(data,source_node,'node_width') as number) / 2, target_node.x + (ReturnValueNode(data,target_node,'node_width') as number / 2)]
       if (source_node.y > target_node.y) {
         yt = yt + 30
       }
@@ -1684,10 +1695,10 @@ const drawCurve = (
   return ''
 }
 
-export const drawCurveFunction:SankeyDrawCurve ={curve:drawCurve}
+export const drawCurveFunction:SankeyDrawCurve ={curve:DrawCurve}
 
 // Returns the x/y position of link_center / left/right/vert_shift
-const handles_positions = (
+const HandlesPositions = (
   data:SankeyData,
   links: { [link_id: string]: SankeyLink },
   link: SankeyLink,
@@ -1695,30 +1706,30 @@ const handles_positions = (
   ys: number,
   xt: number,
   yt: number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
-  let tmp=getLinkValue(data, link.idLink).value
+  let tmp=GetLinkValue(data, link.idLink).value
   tmp=(tmp)?tmp:0
-  const recy=return_value_link(data,link,'recycling') as boolean
-  const ori=return_value_link(data,link,'orientation')
-  const l_h_s=return_value_link(data,link,'left_horiz_shift') as number
-  const r_h_s=return_value_link(data,link,'right_horiz_shift') as number
-  const v_s=return_value_link(data,link,'vert_shift') as number
+  const recy=ReturnValueLink(data,link,'recycling') as boolean
+  const ori=ReturnValueLink(data,link,'orientation')
+  const l_h_s=ReturnValueLink(data,link,'left_horiz_shift') as number
+  const r_h_s=ReturnValueLink(data,link,'right_horiz_shift') as number
+  const v_s=ReturnValueLink(data,link,'vert_shift') as number
 
   if (ori === 'hh' && recy) {
     // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
     if (!l_h_s) {
-      assign_link_local_attribute(link,'left_horiz_shift',0)
+      AssignLinkLocalAttribute(link,'left_horiz_shift',0)
     }
     if (!r_h_s) {
-      assign_link_local_attribute(link,'right_horiz_shift',0)
+      AssignLinkLocalAttribute(link,'right_horiz_shift',0)
     }
     if (!v_s) {
-      assign_link_local_attribute(link,'vert_shift',0)
+      AssignLinkLocalAttribute(link,'vert_shift',0)
 
     }
-    const thick=linkStrokeWidth(link,data,scale,inv_scale,min_thickness,data.nodes,getLinkValue)
+    const thick=LinkStrokeWidth(link,data,scale,inv_scale,min_thickness,data.nodes,GetLinkValue)
     const thickness=(thick === '1px')?1:thick
     if (xt < xs) {
       const x_left = xt - default_horiz_shift + l_h_s - (thickness) // x14
@@ -1740,13 +1751,13 @@ const handles_positions = (
   } else if (ori === 'vv' && recy) {
     // Recycling: 3 handles = left_horiz_shift, right_horiz_shif, vert_shift
     if (!l_h_s) {
-      assign_link_local_attribute(link,'left_horiz_shift',0)
+      AssignLinkLocalAttribute(link,'left_horiz_shift',0)
     }
     if (!r_h_s) {
-      assign_link_local_attribute(link,'right_horiz_shift',0)
+      AssignLinkLocalAttribute(link,'right_horiz_shift',0)
     }
     if (!v_s) {
-      assign_link_local_attribute(link,'vert_shift',0)
+      AssignLinkLocalAttribute(link,'vert_shift',0)
     }
     const y_left = yt - default_horiz_shift + l_h_s - scale(tmp) // x14
     const y_right = ys + default_horiz_shift + r_h_s + scale(tmp) // x2
@@ -1757,20 +1768,20 @@ const handles_positions = (
     return [vert, left, right]
   } else if (ori === 'hh') {
     if (l_h_s === undefined) {
-      assign_link_local_attribute(link,'left_horiz_shift',0)
+      AssignLinkLocalAttribute(link,'left_horiz_shift',0)
     }
     if (!r_h_s) {
-      assign_link_local_attribute(link,'right_horiz_shift',1)
+      AssignLinkLocalAttribute(link,'right_horiz_shift',1)
     }
     const shift_left = 'translate(' + (xs + (xt - xs) * l_h_s) + ', ' + (ys - default_handle_size / 2) + ')'
     const shift_right = 'translate(' + (xs + (xt - xs) * r_h_s) + ', ' + (yt - default_handle_size / 2) + ')'
     return [shift_left, shift_right]
   } else if (ori === 'vv') {
     if (l_h_s === undefined) {
-      assign_link_local_attribute(link,'left_horiz_shift',0)
+      AssignLinkLocalAttribute(link,'left_horiz_shift',0)
     }
     if (!r_h_s) {
-      assign_link_local_attribute(link,'right_horiz_shift',1)
+      AssignLinkLocalAttribute(link,'right_horiz_shift',1)
     }
     const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * l_h_s) + ')'
     const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * r_h_s) + ')'
@@ -1789,15 +1800,15 @@ const handles_positions = (
 }
 
 // Function that compute the size of the snakey zone,it has minimum height and width but can grow if the node or free labels are too close of the border
-export const min_width_and_height = (data:SankeyData) => {
+export const GetSankeyMinWidthAndHeight = (data:SankeyData) => {
   let height = 0
   let width = 0
-  Object.values(data.nodes).filter(n => node_displayed(data,n)).forEach(n => {
+  Object.values(data.nodes).filter(n => NodeDisplayed(data,n)).forEach(n => {
     // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
     let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width??0
-    if((return_value_node(data,n,'label_horiz') as string)=='left'){
+    if((ReturnValueNode(data,n,'label_horiz') as string)=='left'){
       width_label/=2
-    }else if((return_value_node(data,n,'label_horiz') as string)=='middle'){
+    }else if((ReturnValueNode(data,n,'label_horiz') as string)=='middle'){
       width_label=0
     }
     let node_height = 0
@@ -1815,22 +1826,22 @@ export const min_width_and_height = (data:SankeyData) => {
   height = height + 100
   width = width + 100
   Object.values(data.links).forEach(l => {
-    const recy=return_value_link(data,l,'recycling') as boolean
+    const recy=ReturnValueLink(data,l,'recycling') as boolean
     if (recy) {
-      const v_s=return_value_link(data,l,'vert_shift') as number
-      const r_h_s=return_value_link(data,l,'right_horiz_shift') as number
-      height = (v_s && node_displayed(data,data.nodes[l.idSource]) && node_displayed(data,data.nodes[l.idTarget]) ) ? Math.max(data.nodes[l.idSource].y + v_s + 100, data.nodes[l.idTarget].y + v_s + 100, height) : height
-      width = (data.nodes[l.idTarget].x && node_displayed(data,data.nodes[l.idTarget]) && r_h_s) ? Math.max(width, data.nodes[l.idSource].x + r_h_s + default_horiz_shift + 150) : width
+      const v_s=ReturnValueLink(data,l,'vert_shift') as number
+      const r_h_s=ReturnValueLink(data,l,'right_horiz_shift') as number
+      height = (v_s && NodeDisplayed(data,data.nodes[l.idSource]) && NodeDisplayed(data,data.nodes[l.idTarget]) ) ? Math.max(data.nodes[l.idSource].y + v_s + 100, data.nodes[l.idTarget].y + v_s + 100, height) : height
+      width = (data.nodes[l.idTarget].x && NodeDisplayed(data,data.nodes[l.idTarget]) && r_h_s) ? Math.max(width, data.nodes[l.idSource].x + r_h_s + default_horiz_shift + 150) : width
     }
   })
-  const vertical_shift=  get_vertical_marfin_for_sankey_zone()
+  const vertical_shift=  GetVerticalMarginForSankeyZone()
   const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
   return [Math.max(width, window.innerWidth - 60 - has_scroll_bar), Math.max(height, window.innerHeight - 20 - (vertical_shift))]
 }
 
 // Function that draw the grid in the background of the sankey zone
 // The grid help to align sankey elements and the step of nodes shift when we press arrow  on the keyboard
-export const drawGrid = (data:SankeyData) => {
+export const DrawGrid = (data:SankeyData) => {
 
   d3.select(' .opensankey #svg #grid').selectAll('.line').remove()
   if (data.grid_visible && !window.SankeyToolsStatic ) {
@@ -1863,7 +1874,7 @@ export const drawGrid = (data:SankeyData) => {
   }
 
 }
-export const node_stroke_width=(d:SankeyNode,multi_selected_nodes:{current:SankeyNode[]})=>{
+export const NodeStrokeWidth=(d:SankeyNode,multi_selected_nodes:{current:SankeyNode[]})=>{
   if (multi_selected_nodes.current.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
     return 2
   } else {
@@ -1871,12 +1882,12 @@ export const node_stroke_width=(d:SankeyNode,multi_selected_nodes:{current:Sanke
   }
 }
 
-export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id:string]:SankeyLink},display_nodes:{[nodes_id:string]:SankeyNode},
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+export const TextNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id:string]:SankeyLink},display_nodes:{[nodes_id:string]:SankeyNode},
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
   let total = 0
-  const node_visible=node_visible_on_svg()
-  if (return_value_node(data,d,'show_value')) {
+  const node_visible=NodeVisibleOnsSvg()
+  if (ReturnValueNode(data,d,'show_value')) {
     let scientific_precision = 0
     let unit = ''
     if (d.outputLinksId.length > 0) {
@@ -1885,13 +1896,13 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
         if (link === undefined) {
           return ''
         }
-        if (scientific_precision === 0 && return_value_link(data,link,'to_precision')) {
-          scientific_precision = return_value_link(data,link,'scientific_precision') as number
+        if (scientific_precision === 0 && ReturnValueLink(data,link,'to_precision')) {
+          scientific_precision = ReturnValueLink(data,link,'scientific_precision') as number
         }
         if (unit == '') {
-          unit=return_value_link(data,link,'label_unit_visible')?return_value_link(data,link,'label_unit') as string:''
+          unit=ReturnValueLink(data,link,'label_unit_visible')?ReturnValueLink(data,link,'label_unit') as string:''
         }
-        let tmp=getLinkValue(data, link.idLink).value
+        let tmp=GetLinkValue(data, link.idLink).value
         tmp=(tmp)?tmp:0
         if (node_visible.includes(link.idSource) && node_visible.includes(link.idTarget) ) {
           total += tmp
@@ -1906,13 +1917,13 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
             //alert('Corruption du diagramme')
             return ''
           }
-          if (scientific_precision === 0 && return_value_link(data,link,'to_precision')) {
-            scientific_precision = return_value_link(data,link,'scientific_precision') as number
+          if (scientific_precision === 0 && ReturnValueLink(data,link,'to_precision')) {
+            scientific_precision = ReturnValueLink(data,link,'scientific_precision') as number
           }
           if (unit == '') {
-            unit=return_value_link(data,link,'label_unit_visible')?return_value_link(data,link,'label_unit') as string:''
+            unit=ReturnValueLink(data,link,'label_unit_visible')?ReturnValueLink(data,link,'label_unit') as string:''
           }
-          let tmp=getLinkValue(data, link.idLink).value
+          let tmp=GetLinkValue(data, link.idLink).value
           tmp=(tmp)?tmp:0
           if (node_visible.includes(link.idSource) && node_visible.includes(link.idTarget) ) {
             total += tmp
@@ -1921,7 +1932,7 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
       }
     }
     if (scientific_precision !==0) {
-      return toPrecision(total,scientific_precision)+unit
+      return ToPrecision(total,scientific_precision)+unit
     }
     return total+unit
   } else {
@@ -1931,43 +1942,43 @@ export const textNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
 
 
 
-export const node_label_posX=(data:SankeyData,n:SankeyNode)=>{
+export const NodeLabelPosX=(data:SankeyData,n:SankeyNode)=>{
   if (d3.select(' .opensankey #shape_' + n.idNode).empty()) {
     return 0
   }
   const width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
   if (n.x_label) {
     return n.x_label
-  } else if ((return_value_node(data,n,'label_horiz') as string) == 'middle') {
+  } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'middle') {
     return width / 2
-  } else if ((return_value_node(data,n,'label_horiz') as string) == 'left') {
+  } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'left') {
     return 0
-  } else if ((return_value_node(data,n,'label_horiz') as string) == 'right') {
-    return (return_value_node(data,n,'label_vert') as string) == 'middle' ? width : 0
+  } else if ((ReturnValueNode(data,n,'label_horiz') as string) == 'right') {
+    return (ReturnValueNode(data,n,'label_vert') as string) == 'middle' ? width : 0
   } else {
     return 0
   }
 }
-export const node_label_posY=(n:SankeyNode,data:SankeyData)=>{
+export const NodeLabelPosY=(n:SankeyNode,data:SankeyData)=>{
   if (d3.select(' .opensankey #shape_' + n.idNode).empty()) {
     return 0
   }
   const height = +d3.select(' .opensankey #shape_' + n.idNode).attr('height')
   if (n.y_label && data.show_structure !== 'structure') {
     return n.y_label
-  } else if ((return_value_node(data,n,'label_vert') as string) == 'middle') {
+  } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'middle') {
     return height / 2
-  } else if ((return_value_node(data,n,'label_vert') as string) == 'top') {
+  } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'top') {
     return -4
-  } else if ((return_value_node(data,n,'label_vert') as string) == 'bottom') {
+  } else if ((ReturnValueNode(data,n,'label_vert') as string) == 'bottom') {
     return height
   } else {
     return 0
   }
 }
-export const node_value_posX=(data:SankeyData,n:SankeyNode)=>{
+export const NodeLabelValuePosX=(data:SankeyData,n:SankeyNode)=>{
   const width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
-  const val=(return_value_node(data,n,'label_horiz_valeur') as string)
+  const val=(ReturnValueNode(data,n,'label_horiz_valeur') as string)
   if (val== 'middle') {
     return width / 2
   } else if (val == 'left') {
@@ -1979,13 +1990,13 @@ export const node_value_posX=(data:SankeyData,n:SankeyNode)=>{
   }
 }
 
-export const node_value_posY=(data:SankeyData,n:SankeyNode)=>{
+export const NodeLabelValuePosY=(data:SankeyData,n:SankeyNode)=>{
   const height = +d3.select(' .opensankey #shape_' + n.idNode).attr('height')
   const _text = document.getElementById('text_'+n.idNode)
   const height_text = (_text) ? _text.getBoundingClientRect().height : 0
-  const val=(return_value_node(data,n,'label_vert_valeur') as string)
-  const val_font_size=(return_value_node(data,n,'font_size') as number)
-  const is_same_pos=node_value_and_text_same_pos(data,n)
+  const val=(ReturnValueNode(data,n,'label_vert_valeur') as string)
+  const val_font_size=(ReturnValueNode(data,n,'font_size') as number)
+  const is_same_pos=NodeValueAndTextSamePos(data,n)
   if (val == 'middle') {
     return height / 2 + ((is_same_pos)?val_font_size:0)
   } else if (val == 'top') {
@@ -1997,19 +2008,19 @@ export const node_value_posY=(data:SankeyData,n:SankeyNode)=>{
   }
 }
 
-const node_value_and_text_same_pos=(data:SankeyData,node :SankeyNode)=>{
-  const val_visible=(return_value_node(data,node,'label_visible') as number)
-  const val_l_h_v=(return_value_node(data,node,'label_horiz_valeur') as string)
-  const val_l_h=(return_value_node(data,node,'label_horiz') as string)
-  const val_l_v_v=(return_value_node(data,node,'label_vert_valeur') as string)
-  const val_l_v=(return_value_node(data,node,'label_vert') as string)
+const NodeValueAndTextSamePos=(data:SankeyData,node :SankeyNode)=>{
+  const val_visible=(ReturnValueNode(data,node,'label_visible') as number)
+  const val_l_h_v=(ReturnValueNode(data,node,'label_horiz_valeur') as string)
+  const val_l_h=(ReturnValueNode(data,node,'label_horiz') as string)
+  const val_l_v_v=(ReturnValueNode(data,node,'label_vert_valeur') as string)
+  const val_l_v=(ReturnValueNode(data,node,'label_vert') as string)
 
   return (val_visible && val_l_h_v==val_l_h && val_l_v_v==val_l_v)
 }
 
 
 
-export const node_label_text=(
+export const NodeLabeLText=(
   data:SankeyData,
   d:SankeyNode
 )=>{
@@ -2019,7 +2030,7 @@ export const node_label_text=(
   return d.name
 }
 
-export const value_selected_parameter = (data:SankeyData,
+export const ValueSelectedParameter = (data:SankeyData,
   multi_selected_links:{current:SankeyLink[]},
   tags_selected:{[k: string]: string},
 ): SankeyLinkValue => {
@@ -2048,7 +2059,7 @@ export const value_selected_parameter = (data:SankeyData,
 
 }
 
-export const deselect_visualy_links=(d:SankeyLink)=>{
+export const DeselectVisualyLinks=(d:SankeyLink)=>{
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '0')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('cursor', 'pointer')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('cursor', 'pointer')
@@ -2057,35 +2068,35 @@ export const deselect_visualy_links=(d:SankeyLink)=>{
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '0')
   
 }
-export const select_visualy_links=(d:SankeyLink)=>{
+export const SelectVisualyLinks=(d:SankeyLink)=>{
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '1')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '1')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '1')
 }
 
-export const deselect_visualy_nodes=(n:SankeyNode)=>{
+export const DeselectVisualyNodes=(n:SankeyNode)=>{
   d3.select(' .opensankey #shape_' + n.idNode).style('stroke-width',0)
   d3.select(' .opensankey #ggg_' + n.idNode+' .box_width_threshold').attr('visibility','hidden')
 }
-export const select_visualy_nodes=(n:SankeyNode)=>{
+export const SelectVisualyNodes=(n:SankeyNode)=>{
   d3.select(' .opensankey #shape_' + n.idNode).style('stroke-width',2)
 }
 
-export const repositionne_sidebar=()=>{
+export const RepositionneSidebar=()=>{
   const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
   const menu_open=d3.select('.offcanvas-body').node()
   d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?menu_config_width:0))+'px')  
 }
 
 // Function that compute the link width
-export const linkStrokeWidth=(l:SankeyLink,
+export const LinkStrokeWidth=(l:SankeyLink,
   data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   min_thickness:number,
   display_nodes:{ [node_id: string]: SankeyNode},
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
 )=>{
   const node = data.nodes[l.idSource]
   const nodes = data.nodes
@@ -2101,7 +2112,7 @@ export const linkStrokeWidth=(l:SankeyLink,
     pos_x_src = nodes[l.idSource].x
     pos_y_src = nodes[l.idSource].y
   }
-  const link_values = getLinkValue(data, l.idLink)
+  const link_values = GetLinkValue(data, l.idLink)
   const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
   if (display_free_as_dashed) {
     // Generale settings: free link value are displayed dashed without text without witdh
@@ -2122,7 +2133,7 @@ export const linkStrokeWidth=(l:SankeyLink,
     // if flux is displayed thin
     return 5
   }
-  let link_value = test_link_value(data, nodes, l,getLinkValue)
+  let link_value = TestLinkValue(data, nodes, l,GetLinkValue)
   link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
   const width_n=(document.getElementById('shape_'+node.idNode)?.getBoundingClientRect().width??0)/scale_svg
   //Zones limite à ne pas êtres
@@ -2134,29 +2145,29 @@ export const linkStrokeWidth=(l:SankeyLink,
   //si partie gauche du noeud ne se situe pas dans les coord du noeud source
   const left_in_src = node.x > limit_x[0] && node.x < limit_x[1]
   //si partie droite du noeud ne se situe pas dans le noeud source
-  const right_in_src = node.x + (return_value_node(data,node,'node_width') as number) > limit_x[0] && node.x + (return_value_node(data,node,'node_width') as number) < limit_x[1]
+  const right_in_src = node.x + (ReturnValueNode(data,node,'node_width') as number) > limit_x[0] && node.x + (ReturnValueNode(data,node,'node_width') as number) < limit_x[1]
   //si partie haute du noeud ne se situe pas dans le noeud source
   const top_in_src = node.y > limit_y[0] && node.y < limit_y[1]
-  if (return_value_link(data,l,'orientation') == 'hh') {
+  if (ReturnValueLink(data,l,'orientation') == 'hh') {
     //orientation hh
     draw_warning = left_in_src || right_in_src
-  } else if (return_value_link(data,l,'orientation') == 'vv') {
+  } else if (ReturnValueLink(data,l,'orientation') == 'vv') {
     draw_warning = top_in_src
-  } else if (return_value_link(data,l,'orientation') == 'vh') {
+  } else if (ReturnValueLink(data,l,'orientation') == 'vh') {
     draw_warning = left_in_src || right_in_src || top_in_src
   } else {
     draw_warning = left_in_src || right_in_src || top_in_src
   }
-  if (draw_warning && !return_value_link(data,l,'recycling')) {
+  if (draw_warning && !ReturnValueLink(data,l,'recycling')) {
     return '1px'
   } else {
-    const link_value = test_link_value(data, display_nodes, l,getLinkValue)
+    const link_value = TestLinkValue(data, display_nodes, l,GetLinkValue)
     const tmp =(link_value=='')?1:link_value
     return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
   }
 }
 
-export const svgDragMiddleMouseStart=()=>{
+export const SvgDragMiddleMouseStart=()=>{
   d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0')
   d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('cursor', 'pointer')
   d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer')
@@ -2165,7 +2176,7 @@ export const svgDragMiddleMouseStart=()=>{
   d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('fill-opacity', '0')
 }
 
-export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unknown>,data:SankeyData)=>{
+export const SvgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unknown>,data:SankeyData)=>{
   d3.selectAll('.ggg_nodes').filter(n=>(n as SankeyNode).position!=='relative').attr('transform',(d)=>{
     const n=d as SankeyNode
     n.x+=event.dx
@@ -2245,14 +2256,14 @@ export const svgDragMiddleMouseMove=(event:d3.D3DragEvent<Element, unknown, unkn
   d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
   
 }
-export const node_visible_on_svg=()=>d3.selectAll('.node_shape').nodes().map(element => {
+export const NodeVisibleOnsSvg=()=>d3.selectAll('.node_shape').nodes().map(element => {
   return d3.select(element).attr('id').replace('shape_','')
 })
-export const link_visible_on_svg=()=>d3.selectAll('.link').nodes().map(element => {
+export const LinkVisibleOnSvg=()=>d3.selectAll('.link').nodes().map(element => {
   return d3.select(element).attr('id').replace('path_','')
 })
 
-export const zoom_function=(evt:d3.D3ZoomEvent<SVGElement,unknown>,data:SankeyData)=>{
+export const ZoomFunction=(evt:d3.D3ZoomEvent<SVGElement,unknown>,data:SankeyData)=>{
 
   const t='translate(0,0) scale('+evt.transform.k+')'
   const svgSankey = d3.select('.opensankey #svg')
@@ -2269,10 +2280,10 @@ export const zoom_function=(evt:d3.D3ZoomEvent<SVGElement,unknown>,data:SankeyDa
   d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(scale_legend)+')')
   d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale/2)*scale_legend)))
 
-  // repositionne_sidebar()
+  // RepositionneSidebar()
 }
 
-export const simpleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
+export const SimpleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
   nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
@@ -2288,10 +2299,10 @@ export const simpleGNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sanke
   if((event.target as HTMLSpanElement).tagName==='tspan'){
     setTimeout(()=>{
       if(accept_simple_click.current){
-        eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
+        EventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
       }
     },200)
   }else{
-    eventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
+    EventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
   }
 }

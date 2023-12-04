@@ -2,7 +2,7 @@ import React, { FunctionComponent, useState,useRef} from 'react'
 import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup,Overlay,Popover, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
 import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLinkValue,SankeyLink,treeFolderType} from './types'
-import { delete_node,return_value_node,apply_style_to_nodes,add_new_node,cut_name,FolderIcon,FolderOpenIcon,FileIcon} from './SankeyUtils'
+import { DeleteNode,ReturnValueNode,ApplyStyleToNodes,AddNewNode,CutName,FolderIcon,FolderOpenIcon,FileIcon} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus, FaEye,} from 'react-icons/fa'
 // import { MultiSelect } from 'react-multi-select-component'
@@ -13,7 +13,7 @@ import {SankeyMenuConfigurationNodesTags} from './SankeyMenuConfigurationNodesTa
 import {SankeyMenuConfigurationNodesTooltip} from './SankeyMenuConfigurationNodesTooltip'
 import { textwrap } from 'd3-textwrap'
 import { TFunction } from 'i18next'
-import { node_visible_on_svg } from './SankeyDrawFunction'
+import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import FolderTree from 'react-folder-tree'
 import 'react-folder-tree/dist/style.css'
 
@@ -38,7 +38,7 @@ export const OpenSankeyMenuConfigurationNodes = (
   link_io:string,set_link_io:React.Dispatch<React.SetStateAction<string>>,
   link_pos:string,set_link_pos:React.Dispatch<React.SetStateAction<string>>,
   tab_colored:boolean,set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   multi_selected_links: {current:SankeyLink[]},
   set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
 ) => {
@@ -52,7 +52,7 @@ export const OpenSankeyMenuConfigurationNodes = (
     ui['Tags'] = SankeyMenuConfigurationNodesTags(t,data,set_data,multi_selected_nodes,tags_group_key,set_tags_group_key)
   }
   
-  ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,getLinkValue,multi_selected_links,set_display_link_opacity)
+  ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,GetLinkValue,multi_selected_links,set_display_link_opacity)
   
   return ui
 }
@@ -70,7 +70,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const pre_filter_node=(has_node_type)?Object.keys(data.nodeTags['Type de noeud'].tags):[]
   const [filter_node_selector,set_filter_node_selector]=useState<string[]>(pre_filter_node)
 
-  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes,node_visible_on_svg(),filter_node_selector)
+  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
   // const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
   //Renvoie le menu déroulant pour la sélection des noeuds
@@ -166,7 +166,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           data={ tree_of_nodes }
           onChange={ (state, event) => {
             const ev=event as {type:string,path:number[],params:number[]}
-            const node_visible=node_visible_on_svg()
+            const node_visible=NodeVisibleOnsSvg()
             const root_is_checked=Object.values(data.nodes).filter(n=>(data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)).map(n=>n).length===multi_selected_nodes.current.length
             if(state.checked===0.5){
               state.checked=0
@@ -225,8 +225,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
             set_style_to_apply('default')
-            add_new_node(data,set_data,multi_selected_nodes)
-            apply_style_to_nodes(data,set_data,multi_selected_nodes)
+            AddNewNode(data,set_data,multi_selected_nodes)
+            ApplyStyleToNodes(data,set_data,multi_selected_nodes)
           }}>
           <FaPlus/>
         </Button>
@@ -243,7 +243,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
         {/* {dropdownMultiNode()} */}
         <Button style={{width:'70%'}} ref={target_node_selector} variant='outline-primary' id='button-node_selector' onClick={()=>{set_show_node_selector(!show_node_selector)}} >
-          {multi_selected_nodes.current.length>0?cut_name(multi_selected_nodes.current.map(n=>n.name).join(','),25):'None'}
+          {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n=>n.name).join(','),25):'None'}
         </Button>
       </OverlayTrigger>
       {overlayNodeSlector}
@@ -261,7 +261,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           disabled={multi_selected_nodes.current.length == 0}
           onClick={
             () => {
-              multi_selected_nodes.current.map(d => delete_node(data, d))
+              multi_selected_nodes.current.map(d => DeleteNode(data, d))
               multi_selected_nodes.current = []
               set_data({ ...data })
             }}>
@@ -310,17 +310,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             const d = multi_selected_nodes.current[0]
             d3.select(' .opensankey #text_' + d.idNode).text(evt.target.value)
             const wrap = textwrap()
-              .bounds({ height: 100, width: (return_value_node(data,d,'label_box_width') as number != 0) ? return_value_node(data,d,'label_box_width') as number : 110 })
+              .bounds({ height: 100, width: (ReturnValueNode(data,d,'label_box_width') as number != 0) ? ReturnValueNode(data,d,'label_box_width') as number : 110 })
               .method('tspans')
             d3.select(' .opensankey #ggg_' + d.idNode + ' text')
               .call(wrap)
             if (!d.x_label || data.show_structure === 'structure') {
               d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
                 const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
-                if (return_value_node(data,d,'label_horiz') == 'middle') {
+                if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
                   return width / 2
-                } else if (return_value_node(data,d,'label_horiz') == 'right') {
-                  return return_value_node(data,d,'label_vert') == 'middle' ? width : 0
+                } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
+                  return ReturnValueNode(data,d,'label_vert') == 'middle' ? width : 0
                 } else {
                   return 0
                 }
@@ -330,9 +330,9 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
               if (d.x_label) {
                 return d.x_label
-              } else if (return_value_node(data,d,'label_horiz') == 'middle') {
+              } else if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
                 return width / 2
-              } else if (return_value_node(data,d,'label_horiz') == 'right') {
+              } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
                 return width
               } else {
                 return 0
