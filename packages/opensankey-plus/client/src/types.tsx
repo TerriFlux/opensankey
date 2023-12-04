@@ -94,10 +94,10 @@ export type PlusDrawCurveType = (
     link: SankeyPlusLink,
     error_msg: { text?: string } | undefined,
     multi_selected_links:{current: SankeyPlusLink[] },
-    link_text:(data: SankeyPlusData, d: SankeyPlusLink,getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-    min_width_and_height:(d:SankeyPlusData)=>number[],
-    getLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
-    drawArrows:plusDrawArrowsType
+    LinkText:(data: SankeyPlusData, d: SankeyPlusLink,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+    GetSankeyMinWidthAndHeight:(d:SankeyPlusData)=>number[],
+    GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+    DrawArrows:plusDrawArrowsType
 
 ) => string
 
@@ -109,7 +109,7 @@ export type plusDrawArrowsType = (
     data:SankeyPlusData,
     scale:(t:number)=>number,
     inv_scale:(t:number)=>number,
-    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
     display_style: {filter: number},
   ) => void
 
