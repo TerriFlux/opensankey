@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { FunctionComponent } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
-import { Form,  Modal, Button, ButtonGroup,Col,Row, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
+import { Form,  Modal, Button, ButtonGroup, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
 import { SankeyData } from './types'
 import { TFunction,i18n } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
@@ -9,7 +9,8 @@ import { SmoothClasses } from './SankeyUtils'
 const modalPreferencePropTypes = {
   showPreference: PropTypes.bool.isRequired,
   setShowPreference: PropTypes.func.isRequired,
-  ui:PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.element),PropTypes.element]).isRequired).isRequired
+  ui:PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.element),PropTypes.element]).isRequired).isRequired,
+  t:PropTypes.func.isRequired
 }
 type modalPreferenceTypes = InferProps<typeof modalPreferencePropTypes>
 
@@ -26,45 +27,44 @@ export const OpenSankeyDefaultModalePreferenceContent=(
   trad:i18n
 )=>{
   const ui={
-    'lang':<Form.Group key={'1'} as={Row}>
-      <Col xs={1}>
-        <Form.Label  style={{marginTop:'0.5em'}}>{trad.language.toUpperCase()}</Form.Label>
-      </Col>
-      <Col xs={2}>
-        <Form.Check key=''
-          inline
-          style={{marginTop:'0.5em',marginLeft:'0.em'}}
-          type='switch'
-          checked={trad.language=='en'}
-          onChange={evt => {
-            trad.changeLanguage((evt.target.checked)?'en':'fr')
-            set_data({...data})
-          }}
-        />
-      </Col>
-    </Form.Group>,
-
-
-    'mode_expert':<ButtonGroup key={'3'}>
-      <Button variant='info'
-        disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
-        onClick={() => {
-          sessionStorage.removeItem('modepref')
-          data.accordeonToShow = ['MEP']
-          set_data({ ...data })
-
+    'lang':<InputGroup key={'1'}>
+      <InputGroup.Text >{t('Menu.lang')}</InputGroup.Text>
+      <Form.Select
+        size='sm'
+        value={trad.language}
+        onChange={(evt)=>{
+          trad.changeLanguage((evt.target.value))
+          set_data({...data})
         }}
-      >Simple</Button>
-      <Button variant='dark'
-        disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
-        onClick={() => {
-          sessionStorage.setItem('modepref','expert')
-          data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
-          set_data({ ...data })
-        }}
-      >Expert</Button>
-    </ButtonGroup>,
+      >
+        <option key={'francais'} value={'fr'}>Français</option>
+        <option key={'english'} value={'en'}>English</option>
+      </Form.Select>
+    </InputGroup>,
+
+
     'form':[
+      <h4>{t('Menu.pref_title_sub_menu')}</h4>,
+      <ButtonGroup key={'3'}>
+        <Button variant='info'
+          disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
+          onClick={() => {
+            sessionStorage.removeItem('modepref')
+            data.accordeonToShow = ['MEP']
+            set_data({ ...data })
+
+          }}
+        >Mode Simple</Button>
+        <Button variant='dark'
+          disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
+          onClick={() => {
+            sessionStorage.setItem('modepref','expert')
+            data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
+            set_data({ ...data })
+          }}
+        >Mode Expert</Button>
+      
+      </ButtonGroup>,
       <InputGroup>
         <Checkbox 
           sx={SmoothClasses({})}
@@ -135,7 +135,6 @@ export const OpenSankeyDefaultModalePreferenceContent=(
           {t('Menu.ED')}
         </Checkbox>
       </InputGroup>,
-
     ],
     'node_label_sep':<OverlayTrigger
       key={'Banner.ndd_lst.1'}
@@ -178,6 +177,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
   return ui
 }
 export const preferenceCheck = (str: string,data:SankeyData) => {
+  sessionStorage.removeItem('modepref')
   if (!data.accordeonToShow.includes(str)) {
     data.accordeonToShow.push(str)
   } else {
@@ -189,11 +189,11 @@ export const preferenceCheck = (str: string,data:SankeyData) => {
 
 
 
-const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreference,setShowPreference,ui})=>{
+const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreference,setShowPreference,ui,t})=>{
 
   return (<Modal show={showPreference} onHide={() => { setShowPreference(false) }}>
     <Modal.Header closeButton>
-      <Modal.Title>Édition Préferences</Modal.Title>
+      <Modal.Title>{t('Menu.title_pref')}</Modal.Title>
     </Modal.Header>
     <Modal.Body>
       {Object.values(ui).map((d,i)=>{
