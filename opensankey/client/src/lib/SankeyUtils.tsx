@@ -1,4 +1,14 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, TagsGroup,SankeyNodeAttrLocal,SankeyNodeStyle,SankeyLinkAttrLocal,SankeyLinkStyle, TagsCatalog } from './types'
+import { SankeyData,
+  SankeyLink,
+  SankeyLinkValue,
+  SankeyLinkValueDict,
+  SankeyNode,
+  TagsGroup,
+  SankeyNodeAttrLocal,
+  SankeyNodeStyle,
+  SankeyLinkAttrLocal,
+  SankeyLinkStyle,
+  TagsCatalog } from './types'
 import FileSaver from 'file-saver'
 import { complete_sankey_data } from './SankeyConvert'
 import {  compute_auto_sankey,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
@@ -7,6 +17,11 @@ import colormap from 'colormap'
 import { menu_config_width } from './SankeyMenu'
 import React from 'react'
 import { FaCaretRight } from 'react-icons/fa'
+import { OverlayTrigger,Tooltip } from 'react-bootstrap'
+import { TFunction } from 'i18next'
+import { faCircleInfo} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
 declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
@@ -17,7 +32,7 @@ declare const window: Window &
  * @param {{[key:string] : SankeyLinkValue}} v
  * @param {number} depth
  */
-export const addDataTags = (
+export const AddDataTags = (
   dataTags: TagsGroup[],
   v: {[key:string] : SankeyLinkValue},
   depth: number
@@ -43,13 +58,13 @@ export const addDataTags = (
       if ( v[listKey[i]] === undefined ) {
         (v[listKey[i]] as SankeyLinkValueDict) = {}
       }
-      addDataTags(dataTags, v[listKey[i]] as unknown as {[key:string] : SankeyLinkValue}, depth + 1)
+      AddDataTags(dataTags, v[listKey[i]] as unknown as {[key:string] : SankeyLinkValue}, depth + 1)
     }
   }
 }
 
 
-export const cut_name = (t: string, n: number) => {
+export const CutName = (t: string, n: number) => {
   return (t && t.length > n) ? t.slice(0, n) + '...' : t
 }
 
@@ -63,7 +78,7 @@ export const cut_name = (t: string, n: number) => {
  * @param {boolean} [up=false]
  * @returns {*}
  */
-export const getLinkValue = (
+export const GetLinkValue = (
   data: SankeyData,
   idLink: string,
   up = false
@@ -135,7 +150,7 @@ export const getLinkValue = (
  * @param {SankeyLinkValueDict} value_dict
  * @returns {number}
  */
-export const findMaxLinkValue = (
+export const FindMaxLinkValue = (
   max_node_value: number,
   value_dict: SankeyLinkValueDict
 ) => {
@@ -157,7 +172,7 @@ export const findMaxLinkValue = (
   if (typeof child === 'object') {
     // Each link can contain multiple values, so we loop on each dict entry
     Object.values(value_dict).forEach(v => {
-      const cur_max_value = findMaxLinkValue(new_max_node_value, (v as unknown) as SankeyLinkValueDict)
+      const cur_max_value = FindMaxLinkValue(new_max_node_value, (v as unknown) as SankeyLinkValueDict)
       new_max_node_value = (cur_max_value > new_max_node_value) ? cur_max_value : new_max_node_value
     })
   }
@@ -168,43 +183,16 @@ export const findMaxLinkValue = (
   return new_max_node_value
 }
 
-
-
-/**
- *  Compute the sum of all link visible
- *
- * @param {SankeyData} data
- * @param {string[]} Links
- * @returns {number}
- */
-export const getTotalLinks = (
-  data: SankeyData,
-  Links: string[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
-) => {
-  let total = 0
-  Links.forEach(element => {
-    // On vérifie que le lien est affiché, cad que le noeud source et le noeud target sont
-    if (node_displayed(data,data.nodes[data.links[element].idSource]) && node_displayed(data,data.nodes[data.links[element].idTarget])) {
-      const tmp = getLinkValue(data, element).value
-
-      total += (tmp)?tmp:0
-    }
-  })
-  return total
-}
-
-
-export const compute_total_offsets = (
+export const ComputeTotalOffsets = (
   inv_scale:(t:number)=>number,
   node: SankeyNode,
   data: SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
-  test_link_value: (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
-    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  TestLinkValue: (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
+    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
   ) => number,
   ref_link: SankeyLink | undefined = undefined,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
   const { nodes, links} = data
@@ -237,25 +225,25 @@ export const compute_total_offsets = (
         const node_y = node.position === 'absolute' ? +node.y : +target_node.y + +node.y
         const target_node_x = target_node.position === 'absolute' ? +target_node.x : +node.x + +target_node.x
         const target_node_y = target_node.position === 'absolute' ? +target_node.y : +node.y + +target_node.y
-        if (return_value_link(data,link,'orientation') === 'hh') {
-          if (target_node_x > node_x && !return_value_link(data,link,'recycling') || target_node_x <= node_x && return_value_link(data,link,'recycling')) {
+        if (ReturnValueLink(data,link,'orientation') === 'hh') {
+          if (target_node_x > node_x && !ReturnValueLink(data,link,'recycling') || target_node_x <= node_x && ReturnValueLink(data,link,'recycling')) {
             right_flux.push(idLink)
           } else {
             left_flux.push(idLink)
           }
-        } else if (return_value_link(data,link,'orientation') === 'vv') {
+        } else if (ReturnValueLink(data,link,'orientation') === 'vv') {
           if (target_node_y > node_y) {
             bottom_flux.push(idLink)
           } else {
             top_flux.push(idLink)
           }
-        } else if (return_value_link(data,link,'orientation') === 'hv') {
+        } else if (ReturnValueLink(data,link,'orientation') === 'hv') {
           if (target_node_x > node_x) {
             right_flux.push(idLink)
           } else {
             left_flux.push(idLink)
           }
-        } else if (return_value_link(data,link,'orientation') === 'vh') {
+        } else if (ReturnValueLink(data,link,'orientation') === 'vh') {
           if (target_node_y > node_y) {
             bottom_flux.push(idLink)
           } else {
@@ -284,7 +272,7 @@ export const compute_total_offsets = (
         const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y + +source_node.y
         const node_x = node.position === 'absolute' ? +node.x : +source_node.x + +node.x
         const node_y = node.position === 'absolute' ? +node.y : +source_node.y + +node.y
-        if (return_value_link(data,link,'orientation') === 'vv') {
+        if (ReturnValueLink(data,link,'orientation') === 'vv') {
           if (source_node_y < node_y) {
             // flux goes down
             top_flux.push(idLink)
@@ -292,15 +280,15 @@ export const compute_total_offsets = (
             // flux goes up
             bottom_flux.push(idLink)
           }
-        } else if (return_value_link(data,link,'orientation') === 'hh') {
-          if (source_node_x >= node_x && return_value_link(data,link,'recycling') || source_node_x < node_x && !return_value_link(data,link,'recycling')) {
+        } else if (ReturnValueLink(data,link,'orientation') === 'hh') {
+          if (source_node_x >= node_x && ReturnValueLink(data,link,'recycling') || source_node_x < node_x && !ReturnValueLink(data,link,'recycling')) {
             // flux goes right
             left_flux.push(idLink)
           } else {
             // flux goes left
             right_flux.push(idLink)
           }
-        } else if (return_value_link(data,link,'orientation') === 'hv') {
+        } else if (ReturnValueLink(data,link,'orientation') === 'hv') {
           if (source_node_y < node_y) {
             // flux goes right
             top_flux.push(idLink)
@@ -308,7 +296,7 @@ export const compute_total_offsets = (
             // flux goes left
             bottom_flux.push(idLink)
           }
-        } else if (return_value_link(data,link,'orientation') === 'vh') {
+        } else if (ReturnValueLink(data,link,'orientation') === 'vh') {
           if (source_node_x < node_x) {
             // flux goes right
             left_flux.push(idLink)
@@ -335,12 +323,12 @@ export const compute_total_offsets = (
         the_id = top_flux[i - 1]
       }
 
-      let v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
       v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
-      const extension = getLinkValue(data, links[the_id].idLink).extension
+      const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
       }
@@ -369,12 +357,12 @@ export const compute_total_offsets = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      let v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
       v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
-      const extension = getLinkValue(data, links[the_id].idLink).extension
+      const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
       }
@@ -404,12 +392,12 @@ export const compute_total_offsets = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      let v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
       v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
-      const extension = getLinkValue(data, links[the_id].idLink).extension
+      const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
       }
@@ -439,12 +427,12 @@ export const compute_total_offsets = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      let v = test_link_value(data, nodes, links[the_id],getLinkValue)
+      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
       v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
-      const extension = getLinkValue(data, links[the_id].idLink).extension
+      const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
       }
@@ -469,7 +457,7 @@ export const compute_total_offsets = (
  * @param {number} v
  * @returns {*}
  */
-export const toPrecision = (
+export const ToPrecision = (
   v: number,
   nb_scientific=3
 ) => {
@@ -489,16 +477,16 @@ export const toPrecision = (
  * @param {SankeyLink} d
  * @returns {*}
  */
-export const link_text = (
+export const LinkText = (
   data: SankeyData,
   d: SankeyLink,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
-  if(getLinkValue===undefined){
+  if(GetLinkValue===undefined){
     console.log('stop')
   }
-  let the_link_value = getLinkValue(data, d.idLink).value
-  const str_display = String(getLinkValue(data, d.idLink).display_value)
+  let the_link_value = GetLinkValue(data, d.idLink).value
+  const str_display = String(GetLinkValue(data, d.idLink).display_value)
   if (str_display !== '' && str_display!=='*') {
     return str_display
   }
@@ -506,7 +494,7 @@ export const link_text = (
     return
   }
   if (data.show_structure == 'data' ) {
-    const link_value = getLinkValue(data, d.idLink)
+    const link_value = GetLinkValue(data, d.idLink)
     if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
       return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value
     } else {
@@ -517,25 +505,25 @@ export const link_text = (
   if(isNaN(the_link_value)){
     return the_link_value
   }else{
-    const nb_sign=(return_value_link(data,d,'scientific_precision') as number)
+    const nb_sign=(ReturnValueLink(data,d,'scientific_precision') as number)
     if(nb_sign>0){
       the_link_value=parseFloat(the_link_value.toPrecision(nb_sign))
     }
 
-    if((return_value_link(data,d,'to_precision'))){
-      the_link_value =toPrecision(the_link_value,nb_sign)
-    }else if (return_value_link(data,d,'custom_digit')){
-      the_link_value =(the_link_value as number).toFixed((return_value_link(data,d,'nb_digit') as number))
+    if((ReturnValueLink(data,d,'to_precision'))){
+      the_link_value =ToPrecision(the_link_value,nb_sign)
+    }else if (ReturnValueLink(data,d,'custom_digit')){
+      the_link_value =(the_link_value as number).toFixed((ReturnValueLink(data,d,'nb_digit') as number))
     }
-    const unit=return_value_link(data,d,'label_unit_visible')?return_value_link(data,d,'label_unit'):''
+    const unit=ReturnValueLink(data,d,'label_unit_visible')?ReturnValueLink(data,d,'label_unit'):''
     return the_link_value+unit
   }
 }
 
 
 
-export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+export const TestLinkValue = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const { dataTags } = data
   const inv_scale = d3.scaleLinear()
@@ -548,7 +536,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
     return inv_scale(5)
   }
   if (data.show_structure == 'data' ) {
-    const link_value = getLinkValue(data, d.idLink)
+    const link_value = GetLinkValue(data, d.idLink)
     if ((link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value) {
       return (link_value as SankeyLinkValue & {extension: {data_value : string}} ).extension.data_value
     } else {
@@ -609,7 +597,7 @@ export const test_link_value = (data:SankeyData, nodes: { [node_id: string]: San
  *
  * @returns {SankeyData}
  */
-export const default_sankey_data = (): SankeyData => {
+export const DefaultSankeyData = (): SankeyData => {
   const data : Omit<SankeyData,'style_node' | 'style_link'> = {
     version: '0.8',
     couleur_fond_sankey:'#f2f2f2',
@@ -665,8 +653,8 @@ export const default_sankey_data = (): SankeyData => {
   }
   const default_data = {
     ...data,
-    style_node: { 'default' : default_node_style() },
-    style_link: { 'default' : default_link_style() }
+    style_node: { 'default' : DefaultNodeStyle() },
+    style_link: { 'default' : DefaultLinkStyle() }
   }
   return (default_data as unknown as SankeyData)
 }
@@ -677,8 +665,8 @@ export const default_sankey_data = (): SankeyData => {
  * @param {SankeyData} data
  * @returns {*}
  */
-export const link_color = (l: SankeyLink,data:SankeyData,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+export const LinkColor = (l: SankeyLink,data:SankeyData,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   let colorLink
 
@@ -698,9 +686,9 @@ export const link_color = (l: SankeyLink,data:SankeyData,
 
   if (l.colorTag) {
     const tagGroup = l.colorTag
-    const v = getLinkValue(data, l.idLink)
+    const v = GetLinkValue(data, l.idLink)
     if (v === undefined) {
-      return return_value_link(data,l,'color')
+      return ReturnValueLink(data,l,'color')
     }
 
     if (tagGroup in data.fluxTags && v.tags[tagGroup] && v.tags[tagGroup].filter(tag=>tag in data.fluxTags[tagGroup].tags).length > 0) {
@@ -720,8 +708,8 @@ export const link_color = (l: SankeyLink,data:SankeyData,
       return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
     }
   }
-  if (l.local && l.local.color && l.local.color !== '#808080' && l.local.color !== default_link_style().color) {
-    return return_value_link(data,l,'color')
+  if (l.local && l.local.color && l.local.color !== '#808080' && l.local.color !== DefaultLinkStyle().color) {
+    return ReturnValueLink(data,l,'color')
   }
 
   if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
@@ -745,11 +733,11 @@ export const link_color = (l: SankeyLink,data:SankeyData,
       return data.nodeTags[target_node.colorTag].tags[selected_tag].color
     }
   } else if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit') {
-    return return_value_node(data,source_node,'color') as string
+    return ReturnValueNode(data,source_node,'color') as string
   } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit') {
-    return return_value_node(data,target_node,'color') as string
+    return ReturnValueNode(data,target_node,'color') as string
   }
-  return node_color(data.nodes[l.idSource],data)
+  return NodeColor(data.nodes[l.idSource],data)
 }
 
 
@@ -763,8 +751,8 @@ export const link_color = (l: SankeyLink,data:SankeyData,
  * @param {SankeyData} data
  * @returns {boolean}
  */
-export const link_visible = (l: SankeyLink, data: SankeyData,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+export const LinkVisible = (l: SankeyLink, data: SankeyData,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const { dataTags, fluxTags } = data
   if (!l) {
@@ -775,7 +763,7 @@ export const link_visible = (l: SankeyLink, data: SankeyData,
       return false
     }
   }
-  if (!data.nodes[l.idSource] || !node_displayed(data,data.nodes[l.idSource]) || !data.nodes[l.idTarget] || !node_displayed(data,data.nodes[l.idTarget])) {
+  if (!data.nodes[l.idSource] || !NodeDisplayed(data,data.nodes[l.idSource]) || !data.nodes[l.idTarget] || !NodeDisplayed(data,data.nodes[l.idTarget])) {
     return false
   }
   let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
@@ -825,7 +813,7 @@ export const link_visible = (l: SankeyLink, data: SankeyData,
   if (!visible) {
     return false
   }
-  const link_values = getLinkValue(data,l.idLink)
+  const link_values = GetLinkValue(data,l.idLink)
   const is_free = link_values.extension?.free_mini !== undefined &&
                   data.show_structure !== 'free_interval' &&
                   data.show_structure !== 'free_value' &&
@@ -833,7 +821,7 @@ export const link_visible = (l: SankeyLink, data: SankeyData,
   if (link_values.extension?.free_visible) {
     return true
   }
-  if (!is_free && test_link_value(data, data.nodes, l,getLinkValue) === 0) {
+  if (!is_free && TestLinkValue(data, data.nodes, l,GetLinkValue) === 0) {
     if (data.display_style.null_flux) {
       return true
     }
@@ -843,12 +831,12 @@ export const link_visible = (l: SankeyLink, data: SankeyData,
 }
 
 /**
- * Return a default_node, used at the creation of a new node
+ * Return a Sankey Node, used at the creation of a new node
  *
  * @param {SankeyData} data
  * @returns {SankeyNode}
  */
-export const default_node = (
+export const DefaultNode = (
   data: SankeyData
 ): SankeyNode => {
   const defaultNode :  SankeyNode = {
@@ -873,7 +861,7 @@ export const default_node = (
   return defaultNode
 }
 // Return default style configuration for node
-export const default_node_style=()=>{
+export const DefaultNodeStyle=()=>{
   return {
     idNode:'default',
     name:'Style par défaut',
@@ -906,7 +894,7 @@ export const default_node_style=()=>{
   }
 }
 // Return default style configuration for link
-export const default_link_style=()=>{
+export const DefaultLinkStyle=()=>{
   return {
     idLink:'default',
     name:'Style par défaut',
@@ -945,7 +933,7 @@ export const default_link_style=()=>{
  * @param {string[]} l
  * @returns {*}
  */
-const create_object = (data: SankeyData, l: string[]) => {
+const CreateObject = (data: SankeyData, l: string[]) => {
   const { dataTags,fluxTags } = data
   if (l.length == 0) {
     const obj = Object.create({})
@@ -963,7 +951,7 @@ const create_object = (data: SankeyData, l: string[]) => {
       const o = Object.create({})
       Object.keys(dataTags[i].tags).forEach(tag_key => {
         const obj = Object.create({})
-        const ob = create_object(data, l.slice(1))
+        const ob = CreateObject(data, l.slice(1))
         obj[tag_key] = ob
         Object.assign(o, obj)
       })
@@ -977,7 +965,7 @@ const create_object = (data: SankeyData, l: string[]) => {
  * @param {SankeyData} data
  * @returns {SankeyLink}
  */
-export const default_link = (data: SankeyData): SankeyLink => {
+export const DefaultLink = (data: SankeyData): SankeyLink => {
   const { dataTags } = data
   let nObjet = Object.create({})
   const listK = Object.keys(dataTags).filter(d => {
@@ -990,7 +978,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
   })
 
 
-  nObjet = create_object(data, listK)
+  nObjet = CreateObject(data, listK)
 
   return {
     idSource: 'node0',
@@ -1009,7 +997,7 @@ export const default_link = (data: SankeyData): SankeyLink => {
  * @param {SankeyData} data
  * @param {SankeyLink} link
  */
-export const delete_link = (
+export const DeleteLink = (
   data: SankeyData,
   link: SankeyLink
 ) => {
@@ -1029,12 +1017,12 @@ export const delete_link = (
  * @param {SankeyData} data
  * @param {SankeyNode} node
  */
-export const delete_node = (
+export const DeleteNode = (
   data: SankeyData,
   node: SankeyNode
 ) => {
 
-  //Ne fait plus appel à delete_link car la fonction modifie le tableau des output/input du node
+  //Ne fait plus appel à DeleteLink car la fonction modifie le tableau des output/input du node
   //et ne supprime pas des flux qui devrait l'être
 
   node.inputLinksId.forEach(idLink => {
@@ -1091,7 +1079,7 @@ type layout_type = {
  * @param {string} the_url_prefix
  * @param {string} filetype
  */
-export const downloadExamples = (
+export const DownloadExamples = (
   file_name: string,
   the_url_prefix: string,
   filetype: string
@@ -1119,19 +1107,19 @@ export const downloadExamples = (
  * @param {SankeyData} server_data
  * @returns {*}
  */
-export const processExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void,
+export const ProcessExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void,
   convert_data:(d:SankeyData)=>void,
 
 ) => {
-  const data = default_sankey_data()
+  const data = DefaultSankeyData()
   Object.assign(data, server_data)
-  complete_sankey_data(data,default_sankey_data,default_node,default_link)
+  complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
   convert_data(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
     convert_data((data as SankeyData & layout_type).layout)
-    complete_sankey_data((data as SankeyData & layout_type).layout,default_sankey_data,default_node,default_link)
+    complete_sankey_data((data as SankeyData & layout_type).layout,DefaultSankeyData,DefaultNode,DefaultLink)
     compute_default_input_outputLinksId(data.nodes, data.links)
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData }).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData }).layout
@@ -1151,7 +1139,7 @@ export const processExample = (server_data: SankeyData,updateLayout:(data: Sanke
  * @param {string} the_url_prefix
  * @returns {void, set_show_excel_dialog: (b: boolean) => void, input_file: any, the_url_prefix: string) => void}
  */
-export const uploadExcelImpl = (
+export const UploadExcelImpl = (
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
   the_url_prefix: string
@@ -1178,12 +1166,12 @@ export const uploadExcelImpl = (
  * @param {(data: SankeyData) => void} set_data
  * @returns {void) => void}
  */
-export const uploadExemple = (
+export const UploadExemple = (
   file_name: string,
   the_url_prefix: string,
   data: SankeyData,
   set_data: (data: SankeyData) => void,
-  reinitialization: ()=>void,
+  Reinitialization: ()=>void,
   convert_data:(d:SankeyData)=>void
 ) => {
   let root = window.location.href
@@ -1207,8 +1195,8 @@ export const uploadExemple = (
       }
 
       if (!file_name.includes('.xlsx')) {
-        reinitialization()
-        complete_sankey_data(server_data,default_sankey_data,default_node,default_link)
+        Reinitialization()
+        complete_sankey_data(server_data,DefaultSankeyData,DefaultNode,DefaultLink)
         convert_data(server_data)
         set_data({ ...server_data})
       }
@@ -1216,7 +1204,7 @@ export const uploadExemple = (
   })
 }
 
-export const downloadExempleExcel = (
+export const DownloadExempleExcel = (
   file_name: string,
 ) => {
   let root = window.location.href
@@ -1237,13 +1225,13 @@ export const downloadExempleExcel = (
         alert(error)
         return
       }
-      clickSaveExcel('/opensankey/',server_data)
+      ClickSaveExcel('/opensankey/',server_data)
 
     })
   })
 }
 
-export const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
+export const ClickSaveExcel = (url_prefix:string,data:SankeyData) => {
   let root = window.location.href
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
@@ -1279,7 +1267,7 @@ export const clickSaveExcel = (url_prefix:string,data:SankeyData) => {
 
 // Function that return the color that the node has to display
 // It depend of if a tags is selected, if the persistent variable is at true and the color we gived to the node
-export const node_color = (n: SankeyNode,data:SankeyData) => {
+export const NodeColor = (n: SankeyNode,data:SankeyData) => {
   let colorNode
   if (n.colorParameter === 'groupTag' || data.show_structure === 'structure' ) {
     //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
@@ -1288,13 +1276,13 @@ export const node_color = (n: SankeyNode,data:SankeyData) => {
       const tagGroup = n.colorTag
       if (n.tags[tagGroup] === undefined) {
         colorNode = 'grey'
-        colorNode=(return_value_node(data,n,'colorSustainable'))? return_value_node(data,n,'color'):colorNode
+        colorNode=(ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color'):colorNode
       } else if (n.tags[tagGroup].length == 1 ) {
         if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
           colorNode = data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color
         } else {
           colorNode = 'grey'
-          colorNode=(return_value_node(data,n,'colorSustainable'))? return_value_node(data,n,'color'):colorNode
+          colorNode=(ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color'):colorNode
         }
       } else {
         colorNode = 'grey'
@@ -1305,19 +1293,19 @@ export const node_color = (n: SankeyNode,data:SankeyData) => {
   }
   if (n.colorParameter === 'local') {
     // Le couleur est définie dans les parametres locaux du noeud
-    colorNode = return_value_node(data,n,'color')
+    colorNode = ReturnValueNode(data,n,'color')
   }
   return colorNode
 }
 
-export const get_vertical_marfin_for_sankey_zone=()=>{
+export const GetVerticalMarginForSankeyZone=()=>{
   // Get height of elements ahead and below the sankeydraw zone
   const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
   const footer_size=document.getElementsByClassName('sankeyFooter')[0]?.getBoundingClientRect().height
   return shift_top+footer_size
 }
-export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:SankeyData)=>number[],show_nav=false,vertical=false)=>{
-  [data.width, data.height] = min_width_and_height(data)
+export const AdjustSankeyZone=(data:SankeyData,GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],show_nav=false,vertical=false)=>{
+  [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
   let size_menu=0
   if(show_nav){
     size_menu=menu_config_width
@@ -1329,7 +1317,7 @@ export const adjust_sankey_zone=(data:SankeyData,min_width_and_height:(data:Sank
 
   const visible_size=window.innerWidth -size_menu - has_scroll_bar - (is_fullscreen?-50:50)
 
-  const vertical_margin=get_vertical_marfin_for_sankey_zone()
+  const vertical_margin=GetVerticalMarginForSankeyZone()
 
 
   const vertical_visible_size=window.innerHeight - 50 - (vertical_margin) - is_fullscreen
@@ -1352,7 +1340,7 @@ interface DataSuiteType{
   view?:{id: string,view_data: object,nom:string,details:string}[],
 } 
 
-export const clickSaveDiagram = (data:SankeyData,name='sankey_diagram') => {
+export const ClickSaveDiagram = (data:SankeyData,name='sankey_diagram') => {
   const data_to_save = { ...data }
   const str_data = JSON.stringify(data_to_save)
 
@@ -1368,7 +1356,7 @@ export const clickSaveDiagram = (data:SankeyData,name='sankey_diagram') => {
   FileSaver.saveAs(blob, name+'.json')
 }
 
-export const add_tag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string)=>{
+export const AddTag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string)=>{
   const elementTagName = type_tag_name
   // Méthode pour incrementer idElement
   let idElement = Object.keys(data[elementTagName][tags_group_key].tags).length
@@ -1392,7 +1380,7 @@ export const add_tag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'd
   )
 }
 
-export const add_grp_tag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,elementNameProp:string)=>{
+export const AddGroupTag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,elementNameProp:string)=>{
   const elementTagName = type_tag_name
   const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
   // Méthode pour incrementer idGroup
@@ -1418,15 +1406,15 @@ export const add_grp_tag=(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' 
   // Add an element to the group newly created
   // Méthode pour incrementer idElement
 
-  add_tag(data,type_tag_name,k)
+  AddTag(data,type_tag_name,k)
   return k
 }
 
 // Return the value of an attribute from node :
 // - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
 // - Else it return the attribute from the style the node has (a node always has a style )
-export const return_value_node=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle)=>{
-  let value=return_local_node_value(n,k as keyof SankeyNodeAttrLocal)
+export const ReturnValueNode=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle)=>{
+  let value=ReturnLocalNodeValue(n,k as keyof SankeyNodeAttrLocal)
   if(value === undefined || value === null){
     const ks=k as keyof SankeyNodeStyle
     value= n.style in data.style_node ? data.style_node[n.style][ks] : data.style_node['default'][ks]
@@ -1435,12 +1423,12 @@ export const return_value_node=(data:SankeyData,n:SankeyNode,k:keyof SankeyNodeA
 }
 
 // Get the variable value of an attribut from style
-export const get_node_attribute_value_from_style=(data:SankeyData,n:SankeyNodeStyle,k:keyof SankeyNodeStyle)=>{
+export const GetNodeAttributeValueFromStyle=(data:SankeyData,n:SankeyNodeStyle,k:keyof SankeyNodeStyle)=>{
   return data.style_node[n.idNode][k]
 }
 
 // Return value of local node variable attribute that can be undefined ('local' and 'local[key]' can be undefined)
-export const return_local_node_value=(n:SankeyNode,key:keyof SankeyNodeAttrLocal)=>{
+export const ReturnLocalNodeValue=(n:SankeyNode,key:keyof SankeyNodeAttrLocal)=>{
   if(n.local==undefined){
     return undefined
   }else{
@@ -1449,21 +1437,40 @@ export const return_local_node_value=(n:SankeyNode,key:keyof SankeyNodeAttrLocal
 }
 
 // Check if all value of the attribute "k" is the same in the selected nodes (or selected style)
-// If the value come from local attribute or the style of the node does'nt matter, we look only the value
-export const is_all_node_attr_same_value=(data:SankeyData,m_s_n:SankeyNode[]|SankeyNodeStyle[],k:keyof SankeyNodeAttrLocal,menu_for_style:boolean)=>{
-  if(m_s_n.length==0){
-    return null
+// If the value come from local attribute or the style of the node doesn't matter, we look only the value
+export const IsAllNodeAttrSameValue=(data:SankeyData,m_s_n:SankeyNode[]|SankeyNodeStyle[],k_list:(keyof SankeyNodeAttrLocal)[],menu_for_style:boolean)=>{
+  // store_value : variable that contain an array forEach key we are looking for
+  // Each array contain in first position the value of the selected nodes attribute 
+  // In second position it contain a boolean that return true if all selected nodes have the same value for the key
+  const store_value={} as {[x:string]:[(string | number | boolean),boolean]}
+
+  if(m_s_n.length>0){
+    // For each selected nodes
+    m_s_n.forEach((node,i)=>{
+      // For each attributes we want to check
+      k_list.forEach(k => {
+        // Get the value of the node attribute(k)
+        const val=ReturnCorrectNodeAttributeValue(data,node,k,menu_for_style)
+
+        // Store first value of each node attribute
+        if(i===0){
+          store_value[k]=[val,false]
+        }else{
+          // Check if other nodes selected have the same value, if not we set the 2nd value of the array at true
+          store_value[k][1]=val!==store_value[k][0]?true:store_value[k][1]
+        }
+      })
+    })
+  }else{
+    k_list.forEach(k => {
+      store_value[k]=[false,false]
+    })
   }
-  const first_value=return_correct_node_attribute_value(data,m_s_n[0],k,menu_for_style)
-  let all_same=true
-  m_s_n.forEach(n=>{
-    all_same=return_correct_node_attribute_value(data,n,k,menu_for_style)!==first_value?false:all_same
-  })
-  return (all_same?first_value:0)
+  return store_value
 }
 
 // Check if the value used is the local one or the one that come from the style
-export const is_node_diplaying_value_local=(m_s_n:{current:SankeyNode[]},k:keyof SankeyNodeAttrLocal,menu_for_style:boolean)=>{
+export const IsNodeDisplayingValueLocal=(m_s_n:{current:SankeyNode[]},k:keyof SankeyNodeAttrLocal,menu_for_style:boolean)=>{
   if(menu_for_style){
     return false
   }
@@ -1478,31 +1485,31 @@ export const is_node_diplaying_value_local=(m_s_n:{current:SankeyNode[]},k:keyof
 }
 
 // Assign the value to the corresponding variable (in the style or in the variable local of node)
-export const assign_node_value_to_correct_var=(n:SankeyNode|SankeyNodeStyle,k:keyof SankeyNodeAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
+export const AssignNodeValueToCorrectVar=(n:SankeyNode|SankeyNodeStyle,k:keyof SankeyNodeAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
   const nn=(n as SankeyNode)
   const ns=(n as SankeyNodeStyle)
   const ks=(k as keyof SankeyNodeStyle)
   const kl=(k as keyof SankeyNodeAttrLocal);
-  (menu_for_style)?assign_node_style_attribute(ns,ks,v):assign_node_local_attribute(nn,kl,v)
+  (menu_for_style)?AssignNodeStyleAttribute(ns,ks,v):AssignNodeLocalAttribute(nn,kl,v)
 }
 // Return the value to the corresponding variable (in the style or in the variable local of node)
-export const return_correct_node_attribute_value=(data:SankeyData,n:SankeyNode|SankeyNodeStyle,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle,menu_for_style:boolean)=>{
+export const ReturnCorrectNodeAttributeValue=(data:SankeyData,n:SankeyNode|SankeyNodeStyle,k:keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle,menu_for_style:boolean)=>{
   const ks=(k as keyof SankeyNodeStyle)
   const kl=(k as keyof SankeyNodeAttrLocal)
   const nn=(n as SankeyNode)
   const ns=(n as SankeyNodeStyle)
-  return (menu_for_style)?get_node_attribute_value_from_style(data,ns,ks):return_value_node(data,nn,kl)
+  return (menu_for_style)?GetNodeAttributeValueFromStyle(data,ns,ks):ReturnValueNode(data,nn,kl)
 }
 
 // Assign the value to local attribute (create local attribute if it doesn't exist and "k" attribute if it doesn't either)
-export const assign_node_local_attribute=(n:SankeyNode,k:keyof SankeyNodeAttrLocal,v:boolean|string|number)=>{
+export const AssignNodeLocalAttribute=(n:SankeyNode,k:keyof SankeyNodeAttrLocal,v:boolean|string|number)=>{
   if(n.local === undefined || n.local === null){
     n.local={} as SankeyNodeAttrLocal
   }
   Object.assign(n.local,{[k.toString()]:v})
 }
 // Assign the value to attribute of node style "n"
-export const assign_node_style_attribute=(n:SankeyNodeStyle,k:keyof SankeyNodeStyle,v:boolean|string|number)=>{
+export const AssignNodeStyleAttribute=(n:SankeyNodeStyle,k:keyof SankeyNodeStyle,v:boolean|string|number)=>{
   (n[k] as unknown)=v
 }
 
@@ -1519,20 +1526,20 @@ export const assign_node_style_attribute=(n:SankeyNodeStyle,k:keyof SankeyNodeSt
  * @param {SankeyNode} node Node to check
  * @param {boolean} skip_link_zero
  */
-export const node_displayed=(
+export const NodeDisplayed=(
   data:SankeyData,
   node:SankeyNode,
   skip_link_zero=false
 )=>{
-  const has_local_level=return_local_node_value(node,'local_aggregation') as boolean | undefined
-  let local_level=node_has_displayed_level(data,node)
+  const has_local_level=ReturnLocalNodeValue(node,'local_aggregation') as boolean | undefined
+  let local_level=NodeHasDisplayedLevel(data,node)
   if(has_local_level!==undefined && has_local_level!==null){
     local_level=has_local_level
   }
-  return node_has_displayed_tags(data,node) && ( local_level ) && ( skip_link_zero || has_links_zero(data,node))
+  return NodeHasDisplayedTags(data,node) && ( local_level ) && ( skip_link_zero || HasLinksZero(data,node))
 }
 
-export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
+export const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode)=>{
   let to_display=true
 
   Object.entries(data.nodeTags).filter(nt=> nt[0] !== 'Type de noeud' && Object.keys(n.tags).includes(nt[0])).forEach(nt=>{
@@ -1552,7 +1559,7 @@ export const node_has_displayed_tags=(data:SankeyData,n:SankeyNode)=>{
   return to_display
 }
 
-export const node_has_displayed_level=(data:SankeyData,n:SankeyNode)=>{
+export const NodeHasDisplayedLevel=(data:SankeyData,n:SankeyNode)=>{
   let to_display=true
   // Check if there is other aggregation tags than 'Primaire',
   const multi_level=Object.entries(data.levelTags).filter(nt=> nt[0]!=='Primaire').map(nt=>nt[0]).length>0
@@ -1584,7 +1591,7 @@ export const node_has_displayed_level=(data:SankeyData,n:SankeyNode)=>{
 
 // Check if incoming and/or outgoing links have all 0 for value, if that the case we we returne false
 // We can short-circuit the function if the variable null_flux is true or the variable is show_structur is 'structure' (doesn't care about links value)
-export const has_links_zero=(data:SankeyData,node:SankeyNode)=>{
+export const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
   if((node.outputLinksId.length==0 && node.inputLinksId.length==0)|| data.display_style.null_flux || data.show_structure == 'structure'){
     return true
   }else{
@@ -1596,11 +1603,11 @@ export const has_links_zero=(data:SankeyData,node:SankeyNode)=>{
           //alert('Corruption du diagramme')
           return ''
         }
-        if (!node_displayed(data,data.nodes[link.idSource],true) || !node_displayed(data,data.nodes[link.idTarget],true)) {
+        if (!NodeDisplayed(data,data.nodes[link.idSource],true) || !NodeDisplayed(data,data.nodes[link.idTarget],true)) {
           continue
         }
         if (data.nodes[link.idSource]  && data.nodes[link.idTarget]) {
-          const val = getLinkValue(data, link.idLink)
+          const val = GetLinkValue(data, link.idLink)
           if (val.extension?.free_visible) {
             total_input +=1
             continue
@@ -1621,11 +1628,11 @@ export const has_links_zero=(data:SankeyData,node:SankeyNode)=>{
           //alert('Corruption du diagramme')
           return ''
         }
-        if (!node_displayed(data,data.nodes[link.idSource],true) || !node_displayed(data,data.nodes[link.idTarget],true)) {
+        if (!NodeDisplayed(data,data.nodes[link.idSource],true) || !NodeDisplayed(data,data.nodes[link.idTarget],true)) {
           continue
         }
         if (data.nodes[link.idSource] && data.nodes[link.idTarget]) {
-          const val = getLinkValue(data, link.idLink)
+          const val = GetLinkValue(data, link.idLink)
           if (val.extension?.free_visible) {
             total_input +=1
             continue
@@ -1647,8 +1654,8 @@ export const has_links_zero=(data:SankeyData,node:SankeyNode)=>{
 // Return the value of an attribute from link :
 // - If the link has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
 // - Else it return the attribute from the style the link has (a link always has a style )
-export const return_value_link=(data:SankeyData,l:SankeyLink,k:keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle)=>{
-  let value=return_local_link_value(l,k as keyof SankeyLinkAttrLocal)
+export const ReturnValueLink=(data:SankeyData,l:SankeyLink,k:keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle)=>{
+  let value=ReturnLocalLinkValue(l,k as keyof SankeyLinkAttrLocal)
   if(value === undefined || value === null){
     const ks=k as keyof SankeyLinkStyle
     value= l.style in data.style_link ? data.style_link[l.style][ks] : data.style_link['default'][ks]
@@ -1657,12 +1664,12 @@ export const return_value_link=(data:SankeyData,l:SankeyLink,k:keyof SankeyLinkA
 }
 
 // Get the variable value of an attribut from style
-export const get_link_attribute_value_from_style=(data:SankeyData,l:SankeyLinkStyle,k:keyof SankeyLinkStyle)=>{
+export const GetLinkAttributeValueFromStyle=(data:SankeyData,l:SankeyLinkStyle,k:keyof SankeyLinkStyle)=>{
   return data.style_link[l.idLink][k]
 }
 
 // Return value of local link variable attribute that can be undefined ('local' and 'local[key]' can be undefined)
-export const return_local_link_value=(l:SankeyLink,key:keyof SankeyLinkAttrLocal)=>{
+export const ReturnLocalLinkValue=(l:SankeyLink,key:keyof SankeyLinkAttrLocal)=>{
   if (l===undefined) {
     return undefined
   }
@@ -1674,21 +1681,40 @@ export const return_local_link_value=(l:SankeyLink,key:keyof SankeyLinkAttrLocal
 }
 
 // Check if all value of the attribute "k" is the same in the selected links (or selected style)
-// If the value come from local attribute or the style of the link does'nt matter, we look only the value
-export const is_all_link_attr_same_value=(data:SankeyData,m_s_l:SankeyLink[]|SankeyLinkStyle[],k:keyof SankeyLinkAttrLocal,menu_for_style:boolean)=>{
-  if(m_s_l.length==0){
-    return null
+// If the value come from local attribute or the style of the link doesn't matter, we look only the value
+export const IsAllLinkAttrSameValue=(data:SankeyData,m_s_l:SankeyLink[]|SankeyLinkStyle[],k_list:(keyof SankeyLinkAttrLocal)[],menu_for_style:boolean)=>{
+
+  // store_value : variable that contain an array forEach key we are looking for
+  // Each array contain in first position the value of the selected nodes attribute 
+  // In second position it contain a boolean that return true if all selected nodes have the same value for the key
+  const store_value={} as {[x:string]:[(string | number | boolean),boolean]}
+  if(m_s_l.length>0){
+    // For each selected nodes
+    m_s_l.forEach((link,i)=>{
+      // For each attributes we want to check
+      k_list.forEach(k => {
+        // Get the value of the node attribute(k)
+        const val=ReturnCorrectLinkAttributeValue(data,link,k,menu_for_style)
+
+        // Store first value of each node attribute
+        if(i===0){
+          store_value[k]=[val,false]
+        }else{
+          // Check if other nodes selected have the same value, if not we set the 2nd value of the array at true
+          store_value[k][1]=val!==store_value[k][0]?true:store_value[k][1]
+        }
+      })
+    })
+  }else{
+    k_list.forEach(k => {
+      store_value[k]=[false,false]
+    })
   }
-  const first_value=return_correct_link_attribute_value(data,m_s_l[0],k,menu_for_style)
-  let all_same=true
-  m_s_l.forEach(l=>{
-    all_same=return_correct_link_attribute_value(data,l,k,menu_for_style)!==first_value?false:all_same
-  })
-  return (all_same?first_value:0)
+  return store_value
 }
 
 // Check if the value used is the local one or the one that come from the style
-export const is_link_diplaying_value_local=(m_s_l:{current:SankeyLink[]},k:keyof SankeyLinkAttrLocal,menu_for_style:boolean)=>{
+export const IsLinkDiplayingValueLocal=(m_s_l:{current:SankeyLink[]},k:keyof SankeyLinkAttrLocal,menu_for_style:boolean)=>{
   if(menu_for_style){
     return false
   }
@@ -1703,34 +1729,34 @@ export const is_link_diplaying_value_local=(m_s_l:{current:SankeyLink[]},k:keyof
 }
 
 // Assign the value to the corresponding variable (in the style or in the variable local of link)
-export const assign_link_value_to_correct_var=(l:SankeyLink|SankeyLinkStyle,k:keyof SankeyLinkAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
+export const AssignLinkValueToCorrectVar=(l:SankeyLink|SankeyLinkStyle,k:keyof SankeyLinkAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
   const nn=(l as SankeyLink)
   const ns=(l as SankeyLinkStyle)
   const ks=(k as keyof SankeyLinkStyle)
   const kl=(k as keyof SankeyLinkAttrLocal);
-  (menu_for_style)?assign_link_style_attribute(ns,ks,v):assign_link_local_attribute(nn,kl,v)
+  (menu_for_style)?AssignLinkStyleAttribute(ns,ks,v):AssignLinkLocalAttribute(nn,kl,v)
 }
 // Return the value to the corresponding variable (in the style or in the variable local of link)
-export const return_correct_link_attribute_value=(data:SankeyData,l:SankeyLink|SankeyLinkStyle,k:keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle,menu_for_style:boolean)=>{
+export const ReturnCorrectLinkAttributeValue=(data:SankeyData,l:SankeyLink|SankeyLinkStyle,k:keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle,menu_for_style:boolean)=>{
   const ks=(k as keyof SankeyLinkStyle)
   const kl=(k as keyof SankeyLinkAttrLocal)
   const nn=(l as SankeyLink)
   const ns=(l as SankeyLinkStyle)
-  return (menu_for_style)?get_link_attribute_value_from_style(data,ns,ks):return_value_link(data,nn,kl)
+  return (menu_for_style)?GetLinkAttributeValueFromStyle(data,ns,ks):ReturnValueLink(data,nn,kl)
 }
 
 // Assign the value to local attribute (create local attribute if it doesn't exist and "k" attribute if it doesn't either)
-export const assign_link_local_attribute=(l:SankeyLink,k:keyof SankeyLinkAttrLocal,v:boolean|string|number)=>{
+export const AssignLinkLocalAttribute=(l:SankeyLink,k:keyof SankeyLinkAttrLocal,v:boolean|string|number)=>{
   if(l.local === undefined || l.local === null){
     l.local={} as SankeyLinkAttrLocal
   }
   Object.assign(l.local,{[k.toString()]:v})
 }
 // Assign the value to attribute of link style "l"
-export const assign_link_style_attribute=(l:SankeyLinkStyle,k:keyof SankeyLinkStyle,v:boolean|string|number)=>{
+export const AssignLinkStyleAttribute=(l:SankeyLinkStyle,k:keyof SankeyLinkStyle,v:boolean|string|number)=>{
   (l[k] as unknown)=v
 }
-export const node_context_has_aggregate=(n:SankeyNode,data:SankeyData)=>{
+export const NodeContextHasAggregate=(n:SankeyNode,data:SankeyData)=>{
   if (!n.dimensions) {
     return false
   }
@@ -1758,7 +1784,7 @@ export const node_context_has_aggregate=(n:SankeyNode,data:SankeyData)=>{
   }
 
 }
-export const aggregate=(n:SankeyNode,data:SankeyData,set_agregation_node:(s:string)=>void,set_is_agregation:(b:boolean)=>void,set_show_agregation:(b:boolean)=>void)=>{
+export const Aggregate=(n:SankeyNode,data:SankeyData,set_agregation_node:(s:string)=>void,set_is_agregation:(b:boolean)=>void,set_show_agregation:(b:boolean)=>void)=>{
   const parent_names: string[] = []
   const dim_names: string[] = []
   Object.keys(n.dimensions).forEach(
@@ -1787,7 +1813,7 @@ export const aggregate=(n:SankeyNode,data:SankeyData,set_agregation_node:(s:stri
 
 }
 
-export const desaggregate=(
+export const Desaggregate=(
   n:SankeyNode,
   data:SankeyData,
   display_nodes: {[id:string]:SankeyNode},
@@ -1826,7 +1852,7 @@ export const desaggregate=(
 
 }
 
-export const node_context_has_desaggregate=(n:SankeyNode,data:SankeyData)=>{
+export const NodeContextHasDesaggregate=(n:SankeyNode,data:SankeyData)=>{
   if (!n.dimensions) {
     return false
   }
@@ -1858,7 +1884,7 @@ export const node_context_has_desaggregate=(n:SankeyNode,data:SankeyData)=>{
 
 }
 
-export const apply_style_to_nodes = (data:SankeyData,
+export const ApplyStyleToNodes = (data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}) => {
   multi_selected_nodes.current.map(d => {
@@ -1868,11 +1894,11 @@ export const apply_style_to_nodes = (data:SankeyData,
   set_data({ ...data })
 }
 
-export const add_new_node = (data:SankeyData,
+export const AddNewNode = (data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]}) => {
   const { nodes } = data
-  const node: SankeyNode = default_node(data)
+  const node: SankeyNode = DefaultNode(data)
 
   // Méthode pour incrementer idNode
   let idNode = Object.keys(data.nodes).length
@@ -1892,17 +1918,17 @@ export const add_new_node = (data:SankeyData,
   }
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
-  apply_style_to_nodes(data,set_data,multi_selected_nodes)
+  ApplyStyleToNodes(data,set_data,multi_selected_nodes)
   set_data({...data})
 }
 
 // Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link
-export const recursionDataTag=(data:SankeyData,DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
+export const RecursionDataTag=(data:SankeyData,DT:TagsCatalog,ind:number,suffix:string,link_to_copy:SankeyLink,new_links:{ [link_id: string]: SankeyLink })=>{
   const DT_l=Object.values(DT).length
   Object.values((Object.values(DT)[ind] as {group_name:string,show_legend:boolean,color_map:string,tags:Record<string,unknown>}).tags)
     .filter(t=>(t  as {selected:boolean}).selected).forEach((d,i)=>{
       const n_suffix= suffix+'_'+i
-      // Depth search of group_dataTag, if it the deepest, a link is created with a specific id to retrieve the right value of the link in getLinkValue
+      // Depth search of group_dataTag, if it the deepest, a link is created with a specific id to retrieve the right value of the link in GetLinkValue
       // (Deepest= last group_dataTag )
       if(ind==DT_l-1){
         const n_l=JSON.parse(JSON.stringify(link_to_copy))
@@ -1922,7 +1948,7 @@ export const recursionDataTag=(data:SankeyData,DT:TagsCatalog,ind:number,suffix:
         data.nodes[link_to_copy.idTarget].inputLinksId.push(n_l.idLink)
       }
       else {
-        recursionDataTag(data,DT,ind+1,n_suffix,link_to_copy,new_links)
+        RecursionDataTag(data,DT,ind+1,n_suffix,link_to_copy,new_links)
       }
 
     })
@@ -1944,16 +1970,16 @@ export const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.inter
   d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
   d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
 
-export const getRandomInt=(max:number) =>{
+export const GetRandomInt=(max:number) =>{
   return Math.floor(Math.random() * max)
 }
 
-export const retrieve_excel_results=(text:string,
+export const RetrieveExcelResults=(text:string,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   updateLayout:(data: SankeyData, new_layout: SankeyData, mode: string[], synchronize?: boolean) => void,
   callback: (server_data: SankeyData) => number,
-  min_width_and_height:(data: SankeyData) => number[],
+  GetSankeyMinWidthAndHeight:(data: SankeyData) => number[],
   convert_data:(d:SankeyData)=>void
 )=>{
   
@@ -1968,7 +1994,7 @@ export const retrieve_excel_results=(text:string,
     default_nstyle = JSON.parse(JSON.stringify(data.style_node['default']))
     default_lstyle = JSON.parse(JSON.stringify(data.style_link['default']))
   }
-  const new_data=Object.assign(default_sankey_data(),processExample(server_data,updateLayout,convert_data)) as SankeyData
+  const new_data=Object.assign(DefaultSankeyData(),ProcessExample(server_data,updateLayout,convert_data)) as SankeyData
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   callback(new_data)
@@ -1985,16 +2011,99 @@ export const retrieve_excel_results=(text:string,
       Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0 &&
       Object.values(new_data.links).filter(l=>l.local && l.local.color).length == 0
   ) {
-    const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
+    const color_selected=list_palette_color[GetRandomInt(list_palette_color.length)]
     const n_keys=Object.keys(new_data.nodes)
     const size_color=n_keys.length
 
     for(const i in d3.range(size_color)){
-      assign_node_local_attribute(new_data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
+      AssignNodeLocalAttribute(new_data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
     }
   }
   set_data({ ...new_data })
   setTimeout(()=>{
-    adjust_sankey_zone(data,min_width_and_height)
+    AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)
   },100)
+}
+
+// Function that return style for checkbox
+export const SmoothClasses = ({
+  bgChecked = '#C1E5DB',
+  bgHovered = '#C1E5DB',
+  controlColor = '#25B48C',
+  focusColor = '#78C2AD'
+}) => {
+  return {
+    h: '40px',
+    px: '12px',
+    w: '100%',
+    borderRadius: '6px',
+    marginBottom:0,
+    transition: 'all 150ms',
+    _checked: {
+      bg: bgChecked
+    },
+    'span[class*=\'checkbox__control\']:not([data-disabled])': {
+      borderColor: controlColor,
+      borderRadius: '2px',
+      border:'solid 2px '+controlColor,
+      width:'1rem',
+      height:'1rem',
+      _checked: {
+        bg: controlColor,
+        borderColor: controlColor
+      },
+      _focus: {
+        boxShadow: `0 0 0 2px ${focusColor}`,
+        _checked: {
+          boxShadow: `0 0 0 2px ${focusColor}`
+        }
+      }
+    },
+    _hover: {
+      bg: bgHovered,
+      transition: 'all 250ms',
+      _checked: {
+        bg: bgChecked
+      }
+    }
+  }
+}
+
+// Tooltipe added to input in menu when add a local value (for nodes & links local attributes)
+export const TooltipValueSurcharge=(k:string,t:TFunction)=>{
+  const rand_key=k+GetRandomInt(1000)
+  return <OverlayTrigger overlay={<Tooltip id={rand_key}>{t('Menu.overcharge_style_value')}</Tooltip>}>
+    <FontAwesomeIcon style={{color:'#6cc3d5',height:'12',width:'12'}} icon={faCircleInfo}/>
+  </OverlayTrigger>
+}
+type ValueOf<T>=T[keyof T]
+export const IsAllNodeNotLocalAttrSameValue=(data:SankeyData,m_s_n:SankeyNode[],k_list:(keyof SankeyNode)[])=>{
+  // store_value : variable that contain an array forEach key we are looking for
+  // Each array contain in first position the value of the selected nodes attribute 
+  // In second position it contain a boolean that return true if all selected nodes have the same value for the key
+  const store_value={} as {[x:string]:[ValueOf<SankeyNode>,boolean]}
+
+  if(m_s_n.length>0){
+    // For each selected nodes
+    m_s_n.forEach((node,i)=>{
+      // For each attributes we want to check
+      k_list.forEach(k => {
+        // Get the value of the node attribute(k)
+        const val=node[k]
+
+        // Store first value of each node attribute
+        if(i===0){
+          store_value[k]=[val,false]
+        }else{
+          // Check if other nodes selected have the same value, if not we set the 2nd value of the array at true
+          store_value[k][1]=val!==store_value[k][0]?true:store_value[k][1]
+        }
+      })
+    })
+  }else{
+    k_list.forEach(k => {
+      store_value[k]=[false,false]
+    })
+  }
+  return store_value
 }

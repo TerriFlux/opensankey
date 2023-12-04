@@ -3,10 +3,10 @@ import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
-import { link_visible} from './SankeyUtils'
+import { LinkVisible} from './SankeyUtils'
 import { TFunction } from 'i18next'
 import { opposing_drag_elements } from './SankeyDrag'
-import { node_visible_on_svg } from './SankeyDrawFunction'
+import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 
 
@@ -18,7 +18,7 @@ typeof globalThis & {
 export const OpenSankeyDrawLegend = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   t:TFunction,
   pointer_pos:{current:number[]},
   set_tag_contextualised:(t:string)=>void,
@@ -91,12 +91,12 @@ export const OpenSankeyDrawLegend = (
           .filter(tag=>{
             if(Object.keys(data.fluxTags).includes(data.colorMap)){
               const t=Object.values(data.links).filter(l=>{
-                const tmp=getLinkValue(data,l.idLink)
-                return link_visible(l,data,getLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag[0])
+                const tmp=GetLinkValue(data,l.idLink)
+                return LinkVisible(l,data,GetLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag[0])
               }).length
               return t>0
             }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
-              const node_visible=node_visible_on_svg()
+              const node_visible=NodeVisibleOnsSvg()
               const t2=Object.values(data.nodes).filter(n=>{
                 return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && node_visible.includes(n.idNode) && n.position !== 'relative'
               }).length
@@ -123,7 +123,7 @@ export const OpenSankeyDrawLegend = (
           //Recherche les noeuds liés à des flux dont on survole la légende d'étiquette
           const nodes_tied_to_link_hovered=([] as string [])
           Object.values(data.links).filter(l=>{
-            const tmp=getLinkValue(data,l.idLink)
+            const tmp=GetLinkValue(data,l.idLink)
             return tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(d[0])
           }).forEach(el=>{
             nodes_tied_to_link_hovered.push(el.idSource)
@@ -131,7 +131,7 @@ export const OpenSankeyDrawLegend = (
           })
           //Reduit l'opacité de tous les flux qui n'ont pas l'étiquette survolé
           Object.values(data.links).filter(l=>{
-            const tmp=getLinkValue(data,l.idLink)
+            const tmp=GetLinkValue(data,l.idLink)
             return !(tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(d[0]))
           }).forEach(el=>{
             d3.selectAll(' .opensankey #path_'+el.idLink).attr('stroke-opacity',0.1)
@@ -389,7 +389,7 @@ export const context_legend_tags=(tag_contextualised:string|undefined,
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   pointer_pos:{current:number[]},
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
 
 )=>{
   let style_c_t='0px 0px auto auto'
@@ -418,7 +418,7 @@ export const context_legend_tags=(tag_contextualised:string|undefined,
       multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag_contextualised)))
     }else if(NodeOrLinkTag=='fluxTags'){
       multi_selected_links.current=Object.values(data.links).filter(l=>{
-        const tmp=getLinkValue(data,l.idLink)
+        const tmp=GetLinkValue(data,l.idLink)
         return tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag_contextualised)
       })
     }
