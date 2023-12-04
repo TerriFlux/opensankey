@@ -2,7 +2,7 @@
 import React from 'react'
 import { render } from '@testing-library/react'
 //import renderer from 'react-test-renderer';
-//import {default_sankey_data, getLinkValue} from './SankeyUtils'
+//import {DefaultSankeyData, GetLinkValue} from './SankeyUtils'
 import SankeyDraw,{SankeyDrawDefaultProps} from './SankeyDraw'
 import { SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
@@ -73,7 +73,7 @@ test.each(the_tests)( 'tyty',(full_path) => {
     <SankeyDraw
       data={(new_data as unknown) as SankeyData}
       display_nodes={new_data.nodes}
-      // test_link_value= {(nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => 10}
+      // TestLinkValue= {(nodes: { [node_id: string]: SankeyNode }, l: SankeyLink) => 10}
       {...SankeyDrawDefaultProps}
     />
   )

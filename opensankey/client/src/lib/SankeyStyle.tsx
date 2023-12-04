@@ -2,7 +2,7 @@
 import React from 'react'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
 // import { SankeyLink } from 'open-sankey/src/lib/types'
-import {  cut_name,default_node_style,default_link_style } from './SankeyUtils'
+import {  CutName,DefaultNodeStyle,DefaultLinkStyle } from './SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
@@ -42,7 +42,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
           <InputGroup>
             <Col>
               <Button style={{width:'20%'}} onClick={() => {
-                const new_style = default_node_style()
+                const new_style = DefaultNodeStyle()
                 new_style.name = 'New Style'
                 const new_id = 'style_node_' + String(new Date().getTime())
                 new_style.idNode=new_id
@@ -57,7 +57,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
             }
             <Col>
               <Dropdown>
-                <Dropdown.Toggle style={{width:'50%'}} variant="success" id="dropdown-basic">{(selected_style_node !== '') ? cut_name(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
+                <Dropdown.Toggle style={{width:'50%'}} variant="success" id="dropdown-basic">{(selected_style_node !== '') ? CutName(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
                 <Dropdown.Menu>
                   {Object.keys(data.style_node).map((d,i) => {
                     return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
@@ -148,7 +148,7 @@ export const SankeyPlusModalStyleLink = (
 
           <Col xs={1}>
             <Button size="sm" onClick={() => {
-              const new_style = default_link_style()
+              const new_style = DefaultLinkStyle()
               new_style.name = 'New Style'
               const new_id = 'style_link_' + String(new Date().getTime())
               new_style.idLink = new_id
@@ -160,7 +160,7 @@ export const SankeyPlusModalStyleLink = (
 
           <Col xs={5}>
             <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link !== '') ? cut_name(data.style_link[selected_style_link].name, 30) : 'Choix Style'}</Dropdown.Toggle>
+              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link !== '') ? CutName(data.style_link[selected_style_link].name, 30) : 'Choix Style'}</Dropdown.Toggle>
               <Dropdown.Menu>
                 {Object.keys(data.style_link).map((d,i) => {
                   return (<Dropdown.Item key={i} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].name}</Dropdown.Item>)

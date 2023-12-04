@@ -52,7 +52,7 @@ import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinks'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import { repositionne_sidebar,select_visualy_links} from './SankeyDrawFunction'
+import { RepositionneSidebar,SelectVisualyLinks} from './SankeyDrawFunction'
 
 
 declare const window: Window &
@@ -79,7 +79,7 @@ export const menu_config_width=450
 
 
 
-const goToUserDoc = () => {
+const GoToUserDoc = () => {
   const path = window.location.href
   const url = path + 'doc'
   fetch(url, {
@@ -116,7 +116,7 @@ const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_gr
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => void}
  */
-const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
+const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const tab_sel = selected.map((d) => {
     return d.value
   })
@@ -136,7 +136,7 @@ const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => any}
  */
-export const addAllDropDownFlux = (
+export const AddAllDropDownFlux = (
   t:TFunction,
   fluxTags: TagsCatalog,
   data: SankeyData,
@@ -251,7 +251,7 @@ export const addAllDropDownFlux = (
                   value={selected}
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
-                    handleMultiDropdown(selected, the_tags_group, data, set_data)
+                    HandleMultiDropdown(selected, the_tags_group, data, set_data)
                   }}
                 />
               </Col>
@@ -309,8 +309,8 @@ export const addAllDropDownFlux = (
 export const OpenSankeyMenus = (
   t:TFunction,
   setShowPreference:(b:boolean)=>void,
-  reinitialization:()=>void,
-  default_sankey_data:()=>SankeyData,
+  Reinitialization:()=>void,
+  DefaultSankeyData:()=>SankeyData,
   set_show_apply_layout:(b:boolean)=>void,
   set_show_excel_dialog:(b:boolean)=>void,
   set_show_save_json:(b:boolean)=>void,
@@ -410,7 +410,7 @@ export const OpenSankeyMenus = (
               value={selected}
               options={options}
               onChange={(selected: [{ label: string, value: string }]) => {
-                handleMultiDropdown(selected, tags_group, data, set_data)
+                HandleMultiDropdown(selected, tags_group, data, set_data)
 
                 //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
                 if(Object.keys(data.dataTags).length>0){
@@ -432,7 +432,7 @@ export const OpenSankeyMenus = (
 
                   Object.values(pureLinks).forEach(l=>{
                     const suffix=''
-                    SankeyUtils.recursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                    SankeyUtils.RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
                   })
                   data.links=new_links
                   set_data({...data})
@@ -465,7 +465,7 @@ export const OpenSankeyMenus = (
   <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: menu_config_width+'px' }}>
-      {addAllDropDownFlux(t, data.fluxTags, data, set_data)}
+      {AddAllDropDownFlux(t, data.fluxTags, data, set_data)}
     </Popover.Body>
   </Popover>
 
@@ -610,16 +610,16 @@ export const OpenSankeyMenus = (
               const reader = new FileReader()
               reader.onload = (() => {
                 return (e: ProgressEvent<FileReader>) => {
-                  reinitialization()
+                  Reinitialization()
                   const result = String((e.target as FileReader).result)
-                  const new_data = default_sankey_data()
+                  const new_data = DefaultSankeyData()
                   const result_data = JSON.parse(result)
                   Object.assign(new_data, result_data)
                   if (result_data.version === undefined) {
                     (new_data.version as unknown as undefined) = undefined
                   }
                   convert_data(new_data)
-                  complete_sankey_data(new_data,default_sankey_data,SankeyUtils.default_node,SankeyUtils.default_link)
+                  complete_sankey_data(new_data,DefaultSankeyData,SankeyUtils.DefaultNode,SankeyUtils.DefaultLink)
                   console.log('open json')
 
                   set_data(new_data)
@@ -646,7 +646,7 @@ export const OpenSankeyMenus = (
           <Dropdown.Item onClick={()=>{
             set_show_save_json(true)
           }} >{t('Menu.open_json')}</Dropdown.Item>
-          <Dropdown.Item onClick={()=>SankeyUtils.clickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</Dropdown.Item>
+          <Dropdown.Item onClick={()=>SankeyUtils.ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</Dropdown.Item>
           {externale_save_item}
         </Dropdown.Menu>
       </Dropdown>
@@ -671,7 +671,7 @@ export const OpenSankeyMenus = (
       localStorage.setItem('dontSeeAggainWelcome','0')
     }}>
       {t('DisplayWelcome')}</Button>
-    <Button size='sm' variant='light' onClick={() => goToUserDoc()} >{t('Menu.doc')}</Button>
+    <Button size='sm' variant='light' onClick={() => GoToUserDoc()} >{t('Menu.doc')}</Button>
     <Button size='sm' variant='light' onClick={() => set_show_modale_support(true)} >{t('Menu.support')}</Button></>
 
   }
@@ -755,8 +755,8 @@ const MenuPropTypes = {
   set_show_modalTemplate:PropTypes.func.isRequired,
   cardsTemplate:PropTypes.element.isRequired,
   external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  min_width_and_height :PropTypes.func.isRequired,
-  reinitialization:PropTypes.func.isRequired,
+  GetSankeyMinWidthAndHeight :PropTypes.func.isRequired,
+  Reinitialization:PropTypes.func.isRequired,
   set_show_modale_tuto:PropTypes.func.isRequired,
   show_modale_tuto:PropTypes.bool.isRequired,
   show_modale_support:PropTypes.bool.isRequired,
@@ -779,7 +779,7 @@ const MenuPropTypes = {
   is_computing:PropTypes.bool.isRequired,
   setIsComputing:PropTypes.func.isRequired,
   set_tags_selected:PropTypes.func.isRequired,
-  retrieve_excel_results:PropTypes.func.isRequired,
+  RetrieveExcelResults:PropTypes.func.isRequired,
 }
 /**
  * Description placeholder
@@ -827,8 +827,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     cardsTemplate,
 
     external_modal,
-    min_width_and_height,
-    formations_menu,reinitialization,set_show_modale_tuto,show_modale_tuto,
+    GetSankeyMinWidthAndHeight,
+    formations_menu,Reinitialization,set_show_modale_tuto,show_modale_tuto,
     show_modale_support,set_show_modale_support,
     additional_nav_item,
     set_contextualised_node,
@@ -844,7 +844,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     DiagramSelector,
     is_computing, setIsComputing,
     set_tags_selected,
-    retrieve_excel_results
+    RetrieveExcelResults
   }
 ) => {
 
@@ -852,7 +852,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
   let max_link_value = 0
   Object.values(data.links).forEach(link => {
-    const new_max_link_value = SankeyUtils.findMaxLinkValue(
+    const new_max_link_value = SankeyUtils.FindMaxLinkValue(
       max_link_value,
       link.value
     )
@@ -871,7 +871,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     fetch(url, fetchData).then(response => {
       response.text().then(text => {
         try {
-          retrieve_excel_results(text)
+          RetrieveExcelResults(text)
         } catch(err) {
           alert(err)
         }
@@ -889,7 +889,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_nav(!show_nav)
 
     if(!show_nav){
-      [data.width, data.height] = min_width_and_height(data)
+      [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
       const transform=d3.select('.opensankey #svg').attr('transform')
       let scale_svg=1
       if(transform!==undefined && transform!==null){
@@ -899,7 +899,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
-    repositionne_sidebar()
+    RepositionneSidebar()
 
   }
   const setChecked = useState(false)[1]
@@ -971,8 +971,8 @@ const Menu: FunctionComponent<MenuTypes> = (
             <ButtonGroup>
               <Button variant='primary'
                 onClick={() => {
-                  SankeyUtils.uploadExemple(
-                    ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,reinitialization,convert_data
+                  SankeyUtils.UploadExemple(
+                    ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,Reinitialization,convert_data
                   )
                   set_data({...data})
                   set_show_modale_tuto(false)
@@ -985,8 +985,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                     launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
 
-                    SankeyUtils.uploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,reinitialization,convert_data
+                    SankeyUtils.UploadExemple(
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data
                     )
                     set_show_modale_tuto(false)
 
@@ -1001,8 +1001,8 @@ const Menu: FunctionComponent<MenuTypes> = (
 
                     launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
 
-                    SankeyUtils.uploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,reinitialization,convert_data
+                    SankeyUtils.UploadExemple(
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data
                     )
                     set_show_modale_tuto(false)
 
@@ -1086,7 +1086,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   const show_data=Object.values(data_tags).length>0
   let DDDT=[] as (JSX.Element|undefined)[]
   if(show_data){
-    DDDT=dataTagsDDNavBar(data,set_data,set_tags_selected)
+    DDDT=DataTagsDDNavBar(data,set_data,set_tags_selected)
   }
 
   return (
@@ -1180,7 +1180,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_show_save_json={set_show_save_json}
         sankey_data={data}
         additionnal_button_option_save_json={[]}
-        clickSaveDiagram={SankeyUtils.clickSaveDiagram}
+        ClickSaveDiagram={SankeyUtils.ClickSaveDiagram}
       />
       <ApplyLayoutDialog
         t={t}
@@ -1203,7 +1203,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         t={t}
         launch={launch}
         handleCloseDialog={() => set_show_excel_dialog(false)}
-        uploadExcelImpl={SankeyUtils.uploadExcelImpl}
+        UploadExcelImpl={SankeyUtils.UploadExcelImpl}
         show_excel_dialog={show_excel_dialog}
         set_show_excel_dialog={set_show_excel_dialog}
         url_prefix={url_prefix}
@@ -1212,7 +1212,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       <SankeyLoad
         t={t}
         url_prefix={url_prefix}
-        successAction={()=>SankeyUtils.downloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+        successAction={()=>SankeyUtils.DownloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
         show_dialog={show_load}
         set_show_dialog={set_show_load}
         processing={processing}
@@ -1374,7 +1374,7 @@ const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem
   overflowY:'auto'
 } as CSSProperties
 
-export const menu_draggable=(content:JSX.Element|JSX.Element[],pointer_pos:{current:number[]},title:string,set_display_menu:(b:boolean)=>void,width_menu=25)=>{
+export const MenuDraggable=(content:JSX.Element|JSX.Element[],pointer_pos:{current:number[]},title:string,set_display_menu:(b:boolean)=>void,width_menu=25)=>{
   const class_name=title.replaceAll('/','').replaceAll('.','').split(' ').join('_')
   const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
   n_style_menu_draggable.width=width_menu+'%'
@@ -1404,7 +1404,7 @@ const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFr
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
-export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
+export const ContextMenuNode=(contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   display_nodes:{[id:string]:SankeyNode},
   multi_selected_nodes:{current:SankeyNode[]},
@@ -1697,14 +1697,14 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   return contextualised_node!==undefined?<Popover  id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
     <Popover.Body>
       <ButtonGroup vertical>
-        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.node_context_has_aggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          SankeyUtils.aggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
+        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.NodeContextHasAggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
+          SankeyUtils.Aggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
         }}>Agrégation</Button>:<></>}
-        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.node_context_has_desaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          SankeyUtils.desaggregate(contextualised_node,data,display_nodes,set_agregation_node,set_is_agregation,set_show_agregation)
+        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
+          SankeyUtils.Desaggregate(contextualised_node,data,display_nodes,set_agregation_node,set_is_agregation,set_show_agregation)
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
@@ -1715,7 +1715,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
         <Button
           variant='light'
           onClick={() => {
-            multi_selected_nodes.current.map(d => SankeyUtils.delete_node(data, d))
+            multi_selected_nodes.current.map(d => SankeyUtils.DeleteNode(data, d))
             multi_selected_nodes.current = []
             set_contextualised_node(undefined)
             set_data({ ...data })
@@ -1729,10 +1729,10 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           onClick={() => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
               multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-              const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              const opacity=SankeyUtils.ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
               set_display_link_opacity(opacity)
             })
-            multi_selected_links.current.forEach(l=>select_visualy_links(l))
+            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
           }}>
           {t('Noeud.SlctOutLink')}
         </Button>
@@ -1741,10 +1741,10 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
           onClick={() => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
               multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-              const opacity=SankeyUtils.return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              const opacity=SankeyUtils.ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
               set_display_link_opacity(opacity)
             })
-            multi_selected_links.current.forEach(l=>select_visualy_links(l))
+            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
           }}>
           {t('Noeud.SlctInLink')}
         </Button>
@@ -1781,7 +1781,7 @@ export const context_menu_node=(contextualised_node:SankeyNode|undefined,set_con
   </Popover>:<></>
 }
 
-export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_contextualised_node:(n:SankeyLink|undefined)=>void,
+export const ContextMenuLink=(contextualised_link:SankeyLink|undefined,set_contextualised_node:(n:SankeyLink|undefined)=>void,
   set_show_menu_link_data:(b:boolean)=>void,
   set_show_menu_link_appearence:(b:boolean)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
@@ -2037,7 +2037,7 @@ export const context_menu_link=(contextualised_link:SankeyLink|undefined,set_con
   </Popover>:<></>
 }
 
-export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolean)=>void,
+export const ContextZdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolean)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   pointer_pos:{current:number[]},
   node_hspace:number,
@@ -2053,7 +2053,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
     d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
     d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
 
-  const getRandomInt=(max:number) =>{
+  const GetRandomInt=(max:number) =>{
     return Math.floor(Math.random() * max)
   }
 
@@ -2075,13 +2075,13 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
   </>
   const button_assgn_rand_node_color=<><Button variant='light' onClick={()=>{
-    const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
+    const color_selected=list_palette_color[GetRandomInt(list_palette_color.length)]
     const n_keys=Object.keys(data.nodes)
     const size_color=n_keys.length
 
     for(const i in d3.range(size_color)){
       // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
-      SankeyUtils.assign_node_local_attribute(data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
+      SankeyUtils.AssignNodeLocalAttribute(data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
     }
     set_data({...data})
   }}>{t('Menu.rand_node_color')}</Button>
@@ -2254,7 +2254,7 @@ export const context_zdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boole
   </Popover>:<></>
 }
 
-const  dataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tags_selected:(o:{[x:string]:string})=>void) => {
+const  DataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tags_selected:(o:{[x:string]:string})=>void) => {
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     if (tags_group.banner == 'one') {
@@ -2336,7 +2336,7 @@ const  dataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
               value={selected}
               options={options}
               onChange={(selected: [{ label: string, value: string }]) => {
-                handleMultiDropdown(selected, tags_group, data, set_data)
+                HandleMultiDropdown(selected, tags_group, data, set_data)
 
                 //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
                 if(Object.keys(data.dataTags).length>0){
@@ -2358,7 +2358,7 @@ const  dataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
 
                   Object.values(pureLinks).forEach(l=>{
                     const suffix=''
-                    SankeyUtils.recursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                    SankeyUtils.RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
                   })
                   data.links=new_links
                   data.linkZIndex=Object.keys(new_links)
