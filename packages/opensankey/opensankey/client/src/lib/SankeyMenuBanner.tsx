@@ -1,12 +1,30 @@
 import React, {  useRef, useState } from 'react'
-import { Row, Col, Form, FormLabel, Button,  FormGroup, OverlayTrigger, Tooltip, FormCheck, Popover, FormControl, Overlay } from 'react-bootstrap'
+import { Row,
+  Col,
+  Form,
+  FormLabel,
+  Button,
+  FormGroup,
+  OverlayTrigger,
+  Tooltip,
+  FormCheck,
+  Popover,
+  FormControl,
+  Overlay } from 'react-bootstrap'
 import {  SankeyData, TagsGroup} from './types'
 import { MultiSelect } from 'react-multi-select-component'
-import { findMaxLinkValue,adjust_sankey_zone } from './SankeyUtils'
+import { FindMaxLinkValue,AdjustSankeyZone } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShareNodes, faArrowPointer,faCodeBranch,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown, faSliders} from '@fortawesome/free-solid-svg-icons'
+import { faShareNodes,
+  faArrowPointer,
+  faCodeBranch,
+  faFolderTree,
+  faDiagramProject,
+  faArrowsLeftRight,
+  faArrowsUpDown,
+  faSliders} from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
 
@@ -238,7 +256,7 @@ export const addAllDropDownNode = (
                   value={selected}
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
-                    handleMultiDropdown(selected, tags_group, data, set_data)
+                    HandleMultiDropdown(selected, tags_group, data, set_data)
                   }}
                 />
               </Col>
@@ -312,7 +330,7 @@ const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_gr
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => void}
  */
-const handleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
+const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
   const tab_sel = selected.map((d) => {
     return d.value
   })
@@ -368,7 +386,7 @@ export const toolbar_builder = (
   url_prefix: string,
   first_selected_node:object,
   set_first_selected_node:(o:object)=>void,
-  min_width_and_height:(d:SankeyData)=>number[],
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
   setDiagram : (the_diagram : string, set_data : (d:SankeyData)=>void,convert_data:(d:SankeyData)=>void)=>void,
   set_show_modal_welcome:(b:boolean)=>void,
   set_never_see_again:(b:boolean)=>void,
@@ -434,7 +452,7 @@ export const toolbar_builder = (
   let max_link_value = 0
 
   Object.values(data.links).forEach(link => {
-    const new_max_link_value = findMaxLinkValue(
+    const new_max_link_value = FindMaxLinkValue(
       max_link_value,
       link.value
     )
@@ -782,7 +800,7 @@ export const toolbar_builder = (
       </Overlay>
 
 
-      {stretchButtons(data,min_width_and_height,t)}
+      {stretchButtons(data,GetSankeyMinWidthAndHeight,t)}
 
       { url_prefix !== '' ?
         <OverlayTrigger
@@ -827,13 +845,13 @@ export const toolbar_builder = (
 }
 
 
-export const stretchButtons=(data:SankeyData,min_width_and_height:(d:SankeyData)=>number[],t:TFunction)=>{
+export const stretchButtons=(data:SankeyData,GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],t:TFunction)=>{
   return <> <OverlayTrigger
     key={'tooltip-adjust-h'}
     placement={'left'}
     delay={500}
     overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-    <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height)}} >
+    <Button variant='dark' onClick={() => {AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)}} >
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
     </Button>
   </OverlayTrigger>
@@ -842,7 +860,7 @@ export const stretchButtons=(data:SankeyData,min_width_and_height:(d:SankeyData)
     placement={'left'}
     delay={500}
     overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
-    <Button variant='dark' onClick={() => {adjust_sankey_zone(data,min_width_and_height,false,true)}} >
+    <Button variant='dark' onClick={() => {AdjustSankeyZone(data,GetSankeyMinWidthAndHeight,false,true)}} >
       <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
     </Button>
   </OverlayTrigger></>

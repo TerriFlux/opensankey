@@ -3,7 +3,7 @@ import React, {Validator } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { NavDropdown, Dropdown, } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes } from './types'
-import { uploadExemple,  } from './SankeyUtils'
+import { UploadExemple,  } from './SankeyUtils'
 
 
 /**
@@ -33,7 +33,7 @@ const ExempleItemPropTypes = {
   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
   launch: PropTypes.func.isRequired,
-  reinitialization: PropTypes.func.isRequired,
+  Reinitialization: PropTypes.func.isRequired,
   convert_data:PropTypes.func.isRequired,
 }
 
@@ -50,7 +50,7 @@ type ExempleItemTypes = InferProps<typeof ExempleItemPropTypes>
  * @param {ExempleItemTypes} { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}
  * @returns {*}
  */
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,launch,reinitialization,convert_data}: ExempleItemTypes) => {
+export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,launch,Reinitialization,convert_data}: ExempleItemTypes) => {
   return (
     <>
       { ('Files' in exemple_menu) 
@@ -79,8 +79,8 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                 if (path.includes('xlsx')) {
                   launch(path, url_prefix)
                 }
-                uploadExemple(
-                  path, url_prefix, data, set_data,reinitialization,convert_data
+                UploadExemple(
+                  path, url_prefix, data, set_data,Reinitialization,convert_data
                 )} 
               }
             >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
@@ -120,7 +120,7 @@ export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_
                     multi_selected_links={multi_selected_links}
                     multi_selected_nodes={multi_selected_nodes}
                     launch={launch}
-                    reinitialization={reinitialization}
+                    Reinitialization={Reinitialization}
                     convert_data={convert_data}
                   />
                 </NavDropdown>

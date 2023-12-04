@@ -1,12 +1,65 @@
 import React,{useState} from 'react'
 import { Row, Form, Tab, FormControl, OverlayTrigger, Tooltip, InputGroup, Button, ButtonGroup, Dropdown} from 'react-bootstrap'
-import { SankeyData, SankeyLink } from './types'
-
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal } from './types'
 import { TFunction } from 'i18next'
-import { return_correct_link_attribute_value,assign_link_value_to_correct_var,is_all_link_attr_same_value,is_link_diplaying_value_local,cut_name} from './SankeyUtils'
-import { FaEye, FaEyeSlash,FaCheck, FaAlignLeft,FaAlignCenter,FaAlignRight} from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FaAlignLeft,FaAlignCenter,FaAlignRight} from 'react-icons/fa'
+
+import { Checkbox } from '@chakra-ui/react'
+
+import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName} from './SankeyUtils'
+import { SmoothClasses,TooltipValueSurcharge } from './SankeyUtils'
+
+
+const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
+  width="26"
+  height="26"
+  viewBox="0 0 26 26"
+>
+  <g>
+    <path
+      d="m 17.84271,23.063448 c -1.269418,-1.282992 -2.346574,-2.454122 -2.393679,-2.602512 -0.0594,-0.187118 -0.01495,-0.364549 0.145033,-0.578998 0.227793,-0.305339 0.251457,-0.30961 1.893906,-0.341824 l 1.663232,-0.03262 v -5.044847 c 0,-3.278554 -0.04379,-5.16073 -0.125076,-5.375831 C 18.85592,8.636398 18.348461,8.114093 17.890847,7.918325 17.58911,7.78924 16.487878,7.756442 12.455374,7.756442 H 7.3983032 l -0.03263,1.662971 c -0.0324,1.65136 -0.03483,1.664613 -0.348521,1.898566 -0.272363,0.203132 -0.362903,0.216128 -0.65705,0.09431 -0.187636,-0.07771 -1.355183,-1.160016 -2.594548,-2.405127 -1.678774,-1.686558 -2.25339,-2.336228 -2.25339,-2.547722 0,-0.212412 0.600322,-0.884111 2.384458,-2.667967 2.546767,-2.546366 2.737072,-2.671811 3.260033,-2.148932 0.212788,0.212755 0.235188,0.391917 0.235188,1.881201 v 1.646051 h 5.0906128 c 5.443018,0 5.946321,0.04455 6.897173,0.610539 0.590386,0.351422 1.254964,1.004393 1.65343,1.62455 0.666046,1.036613 0.705198,1.426315 0.705198,7.019257 v 5.089812 h 1.646309 c 1.489519,0 1.668709,0.0224 1.881497,0.235151 0.519204,0.519121 0.394333,0.708915 -2.142301,3.256165 -1.834562,1.84224 -2.445485,2.387833 -2.675253,2.389168 -0.232072,0.0013 -0.80697,-0.51292 -2.605802,-2.330984 z"
+    />
+  </g>
+</svg>
+
+const logo_vh=<svg xmlns="http://www.w3.org/2000/svg"
+  width="26"
+  height="26"
+  viewBox="0 0 26 26">
+  <g>
+    <path
+      d="m 3.1500765,17.283934 c 1.282992,-1.269418 2.454122,-2.346574 2.602512,-2.393679 0.187118,-0.0594 0.364549,-0.01495 0.578998,0.145033 0.305339,0.227793 0.30961,0.251457 0.341824,1.893906 l 0.03262,1.663232 h 5.0448465 c 3.278554,0 5.16073,-0.04379 5.375831,-0.125076 0.450418,-0.170206 0.972723,-0.677665 1.168491,-1.135279 0.129085,-0.301737 0.161883,-1.402969 0.161883,-5.435473 V 6.8395274 l -1.662971,-0.03263 c -1.65136,-0.0324 -1.664613,-0.03483 -1.898566,-0.348521 -0.203132,-0.272363 -0.216128,-0.362903 -0.09431,-0.65705 0.07771,-0.187636 1.160016,-1.355183 2.405127,-2.594548 1.686558,-1.678774 2.336228,-2.25339004 2.547722,-2.25339004 0.212412,0 0.884111,0.60032204 2.667967,2.38445804 2.546366,2.546767 2.671811,2.737072 2.148932,3.260033 -0.212755,0.212788 -0.391917,0.235188 -1.881201,0.235188 H 21.043731 V 11.92368 c 0,5.443018 -0.04455,5.946321 -0.610539,6.897173 -0.351422,0.590386 -1.004393,1.254964 -1.62455,1.65343 -1.036613,0.666046 -1.426315,0.705198 -7.019257,0.705198 H 6.6995735 v 1.646309 c 0,1.489519 -0.0224,1.668709 -0.235151,1.881497 -0.519121,0.519204 -0.708915,0.394333 -3.256165,-2.142301 -1.84224,-1.834562 -2.387833,-2.445485 -2.389168,-2.675253 -0.0013,-0.232072 0.51292,-0.80697 2.330984,-2.605802 z"
+    />
+  </g>
+</svg>
+
+const logo_vv=<svg xmlns="http://www.w3.org/2000/svg"
+  width="27"
+  height="27"
+  viewBox="0 0 27 70">
+  <g>
+    <path
+      d="m 1.0769167,58.015255 c 0.217654,0.354078 2.981133,3.275215 6.141066,6.491418 5.2863293,5.380463 5.8029433,5.84764 6.4664543,5.84764 0.665502,0 1.194478,-0.484452 6.858149,-6.280882 6.083147,-6.225736 6.13703,-6.28875 6.13703,-7.176876 0,-0.637443 -0.145906,-1.069736 -0.505635,-1.498089 L 25.668348,54.796371 21.3514,54.730451 17.034455,54.664531 V 37.542387 c 0,-9.417179 -0.06092,-18.000541 -0.135383,-19.074135 l -0.135382,-1.951988 4.45232,-0.06594 4.452319,-0.06597 0.505644,-0.602096 c 0.358397,-0.426766 0.505643,-0.861029 0.505643,-1.491273 0,-0.878947 -0.07053,-0.961469 -6.133897,-7.1768736 -5.688745,-5.831388 -6.186808,-6.28770195 -6.86297,-6.28770195 -0.675922,0 -1.176483,0.45789495 -6.8661033,6.28087995 -6.08314705,6.2257346 -6.13703005,6.2887486 -6.13703005,7.1768766 0,0.637443 0.145908,1.069735 0.50563505,1.498089 l 0.505633,0.602095 4.316948,0.06592 4.3169453,0.06592 v 17.122137 c 0,9.417183 0.06092,18.000543 0.135383,19.074137 l 0.135382,1.951988 -4.4523203,0.06596 -4.452317,0.06596 -0.505646,0.602096 c -0.61444705,0.731653 -0.65563605,1.726456 -0.108342,2.616786 z"
+    />
+  </g>
+</svg>
+
+const logo_hh=<svg xmlns="http://www.w3.org/2000/svg"
+  width="27"
+  height="27"
+  viewBox="0 0 70 27"
+>
+  <g>
+    <path
+      d="m 57.188847,25.602699 c 0.354078,-0.217654 3.275215,-2.981133 6.491418,-6.141066 5.380463,-5.286329 5.84764,-5.802943 5.84764,-6.466454 0,-0.665502 -0.484452,-1.194478 -6.280882,-6.858149 C 57.021287,0.053883 56.958273,0 56.070147,0 55.432704,0 55.000411,0.145906 54.572058,0.505635 l -0.602095,0.505633 -0.06592,4.316948 -0.06592,4.316945 H 36.715979 c -9.41718,0 -18.000542,0.06092 -19.074136,0.135383 L 15.689855,9.915926 15.623915,5.463606 15.557945,1.011287 14.955849,0.505643 C 14.529083,0.147246 14.09482,0 13.464576,0 12.585629,0 12.503107,0.07053 6.287703,6.133897 0.45631402,11.822642 2.289157e-8,12.320705 2.289157e-8,12.996867 2.289157e-8,13.672789 0.45789502,14.17335 6.280881,19.86297 12.506615,25.946117 12.569629,26 13.457757,26 c 0.637443,0 1.069735,-0.145908 1.498089,-0.505635 l 0.602095,-0.505633 0.06592,-4.316948 0.06592,-4.316945 h 17.122138 c 9.417183,0 18.000543,-0.06092 19.074137,-0.135383 l 1.951988,-0.135382 0.06596,4.45232 0.06596,4.452317 0.602096,0.505646 c 0.731653,0.614447 1.726456,0.655636 2.616786,0.108342 z"
+    />
+  </g>
+</svg>
+
+const svg_label_top=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z"/></svg>
+const svg_label_bottom=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z"/></svg>
+const svg_label_center=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z"/></svg>
+
 
 export const SankeyMenuConfigurationLinksAppearence = (
   data:SankeyData,
@@ -24,61 +77,18 @@ export const SankeyMenuConfigurationLinksAppearence = (
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
 
-  const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
-    width="26"
-    height="26"
-    viewBox="0 0 26 26"
-  >
-    <g>
-      <path
-        d="m 17.84271,23.063448 c -1.269418,-1.282992 -2.346574,-2.454122 -2.393679,-2.602512 -0.0594,-0.187118 -0.01495,-0.364549 0.145033,-0.578998 0.227793,-0.305339 0.251457,-0.30961 1.893906,-0.341824 l 1.663232,-0.03262 v -5.044847 c 0,-3.278554 -0.04379,-5.16073 -0.125076,-5.375831 C 18.85592,8.636398 18.348461,8.114093 17.890847,7.918325 17.58911,7.78924 16.487878,7.756442 12.455374,7.756442 H 7.3983032 l -0.03263,1.662971 c -0.0324,1.65136 -0.03483,1.664613 -0.348521,1.898566 -0.272363,0.203132 -0.362903,0.216128 -0.65705,0.09431 -0.187636,-0.07771 -1.355183,-1.160016 -2.594548,-2.405127 -1.678774,-1.686558 -2.25339,-2.336228 -2.25339,-2.547722 0,-0.212412 0.600322,-0.884111 2.384458,-2.667967 2.546767,-2.546366 2.737072,-2.671811 3.260033,-2.148932 0.212788,0.212755 0.235188,0.391917 0.235188,1.881201 v 1.646051 h 5.0906128 c 5.443018,0 5.946321,0.04455 6.897173,0.610539 0.590386,0.351422 1.254964,1.004393 1.65343,1.62455 0.666046,1.036613 0.705198,1.426315 0.705198,7.019257 v 5.089812 h 1.646309 c 1.489519,0 1.668709,0.0224 1.881497,0.235151 0.519204,0.519121 0.394333,0.708915 -2.142301,3.256165 -1.834562,1.84224 -2.445485,2.387833 -2.675253,2.389168 -0.232072,0.0013 -0.80697,-0.51292 -2.605802,-2.330984 z"
-      />
-    </g>
-  </svg>
-
-  const logo_vh=<svg xmlns="http://www.w3.org/2000/svg"
-    width="26"
-    height="26"
-    viewBox="0 0 26 26">
-    <g>
-      <path
-        d="m 3.1500765,17.283934 c 1.282992,-1.269418 2.454122,-2.346574 2.602512,-2.393679 0.187118,-0.0594 0.364549,-0.01495 0.578998,0.145033 0.305339,0.227793 0.30961,0.251457 0.341824,1.893906 l 0.03262,1.663232 h 5.0448465 c 3.278554,0 5.16073,-0.04379 5.375831,-0.125076 0.450418,-0.170206 0.972723,-0.677665 1.168491,-1.135279 0.129085,-0.301737 0.161883,-1.402969 0.161883,-5.435473 V 6.8395274 l -1.662971,-0.03263 c -1.65136,-0.0324 -1.664613,-0.03483 -1.898566,-0.348521 -0.203132,-0.272363 -0.216128,-0.362903 -0.09431,-0.65705 0.07771,-0.187636 1.160016,-1.355183 2.405127,-2.594548 1.686558,-1.678774 2.336228,-2.25339004 2.547722,-2.25339004 0.212412,0 0.884111,0.60032204 2.667967,2.38445804 2.546366,2.546767 2.671811,2.737072 2.148932,3.260033 -0.212755,0.212788 -0.391917,0.235188 -1.881201,0.235188 H 21.043731 V 11.92368 c 0,5.443018 -0.04455,5.946321 -0.610539,6.897173 -0.351422,0.590386 -1.004393,1.254964 -1.62455,1.65343 -1.036613,0.666046 -1.426315,0.705198 -7.019257,0.705198 H 6.6995735 v 1.646309 c 0,1.489519 -0.0224,1.668709 -0.235151,1.881497 -0.519121,0.519204 -0.708915,0.394333 -3.256165,-2.142301 -1.84224,-1.834562 -2.387833,-2.445485 -2.389168,-2.675253 -0.0013,-0.232072 0.51292,-0.80697 2.330984,-2.605802 z"
-      />
-    </g>
-  </svg>
-
-  const logo_vv=<svg xmlns="http://www.w3.org/2000/svg"
-    width="27"
-    height="27"
-    viewBox="0 0 27 70">
-    <g>
-      <path
-        d="m 1.0769167,58.015255 c 0.217654,0.354078 2.981133,3.275215 6.141066,6.491418 5.2863293,5.380463 5.8029433,5.84764 6.4664543,5.84764 0.665502,0 1.194478,-0.484452 6.858149,-6.280882 6.083147,-6.225736 6.13703,-6.28875 6.13703,-7.176876 0,-0.637443 -0.145906,-1.069736 -0.505635,-1.498089 L 25.668348,54.796371 21.3514,54.730451 17.034455,54.664531 V 37.542387 c 0,-9.417179 -0.06092,-18.000541 -0.135383,-19.074135 l -0.135382,-1.951988 4.45232,-0.06594 4.452319,-0.06597 0.505644,-0.602096 c 0.358397,-0.426766 0.505643,-0.861029 0.505643,-1.491273 0,-0.878947 -0.07053,-0.961469 -6.133897,-7.1768736 -5.688745,-5.831388 -6.186808,-6.28770195 -6.86297,-6.28770195 -0.675922,0 -1.176483,0.45789495 -6.8661033,6.28087995 -6.08314705,6.2257346 -6.13703005,6.2887486 -6.13703005,7.1768766 0,0.637443 0.145908,1.069735 0.50563505,1.498089 l 0.505633,0.602095 4.316948,0.06592 4.3169453,0.06592 v 17.122137 c 0,9.417183 0.06092,18.000543 0.135383,19.074137 l 0.135382,1.951988 -4.4523203,0.06596 -4.452317,0.06596 -0.505646,0.602096 c -0.61444705,0.731653 -0.65563605,1.726456 -0.108342,2.616786 z"
-      />
-    </g>
-  </svg>
-
-  const logo_hh=<svg xmlns="http://www.w3.org/2000/svg"
-    width="27"
-    height="27"
-    viewBox="0 0 70 27"
-  >
-    <g>
-      <path
-        d="m 57.188847,25.602699 c 0.354078,-0.217654 3.275215,-2.981133 6.491418,-6.141066 5.380463,-5.286329 5.84764,-5.802943 5.84764,-6.466454 0,-0.665502 -0.484452,-1.194478 -6.280882,-6.858149 C 57.021287,0.053883 56.958273,0 56.070147,0 55.432704,0 55.000411,0.145906 54.572058,0.505635 l -0.602095,0.505633 -0.06592,4.316948 -0.06592,4.316945 H 36.715979 c -9.41718,0 -18.000542,0.06092 -19.074136,0.135383 L 15.689855,9.915926 15.623915,5.463606 15.557945,1.011287 14.955849,0.505643 C 14.529083,0.147246 14.09482,0 13.464576,0 12.585629,0 12.503107,0.07053 6.287703,6.133897 0.45631402,11.822642 2.289157e-8,12.320705 2.289157e-8,12.996867 2.289157e-8,13.672789 0.45789502,14.17335 6.280881,19.86297 12.506615,25.946117 12.569629,26 13.457757,26 c 0.637443,0 1.069735,-0.145908 1.498089,-0.505635 l 0.602095,-0.505633 0.06592,-4.316948 0.06592,-4.316945 h 17.122138 c 9.417183,0 18.000543,-0.06092 19.074137,-0.135383 l 1.951988,-0.135382 0.06596,4.45232 0.06596,4.452317 0.602096,0.505646 c 0.731653,0.614447 1.726456,0.655636 2.616786,0.108342 z"
-      />
-    </g>
-  </svg>
-
-  const dashChecked=is_all_link_attr_same_value(data,selected_parameter,'dashed',menu_for_style) as boolean
-
+  const list_key=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible',
+    'label_visible','font_family','recycling','arrow','curved','nb_digit','scientific_precision',
+    'text_color','label_position','orthogonal_label_position'] as (keyof SankeyLinkAttrLocal)[]
+  const list_value=IsAllLinkAttrSameValue(data,selected_parameter,list_key,menu_for_style)
+  
   const shiftCenter = () => {
     if (selected_parameter.length == 0) {
       return 0.5
     }
     const idx = selected_parameter.length-1
     const current_link = selected_parameter[idx]
-    return parseFloat((((return_correct_link_attribute_value(data,current_link,'left_horiz_shift',menu_for_style)as number) + (return_correct_link_attribute_value(data,current_link,'right_horiz_shift',menu_for_style)as number)) / 2).toPrecision(2))
+    return parseFloat((((ReturnCorrectLinkAttributeValue(data,current_link,'left_horiz_shift',menu_for_style)as number) + (ReturnCorrectLinkAttributeValue(data,current_link,'right_horiz_shift',menu_for_style)as number)) / 2).toPrecision(2))
   }
 
   const shift = () => {
@@ -87,7 +97,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     }
     const idx = selected_parameter.length-1
     const current_link = selected_parameter[idx]
-    const the_shift = ((return_correct_link_attribute_value(data,current_link,'right_horiz_shift',menu_for_style)as number) - (return_correct_link_attribute_value(data,current_link,'left_horiz_shift',menu_for_style)as number))/2
+    const the_shift = ((ReturnCorrectLinkAttributeValue(data,current_link,'right_horiz_shift',menu_for_style)as number) - (ReturnCorrectLinkAttributeValue(data,current_link,'left_horiz_shift',menu_for_style)as number))/2
     return parseFloat(the_shift.toPrecision(2))
   }
 
@@ -96,25 +106,25 @@ export const SankeyMenuConfigurationLinksAppearence = (
     switch (param) {
     case 'hh':
       selected_parameter.map(d => {
-        allChecked = (return_correct_link_attribute_value(data,d,'orientation',menu_for_style) == 'hh') ? allChecked : false
+        allChecked = (ReturnCorrectLinkAttributeValue(data,d,'orientation',menu_for_style) == 'hh') ? allChecked : false
       })
       return allChecked
       break
     case 'vv':
       selected_parameter.map(d => {
-        allChecked = (return_correct_link_attribute_value(data,d,'orientation',menu_for_style) == 'vv') ? allChecked : false
+        allChecked = (ReturnCorrectLinkAttributeValue(data,d,'orientation',menu_for_style) == 'vv') ? allChecked : false
       })
       return allChecked
       break
     case 'hv':
       selected_parameter.map(d => {
-        allChecked = (return_correct_link_attribute_value(data,d,'orientation',menu_for_style) == 'hv') ? allChecked : false
+        allChecked = (ReturnCorrectLinkAttributeValue(data,d,'orientation',menu_for_style) == 'hv') ? allChecked : false
       })
       return allChecked
       break
     case 'vh':
       selected_parameter.map(d => {
-        allChecked = (return_correct_link_attribute_value(data,d,'orientation',menu_for_style) == 'vh') ? allChecked : false
+        allChecked = (ReturnCorrectLinkAttributeValue(data,d,'orientation',menu_for_style) == 'vh') ? allChecked : false
       })
       return allChecked
       break
@@ -125,10 +135,10 @@ export const SankeyMenuConfigurationLinksAppearence = (
     let display_courbe = true
     let courbe = 0.5
     if (selected_parameter.length != 0) {
-      courbe=return_correct_link_attribute_value(data,selected_parameter[0],'curvature',menu_for_style) as number
+      courbe=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'curvature',menu_for_style) as number
     }
     selected_parameter.map((d) => {
-      display_courbe = (return_correct_link_attribute_value(data,d,'curvature',menu_for_style)  == courbe) ? display_courbe : false
+      display_courbe = (ReturnCorrectLinkAttributeValue(data,d,'curvature',menu_for_style)  == courbe) ? display_courbe : false
     })
 
     return (display_courbe) ? courbe : 0
@@ -138,166 +148,45 @@ export const SankeyMenuConfigurationLinksAppearence = (
     let display_arrow_size = true
     let courbe = 10
     if (selected_parameter.length != 0) {
-      courbe=return_correct_link_attribute_value(data,selected_parameter[0],'arrow_size',menu_for_style) as number
+      courbe=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'arrow_size',menu_for_style) as number
     }
     selected_parameter.map((d) => {
-      display_arrow_size = (return_correct_link_attribute_value(data,d,'arrow_size',menu_for_style)  == courbe) ? display_arrow_size : false
+      display_arrow_size = (ReturnCorrectLinkAttributeValue(data,d,'arrow_size',menu_for_style)  == courbe) ? display_arrow_size : false
     })
 
     return (display_arrow_size) ? courbe : 0
-  }
-
-  const linkType = (param: 'recycling'|'curved'|'arrow') => {
-    return is_all_link_attr_same_value(data,selected_parameter,param,menu_for_style) as boolean
-  }
-
-  const linkLabelColor = (param: string) => {
-    let allChecked = true
-
-    if (selected_parameter.length != 0) {
-      switch (param) {
-      case 'white':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'text_color',menu_for_style) == 'white') ? allChecked : false
-        })
-        break
-      case 'black':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'text_color',menu_for_style) == 'black') ? allChecked : false
-        })
-        break
-      case 'color':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'text_color',menu_for_style) == return_correct_link_attribute_value(data,d,'color',menu_for_style)) ? allChecked : false
-        })
-        break
-      }
-      return allChecked
-    } else {
-      return false
-    }
   }
 
   const allNodeLabelFontSize = () => {
     let display_size = true
     let size = 11
     if (selected_parameter.length != 0) {
-      size = return_correct_link_attribute_value(data,selected_parameter[0],'label_font_size',menu_for_style) as number
+      size = ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_font_size',menu_for_style) as number
     }
     selected_parameter.map((d) => {
-      display_size = ((return_correct_link_attribute_value(data,d,'label_font_size',menu_for_style) as number) == size) ? display_size : false
+      display_size = ((ReturnCorrectLinkAttributeValue(data,d,'label_font_size',menu_for_style) as number) == size) ? display_size : false
     })
     return (display_size) ? size : 11
   }
 
-  const labelPositionVert = (param: string) => {
-    let allChecked = true
-    if (selected_parameter.length != 0) {
-      switch (param) {
-      case 'beginning':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'label_position',menu_for_style)== 'beginning') ? allChecked : false
-        })
-        break
-      case 'middle':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'label_position',menu_for_style) == 'middle') ? allChecked : false
-        })
-        break
-      case 'end':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'label_position',menu_for_style) == 'end') ? allChecked : false
-        })
-        break
-      }
-      return allChecked
-    } else {
-      return false
-    }
-  }
-
-  const labelSticktoLinkDisabled= is_all_link_attr_same_value(data,selected_parameter,'label_on_path',menu_for_style) as boolean
-
   const labelLinkFree = () => {
-    let labelLinkFree = false
-    selected_parameter.map(d => {
-      labelLinkFree = (return_correct_link_attribute_value(data,d,'label_position',menu_for_style) === 'frozen'&& (return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)) === 'frozen') ? true : labelLinkFree
-    })
-    return labelLinkFree
-  }
-
-  const labelPositionOrtho = (param: string) => {
-    let allChecked = true
-    if (selected_parameter.length != 0) {
-      switch (param) {
-      case 'above':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style) == 'above') ? allChecked : false
-        })
-        break
-      case 'middle':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style) == 'middle') ? allChecked : false
-        })
-        break
-      case 'below':
-        selected_parameter.map(d => {
-          allChecked = (return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style) == 'below') ? allChecked : false
-        })
-        break
-      }
-      return allChecked
-    } else {
-      return false
+    if(selected_parameter.length==0){
+      return [null,null]
     }
-  }
-
-  const isAllLinkToPrecision=()=>{
-    let toPrecision = true
-    selected_parameter.map(d => {
-      toPrecision =(return_correct_link_attribute_value(data,d,'to_precision',menu_for_style)) ? toPrecision : false
+    const first_value=(ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_position',menu_for_style) === 'frozen'&& (ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'orthogonal_label_position',menu_for_style)) === 'frozen')
+    let all_same=true
+    selected_parameter.forEach(l=>{
+      all_same=((ReturnCorrectLinkAttributeValue(data,l,'label_position',menu_for_style) === 'frozen'&& (ReturnCorrectLinkAttributeValue(data,l,'orthogonal_label_position',menu_for_style)) === 'frozen') ? false : all_same)
     })
-    return toPrecision
+    return (all_same?[first_value,false]:[false,true])
   }
-  const isAllLinkToCustomDigit=()=>{
-    let toPrecision = true
-    selected_parameter.map(d => {
-      toPrecision =(return_correct_link_attribute_value(data,d,'custom_digit',menu_for_style)) ? toPrecision : false
-    })
-    return toPrecision
-  }
-  const  AllLinkToCustomDigit=isAllLinkToCustomDigit()
-  const allLinkLabelCustomDigit = () => {
-    let display_size = true
-    let size = 0
-    if (selected_parameter.length != 0) {
-      size = return_correct_link_attribute_value(data,selected_parameter[0],'nb_digit',menu_for_style) as number
-    }
-    selected_parameter.map((d) => {
-      display_size = ((return_correct_link_attribute_value(data,d,'nb_digit',menu_for_style) as number) == size) ? display_size : false
-    })
-    return (display_size) ? size : 0
-  }
-
-  const allLinkLabelScientificPrecision = () => {
-    let display_size = true
-    let size = 0
-    if (selected_parameter.length != 0) {
-      size = return_correct_link_attribute_value(data,selected_parameter[0],'scientific_precision',menu_for_style) as number
-    }
-    selected_parameter.map((d) => {
-      display_size = ((return_correct_link_attribute_value(data,d,'scientific_precision',menu_for_style) as number) == size) ? display_size : false
-    })
-    return (display_size) ? size : 0
-  }
+  const label_link_free_checked=labelLinkFree() as boolean[]
 
   const apply_style_to_selected_links = () => {
     multi_selected_links.current.map(d => {
       delete d.local
     })
   }
-
-  const isAllLabelUnitVisible =is_all_link_attr_same_value(data,selected_parameter,'label_unit_visible',menu_for_style) as boolean
 
   //Change le style des flux sélectionnés
   const style_of_selected_links = () => {
@@ -309,7 +198,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
       if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? cut_name(data.style_link[style_to_display].idLink, 25) : 'Multiple style parmi les noeuds sélectionnés'
+        return (inchangee) ? CutName(data.style_link[style_to_display].idLink, 25) : 'Multiple style parmi les noeuds sélectionnés'
       } else {
         return 'Aucun'
       }
@@ -318,23 +207,16 @@ export const SankeyMenuConfigurationLinksAppearence = (
     }
   }
 
-  const labelVisibleChecked=is_all_link_attr_same_value(data,selected_parameter,'label_visible',menu_for_style) as boolean
-  const allLinkFF=is_all_link_attr_same_value(data,selected_parameter,'font_family',menu_for_style) as boolean
-  const label_link_free_checked=labelLinkFree()
-
-  const svg_label_top=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z"/></svg>
-  const svg_label_bottom=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z"/></svg>
-  const svg_label_center=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z"/></svg>
 
   const content_appearence = <Form >
 
     {/* Choix de la couleur du flux */}
     <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
-        {t('Flux.apparence.couleur')+(is_link_diplaying_value_local(multi_selected_links,'color',menu_for_style)?'*':'')}
+        {t('Flux.apparence.couleur')+(IsLinkDiplayingValueLocal(multi_selected_links,'color',menu_for_style)?'*':'')}
       </InputGroup.Text>
       <Form.Label htmlFor="form_color_link" style={{width:'60%',
-        'background':(selected_parameter.length == 1) ? (return_correct_link_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff',
+        'background':(selected_parameter.length == 1) ? (ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff',
         border:'1px solid #ced4da',
         borderTopRightRadius:'4px',
         borderBottomRightRadius:'4px',
@@ -349,11 +231,11 @@ export const SankeyMenuConfigurationLinksAppearence = (
           id='form_color_link'
           name='form_color_link'
           style={{display:'none'}}
-          value={(selected_parameter.length == 1) ? (return_correct_link_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+          value={(selected_parameter.length == 1) ? (ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
           onChange={
             evt => {
               const color = evt.target.value
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => assign_link_value_to_correct_var(d,'color',color,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => AssignLinkValueToCorrectVar(d,'color',color,menu_for_style))
               set_data({ ...data })
             }}/>
       </OverlayTrigger>
@@ -361,7 +243,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
     {/* Opacité */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}} >{t('Flux.apparence.opacity')+(is_link_diplaying_value_local(multi_selected_links,'opacity',menu_for_style)?'*':'')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'40%'}} >{t('Flux.apparence.opacity')+(IsLinkDiplayingValueLocal(multi_selected_links,'opacity',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'Flux.apparence.tooltips.1'}
         placement={'top'}
@@ -374,13 +256,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
             min={0}
             step={0.1}
             value={display_link_opacity}
-            isInvalid={selected_parameter.length>0?+display_link_opacity!=return_correct_link_attribute_value(data,selected_parameter[0],'opacity',menu_for_style):false}
+            isInvalid={selected_parameter.length>0?+display_link_opacity!=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'opacity',menu_for_style):false}
             onChange={
               evt => {
                 set_display_link_opacity(evt.target.value)
               }}
             onBlur={(evt)=>{
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => assign_link_value_to_correct_var(d,'opacity',+evt.target.value,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => AssignLinkValueToCorrectVar(d,'opacity',+evt.target.value,menu_for_style))
               set_data({...data})
             }}
           />
@@ -390,29 +272,36 @@ export const SankeyMenuConfigurationLinksAppearence = (
     </InputGroup>
     {/* Flux hachuré */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>{t('Flux.apparence.hach')+(is_link_diplaying_value_local(multi_selected_links,'dashed',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'Flux.apparence.tooltips.2'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'Flux.apparence.tooltips.2'}>{t('Flux.apparence.tooltips.hach')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={dashChecked?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'dashed',!dashChecked,menu_for_style))
+
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['dashed'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['dashed'][1]}
+          isChecked={list_value['dashed'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
+              .forEach(d => AssignLinkValueToCorrectVar(d,'dashed',evt.target.value,menu_for_style))
+
             set_data({ ...data })
-          }}>{dashChecked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          }}>
+          {t('Flux.apparence.hach')+' '}
+        </Checkbox>
       </OverlayTrigger>
+      {(IsLinkDiplayingValueLocal(multi_selected_links,'dashed',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
     </InputGroup>
 
 
     {/* Orientation du flux */}
     <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
-        {t('Flux.apparence.of')+(is_link_diplaying_value_local(multi_selected_links,'orientation',menu_for_style)?'*':'')}
+        {t('Flux.apparence.of')+(IsLinkDiplayingValueLocal(multi_selected_links,'orientation',menu_for_style)?'*':'')}
       </InputGroup.Text>
 
       {/* Horizontal - Horizontal  */}
@@ -429,7 +318,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'orientation','hh',menu_for_style)
+                AssignLinkValueToCorrectVar(d,'orientation','hh',menu_for_style)
 
               })
               set_data({ ...data })
@@ -450,7 +339,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'orientation','vv',menu_for_style)
+                AssignLinkValueToCorrectVar(d,'orientation','vv',menu_for_style)
               })
               set_data({ ...data })
             }}>{logo_vv}</Button>
@@ -470,7 +359,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'orientation','vh',menu_for_style)
+                AssignLinkValueToCorrectVar(d,'orientation','vh',menu_for_style)
               })
               set_data({ ...data })
             }}>{logo_vh}</Button>
@@ -490,7 +379,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onClick={
             () =>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'orientation','hv',menu_for_style)
+                AssignLinkValueToCorrectVar(d,'orientation','hv',menu_for_style)
               })
               set_data({ ...data })
             }}>{logo_hv}</Button>
@@ -519,15 +408,15 @@ export const SankeyMenuConfigurationLinksAppearence = (
             evt => {
               const center = +evt.target.value/100
               selected_parameter.forEach(d => {
-                let shift_gap = (Number(return_correct_link_attribute_value(data,d,'right_horiz_shift',menu_for_style)) - Number(return_correct_link_attribute_value(data,d,'left_horiz_shift',menu_for_style)))/2
+                let shift_gap = (Number(ReturnCorrectLinkAttributeValue(data,d,'right_horiz_shift',menu_for_style)) - Number(ReturnCorrectLinkAttributeValue(data,d,'left_horiz_shift',menu_for_style)))/2
                 if (center - shift_gap < 0) {
                   shift_gap = center
                 }
                 if (center + shift_gap > 1) {
                   shift_gap = 1-center
                 }
-                assign_link_value_to_correct_var(d,'left_horiz_shift',(center - shift_gap),menu_for_style)
-                assign_link_value_to_correct_var(d,'right_horiz_shift',(center + shift_gap),menu_for_style)
+                AssignLinkValueToCorrectVar(d,'left_horiz_shift',(center - shift_gap),menu_for_style)
+                AssignLinkValueToCorrectVar(d,'right_horiz_shift',(center + shift_gap),menu_for_style)
               })
               set_data({ ...data })
             }}/>
@@ -537,7 +426,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     {/* Distance des poignée */}
     <InputGroup>
       <InputGroup.Text style={{width:'70%'}}>
-        {t('Flux.apparence.eep')+(is_link_diplaying_value_local(multi_selected_links,'left_horiz_shift',menu_for_style)&&is_link_diplaying_value_local(multi_selected_links,'right_horiz_shift',menu_for_style)?'*':'')}
+        {t('Flux.apparence.eep')+(IsLinkDiplayingValueLocal(multi_selected_links,'left_horiz_shift',menu_for_style)&&IsLinkDiplayingValueLocal(multi_selected_links,'right_horiz_shift',menu_for_style)?'*':'')}
       </InputGroup.Text>
 
       <OverlayTrigger
@@ -567,8 +456,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
                   new_center_position = 1-shift_gap
                 }
 
-                assign_link_value_to_correct_var(d,'left_horiz_shift',(new_center_position - shift_gap),menu_for_style)
-                assign_link_value_to_correct_var(d,'right_horiz_shift',(new_center_position + shift_gap),menu_for_style)
+                AssignLinkValueToCorrectVar(d,'left_horiz_shift',(new_center_position - shift_gap),menu_for_style)
+                AssignLinkValueToCorrectVar(d,'right_horiz_shift',(new_center_position + shift_gap),menu_for_style)
 
               })
               set_data({ ...data })
@@ -581,7 +470,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     {/* Choix du type de représentation du flux  */}
     <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
-        {t('Flux.apparence.type')+(is_link_diplaying_value_local(multi_selected_links,'left_horiz_shift',menu_for_style)&&is_link_diplaying_value_local(multi_selected_links,'right_horiz_shift',menu_for_style)?'*':'')}
+        {t('Flux.apparence.type')+(IsLinkDiplayingValueLocal(multi_selected_links,'left_horiz_shift',menu_for_style)&&IsLinkDiplayingValueLocal(multi_selected_links,'right_horiz_shift',menu_for_style)?'*':'')}
       </InputGroup.Text>
 
       {/* Forme courbée  */}
@@ -593,11 +482,11 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={linkType('curved')?'primary':'outline-primary'}
+          variant={list_value['curved'][0]?'primary':'outline-primary'}
           onClick={
             () => {
-              const val=linkType('curved')
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => assign_link_value_to_correct_var(d,'curved',!val,menu_for_style))
+              const val=list_value['curved'][0]
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => AssignLinkValueToCorrectVar(d,'curved',!val,menu_for_style))
               set_data({ ...data })
             }}>{t('Flux.apparence.courbe')}</Button>
       </OverlayTrigger>
@@ -611,11 +500,11 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button
           style={{width:'20%'}}
           className='btn_menu_config'
-          variant={linkType('arrow')?'primary':'outline-primary'}
+          variant={list_value['arrow'][0]?'primary':'outline-primary'}
           onClick={
             () => {
-              const val=linkType('arrow')
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>assign_link_value_to_correct_var(d,'arrow',!val,menu_for_style)
+              const val=list_value['arrow'][0]
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>AssignLinkValueToCorrectVar(d,'arrow',!val,menu_for_style)
               )
               set_data({ ...data })
             }}>{t('Flux.apparence.fleche')}</Button>
@@ -630,14 +519,14 @@ export const SankeyMenuConfigurationLinksAppearence = (
         <Button
           style={{width:'20%'}}
           className='btn_menu_config'
-          variant={linkType('recycling')?'primary':'outline-primary'}
+          variant={list_value['recycling'][0]?'primary':'outline-primary'}
           onClick={
             () => {
-              const val=linkType('recycling')
+              const val=list_value['recycling'][0]
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'recycling',!val,menu_for_style)
-                assign_link_value_to_correct_var(d,'left_horiz_shift',(val?0.2:0),menu_for_style)
-                assign_link_value_to_correct_var(d,'right_horiz_shift',(val?0.8:0),menu_for_style)
+                AssignLinkValueToCorrectVar(d,'recycling',!val,menu_for_style)
+                AssignLinkValueToCorrectVar(d,'left_horiz_shift',(val?0.2:0),menu_for_style)
+                AssignLinkValueToCorrectVar(d,'right_horiz_shift',(val?0.8:0),menu_for_style)
               })
               set_data({ ...data })
             }}>{t('Flux.apparence.recy')}</Button>
@@ -646,7 +535,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
     {/* Modification du rayon de courbure du flux  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>{t('Flux.apparence.courbure')+(is_link_diplaying_value_local(multi_selected_links,'curvature',menu_for_style)?'*':'')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'40%'}}>{t('Flux.apparence.courbure')+(IsLinkDiplayingValueLocal(multi_selected_links,'curvature',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'flux.apparence.tooltips.12'}
         placement={'top'}
@@ -661,7 +550,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onChange={
             evt => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'curvature',+evt.target.value,menu_for_style)
+                AssignLinkValueToCorrectVar(d,'curvature',+evt.target.value,menu_for_style)
 
               })
               set_data({ ...data })
@@ -671,7 +560,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
     <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
-        {t('Flux.apparence.arrow_size')+(is_link_diplaying_value_local(multi_selected_links,'arrow_size',menu_for_style)?'*':'')}
+        {t('Flux.apparence.arrow_size')+(IsLinkDiplayingValueLocal(multi_selected_links,'arrow_size',menu_for_style)?'*':'')}
       </InputGroup.Text>
 
       <OverlayTrigger
@@ -690,7 +579,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
               const val=+evt.target.value
               const value=isNaN(val) || val<=0?10:val
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'arrow_size',value,menu_for_style)
+                AssignLinkValueToCorrectVar(d,'arrow_size',value,menu_for_style)
 
               })
               set_data({ ...data })
@@ -703,52 +592,58 @@ export const SankeyMenuConfigurationLinksAppearence = (
   const content_label=<>
     {/* Display label  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.vdb') +(is_link_diplaying_value_local(multi_selected_links,'label_visible',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'flux.label.tooltips.1'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'flux.label.tooltips.1'}>{t('Flux.label.tooltips.label')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'30%'}}
-          variant={labelVisibleChecked?'primary':'outline-primary'}
-          onClick={
-            () => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'label_visible',!labelVisibleChecked,menu_for_style)
-              })
-              set_data({ ...data })
-            }}>{labelVisibleChecked?<FaEye/>:<FaEyeSlash/>}</Button>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['label_visible'][1]?'#78C2AD':'white'}
+          maxW={'50%'}
+          isIndeterminate={list_value['label_visible'][1]}
+          isChecked={list_value['label_visible'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+              AssignLinkValueToCorrectVar(d,'label_visible',evt.target.checked,menu_for_style)
+            })
+            set_data({ ...data })
+          }}>
+      
+          <> {t('Flux.label.vdb')+' '}</>
+        </Checkbox>
       </OverlayTrigger>
+      {(IsLinkDiplayingValueLocal(multi_selected_links,'label_visible',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
     </InputGroup>
-
-         
-    {/* Ajout une unité au label de flux */}
     <InputGroup>
-      <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.l_u_v')+(is_link_diplaying_value_local(multi_selected_links,'label_unit_visible',menu_for_style)?'*':'')}</InputGroup.Text>
+      {/* Ajout une unité au label de flux */}
 
       <OverlayTrigger
         key={'Flux.label.tooltips.2'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'Flux.label.tooltips.2'}>{t('Flux.label.tooltips.l_u_v')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'30%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={isAllLabelUnitVisible?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'label_unit_visible',!isAllLabelUnitVisible,menu_for_style))
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['label_unit_visible'][1]?'#78C2AD':'white'}
+          maxW={'50%'}
+          isIndeterminate={list_value['label_unit_visible'][1]}
+          isChecked={list_value['label_unit_visible'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+              AssignLinkValueToCorrectVar(d,'label_unit_visible',evt.target.checked,menu_for_style)
+            })
             set_data({ ...data })
-          }}>{isAllLabelUnitVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+          }}>
+          {t('Flux.label.l_u_v')+' '}
+        </Checkbox>
       </OverlayTrigger>
+      {(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit_visible',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
     </InputGroup>
-
-    {isAllLabelUnitVisible?<>    {/* Modifie l'unité du label de flux */}
+    {list_value['label_unit_visible'][0]?<>    {/* Modifie l'unité du label de flux */}
       <InputGroup>
         <InputGroup.Text style={{width:'40%'}}>
-          {t('Flux.label.l_u')+(is_link_diplaying_value_local(multi_selected_links,'label_unit',menu_for_style)?'*':'')}
+          {t('Flux.label.l_u')+(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit',menu_for_style)?'*':'')}
         </InputGroup.Text>
         <OverlayTrigger
           key={'Flux.label.tooltips.l_u'}
@@ -758,9 +653,9 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Form.Control
             type='text'
             style={{width:'60%'}}
-            value={return_correct_link_attribute_value(data,selected_parameter[0],'label_unit',menu_for_style) as string}
+            value={ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_unit',menu_for_style) as string}
             onChange={evt => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'label_unit',evt.target.value,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'label_unit',evt.target.value,menu_for_style))
               set_data({ ...data })
             }}/>
         </OverlayTrigger>
@@ -778,12 +673,12 @@ export const SankeyMenuConfigurationLinksAppearence = (
           type='number'
           min={0}
           step={1}
-          value={allLinkLabelScientificPrecision()}
+          value={list_value['scientific_precision'][0] as number}
           onChange={evt=>{
             const value=+evt.target.value
             if(!isNaN(value)){
               const val=isNaN(value) || value<=0?5:Math.round(value)
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'scientific_precision',val,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'scientific_precision',val,menu_for_style))
               set_data({...data})
             }
            
@@ -793,56 +688,60 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
     {/* Choix d'affichage en notation scientifique  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.toPrecision')}</InputGroup.Text>
       <OverlayTrigger
         key={'flux.label.tooltips.13'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'flux.label.tooltips.13'}>{t('Flux.label.tooltips.toPrecision')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'30%'}}
-          variant={isAllLinkToPrecision()?'primary':'outline-primary'}
-          onClick={
-            () => {
-              const val=isAllLinkToPrecision()
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                assign_link_value_to_correct_var(d,'custom_digit',false,menu_for_style)
-                assign_link_value_to_correct_var(d,'to_precision',!val,menu_for_style)
-              })
-              set_data({ ...data })
-            }}>{isAllLinkToPrecision()?<FaEye/>:<FaEyeSlash/>}</Button>
+       
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['to_precision'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['to_precision'][1]}
+          isChecked={list_value['to_precision'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+              AssignLinkValueToCorrectVar(d,'custom_digit',false,menu_for_style)
+              AssignLinkValueToCorrectVar(d,'to_precision',evt.target.checked,menu_for_style)
+            })
+            set_data({ ...data })
+          }}>
+          {t('Flux.label.toPrecision')+' '}
+        </Checkbox>
       </OverlayTrigger>
+      {(IsLinkDiplayingValueLocal(multi_selected_links,'to_precision',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
     </InputGroup>
 
-    {isAllLinkToPrecision()?<>  
+    {list_value['to_precision'][0]?<>  
     </>:<></>}
     {/* Choix d'affichage du nombre de chiffre après la virgule  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'70%'}} >{t('Flux.label.custom_digit')}</InputGroup.Text>
       <OverlayTrigger
         key={'flux.label.tooltips.cd'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'flux.label.tooltips.cd'}>{t('Flux.label.tooltips.custom_digit')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'30%'}}
-          variant={AllLinkToCustomDigit?'primary':'outline-primary'}
-          onClick={
-            () => {
-              const val=AllLinkToCustomDigit
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-
-                assign_link_value_to_correct_var(d,'to_precision',false,menu_for_style)
-                assign_link_value_to_correct_var(d,'custom_digit',!val,menu_for_style)
-              })
-              set_data({ ...data })
-            }}>{AllLinkToCustomDigit?<FaEye/>:<FaEyeSlash/>}</Button>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['custom_digit'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['custom_digit'][1]}
+          isChecked={list_value['custom_digit'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+              AssignLinkValueToCorrectVar(d,'to_precision',false,menu_for_style)
+              AssignLinkValueToCorrectVar(d,'custom_digit',evt.target.value,menu_for_style)
+            })
+            set_data({ ...data })
+          }}>
+          {t('Flux.label.custom_digit')+' '}
+        </Checkbox>
       </OverlayTrigger>
+      {(IsLinkDiplayingValueLocal(multi_selected_links,'custom_digit',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
     </InputGroup>
 
-    {AllLinkToCustomDigit?<>  {/* Choose number of custom digit */}
+    {list_value['custom_digit'][0]?<>  {/* Choose number of custom digit */}
       <InputGroup>
         <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.NbDigit')}</InputGroup.Text>
         <OverlayTrigger
@@ -855,12 +754,12 @@ export const SankeyMenuConfigurationLinksAppearence = (
             type='number'
             min={0}
             step={1}
-            disabled={!AllLinkToCustomDigit}
-            value={allLinkLabelCustomDigit()}
+            disabled={!(list_value['custom_digit'][0] as boolean)}
+            value={list_value['nb_digit'][0] as number}
             onChange={evt=>{
               const value=+evt.target.value
               const val=isNaN(value) 
-              Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>assign_link_value_to_correct_var(d,'nb_digit',value,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'nb_digit',value,menu_for_style))
               set_data({...data})
             }}/>
         </OverlayTrigger>
@@ -878,15 +777,15 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button
             className='btn_menu_config'
             style={{width:'33%', height:'2rem'}}
-            disabled={!labelVisibleChecked}
-            variant={linkLabelColor('black')?'primary':'outline-primary'}
+            disabled={!list_value['label_visible'][0]}
+            variant={!list_value['text_color'][1] && list_value['text_color'][0]==='black'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  assign_link_value_to_correct_var(d,'text_color','black',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'text_color','black',menu_for_style)
                 })
                 set_data({ ...data })
-              }}>{t('Flux.label.len')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
+              }}>{t('Flux.label.len')+(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
         </OverlayTrigger>
 
         {/* Label en blanc  */}
@@ -898,15 +797,15 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button
             className='btn_menu_config'
             style={{width:'33%', height:'2rem'}}
-            disabled={!labelVisibleChecked}
-            variant={linkLabelColor('white')?'primary':'outline-primary'}
+            disabled={!list_value['label_visible'][0]}
+            variant={!list_value['text_color'][1] && list_value['text_color'][0]==='white'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  assign_link_value_to_correct_var(d,'text_color','white',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'text_color','white',menu_for_style)
                 })
                 set_data({ ...data })
-              }}>{t('Flux.label.lb')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
+              }}>{t('Flux.label.lb')+(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
         </OverlayTrigger>
 
         {/* Label en couleur  */}
@@ -918,15 +817,15 @@ export const SankeyMenuConfigurationLinksAppearence = (
           <Button
             className='btn_menu_config'
             style={{width:'34%', height:'2rem'}}
-            disabled={!labelVisibleChecked}
-            variant={linkLabelColor('color')?'primary':'outline-primary'}
+            disabled={!list_value['label_visible'][0]}
+            variant={!list_value['text_color'][1] && list_value['text_color'][0]==='color'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  assign_link_value_to_correct_var(d,'text_color',return_correct_link_attribute_value(data,d,'color',menu_for_style),menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'text_color',ReturnCorrectLinkAttributeValue(data,d,'color',menu_for_style),menu_for_style)
                 })
                 set_data({ ...data })
-              }}>{t('Flux.label.lec')+(is_link_diplaying_value_local(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
+              }}>{t('Flux.label.lec')+(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
         </OverlayTrigger>
       </ButtonGroup>
     </Form.Group>
@@ -936,10 +835,10 @@ export const SankeyMenuConfigurationLinksAppearence = (
       <InputGroup.Text style={{width:'40%'}} >{'Police'}</InputGroup.Text>
       <Form.Select
         style={{width:'30%'}}
-        value={allLinkFF?return_correct_link_attribute_value(data,selected_parameter[0],'font_family',menu_for_style) as string:''}
+        value={list_value['font_family'][0]?ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'font_family',menu_for_style) as string:''}
         onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => assign_link_value_to_correct_var(d,'font_family', evt.target.value,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
             set_data({...data})
           }}>
         {data.display_style.font_family.map((d) => {
@@ -954,11 +853,11 @@ export const SankeyMenuConfigurationLinksAppearence = (
         style={{width:'20%'}}
         min={11}
         type={'number'}
-        disabled={!labelVisibleChecked}
+        disabled={!list_value['label_visible'][0]}
         value={allNodeLabelFontSize()}
         onChange={evt => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>{
-            assign_link_value_to_correct_var(d,'label_font_size',+evt.target.value,menu_for_style)
+            AssignLinkValueToCorrectVar(d,'label_font_size',+evt.target.value,menu_for_style)
           })
           set_data({ ...data })
         }}
@@ -968,39 +867,39 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
     {/* Orienter le texte du label le long du flux  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'70%'}}>
-        {t('Flux.label.acf')+(is_link_diplaying_value_local(multi_selected_links,'label_on_path',menu_for_style)?'*':'')}
-      </InputGroup.Text>
       <OverlayTrigger
         key={'flux.label.tooltips.5'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'flux.label.tooltips.5'}>{t('Flux.label.tooltips.acf')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'30%'}}
-          disabled={!labelVisibleChecked}
-          variant={labelSticktoLinkDisabled?'primary':'outline-primary'}
-          onClick={()=>{
-            const val=labelSticktoLinkDisabled
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['label_on_path'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['label_on_path'][1]}
+          isChecked={list_value['label_on_path'][0] as boolean}
+          onChange={(evt) => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-              assign_link_value_to_correct_var(d,'label_on_path',!val,menu_for_style)
-              if(!val){
-                const l_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
-                const l_orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
-                assign_link_value_to_correct_var(d,'label_position',(l_pos=='frozen')?'middle':l_pos,menu_for_style)
-                assign_link_value_to_correct_var(d,'orthogonal_label_position',(l_orth_pos=='frozen')?'middle':l_orth_pos,menu_for_style)
+              AssignLinkValueToCorrectVar(d,'label_on_path',evt.target.value,menu_for_style)
+              if(evt.target.value){
+                const l_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
+                const l_orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                AssignLinkValueToCorrectVar(d,'label_position',(l_pos=='frozen')?'middle':l_pos,menu_for_style)
+                AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(l_orth_pos=='frozen')?'middle':l_orth_pos,menu_for_style)
               }
             })
             set_data({ ...data })
-          }}>{labelSticktoLinkDisabled?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          }}>
+          {t('Flux.label.acf')+' '}
+        </Checkbox>
       </OverlayTrigger>
+      {(IsLinkDiplayingValueLocal(multi_selected_links,'label_on_path',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
     </InputGroup>
 
     {/* Positionnement lateral des label */}
     <InputGroup>
       <InputGroup.Text style={{width:'40%'}}>
-        {t('Flux.label.pos')+(is_link_diplaying_value_local(multi_selected_links,'label_position',menu_for_style)?'*':'')}
+        {t('Flux.label.pos')+(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?'*':'')}
       </InputGroup.Text>
 
       {/* Vers le début  */}
@@ -1012,13 +911,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
           overlay={<Tooltip id={'flux.label.tooltips.6'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={labelPositionVert('beginning')?'primary':'outline-primary'}
+            variant={!list_value['label_position'][1] && list_value['label_position'][0]==='beginning'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
-                  assign_link_value_to_correct_var(d,'label_position','beginning',menu_for_style)
-                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                  const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}><FaAlignLeft/></Button>
@@ -1032,13 +931,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
           overlay={<Tooltip id={'flux.label.tooltips.7'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={labelPositionVert('middle')?'primary':'outline-primary'}
+            variant={!list_value['label_position'][1] && list_value['label_position'][0]==='middle'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
-                  assign_link_value_to_correct_var(d,'label_position','middle',menu_for_style)
-                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                  const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_position','middle',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}><FaAlignCenter/></Button>
@@ -1052,13 +951,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
           overlay={<Tooltip id={'flux.label.tooltips.8'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={labelPositionVert('end')?'primary':'outline-primary'}
+            variant={!list_value['label_position'][1] && list_value['label_position'][0]==='end'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  const orth_pos=return_correct_link_attribute_value(data,d,'orthogonal_label_position',menu_for_style)
-                  assign_link_value_to_correct_var(d,'label_position','end',menu_for_style)
-                  assign_link_value_to_correct_var(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                  const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_position','end',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}><FaAlignRight/></Button>
@@ -1075,13 +974,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
           overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={labelPositionOrtho('below')?'primary':'outline-primary'}
+            variant={!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='below'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
-                  assign_link_value_to_correct_var(d,'orthogonal_label_position','below',menu_for_style)
-                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                  const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position','below',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}>{svg_label_bottom}</Button>
@@ -1095,13 +994,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
           overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={labelPositionOrtho('middle')?'primary':'outline-primary'}
+            variant={!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='middle'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
-                  assign_link_value_to_correct_var(d,'orthogonal_label_position','middle',menu_for_style)
-                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                  const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position','middle',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}>{svg_label_center}</Button>
@@ -1115,13 +1014,13 @@ export const SankeyMenuConfigurationLinksAppearence = (
           overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={labelPositionOrtho('above')?'primary':'outline-primary'}
+            variant={!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='above'?'primary':'outline-primary'}
             onClick={
               () => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  const lab_pos=return_correct_link_attribute_value(data,d,'label_position',menu_for_style)
-                  assign_link_value_to_correct_var(d,'orthogonal_label_position','above',menu_for_style)
-                  assign_link_value_to_correct_var(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                  const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position','above',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                 })
                 set_data({ ...data })
               }}>{svg_label_top}</Button>
@@ -1131,26 +1030,32 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
     {/* Positionnement à la souris  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.pls')+(is_link_diplaying_value_local(multi_selected_links,'label_position',menu_for_style)?'*':'')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.pls')+(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'flux.label.tooltips.12'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'flux.label.tooltips.12'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'30%'}}
-          variant={label_link_free_checked?'primary':'outline-primary'}
-          onClick={() => {
+
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={label_link_free_checked[1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={label_link_free_checked[1]}
+          isChecked={label_link_free_checked[0]}
+          onChange={(evt) => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-              const l_o_p=return_correct_link_attribute_value(data,d,'label_on_path',menu_for_style)
-              assign_link_value_to_correct_var(d,'label_on_path',((!label_link_free_checked)?false:l_o_p),menu_for_style)
-              assign_link_value_to_correct_var(d,'label_position',(!label_link_free_checked)?'frozen':'middle',menu_for_style)
-              assign_link_value_to_correct_var(d,'orthogonal_label_position',(!label_link_free_checked)?'frozen':'middle',menu_for_style)
+              const l_o_p=ReturnCorrectLinkAttributeValue(data,d,'label_on_path',menu_for_style)
+              AssignLinkValueToCorrectVar(d,'label_on_path',((evt.target.checked)?false:l_o_p),menu_for_style)
+              AssignLinkValueToCorrectVar(d,'label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
+              AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
             })
             set_data({ ...data })
-          }}>{label_link_free_checked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          }}>
+          {t('Flux.label.pls')+' '}
+        </Checkbox>
       </OverlayTrigger>
+      {(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
     </InputGroup>
     
   </>

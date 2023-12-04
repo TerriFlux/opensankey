@@ -316,10 +316,10 @@ export type drawCurveType = (
   link: SankeyLink,
   error_msg: { text?: string } | undefined,
   multi_selected_links:{current: SankeyLink[] },
-  link_text:(data: SankeyData, d: SankeyLink,getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  min_width_and_height:(d:SankeyData)=>number[],
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  drawArrows:drawArrowsType
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  DrawArrows:drawArrowsType
 ) => string
 
 
@@ -329,7 +329,7 @@ export type drawArrowsType = (
   display_nodes: { [node_id: string]: SankeyNode },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   display_style: { filter: number }
   //selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
 ) => void
