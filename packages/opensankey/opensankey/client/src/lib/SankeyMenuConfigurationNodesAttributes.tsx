@@ -1,11 +1,17 @@
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip,FormControl, Button, ButtonGroup, InputGroup,Dropdown } from 'react-bootstrap'
-import { SankeyData, SankeyNode } from './types'
-import { return_correct_node_attribute_value,assign_node_value_to_correct_var,is_node_diplaying_value_local,is_all_node_attr_same_value,cut_name} from './SankeyUtils'
-import { FaAlignLeft,FaAlignCenter,FaAlignRight,FaBold,FaItalic, FaLock, FaLockOpen, FaEye, FaEyeSlash,FaCheck} from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { SankeyData, SankeyNode, SankeyNodeAttrLocal } from './types'
+import { ReturnCorrectNodeAttributeValue,
+  AssignNodeValueToCorrectVar,
+  IsNodeDisplayingValueLocal,
+  IsAllNodeAttrSameValue,
+  CutName,
+  SmoothClasses,
+  TooltipValueSurcharge} from './SankeyUtils'
+import { FaAlignLeft,FaAlignCenter,FaAlignRight,FaBold,FaItalic, FaLock, FaLockOpen} from 'react-icons/fa'
+import { Checkbox } from '@chakra-ui/react'
+
 export const OpenSankeyConfigurationNodesAttributes = (
   t:TFunction,
   data:SankeyData,
@@ -40,82 +46,12 @@ export const OpenSankeyConfigurationNodesAttributes = (
     return browser
   }
 
-  const isAllNodeVisible=is_all_node_attr_same_value(data,selected_parameter,'shape_visible',menu_for_style) as boolean
+  const list_of_key=['shape_visible','colorSustainable','node_width',
+    'node_height','label_visible','label_color','label_background','show_value',
+    'label_box_width','font_size','value_font_size','font_family','bold','uppercase',
+    'italic','label_vert','label_horiz','label_vert_valeur','label_horiz_valeur','shape'] as (keyof SankeyNodeAttrLocal)[]
 
-  const isAllNodeRect = () => {
-    let rect = true
-    if (selected_parameter.length > 0) {
-      selected_parameter.map(d => rect = (return_correct_node_attribute_value(data,d,'shape',menu_for_style) !== 'rect') ? false : rect)
-    } else {
-      rect = false
-    }
-    return rect
-  }
-
-  const isAllNodeCircle = () => {
-    let circle = true
-    if (selected_parameter.length > 0) {
-      selected_parameter.map(d => circle = (return_correct_node_attribute_value(data,d,'shape',menu_for_style) !== 'ellipse') ? false : circle)
-    } else {
-      circle = false
-    }
-    return circle
-  }
-
-  const isAllNodeColorSustainable=is_all_node_attr_same_value(data,selected_parameter,'colorSustainable',menu_for_style) as boolean
-
-  const displayedValueNodeWidth=is_all_node_attr_same_value(data,selected_parameter,'node_width',menu_for_style) as number
-
-  const displayedValueNodeHeight=is_all_node_attr_same_value(data,selected_parameter,'node_height',menu_for_style) as number
-
-  const isAllLabelVisible=is_all_node_attr_same_value(data,selected_parameter,'label_visible',menu_for_style) as boolean
-
-  const isAllLabelWhite =is_all_node_attr_same_value(data,selected_parameter,'label_color',menu_for_style) as boolean
-  const isAllLabelBackGroundColored =is_all_node_attr_same_value(data,selected_parameter,'label_background',menu_for_style) as boolean
-
-  const isAllNodeTotal =is_all_node_attr_same_value(data,selected_parameter,'show_value',menu_for_style) as boolean
-
-  const valueAllNodeLabelBox =Math.round(is_all_node_attr_same_value(data,selected_parameter,'label_box_width',menu_for_style) as number)
-
-  const allNodeLabelFontSize =is_all_node_attr_same_value(data,selected_parameter,'font_size',menu_for_style) as number
-
-  const allNodeValueFontSize =is_all_node_attr_same_value(data,selected_parameter,'value_font_size',menu_for_style) as number
-
-  const allNodeFF =is_all_node_attr_same_value(data,selected_parameter,'font_family',menu_for_style) as boolean
-
-  const isAllNodeBold =is_all_node_attr_same_value(data,selected_parameter,'bold',menu_for_style) as boolean
-
-  const isAllNodeUpper =is_all_node_attr_same_value(data,selected_parameter,'uppercase',menu_for_style) as boolean
-
-  const isAllNodeItalic =is_all_node_attr_same_value(data,selected_parameter,'italic',menu_for_style) as boolean
-
-  const isAllNodeLabelVert = (arg: string, pos: string) => {
-    let all_same = true
-    if (selected_parameter.length > 0) {
-      if (arg == 'vert') {
-        selected_parameter.map(d => all_same = (return_correct_node_attribute_value(data,d,'label_vert',menu_for_style)!==pos) ? false : all_same)
-      } else if (arg == 'horiz') {
-        selected_parameter.map(d => all_same = (return_correct_node_attribute_value(data,d,'label_horiz',menu_for_style)!==pos) ? false : all_same)
-      }
-    } else {
-      all_same = false
-    }
-    return all_same
-  }
-
-  const isAllNodeLabelValueVert = (arg: string, pos: string) => {
-    let all_same = true
-    if (selected_parameter.length > 0) {
-      if (arg == 'vert') {
-        selected_parameter.map(d => all_same = (return_correct_node_attribute_value(data,d,'label_vert_valeur',menu_for_style)!== pos) ? false : all_same)
-      } else if (arg == 'horiz') {
-        selected_parameter.map(d => all_same = (return_correct_node_attribute_value(data,d,'label_horiz_valeur',menu_for_style)!== pos) ? false : all_same)
-      }
-    } else {
-      all_same = false
-    }
-    return all_same
-  }
+  const list_value=IsAllNodeAttrSameValue(data,selected_parameter,list_of_key,menu_for_style)
 
   const style_of_selected_nodes = () => {
     let style_to_display = 'Aucun'
@@ -126,7 +62,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
       if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? cut_name(data.style_node[style_to_display].name, 20) : 'Multiple style parmi les noeuds sélectionnés'
+        return (inchangee) ? CutName(data.style_node[style_to_display].name, 20) : 'Multiple style parmi les noeuds sélectionnés'
       } else {
         return 'Aucun'
       }
@@ -135,7 +71,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
     }
   }
 
-  const apply_style_to_nodes = () => {
+  const ApplyStyleToNodes = () => {
     multi_selected_nodes.current.map(d => {
       // Delete local value so the used value come from the style
       delete d.local
@@ -144,7 +80,6 @@ export const OpenSankeyConfigurationNodesAttributes = (
   }
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
   const has_NodeType_Tag= (!data.override_type_node_shape && !menu_for_style && multi_selected_nodes.current.length>0)?(Object.keys(multi_selected_nodes.current[0].tags).includes('Type de noeud') && multi_selected_nodes.current[0].tags['Type de noeud'].length>0 ):false
-
   const content_appearence=<Form.Group>
     {/* Visibilite du noeud */}
     <OverlayTrigger
@@ -153,17 +88,22 @@ export const OpenSankeyConfigurationNodesAttributes = (
       delay={500}
       overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
       <InputGroup key={'node_visibility'} >
-        <InputGroup.Text style={{width:'40%'}}>
-          {t('Noeud.apparence.Visibilité')+(is_node_diplaying_value_local(multi_selected_nodes,'shape_visible',menu_for_style)?'*':'')}
-        </InputGroup.Text><Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={isAllNodeVisible?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'shape_visible',!isAllNodeVisible,menu_for_style))
+
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['shape_visible'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['shape_visible'][1]}
+          isChecked={list_value['shape_visible'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,menu_for_style))
             set_data({ ...data })
-          }}>{isAllNodeVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+          }}>
+          {t('Noeud.apparence.Visibilité')}
+        </Checkbox>
+        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
       </InputGroup>
     </OverlayTrigger>
 
@@ -181,12 +121,12 @@ export const OpenSankeyConfigurationNodesAttributes = (
         <InputGroup.Text
           style={{width:'40%'}}
         >
-          {t('Noeud.apparence.Couleur')+(is_node_diplaying_value_local(multi_selected_nodes,'color',menu_for_style)?'*':'')}
+          {t('Noeud.apparence.Couleur')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'color',menu_for_style)?'*':'')}
         </InputGroup.Text>
         <Form.Label htmlFor="form_color_node"
           style={{
             width:'50%',
-            background:(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string): '#ffffff',
+            background:(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string): '#ffffff',
             border:'1px solid #ced4da',
           }}/>
         {(getBrowserName()==='Firefox')?<Form.Control
@@ -194,9 +134,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
           type='color'
           id='form_color_node'
           name='form_color_node'
-          value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+          value={(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
           onChange={evt=>{
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
             set_data({ ...data })
           }}
         />:<Form.Control
@@ -204,9 +144,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
           type='color'
           id='form_color_node'
           name='form_color_node'
-          value={(selected_parameter.length == 1) ? (return_correct_node_attribute_value(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+          value={(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
           onChange={evt=>{
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'color',evt.target.value,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
           }}
           onBlurCapture={()=>{
             set_data({ ...data })
@@ -221,11 +161,11 @@ export const OpenSankeyConfigurationNodesAttributes = (
             className='btn_menu_config'
             style={{width:'10%'}}
             //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-            variant={isAllNodeColorSustainable?'primary':'outline-primary'}
+            variant={list_value['colorSustainable'][0]?'primary':'outline-primary'}
             onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'colorSustainable',!isAllNodeColorSustainable,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'colorSustainable',!list_value['colorSustainable'][0],menu_for_style))
               set_data({ ...data })
-            }}>{isAllNodeColorSustainable?<FaLock/>:<FaLockOpen/>}</Button>
+            }}>{list_value['colorSustainable'][0]?<FaLock/>:<FaLockOpen/>}</Button>
         </OverlayTrigger>
       </InputGroup>
     </OverlayTrigger>
@@ -244,25 +184,25 @@ export const OpenSankeyConfigurationNodesAttributes = (
             backgroundColor:(!menu_for_style && has_NodeType_Tag)?'#cccccc':'',
           }}
         >
-          {t('Noeud.apparence.Forme')+(is_node_diplaying_value_local(multi_selected_nodes,'shape',menu_for_style)?'*':'')}
+          {t('Noeud.apparence.Forme')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape',menu_for_style)?'*':'')}
         </InputGroup.Text>
 
         <Button className='btn_menu_config'
           style={{width:'30%'}}
           value="ellipse"
-          variant={isAllNodeCircle()&&!has_NodeType_Tag?'primary':'outline-primary'}
+          variant={list_value['shape'][0]==='ellipse'&&!has_NodeType_Tag?'primary':'outline-primary'}
           disabled={has_NodeType_Tag}
           onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape','ellipse',menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','ellipse',menu_for_style))
             set_data({ ...data })
           }}>{t('Noeud.apparence.Cercle')}</Button>
 
         <Button className='btn_menu_config'
           style={{width:'30%'}}
-          variant={isAllNodeRect()&&!has_NodeType_Tag?'primary':'outline-primary'}
+          variant={list_value['shape'][0]==='rect'&&!has_NodeType_Tag?'primary':'outline-primary'}
           disabled={has_NodeType_Tag}
           onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>assign_node_value_to_correct_var(d,'shape','rect',menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','rect',menu_for_style))
             set_data({ ...data })
           }}>{t('Noeud.apparence.Rectangle')}</Button>
       </InputGroup>
@@ -284,7 +224,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
           min={0}
           step={1}
           type={'number'}
-          value={displayedValueNodeWidth}
+          value={list_value['node_width'][0] as number}
           onChange={
             evt => {
               const val=evt.target.value
@@ -292,7 +232,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
               if(!isNaN(+val)){
                 value=Math.abs(Math.round(+val))
               }
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'node_width',value,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'node_width',value,menu_for_style))
               set_data({ ...data })
             }}/>
 
@@ -317,7 +257,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         <FormControl
           min={0} max={100}
           type={'number'}
-          value={displayedValueNodeHeight}
+          value={list_value['node_height'][0] as number}
           onChange={
             evt => {
               const val=evt.target.value
@@ -325,7 +265,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
               if(!isNaN(+val)){
                 value=Math.abs(Math.round(+val))
               }
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'node_height',value,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'node_height',value,menu_for_style))
               set_data({ ...data })
             }}/>
 
@@ -350,19 +290,21 @@ export const OpenSankeyConfigurationNodesAttributes = (
       delay={500}
       overlay={<Tooltip id={'noeud.labels.tooltips.1'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
       <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>
-          {t('Noeud.labels.vdb')+(is_node_diplaying_value_local(multi_selected_nodes,'label_visible',menu_for_style)?'*':'')}
-        </InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={isAllLabelVisible?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_visible',!isAllLabelVisible,menu_for_style))
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['label_visible'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['label_visible'][1]}
+          isChecked={list_value['label_visible'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => AssignNodeValueToCorrectVar(d,'label_visible',evt.target.checked,menu_for_style))
             set_data({ ...data })
-          }}>{isAllLabelVisible?<FaEye/>:<FaEyeSlash/>}</Button>
+          }}>
+          {t('Noeud.labels.vdb')}
+        </Checkbox>
+        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_visible',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
       </InputGroup>
     </OverlayTrigger>
 
@@ -374,20 +316,21 @@ export const OpenSankeyConfigurationNodesAttributes = (
       delay={500}
       overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
       <InputGroup>
-        <InputGroup.Text
-          style={{width:'40%'}}
-        >
-          {t('Noeud.labels.lb')+(is_node_diplaying_value_local(multi_selected_nodes,'label_color',menu_for_style)?'*':'')}
-        </InputGroup.Text>
-        <Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={isAllLabelWhite?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_color',!isAllLabelWhite,menu_for_style))
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['label_color'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['label_color'][1]}
+          isChecked={list_value['label_color'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => AssignNodeValueToCorrectVar(d,'label_color',evt.target.checked,menu_for_style))
             set_data({ ...data })
-          }}>{isAllLabelWhite?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          }}>
+          {t('Noeud.labels.lb')}
+        </Checkbox>
+        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_color',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
       </InputGroup>
     </OverlayTrigger>
 
@@ -398,19 +341,22 @@ export const OpenSankeyConfigurationNodesAttributes = (
       delay={500}
       overlay={<Tooltip id={'noeud.labels.tooltips.l_bg'}>{t('Noeud.labels.tooltips.l_bg')} </Tooltip>}>
       <InputGroup>
-        <InputGroup.Text style={{width:'40%'}} >
-          {t('Noeud.labels.l_bg')+(is_node_diplaying_value_local(multi_selected_nodes,'label_background',menu_for_style)?'*':'')}
-        </InputGroup.Text>
 
-        <Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={isAllLabelBackGroundColored?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_background',!isAllLabelBackGroundColored,menu_for_style))
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['label_background'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['label_background'][1]}
+          isChecked={list_value['label_background'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => AssignNodeValueToCorrectVar(d,'label_background',evt.target.checked,menu_for_style))
             set_data({ ...data })
-          }}>{isAllLabelBackGroundColored?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          }}>
+          {t('Noeud.labels.l_bg')}
+        </Checkbox>
+        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_background',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
       </InputGroup>
     </OverlayTrigger>
 
@@ -428,10 +374,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.6'}>{t('Noeud.labels.tooltips.gauche')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelVert('horiz', 'left')?'primary':'outline-primary'}
+            variant={list_value['label_horiz'][0]=== 'left'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_horiz','left',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_horiz','left',menu_for_style)
                 delete d.x_label
                 delete d.y_label
               })
@@ -447,10 +393,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.7'}>{t('Noeud.labels.tooltips.Milieu_ph')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelVert('horiz', 'middle')?'primary':'outline-primary'}
+            variant={list_value['label_horiz'][0]=== 'middle'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_horiz','middle',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_horiz','middle',menu_for_style)
                 delete d.x_label
                 delete d.y_label
               })
@@ -466,10 +412,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.8'}>{t('Noeud.labels.tooltips.droite')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelVert('horiz', 'right')?'primary':'outline-primary'}
+            variant={list_value['label_horiz'][0]==='right'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_horiz','right',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_horiz','right',menu_for_style)
                 delete d.x_label
                 delete d.y_label
               })
@@ -488,10 +434,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.3'}>{t('Noeud.labels.tooltips.haut')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelVert('vert', 'top')?'primary':'outline-primary'}
+            variant={list_value['label_vert'][0]==='top'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_vert','top',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_vert','top',menu_for_style)
                 delete d.x_label
                 delete d.y_label
               })
@@ -507,10 +453,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.4'}>{t('Noeud.labels.tooltips.Milieu_pv')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelVert('vert', 'middle')?'primary':'outline-primary'}
+            variant={list_value['label_vert'][0]==='middle'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_vert','middle',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_vert','middle',menu_for_style)
                 delete d.x_label
                 delete d.y_label
               })
@@ -526,10 +472,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.5'}>{t('Noeud.labels.tooltips.Bas')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelVert('vert', 'bottom')?'primary':'outline-primary'}
+            variant={list_value['label_vert'][0]==='bottom'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_vert','bottom',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_vert','bottom',menu_for_style)
                 delete d.x_label
                 delete d.y_label
               })
@@ -547,10 +493,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
       <Button
         className='btn_menu_config'
         style={{width:'7.5%'}}
-        variant={isAllNodeBold?'primary':'outline-primary'}
+        variant={list_value['bold'][0]?'primary':'outline-primary'}
         onClick={() => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-            assign_node_value_to_correct_var(d,'bold',!isAllNodeBold,menu_for_style)
+            AssignNodeValueToCorrectVar(d,'bold',!list_value['bold'][0],menu_for_style)
           })
           set_data({ ...data })
         }}><FaBold/></Button>
@@ -559,10 +505,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
       <Button
         className='btn_menu_config'
         style={{width:'7.5%'}}
-        variant={isAllNodeUpper?'primary':'outline-primary'}
+        variant={list_value['uppercase'][0]?'primary':'outline-primary'}
         onClick={() => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-            assign_node_value_to_correct_var(d,'uppercase',!isAllNodeUpper,menu_for_style)
+            AssignNodeValueToCorrectVar(d,'uppercase',!list_value['uppercase'][0],menu_for_style)
           })
           set_data({ ...data })
         }}>{svg_label_upper}</Button>
@@ -571,19 +517,19 @@ export const OpenSankeyConfigurationNodesAttributes = (
       <Button
         className='btn_menu_config'
         style={{width:'7.5%'}}
-        variant={isAllNodeItalic?'primary':'outline-primary'}
+        variant={list_value['italic'][0]?'primary':'outline-primary'}
         onClick={() => {
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-            assign_node_value_to_correct_var(d,'italic',!isAllNodeItalic,menu_for_style)
+            AssignNodeValueToCorrectVar(d,'italic',!list_value['italic'][0],menu_for_style)
           })
           set_data({ ...data })
         }}><FaItalic/></Button>
 
       <Form.Select
-        value={allNodeFF?(return_correct_node_attribute_value(data,selected_parameter[0],'font_family',menu_for_style) as string):''}
+        value={list_value['font_family'][0]?(ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'font_family',menu_for_style) as string):''}
         onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'font_family', evt.target.value,menu_for_style))
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
             set_data({ ...data })
           }}>
         {data.display_style.font_family.map((d) => {
@@ -598,9 +544,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
       <FormControl
         min={11}
         type={'number'}
-        value={allNodeLabelFontSize}
+        value={list_value['font_size'][0] as number}
         onChange={evt => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'font_size',+evt.target.value,menu_for_style))
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'font_size',+evt.target.value,menu_for_style))
           set_data({ ...data })
         }}
       />
@@ -617,9 +563,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
       rootClose
       overlay={<Tooltip id={'noeud.labels.tooltips.9'}>{t('Noeud.labels.tooltips.cl')} </Tooltip>}>
       <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>{t('Noeud.labels.cl')+(is_node_diplaying_value_local(multi_selected_nodes,'label_box_width',menu_for_style)?'*':'')}</InputGroup.Text>
+        <InputGroup.Text style={{width:'40%'}}>{t('Noeud.labels.cl')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_box_width',menu_for_style)?'*':'')}</InputGroup.Text>
         <FormControl
-          value={valueAllNodeLabelBox}
+          value={list_value['label_box_width'][0] as (string | number)}
           type={'number'}
           placeholder={'110'}
           min={0}
@@ -627,7 +573,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
           onChange={evt => {
             if (!isNaN(+evt.target.value)) {
               const val = (+evt.target.value < 0) ? 0 : +evt.target.value
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'label_box_width',val,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'label_box_width',val,menu_for_style))
               set_data({ ...data })
             }
           }}/>
@@ -647,17 +593,21 @@ export const OpenSankeyConfigurationNodesAttributes = (
       delay={500}
       overlay={<Tooltip id={'noeud.labels.tooltips.10'}>{t('Noeud.labels.tooltips.vdv')} </Tooltip>}>
       <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>{t('Noeud.labels.vdv')} </InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'60%'}}
-          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-          variant={isAllNodeTotal?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'show_value',!isAllNodeTotal,menu_for_style))
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={list_value['show_value'][1]?'#78C2AD':'white'}
+          maxW={'70%'}
+          isIndeterminate={list_value['show_value'][1]}
+          isChecked={list_value['show_value'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => AssignNodeValueToCorrectVar(d,'show_value',evt.target.checked,menu_for_style))
             set_data({ ...data })
-          }}>{isAllNodeTotal?<FaEye/>:<FaEyeSlash/>}</Button>
+          }}>
+          {t('Noeud.labels.vdv')}
+        </Checkbox>
+        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'show_value',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
       </InputGroup>
     </OverlayTrigger>
 
@@ -675,10 +625,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.14'}>{t('Noeud.labels.tooltips.gauche_val')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelValueVert('horiz', 'left')?'primary':'outline-primary'}
+            variant={list_value['label_horiz_valeur'][0]==='left'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_horiz_valeur','left',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_horiz_valeur','left',menu_for_style)
               })
               set_data({ ...data })
             }}><FaAlignLeft/></Button>
@@ -692,10 +642,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.15'}>{t('Noeud.labels.tooltips.Milieu_ph_val')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelValueVert('horiz', 'middle')?'primary':'outline-primary'}
+            variant={list_value['label_horiz_valeur'][0]==='middle'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_horiz_valeur','middle',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_horiz_valeur','middle',menu_for_style)
               })
               set_data({ ...data })
             }}><FaAlignCenter/></Button>
@@ -709,10 +659,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.16'}>{t('Noeud.labels.tooltips.droite_val')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelValueVert('horiz', 'right')?'primary':'outline-primary'}
+            variant={list_value['label_horiz_valeur'][0]==='right'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_horiz_valeur','right',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_horiz_valeur','right',menu_for_style)
               })
               set_data({ ...data })
             }}><FaAlignRight/></Button>
@@ -730,10 +680,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.11'}>{t('Noeud.labels.tooltips.haut_val')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelValueVert('vert', 'top')?'primary':'outline-primary'}
+            variant={list_value['label_vert_valeur'][0]==='top'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_vert_valeur','top',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_vert_valeur','top',menu_for_style)
               })
               set_data({ ...data })
             }}>{svg_label_top}</Button>
@@ -747,10 +697,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           overlay={<Tooltip id={'noeud.labels.tooltips.12'}>{t('Noeud.labels.tooltips.Milieu_pv_val')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            variant={isAllNodeLabelValueVert('vert', 'middle')?'primary':'outline-primary'}
+            variant={list_value['label_vert_valeur'][0]==='middle'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_vert_valeur','middle',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_vert_valeur','middle',menu_for_style)
               })
               set_data({ ...data })
             }}>{svg_label_center}</Button>
@@ -763,10 +713,10 @@ export const OpenSankeyConfigurationNodesAttributes = (
           delay={500}
           overlay={<Tooltip id={'noeud.labels.tooltips.13'}>{t('Noeud.labels.tooltips.Bas_val')} </Tooltip>}>
           <Button className='btn_menu_config'
-            variant={isAllNodeLabelValueVert('vert', 'bottom')?'primary':'outline-primary'}
+            variant={list_value['label_vert_valeur'][0]==='bottom'?'primary':'outline-primary'}
             onClick={() => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                assign_node_value_to_correct_var(d,'label_vert_valeur','bottom',menu_for_style)
+                AssignNodeValueToCorrectVar(d,'label_vert_valeur','bottom',menu_for_style)
               })
               set_data({ ...data })
             }}>{svg_label_bottom}</Button>
@@ -780,9 +730,9 @@ export const OpenSankeyConfigurationNodesAttributes = (
       <FormControl
         min={11}
         type={'number'}
-        value={allNodeValueFontSize}
+        value={list_value['value_font_size'][0] as number}
         onChange={evt => {
-          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => assign_node_value_to_correct_var(d,'value_font_size',+evt.target.value,menu_for_style))
+          Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'value_font_size',+evt.target.value,menu_for_style))
           set_data({ ...data })
         }}
       />
@@ -825,7 +775,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         variant='outline-primary'
         style={{width:'25%'}}
         onClick={() => {
-          apply_style_to_nodes()
+          ApplyStyleToNodes()
           set_data({ ...data })
         }}>
         {t('Noeud.AS')}

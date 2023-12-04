@@ -258,7 +258,7 @@ a:not([href]):not([class]), a:not([href]):not([class]):hover {
 
 pre,
 code,
-kbd,
+/* kbd, */
 samp {
   font-family: var(--bs-font-monospace);
   font-size: 1em;
@@ -289,7 +289,7 @@ code {
 a > code {
   color: inherit;
 }
-
+/* 
 kbd {
   padding: 0.2rem 0.4rem;
   font-size: 0.875em;
@@ -302,7 +302,7 @@ kbd kbd {
   padding: 0;
   font-size: 1em;
   font-weight: 700;
-}
+} */
 
 figure {
   margin: 0 0 1rem;

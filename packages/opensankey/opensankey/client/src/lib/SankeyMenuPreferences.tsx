@@ -4,10 +4,8 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form,  Modal, Button, ButtonGroup, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
 import { SankeyData } from './types'
 import { TFunction,i18n } from 'i18next'
-import { FaEyeSlash,FaEye,FaCheck} from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
-
+import { Checkbox } from '@chakra-ui/react'
+import { SmoothClasses } from './SankeyUtils'
 const modalPreferencePropTypes = {
   showPreference: PropTypes.bool.isRequired,
   setShowPreference: PropTypes.func.isRequired,
@@ -68,60 +66,74 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       
       </ButtonGroup>,
       <InputGroup>
-        <InputGroup.Text style={{width:'30%'}}>{t('Menu.MEP')}</InputGroup.Text>
-        <Button style={{width:'10%'}} className='btn_menu_config' key='MEP' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('MEP')?'primary':'outline-primary'} onClick={() => {
-          preferenceCheck('MEP',data)
-          set_data({ ...data })
-        }} >
-          {data.accordeonToShow.includes('MEP')?<FaEye/>:<FaEyeSlash/>}
-        </Button>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'30%'}
+          isChecked={data.accordeonToShow.includes('MEP')}
+          onChange={() => {
+            preferenceCheck('MEP',data)
+            set_data({ ...data })
+          }}>
+          {t('Menu.MEP')}
+        </Checkbox>
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'30%'}}>{t('Menu.Noeuds')}</InputGroup.Text>
-        <Button style={{width:'10%'}} className='btn_menu_config' key='Node' variant={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)?'primary':'outline-primary'} disabled >
-          <FaEye/>
-        </Button>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'30%'}
+          isChecked
+        >
+          {t('Menu.Noeuds')}
+        </Checkbox>
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'30%'}}>{t('Menu.EN')}</InputGroup.Text>
-        <Button style={{width:'10%'}} className='btn_menu_config' key='EN' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('EN')?'primary':'outline-primary'} onClick={() => {Button
-          preferenceCheck('EN',data)
-          set_data({ ...data })
-        }} >
-          {data.accordeonToShow.includes('EN')?<FaEye/>:<FaEyeSlash/>}
-        </Button>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'30%'}
+          isChecked={data.accordeonToShow.includes('EN')}
+          onChange={() => {
+            preferenceCheck('EN',data)
+            set_data({ ...data })
+          }}>
+          {t('Menu.EN')}
+        </Checkbox>
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'30%'}}>{t('Menu.flux')}</InputGroup.Text>
-        <Button style={{width:'10%'}} className='btn_menu_config' key='flux' variant={!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)?'primary':'outline-primary'} disabled >
-          <FaEye/>
-
-        </Button>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'30%'}
+          isChecked>
+          {t('Menu.flux')}
+        </Checkbox>
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'30%'}}>{t('Menu.EF')}</InputGroup.Text>
-        <Button style={{width:'10%'}} className='btn_menu_config' key='ef' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('EF')?'primary':'outline-primary'} onClick={() => {
-          preferenceCheck('EF',data)
-          set_data({ ...data })
-        }} >
-          {data.accordeonToShow.includes('EF')?<FaEye/>:<FaEyeSlash/>}
-
-        </Button>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'30%'}
+          isChecked={data.accordeonToShow.includes('EF')}
+          onChange={() => {
+            preferenceCheck('EF',data)
+            set_data({ ...data })
+          }}>
+          {t('Menu.EF')}
+        </Checkbox>
       </InputGroup>,
 
       <InputGroup>
-        <InputGroup.Text style={{width:'30%'}}>{t('Menu.ED')}</InputGroup.Text>
-        <Button style={{width:'10%'}} className='btn_menu_config' key='ed' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('ED')?'primary':'outline-primary'} onClick={() => {
-          preferenceCheck('ED',data)
-          set_data({ ...data })
-        }}>
-          {data.accordeonToShow.includes('ED')?<FaEye/>:<FaEyeSlash/>}
-
-        </Button>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'30%'}
+          isChecked={data.accordeonToShow.includes('ED')}
+          onChange={() => {
+            preferenceCheck('ED',data)
+            set_data({ ...data })
+          }}>
+          {t('Menu.ED')}
+        </Checkbox>
       </InputGroup>,
     ],
     'node_label_sep':<OverlayTrigger
@@ -144,18 +156,18 @@ export const OpenSankeyDefaultModalePreferenceContent=(
       overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.override_type_node_shape')} </Tooltip>}>
 
       <InputGroup>
-        <InputGroup.Text
-          style={{width:'40%'}}>
-          {t('Noeud.apparence.override_type_node_shape')}
-        </InputGroup.Text>
 
-        <Button className='btn_menu_config'
-          style={{width:'10%'}}
-          variant={data.override_type_node_shape?'primary':'outline-primary'}
-          onClick={() => {
+
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'30%'}
+          isChecked={data.override_type_node_shape}
+          onChange={() => {
             data.override_type_node_shape=!data.override_type_node_shape
             set_data({ ...data })
-          }}>{data.override_type_node_shape?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          }}>
+          {t('Noeud.apparence.override_type_node_shape')}
+        </Checkbox>
       </InputGroup>
     </OverlayTrigger>
 
