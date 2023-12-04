@@ -633,8 +633,8 @@ export const viewsAccordion = (
 
   return <><Accordion.Item
     id='Visualisation'
+    style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'block' : 'none' }}
     eventKey="Visualisation"
-    style={{ 'display': 'block' }}
     onClick={
       evt => {
         if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
@@ -878,7 +878,6 @@ export const SankeyPlusBannerView=(
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
-  view_not_saved:string,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
@@ -903,16 +902,7 @@ export const SankeyPlusBannerView=(
   const target_popover_modify_view_name=useRef(null)
 
 
-  // Boolean used to change the logo of the button to save the current view :
-  //  - if there is no differences between the the saved view and the current view, then the logo has a check
-  //  - else if it contain difference, the logo contain an exclamation point
-  let is_different=false
-  if(view !== 'none' && view_not_saved ==='' && master_data && connected){
-    const diff=check_current_view_saved(master_data,data,view)
-    if(diff.length>0){
-      is_different=true
-    }
-  }
+
 
   const has_views = master_data?master_data.view.length>0:false
   const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
@@ -960,58 +950,6 @@ export const SankeyPlusBannerView=(
   </OverlayTrigger>
 
 
-
-  const buttonUpdateView=<OverlayTrigger
-    key={'buttonUpdateViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonSaveView'}>{t('view.tooltips.saveView')} </Tooltip>}
-  >
-    <span>
-      <Button
-        size='sm'
-        disabled={!connected}
-        variant='light'
-        onClick={() => {
-          const ev = document
-          const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
-          if (ev.onkeydown) {
-            ev.onkeydown(t)
-          }
-        }}
-      >
-        <Col><FontAwesomeIcon
-          icon={faFloppyDisk}
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        </Col>
-        {!connected?<>          
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col></>
-          :<Col>{is_different?
-            <FontAwesomeIcon
-              icon={faExclamation}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.5em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-danger-rgb), var(--bs-bg-opacity))'}} />
-            :<></>}
-          </Col>}
-        <Col style={{'fontSize':'9px'}}>{t('Menu.check')}</Col>
-      </Button>
-    </span>
-  </OverlayTrigger>
 
 
   const button_heredited_attr_from_master=<OverlayTrigger
@@ -1427,7 +1365,6 @@ export const SankeyPlusBannerView=(
 
   {buttonCreateView}
 
-  {buttonUpdateView}
 
   <OverlayTrigger
     key={'buttonPrevViewDisabled'}
@@ -1524,7 +1461,6 @@ export const SankeyPlusBannerView=(
 
 export const SankeyPlusMenuPreferenceView=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
   return <InputGroup>
-    
     <Checkbox 
       sx={SmoothClasses({})}
       maxW={'30%'}
@@ -1967,7 +1903,66 @@ export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_on
 
 
 
+export const OpenSankeyPlusCheckpointButton=(
+  master_data:SankeyPlusData,
+  data:SankeyPlusData,
+  view:string, 
+  view_not_saved:string,
+  connected:boolean,
+  t:TFunction
+)=>{
 
+  // Boolean used to change the logo of the button to save the current view :
+  //  - if there is no differences between the the saved view and the current view, then the logo has a check
+  //  - else if it contain difference, the logo contain an exclamation point
+  let is_different=false
+  if(view !== 'none' && view_not_saved ==='' && master_data && connected){
+    const diff=check_current_view_saved(master_data,data,view)
+    if(diff.length>0){
+      is_different=true
+    }
+  }
+
+  return   <OverlayTrigger
+    key={'buttonUpdateViewDisabled'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(
+      <Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'buttonSaveView'}>{t('view.tooltips.saveView')} </Tooltip>}
+  >
+    <Button
+      disabled={!connected}
+      variant='light'
+      onClick={() => {
+        const ev = document
+        const t=new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+        if (ev.onkeydown) {
+          ev.onkeydown(t)
+        }
+      }}
+    >
+      <FontAwesomeIcon
+        icon={faFloppyDisk}
+        style={{opacity:(!connected)?'0.6':'1',width:'2rem',height:'2rem'}}/>
+      {!connected?<>          
+        <FontAwesomeIcon
+          icon={faLock}
+          style={{
+            fontSize:'1em',
+            color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+      </>
+        :<>{is_different?
+          <FontAwesomeIcon
+            icon={faExclamation}
+            style={{
+              fontSize:'1em',
+              color: 'rgba(var(--bs-danger-rgb), var(--bs-bg-opacity))'}} />
+          :<></>}</>
+      }
+    </Button>
+  </OverlayTrigger>
+}
 
 
 
