@@ -44,7 +44,7 @@ import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDi
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
-import { faFloppyDisk,faGears,faFolderOpen, faDownload, faTrashCan, faFileInvoice, faPenToSquare,faUpRightFromSquare} from '@fortawesome/free-solid-svg-icons'
+import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faUpRightFromSquare,faFile,faPlus} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { addAllDropDownNode } from './SankeyMenuBanner'
 import { reorganize_inputLinksId } from './SankeyLayout'
@@ -571,18 +571,25 @@ export const OpenSankeyMenus = (
 
   const logo_tempalte=<svg xmlns="http://www.w3.org/2000/svg" aria-hidden='false' data-prefix='fas' className='svg-inline--fa' viewBox="0 0 24 24"><path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z"/></svg>
 
-  const last_save=localStorage.getItem('last_save')
-  let l_s_c=''
-  const has_save=last_save!==undefined && last_save!==null
-  if(last_save!==undefined && last_save!==null){
-    l_s_c=last_save
-  }
+
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui :{[s:string] : JSX.Element}=  {}
 
   if(!window.SankeyToolsStatic){
     ui['file']=<>
+      <Dropdown className='buttonSubNav'  drop='end'  id='new'  >
+        <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPlus} /></Col><Col className='textIcon'>{t('Menu.new')}</Col></></Dropdown.Toggle>
+        <Dropdown.Menu>
+          <Dropdown.Item
+            onClick={Reinitialization} >{t('Menu.from_new')} <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/></Dropdown.Item>
+
+          <Dropdown.Item
+            onClick={() => { set_show_modalTemplate(true) }}
+          >{t('Menu.from_model')} {logo_tempalte}</Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+
       <Dropdown className='buttonSubNav'  drop='end'  id='ouvrir'  >
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faFolderOpen} /></Col><Col className='textIcon'>{t('Menu.ouvrir')}</Col></></Dropdown.Toggle>
         <Dropdown.Menu>
@@ -592,7 +599,7 @@ export const OpenSankeyMenus = (
                 _load_json.current.name = ''
                 _load_json.current.click()
               }
-            }} >JSON</Dropdown.Item>
+            }} >{t('Menu.open_json')}</Dropdown.Item>
           <Form.Control
             accept='.json'
             type="file"
@@ -629,37 +636,26 @@ export const OpenSankeyMenus = (
           />
           <Dropdown.Item
             onClick={() => set_show_excel_dialog(true)}
-          >Excel</Dropdown.Item>
+          >{t('Menu.open_excel')}</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
+
       <Dropdown className='buttonSubNav' drop='end'  id='enregistrer' >
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faDownload} /></Col><Col className='textIcon'>{t('Menu.enregistrer')}</Col></></Dropdown.Toggle>
         <Dropdown.Menu>
           <Dropdown.Item onClick={()=>{
             set_show_save_json(true)
-          }} >JSON</Dropdown.Item>
-          <Dropdown.Item onClick={()=>SankeyUtils.ClickSaveExcel('/opensankey/',data)} >Excel</Dropdown.Item>
+          }} >{t('Menu.open_json')}</Dropdown.Item>
+          <Dropdown.Item onClick={()=>SankeyUtils.ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</Dropdown.Item>
           {externale_save_item}
         </Dropdown.Menu>
       </Dropdown>
-      <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
-      <Button size='sm' variant='light' onClick={() => { set_show_modalTemplate(true) }}>{<><Col>{logo_tempalte}</Col><Col className='textIcon'>{t('Menu.templates')}</Col></>}</Button>
       {external_file_item}
-      <OverlayTrigger
-        key={'buttonCheckpoint'}
-        placement={'left'}
-        delay={500}
-        overlay={(<Tooltip id={'buttonCheckpoint'}>{t('Menu.tooltips.checkpoint')} </Tooltip>)}
-      >
-        <Button size='sm' variant='light' onClick={() => {const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp)
-          }
-        }}  ><><Col><FontAwesomeIcon icon={faFloppyDisk} /></Col><Col className='textIcon'>{t('Menu.check')}</Col></></Button></OverlayTrigger>
-      {has_save?<Form.Label style={{marginTop:'auto',marginBottom:'auto'}}>{t('Menu.last_save')+' : ' + l_s_c}</Form.Label>:<></>}    </>
+      <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
+      
+    </>
 
     ui['edition']=<>
-      <Button size='sm' variant='light' onClick={Reinitialization} ><><Col><FontAwesomeIcon icon={faTrashCan} /></Col><Col className='textIcon'>{t('Menu.reinit')}</Col></></Button>
       <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}><><Col><FontAwesomeIcon icon={faFileInvoice} /></Col><Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></></Button>
       <Dropdown className='buttonSubNav' drop='end' id='exporter' >
         <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPenToSquare} /></Col><Col className='textIcon'>{t('Menu.style')}</Col></></Dropdown.Toggle>
@@ -2374,4 +2370,29 @@ const  DataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
     }
   })
   return allDD
+}
+export const OpenSankeySaveButton=(t:TFunction)=>{
+  return <>
+    <OverlayTrigger
+      key={'buttonCheckpoint'}
+      placement={'left'}
+      
+      delay={500}
+      overlay={(<Tooltip id={'buttonCheckpoint'}>{t('Menu.tooltips.checkpoint')} </Tooltip>)}
+    >
+      <Button variant='light' onClick={() => {const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
+        if (ev.onkeydown) {
+          ev.onkeydown(tmp)
+        }
+      }}  ><FontAwesomeIcon style={{width:'2rem',height:'2rem'}} icon={faFloppyDisk} /></Button></OverlayTrigger></>
+}
+export const LastCheckpointTime=(t:TFunction)=>{
+  const last_save=localStorage.getItem('last_save')
+  let l_s_c=''
+  const has_save=last_save!==undefined && last_save!==null
+  if(last_save!==undefined && last_save!==null){
+    l_s_c=last_save
+  }
+  return has_save?<Form.Label style={{marginTop:'auto',marginBottom:'auto'}}>{t('Menu.last_save')+' : ' + l_s_c}</Form.Label>:<></>
+
 }
