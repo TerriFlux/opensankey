@@ -3,9 +3,17 @@ import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes} from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import {  delete_link,delete_node,clickSaveDiagram} from './SankeyUtils'
+import {  DeleteLink,DeleteNode,ClickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
-import { removeAnimate,drawGrid,update_scale,select_visualy_links,deselect_visualy_links,deselect_visualy_nodes,svgDragMiddleMouseStart,svgDragMiddleMouseMove, select_visualy_nodes} from './SankeyDrawFunction'
+import { RemoveAnimate,
+  DrawGrid,
+  update_scale,
+  SelectVisualyLinks,
+  DeselectVisualyLinks,
+  DeselectVisualyNodes,
+  SvgDragMiddleMouseStart,
+  SvgDragMiddleMouseMove,
+  SelectVisualyNodes} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 
 
@@ -26,7 +34,7 @@ const SankeyDrawPropTypes = {
   set_agregation_node:PropTypes.func.isRequired,
   is_agregation:PropTypes.bool.isRequired,
   set_alt_key_pressed:PropTypes.func.isRequired,
-  min_width_and_height:PropTypes.func.isRequired,
+  GetSankeyMinWidthAndHeight:PropTypes.func.isRequired,
   pointer_pos:PropTypes.shape({current:PropTypes.arrayOf(PropTypes.number.isRequired).isRequired}).isRequired,
   set_show_context_zdd:PropTypes.func.isRequired
 
@@ -45,7 +53,7 @@ export const SankeyDrawDefaultProps = {
   is_agregation:false,
 
   set_alt_key_pressed:()=>false,
-  min_width_and_height:()=>[],
+  GetSankeyMinWidthAndHeight:()=>[],
   set_show_toast_limit_node:()=>false,
   pointer_pos:{current:[]},
   set_show_context_zdd:()=>false
@@ -64,7 +72,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   agregation_node,
   set_agregation_node,
   is_agregation,
-  set_alt_key_pressed,min_width_and_height,
+  set_alt_key_pressed,GetSankeyMinWidthAndHeight,
   pointer_pos,
   set_show_context_zdd
 }) => {
@@ -101,8 +109,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (animation) {
       return
     }
-    [data.width, data.height] = min_width_and_height(data)
-    removeAnimate()
+    [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
+    RemoveAnimate()
     d3.select('body').style('background-color',data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
     if (mode_selection.current=='s') {
@@ -149,10 +157,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         .on('start',()=>{
         // Cache les handles des liens
-          svgDragMiddleMouseStart()
+          SvgDragMiddleMouseStart()
         })
         .on('drag', function (event) {
-          svgDragMiddleMouseMove(event,data)
+          SvgDragMiddleMouseMove(event,data)
         })
         .on('end',()=>{
           set_data({...data})
@@ -167,7 +175,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       }
     })
 
-    drawGrid(data)
+    DrawGrid(data)
 
     update_scale(data.user_scale)
     const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
@@ -325,13 +333,13 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
 
     // Visualy deselect nodes then deselect in the app data
     multi_selected_nodes.current.forEach(d => {
-      deselect_visualy_nodes(d)
+      DeselectVisualyNodes(d)
     })
     multi_selected_nodes.current=[]
 
 
     multi_selected_links.current.forEach(l=>{
-      deselect_visualy_links(l)
+      DeselectVisualyLinks(l)
     })
     multi_selected_links.current=[]
 
@@ -343,10 +351,10 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {
       multi_selected_links.current.forEach(el=>{
-        delete_link(data,el)
+        DeleteLink(data,el)
       })
       multi_selected_nodes.current.forEach(el=>{
-        delete_node(data,el)
+        DeleteNode(data,el)
       })
       multi_selected_nodes.current=[]
       multi_selected_links.current=[]
@@ -356,11 +364,11 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     e.preventDefault()
     multi_selected_nodes.current=Object.values(data.nodes)
     multi_selected_nodes.current.forEach(n=>{
-      select_visualy_nodes(n)
+      SelectVisualyNodes(n)
     })
     multi_selected_links.current=Object.values(data.links)
     multi_selected_links.current.forEach(l=>{
-      select_visualy_links(l)
+      SelectVisualyLinks(l)
     })
 
   }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && document.activeElement?.className.includes('form-control')){
@@ -379,7 +387,7 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
     set_data({...data})
-    clickSaveDiagram(data)
+    ClickSaveDiagram(data)
   }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
     if((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??true)){
       e.preventDefault()

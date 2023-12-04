@@ -154,6 +154,7 @@ export const open_resources = {
         lang:'Language',
         new:'New',
         pref_title_sub_menu:'Choose sub-menu visible in configuration menu',
+        overcharge_style_value:'Value of the variable override the value from the style',
         Transformation : {
           amp_short:'Trans.',
           amp:'Change the layout',
@@ -747,6 +748,7 @@ export const open_resources = {
         title_pref:'Paramétrage de l\'application',
         lang:'Langue',
         pref_title_sub_menu:'Choix des sous-menus visibles dans l\'interface',
+        overcharge_style_value:'La valeur de la variable surcharge celle du style',
         Transformation : {
           amp_short:'Trans.',
           amp:'Modifier la mise en page',

@@ -4,14 +4,15 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { complete_sankey_data } from './SankeyConvert'
-import { default_link, default_node, default_sankey_data } from './SankeyUtils'
-import { node_visible_on_svg,link_visible_on_svg } from './SankeyDrawFunction'
+import { DefaultLink, DefaultNode, DefaultSankeyData,SmoothClasses } from './SankeyUtils'
+import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from './SankeyDrawFunction'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
-import { menu_draggable } from './SankeyMenu'
+import { MenuDraggable } from './SankeyMenu'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
+import { Checkbox } from '@chakra-ui/react'
 /**
  * Define ApplyLayoutDialog
  *
@@ -58,7 +59,7 @@ export const ApplyLayoutDialog = ({
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
   const [mode_trans,set_mode_trans]=useState('simple')
-  const node_visible=node_visible_on_svg()
+  const node_visible=NodeVisibleOnsSvg()
 
   const all_element_to_transform = [
     'addNode', 'addFlux', 'removeNode', 'removeFlux',
@@ -566,14 +567,14 @@ export const ApplyLayoutDialog = ({
     <Tab key='trans_topo' eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
   </Tabs>
 
-  const dragLayout=show_apply_layout?menu_draggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.Transformation.title'),set_show_apply_layout,60):<></>
+  const dragLayout=show_apply_layout?MenuDraggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.Transformation.title'),set_show_apply_layout,60):<></>
   return dragLayout
 
 }
 
 /**
  *
- * @type {{ show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; clickSaveDiagram: any; }}
+ * @type {{ show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
  */
 const ApplySaveJSONPropTypes = {
   t:PropTypes.func.isRequired,
@@ -581,7 +582,7 @@ const ApplySaveJSONPropTypes = {
   set_show_save_json: PropTypes.func.isRequired,
   sankey_data : PropTypes.shape(SankeyDataPropTypes).isRequired,
   additionnal_button_option_save_json:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  clickSaveDiagram:PropTypes.func.isRequired
+  ClickSaveDiagram:PropTypes.func.isRequired
 }
 
 
@@ -589,10 +590,10 @@ type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
 
 /**
  *
- * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,clickSaveDiagram }
+ * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,ClickSaveDiagram }
  * @returns {*}
  */
-export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,additionnal_button_option_save_json,clickSaveDiagram }: ApplySaveJSONTypes) => {
+export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,additionnal_button_option_save_json,ClickSaveDiagram }: ApplySaveJSONTypes) => {
   const [mode_save,set_mode_save]=useState(true)
   const [mode_visible_element,set_mode_visible_element]=useState(false)
 
@@ -612,24 +613,22 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
       <Modal.Body>
         <Form >
           <InputGroup>
-            <InputGroup.Text style={{width:'40%'}}>{t('Menu.SaveValue')}</InputGroup.Text>
-            <Button
-              style={{width:'40%'}}
-              className='btn_menu_config'
-              variant={mode_save?'primary':'outline-primary'}
-              onClick={()=>set_mode_save(!mode_save)}>
-              {mode_save?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
-            </Button>
+            <Checkbox 
+              sx={SmoothClasses({})}
+              maxW={'40%'}
+              isChecked={mode_save}
+              onChange={() => set_mode_save(!mode_save)}>
+              {t('Menu.SaveValue')}
+            </Checkbox>
           </InputGroup>
           <InputGroup>
-            <InputGroup.Text style={{width:'40%'}}>{t('Menu.VisibleElement')}</InputGroup.Text>
-            <Button
-              style={{width:'40%'}}
-              className='btn_menu_config'
-              variant={mode_visible_element?'primary':'outline-primary'}
-              onClick={()=>set_mode_visible_element(!mode_visible_element)}>
-              {mode_visible_element?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
-            </Button>
+            <Checkbox 
+              sx={SmoothClasses({})}
+              maxW={'40%'}
+              isChecked={mode_visible_element}
+              onChange={() => set_mode_visible_element(!mode_visible_element)}>
+              {t('Menu.VisibleElement')}
+            </Checkbox>
           </InputGroup>
           {additionnal_button_option_save_json}
         </Form>
@@ -651,7 +650,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
           onClick={
             () => {
               // Crée une copie pour d'abord enregitrer avec les changements
-              // (clickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
+              // (ClickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
               const cpy:SankeyData=JSON.parse(JSON.stringify(sankey_data))
               if(!mode_save){
                 Object.values(cpy.links).forEach(d=>{
@@ -660,8 +659,8 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
               }
               if(mode_visible_element){
                 // Si l'on enregistre que les element visible alors on cherche les élements visible dasns le svg
-                const link_present=link_visible_on_svg()
-                const node_visible=node_visible_on_svg()
+                const link_present=LinkVisibleOnSvg()
+                const node_visible=NodeVisibleOnsSvg()
                 cpy.links=Object.fromEntries(Object.entries(cpy.links).filter(l=>link_present.includes(l[0])).map(l=>l))
                 const key_level_tags=Object.keys(sankey_data.levelTags)
                 cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>{
@@ -680,7 +679,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
               }
 
               // set_sankey_data({...sankey_data})
-              clickSaveDiagram(cpy)
+              ClickSaveDiagram(cpy)
               // set_sankey_data({...cpy})
             }
           }>{t('Menu.SaveJSON')}
@@ -692,7 +691,7 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
 
 const ExcelModalPropTypes = {
   t:PropTypes.func.isRequired,
-  uploadExcelImpl: PropTypes.func.isRequired,
+  UploadExcelImpl: PropTypes.func.isRequired,
   handleCloseDialog: PropTypes.func.isRequired,
   show_excel_dialog: PropTypes.bool.isRequired,
   set_show_excel_dialog: PropTypes.func.isRequired,
@@ -706,10 +705,10 @@ type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 /**
  * Return the modal when we try to open an excel file
  *
- * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
+ * @param {{ UploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { UploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelImpl, handleCloseDialog, show_excel_dialog, set_show_excel_dialog,url_prefix,callback,launch }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, handleCloseDialog, show_excel_dialog, set_show_excel_dialog,url_prefix,callback,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
 
   return (
@@ -739,7 +738,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,uploadExcelIm
           onClick={
             () => {
               launch('')
-              uploadExcelImpl(set_show_excel_dialog,input_file_name,url_prefix,callback)
+              UploadExcelImpl(set_show_excel_dialog,input_file_name,url_prefix,callback)
             }
           }
         >Ouvrir</Button>
@@ -790,7 +789,7 @@ export const OpenSankeyDiagramSelector = (
                     result = String(result)
                     const new_layout = JSON.parse(result)
                     convert_data(new_layout)
-                    complete_sankey_data(new_layout, default_sankey_data, default_node, default_link)
+                    complete_sankey_data(new_layout, DefaultSankeyData, DefaultNode, DefaultLink)
                     set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
                     updateLayout(sankey_data, new_layout, elementToDispose, true)
                     set_sankey_data({ ...sankey_data })

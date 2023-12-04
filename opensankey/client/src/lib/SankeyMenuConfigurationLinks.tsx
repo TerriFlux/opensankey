@@ -3,7 +3,7 @@ import { Form, Tabs,  Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup }
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyNode,SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import {  default_link, delete_link,return_value_link,assign_link_value_to_correct_var,return_correct_link_attribute_value, add_new_node } from './SankeyUtils'
+import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH, FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -11,7 +11,7 @@ import {SankeyMenuConfigurationLinksData} from './SankeyMenuConfigurationLinksDa
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
 import {SankeyMenuConfigurationLinksTags} from './SankeyMenuConfigurationLinksTags'
 import {SankeyMenuConfigurationLinksTooltip} from './SankeyMenuConfigurationLinksTooltip'
-import {value_selected_parameter,node_visible_on_svg} from './SankeyDrawFunction'
+import {ValueSelectedParameter,NodeVisibleOnsSvg} from './SankeyDrawFunction'
 
 import { TFunction } from 'i18next'
 
@@ -67,7 +67,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const [pre_idSource,set_pre_idSource]=useState('none')
   const [pre_idTarget,set_pre_idTarget]=useState('none')
   const set_show_link = useState(true)[1]
-  const node_visible=node_visible_on_svg()
+  const node_visible=NodeVisibleOnsSvg()
 
   if ((tags_group_key == '' && Object.keys(fluxTags).length > 0) || (!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length > 0)) {
     set_tags_group_key(Object.keys(fluxTags)[0])
@@ -116,7 +116,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
             multi_selected_links.current = m_s
             if(m_s.length>0){
-              set_display_link_opacity(return_value_link(data,m_s[0],'opacity'))
+              set_display_link_opacity(ReturnValueLink(data,m_s[0],'opacity'))
             }
 
             if(multi_selected_links.current.length>0){
@@ -127,13 +127,13 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 // Supprime le première élément du tableau qui ne contient que l'id du flux
                 index_grp_tag.shift()
                 new_tags_selected={}
-                // On fabrique un tags_selected pour récupérer la bonne valeur pour value_selected_parameter
+                // On fabrique un tags_selected pour récupérer la bonne valeur pour ValueSelectedParameter
                 for(const i in index_grp_tag){
                   const key=Object.keys(data.dataTags)[Number(i)]
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
                 set_tags_selected(new_tags_selected)
-                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value)
 
               }else if(Object.values(data.dataTags).length>0){
                 // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -146,9 +146,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   n_t_s[dt]=tmp[i]
                 })
                 set_tags_selected(n_t_s)
-                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,n_t_s).value)
+                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value)
               }else{
-                set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,new_tags_selected).value)
+                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value)
               }
             }
 
@@ -168,11 +168,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     if (Object.keys(nodes).length < 2) {
       if (Object.keys(nodes).length == 0) {
-        add_new_node(data,()=>null,multi_selected_nodes)
+        AddNewNode(data,()=>null,multi_selected_nodes)
       }
-      add_new_node(data,()=>null,multi_selected_nodes)
+      AddNewNode(data,()=>null,multi_selected_nodes)
     }
-    const link: SankeyLink = default_link(data)
+    const link: SankeyLink = DefaultLink(data)
     // Méthode pour incrementer idNode
     let idLink = Object.keys(data.links).length
     while (data.links['link'+idLink]) {
@@ -194,7 +194,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     link.idSource = nodes[ids].idNode
     link.idTarget = nodes[idt].idNode
     if (link.idSource === link.idTarget) {
-      assign_link_value_to_correct_var(link,'recycling',true,false)
+      AssignLinkValueToCorrectVar(link,'recycling',true,false)
 
     }
 
@@ -202,7 +202,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     nodes[idt].inputLinksId.push(link.idLink)
 
     multi_selected_links.current = [link]
-    set_display_link_opacity(return_correct_link_attribute_value(data,link,'opacity',false))
+    set_display_link_opacity(ReturnCorrectLinkAttributeValue(data,link,'opacity',false))
     data.linkZIndex.push(
       link.idLink)
     set_data({ ...data })
@@ -220,7 +220,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       const source_node = data.nodes[changeEvent.target.value]
       link.idSource = source_node.idNode
       if (link.idSource === link.idTarget) {
-        assign_link_value_to_correct_var(link,'recycling',true,false)
+        AssignLinkValueToCorrectVar(link,'recycling',true,false)
       }
       source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
   
@@ -258,7 +258,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       const target_node = nodes[changeEvent.target.value]
       link.idTarget = target_node.idNode
       if (link.idSource === link.idTarget) {
-        assign_link_value_to_correct_var(link,'recycling',true,false)
+        AssignLinkValueToCorrectVar(link,'recycling',true,false)
   
       }
       target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
@@ -312,7 +312,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           style={{width:'10%'}}
           onClick={
             () => {
-              multi_selected_links.current.forEach(l => delete_link(data, l))
+              multi_selected_links.current.forEach(l => DeleteLink(data, l))
               multi_selected_links.current = []
               set_data({ ...data })
             }}>
