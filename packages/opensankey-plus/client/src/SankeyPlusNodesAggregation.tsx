@@ -2,7 +2,7 @@ import React from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tab, Button } from 'react-bootstrap'
 import { SankeyPlusData, SankeyPlusNode } from './types'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from 'open-sankey/dist/SankeyLayout'
-import { default_link } from 'open-sankey/dist/SankeyUtils'
+import { DefaultLink } from 'open-sankey/dist/SankeyUtils'
 import { TFunction } from 'i18next'
 
 
@@ -96,7 +96,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
                   output_links.forEach( idLink => new_output_nodes.push(data.links[idLink].idTarget))
                 })
                 new_input_nodes.forEach(idSource => {
-                  const new_link = default_link(data)
+                  const new_link = DefaultLink(data)
                   new_link.idSource = idSource
                   new_link.idTarget = d.idNode
                   new_link.idLink = 'link' + idLink
@@ -106,7 +106,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
                   reorganize_node_outputLinksId(data.nodes[new_link.idSource], data.nodes, data.links)
                 })
                 new_output_nodes.forEach(() => {
-                  const new_link = default_link(data)
+                  const new_link = DefaultLink(data)
                   new_link.idSource = d.idNode
                   new_link.idLink = 'link' + idLink
                   data.links[new_link.idLink] = new_link

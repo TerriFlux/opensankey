@@ -3,18 +3,40 @@ import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import LZString from 'lz-string'
 
-import { Accordion, Button, ButtonGroup, Col, Form, FormControl, Table, Toast,OverlayTrigger,Tooltip,Badge,Popover,Modal, InputGroup, Overlay } from 'react-bootstrap'
-import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { Accordion,
+  Button,
+  ButtonGroup,
+  Col,
+  Form,
+  FormControl,
+  Table,
+  Toast,
+  OverlayTrigger,
+  Tooltip,
+  Badge,
+  Popover,
+  Modal,
+  InputGroup,
+  Overlay } from 'react-bootstrap'
+import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaCopy} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { adjust_sankey_zone} from 'open-sankey/dist/SankeyUtils'
+import { AdjustSankeyZone,SmoothClasses} from 'open-sankey/dist/SankeyUtils'
 import { updateLayout } from 'open-sankey/dist/SankeyLayout'
 
-import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink, SankeyPlusLabel, differenceType, DiffType, ViewType } from './types'
+import { SankeyPlusData,
+  SankeyPlusNode,
+  SankeyPlusLink,
+  SankeyPlusLabel,
+  differenceType,
+  DiffType,
+  ViewType } from './types'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
+import { Checkbox } from '@chakra-ui/react'
+
 /* eslint-disable */
 // @ts-ignore
 const deep_diff = require('deep-diff')
@@ -110,63 +132,8 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
     data_init=view_object.view_data as SankeyPlusData
   }
   updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
-  // let something_wrong = false
-
-
-  // Object.values(data_init.nodes).forEach(n=>n.inputLinksId.forEach(idLink=> {
-  //   if (!data_init.links[idLink]) {
-  //      something_wrong = true
-  //   }}
-  // ))
-  // Object.values(data_init.nodes).forEach(n=>n.outputLinksId.forEach(idLink=> {
-  //   if (!data_init.links[idLink]) {
-  //      something_wrong = true
-  //   }}
-  // ))
-
-  // if (something_wrong) {
-  //   compute_default_input_outputLinksId(data_init.nodes, data_init.links)
-  // }
-
-  // Object.values(data_init.links).forEach(l=>{
-  //   if (!data_init.nodes[l.idSource] || !data_init.nodes[l.idTarget]) {
-  //      something_wrong = true
-  //   }}
-  // )
-
   return data_init
-  // const del_node_views = diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] === 'nodes' && d.kind === 'D' && d.path.length === 2))
-  // del_node_views.forEach((d:{path:string[],kind:string,rhs:boolean|string})=>{
-  //   d.kind = 'E'
-  //   d.path.push('display')
-  //   d.rhs = false
-  // })
-  // const del_link_views = diff_view.filter((d : {path:string[],kind:string})=>(d.path[0] === 'links' && d.kind === 'D'))
-  // del_link_views.forEach((d:{path:string[],kind:string,rhs:boolean})=>{
-  //   d.kind = 'E'
-  //   d.path.push('link_visible')
-  //   d.rhs = false
-  // })
-  // const ignore_changes = diff_view.filter((d :{path:string[],kind:string})=> (d.kind !== 'N' || d.path.length!==2) && d.path[0] === 'nodes' && master_data.nodes[d.path[1]] === undefined)
-  // const ignore_changes2 = diff_view.filter((d :{path:string[],kind:string})=> (d.kind !== 'N' || d.path.length!==2) && d.path[0] === 'links' && master_data.links[d.path[1]] === undefined)
-  // const ignore_changes3 = diff_view.filter((d :{path:string[],kind:string,rhs:string})=>
-  //   d.kind === 'E' && d.path[0] === 'nodes' && (d.path[2] === 'outputLinksId' || d.path[2] === 'inputLinksId') &&
-  //     master_data.links[d.rhs] === undefined)
-
-  // // Apply the changements saved in the view to the copy of master then return 'master data + modification saved in the view'
-  // diff_view
-  //   .filter((d :{path:string[],kind:string}) => (d.kind === 'N' && d.path.length===2) || d.path[0] !== 'nodes' || master_data.nodes[d.path[1]] !== undefined)
-  //   .filter((d :{path:string[],kind:string}) => (d.kind === 'N' && d.path.length===2) || d.path[0] !== 'links' || master_data.links[d.path[1]] !== undefined)
-  //   .filter((d :{path:string[],kind:string}) => (d.path[0] !== 'links' || d.kind !== 'D'))
-  //   .filter((d :{path:string[],kind:string}) => !(d.path[0] === 'nodeTags' && d.kind === 'E' && d.path.length===5 && d.path[4] === 'color'))
-  //   .filter((d :{path:string[],kind:string}) => !(d.kind === 'E' && d.path[0] ==='links' && d.path.length > 3 && d.path[2]==='value'))
-  //   .forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d))
-  // if (ignore_changes.length > 0 || ignore_changes2.length > 0 || ignore_changes3.length > 0) {
-  //   compute_default_input_outputLinksId(
-  //     data_init.nodes,
-  //     data_init.links
-  //   )
-  // }
+  
 }
 
 export const filter_view=(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
@@ -361,7 +328,7 @@ export const keyHandler = (
       set_view('none')
       set_data(JSON.parse(JSON.stringify(master_data)))
       setTimeout(()=>{
-        adjust_sankey_zone(master_data,sankey_plus_min_width_and_height)
+        AdjustSankeyZone(master_data,sankey_plus_min_width_and_height)
       },100)
 
     }
@@ -396,9 +363,9 @@ export const keyHandler = (
       if(saved){
         set_data({...data_view as SankeyPlusData})
         set_view(master_data.view[ind-1].id)
-        // adjust_sankey_zone(master_data.view[ind-1].view_data as SankeyPlusData,min_width_and_height)
+        // AdjustSankeyZone(master_data.view[ind-1].view_data as SankeyPlusData,GetSankeyMinWidthAndHeight)
         setTimeout(()=>{
-          adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+          AdjustSankeyZone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
         },100)
       }
 
@@ -441,7 +408,7 @@ export const keyHandler = (
         set_data(data_view)
         set_view(new_master_data.view[ind+1].id)
         setTimeout(()=>{
-          adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+          AdjustSankeyZone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
         },100)
       }
       //}
@@ -600,14 +567,14 @@ export const selecteur_view=(data:SankeyPlusData,
             set_master_data(new_master_data)
 
             setTimeout(()=>{
-              adjust_sankey_zone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+              AdjustSankeyZone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
             },100)
 
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
             set_data(JSON.parse(JSON.stringify(master_data)))
             setTimeout(()=>{
-              adjust_sankey_zone(master_data,sankey_plus_min_width_and_height)
+              AdjustSankeyZone(master_data,sankey_plus_min_width_and_height)
             },100)
           }
         }
@@ -1226,7 +1193,7 @@ export const SankeyPlusBannerView=(
   //       onClick={()=>{
   //         const to_download=get_data_from_view(master_data,current_view.id)
   //         to_download.view=[]
-  //         clickSaveDiagram(to_download,current_view.nom)
+  //         ClickSaveDiagram(to_download,current_view.nom)
   //       }}
   //     >
   //       <Col><FaFileExport
@@ -1493,15 +1460,18 @@ export const SankeyPlusBannerView=(
 }
 
 export const SankeyPlusMenuPreferenceView=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
-  return data.view && data.view.length>0? <InputGroup>
-    <InputGroup.Text style={{width:'30%'}}>{t('view.storytelling')}</InputGroup.Text>
-    <Button style={{width:'10%'}} className='btn_menu_config' key='Vis' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('Vis')?'primary':'outline-primary'} onClick={() => {
-      preferenceCheck('Vis',data)
-      set_data({ ...data })
-    }} >
-      {data.accordeonToShow.includes('Vis')?<FaEye/>:<FaEyeSlash/>}
-    </Button>
-  </InputGroup>:<></>
+  return <InputGroup>
+    <Checkbox 
+      sx={SmoothClasses({})}
+      maxW={'30%'}
+      isChecked={data.accordeonToShow.includes('Vis')}
+      onChange={() => {
+        preferenceCheck('Vis',data)
+        set_data({ ...data })
+      }}>
+      {t('view.storytelling')}
+    </Checkbox>
+  </InputGroup>
 }
 
 
@@ -1535,12 +1505,12 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
               const data_view=get_data_from_view(master_data,view) as SankeyPlusData
               set_data(data_view)
               setTimeout(()=>{
-                adjust_sankey_zone(data_view,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(data_view,sankey_plus_min_width_and_height)
               },100)
             } else if(view === 'none'){
               set_data({...master_data})
               setTimeout(()=>{
-                adjust_sankey_zone(master_data,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(master_data,sankey_plus_min_width_and_height)
               },100)
             }
             set_view_not_saved('')
@@ -1560,13 +1530,13 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
               set_master_data({...JSON.parse(JSON.stringify(master_data))})
               set_data(data_view)
               setTimeout(()=>{
-                adjust_sankey_zone(data_view,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(data_view,sankey_plus_min_width_and_height)
               },100)
 
             } else if(view === 'none'){
               set_data({...JSON.parse(JSON.stringify(master_data))})
               setTimeout(()=>{
-                adjust_sankey_zone(master_data,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(master_data,sankey_plus_min_width_and_height)
               },100)
             }
             set_view_not_saved('')
@@ -1914,20 +1884,20 @@ export const modal_transparent_view_attr=(show_modal_transparent_view_attr:boole
 
 export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_only_view:boolean,set_save_only_view:(b:boolean)=>void)=>{
   return <InputGroup>
-    <InputGroup.Text style={{width:'40%'}}>{t('view.export')}</InputGroup.Text>
     <OverlayTrigger
       key={'buttonExportViewDisabled'}
       placement={'bottom'}
       delay={500}
       overlay={<Tooltip id={'buttonExportView'}>{t('view.tooltips.buttonExportView')} </Tooltip>}
     >
-      <Button
-        style={{width:'40%'}}
-        className='btn_menu_config'
-        variant={save_only_view?'primary':'outline-primary'}
-        onClick={()=>set_save_only_view(!save_only_view)} >
-        {save_only_view?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
-      </Button></OverlayTrigger>
+      <Checkbox 
+        sx={SmoothClasses({})}
+        maxW={'40%'}
+        isChecked={save_only_view}
+        onChange={() => set_save_only_view(!save_only_view)}>
+        {t('view.export')}
+      </Checkbox>
+    </OverlayTrigger>
   </InputGroup>
 }
 
