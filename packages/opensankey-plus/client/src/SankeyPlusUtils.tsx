@@ -1,6 +1,6 @@
 
 import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode } from './types'
-import { default_link_style } from 'open-sankey/dist/SankeyUtils'
+import { DefaultLinkStyle } from 'open-sankey/dist/SankeyUtils'
 import {drag_legend_g_element} from 'open-sankey/dist/SankeyDrawLegend'
 import * as d3 from 'd3'
 import { opposing_drag_elements_plus } from './SankeyPlusNodes'
@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
 
 export const default_sankey_plus_style_link=()=>{
-  const style=default_link_style() as SankeyPlusLinkStyle
+  const style=DefaultLinkStyle() as SankeyPlusLinkStyle
   style.gradient=false
   return style
 }
@@ -118,4 +118,16 @@ export const set_svg_bg=(data:SankeyPlusData)=>{
     .style('background-image','url('+data.background_image+')')
     .style('background-size','contain')
     .style('background-repeat','no-repeat')
+}
+
+export const is_all_zdt_attr_same_value=(data:SankeyPlusData,m_s_zdt:SankeyPlusLabel[],k:keyof SankeyPlusLabel)=>{
+  if(m_s_zdt.length===0){
+    return [null,null]
+  }
+  const first_value=m_s_zdt[0][k]
+  let all_same=true
+  m_s_zdt.forEach(l=>{
+    all_same=l[k]!==first_value?false:all_same
+  })
+  return (all_same?[first_value,false]:[0,true])
 }

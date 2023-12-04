@@ -1,19 +1,18 @@
 import React from 'react'
-import { Form, Tab, OverlayTrigger, Tooltip, Badge, InputGroup, Button } from 'react-bootstrap'
+import { Form, Tab, OverlayTrigger, Tooltip, Badge, InputGroup } from 'react-bootstrap'
 import { TFunction } from 'i18next'
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {  faLock } from '@fortawesome/free-solid-svg-icons'
+import { Quill } from 'react-quill'
+import { Checkbox } from '@chakra-ui/react'
 import * as d3 from 'd3'
-import { SankeyPlusData, SankeyPlusNode } from './types'
-
 import ReactQuill from 'react-quill'
 
-import { node_displayed} from 'open-sankey/dist/SankeyUtils'
+import { SankeyPlusData, SankeyPlusNode } from './types'
 
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FaCheck} from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faLock } from '@fortawesome/free-solid-svg-icons'
-import { Quill } from 'react-quill'
+import { NodeDisplayed,SmoothClasses,IsAllNodeNotLocalAttrSameValue} from 'open-sankey/dist/SankeyUtils'
+
+
 
 declare const window: Window &
 typeof globalThis & {
@@ -31,18 +30,6 @@ export const SankeyPlusNodeFO = (
 
 )=> {
   // const [value, setValue] = useState('')
-
-  const isAllFOVisible = () => {
-    let visible = false
-    multi_selected_nodes.current.map(d => visible = (d.has_FO) ? true : visible)
-    return visible
-  }
-
-  const isAllFORaw = () => {
-    let visible = false
-    multi_selected_nodes.current.map(d => visible = (d.is_FO_raw) ? true : visible)
-    return visible
-  }
 
   // Create a custom size list of font-size
   const list_size=[]
@@ -71,11 +58,10 @@ export const SankeyPlusNodeFO = (
     'bold', 'italic', 'underline', 'strike','color','background',
     'list', 'bullet','align'
   ]
-
-  const is_all_fo_visible = isAllFOVisible()
-  const is_all_fo_raw = isAllFORaw()
-
   const isQuill_invalid=multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content!==editor_content_fo_node:false
+
+  const value_of_key=IsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
+
 
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
@@ -97,10 +83,10 @@ export const SankeyPlusNodeFO = (
       theme="snow"
       modules={modules}
       formats={formats}
-      readOnly={!is_activated?true:!is_all_fo_visible}
+      readOnly={!is_activated?true:!value_of_key['has_FO'][0]}
       style={{
-        color:(!is_activated || !is_all_fo_visible )?'#666666':'',
-        backgroundColor:(!is_activated || !is_all_fo_visible)?'#cccccc':''}}
+        color:(!is_activated || !value_of_key['has_FO'][0] )?'#666666':'',
+        backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}}
     /></Form.Group>
     <Form.Control type='text' isInvalid={isQuill_invalid} style={{display:'none'}}/>
     <Form.Control.Feedback type='invalid'>{t('MEP.onBlurNoEnter')}</Form.Control.Feedback>
@@ -111,9 +97,9 @@ export const SankeyPlusNodeFO = (
     as="textarea"
     rows={5}
     style={{
-      color:(!is_activated || !is_all_fo_visible)?'#666666':'',
-      backgroundColor:(!is_activated || !is_all_fo_visible)?'#cccccc':''}}
-    disabled={!is_activated?true:!is_all_fo_visible}
+      color:(!is_activated || !value_of_key['has_FO'][0])?'#666666':'',
+      backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}}
+    disabled={!is_activated?true:!value_of_key['has_FO'][0]}
     value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
     onChange={(evt) => {
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
@@ -152,33 +138,22 @@ export const SankeyPlusNodeFO = (
       overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
       <InputGroup>
-        <InputGroup.Text
-          style={{
-            color:(!is_activated)?'#666666':'',
-            backgroundColor:(!is_activated)?'#cccccc':'',
-            width:'75%'}}
-        >
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'40%'}
+          iconColor={value_of_key['has_FO'][1]?'#78C2AD':'white'}
+          isDisabled={!is_activated}
+          isIndeterminate={value_of_key['has_FO'][1]}
+          isChecked={value_of_key['has_FO'][0]}
+          onChange={(evt) => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => {
+                d.has_FO = evt.target.checked
+              })
+            set_data({ ...data })
+          }}>
           {t('Noeud.foreign_object.Visibilité')}
-        </InputGroup.Text>
-
-        <Button
-          style={{width:'25%'}}
-          className='btn_menu_config'
-          disabled={!is_activated}
-          variant={is_all_fo_visible?'primary':'outline-primary'}
-          onClick={
-            () => {
-              Object.values(data.nodes).filter(
-                f => multi_selected_nodes.current.map(
-                  d => d.idNode).includes(
-                  f.idNode)).map(
-                d => d.has_FO = !is_all_fo_visible)
-              set_data({ ...data })
-            }
-          }
-        >
-          {is_all_fo_visible?<FaEye/>:<FaEyeSlash/>}
-        </Button>
+        </Checkbox>
       </InputGroup>
     </OverlayTrigger>
 
@@ -189,32 +164,22 @@ export const SankeyPlusNodeFO = (
       overlay={(!is_activated)?(<Tooltip id={'foRawDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
       <InputGroup>
-        <InputGroup.Text
-          style={{
-            color:(!is_activated)?'#666666':'',
-            backgroundColor:(!is_activated)?'#cccccc':'',
-            width:'75%'}}
-        >
+        <Checkbox 
+          sx={SmoothClasses({})}
+          maxW={'40%'}
+          iconColor={value_of_key['is_FO_raw'][1]?'#78C2AD':'white'}
+          isDisabled={!is_activated}
+          isIndeterminate={value_of_key['is_FO_raw'][1]}
+          isChecked={value_of_key['is_FO_raw'][0]}
+          onChange={(evt) => {
+            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => {
+                d.is_FO_raw = evt.target.checked
+              })
+            set_data({ ...data })
+          }}>
           {t('Noeud.foreign_object.raw')}
-        </InputGroup.Text>
-
-        <Button
-          style={{width:'25%'}}
-          className='btn_menu_config'
-          disabled={!is_activated}
-          variant={is_all_fo_raw?'primary':'outline-primary'}
-          onClick={
-            () => {
-              Object.values(data.nodes).filter(
-                f => multi_selected_nodes.current.map(
-                  d => d.idNode).includes(f.idNode)).map(
-                d => d.is_FO_raw = !is_all_fo_raw)
-              set_data({ ...data })
-            }
-          }
-        >
-          {is_all_fo_raw?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
-        </Button>
+        </Checkbox>
       </InputGroup>
     </OverlayTrigger>
 
@@ -225,7 +190,7 @@ export const SankeyPlusNodeFO = (
         delay={500}
         overlay={(!is_activated)?
           (<Tooltip id={'foContentDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-          (!is_all_fo_visible)?<Tooltip id={'foNotVisible'}>{t('Noeud.foreign_object.not_activated')}</Tooltip>:<></>}
+          (!value_of_key['has_FO'][0])?<Tooltip id={'foNotVisible'}>{t('Noeud.foreign_object.not_activated')}</Tooltip>:<></>}
       >
         <Form className='FO_node_editeur'>
           <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
@@ -248,23 +213,23 @@ export const SankeyPlusNodeFO = (
 export const SankeyPlusDrawNodesFO = (
   data:SankeyPlusData,
   mode_selection:string,
-  nodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
+  NodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
 
 ) => {
 
   const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection === 's')? 'pointer' : 'unset')
-    if (node_displayed(data,(d as SankeyPlusNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
+    if (NodeDisplayed(data,(d as SankeyPlusNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(nodeTooltipsContent(data, d as SankeyPlusNode))
+        .html(NodeTooltipsContent(data, d as SankeyPlusNode))
     }
   }
 
   const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    if ((node_displayed(data,(d as SankeyPlusNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
+    if ((NodeDisplayed(data,(d as SankeyPlusNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))

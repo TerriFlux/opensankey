@@ -1,39 +1,47 @@
 import React,{useState,ChangeEvent} from 'react'
-import { Row, Form, FormControl, Button, OverlayTrigger,Tooltip, InputGroup, Popover, ButtonGroup, Badge} from 'react-bootstrap'
+import { Row,
+  Form,
+  FormControl,
+  Button,
+  OverlayTrigger,
+  Tooltip,
+  InputGroup,
+  Popover,
+  ButtonGroup,
+  Badge} from 'react-bootstrap'
 import {  SankeyPlusData,SankeyPlusLabel} from './types'
 import { MultiSelect } from 'react-multi-select-component'
-import { FaAngleDown, FaAngleUp, FaEye, FaEyeSlash, FaMinus, FaPlus} from 'react-icons/fa'
+import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import Accordion from 'react-bootstrap/Accordion'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
-import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
+import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 import { Quill } from 'react-quill'
 import * as d3 from 'd3'
 
 import {  preferenceCheck } from 'open-sankey/dist/SankeyMenuPreferences'
+import { Checkbox } from '@chakra-ui/react'
+import { SmoothClasses} from 'open-sankey/dist/SankeyUtils'
+import { is_all_zdt_attr_same_value } from './SankeyPlusUtils'
 
-declare const window: Window &
-typeof globalThis & {
-  SankeyToolsStatic: boolean
-}
 
 
 export const SankeyPlusMenuPreferenceLabels=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
   return <InputGroup>
-    <InputGroup.Text style={{width:'30%'}}>{t('Menu.LL')}</InputGroup.Text>
-    <Button style={{width:'10%'}} className='btn_menu_config' key='LL' disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)} variant={data.accordeonToShow.includes('LL')?'primary':'outline-primary'} onClick={() => {
-      preferenceCheck('LL',data)
-      set_data({ ...data })
-    }} >
-      {data.accordeonToShow.includes('LL')?<FaEye/>:<FaEyeSlash/>}
-    </Button>
+    <Checkbox 
+      sx={SmoothClasses({})}
+      maxW={'30%'}
+      isChecked={data.accordeonToShow.includes('LL')}
+      onChange={() => {
+        preferenceCheck('LL',data)
+        set_data({ ...data })
+      }}>
+      {t('Menu.LL')}
+    </Checkbox>
   </InputGroup>
 }
-
-
 
 /**
  * Description placeholder
@@ -169,16 +177,9 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
     })
     return (display_size) ? opa : 0
   }
-  const allLabelBorderTransparent = () => {
-    let transparent = false
-
-    multi_selected_label.current.map((d) => {
-      transparent = (d.transparent_border) ? true : transparent
-    })
-    return transparent
-  }
-  const valAllLabelBorderTransparent=allLabelBorderTransparent()
-
+  
+  const valAllLabelBorderTransparent=is_all_zdt_attr_same_value(data,multi_selected_label.current,'transparent_border') as boolean[]
+ 
   // Create a custom size list of font-size
   const list_size=[]
   for(let i=6;i<=50;i++){
@@ -570,26 +571,19 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
         }}
       />
 
-      <InputGroup.Text style={{
-        color:disable_options?'#666666':'',
-        backgroundColor:disable_options?'#cccccc':'',
-        width:'30%'}}>
-        {t('LL.bt')}
-      </InputGroup.Text>
-
-      <Button
-        className='btn_menu_config'
-        style={{
-          color:disable_options?'#666666':'',
-          backgroundColor:disable_options?'#cccccc':'',
-          width:'20%'}}
-        disabled={disable_options}
-        variant={valAllLabelBorderTransparent?'outline-primary':'primary'}
-        onClick={() => {
-          multi_selected_label.current.map(d => d.transparent_border = !valAllLabelBorderTransparent)
+      <Checkbox 
+        sx={SmoothClasses({})}
+        maxW={'50%'}
+        iconColor={valAllLabelBorderTransparent[1]?'#78C2AD':'white'}
+        isDisabled={disable_options}
+        isIndeterminate={valAllLabelBorderTransparent[1]}
+        isChecked={valAllLabelBorderTransparent[0]}
+        onChange={(evt) => {
+          multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
           set_data({ ...data })
-        }}
-      >{valAllLabelBorderTransparent?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        }}>
+        {t('LL.bt')}
+      </Checkbox>
     </InputGroup>
   </>
 

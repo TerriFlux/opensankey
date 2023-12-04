@@ -2,7 +2,7 @@
 import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
 import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
-import { default_sankey_data,default_link, default_node } from 'open-sankey/dist/SankeyUtils'
+import { DefaultSankeyData,DefaultLink, DefaultNode } from 'open-sankey/dist/SankeyUtils'
 import { synchronizeNodesandLinksId } from 'open-sankey/dist/SankeyLayout'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
@@ -93,7 +93,7 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
       v.heredited_attr_from_master=['']
     }
     if((v.view_data as unknown as SankeyPlusData ).version){
-      complete_sankey_data(v.view_data,default_sankey_data,default_node,default_link)
+      complete_sankey_data(v.view_data,DefaultSankeyData,DefaultNode,DefaultLink)
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
@@ -237,7 +237,7 @@ export const OpenSankeyPlusDiagramSelector = (
                   result = String(result) //.split('<br>').join('\\\\n')
                   const new_layout = JSON.parse(result)
                   convert_data(new_layout)
-                  complete_sankey_data(new_layout, default_sankey_data, default_node, default_link)
+                  complete_sankey_data(new_layout, DefaultSankeyData, DefaultNode, DefaultLink)
                   set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
                   updateLayout(sankey_data, new_layout, elementToDispose)
                   const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
