@@ -2,10 +2,12 @@ import React from 'react'
 import { FormControl, Form, OverlayTrigger, Tooltip,InputGroup, Button } from 'react-bootstrap'
 import { SankeyData } from './types'
 import { TFunction } from 'i18next'
-
-import { FaEye, FaEyeSlash,FaCheck} from 'react-icons/fa'
+import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { Checkbox } from '@chakra-ui/react'
+
+import { SmoothClasses } from './SankeyUtils'
 
 export const OpenSankeyMenuConfigurationLayout = (
   t:TFunction,
@@ -124,25 +126,19 @@ export const OpenSankeyMenuConfigurationLayout = (
 
     <h5>{t('Menu.Leg')}</h5>,
 
-    <InputGroup>
-      <InputGroup.Text style={{width:'60%'}} >{t('MEP.SLIP')}</InputGroup.Text>
-
-      <OverlayTrigger
-        key={'MEP.tooltips.SLIP'}
-        placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'MEP.tooltips.SLIP'}>{t('MEP.tooltips.SLIP')} </Tooltip>}>
-        <Button
-          style={{width:'40%'}}
-          variant={data.mask_legend?'primary':'outline-primary'}
-          onClick={() => {
-            data.mask_legend = !data.mask_legend
-            set_data({ ...data })
-          }}>{data.mask_legend?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-      </OverlayTrigger>
-      
-    </InputGroup>,
+    <Checkbox 
+      sx={SmoothClasses({})}
+      iconColor='white'
+      maxW={'50%'}
+      isChecked={data.mask_legend}
+      onClick={() => {
+        data.mask_legend = !data.mask_legend
+        set_data({ ...data })
+      }}
+    >
+      {t('MEP.SLIP')}
+    </Checkbox>
+    ,
 
     /* Position X de la legende  */
     <InputGroup>
@@ -213,21 +209,7 @@ export const OpenSankeyMenuConfigurationLayout = (
       </OverlayTrigger>
       
     </InputGroup>,
-    // Afficher l'échelle sur le graphe
-    <InputGroup>
-      
-      <InputGroup.Text style={{width:'60%'}}>{t('Menu.display_scale')}</InputGroup.Text>
-      
-      
-      <Button
-        variant={data.display_legend_scale?'primary':'outline-primary'}
-        style={{width:'40%'}}
-        onClick={() => {
-          data.display_legend_scale = !data.display_legend_scale
-          set_data({ ...data })
-        }}>{data.display_legend_scale?<FaEye/>:<FaEyeSlash/>}</Button>
-      
-    </InputGroup>,
+    
     /* Font size de la legende*/
     <InputGroup>
       
@@ -251,6 +233,20 @@ export const OpenSankeyMenuConfigurationLayout = (
       </OverlayTrigger>
       
     </InputGroup>,
+
+    // Afficher l'échelle sur le graphe
+    <Checkbox defaultChecked={data.mask_legend}
+      sx={SmoothClasses({})}
+      iconColor='white'
+      maxW={'50%'}
+      checked={data.display_legend_scale}
+      onClick={() => {
+        data.display_legend_scale = !data.display_legend_scale
+        set_data({ ...data })
+      }}
+    >
+      {t('Menu.display_scale')}
+    </Checkbox>
 
 
 

@@ -1,10 +1,10 @@
 import React from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { SankeyData, SankeyLink } from './types'
-import {value_selected_parameter} from './SankeyDrawFunction'
+import {ValueSelectedParameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
 import {TFunction} from 'i18next'
-import { return_value_link,assign_link_local_attribute } from './SankeyUtils'
+import { ReturnValueLink,AssignLinkLocalAttribute } from './SankeyUtils'
 
 export const SankeyMenuConfigurationLinksData = (
   data:SankeyData,
@@ -21,7 +21,7 @@ export const SankeyMenuConfigurationLinksData = (
 )=>{
   let is_link_data_invalid=false
   if(multi_selected_links.current.length>0){
-    const curr_val=value_selected_parameter(data,multi_selected_links,tags_selected).value
+    const curr_val=ValueSelectedParameter(data,multi_selected_links,tags_selected).value
     if(curr_val==='' && displayed_input_link_value===''){
       is_link_data_invalid=false
     }else{
@@ -51,7 +51,7 @@ export const SankeyMenuConfigurationLinksData = (
                     set_tags_selected(prevState => {
                       tmp= ({...prevState,[name]: value})
                       return ({...prevState,[name]: value})})
-                    set_displayed_input_link_value(value_selected_parameter(data,multi_selected_links,tmp).value)
+                    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,tmp).value)
 
                   }}>
                 {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
@@ -97,11 +97,11 @@ export const SankeyMenuConfigurationLinksData = (
           onBlur={evt=>{
             const formatedValue=evt.target.value.replace(',','.')
             if(formatedValue!=='' && !isNaN(+formatedValue )){
-              const was_empty=value_selected_parameter(data,multi_selected_links,tags_selected).value===''
+              const was_empty=ValueSelectedParameter(data,multi_selected_links,tags_selected).value===''
               let val = Object(multi_selected_links.current[0].value)
               multi_selected_links.current.map(d => {
-                const dashed=return_value_link(data,multi_selected_links.current[0],'dashed') as boolean
-                assign_link_local_attribute(d,'dashed',(was_empty)?false:dashed)
+                const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
+                AssignLinkLocalAttribute(d,'dashed',(was_empty)?false:dashed)
 
                 val = d.value
                 Object.values(tags_selected).forEach(tag => {
@@ -124,7 +124,7 @@ export const SankeyMenuConfigurationLinksData = (
               let val = Object(multi_selected_links.current[0].value)
               multi_selected_links.current.map(d => {
                 val = d.value
-                assign_link_local_attribute(d,'dashed',true)
+                AssignLinkLocalAttribute(d,'dashed',true)
                 Object.values(tags_selected).forEach(tag => {
                   if (val[tag] === undefined) {
                     val[tag] = {}
@@ -154,7 +154,7 @@ export const SankeyMenuConfigurationLinksData = (
         <Form.Control
           style={{width:'60%'}}
           type='text'
-          value={value_selected_parameter(data,multi_selected_links,tags_selected).display_value}
+          value={ValueSelectedParameter(data,multi_selected_links,tags_selected).display_value}
           onChange={
             evt => {
               let val = Object(multi_selected_links.current[0].value)

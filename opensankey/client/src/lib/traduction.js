@@ -145,7 +145,7 @@ export const open_resources = {
         selectNodeAttrubutedToTag:'Select all nodes having this tag',
         selectLinkAttrubutedToTag:'Select all links having this tag',
         node_label_sep:'Node label separator',
-
+        overcharge_style_value:'Value of the variable override the value from the style',
         Transformation : {
           amp_short:'Trans.',
           amp:'Change the layout',
@@ -730,6 +730,7 @@ export const open_resources = {
         selectNodeAttrubutedToTag:'Sélectionne les noeuds possédant cette étiquette',
         selectLinkAttrubutedToTag:'Sélectionne les flux possédant cette étiquette',
         node_label_sep:'Séparateur de label de noeud',
+        overcharge_style_value:'La valeur de la variable surcharge celle du style',
 
         Transformation : {
           amp_short:'Trans.',

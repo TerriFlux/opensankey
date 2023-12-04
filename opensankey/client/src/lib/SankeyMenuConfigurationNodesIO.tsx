@@ -1,11 +1,11 @@
 import React from 'react'
 import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { SankeyData, SankeyNode,SankeyLinkValue,SankeyLink } from './types'
-import { link_visible,link_color,return_value_link} from './SankeyUtils'
+import { LinkVisible,LinkColor,ReturnValueLink} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
-import { select_visualy_links } from './SankeyDrawFunction'
+import { SelectVisualyLinks } from './SankeyDrawFunction'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them
 const getIOLink=(
@@ -13,7 +13,7 @@ const getIOLink=(
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,
   io:string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
 
 
 )=>{
@@ -25,42 +25,42 @@ const getIOLink=(
     if(pos=='left'){
       //Recherche tous les flux entrant a gauche
       link_io=Object.values(n.inputLinksId).filter(k=>{
-        const recy=return_value_link(data,data.links[k],'recycling') as boolean
-        const ori=return_value_link(data,data.links[k],'orientation') as string
+        const recy=ReturnValueLink(data,data.links[k],'recycling') as boolean
+        const ori=ReturnValueLink(data,data.links[k],'orientation') as string
 
         const n_s=data.nodes[data.links[k].idSource]
         const cond_no_recy=(((n_s.x<=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x<0))&& !recy)
         const cond_recy=(recy && n_s.x>=n.x)
 
-        return (cond_no_recy || cond_recy)  && (ori=='hh' ||ori=='vh') && link_visible(data.links[k],data,getLinkValue)
+        return (cond_no_recy || cond_recy)  && (ori=='hh' ||ori=='vh') && LinkVisible(data.links[k],data,GetLinkValue)
       })
     }else if(pos=='right'){
       //Recherche tous les flux entrant a droite
       link_io=Object.values(n.inputLinksId).filter(k=>{
-        const recy=return_value_link(data,data.links[k],'recycling') as boolean
-        const ori=return_value_link(data,data.links[k],'orientation') as string
+        const recy=ReturnValueLink(data,data.links[k],'recycling') as boolean
+        const ori=ReturnValueLink(data,data.links[k],'orientation') as string
 
         const n_s=data.nodes[data.links[k].idSource]
         const cond_no_recy=(((n_s.x>=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x>0))&& !recy)
         const cond_recy=(recy && n_s.x<n.x)
 
-        return  (cond_no_recy ||cond_recy) && (ori=='hh' ||ori=='vh')&& link_visible(data.links[k],data,getLinkValue)
+        return  (cond_no_recy ||cond_recy) && (ori=='hh' ||ori=='vh')&& LinkVisible(data.links[k],data,GetLinkValue)
       })
     }else if(pos=='top'){
       //Recherche tous les flux entrant en haut
       link_io=Object.values(n.inputLinksId).filter(k=>{
-        const ori=return_value_link(data,data.links[k],'orientation') as string
+        const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_s=data.nodes[data.links[k].idSource]
 
-        return n_s.y<n.y && (ori=='vv' ||ori=='hv')&& link_visible(data.links[k],data,getLinkValue)
+        return n_s.y<n.y && (ori=='vv' ||ori=='hv')&& LinkVisible(data.links[k],data,GetLinkValue)
       })
     }else if(pos=='bottom'){
       //Recherche tous les flux entrant en haut
       link_io=Object.values(n.inputLinksId).filter(k=>{
-        const ori=return_value_link(data,data.links[k],'orientation') as string
+        const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_s=data.nodes[data.links[k].idSource]
 
-        return n_s.y>=n.y && (ori=='vv' ||ori=='hv')&& link_visible(data.links[k],data,getLinkValue)
+        return n_s.y>=n.y && (ori=='vv' ||ori=='hv')&& LinkVisible(data.links[k],data,GetLinkValue)
       })
     }
   }else if(io=='output'){
@@ -70,13 +70,13 @@ const getIOLink=(
         if (!data.links[k] ) {
           return false
         }
-        const recy=return_value_link(data,data.links[k],'recycling') as boolean
-        const ori=return_value_link(data,data.links[k],'orientation') as string
+        const recy=ReturnValueLink(data,data.links[k],'recycling') as boolean
+        const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
         const cond_no_recy=(((n_t.x<n.x  && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x<=0)) && !recy)
         const cond_recy=(recy && n_t.x>n.x)
 
-        return (( cond_no_recy|| cond_recy)) && (ori=='hh' ||ori=='hv')&& link_visible(data.links[k],data,getLinkValue)
+        return (( cond_no_recy|| cond_recy)) && (ori=='hh' ||ori=='hv')&& LinkVisible(data.links[k],data,GetLinkValue)
       })
     }else if(pos=='right'){
       //Recherche tous les flux entrant a droite
@@ -84,13 +84,13 @@ const getIOLink=(
         if (!data.links[k] ) {
           return false
         }
-        const recy=return_value_link(data,data.links[k],'recycling') as boolean
-        const ori=return_value_link(data,data.links[k],'orientation') as string
+        const recy=ReturnValueLink(data,data.links[k],'recycling') as boolean
+        const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
         const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !recy)
         const cond_recy=(recy && n_t.x<=n.x)
 
-        return  ( cond_no_recy || cond_recy) && (ori=='hh' ||ori=='hv')&& link_visible(data.links[k],data,getLinkValue)
+        return  ( cond_no_recy || cond_recy) && (ori=='hh' ||ori=='hv')&& LinkVisible(data.links[k],data,GetLinkValue)
       })
     }else if(pos=='top'){
       //Recherche tous les flux entrant en haut
@@ -98,10 +98,10 @@ const getIOLink=(
         if (!data.links[k] ) {
           return false
         }
-        const ori=return_value_link(data,data.links[k],'orientation') as string
+        const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
 
-        return n_t.y<n.y && (ori=='vv' ||ori=='vh')&& link_visible(data.links[k],data,getLinkValue)
+        return n_t.y<n.y && (ori=='vv' ||ori=='vh')&& LinkVisible(data.links[k],data,GetLinkValue)
       })
     }else if(pos=='bottom'){
       //Recherche tous les flux entrant en haut
@@ -109,10 +109,10 @@ const getIOLink=(
         if (!data.links[k] ) {
           return false
         }
-        const ori=return_value_link(data,data.links[k],'orientation') as string
+        const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
 
-        return n_t.y>=n.y && (ori=='vv' ||ori=='vh')&& link_visible(data.links[k],data,getLinkValue)
+        return n_t.y>=n.y && (ori=='vv' ||ori=='vh')&& LinkVisible(data.links[k],data,GetLinkValue)
       })
     }
   }
@@ -133,10 +133,10 @@ const handleUpLinkIOPos=(
   k_link:string,
   pos:string,
   io:string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
   const n=multi_selected_nodes.current[0]
-  const link_io=getIOLink(data,multi_selected_nodes,pos,io,getLinkValue)
+  const link_io=getIOLink(data,multi_selected_nodes,pos,io,GetLinkValue)
   if(io=='input'){
     if(pos=='left'){
 
@@ -254,10 +254,10 @@ const handleDownLinkIOPos=(
   k_link:string,
   pos:string,
   io:string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
   const n=multi_selected_nodes.current[0]
-  const link_io=getIOLink(data,multi_selected_nodes,pos,io,getLinkValue)
+  const link_io=getIOLink(data,multi_selected_nodes,pos,io,GetLinkValue)
 
   if(io=='input'){
     if(pos=='left'){
@@ -368,9 +368,9 @@ const has_link_come_from=(
   multi_selected_nodes:{current:SankeyNode[]},
   io:string,
   pos:string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
-  const link_io=getIOLink(data,multi_selected_nodes,pos,io,getLinkValue)
+  const link_io=getIOLink(data,multi_selected_nodes,pos,io,GetLinkValue)
   return link_io.length==0
 }
 
@@ -388,9 +388,9 @@ const tab_pos_link=(
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,io:string,tab_colored:boolean,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 )=>{
-  const link_io=getIOLink(data,multi_selected_nodes,pos,io,getLinkValue)
+  const link_io=getIOLink(data,multi_selected_nodes,pos,io,GetLinkValue)
   return (
     <>
       <Table striped bordered hover className='node_group_tags_definition'>
@@ -404,7 +404,7 @@ const tab_pos_link=(
           {
             link_io.map(
               (k, i) => {
-                const color=link_color(data.links[k],data,getLinkValue) as string
+                const color=LinkColor(data.links[k],data,GetLinkValue) as string
                 const bc={'backgroundColor': (color && tab_colored)?color:'inherit'}
                 const n_s=data.nodes[data.links[k].idSource]
                 const n_t=data.nodes[data.links[k].idTarget]
@@ -415,8 +415,8 @@ const tab_pos_link=(
                     <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
-                        <Button variant="info" onClick={() => handleUpLinkIOPos(data,set_data,multi_selected_nodes,k,pos,io,getLinkValue)}><FaArrowAltCircleUp /></Button>
-                        <Button variant="info" onClick={() => handleDownLinkIOPos(data,set_data,multi_selected_nodes,k,pos,io,getLinkValue)}><FaArrowAltCircleDown /></Button>
+                        <Button variant="info" onClick={() => handleUpLinkIOPos(data,set_data,multi_selected_nodes,k,pos,io,GetLinkValue)}><FaArrowAltCircleUp /></Button>
+                        <Button variant="info" onClick={() => handleDownLinkIOPos(data,set_data,multi_selected_nodes,k,pos,io,GetLinkValue)}><FaArrowAltCircleDown /></Button>
                       </ButtonGroup>
                     </td>
 
@@ -441,7 +441,7 @@ export const SankeyMenuConfigurationNodesIO = (
   set_link_pos:React.Dispatch<React.SetStateAction<string>>,
   tab_colored:boolean,
   set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   multi_selected_links: {current:SankeyLink[]},
   set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
   menu_for_modal=false
@@ -519,7 +519,7 @@ export const SankeyMenuConfigurationNodesIO = (
           overlay={<Tooltip id={'noeud.pf.tooltips.3'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',getLinkValue)}
+            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'left',GetLinkValue)}
             variant={(link_pos=='left')?'primary':'outline-primary'}
             onClick={() => {
               set_link_pos('left')
@@ -536,7 +536,7 @@ export const SankeyMenuConfigurationNodesIO = (
           overlay={<Tooltip id={'noeud.pf.tooltips.4'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
           <Button
             className='btn_menu_config'
-            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',getLinkValue)}
+            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'right',GetLinkValue)}
             variant={(link_pos=='right')?'primary':'outline-primary'}
             onClick={() => {
               set_link_pos('right')
@@ -553,7 +553,7 @@ export const SankeyMenuConfigurationNodesIO = (
           overlay={<Tooltip id={'noeud.pf.tooltips.5'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
           <Button
             className='btn_menu_config'
-            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',getLinkValue)}
+            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'top',GetLinkValue)}
             variant={(link_pos=='top')?'primary':'outline-primary'}
             onClick={() => {
               set_link_pos('top')
@@ -570,7 +570,7 @@ export const SankeyMenuConfigurationNodesIO = (
           overlay={<Tooltip id={'noeud.pf.tooltips.6'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
           <Button
             className='btn_menu_config'
-            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',getLinkValue)}
+            disabled={has_link_come_from(data,set_data,multi_selected_nodes,link_io,'bottom',GetLinkValue)}
             variant={(link_pos=='bottom')?'primary':'outline-primary'}
             onClick={() => {
               set_link_pos('bottom')
@@ -605,7 +605,7 @@ export const SankeyMenuConfigurationNodesIO = (
     </InputGroup>
 
     {/* Table montrant les noeuds selectionnés  */}
-    {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored,getLinkValue)}
+    {tab_pos_link(t,data,set_data,multi_selected_nodes,link_pos,link_io,tab_colored,GetLinkValue)}
 
   </>:<></>
 
@@ -644,10 +644,10 @@ export const SankeyMenuConfigurationNodesIO = (
           onClick={() => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
               multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-              const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
               set_display_link_opacity(opacity)
             })
-            multi_selected_links.current.forEach(l=>select_visualy_links(l))
+            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
           }}>
           {t('Noeud.SlctOutLink')}
         </Button>
@@ -665,10 +665,10 @@ export const SankeyMenuConfigurationNodesIO = (
           onClick={() => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
               multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-              const opacity=return_value_link(data,multi_selected_links.current[0],'opacity') as string
+              const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
               set_display_link_opacity(opacity)
             })
-            multi_selected_links.current.forEach(l=>select_visualy_links(l))
+            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
           }}>
           {t('Noeud.SlctInLink')}
         </Button>

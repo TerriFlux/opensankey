@@ -20,7 +20,7 @@ export const SankeyMenuConfigurationLinksTags = (
   const {fluxTags}=data
   const tags_visible = Object.keys(fluxTags).length > 0
 
-  const value_selected_parameter = (): SankeyLinkValue => {
+  const ValueSelectedParameter = (): SankeyLinkValue => {
     if(multi_selected_links.current.length==0){
       return ({} as SankeyLinkValue)
     }else{
@@ -115,7 +115,7 @@ export const SankeyMenuConfigurationLinksTags = (
         <tbody>
           {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
             ([tag_key,tag]) => {
-              const is_selected=value_selected_parameter().tags[tags_group_key].includes(tag_key) 
+              const is_selected=ValueSelectedParameter().tags[tags_group_key].includes(tag_key) 
               return (
                 <tr key={tag_key}>
                   <td><FormLabel>{tag.name}</FormLabel></td>
