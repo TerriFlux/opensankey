@@ -4,14 +4,14 @@ import { Popover, Form,Pagination,Button,ButtonGroup,Carousel} from 'react-boots
 import * as d3 from 'd3'
 
 import SankeyDraw from './SankeyDraw'
-import Menu, { OpenSankeyMenus,OpenSankeyModalWelcome,context_menu_node,context_menu_link,menu_draggable,context_zdd} from './SankeyMenu'
+import Menu, { OpenSankeyMenus,OpenSankeyModalWelcome,ContextMenuNode,ContextMenuLink,MenuDraggable,ContextZdd} from './SankeyMenu'
 import { SankeySettingsEditionElementTags } from './SankeyMenuConfigurationTags'
 import * as SankeyUtils from './SankeyUtils'
 import {OpenSankeyConfigurationsMenus} from './SankeyMenuConfiguration'
 import {OpenSankeyConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {OpenSankeyMenuConfigurationNodes} from './SankeyMenuConfigurationNodes'
 import {OpenSankeyMenuConfigurationLinks} from './SankeyMenuConfigurationLinks'
-import { linkTooltipsContent, nodeTooltipsContent } from './SankeyTooltip'
+import { LinkTooltipsContent, NodeTooltipsContent } from './SankeyTooltip'
 import { useTranslation } from 'react-i18next'
 import { SankeyData, SankeyLink, SankeyNode } from './types'
 import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayout'
@@ -22,7 +22,14 @@ import { OpenSankeyDrawLegend,context_legend_tags,drag_legend } from './SankeyDr
 import { OpenSankeyDrawNodesLabel } from './SankeyDrawNodesLabel'
 import {addSimpleLevelDropDown,  setDiagram, toolbar_builder} from './SankeyMenuBanner'
 import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './SankeyMenuPreferences'
-import {linkStroke, min_width_and_height,drawArrows,eventOnSankeyZoneMouseDown,eventOnSankeyZoneMouseMove,eventOnSankeyZoneMouseUp,zoom_function,repositionne_sidebar} from './SankeyDrawFunction'
+import {LinkStroke,
+  GetSankeyMinWidthAndHeight,
+  DrawArrows,
+  EventOnSankeyZoneMouseDown,
+  EventOnSankeyZoneMouseMove,
+  EventOnSankeyZoneMouseUp,
+  ZoomFunction,
+  RepositionneSidebar} from './SankeyDrawFunction'
 import i18next from './traduction'
 import { updateLayout } from './SankeyLayout'
 import {SankeyMenuConfigurationNodesIO} from './SankeyMenuConfigurationNodesIO'
@@ -33,7 +40,7 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faSliders,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { FaAngleDoubleLeft} from 'react-icons/fa'
-import { return_value_link } from './SankeyUtils'
+import { ReturnValueLink } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
 import { OpenSankeyDiagramSelector } from './SankeyMenuDialogs'
 import { SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from './SankeyStyle'
@@ -199,8 +206,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const {t} =useTranslation()
 
   //Réinitialise data et vide les noeud/flux sélectionnés
-  const reinitialization = () => {
-    const data = SankeyUtils.default_sankey_data()
+  const Reinitialization = () => {
+    const data = SankeyUtils.DefaultSankeyData()
     multi_selected_nodes.current = []
     multi_selected_links.current = []
     localStorage.removeItem('diff')
@@ -278,7 +285,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- 1.2 Builds Configuration Menus Node
   //- 1.2.1 Builds Configuration Menus Node Attributes
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes,false,selected_style_node,set_style_to_apply,[],[],[])
-  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.getLinkValue,multi_selected_links,set_display_link_opacity)
+  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity)
   //- 1.2.1 Builds Configuration Menus Node Tags
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -320,7 +327,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 2. Build Menus
   const sankey_menus = OpenSankeyMenus(
-    t,setShowPreference,reinitialization,SankeyUtils.default_sankey_data,set_show_apply_layout,set_show_excel_dialog,
+    t,setShowPreference,Reinitialization,SankeyUtils.DefaultSankeyData,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
     set_show_modal_welcome,set_never_see_again,data,set_data,set_show_modalTemplate,set_show_modale_support,[],[],[],set_tags_selected,convert_data
   )
@@ -367,7 +374,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       </Popover.Body>
     </Popover>
   const {filter}=data.display_style
-  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,min_width_and_height,setDiagram,set_show_modalTemplate,set_never_see_again,convert_data,maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux)
+  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,GetSankeyMinWidthAndHeight,setDiagram,set_show_modalTemplate,set_never_see_again,convert_data,maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux)
   Object.keys(toolbar).forEach(k=>{
     sankey_menus[k]=toolbar[k]
   })
@@ -379,7 +386,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   // })
 
 
-  const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !SankeyUtils.node_displayed(data,n) || (n.inputLinksId.length === 0) || (!(return_value_link(data,data.links[n.inputLinksId[0]],'arrow'))) ? false : true
+  const node_arrow_visible=(data:SankeyData,n: SankeyNode) => !SankeyUtils.NodeDisplayed(data,n) || (n.inputLinksId.length === 0) || (!(ReturnValueLink(data,data.links[n.inputLinksId[0]],'arrow'))) ? false : true
   const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
 
 
@@ -414,12 +421,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   /* eslint-disable */
     // @ts-ignore
     addEventListener('resize',()=>{
-      repositionne_sidebar()
+      RepositionneSidebar()
       })
       /* eslint-enable */
 
   const display_nodes = Object.keys(data.nodes)
-    .filter((key) => SankeyUtils.node_displayed(data,data.nodes[key]))
+    .filter((key) => SankeyUtils.NodeDisplayed(data,data.nodes[key]))
     .reduce((obj, key) => {
       return Object.assign(obj, {
         [key]: data.nodes[key]
@@ -446,10 +453,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       first_selected_node,set_first_selected_node,
       accordion_ref,button_ref,
       alt_key_pressed,
-      nodeTooltipsContent,SankeyUtils.link_text,SankeyUtils.getLinkValue,
+      NodeTooltipsContent,SankeyUtils.LinkText,SankeyUtils.GetLinkValue,
       set_displayed_input_link_value,accept_simple_click,set_contextualised_node,pointer_pos)
 
-    OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.getLinkValue)
+    OpenSankeyDrawNodesLabel(data,set_data,multi_selected_nodes,SankeyUtils.GetLinkValue)
 
     // Call the function that add links to the sankey
     OpenSankeyDrawLinks(
@@ -464,13 +471,13 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
       alt_key_pressed,
       position,node_arrow_visible,
-      linkTooltipsContent,
-      SankeyUtils.link_text,SankeyUtils.getLinkValue,set_data,set_displayed_input_link_value,tags_selected,set_tags_selected,linkStroke,drawArrows,set_display_link_opacity,
+      LinkTooltipsContent,
+      SankeyUtils.LinkText,SankeyUtils.GetLinkValue,set_data,set_displayed_input_link_value,tags_selected,set_tags_selected,LinkStroke,DrawArrows,set_display_link_opacity,
       set_contextualised_link,pointer_pos
     )
 
 
-    OpenSankeyDrawLegend(data,set_data,SankeyUtils.getLinkValue,t,pointer_pos,set_tag_contextualised)
+    OpenSankeyDrawLegend(data,set_data,SankeyUtils.GetLinkValue,t,pointer_pos,set_tag_contextualised)
     const g_legend=d3.select(' .opensankey #g_legend') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
     if(!window.SankeyToolsStatic){
       g_legend.call(drag_legend(data,set_data))
@@ -497,21 +504,21 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   // MENU DRAGGABLE NODE ATTR
   const menu_node_attr=menu_configuration_nodes_attributes
-  const dragNodeAttr=show_menu_node_apparence?menu_draggable(menu_node_attr,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.apparence.apparence'),set_show_menu_node_apparence):<></>
+  const dragNodeAttr=show_menu_node_apparence?MenuDraggable(menu_node_attr,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.apparence.apparence'),set_show_menu_node_apparence):<></>
 
   // MENU DRAGGABLE NODE IO
   if(show_menu_node_io && multi_selected_nodes.current.length!==1){
     set_show_menu_node_io(false)
   }
-  const menu_node_io=SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.getLinkValue,multi_selected_links,set_display_link_opacity,true)
-  const dragNodeIO=show_menu_node_io?menu_draggable(menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),set_show_menu_node_io):<></>
+  const menu_node_io=SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity,true)
+  const dragNodeIO=show_menu_node_io?MenuDraggable(menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),set_show_menu_node_io):<></>
 
 
 
 
 
 
-  const context_n=context_menu_node(contextualised_node,set_contextualised_node,data,set_data,display_nodes,multi_selected_nodes,multi_selected_links,t,
+  const context_n=ContextMenuNode(contextualised_node,set_contextualised_node,data,set_data,display_nodes,multi_selected_nodes,multi_selected_links,t,
     set_show_menu_node_apparence,set_show_menu_node_io,
     set_agregation_node,set_is_agregation,set_show_agregation,
     set_display_link_opacity,
@@ -520,24 +527,24 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   // MENU DRAGGABLE LINK DATA
   const menu_link_data=SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,multi_selected_links,set_data,t,[],displayed_input_link_value,set_displayed_input_link_value,true)
-  const dragLink_data=show_menu_link_data?menu_draggable(menu_link_data,pointer_pos,t('Menu.flux')+' '+t('Flux.data.données'),set_show_menu_link_data):<></>
+  const dragLink_data=show_menu_link_data?MenuDraggable(menu_link_data,pointer_pos,t('Menu.flux')+' '+t('Flux.data.données'),set_show_menu_link_data):<></>
 
 
   // MENU DRAGGABLE LINK APPEARENCE
   const menu_link_appearence=SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,[],false,'default',display_link_opacity,set_display_link_opacity,true)
-  const dragLink_appearence=show_menu_link_appearence?menu_draggable(menu_link_appearence,pointer_pos,t('Menu.flux')+' '+t('Flux.apparence.apparence'),set_show_menu_link_appearence):<></>
+  const dragLink_appearence=show_menu_link_appearence?MenuDraggable(menu_link_appearence,pointer_pos,t('Menu.flux')+' '+t('Flux.apparence.apparence'),set_show_menu_link_appearence):<></>
 
-  const context_l=context_menu_link(contextualised_link,set_contextualised_link,
+  const context_l=ContextMenuLink(contextualised_link,set_contextualised_link,
     set_show_menu_link_data,set_show_menu_link_appearence
     ,data,set_data,tags_selected,multi_selected_links,t,pointer_pos)
 
   // MENU DRAGGABLE LAYOUT
   menu_configuration_layout
-  const drag_menu_layout=show_menu_layout?menu_draggable(menu_configuration_layout,pointer_pos,t('Menu.MEP'),set_show_menu_layout):<></>
+  const drag_menu_layout=show_menu_layout?MenuDraggable(menu_configuration_layout,pointer_pos,t('Menu.MEP'),set_show_menu_layout):<></>
 
 
-  const context_for_zdd=context_zdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout)
-  const context_for_tag_legend=context_legend_tags(tag_contextualised,set_tag_contextualised,data,set_data,multi_selected_nodes,multi_selected_links,t,pointer_pos,SankeyUtils.getLinkValue)
+  const context_for_zdd=ContextZdd(show_context_zdd,set_show_context_zdd,data,set_data,pointer_pos,node_hspace,set_node_hspace,node_vspace,set_node_vspace,t,set_show_menu_layout)
+  const context_for_tag_legend=context_legend_tags(tag_contextualised,set_tag_contextualised,data,set_data,multi_selected_nodes,multi_selected_links,t,pointer_pos,SankeyUtils.GetLinkValue)
 
 
   const modale_style_link=<React.Fragment key={'modale_style_link'}>{SankeyPlusModalStyleLink(t,data,set_data,showStyleLink,setShowStyleLink,selected_style_link,set_selected_style_link,[],display_link_opacity,set_display_link_opacity)}</React.Fragment>
@@ -547,7 +554,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
   
-  const processExcel=(text:string)=>SankeyUtils.retrieve_excel_results(text,data,set_data,updateLayout,()=>0,min_width_and_height,convert_data)
+  const processExcel=(text:string)=>SankeyUtils.RetrieveExcelResults(text,data,set_data,updateLayout,()=>0,GetSankeyMinWidthAndHeight,convert_data)
 
 
 
@@ -604,9 +611,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             show_modalTemplate={show_modalTemplate}
             set_show_modalTemplate={set_show_modalTemplate}
             external_modal={external_menu_modal}
-            min_width_and_height={min_width_and_height}
+            GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
             formations_menu={formations_menu}
-            reinitialization={reinitialization}
+            Reinitialization={Reinitialization}
             set_show_modale_tuto={set_show_modale_tuto}
             show_modale_tuto={show_modale_tuto}
             show_modale_support={show_modale_support}
@@ -628,7 +635,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             is_computing={is_computing}
             setIsComputing={setIsComputing}
             set_tags_selected={set_tags_selected}
-            retrieve_excel_results={processExcel}
+            RetrieveExcelResults={processExcel}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
@@ -645,13 +652,13 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
                 return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
               })
               .on('zoom', function (evt) {
-                zoom_function(evt,data)
+                ZoomFunction(evt,data)
               }))
             .on('dblclick.zoom', null)
 
 
           const timer = setTimeout(() => {
-            SankeyUtils.adjust_sankey_zone(data,min_width_and_height)
+            SankeyUtils.AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)
           }, 100)
           return () => clearTimeout(timer)
         }, [])}
@@ -668,7 +675,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           set_agregation_node={set_agregation_node}
           is_agregation={is_agregation}
           set_alt_key_pressed={set_alt_key_pressed}
-          min_width_and_height={min_width_and_height}
+          GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
           pointer_pos={pointer_pos}
           set_show_context_zdd={set_show_context_zdd}
         />
@@ -693,13 +700,13 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     //Ajout des events sur les l'ajout des noeuds aux click
     const svgSankey=d3.select('.opensankey #svg')
     svgSankey.on('mousedown',evt=>{
-      eventOnSankeyZoneMouseDown(mode_selection,data,set_data,set_first_selected_node,true,()=>false,evt,start_point,closeAllMenuContext)
+      EventOnSankeyZoneMouseDown(mode_selection,data,set_data,set_first_selected_node,true,()=>false,evt,start_point,closeAllMenuContext)
     })
     svgSankey.on('mousemove',evt=>{
-      eventOnSankeyZoneMouseMove(mode_selection,data,first_selected_node,set_first_selected_node,evt,start_point)
+      EventOnSankeyZoneMouseMove(mode_selection,data,first_selected_node,set_first_selected_node,evt,start_point)
     })
     svgSankey.on('mouseup',evt=>{
-      eventOnSankeyZoneMouseUp(mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,true,()=>false,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value,evt,start_point)
+      EventOnSankeyZoneMouseUp(mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,true,()=>false,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value,evt,start_point)
     })
   }, 100)
 

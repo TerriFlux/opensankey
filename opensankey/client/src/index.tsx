@@ -6,7 +6,7 @@ import { render } from 'react-dom'
 
 import SankeyApp from './lib/SankeyApp'
 import { convert_data,complete_sankey_data } from './lib/SankeyConvert'
-import { default_link, default_node, default_sankey_data } from './lib/SankeyUtils'
+import { DefaultLink, DefaultNode, DefaultSankeyData } from './lib/SankeyUtils'
 import LZString from 'lz-string'
 import { SankeyData } from './lib/types'
 import './lib/traduction'
@@ -63,7 +63,7 @@ if (!window.sankey) {
   window.sankey = {}
 }
 // Create a default sankey
-const data = default_sankey_data()
+const data = DefaultSankeyData()
 
 if (!window.SankeyToolsStatic) {
   if (!window.sankey) {
@@ -78,7 +78,7 @@ if (!window.SankeyToolsStatic) {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
     convert_data(data)
-    complete_sankey_data(data,default_sankey_data,default_node,default_link)
+    complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
   }
 
   const fetchData = {
@@ -133,7 +133,7 @@ if (!window.SankeyToolsStatic) {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
     convert_data(data)
-    complete_sankey_data(data,default_sankey_data,default_node,default_link)
+    complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
   }
   render(
     <>
