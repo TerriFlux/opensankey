@@ -8,15 +8,15 @@ import {
   SankeyNodePropTypes
 } from './types'
 import {
-  assign_link_local_attribute,
-  assign_node_local_attribute,
-  compute_total_offsets,
-  findMaxLinkValue,
-  getLinkValue,
-  node_displayed,
-  return_value_link,
-  return_value_node,
-  test_link_value
+  AssignLinkLocalAttribute,
+  AssignNodeLocalAttribute,
+  ComputeTotalOffsets,
+  FindMaxLinkValue,
+  GetLinkValue,
+  NodeDisplayed,
+  ReturnValueLink,
+  ReturnValueNode,
+  TestLinkValue
 } from './SankeyUtils'
 import React, { FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
@@ -46,12 +46,12 @@ export const reorganize_node_inputLinksId = (
   input_links.sort((l1, l2) => {
     const n1Id = l1.idSource
     const n2Id = l2.idSource
-    const l1_recy=return_value_link(data,l1,'recycling')
-    const l2_recy=return_value_link(data,l2,'recycling')
-    const l1_v_s=return_value_link(data,l1,'vert_shift') as number
-    const l2_v_s=return_value_link(data,l2,'vert_shift') as number
-    const l1_ori=return_value_link(data,l1,'orientation')
-    const l2_ori=return_value_link(data,l2,'orientation')
+    const l1_recy=ReturnValueLink(data,l1,'recycling')
+    const l2_recy=ReturnValueLink(data,l2,'recycling')
+    const l1_v_s=ReturnValueLink(data,l1,'vert_shift') as number
+    const l2_v_s=ReturnValueLink(data,l2,'vert_shift') as number
+    const l1_ori=ReturnValueLink(data,l1,'orientation')
+    const l2_ori=ReturnValueLink(data,l2,'orientation')
 
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
@@ -128,12 +128,12 @@ export const reorganize_node_outputLinksId = (
   output_links.sort((l1, l2) => {
     const n1Id = l1.idTarget
     const n2Id = l2.idTarget
-    const l1_recy=return_value_link(data,l1,'recycling')
-    const l2_recy=return_value_link(data,l2,'recycling')
-    const l1_v_s=return_value_link(data,l1,'vert_shift') as number
-    const l2_v_s=return_value_link(data,l2,'vert_shift') as number
-    const l1_ori=return_value_link(data,l1,'orientation')
-    const l2_ori=return_value_link(data,l2,'orientation')
+    const l1_recy=ReturnValueLink(data,l1,'recycling')
+    const l2_recy=ReturnValueLink(data,l2,'recycling')
+    const l1_v_s=ReturnValueLink(data,l1,'vert_shift') as number
+    const l2_v_s=ReturnValueLink(data,l2,'vert_shift') as number
+    const l1_ori=ReturnValueLink(data,l1,'orientation')
+    const l2_ori=ReturnValueLink(data,l2,'orientation')
 
     if (n1Id !== n2Id) {
       const n1 = nodes[n1Id]
@@ -440,7 +440,7 @@ export const arrangeNodes = (
   data: SankeyData
 ) => {
   Object.values(data.nodes).forEach(node => {
-    if ( !node_displayed(data,node) || node.position === 'relative' ) {
+    if ( !NodeDisplayed(data,node) || node.position === 'relative' ) {
       return
     }
     const x = Math.round(node.x / data.grid_square_size) * data.grid_square_size
@@ -458,7 +458,7 @@ export const arrangeNodes = (
  * @param {{ [node_id: string]: SankeyNode }} display_nodes Visible nodes
  * @param {Function} inv_scale
  * @param {Function} scale
- * @param {Function} getLinkValue
+ * @param {Function} GetLinkValue
  */
 export const nodeHeight = (
   node: SankeyNode,
@@ -466,16 +466,16 @@ export const nodeHeight = (
   display_nodes:{ [node_id: string]: SankeyNode },
   inv_scale: (t:number)=>number,
   scale: (t:number)=>number,
-  getLinkValue: (data: SankeyData, idLink: string, up?: boolean)=>SankeyLinkValue
+  GetLinkValue: (data: SankeyData, idLink: string, up?: boolean)=>SankeyLinkValue
 ) => {
-  const res = compute_total_offsets(
+  const res = ComputeTotalOffsets(
     inv_scale,
     node,
     data,
     display_nodes,
-    test_link_value,
+    TestLinkValue,
     undefined,
-    getLinkValue)
+    GetLinkValue)
   const [total_offset_height_left, total_offset_height_right] = res
   const node_size_s_height = Math.max(total_offset_height_left, total_offset_height_right)
   //Hauteur des noeuds
@@ -485,7 +485,7 @@ export const nodeHeight = (
       (res[3] === 0) || data.show_structure == 'structure') {
     // Hauteur des noeuds
     // return data.node_height
-    return return_value_node(data, node, 'node_height') as number
+    return ReturnValueNode(data, node, 'node_height') as number
   }
   return scale(node_size_s_height)
 }
@@ -504,7 +504,7 @@ export const compute_auto_sankey = (
   h_space : number,
 ) => {
   const display_nodes = Object.keys(data.nodes)
-    .filter((key) => node_displayed(data,data.nodes[key]))
+    .filter((key) => NodeDisplayed(data,data.nodes[key]))
     .reduce((obj, key) => {
       return Object.assign(obj, {
         [key]: data.nodes[key]
@@ -519,7 +519,7 @@ export const compute_auto_sankey = (
   Object.values(data.links).forEach(link => {
     // We use a function to max value for each link because
     // each link can have multiple values
-    max_link_value = findMaxLinkValue(
+    max_link_value = FindMaxLinkValue(
       max_link_value,
       link.value
     )
@@ -546,7 +546,7 @@ export const compute_auto_sankey = (
   //  /!\ the nodes of this list will be the only nodes
   //      that are going to be positionned
   const visible_nodes_ids = Object.values(data.nodes)
-    .filter(n => node_displayed(data, n) && (n.position !== 'relative'))
+    .filter(n => NodeDisplayed(data, n) && (n.position !== 'relative'))
     .map(n=>n.idNode)
 
   // Compute positionning indexes
@@ -618,10 +618,10 @@ export const compute_auto_sankey = (
         // which can not be the case if these nodes have been reprocessed
         // by this same function
         if (node_index >= horizontal_indexes_per_nodes_ids[target_node_id]) {
-          assign_link_local_attribute(data.links[link_id], 'recycling', true)
+          AssignLinkLocalAttribute(data.links[link_id], 'recycling', true)
         }
         else {
-          assign_link_local_attribute(data.links[link_id], 'recycling', false)
+          AssignLinkLocalAttribute(data.links[link_id], 'recycling', false)
         }
       })
   })
@@ -654,7 +654,7 @@ export const compute_auto_sankey = (
           display_nodes,
           v_scale_inv,
           v_scale,
-          getLinkValue)
+          GetLinkValue)
         // Coef to verticaly sort nodes - highest coef is upper
         // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
         const node_sortcoef = node_height * (0.8 + 0.2/(node.outputLinksId.length + node.inputLinksId.length))
@@ -714,25 +714,25 @@ export const compute_auto_sankey = (
             (node.outputLinksId.length === 0))
         {
           // Node is lone node
-          assign_node_local_attribute(node,'label_horiz', 'middle')
-          assign_node_local_attribute(node,'label_vert', 'middle')
-          assign_node_local_attribute(node,'label_background', true)
+          AssignNodeLocalAttribute(node,'label_horiz', 'middle')
+          AssignNodeLocalAttribute(node,'label_vert', 'middle')
+          AssignNodeLocalAttribute(node,'label_background', true)
         }
         else if (node.inputLinksId.length === 0) {
           // Node is a source : no input link
-          assign_node_local_attribute(node,'label_horiz', 'left')
-          assign_node_local_attribute(node,'label_vert', 'middle')
+          AssignNodeLocalAttribute(node,'label_horiz', 'left')
+          AssignNodeLocalAttribute(node,'label_vert', 'middle')
         }
         else if (node.outputLinksId.length === 0) {
           // Node is a sink : no output link
-          assign_node_local_attribute(node,'label_horiz', 'right')
-          assign_node_local_attribute(node,'label_vert', 'middle')
+          AssignNodeLocalAttribute(node,'label_horiz', 'right')
+          AssignNodeLocalAttribute(node,'label_vert', 'middle')
         }
         else {
           // Node is in the middle of the sankey
-          assign_node_local_attribute(node,'label_horiz', 'left')
-          assign_node_local_attribute(node,'label_vert', 'middle')
-          assign_node_local_attribute(node,'label_background', true)
+          AssignNodeLocalAttribute(node,'label_horiz', 'left')
+          AssignNodeLocalAttribute(node,'label_vert', 'middle')
+          AssignNodeLocalAttribute(node,'label_background', true)
         }
       })
 
@@ -810,7 +810,7 @@ export const compute_auto_sankey = (
   // Propagate node position to sub-levels
   // --> This can slighty change y-positions of node (node's y = mean value of desagregated nodes' y)
   Object.values(data.nodes)
-    .filter(n => node_displayed(data,n))
+    .filter(n => NodeDisplayed(data,n))
     .forEach(n =>
       desagregation(
         data,
@@ -1169,15 +1169,15 @@ export const desagregation = (
     .domain([0, data.user_scale])
   const nb_desagregated = dim_desagregate_nodes.length
   let nodes_heights = 0
-  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,data,display_nodes,inv_scale,scale,getLinkValue))
-  const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],data,display_nodes,inv_scale,scale,getLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
+  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,data,display_nodes,inv_scale,scale,GetLinkValue))
+  const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],data,display_nodes,inv_scale,scale,GetLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
   let delta_y = 0
   dim_desagregate_nodes.forEach(n => {
     if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idNode].x !==0 && data.nodes[idNode].y !==0 )) {
       n.x = data.nodes[idNode].x
       n.y = start_point + delta_y
     }
-    delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,data,display_nodes,inv_scale,scale,getLinkValue)
+    delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,data,display_nodes,inv_scale,scale,GetLinkValue)
 
     if(n.local==undefined || n.local==null) {
       n.local = {}
@@ -1185,15 +1185,15 @@ export const desagregation = (
     setLocalAgregation(n, data, true)
     if (compute_auto_sankey) {
       if (n.outputLinksId.length === 0) {
-        assign_node_local_attribute(n,'label_horiz', 'right')
-        assign_node_local_attribute(n,'label_vert', 'middle')
+        AssignNodeLocalAttribute(n,'label_horiz', 'right')
+        AssignNodeLocalAttribute(n,'label_vert', 'middle')
       } else if (n.inputLinksId.length === 0) {
-        assign_node_local_attribute(n,'label_horiz', 'left')
-        assign_node_local_attribute(n,'label_vert', 'middle')
+        AssignNodeLocalAttribute(n,'label_horiz', 'left')
+        AssignNodeLocalAttribute(n,'label_vert', 'middle')
       } else {
-        assign_node_local_attribute(n,'label_horiz', 'left')
-        assign_node_local_attribute(n,'label_vert', 'middle')
-        assign_node_local_attribute(n,'label_background', true)
+        AssignNodeLocalAttribute(n,'label_horiz', 'left')
+        AssignNodeLocalAttribute(n,'label_vert', 'middle')
+        AssignNodeLocalAttribute(n,'label_background', true)
       }
     }
   })

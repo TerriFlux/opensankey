@@ -5,7 +5,7 @@ import { SankeyDataPropTypes,  TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
-import { add_tag,add_grp_tag } from './SankeyUtils'
+import { AddTag,AddGroupTag } from './SankeyUtils'
 import { FaEye,FaEyeSlash} from 'react-icons/fa'
 
 
@@ -55,13 +55,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
 
   //add a tags to the selected groupTag
   const handleAddTagButton = () => {
-    add_tag(data,type_tag_name,tags_group_key)
+    AddTag(data,type_tag_name,tags_group_key)
     set_data({ ...data })
   }
 
   //add a groupTag
   const handleAddTagGrpButton = () => {
-    const k=add_grp_tag(data,type_tag_name,tags_group_key,elementNameProp)
+    const k=AddGroupTag(data,type_tag_name,tags_group_key,elementNameProp)
     set_tags_group_key(k)
     set_data({ ...data })
   }
@@ -73,7 +73,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     set_data({ ...data })
   }
 
-  const getRandomInt=(max:number) =>{
+  const GetRandomInt=(max:number) =>{
     return Math.floor(Math.random() * max)
   }
 
@@ -165,7 +165,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
           <Button variant="secondary" value='rand' 
             size='sm'
             onClick={()=>{
-              const color_selected=list_palette_color[getRandomInt(list_palette_color.length)]
+              const color_selected=list_palette_color[GetRandomInt(list_palette_color.length)]
               const size_color=Object.keys(data[elementTagName][tags_group_key].tags).length
               for(const i in d3.range(size_color)){
                 data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
@@ -190,7 +190,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
               let size_color=color.length
               for(const i in d3.range(size_color)){
                 size_color=color.length
-                const color_to_select=getRandomInt(size_color)
+                const color_to_select=GetRandomInt(size_color)
                 const c=color.splice(color_to_select,1)
                 if(c!=undefined && c!=null){
                   const v=c[0]

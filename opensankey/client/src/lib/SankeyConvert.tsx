@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal,SankeyNodeStyle, SankeyNodeAttrLocal, SankeyLinkStyle} from './types'
 import colormap from 'colormap'
-import { default_sankey_data, default_node,assign_link_local_attribute, return_value_link, default_link_style,default_node_style} from './SankeyUtils'
+import { DefaultSankeyData, DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle} from './SankeyUtils'
 
 
 interface ConvertSankeyNode {
@@ -139,17 +139,17 @@ const normalize_name = (name: string) => {
 
 export const complete_sankey_data = (
   data: SankeyData,
-  default_sankey_data: ()=>SankeyData,
-  default_node: (data:SankeyData)=>SankeyNode,
-  default_link: (data:SankeyData)=>SankeyLink
+  DefaultSankeyData: ()=>SankeyData,
+  DefaultNode: (data:SankeyData)=>SankeyNode,
+  DefaultLink: (data:SankeyData)=>SankeyLink
 ): void => {
   const { nodes, links } = data
-  const the_data = default_sankey_data()
+  const the_data = DefaultSankeyData()
   Object.assign(the_data,data)
   Object.assign(data,the_data)
   Object.values(nodes).forEach(
     n => {
-      const nn = default_node(data);
+      const nn = DefaultNode(data);
       (nn as unknown as {x:undefined}).x = undefined;
       (nn as unknown as {y:undefined}).y = undefined
       Object.assign(nn, n)
@@ -159,7 +159,7 @@ export const complete_sankey_data = (
 
   Object.values(links).forEach(
     l => {
-      const ll = default_link(data)
+      const ll = DefaultLink(data)
       Object.assign(ll, l)
       Object.assign(l, ll)
     }
@@ -702,7 +702,7 @@ export const convert_nodes = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
-  const default_n=default_node(data)
+  const default_n=DefaultNode(data)
   if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {
     Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
@@ -832,7 +832,7 @@ export const convert_nodes = (
         n.local.label_visible=(n_convert.label_visible as boolean)
       }
       if (n_convert.node_visible !== undefined && n_convert.display !== undefined) {
-        // if (node_displayed(data,n,false) !== (n_convert.node_visible&&n_convert.display) ) {
+        // if (NodeDisplayed(data,n,false) !== (n_convert.node_visible&&n_convert.display) ) {
         //   n.local=(n.local!==undefined && n.local!==null)?n.local:{}
         //   n.local.local_aggregation = (n_convert.node_visible&&n_convert.display)
         // }
@@ -1130,11 +1130,11 @@ export const convert_links = (
       return
     }
     if (l && l.local && !('orientation' in l.local)) {
-      assign_link_local_attribute(l,'orientation','hh')
+      AssignLinkLocalAttribute(l,'orientation','hh')
       if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
-        assign_link_local_attribute(l,'orientation','vh')
+        AssignLinkLocalAttribute(l,'orientation','vh')
       } else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
-        assign_link_local_attribute(l,'orientation','hv')
+        AssignLinkLocalAttribute(l,'orientation','hv')
       }
     }
     if ('frozen' in l) {
@@ -1154,14 +1154,14 @@ export const convert_links = (
     }
 
     if (l_convert.type === 'short_link_arrow') {
-      assign_link_local_attribute(l,'curved',false)
-      assign_link_local_attribute(l,'arrow', true)
+      AssignLinkLocalAttribute(l,'curved',false)
+      AssignLinkLocalAttribute(l,'arrow', true)
     } else if (l_convert.type === 'bezier_link_arrow') {
-      assign_link_local_attribute(l,'curved',true)
-      assign_link_local_attribute(l,'arrow', true)
+      AssignLinkLocalAttribute(l,'curved',true)
+      AssignLinkLocalAttribute(l,'arrow', true)
     } else if (l_convert.type === 'bezier_link_classic') {
-      assign_link_local_attribute(l,'curved',true)
-      assign_link_local_attribute(l,'arrow', false)
+      AssignLinkLocalAttribute(l,'curved',true)
+      AssignLinkLocalAttribute(l,'arrow', false)
     }
     const attributes_to_remove = ['source', 'target', 'id', 'classif', 'title_length', 'raw_value', 'old_display_value', 'old_color', 'y_sd_label', 'x_sd_label', 'type']
     for (const attr in attributes_to_remove) {
@@ -1176,27 +1176,27 @@ export const convert_links = (
         const natural_conv = l_convert.conv[unit_index]
         l_convert.conv.splice(1, 0, natural_conv)
       }
-      assign_link_local_attribute(l,'curved',true)
-      assign_link_local_attribute(l,'curvature',1)
+      AssignLinkLocalAttribute(l,'curved',true)
+      AssignLinkLocalAttribute(l,'curvature',1)
       if (l_convert.text_same_color === true) {
-        assign_link_local_attribute(l,'text_color',return_value_link(data,l,'color'))
+        AssignLinkLocalAttribute(l,'text_color',ReturnValueLink(data,l,'color'))
 
       } else {
-        assign_link_local_attribute(l,'text_color','white')
+        AssignLinkLocalAttribute(l,'text_color','white')
       }
       delete l_convert.text_same_color
       if (target_node.x < source_node.x) {
-        assign_link_local_attribute(l,'recycling',true)
+        AssignLinkLocalAttribute(l,'recycling',true)
 
       }
     } else if (!('curvature' in l)) {
-      assign_link_local_attribute(l,'curvature',0.5)
+      AssignLinkLocalAttribute(l,'curvature',0.5)
 
     }
     if (data.version === '0.2') {
       if (target_node.x < source_node.x) {
         // l.recycling = true
-        assign_link_local_attribute(l,'recycling',true)
+        AssignLinkLocalAttribute(l,'recycling',true)
 
       }
     }
@@ -1212,24 +1212,24 @@ export const convert_links = (
       delete l.tooltip_text
     }
     if (l_convert.text_same_color === false) {
-      assign_link_local_attribute(l,'text_color','black')
+      AssignLinkLocalAttribute(l,'text_color','black')
     } else if (l_convert.text_same_color === true) {
-      assign_link_local_attribute(l,'text_color',return_value_link(data,l,'color'))
+      AssignLinkLocalAttribute(l,'text_color',ReturnValueLink(data,l,'color'))
     } else if (l_convert.text_same_color === 'same_color') {
-      assign_link_local_attribute(l,'text_color',return_value_link(data,l,'color'))
+      AssignLinkLocalAttribute(l,'text_color',ReturnValueLink(data,l,'color'))
     }
     delete l_convert.text_same_color
 
     convert_display(dataTagsArray,l.value as SankeyLinkValue,0)
-    if(!return_value_link(data,l,'opacity')){
-      assign_link_local_attribute(l,'opacity',0.85)
+    if(!ReturnValueLink(data,l,'opacity')){
+      AssignLinkLocalAttribute(l,'opacity',0.85)
 
     }
 
     if(l_convert.dashed===0){
-      assign_link_local_attribute(l,'dashed',false)
+      AssignLinkLocalAttribute(l,'dashed',false)
     }else if(l_convert.dashed==1){
-      assign_link_local_attribute(l,'dashed',true)
+      AssignLinkLocalAttribute(l,'dashed',true)
     }
 
     // Assign missing variable
@@ -1241,7 +1241,7 @@ export const convert_links = (
         delete l[(k as keyof SankeyLink)] 
       }
     })
-    if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === default_link_style().color) ) {
+    if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color) ) {
       delete l.local.color
     }
   })
@@ -1429,7 +1429,7 @@ export const convert_data = (
     data_to_convert.display_style.unit = true
   }
   // Assign default value to missing variable
-  const defaut_data=default_sankey_data()
+  const defaut_data=DefaultSankeyData()
   Object.entries(data.style_link).forEach(s=>{
     s[1]=Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])),s[1])
     data.style_link[s[0]]=s[1]
@@ -1473,10 +1473,10 @@ export const convert_data = (
   // Convert style of node and link
   // Previously tehy were object identical to SankeyNode or SankeyLink, now they are like local attribute  
   if(Object.keys(data_to_convert.style_link['default'])!== Object.keys(SankeyLinkStyleTypes) ){
-    data.style_link['default'] = default_link_style()
+    data.style_link['default'] = DefaultLinkStyle()
   }
   if(Object.keys(data_to_convert.style_node['default'])!== Object.keys(SankeyNodeStyleTypes) ){
-    data.style_node['default'] = default_node_style()
+    data.style_node['default'] = DefaultNodeStyle()
   }
 
   if(!data.accordeonToShow.includes('EN') && Object.keys(data.nodeTags).length>0){

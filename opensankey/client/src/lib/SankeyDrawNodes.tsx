@@ -3,9 +3,9 @@ import { SankeyLink, SankeyData, SankeyNode,SankeyLinkValue} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 
-import {node_color,return_value_node} from './SankeyUtils'
-import { scale,inv_scale,setNodeHeight,eventOnMouseUpAddNodesAndLink,
-  eventNodeContextMenu,nodeTransform,node_stroke_width,simpleGNodeClick } from './SankeyDrawFunction'
+import {NodeColor,ReturnValueNode} from './SankeyUtils'
+import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
+  EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
 
 declare const window: Window &
@@ -29,11 +29,11 @@ export const OpenSankeyDrawNodes = (
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
 
   alt_key_pressed:boolean,
-  nodeTooltipsContent: (data: SankeyData, d: SankeyNode,
-    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  link_text:(data: SankeyData, d: SankeyLink,
-    getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  getLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  NodeTooltipsContent: (data: SankeyData, d: SankeyNode,
+    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  LinkText:(data: SankeyData, d: SankeyLink,
+    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   set_displayed_input_link_value:(s:string)=>void,
   accept_simple_click:{current:boolean},
   set_contextualised_node:(n:SankeyNode)=>void,
@@ -41,7 +41,7 @@ export const OpenSankeyDrawNodes = (
 
 ) => {
   // const display_nodes = Object.keys(data.nodes)
-  //   .filter((key) => node_displayed(data,data.nodes[key]))
+  //   .filter((key) => NodeDisplayed(data,data.nodes[key]))
   //   .reduce((obj, key) => {
   //     return Object.assign(obj, {
   //       [key]: data.nodes[key]
@@ -61,7 +61,7 @@ export const OpenSankeyDrawNodes = (
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(nodeTooltipsContent(data, d as SankeyNode,getLinkValue))
+        .html(NodeTooltipsContent(data, d as SankeyNode,GetLinkValue))
     }
   }
     
@@ -112,7 +112,7 @@ export const OpenSankeyDrawNodes = (
         return display
       })
       .style('font-family',(d) => {
-        return return_value_node(data,d,'font_family') as string
+        return ReturnValueNode(data,d,'font_family') as string
       })
 
     const ggg_nodes = gg_nodes.append('g')
@@ -144,7 +144,7 @@ export const OpenSankeyDrawNodes = (
       }
 
       ggg_nodes
-        .on('click', (event, d) => simpleGNodeClick(event,d,data,set_data,nodes_accordion_ref,multi_selected_nodes,mode_selection,accordion_ref,button_ref,accept_simple_click))
+        .on('click', (event, d) => SimpleGNodeClick(event,d,data,set_data,nodes_accordion_ref,multi_selected_nodes,mode_selection,accordion_ref,button_ref,accept_simple_click))
         .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
 
       if (mode_selection.current == 'ln') {
@@ -153,15 +153,15 @@ export const OpenSankeyDrawNodes = (
             set_first_selected_node(d)
           }
         })
-          .on('mouseup',  (event, d) =>eventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value))
+          .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value))
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s' && window.SankeyToolsStatic!==true){
-        ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,link_text,getLinkValue,scale,inv_scale))
+        ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,LinkText,GetLinkValue,scale,inv_scale))
       }
     }
-    // ggg_nodes.on('contextmenu', (ev, n) => eventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-    ggg_nodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return eventNodeContextMenu(ev,n,set_contextualised_node,pointer_pos,multi_selected_nodes)}})
+    // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
+    ggg_nodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return EventNodeContextMenu(ev,n,set_contextualised_node,pointer_pos,multi_selected_nodes)}})
     // if node have a unique groupTag then it control the shape of the node
     if ( data.nodeTags['Type de noeud'] && !data.override_type_node_shape ) {
       Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
@@ -179,21 +179,21 @@ export const OpenSankeyDrawNodes = (
 
     } else {
       ggg_nodes
-        .filter(d => return_value_node(data,d,'shape') === 'rect')
+        .filter(d => ReturnValueNode(data,d,'shape') === 'rect')
         .append('rect')
         .classed('node', true)
         .classed('node_shape', true)
    
 
       ggg_nodes
-        .filter(d => return_value_node(data,d,'shape') === 'ellipse')
+        .filter(d => ReturnValueNode(data,d,'shape') === 'ellipse')
         .append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
-        .attr('cx', d =>return_value_node(data,d,'node_width') as number / 2)
-        .attr('cy', d =>return_value_node(data,d,'node_height') as number / 2)
-        .attr('rx', d =>return_value_node(data,d,'node_width') as number / 2)
-        .attr('ry', d =>return_value_node(data,d,'node_height') as number / 2)
+        .attr('cx', d =>ReturnValueNode(data,d,'node_width') as number / 2)
+        .attr('cy', d =>ReturnValueNode(data,d,'node_height') as number / 2)
+        .attr('rx', d =>ReturnValueNode(data,d,'node_width') as number / 2)
+        .attr('ry', d =>ReturnValueNode(data,d,'node_height') as number / 2)
             
             
     }
@@ -203,12 +203,12 @@ export const OpenSankeyDrawNodes = (
     // Apply node's parameters to each node
     d3.selectAll(' .opensankey .node')
       .attr('id', d => 'shape_'+(d as SankeyNode).idNode)
-      .attr('fill-opacity', d => return_value_node(data,(d as SankeyNode),'shape_visible') ? '1' : '0')
-      .attr('fill', d => node_color(d as SankeyNode,data) as string)
+      .attr('fill-opacity', d => ReturnValueNode(data,(d as SankeyNode),'shape_visible') ? '1' : '0')
+      .attr('fill', d => NodeColor(d as SankeyNode,data) as string)
       .style('stroke', 'black')
       .style('stroke-width', d => {
         const dd = (d as SankeyNode)
-        return node_stroke_width(dd,multi_selected_nodes)
+        return NodeStrokeWidth(dd,multi_selected_nodes)
       }
       )
 
@@ -228,7 +228,7 @@ export const OpenSankeyDrawNodes = (
 
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
-    Object.values(display_nodes).map(n => setNodeHeight(n, display_nodes,data,scale,inv_scale,getLinkValue))
+    Object.values(display_nodes).map(n => SetNodeHeight(n, display_nodes,data,scale,inv_scale,GetLinkValue))
         
   }
   
