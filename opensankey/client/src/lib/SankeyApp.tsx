@@ -329,10 +329,17 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const sankey_menus = OpenSankeyMenus(
     t,setShowPreference,Reinitialization,SankeyUtils.DefaultSankeyData,set_show_apply_layout,set_show_excel_dialog,
     set_show_save_json,showStyleEdition,showStyleEditionLink,
-    set_show_modal_welcome,set_never_see_again,data,set_data,set_show_modalTemplate,set_show_modale_support,[],[],[],set_tags_selected,convert_data
+    set_show_modal_welcome,
+    set_never_see_again,
+    data,set_data,
+    set_show_modalTemplate,
+    set_show_modale_support,
+    [],[],[],
+    set_tags_selected,
+    convert_data,
+    set_show_modale_tuto
   )
 
-  sankey_menus['formation']=<>{()=>set_show_modale_tuto(true)}</>
 
 
   // 2.4 Modal linked to menu item
@@ -377,7 +384,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const {filter}=data.display_style
   const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,GetSankeyMinWidthAndHeight,setDiagram,set_show_modalTemplate,set_never_see_again,convert_data,maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux)
   Object.keys(toolbar).forEach(k=>{
-    sankey_menus[k]=toolbar[k]
+    sankey_menus[k]=[toolbar[k]]
   })
 
   //-3. Sankey Draws
