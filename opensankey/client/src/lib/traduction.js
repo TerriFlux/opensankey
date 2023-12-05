@@ -156,6 +156,8 @@ export const open_resources = {
         new:'New',
         pref_title_sub_menu:'Choose sub-menu visible in configuration menu',
         overcharge_style_value:'Value of the variable override the value from the style',
+        group:'Group',
+        color:'Color',
         Transformation : {
           amp_short:'Layout',
           amp:'Change the layout',
@@ -752,6 +754,8 @@ export const open_resources = {
         lang:'Langue',
         pref_title_sub_menu:'Choix des sous-menus visibles dans l\'interface',
         overcharge_style_value:'La valeur de la variable surcharge celle du style',
+        group:'Groupe',
+        color:'Couleur',
         oher_file:'Autre fichier',
         Transformation : {
           amp_short:'M.E.P',
