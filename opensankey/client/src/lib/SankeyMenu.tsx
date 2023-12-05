@@ -302,7 +302,7 @@ export const AddAllDropDownFlux = (
         </FormGroup>)
     }
   })
-  return (<><tr><th>{t('Banner.ndd_lst')}</th><th>{t('Banner.ndd_chk')}</th></tr>{allDD.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}</>)
+  return (<>{allDD.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}</>)
 }
 
 // Logo for sub-nav 'aide'
@@ -481,7 +481,14 @@ export const OpenSankeyMenus = (
     return allDD
   }
 
-
+  const legend_filter=<FormGroup as={Row}>
+    <Col xs={9}>
+      {t('Menu.group')}
+    </Col>
+    <Col xs={3}>
+      {t('Menu.color')}
+    </Col>
+  </FormGroup>
 
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
@@ -489,6 +496,7 @@ export const OpenSankeyMenus = (
   <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: menu_config_width+'px' }}>
+      {legend_filter}
       <>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
         {addAllDropDownNode(t,data,set_data,false)}</>
       ) : (<>
@@ -502,15 +510,17 @@ export const OpenSankeyMenus = (
   <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: menu_config_width+'px' }}>
+      {legend_filter}
       {AddAllDropDownFlux(t, data.fluxTags, data, set_data)}
     </Popover.Body>
   </Popover>
 
   //Popover element to handle the display of data tags
   const filter_data=
-  <Popover id='tooltip-data-color-filter' style={{maxWidth:'100%'}}>
+  <Popover id='tooltip-data-color-filter' style={{minWidth:'450px'}}>
     <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
     <Popover.Body>
+      {legend_filter}
       <FormGroup as={Row}>
         <Col xs={10}>
           {addAllDropDownLinks()}
