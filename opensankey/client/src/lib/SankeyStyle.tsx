@@ -34,14 +34,14 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
 
   return(
     <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'}  >
-      <Modal.Header>
+      <Modal.Header closeButton>
         <Modal.Title>{t('Menu.esn')}</Modal.Title>
       </Modal.Header>
       <Modal.Body className='sankey-menu'>
         <Form.Group>
           <InputGroup>
-            <Col>
-              <Button style={{width:'20%'}} onClick={() => {
+            <Button
+              onClick={() => {
                 const new_style = DefaultNodeStyle()
                 new_style.name = 'New Style'
                 const new_id = 'style_node_' + String(new Date().getTime())
@@ -49,39 +49,32 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
                 data.style_node[new_id] = new_style
                 set_data({ ...data })
               }}><FaPlus /></Button>
-            </Col>
 
             {
             // Drodown to select the style to modify
             // The dropdown is not visible when sankey+ isn't activated
             }
-            <Col>
-              <Dropdown>
-                <Dropdown.Toggle style={{width:'50%'}} variant="success" id="dropdown-basic">{(selected_style_node !== '') ? CutName(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
-                <Dropdown.Menu>
-                  {Object.keys(data.style_node).map((d,i) => {
-                    return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
+            <Dropdown>
+              <Dropdown.Toggle style={{width:'50%'}} variant="success" id="dropdown-basic">{(selected_style_node !== '') ? CutName(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
+              <Dropdown.Menu>
+                {Object.keys(data.style_node).map((d,i) => {
+                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
 
-                  })}
-                </Dropdown.Menu>
-              </Dropdown>
-            </Col>
+                })}
+              </Dropdown.Menu>
+            </Dropdown>
 
-            <Col>
-              <Button
-                style={{width:'20%'}}
-                variant='danger'
-                disabled={selected_style_node === 'default'}
-                onClick={
-                  () => {
-                    Object.values(data.nodes).filter(n=>n.style==selected_style_node).forEach(n=>n.style='default')
-                    delete data.style_node[selected_style_node]
-                    set_selected_style_node((Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : '')
-                  }
+            <Button
+              variant='danger'
+              disabled={selected_style_node === 'default'}
+              onClick={
+                () => {
+                  Object.values(data.nodes).filter(n=>n.style==selected_style_node).forEach(n=>n.style='default')
+                  delete data.style_node[selected_style_node]
+                  set_selected_style_node((Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : '')
                 }
-              ><FaMinus /></Button>
-
-            </Col>
+              }
+            ><FaMinus /></Button>
           </InputGroup>
 
           <InputGroup>
@@ -101,9 +94,6 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
         </Form.Group>
         {SankeyMenuConfigurationNodesAttributes(t,tab_node_style_attribute,true)}
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={closeStyleEdition}>Close</Button>
-      </Modal.Footer>
     </Modal>
   )
 }
@@ -143,11 +133,9 @@ export const SankeyPlusModalStyleLink = (
         <Modal.Title>{t('Menu.esf')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-
-        <Row >
-
-          <Col xs={1}>
-            <Button size="sm" onClick={() => {
+        <Form.Group>
+          <InputGroup >
+            <Button  onClick={() => {
               const new_style = DefaultLinkStyle()
               new_style.name = 'New Style'
               const new_id = 'style_link_' + String(new Date().getTime())
@@ -156,23 +144,15 @@ export const SankeyPlusModalStyleLink = (
               set_data({ ...data })
 
             }}><FaPlus /></Button>
-          </Col>
-
-          <Col xs={5}>
             <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">{(selected_style_link !== '') ? CutName(data.style_link[selected_style_link].name, 30) : 'Choix Style'}</Dropdown.Toggle>
+              <Dropdown.Toggle style={{width:'50%'}}  variant="success" id="dropdown-basic">{(selected_style_link !== '') ? CutName(data.style_link[selected_style_link].name, 30) : 'Choix Style'}</Dropdown.Toggle>
               <Dropdown.Menu>
                 {Object.keys(data.style_link).map((d,i) => {
                   return (<Dropdown.Item key={i} onClick={() => { set_selected_style_link(d) }}>{data.style_link[d].name}</Dropdown.Item>)
                 })}
               </Dropdown.Menu>
             </Dropdown>
-          </Col>
-
-
-          <Col xs={1}>
             <Button
-              size="sm"
               variant='danger'
               disabled={selected_style_link === 'default'}
               onClick={
@@ -182,14 +162,9 @@ export const SankeyPlusModalStyleLink = (
                 }
               }
             ><FaMinus /></Button>
-
-          </Col>
-
-          <Col xs={5}>
-            <Button variant="warning" onClick={applyStyleToLinks}>{t('Flux.asf')}</Button>
-          </Col>
-        </Row>
-
+            <Button style={{width:'35%'}}  variant="warning" onClick={applyStyleToLinks}>{t('Flux.asf')}</Button>
+          </InputGroup>
+        </Form.Group>
         <Form.Group as={Row} >
           <Col xs={2} >
             <FormLabel >{t('Menu.ns')}</FormLabel>
@@ -219,9 +194,6 @@ export const SankeyPlusModalStyleLink = (
         </Row>
 
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={closeStyleEditionLink}>Close</Button>
-      </Modal.Footer>
     </Modal>
   )
 
