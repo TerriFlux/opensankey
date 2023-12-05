@@ -2376,7 +2376,6 @@ export const OpenSankeySaveButton=(t:TFunction)=>{
     <OverlayTrigger
       key={'buttonCheckpoint'}
       placement={'left'}
-      
       delay={500}
       overlay={(<Tooltip id={'buttonCheckpoint'}>{t('Menu.tooltips.checkpoint')} </Tooltip>)}
     >
