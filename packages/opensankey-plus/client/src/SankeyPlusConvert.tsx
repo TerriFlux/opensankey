@@ -168,7 +168,7 @@ export const OpenSankeyPlusDiagramSelector = (
         onClick={
           () => {
             setDiagramType('File')
-          }}>Fichier</Button>
+          }}>{t('Menu.other_file')}</Button>
       <Button 
         className='btn_menu_config'
         style={{width:'10%'}}
@@ -176,7 +176,7 @@ export const OpenSankeyPlusDiagramSelector = (
         onClick={
           () => {
             setDiagramType('View')
-          }}>Vues</Button>
+          }}>{t('Menu.view_actual_file')}</Button>
       
       {diagramType==='File' ? <>
         <Form.Control
