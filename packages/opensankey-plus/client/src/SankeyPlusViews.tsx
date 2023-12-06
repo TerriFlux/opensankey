@@ -958,7 +958,7 @@ export const SankeyPlusBannerView=(
     delay={500}
     overlay={(!connected)?(
       <Tooltip id={'buttonCloneMasterAttrViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonCloneMasterAttrView'}>{t('Menu.tooltips.buttonCloneMasterAttrView')} </Tooltip>}
+      <Tooltip id={'buttonCloneMasterAttrView'}>{t('view.tooltips.buttonCloneMasterAttrView')} </Tooltip>}
   >
     <span>
       <Button
@@ -1088,7 +1088,14 @@ export const SankeyPlusBannerView=(
   </OverlayTrigger>
 
 
-  const button_delete_actual_view=<span><Button
+  const button_delete_actual_view=<OverlayTrigger
+  key={'button_delete_actual_view'}
+  placement={'bottom'}
+  delay={500}
+  overlay={(!connected)?(
+    <Tooltip id={'disable_button_delete_actual_view'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+    <Tooltip id={'button_delete_actual_view'}>{t('view.tooltips.button_delete_actual_view')} </Tooltip>}><span>
+      <Button
     variant='light'
     disabled={!connected}
     onClick={
@@ -1130,6 +1137,7 @@ export const SankeyPlusBannerView=(
       </Col>
       :<></>}
     <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.delete')}</Col></Button></span>
+    </OverlayTrigger>
 
   // -- NOT REALLY USEFULL ANYMORE WITH THE IMPORT LAYOUT 
   // const button_import_view=<OverlayTrigger
