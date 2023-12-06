@@ -226,7 +226,18 @@ export const open_resources = {
           BgC:'Change the background color of the interactive graphic space',
           checkpoint:'Local data saving on the browser (cache memory)',
           fontSize:'Change the size of the font in the legend',
-          node_label_sep:'String of text that will be used to hide some part of a node label, exemple: separator is " - " and node name is "node1 - subinfo" the node label displayed in the drawing area will be "node1"'
+          node_label_sep:'String of text that will be used to hide some part of a node label, exemple: separator is " - " and node name is "node1 - subinfo" the node label displayed in the drawing area will be "node1"',
+          new:'Create a new sankey diagram',
+          ouvrir:'Open a file',
+          enregistrer:'Save as',
+          preference:'Set parameters of the application',
+          amp:'Modify the layout of the diagram',
+          style:'Define style of nodes or links',
+          DisplayWelcome:'Display welcome message',          
+          doc:'Open the documentation',
+          support:'Contact the support',
+          tuto:'Explore tutorials'
+
         },
       },
       MEP:{
@@ -824,6 +835,18 @@ export const open_resources = {
           checkpoint:'Sauvegarde locale sur le navigateur (mémoire cache)',
           fontSize:'Modifie la taille de la police pour la légende',
           node_label_sep:'Chaine de caractère qui permettra de masquer une partie d\'un label de noeud, exemple : le séparateur est " - " et le nom du noeud est " noeud1 - sousinfo" alors le label du noeud affiché dans la zone de dessin sera "noeud1"',
+          new:'Créer un nouveau diagramme de Sankey',
+          ouvrir:'Ouvrir un fichier',
+          enregistrer:'Enregistrer sous',
+          preference:'Choisir les paramètres de l\'application',
+          amp:'Modifier la mise en page du diagramme',
+          style:'Définir des styles par groupe de noeuds ou de flux',
+          DisplayWelcome:'Afficher le message de bienvenue',          
+          doc:'Ouvrir la documentation',
+          support:'Contacter le support',
+          tuto:'Explorer les tutoriels',
+
+
         },
       },
       MEP:{
