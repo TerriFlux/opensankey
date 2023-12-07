@@ -729,9 +729,9 @@ export const OpenSankeyMenus = (
         rootClose
         overlay={<Tooltip id={'tooltip-edition_layout'}>{t('Menu.tooltips.amp')} </Tooltip>}>
         <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}>
-        <><Col><FontAwesomeIcon icon={faFileInvoice} /></Col>
-          <Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></>
-      </Button>
+          <><Col><FontAwesomeIcon icon={faFileInvoice} /></Col>
+            <Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></>
+        </Button>
       </OverlayTrigger>,
 
       <OverlayTrigger
@@ -750,47 +750,47 @@ export const OpenSankeyMenus = (
     ]
         
     ui['aide']=[
-          <OverlayTrigger
+      <OverlayTrigger
         key={'help_welcome'}
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-help_welcome'}>{t('Menu.tooltips.DisplayWelcome')} </Tooltip>}>
-    <Button variant='light' onClick={() =>{
-      set_show_welcome(true)
-      set_never_see_again(false)
-      localStorage.setItem('dontSeeAggainWelcome','0')
-    }}>
-      <Col>{logo_home}</Col>
-      <Col className='textIcon'>{t('DisplayWelcome')}</Col>
-    </Button></OverlayTrigger>,
+        <Button variant='light' onClick={() =>{
+          set_show_welcome(true)
+          set_never_see_again(false)
+          localStorage.setItem('dontSeeAggainWelcome','0')
+        }}>
+          <Col>{logo_home}</Col>
+          <Col className='textIcon'>{t('DisplayWelcome')}</Col>
+        </Button></OverlayTrigger>,
           
       <OverlayTrigger
         key={'tuto'}
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-tuto'}>{t('Menu.tooltips.tuto')} </Tooltip>}>
-    <Button variant='light' onClick={() => set_show_modale_tuto(true)} ><Col>{logo_tuto}</Col>
-      <Col className='textIcon'>{t('Menu.formation')}</Col>
-    </Button></OverlayTrigger>,
+        <Button variant='light' onClick={() => set_show_modale_tuto(true)} ><Col>{logo_tuto}</Col>
+          <Col className='textIcon'>{t('Menu.formation')}</Col>
+        </Button></OverlayTrigger>,
 
-    <OverlayTrigger
+      <OverlayTrigger
         key={'doc'}
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-doc'}>{t('Menu.tooltips.doc')} </Tooltip>}>
-    <Button variant='light' onClick={() => GoToUserDoc()} ><Col>{logo_doc}</Col>
-      <Col className='textIcon'>{t('Menu.doc')}</Col>
-    </Button></OverlayTrigger>,
+        <Button variant='light' onClick={() => GoToUserDoc()} ><Col>{logo_doc}</Col>
+          <Col className='textIcon'>{t('Menu.doc')}</Col>
+        </Button></OverlayTrigger>,
 
-    <OverlayTrigger
+      <OverlayTrigger
         key={'support'}
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-support'}>{t('Menu.tooltips.support')} </Tooltip>}>
-    <Button variant='light' onClick={() => set_show_modale_support(true)}><Col>{logo_contact}</Col>
-      <Col className='textIcon'>{t('Menu.support')}</Col>
-    </Button>
-    </OverlayTrigger>
+        <Button variant='light' onClick={() => set_show_modale_support(true)}><Col>{logo_contact}</Col>
+          <Col className='textIcon'>{t('Menu.support')}</Col>
+        </Button>
+      </OverlayTrigger>
     ]
 
   }
@@ -800,7 +800,7 @@ export const OpenSankeyMenus = (
       <OverlayTrigger
         key={'tooltip-filter'}
         placement={'bottom'}
-          overlay={<Tooltip id={'tooltip-filter'}>{t('Banner.hlp_1_txt_9')} </Tooltip>}>
+        overlay={<Tooltip id={'tooltip-filter'}>{t('Banner.hlp_1_txt_9')} </Tooltip>}>
 
         {item_dropdown_filter}
       </OverlayTrigger>]
