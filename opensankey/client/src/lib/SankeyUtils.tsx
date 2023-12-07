@@ -206,7 +206,7 @@ export const ComputeTotalOffsets = (
   const top_flux: string[] = []
   const bottom_flux: string[] = []
 
-  node.outputLinksId.forEach(
+  node.outputLinksId.filter(lid=>LinkVisible(data.links[lid],data,GetLinkValue)).forEach(
     (idLink) => {
       const link = links[idLink]
       if (link === undefined) {
@@ -254,7 +254,7 @@ export const ComputeTotalOffsets = (
     }
   )
 
-  node.inputLinksId.forEach(
+  node.inputLinksId.filter(lid=>LinkVisible(data.links[lid],data,GetLinkValue)).forEach(
     (idLink) => {
       const link = links[idLink]
       if (link === undefined) {
