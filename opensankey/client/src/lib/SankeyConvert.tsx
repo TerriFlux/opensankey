@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal,SankeyNodeStyle, SankeyNodeAttrLocal, SankeyLinkStyle} from './types'
 import colormap from 'colormap'
-import { DefaultSankeyData, DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle} from './SankeyUtils'
+import { DefaultSankeyData, DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
 
 
 interface ConvertSankeyNode {
@@ -472,6 +472,14 @@ export const convert_tags = (
     if ('échange' in data.nodeTags['Type de noeud'].tags) {
       data.nodeTags['Type de noeud'].tags['echange'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud'].tags['échange']))
       delete data.nodeTags['Type de noeud'].tags['échange']
+    }
+    // If data has NodeTags 'Type de noeud' but not the style associated to it
+    // then add it
+    if(!Object.keys(data.style_node).includes('NodeProductStyle')){
+      data.style_node['NodeProductStyle']=DefaultNodeProductStyle()
+    }
+    if(!Object.keys(data.style_node).includes('NodeSectorStyle')){
+      data.style_node['NodeSectorStyle']=DefaultNodeSectorStyle()
     }
   }
 
