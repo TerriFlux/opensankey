@@ -386,11 +386,11 @@ export const OpenSankeyDrawLinks = (
     d3.selectAll(' .opensankey .ggg_nodes')
       .filter((n) => (n as SankeyNode).inputLinksId.length>0?node_arrow_visible(data,(n as SankeyNode)):false)
       .each( (n) => {
-        DrawArrows(n as SankeyNode,data,display_nodes,scale,inv_scale,GetLinkValue,display_style)
+        DrawArrows(n as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
       })
 
     paths.attr('d', d => {
-      SetNodesHeight(data,display_nodes, d, GetLinkValue)
+      SetNodesHeight(data,display_nodes,display_links, d, GetLinkValue)
       return drawCurveFunction.curve(data,set_data,
         display_nodes, display_links, display_style,
         data.nodeTags, d, error_msg,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
@@ -697,7 +697,7 @@ export const OpenSankeyDrawLinks = (
           }
         }
       }
-      DrawArrows(node as SankeyNode,data,display_nodes,scale,inv_scale,GetLinkValue,display_style)
+      DrawArrows(node as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
     }
   }
 
