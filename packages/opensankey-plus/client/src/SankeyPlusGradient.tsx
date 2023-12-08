@@ -495,13 +495,14 @@ export const SankeyPlusDrawArrows = (
   n: SankeyPlusNode,
   data:SankeyPlusData,
   display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
   display_style: {filter: number},
 
 ) => {
-  OpensankeyDrawFunction.DrawArrows(n,data,display_nodes,scale,inv_scale,GetLinkValue,display_style)
+  OpensankeyDrawFunction.DrawArrows(n,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
   for (let i = 0; i < n.inputLinksId.length; i++) {
     const l_arrow=OpensankeyUtils.ReturnValueLink(data,data.links[n.inputLinksId[i]],'arrow')
     const l_grad=OpensankeyUtils.ReturnValueLink(data,data.links[n.inputLinksId[i]],'gradient')
