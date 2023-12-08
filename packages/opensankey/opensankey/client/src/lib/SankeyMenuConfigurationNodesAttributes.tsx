@@ -79,7 +79,6 @@ export const OpenSankeyConfigurationNodesAttributes = (
     set_data({ ...data })
   }
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
-  const has_NodeType_Tag= (!data.override_type_node_shape && !menu_for_style && multi_selected_nodes.current.length>0)?(Object.keys(multi_selected_nodes.current[0].tags).includes('Type de noeud') && multi_selected_nodes.current[0].tags['Type de noeud'].length>0 ):false
   const content_appearence=<Form.Group>
     {/* Visibilite du noeud */}
     <OverlayTrigger
@@ -175,13 +174,13 @@ export const OpenSankeyConfigurationNodesAttributes = (
       key={'noeud.apparence.tooltips.4'}
       placement={'top'}
       delay={500}
-      overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{has_NodeType_Tag?t('Noeud.apparence.tooltips.FormeDisabled'):t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
+      overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
 
       <InputGroup>
         <InputGroup.Text
           style={{width:'40%',
-            color:(!menu_for_style && has_NodeType_Tag)?'#666666':'',
-            backgroundColor:(!menu_for_style && has_NodeType_Tag)?'#cccccc':'',
+            color:(!menu_for_style )?'#666666':'',
+            backgroundColor:(!menu_for_style)?'#cccccc':'',
           }}
         >
           {t('Noeud.apparence.Forme')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape',menu_for_style)?'*':'')}
@@ -190,8 +189,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         <Button className='btn_menu_config'
           style={{width:'30%'}}
           value="ellipse"
-          variant={list_value['shape'][0]==='ellipse'&&!has_NodeType_Tag?'primary':'outline-primary'}
-          disabled={has_NodeType_Tag}
+          variant={list_value['shape'][0]==='ellipse'?'primary':'outline-primary'}
           onClick={() => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','ellipse',menu_for_style))
             set_data({ ...data })
@@ -199,8 +197,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
 
         <Button className='btn_menu_config'
           style={{width:'30%'}}
-          variant={list_value['shape'][0]==='rect'&&!has_NodeType_Tag?'primary':'outline-primary'}
-          disabled={has_NodeType_Tag}
+          variant={list_value['shape'][0]==='rect'?'primary':'outline-primary'}
           onClick={() => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','rect',menu_for_style))
             set_data({ ...data })

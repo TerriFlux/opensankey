@@ -148,28 +148,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
         }}></Form.Control>
       </InputGroup></OverlayTrigger>,
 
-    // Button to allow the user to choose the shape of the node even if it has the node tags 'Type de noeud'
-    'override_node_shape':<OverlayTrigger
-      key={'noeud.apparence.tooltips.ons'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.override_type_node_shape')} </Tooltip>}>
-
-      <InputGroup>
-
-
-        <Checkbox 
-          sx={SmoothClasses({})}
-          maxW={'30%'}
-          isChecked={data.override_type_node_shape}
-          onChange={() => {
-            data.override_type_node_shape=!data.override_type_node_shape
-            set_data({ ...data })
-          }}>
-          {t('Noeud.apparence.override_type_node_shape')}
-        </Checkbox>
-      </InputGroup>
-    </OverlayTrigger>
+    
 
 
   }

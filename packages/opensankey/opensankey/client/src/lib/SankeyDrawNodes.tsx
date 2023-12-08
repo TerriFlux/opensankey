@@ -162,41 +162,25 @@ export const OpenSankeyDrawNodes = (
     }
     // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
     ggg_nodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return EventNodeContextMenu(ev,n,set_contextualised_node,pointer_pos,multi_selected_nodes)}})
-    // if node have a unique groupTag then it control the shape of the node
-    if ( data.nodeTags['Type de noeud'] && !data.override_type_node_shape ) {
-      Object.entries(data.nodeTags['Type de noeud'].tags).forEach( ([key,tag])=> {
-        ggg_nodes
-          .filter(d =>d.tags['Type de noeud'] && d.tags['Type de noeud'].includes(key))
-          .append(tag.shape as string)
-          .classed('node', true)
-          .classed('node_shape', true)
-      })
-      ggg_nodes
-        .filter(d =>d.tags['Type de noeud'] === undefined || d.tags['Type de noeud'].length === 0)
-        .append('rect')
-        .classed('node', true)
-        .classed('node_shape', true)
-
-    } else {
-      ggg_nodes
-        .filter(d => ReturnValueNode(data,d,'shape') === 'rect')
-        .append('rect')
-        .classed('node', true)
-        .classed('node_shape', true)
+    
+    ggg_nodes
+      .filter(d => ReturnValueNode(data,d,'shape') === 'rect')
+      .append('rect')
+      .classed('node', true)
+      .classed('node_shape', true)
    
 
-      ggg_nodes
-        .filter(d => ReturnValueNode(data,d,'shape') === 'ellipse')
-        .append('ellipse')
-        .classed('node', true)
-        .classed('node_shape', true)
-        .attr('cx', d =>ReturnValueNode(data,d,'node_width') as number / 2)
-        .attr('cy', d =>ReturnValueNode(data,d,'node_height') as number / 2)
-        .attr('rx', d =>ReturnValueNode(data,d,'node_width') as number / 2)
-        .attr('ry', d =>ReturnValueNode(data,d,'node_height') as number / 2)
+    ggg_nodes
+      .filter(d => ReturnValueNode(data,d,'shape') === 'ellipse')
+      .append('ellipse')
+      .classed('node', true)
+      .classed('node_shape', true)
+      .attr('cx', d =>ReturnValueNode(data,d,'node_width') as number / 2)
+      .attr('cy', d =>ReturnValueNode(data,d,'node_height') as number / 2)
+      .attr('rx', d =>ReturnValueNode(data,d,'node_width') as number / 2)
+      .attr('ry', d =>ReturnValueNode(data,d,'node_height') as number / 2)
             
-            
-    }
+          
 
 
         
