@@ -212,7 +212,7 @@ export const OpenSankeyDrawNodes = (
 
     //---------VERSION AVEC STYLE PROPRE A CHAQUE NOEUD---------------
 
-    Object.values(display_nodes).map(n => SetNodeHeight(n, display_nodes,data,scale,inv_scale,GetLinkValue))
+    Object.values(display_nodes).map(n => SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue))
         
   }
   

@@ -187,7 +187,8 @@ export const ComputeTotalOffsets = (
   inv_scale:(t:number)=>number,
   node: SankeyNode,
   data: SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
+  display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [node_id: string]: SankeyLink },
   TestLinkValue: (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
     GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
   ) => number,
@@ -206,7 +207,7 @@ export const ComputeTotalOffsets = (
   const top_flux: string[] = []
   const bottom_flux: string[] = []
 
-  node.outputLinksId.filter(lid=>LinkVisible(data.links[lid],data,GetLinkValue)).forEach(
+  node.outputLinksId.filter(lid=>display_links[lid]).forEach(
     (idLink) => {
       const link = links[idLink]
       if (link === undefined) {
@@ -254,7 +255,7 @@ export const ComputeTotalOffsets = (
     }
   )
 
-  node.inputLinksId.filter(lid=>LinkVisible(data.links[lid],data,GetLinkValue)).forEach(
+  node.inputLinksId.filter(lid=>display_links[lid]).forEach(
     (idLink) => {
       const link = links[idLink]
       if (link === undefined) {
@@ -1122,12 +1123,14 @@ export const DownloadExamples = (
  * @param {SankeyData} server_data
  * @returns {*}
  */
-export const ProcessExample = (server_data: SankeyData,updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void,
+export const ProcessExample = (
+  data: SankeyData,
+  updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void,
   convert_data:(d:SankeyData)=>void,
 
 ) => {
-  const data = DefaultSankeyData()
-  Object.assign(data, server_data)
+  // const data = DefaultSankeyData()
+  // Object.assign(data, server_data)
   complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
   convert_data(data)
   if ( (data as SankeyData & layout_type).layout === undefined) {
@@ -1832,6 +1835,7 @@ export const Desaggregate=(
   n:SankeyNode,
   data:SankeyData,
   display_nodes: {[id:string]:SankeyNode},
+  display_links: {[id:string]:SankeyLink},
   set_agregation_node:(s:string)=>void,
   set_is_agregation:(b:boolean)=>void,
   set_show_agregation:(b:boolean)=>void
@@ -1862,7 +1866,7 @@ export const Desaggregate=(
     set_is_agregation(false)
     set_show_agregation(true)
   } else {
-    desagregation(data, display_nodes, n.idNode, dim_names[0])
+    desagregation(data, display_nodes,display_links, n.idNode, dim_names[0])
   }
 
 }
@@ -1989,8 +1993,9 @@ export const GetRandomInt=(max:number) =>{
   return Math.floor(Math.random() * max)
 }
 
-export const RetrieveExcelResults=(text:string,
-  data:SankeyData,
+export const RetrieveExcelResults=(
+  text:string,
+  default_data:SankeyData,
   set_data:(d:SankeyData)=>void,
   updateLayout:(data: SankeyData, new_layout: SankeyData, mode: string[], synchronize?: boolean) => void,
   callback: (server_data: SankeyData) => number,
@@ -1999,17 +2004,18 @@ export const RetrieveExcelResults=(text:string,
 )=>{
   
   const server_data = JSON.parse(text)
-  let default_nstyle = data.style_node['default']
-  let default_lstyle = data.style_link['default']
-  server_data.h_space = data.h_space
-  server_data.v_space = data.v_space
-  if ((data as SankeyData & { layout?: SankeyData }).layout ) {
-    server_data.layout = (data as SankeyData & { layout?: SankeyData }).layout
+  let default_nstyle = default_data.style_node['default']
+  let default_lstyle = default_data.style_link['default']
+  server_data.h_space = default_data.h_space
+  server_data.v_space = default_data.v_space
+  if ((default_data as SankeyData & { layout?: SankeyData }).layout ) {
+    server_data.layout = (default_data as SankeyData & { layout?: SankeyData }).layout
   } else {
-    default_nstyle = JSON.parse(JSON.stringify(data.style_node['default']))
-    default_lstyle = JSON.parse(JSON.stringify(data.style_link['default']))
+    default_nstyle = JSON.parse(JSON.stringify(default_data.style_node['default']))
+    default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
   }
-  const new_data=Object.assign(DefaultSankeyData(),ProcessExample(server_data,updateLayout,convert_data)) as SankeyData
+  const new_data=Object.assign(default_data,server_data) as SankeyData
+  ProcessExample(new_data,updateLayout,convert_data)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   callback(new_data)
@@ -2036,7 +2042,7 @@ export const RetrieveExcelResults=(text:string,
   }
   set_data({ ...new_data })
   setTimeout(()=>{
-    AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)
+    AdjustSankeyZone(new_data,GetSankeyMinWidthAndHeight)
   },100)
 }
 

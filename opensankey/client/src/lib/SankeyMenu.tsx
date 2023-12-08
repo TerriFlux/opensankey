@@ -1516,6 +1516,7 @@ const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 export const ContextMenuNode=(contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   display_nodes:{[id:string]:SankeyNode},
+  display_links:{[id:string]:SankeyLink},
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
@@ -1813,7 +1814,7 @@ export const ContextMenuNode=(contextualised_node:SankeyNode|undefined,set_conte
           set_contextualised_node(undefined)
         }}>Agrégation</Button>:<></>}
         {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          SankeyUtils.Desaggregate(contextualised_node,data,display_nodes,set_agregation_node,set_is_agregation,set_show_agregation)
+          SankeyUtils.Desaggregate(contextualised_node,data,display_nodes,display_links,set_agregation_node,set_is_agregation,set_show_agregation)
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
