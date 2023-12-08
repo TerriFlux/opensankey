@@ -151,9 +151,9 @@ export const ComputeEndPoints = (
     link_value = inv_scale(5)
   }
 
-  let res = ComputeTotalOffsets(inv_scale,source_node, data, display_nodes, TestLinkValue,undefined,GetLinkValue)
+  let res = ComputeTotalOffsets(inv_scale,source_node, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale,target_node, data,display_nodes, TestLinkValue,undefined,GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale,target_node, data,display_nodes,display_links, TestLinkValue,undefined,GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
   let node_size_s_width = inv_scale((ReturnValueNode(data,source_node,'node_width') as number))
   let node_size_t_width = inv_scale(ReturnValueNode(data,target_node,'node_width') as number)
@@ -175,9 +175,9 @@ export const ComputeEndPoints = (
       inv_scale((ReturnValueNode(data,target_node,'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
     )
   }
-  res = ComputeTotalOffsets(inv_scale,source_node, data,display_nodes, TestLinkValue, link,GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale,source_node, data,display_nodes, display_links, TestLinkValue, link,GetLinkValue)
   const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale,target_node, data,display_nodes , TestLinkValue, link,GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale,target_node, data,display_nodes, display_links, TestLinkValue, link,GetLinkValue)
   const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
   const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
   const delta_s_width_top = Math.max(0, (node_size_s_width - s_total_offset_width_top) / 2)
@@ -536,13 +536,14 @@ export const TextNodeWrap=(d:SankeyNode,data:SankeyData)=>{
 export const SetNodeHeight = (
   n: SankeyNode,
   display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [link_id: string]: SankeyLink },
   data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
 ) => {
-  const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, TestLinkValue,undefined,GetLinkValue)
+  const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
   const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
   let node_size_s_height = Math.max(
     inv_scale((ReturnValueNode(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
@@ -626,6 +627,7 @@ export const DrawArrows = (
   n: SankeyNode,
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [link_id: string]: SankeyLink },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
@@ -638,7 +640,7 @@ export const DrawArrows = (
   let is_v = true
   const is_exportation_node=n.tags&& n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
 
-  const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, TestLinkValue,undefined,GetLinkValue)
+  const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
   for (let i = 0; i < n.inputLinksId.length; i++) {
@@ -686,7 +688,7 @@ export const DrawArrows = (
     if (!display_style.filter || link_value >= display_style.filter) {
       //selection
       d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
-      SetNodeHeight(n, display_nodes, data,scale,inv_scale,GetLinkValue)
+      SetNodeHeight(n, display_nodes,display_links, data,scale,inv_scale,GetLinkValue)
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'arrow')
@@ -1183,6 +1185,7 @@ export const inv_scale = d3.scaleLinear()
 export const SetNodesHeight = (
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [link_id: string]: SankeyLink },
   d: SankeyLink,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
@@ -1197,9 +1200,9 @@ export const SetNodesHeight = (
     source_node = display_nodes[filter_idSource]
   }
 
-  const res_source = ComputeTotalOffsets(inv_scale,source_node, data,display_nodes, TestLinkValue,undefined,GetLinkValue)
+  const res_source = ComputeTotalOffsets(inv_scale,source_node, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
-  const res_target = ComputeTotalOffsets(inv_scale,target_node, data,display_nodes, TestLinkValue,undefined,GetLinkValue)
+  const res_target = ComputeTotalOffsets(inv_scale,target_node, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
   let node_size_s_height = Math.max(
