@@ -440,18 +440,17 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
         [key]: data.nodes[key]
       })
     }, {}) as {[idNode:string]:SankeyNode}
+  const pre_display_links=Object.keys(data.links)
+    .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
+    .reduce((obj, key) => {
+      return Object.assign(obj, {
+        [key]: data.links[key]
+      })
+    }, {}) as {[idLink:string]:SankeyLink}
+  const pre_link_key=Object.keys(pre_display_links)
+  const display_links={} as {[idLink:string]:SankeyLink}
+  data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
   useEffect(()=>{
-    const pre_display_links=Object.keys(data.links)
-      .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
-      .reduce((obj, key) => {
-        return Object.assign(obj, {
-          [key]: data.links[key]
-        })
-      }, {}) as {[idLink:string]:SankeyLink}
-    const pre_link_key=Object.keys(pre_display_links)
-    const display_links={} as {[idLink:string]:SankeyLink}
-    data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
-      
     // Call the function that add nodes to the sankey
     OpenSankeyDrawNodes(data,set_data,
       display_nodes,display_links,
@@ -504,10 +503,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   <>
   </>
 
-
-
-
-
   // =================DRAGGABEL MENU + CONTEXT MENU=============================
 
   // MENU DRAGGABLE NODE ATTR
@@ -521,12 +516,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const menu_node_io=SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity,true)
   const dragNodeIO=show_menu_node_io?MenuDraggable(menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),set_show_menu_node_io):<></>
 
-
-
-
-
-
-  const context_n=ContextMenuNode(contextualised_node,set_contextualised_node,data,set_data,display_nodes,multi_selected_nodes,multi_selected_links,t,
+  const context_n=ContextMenuNode(contextualised_node,set_contextualised_node,data,set_data,display_nodes,display_links,multi_selected_nodes,multi_selected_links,t,
     set_show_menu_node_apparence,set_show_menu_node_io,
     set_agregation_node,set_is_agregation,set_show_agregation,
     set_display_link_opacity,
@@ -680,6 +670,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
           data={data}
           set_data={set_data}
           display_nodes={display_nodes}
+          display_links={display_links}
           animation={false}
           mode_selection={mode_selection}
           show_agregation={show_agregation}

@@ -326,6 +326,7 @@ export type drawArrowsType = (
   n: SankeyNode,
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [node_id: string]: SankeyLink },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
