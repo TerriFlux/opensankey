@@ -80,7 +80,19 @@ export const SankeyMenuConfigurationNodesTags = (
                                 d.tags[tags_group_key] = []
                               }
                               d.tags[tags_group_key].push(tags[0])
+                              // If the groue tage is 'Type de noeud' then we change the style
+                              // to style of product or sector
+                              if(tags_group_key==='Type de noeud'){
+                                if(tags[0]==='secteur'){
+                                  d.style='NodeSectorStyle'
+                                }else  if(tags[0]==='produit'){
+                                  d.style='NodeProductStyle'
+                                }
+                              }
                             } else {
+                              if(tags_group_key==='Type de noeud'){
+                                d.style='default'
+                              }
                               d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[0]),1)
                             }
                           })
