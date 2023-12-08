@@ -608,7 +608,6 @@ export const DefaultSankeyData = (): SankeyData => {
     user_scale: 20,
 
     accordeonToShow: ['MEP'],
-    override_type_node_shape:false,
 
     width: window.innerWidth - 50,
     height: window.innerHeight - 50,
@@ -651,9 +650,11 @@ export const DefaultSankeyData = (): SankeyData => {
     node_label_separator:' - '
 
   }
+  const node_style_sect=DefaultNodeSectorStyle()
+  const node_style_prod=DefaultNodeProductStyle()
   const default_data = {
     ...data,
-    style_node: { 'default' : DefaultNodeStyle() },
+    style_node: { 'default' : DefaultNodeStyle(),'style_node_prod':node_style_prod,'style_node_sect':node_style_sect },
     style_link: { 'default' : DefaultLinkStyle() }
   }
   return (default_data as unknown as SankeyData)
@@ -892,6 +893,20 @@ export const DefaultNodeStyle=()=>{
     label_color:false,
 
   }
+}
+export const DefaultNodeSectorStyle=()=>{
+  const node_style=DefaultNodeStyle()
+  node_style.shape='ellipse'
+  node_style.idNode='NodeSectorStyle'
+  node_style.name='Noeud de type secteur'
+  return node_style
+}
+
+export const DefaultNodeProductStyle=()=>{
+  const node_style=DefaultNodeStyle()
+  node_style.idNode='NodeProductStyle'
+  node_style.name='Noeud de type produit'
+  return node_style
 }
 // Return default style configuration for link
 export const DefaultLinkStyle=()=>{
