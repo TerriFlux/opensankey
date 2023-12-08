@@ -557,12 +557,6 @@ export const SetNodeHeight = (
   }
   d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))
-  if (!data.override_type_node_shape && n.tags['Type de noeud'] && n.tags['Type de noeud'].length > 0 && data.nodeTags['Type de noeud'].tags[n.tags['Type de noeud'][0]].shape === 'ellipse') {
-    d3.select(' .opensankey #shape_' + n.idNode).attr('rx', scale(node_size_s_width / 2))
-    d3.select(' .opensankey #shape_' + n.idNode).attr('cx', scale(node_size_s_width / 2))
-    d3.select(' .opensankey #shape_' + n.idNode).attr('ry', scale(node_size_s_height / 2))
-    d3.select(' .opensankey #shape_' + n.idNode).attr('cy', scale(node_size_s_height / 2))
-  }
 }
 
 
@@ -1227,16 +1221,11 @@ export const SetNodesHeight = (
   d3.select(' .opensankey #shape_' + source_node.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #shape_' + source_node.idNode).attr('height', scale(node_size_s_height))
 
-  // Is the node shape ellipse defined by the tag 'Type de noeud' ?
-  const source_ellipse_by_node_type=(!data.override_type_node_shape 
-    && source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 
-    && data.nodeTags['Type de noeud'].tags[source_node.tags['Type de noeud'][0]].shape === 'ellipse')
-  
-  // Is the node shape ellipse defined by the shape associated to it ?
-  const source_shape_not_by_node_type=((!source_node.tags['Type de noeud']  || data.override_type_node_shape)
-    && ReturnValueNode(data,source_node,'shape')=='ellipse' )
 
-  if ( source_ellipse_by_node_type || source_shape_not_by_node_type ) {
+  // Is the node shape ellipse defined by the shape associated to it ?
+  const source_shape_not_by_node_type=(ReturnValueNode(data,source_node,'shape')=='ellipse' )
+
+  if ( source_shape_not_by_node_type ) {
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('rx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('cx', scale(node_size_s_width / 2))
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('ry', scale(node_size_s_height / 2))
@@ -1246,15 +1235,10 @@ export const SetNodesHeight = (
   d3.select(' .opensankey #shape_' + target_node.idNode).attr('width', scale(node_size_t_width))
   d3.select(' .opensankey #shape_' + target_node.idNode).attr('height', scale(node_size_t_height))
 
-  // Is the node shape ellipse defined by the tag 'Type de noeud' ?
-  const target_shape_by_node_type=(!data.override_type_node_shape && target_node.tags['Type de noeud'] 
-    && target_node.tags['Type de noeud'].length > 0 
-    && data.nodeTags['Type de noeud'].tags[target_node.tags['Type de noeud'][0]].shape === 'ellipse')
 
   // Is the node shape ellipse defined by the shape associated to it ?
-  const target_shape_not_by_node_type=((!target_node.tags['Type de noeud'] || data.override_type_node_shape) 
-    && ReturnValueNode(data,target_node,'shape')=='ellipse')
-  if (target_shape_by_node_type || target_shape_not_by_node_type) {
+  const target_shape_not_by_node_type=(ReturnValueNode(data,target_node,'shape')=='ellipse')
+  if (target_shape_not_by_node_type) {
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('rx', scale(node_size_t_width / 2))
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('cx', scale(node_size_t_width / 2))
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
