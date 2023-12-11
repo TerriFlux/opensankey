@@ -11,6 +11,7 @@ import { compute_auto_sankey } from './SankeyLayout'
 import fs from 'fs'
 // const path = require('path')
 import path from 'path'
+import { DefaultSankeyData } from './SankeyUtils'
 beforeEach(() => {
   (window.SVGElement.prototype as SVGTextContentElement).getComputedTextLength = () => 200
 })
@@ -56,7 +57,7 @@ test.each(the_tests)( 'tyty',(full_path) => {
   })
 
   const new_data = require(full_path)
-  convert_data(new_data as SankeyData)
+  convert_data(new_data as SankeyData,DefaultSankeyData)
   compute_auto_sankey(new_data as SankeyData,200)
   const base_file_name = path.basename(full_path,'.json')
   const sankey_file_name = path.join(path.dirname(full_path),base_file_name+'_auto_layout.json')
