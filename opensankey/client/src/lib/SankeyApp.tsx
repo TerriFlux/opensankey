@@ -429,7 +429,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   /* eslint-disable */
     // @ts-ignore
     addEventListener('resize',()=>{
-      RepositionneSidebar()
+      RepositionneSidebar(show_nav)
       })
       /* eslint-enable */
 
