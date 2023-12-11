@@ -40,7 +40,9 @@ export const OpenSankeyDrawLegend = (
     d3.select(' .opensankey #g_legend').selectAll('*').remove()
 
     // Draw the draggable zone at first so it doesn't overlaps over legend element that are interactive 
-    d3.select('.opensankey #g_legend').append('rect')
+    d3.select('.opensankey #g_legend').append('g')
+      .attr('class','g_drag_zone_leg')
+      .append('rect')
       .attr('class','drag_zone_leg')
       .attr('width',data.legend_width)
       .attr('height','5px')
@@ -367,13 +369,13 @@ export const drag_legend=(data:SankeyData,
     }
   }).on('end',()=>set_data({...data}))
 
-export const drag_legend_g_element=(data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },)=>{
+export const drag_legend_g_element=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
   let scale_for_legend=1
   const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
   const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
   scale_for_legend=(scale_svg<1?(1/scale_svg):1)
-  data.legend_position[0]+=(event.dx)
-  data.legend_position[1]+=(event.dy)
+  data.legend_position[0]+=(event.sourceEvent.movementX/scale_svg)
+  data.legend_position[1]+=(event.sourceEvent.movementY/scale_svg)
   data.legend_position[0]=(data.legend_position[0]>=0?data.legend_position[0]:0)
   data.legend_position[1]=(data.legend_position[1]>=0?data.legend_position[1]:0)
   d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
