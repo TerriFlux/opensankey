@@ -514,7 +514,7 @@ export const compute_auto_sankey = (
       })
     }, {}) as {[idNode:string]:SankeyNode}
   const display_links=Object.keys(data.links)
-  .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
+    .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
     .reduce((obj, key) => {
       return Object.assign(obj, {
         [key]: data.links[key]
