@@ -2089,10 +2089,8 @@ export const SelectVisualyNodes=(n:SankeyNode)=>{
   d3.select(' .opensankey #shape_' + n.idNode).style('stroke-width',2)
 }
 
-export const RepositionneSidebar=()=>{
-  const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
-  const menu_open=d3.select('.offcanvas-body').node()
-  d3.select('.sideBar').style('left',(window.innerWidth-40-has_scrollbar_shift-(menu_open?menu_config_width:0))+'px')  
+export const RepositionneSidebar=(show_nav:boolean)=>{
+  d3.select('.sideBar').style('right',((show_nav?menu_config_width:0))+'px')  
 }
 
 // Function that compute the link width

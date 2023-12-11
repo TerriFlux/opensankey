@@ -52,7 +52,7 @@ import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinks'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import { RepositionneSidebar,SelectVisualyLinks} from './SankeyDrawFunction'
+import { SelectVisualyLinks} from './SankeyDrawFunction'
 
 
 declare const window: Window &
@@ -1017,7 +1017,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
-    RepositionneSidebar()
 
   }
   const setChecked = useState(false)[1]
@@ -1037,7 +1036,6 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   }
 
-  const has_scrollbar_shift=window.innerWidth-document.getElementsByTagName('html')[0].clientWidth
 
   const ordered_menu: {[s: string]: ReactElementLike[]} = {}
   const ordered_key: string[] = [
@@ -1257,7 +1255,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
       <ButtonGroup vertical
         className='sideBar'
-        style={{top:window.innerHeight/2-120,left:window.innerWidth-40-((show_nav)?menu_config_width+has_scrollbar_shift:has_scrollbar_shift)}}
+        style={{top:window.innerHeight/2-120,right:0}}
       >
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
