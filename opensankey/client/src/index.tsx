@@ -77,7 +77,7 @@ if (!window.SankeyToolsStatic) {
   if (json_data !== null && json_data != '' && json_data!='null') {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
-    convert_data(data)
+    convert_data(data,DefaultSankeyData)
     complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
   }
 
@@ -132,7 +132,7 @@ if (!window.SankeyToolsStatic) {
   if (json_data !== null && json_data !== 'undefined' && json_data != '') {
     const new_data = JSON.parse(json_data)
     Object.assign(data, new_data)
-    convert_data(data)
+    convert_data(data,DefaultSankeyData)
     complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
   }
   render(

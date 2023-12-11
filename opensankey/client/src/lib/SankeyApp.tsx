@@ -382,7 +382,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       </Popover.Body>
     </Popover>
   const {filter}=data.display_style
-  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,GetSankeyMinWidthAndHeight,setDiagram,set_show_modalTemplate,set_never_see_again,convert_data,maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux)
+  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,GetSankeyMinWidthAndHeight,setDiagram,set_show_modalTemplate,set_never_see_again,convert_data,maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux,SankeyUtils.DefaultSankeyData)
   Object.keys(toolbar).forEach(k=>{
     sankey_menus[k]=[toolbar[k]]
   })
@@ -552,7 +552,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
   
-  const processExcel=(text:string)=>SankeyUtils.RetrieveExcelResults(text,data,set_data,updateLayout,()=>0,GetSankeyMinWidthAndHeight,convert_data)
+  const processExcel=(text:string)=>SankeyUtils.RetrieveExcelResults(text,data,set_data,updateLayout,()=>0,GetSankeyMinWidthAndHeight,convert_data,SankeyUtils.DefaultSankeyData)
 
   const additional_nav_item=[]
 
@@ -639,6 +639,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             setIsComputing={setIsComputing}
             set_tags_selected={set_tags_selected}
             RetrieveExcelResults={processExcel}
+            DefaultSankeyData={SankeyUtils.DefaultSankeyData}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
