@@ -359,7 +359,8 @@ declare const window: Window &
 export const setDiagram = (
   the_diagram : string,
   set_data : (d:SankeyData)=>void,
-  convert_data:(d:SankeyData)=>void
+  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData,)=>void,
+  DefaultSankeyData: ()=>SankeyData,
 ) => {
   const sous_filieres = window.sankey.sous_filieres
 
@@ -368,7 +369,7 @@ export const setDiagram = (
       window.sankey[sous_filieres[the_diagram]]
     )
   ) as SankeyData
-  convert_data(new_data)
+  convert_data(new_data,DefaultSankeyData)
   d3.select(' .opensankey #svg').on('.zoom', null)
   set_data({ ...new_data })
 }
@@ -387,14 +388,15 @@ export const toolbar_builder = (
   first_selected_node:object,
   set_first_selected_node:(o:object)=>void,
   GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
-  setDiagram : (the_diagram : string, set_data : (d:SankeyData)=>void,convert_data:(d:SankeyData)=>void)=>void,
+  setDiagram : (the_diagram : string, set_data : (d:SankeyData)=>void,convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,DefaultSankeyData: ()=>SankeyData,)=>void,
   set_show_modal_welcome:(b:boolean)=>void,
   set_never_see_again:(b:boolean)=>void,
-  convert_data:(d:SankeyData)=>void,
+  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData,)=>void,
   maximum_flux:number | null | undefined,
   set_maximum_flux:(n:number)=>void,
   minimum_flux:number | null | undefined,
   set_minimum_flux:(n:number)=>void,
+  DefaultSankeyData: ()=>SankeyData,
 ) => {
   const level_filter = Object.entries(data.levelTags).length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
@@ -642,7 +644,7 @@ export const toolbar_builder = (
           <Form.Select style={{ width: '200px', color:'black' }}
             onChange={evt=> {
               set_diagram(evt.target.value)
-              setDiagram(evt.target.value, set_data, convert_data)
+              setDiagram(evt.target.value, set_data, convert_data,DefaultSankeyData)
             }}
             value={diagram}>
             {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -656,7 +658,7 @@ export const toolbar_builder = (
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
             set_diagram(evt.target.value)
             const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path, set_data,convert_data)
+            setDiagram(diagram_path, set_data,convert_data,DefaultSankeyData)
           }}
           value={diagram}>
           {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -666,7 +668,7 @@ export const toolbar_builder = (
             onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
               set_diagram2(evt.target.value)
               const diagram_path = diagram+'/'+evt.target.value
-              setDiagram(diagram_path, set_data,convert_data)
+              setDiagram(diagram_path, set_data,convert_data,DefaultSankeyData)
             }}
             value={diagram2}>
             {diagrams[diagram] ? (Object.values(diagrams[diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
