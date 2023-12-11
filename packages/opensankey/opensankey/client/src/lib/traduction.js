@@ -841,7 +841,7 @@ export const open_resources = {
           preference:'Choisir les paramètres de l\'application',
           amp:'Modifier la mise en page du diagramme',
           style:'Définir des styles par groupe de noeuds ou de flux',
-          DisplayWelcome:'Afficher le message de bienvenue',          
+          DisplayWelcome:'Afficher le message d\'acceuil',          
           doc:'Ouvrir la documentation',
           support:'Contacter le support',
           tuto:'Explorer les tutoriels',

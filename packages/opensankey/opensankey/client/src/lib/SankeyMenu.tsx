@@ -717,7 +717,7 @@ export const OpenSankeyMenus = (
         key={'file_setting'}
         placement={'bottom'}
         rootClose
-        overlay={<Tooltip id={'tooltip-file_setting'}>{t('Menu.tooltips.new')} </Tooltip>}>
+        overlay={<Tooltip id={'tooltip-file_setting'}>{t('Menu.tooltips.preference')} </Tooltip>}>
         <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
       </OverlayTrigger>
     ]
