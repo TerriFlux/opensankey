@@ -43,12 +43,13 @@ const deep_diff = require('deep-diff')
 /* eslint-enable */
 export const setDiagram = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
-  set_view: (s:string)=>void
+  set_view: (s:string)=>void,
+  DefaultSankeyData: ()=>SankeyPlusData
 ) => {
   return (
     the_diagram : string,
     set_data : (d:SankeyPlusData)=>void,
-    convert_data:(d:SankeyPlusData)=>void
+    convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void
   ) => {
     const sous_filieres = window.sankey.sous_filieres
 
@@ -57,7 +58,7 @@ export const setDiagram = (
         window.sankey[sous_filieres[the_diagram]]
       )
     ) as SankeyPlusData
-    convert_data(new_data)
+    convert_data(new_data,DefaultSankeyData)
     d3.select(' .opensankey #svg').on('.zoom', null)
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
       set_master_data(new_data)
@@ -618,11 +619,12 @@ export const viewsAccordion = (
   t:TFunction,
   is_activated:boolean,
   set_view_not_saved:(s:string)=>void,
-  convert_data:(d:SankeyPlusData)=>void,
+  convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
   value_editor_name_view:string,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void
+  set_select_or_edit:(s:'select'|'edit')=>void,
+  DefaultSankeyData: ()=>SankeyPlusData
 ) => {
 
   // const _load_multiple_json = useRef<HTMLInputElement>(null)
@@ -809,7 +811,7 @@ export const viewsAccordion = (
           const cur_view = master_data.view[ind]
           const imported_data=JSON.parse(JSON.stringify(result_data))
           imported_data.view=[]
-          convert_data(imported_data)
+          convert_data(imported_data,DefaultSankeyData)
           let difference = deep_diff.diff(master_data,imported_data)
           difference=JSON.parse(JSON.stringify((difference !== undefined)?difference:[]))
           difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
@@ -893,8 +895,8 @@ export const SankeyPlusBannerView=(
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
   set_select_or_edit:(s:'select'|'edit')=>void,
-  convert_data:(d:SankeyPlusData)=>void,
-  
+  convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
+  DefaultSankeyData: ()=>SankeyPlusData,
 )=>{
 
   const m_d=master_data?master_data:data
@@ -1089,55 +1091,55 @@ export const SankeyPlusBannerView=(
 
 
   const button_delete_actual_view=<OverlayTrigger
-  key={'button_delete_actual_view'}
-  placement={'bottom'}
-  delay={500}
-  overlay={(!connected)?(
-    <Tooltip id={'disable_button_delete_actual_view'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-    <Tooltip id={'button_delete_actual_view'}>{t('view.tooltips.button_delete_actual_view')} </Tooltip>}><span>
+    key={'button_delete_actual_view'}
+    placement={'bottom'}
+    delay={500}
+    overlay={(!connected)?(
+      <Tooltip id={'disable_button_delete_actual_view'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
+      <Tooltip id={'button_delete_actual_view'}>{t('view.tooltips.button_delete_actual_view')} </Tooltip>}><span>
       <Button
-    variant='light'
-    disabled={!connected}
-    onClick={
-    // Delete the view
-      () => {
-        let ind = -1
-        master_data.view.map((v, i) => {
-          ind = (v.id === view) ? i : ind
-        })
-        master_data.view.splice(ind, 1)
-        // If master is not a catalog & we delete the current view then we go to master
-        // If master is a catalog and the catalog of view is empty then we got to master 
-        if((master_data.current_view===view && master_data.is_catalog===false) || (master_data.view.length===0 && master_data.is_catalog===true)){
-          set_view('none')
-          set_data({ ...master_data })
-        }else if(master_data.is_catalog && master_data.view.length>0){
-          // If master is a catalog and the catalog is not empty then we got to the first view 
-          set_view(master_data.view[0].id)
-          const tmp=get_data_from_view(master_data,master_data.view[0].id) as SankeyPlusData
-          set_data({ ...tmp })
+        variant='light'
+        disabled={!connected}
+        onClick={
+          // Delete the view
+          () => {
+            let ind = -1
+            master_data.view.map((v, i) => {
+              ind = (v.id === view) ? i : ind
+            })
+            master_data.view.splice(ind, 1)
+            // If master is not a catalog & we delete the current view then we go to master
+            // If master is a catalog and the catalog of view is empty then we got to master 
+            if((master_data.current_view===view && master_data.is_catalog===false) || (master_data.view.length===0 && master_data.is_catalog===true)){
+              set_view('none')
+              set_data({ ...master_data })
+            }else if(master_data.is_catalog && master_data.view.length>0){
+              // If master is a catalog and the catalog is not empty then we got to the first view 
+              set_view(master_data.view[0].id)
+              const tmp=get_data_from_view(master_data,master_data.view[0].id) as SankeyPlusData
+              set_data({ ...tmp })
+            }
+            if(master_data.view.length===0){
+              master_data.is_catalog=false
+              set_data({...master_data})
+            }
+            set_master_data({...master_data})
+          }
         }
-        if(master_data.view.length===0){
-          master_data.is_catalog=false
-          set_data({...master_data})
-        }
-        set_master_data({...master_data})
-      }
-    }
-  ><Col><FaMinus/></Col>{!connected?
-      <Col>
-        <FontAwesomeIcon
-          icon={faLock}
-          style={{
-            fontSize:'1em',
-            position: 'absolute',
-            right: '0.1em',
-            bottom: '0em',
-            color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-      </Col>
-      :<></>}
-    <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.delete')}</Col></Button></span>
-    </OverlayTrigger>
+      ><Col><FaMinus/></Col>{!connected?
+          <Col>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                fontSize:'1em',
+                position: 'absolute',
+                right: '0.1em',
+                bottom: '0em',
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Col>
+          :<></>}
+        <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.delete')}</Col></Button></span>
+  </OverlayTrigger>
 
   // -- NOT REALLY USEFULL ANYMORE WITH THE IMPORT LAYOUT 
   // const button_import_view=<OverlayTrigger
@@ -1268,14 +1270,14 @@ export const SankeyPlusBannerView=(
             const result = String((e.target as FileReader).result)
             const result_data = JSON.parse(result)
             const imported_data=JSON.parse(JSON.stringify(result_data)) as SankeyPlusData
-            convert_data(imported_data)
+            convert_data(imported_data,DefaultSankeyData)
             let new_ind = 'view_' + String(new Date().getTime())
             let first_data={} as SankeyPlusData
             if(imported_data.view && imported_data.view.length>0){
               // Import all view from the coming file
               imported_data.view.forEach((v,i2)=>{
                 const view_from_imported_data=get_data_from_view(imported_data,v.id) as SankeyPlusData
-                convert_data(view_from_imported_data)
+                convert_data(view_from_imported_data,DefaultSankeyData)
 
                 if(i2===0 && i==='0'){
                   new_ind=v.id
