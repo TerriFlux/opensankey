@@ -2,7 +2,7 @@
 import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
 import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
-import { DefaultSankeyData,DefaultLink, DefaultNode } from 'open-sankey/dist/SankeyUtils'
+import { DefaultLink, DefaultNode } from 'open-sankey/dist/SankeyUtils'
 import { synchronizeNodesandLinksId } from 'open-sankey/dist/SankeyLayout'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
@@ -23,7 +23,7 @@ const deep_diff = require('deep-diff')
 /* eslint-enable */
 
 
-export const plus_convert_data = (data:SankeyPlusData)=>{
+export const plus_convert_data = (data:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData,)=>{
   if(data.background_image===undefined){
     data.background_image=''
   }
@@ -97,8 +97,8 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
-      convert_data(v.view_data as unknown as SankeyPlusData)
-      plus_convert_data((v.view_data as unknown as SankeyPlusData ))
+      convert_data(v.view_data as unknown as SankeyPlusData,DefaultSankeyData)
+      plus_convert_data((v.view_data as unknown as SankeyPlusData ),DefaultSankeyData)
       // let difference = deep_diff.diff(data, v.view_data)
       // difference=(difference!==undefined)?difference:[]
       // difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
@@ -121,13 +121,13 @@ export const plus_convert_data = (data:SankeyPlusData)=>{
 
     } else if((v.view_data as unknown as DiffType).diff!==undefined){
       const d_view=get_data_from_view(data,v.id) as SankeyPlusData
-      convert_data(d_view)
-      plus_convert_data(d_view)
+      convert_data(d_view,DefaultSankeyData)
+      plus_convert_data(d_view,DefaultSankeyData)
       const copy_data={...data}
       copy_data.view=[]
       const converted_master=JSON.parse(JSON.stringify(copy_data))
-      convert_data(converted_master)
-      plus_convert_data(converted_master)
+      convert_data(converted_master,DefaultSankeyData)
+      plus_convert_data(converted_master,DefaultSankeyData)
       let difference = deep_diff.diff(converted_master, d_view)
       difference=(difference !== undefined)?difference:[]
       difference=filter_view(difference)
@@ -145,10 +145,11 @@ export const OpenSankeyPlusDiagramSelector = (
   set_view_selected:(s:string)=>void,
   diagramType:string,
   setDiagramType:(s:string)=>void,
+  DefaultSankeyData: ()=>SankeyPlusData
 ) => {
   const OpenSankeyPlusDiagramSelectorInner = (
     t: TFunction, 
-    convert_data: (s:SankeyPlusData)=>null,
+    convert_data: (s:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>null,
     sankey_data: SankeyPlusData,
     set_sankey_data: (s:SankeyPlusData)=>null,
     prev_sankey_data: SankeyPlusData,
@@ -236,7 +237,7 @@ export const OpenSankeyPlusDiagramSelector = (
                 if (result) {
                   result = String(result) //.split('<br>').join('\\\\n')
                   const new_layout = JSON.parse(result)
-                  convert_data(new_layout)
+                  convert_data(new_layout,DefaultSankeyData)
                   complete_sankey_data(new_layout, DefaultSankeyData, DefaultNode, DefaultLink)
                   set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
                   updateLayout(sankey_data, new_layout, elementToDispose)
