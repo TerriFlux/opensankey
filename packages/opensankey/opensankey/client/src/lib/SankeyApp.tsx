@@ -485,7 +485,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
     OpenSankeyDrawLegend(data,set_data,SankeyUtils.GetLinkValue,t,pointer_pos,set_tag_contextualised)
-    const g_legend=d3.select(' .opensankey #g_legend') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
+    const g_legend=d3.select(' .opensankey #g_legend .drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
     if(!window.SankeyToolsStatic){
       g_legend.call(drag_legend(data,set_data))
     }
