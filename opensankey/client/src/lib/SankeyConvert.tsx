@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal,SankeyNodeStyle, SankeyNodeAttrLocal, SankeyLinkStyle} from './types'
 import colormap from 'colormap'
-import { DefaultSankeyData, DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
+import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
 
 
 interface ConvertSankeyNode {
@@ -1416,7 +1416,9 @@ export const convert_links = (
 }
 
 export const convert_data = (
-  data: SankeyData
+  data: SankeyData,
+  DefaultSankeyData: ()=>SankeyData,
+
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
   const { display_style,units_names } = data_to_convert

@@ -362,7 +362,7 @@ export const OpenSankeyMenus = (
   external_file_item:JSX.Element[],
   externale_save_item:JSX.Element[],
   set_tags_selected:(o:{[x:string]:string})=>void,
-  convert_data:(d:SankeyData)=>void,
+  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
   set_show_modale_tuto:(b:boolean)=>void,
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
@@ -675,7 +675,7 @@ export const OpenSankeyMenus = (
                     if (result_data.version === undefined) {
                       (new_data.version as unknown as undefined) = undefined
                     }
-                    convert_data(new_data)
+                    convert_data(new_data,DefaultSankeyData)
                     complete_sankey_data(new_data,DefaultSankeyData,SankeyUtils.DefaultNode,SankeyUtils.DefaultLink)
                     console.log('open json')
 
@@ -898,6 +898,7 @@ const MenuPropTypes = {
   setIsComputing:PropTypes.func.isRequired,
   set_tags_selected:PropTypes.func.isRequired,
   RetrieveExcelResults:PropTypes.func.isRequired,
+  DefaultSankeyData: PropTypes.func.isRequired
 }
 /**
  * Description placeholder
@@ -962,7 +963,8 @@ const Menu: FunctionComponent<MenuTypes> = (
     DiagramSelector,
     is_computing, setIsComputing,
     set_tags_selected,
-    RetrieveExcelResults
+    RetrieveExcelResults,
+    DefaultSankeyData
   }
 ) => {
 
@@ -1306,6 +1308,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
+        DefaultSankeyData={DefaultSankeyData}
       />
 
       <ExcelModal

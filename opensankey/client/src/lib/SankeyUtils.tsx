@@ -1126,17 +1126,16 @@ export const DownloadExamples = (
 export const ProcessExample = (
   data: SankeyData,
   updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void,
-  convert_data:(d:SankeyData)=>void,
+  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData )=>void,
+  DefaultSankeyData: ()=>SankeyData,
 
 ) => {
-  // const data = DefaultSankeyData()
-  // Object.assign(data, server_data)
   complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
-  convert_data(data)
+  convert_data(data,DefaultSankeyData)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
   } else {
-    convert_data((data as SankeyData & layout_type).layout)
+    convert_data((data as SankeyData & layout_type).layout,DefaultSankeyData)
     complete_sankey_data((data as SankeyData & layout_type).layout,DefaultSankeyData,DefaultNode,DefaultLink)
     compute_default_input_outputLinksId(data.nodes, data.links)
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData }).layout)) as SankeyData
@@ -2000,7 +1999,8 @@ export const RetrieveExcelResults=(
   updateLayout:(data: SankeyData, new_layout: SankeyData, mode: string[], synchronize?: boolean) => void,
   callback: (server_data: SankeyData) => number,
   GetSankeyMinWidthAndHeight:(data: SankeyData) => number[],
-  convert_data:(d:SankeyData)=>void
+  convert_data:(d:SankeyData,  DefaultSankeyData: ()=>SankeyData)=>void,
+  DefaultSankeyData: ()=>SankeyData,
 )=>{
   
   const server_data = JSON.parse(text)
@@ -2015,7 +2015,7 @@ export const RetrieveExcelResults=(
     default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
   }
   const new_data=Object.assign(default_data,server_data) as SankeyData
-  ProcessExample(new_data,updateLayout,convert_data)
+  ProcessExample(new_data,updateLayout,convert_data,DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   callback(new_data)
