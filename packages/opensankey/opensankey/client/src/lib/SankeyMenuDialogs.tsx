@@ -4,7 +4,7 @@ import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
 import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { complete_sankey_data } from './SankeyConvert'
-import { DefaultLink, DefaultNode, DefaultSankeyData,SmoothClasses } from './SankeyUtils'
+import { DefaultLink, DefaultNode, SmoothClasses } from './SankeyUtils'
 import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from './SankeyDrawFunction'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import { MenuDraggable } from './SankeyMenu'
@@ -33,7 +33,7 @@ const ApplyLayoutDialogPropTypes = {
   diagramSelector: PropTypes.func.isRequired,
   elementToDispose:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   apply_transformation_additional_elements: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-
+  DefaultSankeyData: PropTypes.func.isRequired,
 }
 
 /**
@@ -53,6 +53,7 @@ export const ApplyLayoutDialog = ({
   diagramSelector,
   elementToDispose,
   apply_transformation_additional_elements,
+  DefaultSankeyData
 }: ApplyLayoutDialogTypes) => {
   const [prev_sankey_data,set_prev_sankey_data] = useState(sankey_data)
   const [forceUpdate,setForceUpdate] = useState(true)
@@ -116,7 +117,7 @@ export const ApplyLayoutDialog = ({
       </InputGroup>
       
 
-      {diagramSelector(t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose)}
+      {diagramSelector(t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose,DefaultSankeyData)}
       <OverlayTrigger
         key={'TransforShortCut'}
         placement={'bottom'}
@@ -754,13 +755,14 @@ ExcelModal.propTypes = ExcelModalPropTypes
 
 export const OpenSankeyDiagramSelector = (
   t: TFunction, 
-  convert_data: (s:SankeyData)=>null,
+  convert_data: (s:SankeyData,DefaultSankeyData:()=>void)=>null,
   sankey_data: SankeyData,
   set_sankey_data: (s:SankeyData)=>null,
   prev_sankey_data: SankeyData,
   set_prev_sankey_data: (s:SankeyData)=>void, 
   updateLayout: (data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void, 
-  elementToDispose : string[]
+  elementToDispose : string[],
+  DefaultSankeyData: ()=>SankeyData
 ) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   return <Form>
@@ -788,7 +790,7 @@ export const OpenSankeyDiagramSelector = (
                   if (result) {
                     result = String(result)
                     const new_layout = JSON.parse(result)
-                    convert_data(new_layout)
+                    convert_data(new_layout,DefaultSankeyData)
                     complete_sankey_data(new_layout, DefaultSankeyData, DefaultNode, DefaultLink)
                     set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
                     updateLayout(sankey_data, new_layout, elementToDispose, true)
