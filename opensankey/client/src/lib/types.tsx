@@ -262,6 +262,9 @@ export const SankeyDataPropTypes = {
   display_legend_scale:PropTypes.bool.isRequired,
   legend_police:PropTypes.number.isRequired,
   mask_legend:PropTypes.bool.isRequired,
+  legend_bg_color:PropTypes.string.isRequired,
+  legend_bg_opacity:PropTypes.number.isRequired,
+  legend_bg_border:PropTypes.bool.isRequired,
 
   nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
   links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
