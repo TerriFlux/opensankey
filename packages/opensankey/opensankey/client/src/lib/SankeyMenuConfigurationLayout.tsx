@@ -1,4 +1,4 @@
-import React from 'react'
+import React,{useState} from 'react'
 import { FormControl, Form, OverlayTrigger, Tooltip,InputGroup, Button } from 'react-bootstrap'
 import { SankeyData } from './types'
 import { TFunction } from 'i18next'
@@ -19,7 +19,7 @@ export const OpenSankeyMenuConfigurationLayout = (
   set_legend_position:(n:number[])=>void,
   extra_background_element:JSX.Element
 ) => {
-
+  const [current_legend_bg_opacity,set_current_legend_bg_opacity]=useState(data.legend_bg_opacity)
   return [
     <h5>{t('Menu.background')}</h5>,
     /* Couleur du fond de la page */
@@ -131,8 +131,8 @@ export const OpenSankeyMenuConfigurationLayout = (
       iconColor='white'
       maxW={'50%'}
       isChecked={data.mask_legend}
-      onClick={() => {
-        data.mask_legend = !data.mask_legend
+      onChange={(evt) => {
+        data.mask_legend = evt.target.checked
         set_data({ ...data })
       }}
     >
@@ -142,10 +142,7 @@ export const OpenSankeyMenuConfigurationLayout = (
 
     /* Position X de la legende  */
     <InputGroup>
-      
-      <InputGroup.Text style={{width:'60%'}} >{t('Menu.LegX')}</InputGroup.Text>
-      
-      
+      <InputGroup.Text style={{width:'60%'}} >{t('Menu.LegX')}</InputGroup.Text>      
       <OverlayTrigger
         key={'Menu.tooltips.LegX'}
         placement={'top'}
@@ -183,15 +180,12 @@ export const OpenSankeyMenuConfigurationLayout = (
             data.legend_position = legend_position
             set_data({ ...data })
           }}/>
-      </OverlayTrigger>
-      
+      </OverlayTrigger>  
     </InputGroup>,
+
     /* Largeur de la fenetre de legende */
     <InputGroup>
-      
       <InputGroup.Text style={{width:'60%'}}>{t('Menu.LegWidth')}</InputGroup.Text>
-      
-      
       <OverlayTrigger
         key={'Menu.tooltips.LegWidth'}
         placement={'top'}
@@ -207,7 +201,83 @@ export const OpenSankeyMenuConfigurationLayout = (
             set_data({ ...data })
           }}/>
       </OverlayTrigger>
-      
+    </InputGroup>,
+
+    /* Couleur de fond de la légende */
+    <InputGroup>
+      <InputGroup.Text style={{width:'60%'}} >{t('Menu.LegBgColor')}</InputGroup.Text>      
+      <OverlayTrigger
+        key={'Menu.tooltips.LegBgColor'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'Menu.tooltips.LegBgColor'}>{t('Menu.tooltips.LegBgColor')} </Tooltip>}>
+
+        <Form.Label htmlFor="form_color_leg" style={{width:'40%',
+          'background':data.legend_bg_color,
+          border:'1px solid #ced4da',
+          borderTopRightRadius:'4px',
+          borderBottomRightRadius:'4px',
+        }}/>
+      </OverlayTrigger>
+      <FormControl
+        type="color"
+        id='form_color_leg'
+        name='form_color_leg'
+        value={data.legend_bg_color}
+        style={{display:'none'}}
+        onChange={evt => {
+          data.legend_bg_color = evt.target.value
+          set_data({ ...data })
+        }}
+      />
+    </InputGroup>,
+
+    /* Opacité du fond de la légende */
+    <InputGroup>
+      <InputGroup.Text style={{width:'60%'}} >{t('Menu.LegBgOpacity')}</InputGroup.Text>      
+      <OverlayTrigger
+        key={'Menu.tooltips.LegBgOpacity'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'Menu.tooltips.LegBgOpacity'}>{t('Menu.tooltips.LegBgOpacity')} </Tooltip>}>
+        <FormControl
+          type="number"
+          min={0}
+          max={1}
+          step={0.1}
+          value={current_legend_bg_opacity}
+          onChange={evt => set_current_legend_bg_opacity(+evt.target.value)}
+          onBlur={() => {
+            data.legend_bg_opacity = current_legend_bg_opacity
+            set_data({ ...data })
+          }}/>
+      </OverlayTrigger>
+    </InputGroup>,
+
+    /* Affichage du bord de la légende */
+    <InputGroup>
+      <OverlayTrigger
+        key={'Menu.tooltips.LegBgBorder'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'Menu.tooltips.LegBgBorder'}>{t('Menu.tooltips.LegBgBorder')} </Tooltip>}>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor='white'
+          maxW={'60%'}
+          isChecked={data.legend_bg_border}
+          onChange={(evt) => {
+            console.log(data.legend_bg_border)
+            data.legend_bg_border = evt.target.checked
+            set_data({ ...data })
+          }}
+        >
+          {t('Menu.LegBgBorder')}
+        </Checkbox>
+      </OverlayTrigger>
     </InputGroup>,
     
     /* Font size de la legende*/

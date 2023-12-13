@@ -648,6 +648,9 @@ export const DefaultSankeyData = (): SankeyData => {
     mask_legend:false,
     display_legend_scale:false,
     legend_police:16,
+    legend_bg_border:false,
+    legend_bg_color:'grey',
+    legend_bg_opacity:0,
     node_label_separator:' - '
 
   }

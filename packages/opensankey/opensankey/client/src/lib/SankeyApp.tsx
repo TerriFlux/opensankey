@@ -92,6 +92,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [show_modale_tuto,set_show_modale_tuto]=useState(false)
   const [show_modale_support,set_show_modale_support]=useState(false)
   const [elementToDispose, ] = useState([''])
+  const [legend_clicked,set_legend_clicked]=useState(false)
+
   const set_data=(ndata:SankeyData)=>{
     set_user_scale(ndata.user_scale)
     if(ndata.legend_position!==legend_position){
@@ -211,6 +213,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     const data = SankeyUtils.DefaultSankeyData()
     multi_selected_nodes.current = []
     multi_selected_links.current = []
+    set_legend_clicked(false)
     localStorage.removeItem('diff')
     localStorage.removeItem('data')
     localStorage.removeItem('initial_data')
@@ -495,7 +498,13 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     )
 
 
-    OpenSankeyDrawLegend(data,set_data,SankeyUtils.GetLinkValue,t,pointer_pos,set_tag_contextualised)
+    OpenSankeyDrawLegend(
+      data,set_data,
+      SankeyUtils.GetLinkValue,
+      t,
+      pointer_pos,
+      set_tag_contextualised,
+      legend_clicked,set_legend_clicked)
     const g_legend=d3.select(' .opensankey #g_legend .drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
     if(!window.SankeyToolsStatic){
       g_legend.call(drag_legend(data,set_data))
@@ -737,7 +746,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       EventOnSankeyZoneMouseMove(mode_selection,data,first_selected_node,set_first_selected_node,evt,start_point)
     })
     svgSankey.on('mouseup',evt=>{
-      EventOnSankeyZoneMouseUp(mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,true,()=>false,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value,evt,start_point)
+      EventOnSankeyZoneMouseUp(mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,true,()=>false,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value,evt,start_point,set_legend_clicked)
     })
   }, 100)
 
