@@ -1514,7 +1514,8 @@ const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFr
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
-export const ContextMenuNode=(contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
+export const ContextMenuNode=(
+  contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   display_nodes:{[id:string]:SankeyNode},
   display_links:{[id:string]:SankeyLink},

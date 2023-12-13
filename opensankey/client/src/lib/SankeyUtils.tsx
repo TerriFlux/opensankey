@@ -1075,6 +1075,15 @@ export const DeleteNode = (
     })
   }
 
+  // Delete refrence to son nodes
+  Object.values(data.nodes)
+    .filter(n=>n.dimensions)
+    .forEach(n=>{
+      Object.entries(n.dimensions).filter(nd=>nd[1].parent_name && nd[1].parent_name==node.idNode).forEach(nd=>{
+        delete n.dimensions[nd[0]]
+      })
+    })
+
   delete data.nodes[node.idNode]
 }
 
