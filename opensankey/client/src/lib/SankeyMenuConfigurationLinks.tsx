@@ -1,12 +1,11 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Form, Tabs,  Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { reorganize_inputLinksId } from './SankeyLayout'
-import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyNode,SankeyData } from './types'
+import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
+import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
 import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
-import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH, FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import {SankeyMenuConfigurationLinksData} from './SankeyMenuConfigurationLinksData'
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
 import {SankeyMenuConfigurationLinksTags} from './SankeyMenuConfigurationLinksTags'
@@ -26,6 +25,8 @@ const SankeyMenuConfigurationLinksPropTypes = {
   tags_selected:PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
   set_tags_selected:PropTypes.func.isRequired,
   set_display_link_opacity:PropTypes.func.isRequired,
+  pre_idSource:PropTypes.string.isRequired,
+  pre_idTarget:PropTypes.string.isRequired,
 }
 
 type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
@@ -44,10 +45,23 @@ export const OpenSankeyMenuConfigurationLinks = (
   additional_link_appearence_items:JSX.Element[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
+  pre_idSource:string,
+  set_pre_idSource:(s:string)=>void,
+  pre_idTarget:string,
+  set_pre_idTarget:(s:string)=>void,
 ) => {
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
-    'data'      : SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,multi_selected_links,set_data,t,additional_data_element,displayed_input_link_value,set_displayed_input_link_value),
+    'data'      : SankeyMenuConfigurationLinksData(data,
+      tags_selected,set_tags_selected,
+      multi_selected_links,
+      set_data,
+      t,
+      additional_data_element,
+      displayed_input_link_value,set_displayed_input_link_value,
+      pre_idSource,set_pre_idSource,
+      pre_idTarget,set_pre_idTarget
+    ),
     'appearence': SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t)
   }
@@ -60,12 +74,19 @@ export const OpenSankeyMenuConfigurationLinks = (
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { t,data, set_data, multi_selected_links,multi_selected_nodes,menu_configuration_links,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity}
+  { t,data, set_data,
+    multi_selected_links,multi_selected_nodes,
+    menu_configuration_links,
+    set_displayed_input_link_value,
+    tags_selected,set_tags_selected,
+    set_display_link_opacity,
+    pre_idSource,
+    pre_idTarget
+  }
 ) => {
   const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
-  const [pre_idSource,set_pre_idSource]=useState('none')
-  const [pre_idTarget,set_pre_idTarget]=useState('none')
+
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
 
@@ -160,8 +181,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     return DD
   }
 
-
-
   //Add new link and selection it
   const add_new_link = () => {
     const { nodes, links } = data
@@ -207,66 +226,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       link.idLink)
     set_data({ ...data })
     set_show_link(true)
-  }
-
-  //Change the source of selected link
-  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if(multi_selected_links.current.length>0){
-      const link = multi_selected_links.current[0]
-      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
-      const previous_node = data.nodes[link.idSource]
-      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-  
-      const source_node = data.nodes[changeEvent.target.value]
-      link.idSource = source_node.idNode
-      if (link.idSource === link.idTarget) {
-        AssignLinkValueToCorrectVar(link,'recycling',true,false)
-      }
-      source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
-  
-      set_data({ ...data })
-    }else if(Object.keys(data.nodes).length>1){
-      set_pre_idSource(changeEvent.target.value)
-    }
-    
-  }
-
-  const addDropSource = () => {
-    if (Object.keys(data.nodes).length >= 2) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)
-      )
-    }
-  }
-
-  const addDropCible = () => {
-    if (Object.keys(data.nodes).length >= 2) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)
-      )
-    }
-  }
-
-  //Change the target of selected link
-  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if(multi_selected_links.current.length>0){
-      const { nodes } = data
-      const link = multi_selected_links.current[0]
-      const previous_node = nodes[link.idTarget]
-      previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-  
-      const target_node = nodes[changeEvent.target.value]
-      link.idTarget = target_node.idNode
-      if (link.idSource === link.idTarget) {
-        AssignLinkValueToCorrectVar(link,'recycling',true,false)
-  
-      }
-      target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
-      set_data({ ...data })
-    }else if(Object.keys(data.nodes).length>1){
-      set_pre_idTarget(changeEvent.target.value)
-    }
-   
   }
 
   return (<>
@@ -339,196 +298,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       </OverlayTrigger>
     </InputGroup>
 
-    {/* Choix du point de départ du flux  */}
-    <OverlayTrigger
-      key={'Menu.tooltips.flux.src'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.flux.src'}>{t('Flux.tooltips.src')} </Tooltip>}>
-      <InputGroup>
-        <InputGroup.Text style={{
-          color:(multi_selected_links.current.length != 1)?'#666666':'',
-          backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-          width:'45%'}}>
-          {t('Flux.src')}
-        </InputGroup.Text>
-        <Form.Select
-          disabled={Object.keys(data.nodes).length<2}
-          style={{width:'55%'}}
-          onChange={source_change}
-          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
-          {addDropSource()}
-        </Form.Select>
-      </InputGroup>
-    </OverlayTrigger>
-
-    {/* Choix du point d'arrivée du flux  */}
-    <OverlayTrigger
-      key={'Menu.tooltips.flux.trgt'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-      <InputGroup>
-        <InputGroup.Text style={{
-          color:(multi_selected_links.current.length != 1)?'#666666':'',
-          backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-          width:'45%'}}>
-          {t('Flux.trgt')}
-        </InputGroup.Text>
-        <Form.Select
-          disabled={Object.keys(data.nodes).length<2}
-          style={{width:'55%'}}
-          onChange={target_change}
-          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
-          {addDropCible()}
-        </Form.Select>
-      </InputGroup>
-    </OverlayTrigger>
-
-    {/* Inversion du flux  */}
-    <OverlayTrigger
-      key={'Menu.tooltips.flux.if'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.if')} </Tooltip>}>
-      <InputGroup>
-        <InputGroup.Text style={{
-          color:(multi_selected_links.current.length == 0)?'#666666':'',
-          backgroundColor:(multi_selected_links.current.length == 0)?'#cccccc':'',
-          width:'45%'}}>
-          {t('Flux.if')}
-        </InputGroup.Text>
-        <Button
-          className='btn_menu_config'
-          style={{width:'55%'}}
-          variant="outline-primary"
-          disabled={multi_selected_links.current.length == 0}
-          onClick={() => {
-            const nodes_to_reorganize: SankeyNode[] = []
-            multi_selected_links.current.forEach(l => {
-              const tmp = l.idSource
-              const previous_node_s = data.nodes[l.idSource]
-              previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-              const source_node = data.nodes[l.idTarget]
-              l.idSource = source_node.idNode
-              source_node.outputLinksId.push(l.idLink)
-              nodes_to_reorganize.push(source_node)
-              const previous_node_t = data.nodes[l.idTarget]
-              previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-              const target_node = data.nodes[tmp]
-              l.idTarget = target_node.idNode
-              target_node.inputLinksId.push(l.idLink)
-              nodes_to_reorganize.push(target_node)
-            })
-            nodes_to_reorganize.forEach(n => {
-              reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
-            })
-            set_data({ ...data })
-          }}>
-          <FaArrowsAltH/>
-        </Button>
-      </InputGroup>
-    </OverlayTrigger>
-
-    <InputGroup>
-      <InputGroup.Text style={{
-        color:(multi_selected_links.current.length != 1)?'#666666':'',
-        backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-        width:'45%'}}>
-        {t('Flux.dzf')}
-      </InputGroup.Text>
-      {/* Boutton pour monter le lien sélctionné */}
-      <ButtonGroup style={{width:'55%'}}>
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.up'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.up'}>{t('Flux.tooltips.up')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            variant="outline-primary"
-            disabled={multi_selected_links.current.length != 1}
-            onClick={() => {
-              multi_selected_links.current.map(l => {
-                handleDownLink(data,l.idLink)
-              })
-              set_data({ ...data })
-            }}>
-            <FaAngleUp/>
-          </Button>
-        </OverlayTrigger>
-
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.upup'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.upup'}>{t('Flux.tooltips.upup')} </Tooltip>}>
-          <Button  variant="outline-primary" disabled={multi_selected_links.current.length<1}
-            className='btn_menu_config'
-            onClick={() => {
-              const tab_toshift:string[]=[]
-              const list_link_id_selected=multi_selected_links.current.map(l=>l.idLink)
-
-              data.linkZIndex.filter(l=>list_link_id_selected.includes(l)).forEach(l=>{
-                const posElemt = data.linkZIndex.indexOf(l)
-                tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
-              })
-              tab_toshift.forEach(l=>data.linkZIndex.push(l))
-              set_data({ ...data })
-            }}>
-            <FaAngleDoubleUp />
-          </Button>
-        </OverlayTrigger>
-
-        {/* Boutton pour baisser le lien sélctionné */}
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.dwn'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.dwn'}>{t('Flux.tooltips.dwn')} </Tooltip>}>
-          <Button  variant="outline-primary" disabled={multi_selected_links.current.length != 1}
-            className='btn_menu_config'
-            onClick={() => {
-              multi_selected_links.current.map(l => {
-                handleUpLink(data,l.idLink)
-              })
-              set_data({ ...data })
-
-            }}>
-            <FaAngleDown />
-          </Button>
-        </OverlayTrigger>
-
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.dwndwn'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.dwndwn'}>{t('Flux.tooltips.dwndwn')} </Tooltip>}>
-          <Button  variant="outline-primary" disabled={multi_selected_links.current.length<1}
-            className='btn_menu_config'
-            onClick={() => {
-              const tab_toshift:string[]=[]
-              const list_link_id_selected=multi_selected_links.current.map(l=>l.idLink)
-
-              data.linkZIndex.filter(l=>list_link_id_selected.includes(l)).forEach(l=>{
-                const posElemt = data.linkZIndex.indexOf(l)
-                tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
-              })
-              const reverse_linkzindex=data.linkZIndex.reverse();
-              (tab_toshift.reverse()).forEach(l=>reverse_linkzindex.push(l))
-              data.linkZIndex=reverse_linkzindex.reverse()
-              set_data({ ...data })
-
-            }}>
-            <FaAngleDoubleDown />
-          </Button>
-        </OverlayTrigger>
-      </ButtonGroup>
-    </InputGroup>
-
-
-
-
     { (multi_selected_links.current.length !== 0) ? (
       <Tabs defaultActiveKey="flux_data" id="settings-layout" fill={true}>
         {menu_configuration_links}
@@ -541,19 +310,3 @@ SankeyMenuConfigurationLinks.propTypes = SankeyMenuConfigurationLinksPropTypes
 
 export default SankeyMenuConfigurationLinks
 
-
-//Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
-//Permet donc de les déssiner avant
-export const handleUpLink = (data:SankeyData,i: string) => {
-  const posElemt = data.linkZIndex.indexOf(i)
-  data.linkZIndex.splice(posElemt, 1)
-  data.linkZIndex.splice(posElemt-1, 0, i)
-}
-
-//Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
-//Permet donc de les déssiner après
-export const handleDownLink = (data:SankeyData,i: string) => {
-  const posElemt = data.linkZIndex.indexOf(i)
-  data.linkZIndex.splice(posElemt, 1)
-  data.linkZIndex.splice(posElemt+1, 0, i)
-}

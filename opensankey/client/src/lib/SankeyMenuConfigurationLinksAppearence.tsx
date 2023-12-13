@@ -1,8 +1,10 @@
 import React,{useState} from 'react'
 import { Row, Form, Tab, FormControl, OverlayTrigger, Tooltip, InputGroup, Button, ButtonGroup, Dropdown} from 'react-bootstrap'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal } from './types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal,SankeyNode } from './types'
 import { TFunction } from 'i18next'
 import { FaAlignLeft,FaAlignCenter,FaAlignRight} from 'react-icons/fa'
+import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH } from 'react-icons/fa'
+import { reorganize_inputLinksId } from './SankeyLayout'
 
 import { Checkbox } from '@chakra-ui/react'
 
@@ -1030,7 +1032,6 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
     {/* Positionnement à la souris  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'70%'}}>{t('Flux.label.pls')+(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?'*':'')}</InputGroup.Text>
       <OverlayTrigger
         key={'flux.label.tooltips.12'}
         placement={'top'}
@@ -1099,10 +1100,154 @@ export const SankeyMenuConfigurationLinksAppearence = (
       </Button>
     </OverlayTrigger>
   </InputGroup>:<></>
+  const content_zIndex_and_direction=<>    {/* Inversion du flux  */}
+    <OverlayTrigger
+      key={'Menu.tooltips.flux.if'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.if')} </Tooltip>}>
+      <InputGroup>
+        <InputGroup.Text style={{
+          color:(multi_selected_links.current.length == 0)?'#666666':'',
+          backgroundColor:(multi_selected_links.current.length == 0)?'#cccccc':'',
+          width:'45%'}}>
+          {t('Flux.if')}
+        </InputGroup.Text>
+        <Button
+          className='btn_menu_config'
+          style={{width:'55%'}}
+          variant="outline-primary"
+          disabled={multi_selected_links.current.length == 0}
+          onClick={() => {
+            const nodes_to_reorganize: SankeyNode[] = []
+            multi_selected_links.current.forEach(l => {
+              const tmp = l.idSource
+              const previous_node_s = data.nodes[l.idSource]
+              previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
+              const source_node = data.nodes[l.idTarget]
+              l.idSource = source_node.idNode
+              source_node.outputLinksId.push(l.idLink)
+              nodes_to_reorganize.push(source_node)
+              const previous_node_t = data.nodes[l.idTarget]
+              previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
+              const target_node = data.nodes[tmp]
+              l.idTarget = target_node.idNode
+              target_node.inputLinksId.push(l.idLink)
+              nodes_to_reorganize.push(target_node)
+            })
+            nodes_to_reorganize.forEach(n => {
+              reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
+            })
+            set_data({ ...data })
+          }}>
+          <FaArrowsAltH/>
+        </Button>
+      </InputGroup>
+    </OverlayTrigger>
+
+    <InputGroup>
+      <InputGroup.Text style={{
+        color:(multi_selected_links.current.length != 1)?'#666666':'',
+        backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
+        width:'45%'}}>
+        {t('Flux.dzf')}
+      </InputGroup.Text>
+      {/* Boutton pour monter le lien sélctionné */}
+      <ButtonGroup style={{width:'55%'}}>
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.up'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.up'}>{t('Flux.tooltips.up')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            variant="outline-primary"
+            disabled={multi_selected_links.current.length != 1}
+            onClick={() => {
+              multi_selected_links.current.map(l => {
+                handleDownLink(data,l.idLink)
+              })
+              set_data({ ...data })
+            }}>
+            <FaAngleUp/>
+          </Button>
+        </OverlayTrigger>
+
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.upup'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.upup'}>{t('Flux.tooltips.upup')} </Tooltip>}>
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length<1}
+            className='btn_menu_config'
+            onClick={() => {
+              const tab_toshift:string[]=[]
+              const list_link_id_selected=multi_selected_links.current.map(l=>l.idLink)
+
+              data.linkZIndex.filter(l=>list_link_id_selected.includes(l)).forEach(l=>{
+                const posElemt = data.linkZIndex.indexOf(l)
+                tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
+              })
+              tab_toshift.forEach(l=>data.linkZIndex.push(l))
+              set_data({ ...data })
+            }}>
+            <FaAngleDoubleUp />
+          </Button>
+        </OverlayTrigger>
+
+        {/* Boutton pour baisser le lien sélctionné */}
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.dwn'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.dwn'}>{t('Flux.tooltips.dwn')} </Tooltip>}>
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length != 1}
+            className='btn_menu_config'
+            onClick={() => {
+              multi_selected_links.current.map(l => {
+                handleUpLink(data,l.idLink)
+              })
+              set_data({ ...data })
+
+            }}>
+            <FaAngleDown />
+          </Button>
+        </OverlayTrigger>
+
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.dwndwn'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.dwndwn'}>{t('Flux.tooltips.dwndwn')} </Tooltip>}>
+          <Button  variant="outline-primary" disabled={multi_selected_links.current.length<1}
+            className='btn_menu_config'
+            onClick={() => {
+              const tab_toshift:string[]=[]
+              const list_link_id_selected=multi_selected_links.current.map(l=>l.idLink)
+
+              data.linkZIndex.filter(l=>list_link_id_selected.includes(l)).forEach(l=>{
+                const posElemt = data.linkZIndex.indexOf(l)
+                tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
+              })
+              const reverse_linkzindex=data.linkZIndex.reverse();
+              (tab_toshift.reverse()).forEach(l=>reverse_linkzindex.push(l))
+              data.linkZIndex=reverse_linkzindex.reverse()
+              set_data({ ...data })
+
+            }}>
+            <FaAngleDoubleDown />
+          </Button>
+        </OverlayTrigger>
+      </ButtonGroup>
+    </InputGroup></>
 
   const content= <div className='apparence_config'>
     {content_style}
     <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+
+    {content_zIndex_and_direction}
+    <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+
     <h4 style={{fontSize:'14px' ,fontWeight:'bold'}}>{t('Flux.apparence.apparence')}</h4>
     {content_appearence}
     <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
@@ -1111,4 +1256,20 @@ export const SankeyMenuConfigurationLinksAppearence = (
 
   /* Formattage de l'affichage du menu attribut de flux */
   return menu_for_modal?content:<Tab key="flux_attributes" eventKey="flux_attributes" title={t('Flux.apparence.apparence')}>{content}</Tab>
+}
+
+//Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
+//Permet donc de les déssiner avant
+export const handleUpLink = (data:SankeyData,i: string) => {
+  const posElemt = data.linkZIndex.indexOf(i)
+  data.linkZIndex.splice(posElemt, 1)
+  data.linkZIndex.splice(posElemt-1, 0, i)
+}
+
+//Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
+//Permet donc de les déssiner après
+export const handleDownLink = (data:SankeyData,i: string) => {
+  const posElemt = data.linkZIndex.indexOf(i)
+  data.linkZIndex.splice(posElemt, 1)
+  data.linkZIndex.splice(posElemt+1, 0, i)
 }
