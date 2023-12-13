@@ -30,4 +30,3 @@ opensankey/client/.vscode/launch.json
 opensankey/client/src/images/*
 opensankey/client/node_modules
 **/OpenSankey.egg-info/*
-**/tests/*

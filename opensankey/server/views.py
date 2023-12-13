@@ -13,6 +13,7 @@ try:
     pythoncom.CoInitialize()
 except Exception:
     pass
+
 # External modules
 from threading import Thread
 
@@ -96,7 +97,7 @@ def save_excel():
     try:
         cwd = os.getcwd()
         excel_filename = os.path.join(cwd, "tutu.xlsx")
-        io_excel.write_mfa_excel(excel_filename, sankey, mode='w')
+        io_excel.write_excel_from_sankey(excel_filename, sankey, mode='w')
         # Ajoute le fichier json dans un onglet layout
         wb = openpyxl.load_workbook(excel_filename)
         layout_sheet = wb.create_sheet()
@@ -110,7 +111,7 @@ def save_excel():
         return send_file(excel_filename, as_attachment=True)
     except Exception as excpt:
         response = Response(
-            response='write_mfa_excel' + str(excpt),
+            response='write_excel_from_sankey : ' + str(excpt),
             status=402
         )
         return response
