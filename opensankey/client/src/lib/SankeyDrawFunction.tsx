@@ -900,9 +900,12 @@ export const EventOnSankeyZoneMouseUp=(
   links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
   set_displayed_input_link_value:(s:string)=>void,
   evt:MouseEvent,
-  start_point:{current:number[]}
-
+  start_point:{current:number[]},
+  set_legend_clicked:(b:boolean)=>void
 )=>{
+
+  set_legend_clicked(false)
+
   const open_links_menu=()=>{
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
       button_ref.current.click()
