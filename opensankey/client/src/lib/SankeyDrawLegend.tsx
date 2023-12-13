@@ -22,6 +22,8 @@ export const OpenSankeyDrawLegend = (
   t:TFunction,
   pointer_pos:{current:number[]},
   set_tag_contextualised:(t:string)=>void,
+  legend_clicked:boolean,
+  set_legend_clicked:(b:boolean)=>void,
 ) => {
   // Function that add legend of tags
   // In the legend it draw the legend (color of the tag and it name) that are visually reprensented on the graph
@@ -38,7 +40,8 @@ export const OpenSankeyDrawLegend = (
       return
     }
     d3.select(' .opensankey #g_legend').selectAll('*').remove()
-
+    d3.selectAll(' .opensankey #svg #g_legend_handles').remove()
+    console.log('-',legend_clicked)
     // Draw the draggable zone at first so it doesn't overlaps over legend element that are interactive 
     d3.select('.opensankey #g_legend').append('g')
       .attr('class','g_drag_zone_leg')
@@ -46,18 +49,23 @@ export const OpenSankeyDrawLegend = (
       .attr('class','drag_zone_leg')
       .attr('width',data.legend_width)
       .attr('height','5px')
-      .attr('stroke','none')
-      .attr('stroke-dasharray','6,6')
-      .attr('fill','grey')
-      .attr('fill-opacity','0')
+      .attr('rx','2px')
+      .attr('ry','2px')
+      .attr('stroke-dasharray',()=>legend_clicked?'6,6':'')
+      .attr('stroke',data.legend_bg_border?data.legend_bg_color:'none')
+      .attr('fill',data.legend_bg_color)
+      .attr('fill-opacity',data.legend_bg_opacity)
       .on('mouseover',()=>{
-        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke','grey')
-        d3.select('.opensankey #g_legend .drag_zone_leg').attr('fill-opacity','0.05')
+        
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray','6,6')
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke',data.legend_bg_color)
       })
       .on('mouseleave',()=>{
-        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke','none')
-        d3.select('.opensankey #g_legend .drag_zone_leg').attr('fill-opacity','0')
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray','unherit')
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke',data.legend_bg_border?data.legend_bg_color:'none')
+
       })
+      .on('mousedown',()=>set_legend_clicked(true))
 
 
     let scale_for_legend=1
@@ -66,7 +74,9 @@ export const OpenSankeyDrawLegend = (
       const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
       scale_for_legend=(scale_svg<1?(1/scale_svg):1)
     }
-    const legend = d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(scale_for_legend)+')').append('g')
+    const legend = d3.select(' .opensankey #g_legend')
+      .attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+(scale_for_legend)+')')
+      .append('g').style('transform','translate(3px,-6px)')
 
     const wrap = textwrap()
       .bounds({ height: 100, width: pas - 40 })
@@ -343,7 +353,8 @@ export const OpenSankeyDrawLegend = (
     h=h?h:50
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
   
-
+    d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
+    draw_legend_handles(data,set_data,legend_clicked,h)
   }
   if(!data.mask_legend){
     drawLegend()
@@ -374,10 +385,26 @@ export const drag_legend_g_element=(data:SankeyData,event:d3.D3DragEvent<SVGGEle
   const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
   const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
   scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+  const legend_width=data.legend_width*scale_for_legend
   data.legend_position[0]+=(event.sourceEvent.movementX/scale_svg)
   data.legend_position[1]+=(event.sourceEvent.movementY/scale_svg)
   data.legend_position[0]=(data.legend_position[0]>=0?data.legend_position[0]:0)
   data.legend_position[1]=(data.legend_position[1]>=0?data.legend_position[1]:0)
+
+  let h=document.getElementById('g_legend')?.getBoundingClientRect().height
+  h=h?h:50
+  // Move handles
+  d3.select('.opensankey #g_legend_handles .legend_handleleft')
+    .attr('x',data.legend_position[0]-(size_zdt_handle/2))
+    .attr('y',data.legend_position[1]+ h/2-(size_zdt_handle/2))
+
+  d3.select('.opensankey #g_legend_handles .legend_handleright')
+    .attr('x',data.legend_position[0]+legend_width-(size_zdt_handle/2))
+    .attr('y',data.legend_position[1]+ h/2-(size_zdt_handle/2))
+
+
+
+
   d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
 }
 
@@ -437,4 +464,88 @@ export const context_legend_tags=(tag_contextualised:string|undefined,
       </ButtonGroup>
     </Popover.Body>
   </Popover>:<></>
+}
+const draw_legend_handles=(data:SankeyData,set_data:(d:SankeyData)=>void,legend_clicked:boolean,h:number)=>{
+  // d3.select('.opensankey #g_legend_handles').append('g').attr('id','gg_legend_handles_'+zdt.idLabel);
+  // console.log(legend_clicked);
+  ['left','right'].forEach(pos=>{
+    add_legend_handle(pos,data,set_data,legend_clicked,h)
+  })
+}
+const size_zdt_handle=10
+
+const add_legend_handle=(pos:string,data:SankeyData,set_data:(d:SankeyData)=>void,legend_clicked:boolean,h:number)=>{
+  // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
+  let  svg_k_factor=1
+  if(d3.select('.opensankey #svg').nodes().length>0){
+    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+    svg_k_factor=(scale_svg<1?(1/scale_svg):1)
+  }
+
+  h*=svg_k_factor
+  const legend_width=data.legend_width*svg_k_factor
+  const gg_zdt=d3.select('.opensankey #g_legend_handles').style('display',legend_clicked?'inline':'none')
+  // const gg_zdt=d3.select('.opensankey #g_legend_handles')
+
+  // Draw the circle with parameter commont to all the handles
+  const gg_zdt_h_circle=gg_zdt
+    .append('rect')
+    .attr('class','legend_handle'+pos)
+    .attr('width',size_zdt_handle*svg_k_factor)
+    .attr('height',size_zdt_handle*svg_k_factor)
+    .attr('fill','black')
+    .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
+    .call(drag_legend_handle(pos,data,set_data,svg_k_factor))
+  // Position the handle 
+  switch (pos){
+
+  case 'left':
+    gg_zdt_h_circle
+      .attr('x',data.legend_position[0]-(size_zdt_handle/2))
+      .attr('y',data.legend_position[1]+ h/2-(size_zdt_handle/2))
+    break
+
+  case 'right':
+    gg_zdt_h_circle
+      .attr('x',data.legend_position[0]+legend_width-(size_zdt_handle/2))
+      .attr('y',data.legend_position[1]+ h/2-(size_zdt_handle/2))
+    break
+  }
+}
+
+const drag_legend_handle=(pos:string,data:SankeyData,set_data:(d:SankeyData)=>void,svg_k_factor:number)=>{
+  const g_zdt_h=d3.select('.opensankey #g_legend_handles .legend_handle'+pos)
+  const text_zone_shape=d3.select('.g_drag_zone_leg rect')
+  const g_text_zone=d3.select('#g_legend')
+
+  return d3.drag<SVGRectElement, unknown, HTMLElement>()
+    .subject(Object)
+    .on('drag', function (event) {
+      // The handles change the width and height of the text_zone
+      // The top and left handles also shift the x/y of text zone
+      const legend_width=data.legend_width*svg_k_factor
+
+      switch(pos){
+
+      case 'left':
+        data.legend_width-=event.dx/svg_k_factor
+        data.legend_position[0]+=event.dx
+
+        g_text_zone.attr('transform','translate('+data.legend_position[0]+','+data.legend_position[1]+') scale('+svg_k_factor+')')
+        g_zdt_h.attr('x',data.legend_position[0]-(size_zdt_handle/2))
+        // g_zdt_h.attr('width',data.legend_width)
+        text_zone_shape.attr('width',data.legend_width)
+        break
+
+      case 'right':
+        data.legend_width+=event.dx/svg_k_factor
+        g_zdt_h.attr('x',data.legend_position[0]+legend_width-(size_zdt_handle/2))
+        text_zone_shape.attr('width',data.legend_width)
+        break
+      }
+    })
+    .on('end',()=>set_data(data))
+
+        
 }

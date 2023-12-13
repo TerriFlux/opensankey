@@ -158,6 +158,10 @@ export const open_resources = {
         overcharge_style_value:'Value of the variable override the value from the style',
         group:'Group',
         color:'Color',
+        LegBgOpacity:'Background opacity',
+        LegBgBorder:'Border',
+        LegBgColor:'Background color',
+
         Transformation : {
           amp_short:'Layout',
           amp:'Change the layout',
@@ -195,7 +199,6 @@ export const open_resources = {
           attrGeneral:'Drawing area',
           title:'Layout',
           oher_file:'Other file',
-          
           tooltips:{
             Shortcuts:'Shortened selection of attributes to transfer from imported sankey',
             Topology:'Transfer added/deleted node/links from the imported sankey to current',
@@ -236,8 +239,10 @@ export const open_resources = {
           DisplayWelcome:'Display welcome message',          
           doc:'Open the documentation',
           support:'Contact the support',
-          tuto:'Explore tutorials'
-
+          tuto:'Explore tutorials',
+          LegBgOpacity:'Choose background color',
+          LegBgBorder:'Add a border to the legend area',
+          LegBgColor:'Choose background color opacity',
         },
       },
       MEP:{
@@ -768,6 +773,9 @@ export const open_resources = {
         group:'Groupe',
         color:'Couleur',
         oher_file:'Autre fichier',
+        LegBgOpacity:'Opacité du fond',
+        LegBgBorder:'Bordure',
+        LegBgColor:'Couleur de fond',
         Transformation : {
           amp_short:'M.E.P',
           amp:'Modifier la mise en page',
@@ -845,7 +853,9 @@ export const open_resources = {
           doc:'Ouvrir la documentation',
           support:'Contacter le support',
           tuto:'Explorer les tutoriels',
-
+          LegBgOpacity:'Modifie l\'opacité de la couleur de fond de la légende',
+          LegBgBorder:'Ajoute une bordure à la légende',
+          LegBgColor:'Moddifie la couleur de fond de la légende',
 
         },
       },
