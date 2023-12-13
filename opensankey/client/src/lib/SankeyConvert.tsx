@@ -711,237 +711,238 @@ export const convert_nodes = (
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
   const default_n=DefaultNode(data)
+
+  // If node has old 'id' attribute, convert it to new one 'idNode' 
   if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {
     Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
+  
+  const has_product = Object.values(data.nodes).filter(n =>((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
+  const list_key_nodes=Object.values(data.nodes).map(n=>n.idNode)
+
   Object.values(data.nodes).forEach( n => {
-    if (((n as unknown) as ConvertSankeyNode).input_links) {
+    const n_depreciated = (n as unknown) as ConvertSankeyNode
+
+    if (n_depreciated.input_links) {
       n.inputLinksId = []
       n.outputLinksId = [];
-      (((n as unknown) as ConvertSankeyNode).input_links as number[]).forEach(link_idx => {
+      (n_depreciated.input_links as number[]).forEach(link_idx => {
         n.inputLinksId.push(data.links['link' + link_idx].idLink)
       });
-      (((n as unknown) as ConvertSankeyNode).output_links as number[]).forEach(link_idx => {
+      (n_depreciated.output_links as number[]).forEach(link_idx => {
         n.outputLinksId.push(data.links['link' + link_idx].idLink)
       })
-      delete ((n as unknown) as ConvertSankeyNode).output_links
-      delete ((n as unknown) as ConvertSankeyNode).input_links
-      delete ((n as unknown) as ConvertSankeyNode).id
+      delete n_depreciated.output_links
+      delete n_depreciated.input_links
+      delete n_depreciated.id
     }
-  })
-  const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
-  Object.values(data.nodes).forEach(
-    n => {
-      const n_convert = (n as unknown) as ConvertSankeyNode
 
-      // ==================================================================
-      // CONVERSION D'ATTRIBUT OBLIGATOIRE DES NOEUDS EN VARIABLES LOCAL
-      if(((n as unknown) as ConvertSankeyNode).display_style!==undefined){
-        n.local=(n.local!=undefined && n.local!==null)?n.local:{}
-        if (n_convert.display_style?.label_vert === 'haut' ) {
-          n_convert.display_style.label_vert = 'top'
-        }
-        if (n_convert.display_style?.label_vert === 'milieu' ) {
-          n_convert.display_style.label_vert = 'middle'
-        }
-        if (n_convert.display_style?.label_vert === 'bas' ) {
-          n_convert.display_style.label_vert = 'bottom'
-        }
-        if (n_convert.display_style?.label_horiz === 'droite' ) {
-          n_convert.display_style.label_horiz = 'right'
-        }
-        if (n_convert.display_style?.label_horiz === 'milieu' ) {
-          n_convert.display_style.label_horiz = 'middle'
-        }
-        if (n_convert.display_style?.label_horiz === 'gauche' ) {
-          n_convert.display_style.label_horiz = 'left'
-        }
-        if (n_convert.display_style && n_convert.display_style?.font_family === undefined) {
-          n_convert.display_style.font_family = 'Arial,serif'
-        }
+    // ==================================================================
+    // CONVERSION D'ATTRIBUT OBLIGATOIRE DES NOEUDS EN VARIABLES LOCAL
+    if(n_depreciated.display_style!==undefined){
+      n.local=(n.local!=undefined && n.local!==null)?n.local:{}
+      if (n_depreciated.display_style?.label_vert === 'haut' ) {
+        n_depreciated.display_style.label_vert = 'top'
+      }
+      if (n_depreciated.display_style?.label_vert === 'milieu' ) {
+        n_depreciated.display_style.label_vert = 'middle'
+      }
+      if (n_depreciated.display_style?.label_vert === 'bas' ) {
+        n_depreciated.display_style.label_vert = 'bottom'
+      }
+      if (n_depreciated.display_style?.label_horiz === 'droite' ) {
+        n_depreciated.display_style.label_horiz = 'right'
+      }
+      if (n_depreciated.display_style?.label_horiz === 'milieu' ) {
+        n_depreciated.display_style.label_horiz = 'middle'
+      }
+      if (n_depreciated.display_style?.label_horiz === 'gauche' ) {
+        n_depreciated.display_style.label_horiz = 'left'
+      }
+      if (n_depreciated.display_style && n_depreciated.display_style?.font_family === undefined) {
+        n_depreciated.display_style.font_family = 'Arial,serif'
+      }
 
-        n.local.font_family = n_convert.display_style?.font_family
-        n.local.label_vert = n_convert.display_style?.label_vert
-        n.local.label_horiz = n_convert.display_style?.label_horiz
-        n.local.font_size=Number(n_convert.display_style?.font_size)
-        n.local.value_font_size=Number(n_convert.display_style?.value_font_size)
-        n.local.bold=n_convert.display_style?.bold
-        n.local.uppercase=n_convert.display_style?.uppercase
-        n.local.italic=n_convert.display_style?.italic
-        n.local.label_box_width=n_convert.display_style?.label_box_width
-        n.local.label_color=n_convert.display_style?.label_color
-        n.local.value_font_size=n_convert.display_style?.value_font_size
-        n.local.label_horiz_valeur=n_convert.display_style?.label_horiz_valeur
-        n.local.label_vert_valeur=n_convert.display_style?.label_vert_valeur
+      n.local.font_family = n_depreciated.display_style?.font_family
+      n.local.label_vert = n_depreciated.display_style?.label_vert
+      n.local.label_horiz = n_depreciated.display_style?.label_horiz
+      n.local.font_size=Number(n_depreciated.display_style?.font_size)
+      n.local.value_font_size=Number(n_depreciated.display_style?.value_font_size)
+      n.local.bold=n_depreciated.display_style?.bold
+      n.local.uppercase=n_depreciated.display_style?.uppercase
+      n.local.italic=n_depreciated.display_style?.italic
+      n.local.label_box_width=n_depreciated.display_style?.label_box_width
+      n.local.label_color=n_depreciated.display_style?.label_color
+      n.local.value_font_size=n_depreciated.display_style?.value_font_size
+      n.local.label_horiz_valeur=n_depreciated.display_style?.label_horiz_valeur
+      n.local.label_vert_valeur=n_depreciated.display_style?.label_vert_valeur
         
 
-        delete n_convert.display_style
-      }
+      delete n_depreciated.display_style
+    }
 
-      // Assign ancienement attribut de noeud obligatoires en tant que var local 
-      if (n_convert.visible === 1) {
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.shape_visible = true
-      }
-      if (n_convert.visible === 0) {
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.shape_visible = false
-      }
-      if(n_convert.shape_visible || n_convert.display){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.shape_visible=(n_convert.shape_visible as boolean)
-        delete n_convert.shape_visible
-        //delete n_convert.display
-      }
-      if(n_convert.shape && ((n.local && n.local.shape==undefined) || n.local===undefined)){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.shape=(n_convert.shape)
-        delete n_convert.shape
+    // Assign ancienement attribut de noeud obligatoires en tant que var local 
+    if (n_depreciated.visible === 1) {
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.shape_visible = true
+    }
+    if (n_depreciated.visible === 0) {
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.shape_visible = false
+    }
+    if(n_depreciated.shape_visible || n_depreciated.display){
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.shape_visible=(n_depreciated.shape_visible as boolean)
+      delete n_depreciated.shape_visible
+      //delete n_depreciated.display
+    }
+    if(n_depreciated.shape && ((n.local && n.local.shape==undefined) || n.local===undefined)){
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.shape=(n_depreciated.shape)
+      delete n_depreciated.shape
 
-      }
-      if(n_convert.node_width && ((n.local && n.local.node_width==undefined) || n.local===undefined)){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.node_width=(n_convert.node_width)
-        delete n_convert.node_width
+    }
+    if(n_depreciated.node_width && ((n.local && n.local.node_width==undefined) || n.local===undefined)){
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.node_width=(n_depreciated.node_width)
+      delete n_depreciated.node_width
 
-      }
-      if(n_convert.node_height && ((n.local && n.local.node_height==undefined) || n.local===undefined)){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.node_height=(n_convert.node_height)
-        delete n_convert.node_height
-      }
+    }
+    if(n_depreciated.node_height && ((n.local && n.local.node_height==undefined) || n.local===undefined)){
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.node_height=(n_depreciated.node_height)
+      delete n_depreciated.node_height
+    }
 
-      if(n_convert.color && ((n.local && n.local.color==undefined) || n.local===undefined)){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.color=(n_convert.color)
-        delete n_convert.color
+    if(n_depreciated.color && ((n.local && n.local.color==undefined) || n.local===undefined)){
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.color=(n_depreciated.color)
+      delete n_depreciated.color
+    }
+    if(n_depreciated.colorSustainable && ((n.local && n.local.colorSustainable==undefined) || n.local===undefined)){
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.colorSustainable=(n_depreciated.colorSustainable)
+      delete n_depreciated.colorSustainable
+    }
+    if (n_depreciated.type) {
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.shape = n_depreciated.type === 'product' ? 'ellipse' : 'rect'
+      if ( has_product && !n.tags['Type de noeud']) {
+        n.tags['Type de noeud'] = []
       }
-      if(n_convert.colorSustainable && ((n.local && n.local.colorSustainable==undefined) || n.local===undefined)){
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.colorSustainable=(n_convert.colorSustainable)
-        delete n_convert.colorSustainable
+      if (has_product && n.tags['Type de noeud'].length === 0 ) {
+        n.tags['Type de noeud'].push(n_depreciated.type === 'product' ? 'produit' : 'secteur' )
       }
+      delete n_depreciated.type
+    }
+    if (n_depreciated.label_visible && ((n.local && n.local.label_visible==undefined) || n.local===undefined)) {
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local.label_visible=(n_depreciated.label_visible as boolean)
+    }
+    if (n_depreciated.node_visible !== undefined && n_depreciated.display !== undefined) {
+      // if (NodeDisplayed(data,n,false) !== (n_depreciated.node_visible&&n_depreciated.display) ) {
+      //   n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      //   n.local.local_aggregation = (n_depreciated.node_visible&&n_depreciated.display)
+      // }
+      delete n_depreciated.node_visible
+      delete n_depreciated.display
+    }
 
+    // FIN CONVERSION EN ATTRIBUT LOCAL
+    // ==================================================================
 
-      if (n_convert.type) {
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.shape = n_convert.type === 'product' ? 'ellipse' : 'rect'
-        if ( has_product && !n.tags['Type de noeud']) {
-          n.tags['Type de noeud'] = []
-        }
-        if (has_product && n.tags['Type de noeud'].length === 0 ) {
-          n.tags['Type de noeud'].push(n_convert.type === 'product' ? 'produit' : 'secteur' )
-        }
-        delete n_convert.type
-      }
-
-      if (n_convert.label_visible && ((n.local && n.local.label_visible==undefined) || n.local===undefined)) {
-        n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        n.local.label_visible=(n_convert.label_visible as boolean)
-      }
-      if (n_convert.node_visible !== undefined && n_convert.display !== undefined) {
-        // if (NodeDisplayed(data,n,false) !== (n_convert.node_visible&&n_convert.display) ) {
-        //   n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-        //   n.local.local_aggregation = (n_convert.node_visible&&n_convert.display)
-        // }
-        delete n_convert.node_visible
-        delete n_convert.display
-      }
-
-      // FIN CONVERSION EN ATTRIBUT LOCAL
-      // ==================================================================
-
-
-      if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {
-        Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
-      }
     
-    
-  
-      if (n_convert.definition) {
-        n.tooltip_text = n_convert.definition
-        delete n_convert.definition
-      }
-      if (n.x === undefined) {
-        n.x = 0
-      }
-      if (n.y === undefined) {
-        n.y = 0
-      }
+    if (n_depreciated.definition) {
+      n.tooltip_text = n_depreciated.definition
+      delete n_depreciated.definition
+    }
+    if (n.x === undefined) {
+      n.x = 0
+    }
+    if (n.y === undefined) {
+      n.y = 0
+    }
 
-      delete n_convert.visible
+    delete n_depreciated.visible
 
-      n.name = n.name.split('\\n').join(' ')
+    n.name = n.name.split('\\n').join(' ')
 
-      const attributes_to_remove = ['tooltips','total_input_offset','input_offsets','total_output_offset','output_offsets','horizontal_index','title_length','old_color']
-      for (const attr in attributes_to_remove) {
-        if (attributes_to_remove[attr] in n_convert) {
-          delete ((n_convert as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
-        }
+    const attributes_to_remove = ['tooltips','total_input_offset','input_offsets','total_output_offset','output_offsets','horizontal_index','title_length','old_color']
+    for (const attr in attributes_to_remove) {
+      if (attributes_to_remove[attr] in n_depreciated) {
+        delete ((n_depreciated as unknown) as {[key:string]:unknown})[attributes_to_remove[attr]]
       }
+    }
 
-      if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
-        if (data_to_convert.display_style.trade_close !== undefined) {
-          n_convert.trade_close = data_to_convert.display_style.trade_close
-        }
-      } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
-        if (data_to_convert.display_style.trade_close !== undefined) {
-          n_convert.trade_close = data_to_convert.display_style.trade_close
-        }
+    if (n.name.includes('(I') && n.outputLinksId.length > 0 && data.nodeTags['Exchanges']) {
+      if (data_to_convert.display_style.trade_close !== undefined) {
+        n_depreciated.trade_close = data_to_convert.display_style.trade_close
       }
-      if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_convert.trade_close && !n.position) {
-        n.position = 'relative'
-        n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
-        n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
+    } else if (n.name.includes('(E') && !n.name.includes('(EA)') && data.nodeTags['Exchanges']) {
+      if (data_to_convert.display_style.trade_close !== undefined) {
+        n_depreciated.trade_close = data_to_convert.display_style.trade_close
       }
-      if ( !('Primaire' in n.dimensions) ) {
-        n.dimensions['Primaire'] = { level : 1, parent_name: undefined }
+    }
+    if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 &&(n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
+      n.position = 'relative'
+      n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
+      n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
+    }
+    if ( !('Primaire' in n.dimensions) ) {
+      n.dimensions['Primaire'] = { level : 1, parent_name: undefined }
+    }
+    if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
+      n.tags['Type de noeud'] = ['echange']
+      if (!n.dimensions) {
+        n.dimensions = {}
       }
-      if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior' ) {
-        n.tags['Type de noeud'] = ['echange']
-        if (!n.dimensions) {
-          n.dimensions = {}
-        }
-        if (data_to_convert.trade_sectors) {
-          if (n.tags['Exchanges'][0].includes((data_to_convert.trade_sectors as string[])[0].split(' - ')[0])) {
-            n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
-            if (!('Echanges' in n.tags)) {
-              n.tags.Echanges = []
-            }
-          } else {
-            const names = n.name.split(' - ')
-            names[1] = (data_to_convert.trade_sectors as string[])[0].split(' - ')[0]
-            const parent_name = names.join(' - ')
-            const parent_node = Object.values(data.nodes).filter( n => n.name === parent_name)[0]
-            if (parent_node) {
-              n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
-            }
-            if (!('Echanges' in n.tags)) {
-              n.tags.Echanges = []
-            }
+      if (data_to_convert.trade_sectors) {
+        if (n.tags['Exchanges'][0].includes((data_to_convert.trade_sectors as string[])[0].split(' - ')[0])) {
+          n.dimensions = { 'Echanges': { level : 1, parent_name: undefined } }
+          if (!('Echanges' in n.tags)) {
+            n.tags.Echanges = []
+          }
+        } else {
+          const names = n.name.split(' - ')
+          names[1] = (data_to_convert.trade_sectors as string[])[0].split(' - ')[0]
+          const parent_name = names.join(' - ')
+          const parent_node = Object.values(data.nodes).filter( n => n.name === parent_name)[0]
+          if (parent_node) {
+            n.dimensions = { 'Echanges': { level : 2, parent_name: parent_node.idNode } }
+          }
+          if (!('Echanges' in n.tags)) {
+            n.tags.Echanges = []
           }
         }
       }
-      delete n.tags['Exchanges']
+    }
+    delete n.tags['Exchanges']
 
-      // Nodes with type Echanges did not have the correct dimensions
-      if ( n.tags['Echanges'] ) {
-        const new_dimensions = {
-          'Primaire' : n.dimensions['Primaire'],
-          'Echanges' : n.dimensions['Echanges']
-        }
-        n.dimensions = new_dimensions
+    // Nodes with type Echanges did not have the correct dimensions
+    if ( n.tags['Echanges'] ) {
+      const new_dimensions = {
+        'Primaire' : n.dimensions['Primaire'],
+        'Echanges' : n.dimensions['Echanges']
       }
+      n.dimensions = new_dimensions
+    }
 
     
-      // Filter out variable in the node that are null or undefined so they can be attribued the default value
-      n=(Object.fromEntries(Object.entries(n).filter(kn=>kn[1]!==null && kn[1]!==undefined)) as SankeyNode)
+    // Filter out variable in the node that are null or undefined so they can be attribued the default value
+    n=(Object.fromEntries(Object.entries(n).filter(kn=>kn[1]!==null && kn[1]!==undefined)) as SankeyNode)
 
-      // Fill missing variable from incoming node with default value so the node has the required structure 
-      n=Object.assign(JSON.parse(JSON.stringify(default_n)),n)
+    // Fill missing variable from incoming node with default value so the node has the required structure 
+    n=Object.assign(JSON.parse(JSON.stringify(default_n)),n)
 
-      data.nodes[n.idNode]=n
+    // Search if nodes reference parent that doesn't exist
+    if(n.dimensions){
+      Object.entries(n.dimensions).filter(nd=>nd[1].parent_name && !list_key_nodes.includes(nd[1].parent_name)).forEach(nd=>{
+        delete n.dimensions[nd[0]]
+      })
     }
+
+    data.nodes[n.idNode]=n
+  }
   )
 }
 

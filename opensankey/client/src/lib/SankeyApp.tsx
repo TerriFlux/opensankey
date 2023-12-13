@@ -516,9 +516,16 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const menu_node_io=SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity,true)
   const dragNodeIO=show_menu_node_io?MenuDraggable(menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),set_show_menu_node_io):<></>
 
-  const context_n=ContextMenuNode(contextualised_node,set_contextualised_node,data,set_data,display_nodes,display_links,multi_selected_nodes,multi_selected_links,t,
-    set_show_menu_node_apparence,set_show_menu_node_io,
-    set_agregation_node,set_is_agregation,set_show_agregation,
+  const context_n=ContextMenuNode(
+    contextualised_node,set_contextualised_node,
+    data,set_data,
+    display_nodes,display_links,
+    multi_selected_nodes,multi_selected_links,
+    t,
+    set_show_menu_node_apparence,
+    set_show_menu_node_io,
+    set_agregation_node,set_is_agregation,
+    set_show_agregation,
     set_display_link_opacity,
     pointer_pos,[],[])
 
