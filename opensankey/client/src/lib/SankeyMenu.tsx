@@ -48,7 +48,7 @@ import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSq
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { addAllDropDownNode } from './SankeyMenuBanner'
 import { reorganize_inputLinksId } from './SankeyLayout'
-import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinks'
+import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinksAppearence'
 import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'

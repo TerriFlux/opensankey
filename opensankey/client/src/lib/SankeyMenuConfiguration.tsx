@@ -36,7 +36,8 @@ export const OpenSankeyConfigurationsMenus = (
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
   set_display_link_opacity:(s:string)=>void,
-
+  pre_idSource:string,
+  pre_idTarget:string,
 
 ) => {
   return [
@@ -205,6 +206,8 @@ export const OpenSankeyConfigurationsMenus = (
                 tags_selected={tags_selected}
                 set_tags_selected={set_tags_selected}
                 set_display_link_opacity={set_display_link_opacity}
+                pre_idSource={pre_idSource}
+                pre_idTarget={pre_idTarget}
               />
             </Accordion.Body>
           </Accordion.Item>

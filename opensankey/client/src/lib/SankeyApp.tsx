@@ -122,7 +122,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   // For OpenSankeyConfigurationsMenus
   const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
-
+  const [pre_idSource,set_pre_idSource]=useState('none')
+  const [pre_idTarget,set_pre_idTarget]=useState('none')
 
   const [show_menu_node_apparence,set_show_menu_node_apparence]=useState(false)
   const [show_menu_node_io,set_show_menu_node_io]=useState(false)
@@ -296,7 +297,16 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //- 1.3 Builds Configuration Menus Links
   //- 1.3.1 Builds Configuration Menus Link Attributes
-  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,multi_selected_links,t,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,[],displayed_input_link_value,set_displayed_input_link_value,[],display_link_opacity,set_display_link_opacity)
+  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(data,set_data,
+    multi_selected_links,t,
+    tags_group_key,set_tags_group_key,
+    tags_selected,set_tags_selected,[],
+    displayed_input_link_value,set_displayed_input_link_value,
+    [],
+    display_link_opacity,set_display_link_opacity,
+    pre_idSource,set_pre_idSource,
+    pre_idTarget,set_pre_idTarget
+  )
   //- 1.3.2 Builds Configuration Menus Link tags
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -322,7 +332,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     set_style_to_apply,set_show_nav,
     menu_configuration_layout,menu_configuration_nodes_tags, menu_configuration_link_tags, menu_configuration_data_tags,
     menu_configuration_nodes,menu_configuration_links,<></>,sub_nav_item_active,set_sub_nav_item_active,
-    true,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
+    true,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity,
+    pre_idSource,pre_idTarget
   )
 
   //- 2. Build Menus
@@ -524,7 +535,15 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
   // MENU DRAGGABLE LINK DATA
-  const menu_link_data=SankeyMenuConfigurationLinksData(data,tags_selected,set_tags_selected,multi_selected_links,set_data,t,[],displayed_input_link_value,set_displayed_input_link_value,true)
+  const menu_link_data=SankeyMenuConfigurationLinksData(data,
+    tags_selected,set_tags_selected,
+    multi_selected_links,
+    set_data,
+    t,
+    [],
+    displayed_input_link_value,set_displayed_input_link_value,
+    pre_idSource,set_pre_idSource,
+    pre_idTarget,set_pre_idTarget,true)
   const dragLink_data=show_menu_link_data?MenuDraggable(menu_link_data,pointer_pos,t('Menu.flux')+' '+t('Flux.data.données'),set_show_menu_link_data):<></>
 
 
