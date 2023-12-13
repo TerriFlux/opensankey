@@ -8,7 +8,6 @@ import {RemoveAnimate,
   DrawArrows,
   SvgDragMiddleMouseStart,
   SvgDragMiddleMouseMove,
-  NodeVisibleOnsSvg,
   SimpleGNodeClick} from 'open-sankey/dist/SankeyDrawFunction'
 import {  GetLinkValue,
   NodeColor,
@@ -445,7 +444,6 @@ const calcPath = (
   // let number_new_path=0
   let long = 0
   const links_present = node.outputLinksId.filter(o => new_links.includes(o))
-
   if (links_present.length > 0) {
     long += 1
     links_present.forEach(d => {
@@ -461,7 +459,8 @@ const calcPath = (
 const node_mouse_click=(
   data:SankeyPlusData,
   set_animating:(b:boolean)=>void,
-  event:React.MouseEvent<HTMLButtonElement>,d:unknown,
+  event:React.MouseEvent<HTMLButtonElement>,
+  d:SankeyPlusNode,
   set_data:(d:SankeyPlusData)=>void,
   nodes_accordion_ref:{ current: HTMLDivElement }| null,
   multi_selected_nodes:{current: SankeyPlusNode[] },
@@ -469,7 +468,8 @@ const node_mouse_click=(
   accordion_ref:{ current: HTMLDivElement},
   button_ref:{ current: HTMLLabelElement},
   accept_simple_click:{current:boolean},
-  
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink },
 )=>{
   const sankeyTooltip=d3.select('.sankey-tooltip')
 
@@ -484,18 +484,18 @@ const node_mouse_click=(
     d3.select(' .opensankey #svg').selectAll('.link').style('stroke', '#dddddd')
     d3.select(' .opensankey #svg').selectAll('.node').style('fill', '#dddddd')
     d3.select(' .opensankey #svg').selectAll('.link_value').style('display', 'none')
-    const dd=(d as SankeyPlusNode)
-    const nodeDisplay = [(d as SankeyPlusNode).idNode]
-    branchAnimate(data,dd,nodeDisplay)
-    const node_visible=NodeVisibleOnsSvg()
-    const visible_links = Object.values(data.links).filter(l=>node_visible.includes(l.idSource) && node_visible.includes(l.idTarget)).map(l=>l.idLink)
+    const nodeDisplay = [d.idNode]
+    const node_visible=Object.values(display_nodes).map(n=>n.idNode)
+
+    branchAnimate(data,d,nodeDisplay,node_visible)
+    const visible_links = Object.values(display_links).map(l=>l.idLink)
     const start_point = Object.values(data.nodes).filter(f => (f.inputLinksId.filter(i => visible_links.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0))
     let time_to_animate = 500
     Object.values(data.nodes).filter(f => {
       return (f.inputLinksId.filter(i => visible_links.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0)})
     //calcul la profondeur max de nouveau flux (le nombre de nouveau flux consecutif ) afin de calculer le temps qu'il faut avant de changer la variable set_view
     if (start_point.length > 0) {
-      let nb_animation = calcPath(data,data.nodes, dd, visible_links)
+      let nb_animation = calcPath(data,data.nodes, d, visible_links)
       nb_animation = (nb_animation !== undefined) ? nb_animation : 0
       time_to_animate += nb_animation * 2000
     }
@@ -521,7 +521,8 @@ const node_mouse_click=(
 const branchAnimate = (
   data:SankeyPlusData,
   nodeData: SankeyPlusNode,
-  nodeDisplay: string[]
+  nodeDisplay: string[],
+  node_visible: string[],
 ) => {
 
   // Permet la progation de l'animation sur l'ensemble du Sankey
@@ -535,7 +536,6 @@ const branchAnimate = (
     .filter(function (d) {
       return d.idSource === nodeStart
     })
-
   // On fait une copie du link pour son animation, celle-ci sera supprimé après l'animation  (classe .tmp)
   const tmpLinks = glinks.clone(true).raise().attr('class', 'tmp')
   tmpLinks.selectAll('.link')
@@ -578,20 +578,24 @@ const branchAnimate = (
       if (!nodeDisplay.includes(idTarget)) {
         nodeDisplay.push(idTarget)
         let max=0
-        const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink])
+        const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink],node_visible)
+
         max=(tmp>max)?tmp:max
         setTimeout(()=>{
-          branchAnimate(data,data.nodes[idTarget], nodeDisplay)
+          branchAnimate(data,data.nodes[idTarget], nodeDisplay,node_visible)
         },max*2000)
       }
     })
 }
 
-const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[])=>{
+const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[],
+  display_nodes_id:string[],
+  
+)=>{
   //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud
   //exemple : n0 -> n1  et n0 -> n2 -> n1
   //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
-  const next_link = n.outputLinksId.filter(f=>(!ReturnValueLink(data,data.links[f],'recycling') && !Object.values(link_to_avoid).includes(f)))
+  const next_link = n.outputLinksId.filter(f=>(!ReturnValueLink(data,data.links[f],'recycling') && !Object.values(link_to_avoid).includes(f) && display_nodes_id.includes(data.links[f].idTarget)))
   let max=0
 
   if(n.idNode === target.idNode){
@@ -601,7 +605,7 @@ const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target
       const next_node=data.nodes[data.links[id].idTarget]
       //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
       const to_avoid=link_to_avoid.concat([id])
-      const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid)
+      const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid,display_nodes_id)
       max=(tmp>max)?tmp:max
     })
   }
@@ -621,17 +625,21 @@ export const SankeyPlusNodeClickEvent=(
   accordion_ref:{ current: HTMLDivElement},
   button_ref:{ current: HTMLLabelElement},
   accept_simple_click:{current:boolean},
+  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  display_links:{ [link_id: string]: SankeyPlusLink },
 )=>{
   d3.selectAll(' .opensankey .ggg_nodes')
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
-      node_mouse_click(data,set_animating,event,d,set_data,
+      node_mouse_click(data,set_animating,event,(d as SankeyPlusNode),set_data,
         nodes_accordion_ref,
         multi_selected_nodes,
         mode_selection,
         accordion_ref,
         button_ref,
-        accept_simple_click)
+        accept_simple_click,
+        display_nodes,display_links
+      )
     })
 }
 
