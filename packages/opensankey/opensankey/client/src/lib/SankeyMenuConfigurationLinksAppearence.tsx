@@ -289,7 +289,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onChange={(evt) => {
             Object.values(parameter_to_modify)
               .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
-              .forEach(d => AssignLinkValueToCorrectVar(d,'dashed',evt.target.value,menu_for_style))
+              .forEach(d => AssignLinkValueToCorrectVar(d,'dashed',evt.target.checked,menu_for_style))
 
             set_data({ ...data })
           }}>
@@ -733,7 +733,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
           onChange={(evt) => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
               AssignLinkValueToCorrectVar(d,'to_precision',false,menu_for_style)
-              AssignLinkValueToCorrectVar(d,'custom_digit',evt.target.value,menu_for_style)
+              AssignLinkValueToCorrectVar(d,'custom_digit',evt.target.checked,menu_for_style)
             })
             set_data({ ...data })
           }}>
@@ -882,8 +882,8 @@ export const SankeyMenuConfigurationLinksAppearence = (
           isChecked={list_value['label_on_path'][0] as boolean}
           onChange={(evt) => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-              AssignLinkValueToCorrectVar(d,'label_on_path',evt.target.value,menu_for_style)
-              if(evt.target.value){
+              AssignLinkValueToCorrectVar(d,'label_on_path',evt.target.checked,menu_for_style)
+              if(evt.target.checked){
                 const l_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                 const l_orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                 AssignLinkValueToCorrectVar(d,'label_position',(l_pos=='frozen')?'middle':l_pos,menu_for_style)
