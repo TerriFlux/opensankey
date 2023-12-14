@@ -713,9 +713,6 @@ export const LinkColor = (l: SankeyLink,data:SankeyData,
       return data.nodeTags[source_node.colorTag].tags[common_tags[0]].color
     }
   }
-  if (l.local && l.local.color && l.local.color !== '#808080' && l.local.color !== DefaultLinkStyle().color) {
-    return ReturnValueLink(data,l,'color')
-  }
 
   if (source_node.tags['Type de noeud'] && source_node.tags['Type de noeud'].length > 0 && source_node.tags['Type de noeud'][0] === 'produit' && source_node.colorParameter !== 'local' && source_node.colorTag in source_node.tags && source_node.tags[source_node.colorTag].length === 1) {
     selected_tag = source_node.tags[source_node.colorTag][0]
@@ -742,7 +739,7 @@ export const LinkColor = (l: SankeyLink,data:SankeyData,
   } else if (target_node.tags['Type de noeud'] && target_node.tags['Type de noeud'].length > 0 && target_node.tags['Type de noeud'][0] === 'produit') {
     return ReturnValueNode(data,target_node,'color') as string
   }
-  return NodeColor(data.nodes[l.idSource],data)
+  return ReturnValueLink(data,l,'color')
 }
 
 

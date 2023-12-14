@@ -1,11 +1,9 @@
 import { TFunction } from 'i18next'
 import React from 'react'
-import { Row, Form, FormLabel, Tab, Table, Button, InputGroup } from 'react-bootstrap'
+import { Row, Form, Tab, InputGroup } from 'react-bootstrap'
 import { SankeyData,SankeyNode } from './types'
-import { FaCheck} from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
-
+import { Checkbox } from '@chakra-ui/react'
+import { SmoothClasses } from './SankeyUtils'
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
    * To visaulize nodes according to their tag associated, the groupTags must be at least have it banner in mode one or mutliple
@@ -47,64 +45,78 @@ export const SankeyMenuConfigurationNodesTags = (
       </Form.Select>
     </InputGroup>
 
-    <Form.Group as={Row} style={{paddingTop: '15px'}} >
-      <Table striped bordered hover responsive='sm' size='sm' className='node_tags_affiliation' >
-        <thead>
-          <tr>
-            <th>{t('Noeud.Nom')}</th>
-            <th>{t('Noeud.tags_node.Appartenance')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tags_visible && tags_group_key != '' && Object.keys(data.nodeTags).includes(tags_group_key) ? Object.entries(data.nodeTags[tags_group_key].tags).map(
-            tags => {
-              const verif = tags[0]
-              let allChecked = true
-              multi_selected_nodes.current.map((d) => {
-                allChecked = (tags_group_key in d.tags && d.tags[tags_group_key].includes(verif)) ? allChecked : false
-              })
-              return (
-                <tr key={tags[0]}>
-                  <td><FormLabel>{tags[1].name}</FormLabel></td>
-                  <td>
-                    <Button
-                      name={'element_visible' + tags[0]}
-                      variant={allChecked?'primary':'outline-primary'}
-                      id={tags[0]}
-                      onClick={
-                        () => {
-                          const visible = !allChecked
-                          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                            if (visible) {
-                              if (!d.tags[tags_group_key]) {
-                                d.tags[tags_group_key] = []
-                              }
-                              d.tags[tags_group_key].push(tags[0])
-                              // If the groue tage is 'Type de noeud' then we change the style
-                              // to style of product or sector
-                              if(tags_group_key==='Type de noeud'){
-                                if(tags[0]==='secteur'){
-                                  d.style='NodeSectorStyle'
-                                }else  if(tags[0]==='produit'){
-                                  d.style='NodeProductStyle'
-                                }
-                              }
-                            } else {
-                              if(tags_group_key==='Type de noeud'){
-                                d.style='default'
-                              }
-                              d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[0]),1)
-                            }
-                          })
-                          set_data({ ...data })
-                        }
-                      } >{allChecked?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-                  </td>
-                </tr>
-              )
-            }) : (<></>)}
-        </tbody>
-      </Table>
+    <Form.Group as={Row} style={{margin:'auto'}} >
+      
+      {tags_visible && tags_group_key != '' && Object.keys(data.nodeTags).includes(tags_group_key) ? Object.entries(data.nodeTags[tags_group_key].tags).map(
+        tags => {
+          const allChecked = IsAllNodeTagsSame(multi_selected_nodes.current,tags[0],tags_group_key)
+          return (
+            <Checkbox 
+              sx={SmoothClasses({})}
+              iconColor={allChecked[1]?'#78C2AD':'white'}
+              maxW={'100%'}
+              isIndeterminate={allChecked[1]}
+              isChecked={allChecked[0] as boolean}
+              onChange={(evt) => {
+                const visible = evt.target.checked
+                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  if (visible) {
+                    if (!d.tags[tags_group_key]) {
+                      d.tags[tags_group_key] = []
+                    }
+                    d.tags[tags_group_key].push(tags[0])
+                    // If the groue tage is 'Type de noeud' then we change the style
+                    // to style of product or sector
+                    if(tags_group_key==='Type de noeud'){
+                      if(tags[0]==='secteur'){
+                        d.style='NodeSectorStyle'
+                      }else  if(tags[0]==='produit'){
+                        d.style='NodeProductStyle'
+                      }
+                    }
+                  } else {
+                    if(tags_group_key==='Type de noeud'){
+                      d.style='default'
+                    }
+                    d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[0]),1)
+                  }
+                })
+                set_data({ ...data })
+              }}>
+              {tags[1].name}
+            </Checkbox>
+
+
+
+              
+          )
+        }) : (<></>)}
     </Form.Group>
   </Tab >
+}
+
+// Check if all value of the attribute "k" is the same in the selected nodes (or selected style)
+// If the value come from local attribute or the style of the node doesn't matter, we look only the value
+export const IsAllNodeTagsSame=(m_s_n:SankeyNode[],key_tag:string,key_grp_tag:string)=>{
+  // store_value : variable that contain an array forEach key we are looking for
+  // Each array contain in first position the value of the selected nodes attribute 
+  // In second position it contain a boolean that return true if all selected nodes have the same value for the key
+  let store_value=[false,false]
+
+  if(m_s_n.length>0){
+    // For each selected nodes
+
+    m_s_n.map((d,i) => {
+      const val=(key_grp_tag in d.tags && d.tags[key_grp_tag].includes(key_tag))
+      if(i===0){
+        store_value=[val,false]
+      }else{
+        store_value[1]=val!==store_value[0]?true:store_value[1]
+      }
+      
+    })
+  }else{
+    store_value=[false,false]
+  }
+  return store_value
 }

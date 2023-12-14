@@ -119,13 +119,6 @@ export const SankeyPlusModalStyleLink = (
   const closeStyleEditionLink = () => {
     setShowStyleLink(false)
   }
-  const applyStyleToLinks = () => {
-    Object.values(data.links).filter(d => d.style !== '' && d.style === selected_style_link).map(d => {
-      delete d.local
-    })
-
-    set_data({ ...data })
-  }
 
   return (
     <Modal show={showStyleLink} onHide={closeStyleEditionLink} size={'lg'} >
@@ -162,7 +155,6 @@ export const SankeyPlusModalStyleLink = (
                 }
               }
             ><FaMinus /></Button>
-            <Button style={{width:'35%'}}  variant="warning" onClick={applyStyleToLinks}>{t('Flux.asf')}</Button>
           </InputGroup>
         </Form.Group>
         <Form.Group as={Row} >
