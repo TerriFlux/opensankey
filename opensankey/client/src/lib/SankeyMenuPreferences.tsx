@@ -83,6 +83,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
           sx={SmoothClasses({})}
           maxW={'30%'}
           isChecked
+          disabled
         >
           {t('Menu.Noeuds')}
         </Checkbox>
@@ -105,7 +106,9 @@ export const OpenSankeyDefaultModalePreferenceContent=(
         <Checkbox 
           sx={SmoothClasses({})}
           maxW={'30%'}
-          isChecked>
+          isChecked
+          disabled
+        >
           {t('Menu.flux')}
         </Checkbox>
       </InputGroup>,

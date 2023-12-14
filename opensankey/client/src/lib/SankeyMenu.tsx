@@ -634,11 +634,11 @@ export const OpenSankeyMenus = (
           <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPlus} /></Col><Col className='textIcon'>{t('Menu.new')}</Col></></Dropdown.Toggle>
           <Dropdown.Menu>
             <Dropdown.Item
-              onClick={Reinitialization} >{t('Menu.from_new')} <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/></Dropdown.Item>
+              onClick={Reinitialization} ><FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')} </Dropdown.Item>
 
             <Dropdown.Item
               onClick={() => { set_show_modalTemplate(true) }}
-            >{t('Menu.from_model')} {logo_tempalte}</Dropdown.Item>
+            >{logo_tempalte} {t('Menu.from_model')} </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
 
