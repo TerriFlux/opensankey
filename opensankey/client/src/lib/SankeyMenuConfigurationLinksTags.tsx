@@ -1,10 +1,9 @@
 import React from 'react'
-import { Row, Form, FormLabel, Tab, Table,Button, InputGroup } from 'react-bootstrap'
+import { Row, Form,  Tab, InputGroup } from 'react-bootstrap'
 import { SankeyData, SankeyLink,SankeyLinkValue } from './types'
 import { TFunction } from 'i18next'
-import { FaCheck} from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { Checkbox } from '@chakra-ui/react'
+import { SmoothClasses } from './SankeyUtils'
 
 export const SankeyMenuConfigurationLinksTags = (
   data:SankeyData,
@@ -104,53 +103,37 @@ export const SankeyMenuConfigurationLinksTags = (
         }
       })}
 
-    <Form.Group as={Row} style={{paddingTop: '15px'}} >
-      <Table striped bordered hover responsive='sm' size='sm' className='link_tags_affiliation'>
-        <thead>
-          <tr>
-            <th>{t('Tags.Nom')}</th>
-            <th>{t('Noeud.tags_node.Appartenance')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
-            ([tag_key,tag]) => {
-              const is_selected=ValueSelectedParameter().tags[tags_group_key].includes(tag_key) 
-              return (
-                <tr key={tag_key}>
-                  <td><FormLabel>{tag.name}</FormLabel></td>
-                  <td>
-                    <Button
-                      size='sm'
-                      name={'element_visible' + tag_key}
-                      variant={is_selected?'primary':'outline-primary'}
-                      id={tag_key}
-                      onClick={
-                        () => {
-                          const visible = !is_selected
-                          Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                            let val = Object(d.value)
-                            Object.values(tags_selected).forEach(tag => {
-                              if (val[tag] === undefined) {
-                                val[tag] = {}
-                              }
-                              val = val[tag]
-                            })
-                            if (visible) {
-                              val.tags[tags_group_key].push(tag_key)
-                            } else {
-                              val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
-                            }
-                          })
-                          set_data({ ...data })
-                        }
-                      }>{is_selected?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-                  </td>
-                </tr>
-              )
-            }) : (<></>)}
-        </tbody>
-      </Table>
+    <Form.Group as={Row} style={{margin: 'auto'}} >
+      {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
+        ([tag_key,tag]) => {
+          const is_selected=ValueSelectedParameter().tags[tags_group_key].includes(tag_key) 
+          return (
+            <Checkbox 
+              sx={SmoothClasses({})}
+              maxW={'100%'}
+              isChecked={is_selected}
+              onChange={(evt) => {
+                const visible = evt.target.checked
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  let val = Object(d.value)
+                  Object.values(tags_selected).forEach(tag => {
+                    if (val[tag] === undefined) {
+                      val[tag] = {}
+                    }
+                    val = val[tag]
+                  })
+                  if (visible) {
+                    val.tags[tags_group_key].push(tag_key)
+                  } else {
+                    val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
+                  }
+                })
+                set_data({ ...data })
+              }}>
+              {tag.name}
+            </Checkbox>
+          )
+        }) : (<></>)}
     </Form.Group>
   </Tab >
 }
