@@ -1927,10 +1927,11 @@ export const OpenSankeyPlusCheckpointButton=(
   //  - else if it contain difference, the logo contain an exclamation point
   let is_different=false
   if(view !== 'none' && view_not_saved ==='' && master_data && connected){
-    const diff=check_current_view_saved(master_data,data,view)
-    if(diff.length>0){
-      is_different=true
-    }
+    // find another way with a variable. Checking the all view consumes too much time
+    // const diff=check_current_view_saved(master_data,data,view)
+    // if(diff.length>0){
+    //   is_different=true
+    // }
   }
 
   return   <OverlayTrigger
