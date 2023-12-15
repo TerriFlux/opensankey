@@ -940,7 +940,14 @@ export const convert_nodes = (
         delete n.dimensions[nd[0]]
       })
     }
-
+    // Change style if node has default style & 'Type de noeud' tags
+    if(n.tags['Type de noeud'] && n.style==='default'){
+      if(n.tags['Type de noeud'].includes('produit')){
+        n.style='NodeProductStyle'
+      }else if(n.tags['Type de noeud'].includes('secteur')){
+        n.style='NodeSectorStyle'
+      }
+    }
     data.nodes[n.idNode]=n
   }
   )

@@ -1,6 +1,6 @@
 import React,{useState} from 'react'
 import { Row, Form, Tab, FormControl, OverlayTrigger, Tooltip, InputGroup, Button, ButtonGroup, Dropdown} from 'react-bootstrap'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal,SankeyNode } from './types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal,SankeyNode,SankeyLinkValue } from './types'
 import { TFunction } from 'i18next'
 import { FaAlignLeft,FaAlignCenter,FaAlignRight} from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH } from 'react-icons/fa'
@@ -8,9 +8,8 @@ import { reorganize_inputLinksId } from './SankeyLayout'
 
 import { Checkbox } from '@chakra-ui/react'
 
-import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName} from './SankeyUtils'
-import { SmoothClasses,TooltipValueSurcharge } from './SankeyUtils'
-
+import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge} from './SankeyUtils'
+import { LinkStrokeWidth,scale,inv_scale } from './SankeyDrawFunction'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
   width="26"
@@ -73,6 +72,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
   selected_style_link:string,
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   menu_for_modal=false
 )=>{
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
@@ -1061,7 +1061,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
     
   </>
 
-  const content_style=(!menu_for_style)?<InputGroup>
+  const content_style=(!menu_for_style)?<><InputGroup>
     <InputGroup.Text style={{width:'25%'}}>{t('Flux.style')}</InputGroup.Text>
 
     {/* Choix du style  */}
@@ -1099,8 +1099,11 @@ export const SankeyMenuConfigurationLinksAppearence = (
         {t('Flux.as')}
       </Button>
     </OverlayTrigger>
-  </InputGroup>:<></>
-  const content_zIndex_and_direction=<>    {/* Inversion du flux  */}
+  </InputGroup>
+  <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+  </>:<></>
+  const content_zIndex_and_direction=(!menu_for_style)?<>    
+    {/* Inversion du flux  */}
     <OverlayTrigger
       key={'Menu.tooltips.flux.if'}
       placement={'top'}
@@ -1239,14 +1242,43 @@ export const SankeyMenuConfigurationLinksAppearence = (
           </Button>
         </OverlayTrigger>
       </ButtonGroup>
-    </InputGroup></>
+    </InputGroup>
+    <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+  </>:<></>
+
+  const content_adjust_label_pos =(!menu_for_style)?<>    
+    {/* Button to adjust label position in case the label is bigger than the link */}
+    <OverlayTrigger
+      key={'Menu.tooltips.flux.ajust_label'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.ajust_label')} </Tooltip>}>
+      <InputGroup>
+        <Button
+          className='btn_menu_config'
+          style={{width:'50%', margin:'auto'}}
+          variant={'primary'}
+          onClick={
+            () => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                const label_vert_pos=(ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)as string)
+                const stroke_width=LinkStrokeWidth(d,data,scale,inv_scale,2,data.nodes,GetLinkValue)
+                const label_size=(ReturnCorrectLinkAttributeValue(data,d,'label_font_size',menu_for_style)as number)
+                console.log(label_vert_pos,label_size,stroke_width)
+                if(label_vert_pos==='middle' && label_size>stroke_width ){
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position','above',menu_for_style)
+                }
+              })
+              set_data({ ...data })
+            }}>{t('Flux.ajust_label')}</Button>
+      </InputGroup></OverlayTrigger>
+    <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+  </>:<></>
 
   const content= <div className='apparence_config'>
     {content_style}
-    <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
     {content_zIndex_and_direction}
-    <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+    {content_adjust_label_pos}
 
     <h4 style={{fontSize:'14px' ,fontWeight:'bold'}}>{t('Flux.apparence.apparence')}</h4>
     {content_appearence}

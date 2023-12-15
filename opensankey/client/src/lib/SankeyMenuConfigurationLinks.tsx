@@ -2,7 +2,7 @@ import React, { FunctionComponent, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
+import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode, GetLinkValue } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -62,7 +62,7 @@ export const OpenSankeyMenuConfigurationLinks = (
       pre_idSource,set_pre_idSource,
       pre_idTarget,set_pre_idTarget
     ),
-    'appearence': SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity),
+    'appearence': SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity,GetLinkValue),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t)
   }
 
