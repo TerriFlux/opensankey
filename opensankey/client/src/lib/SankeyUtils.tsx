@@ -1146,6 +1146,9 @@ export const ProcessExample = (
   convert_data(data,DefaultSankeyData)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
+
+    // Set sector/product style to node only when it come from an excel file and without a layout 
+    SetNodeStyleToTypeNode(data)
   } else {
     convert_data((data as SankeyData & layout_type).layout,DefaultSankeyData)
     complete_sankey_data((data as SankeyData & layout_type).layout,DefaultSankeyData,DefaultNode,DefaultLink)
@@ -1157,6 +1160,20 @@ export const ProcessExample = (
   d3.select('.loading_auto_compute').remove()
 
   return data
+}
+
+export const SetNodeStyleToTypeNode=(data:SankeyData)=>{
+  if(Object.keys(data.nodeTags).includes('Type de noeud')){
+    Object.values(data.nodes).forEach(node=>{
+      if(node.tags['Type de noeud']){
+        if(node.tags['Type de noeud'].includes('secteur')){
+          node.style='NodeSectorStyle'
+        }else if(node.tags['Type de noeud'].includes('produit')){
+          node.style='NodeProductStyle'
+        }
+      }
+    })
+  }
 }
 
 /**
