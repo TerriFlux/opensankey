@@ -448,6 +448,7 @@ export const open_resources = {
         style:'Style',
         as:'Apply the style to selected link(s)',
         IB:'ToolTip',
+        ajust_label:'Adjust labels position',
         tooltips: {
           src:'Choice of the departure node for the selected link(s)',
           trgt:'Choice of the arrival node for the selected link(s)',
@@ -457,7 +458,8 @@ export const open_resources = {
           dwn:'Go down one step to the last plane',
           dwndwn:'Move the selected stream(s) to the last plane',
           as:'Allow to apply a predefined style in the preference menu to the selected link(s)',
-          IB:'Tooltip : text formatted in HTML and displayed with the tooltip of the link. This tooltip pops on graphic space with SHIFT + MOUSE on the link.'
+          IB:'Tooltip : text formatted in HTML and displayed with the tooltip of the link. This tooltip pops on graphic space with SHIFT + MOUSE on the link.',
+          ajust_label:'Reposition links labels above the links if they\'re taller than link stroke',
         },
         data:{
           données:'Data',
@@ -1061,6 +1063,7 @@ export const open_resources = {
         style:'Style',
         as:'Réinitialiser',
         IB:'Info-bulle',
+        ajust_label:'Ajuster la position des labels',
         tooltips: {
           src:'Choix du noeud de départ pour le/les flux sélectionné(s)',
           trgt:'Choix du noeud d\'arrivée pour le/les flux sélectionné(s)',
@@ -1070,7 +1073,8 @@ export const open_resources = {
           dwn:'Descendre d\'un cran vers le dernier plan',
           dwndwn:'Mettre le/les flux sélectionné(s) au dernier plan',
           as:'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) flux selectionné(s)',
-          IB:'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du flux. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le flux'
+          IB:'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du flux. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le flux',
+          ajust_label:'Repositionne les labels de flux au dessus si les labels sont plus grand que l\'épaisseur des flux',
         },
         data:{
           données:'Données',

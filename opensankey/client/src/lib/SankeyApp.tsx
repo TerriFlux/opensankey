@@ -564,7 +564,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
   // MENU DRAGGABLE LINK APPEARENCE
-  const menu_link_appearence=SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,[],false,'default',display_link_opacity,set_display_link_opacity,true)
+  const menu_link_appearence=SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,[],false,'default',display_link_opacity,set_display_link_opacity,SankeyUtils.GetLinkValue,true)
   const dragLink_appearence=show_menu_link_appearence?MenuDraggable(menu_link_appearence,pointer_pos,t('Menu.flux')+' '+t('Flux.apparence.apparence'),set_show_menu_link_appearence):<></>
 
   const context_l=ContextMenuLink(contextualised_link,set_contextualised_link,
