@@ -41,7 +41,6 @@ export const OpenSankeyDrawLegend = (
     }
     d3.select(' .opensankey #g_legend').selectAll('*').remove()
     d3.selectAll(' .opensankey #svg #g_legend_handles').remove()
-    console.log('-',legend_clicked)
     // Draw the draggable zone at first so it doesn't overlaps over legend element that are interactive 
     d3.select('.opensankey #g_legend').append('g')
       .attr('class','g_drag_zone_leg')
@@ -466,8 +465,6 @@ export const context_legend_tags=(tag_contextualised:string|undefined,
   </Popover>:<></>
 }
 const draw_legend_handles=(data:SankeyData,set_data:(d:SankeyData)=>void,legend_clicked:boolean,h:number)=>{
-  // d3.select('.opensankey #g_legend_handles').append('g').attr('id','gg_legend_handles_'+zdt.idLabel);
-  // console.log(legend_clicked);
   ['left','right'].forEach(pos=>{
     add_legend_handle(pos,data,set_data,legend_clicked,h)
   })
