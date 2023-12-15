@@ -1738,8 +1738,7 @@ const HandlesPositions = (
       AssignLinkLocalAttribute(link,'vert_shift',0)
 
     }
-    const thick=LinkStrokeWidth(link,data,scale,inv_scale,min_thickness,data.nodes,GetLinkValue)
-    const thickness=(thick === '1px')?1:thick
+    const thickness=LinkStrokeWidth(link,data,scale,inv_scale,min_thickness,data.nodes,GetLinkValue)
     if (xt < xs) {
       const x_left = xt - default_horiz_shift + l_h_s - (thickness) // x14
       const x_right = xs + default_horiz_shift + r_h_s  + (thickness) // x2
@@ -2166,7 +2165,7 @@ export const LinkStrokeWidth=(l:SankeyLink,
     draw_warning = left_in_src || right_in_src || top_in_src
   }
   if (draw_warning && !ReturnValueLink(data,l,'recycling')) {
-    return '1px'
+    return 1
   } else {
     const link_value = TestLinkValue(data, display_nodes, l,GetLinkValue)
     const tmp =(link_value=='')?1:link_value

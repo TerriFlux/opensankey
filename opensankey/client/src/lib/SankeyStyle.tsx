@@ -2,7 +2,7 @@
 import React from 'react'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
 // import { SankeyLink } from 'open-sankey/src/lib/types'
-import {  CutName,DefaultNodeStyle,DefaultLinkStyle } from './SankeyUtils'
+import {  CutName,DefaultNodeStyle,DefaultLinkStyle, GetLinkValue } from './SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
@@ -189,7 +189,7 @@ export const SankeyPlusModalStyleLink = (
         <Row>
           <Col md={12}>
 
-            {SankeyMenuConfigurationLinksAppearence(data,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link,display_link_opacity,set_display_link_opacity,true)}
+            {SankeyMenuConfigurationLinksAppearence(data,{current:[]},set_data,t,additional_link_appearence_items,true,selected_style_link,display_link_opacity,set_display_link_opacity,GetLinkValue,true)}
           </Col>
         </Row>
 
