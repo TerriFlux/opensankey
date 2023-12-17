@@ -1139,6 +1139,7 @@ export const ProcessExample = (
   data: SankeyData,
   updateLayout:(data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void,
   convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData )=>void,
+  callback: (server_data: SankeyData) => number,
   DefaultSankeyData: ()=>SankeyData,
 
 ) => {
@@ -1146,7 +1147,8 @@ export const ProcessExample = (
   convert_data(data,DefaultSankeyData)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     compute_auto_sankey(data, data.h_space ? data.h_space : 200)
-
+    callback(data)
+    compute_default_input_outputLinksId(data.nodes, data.links)
     // Set sector/product style to node only when it come from an excel file and without a layout 
     SetNodeStyleToTypeNode(data)
   } else {
@@ -1156,6 +1158,7 @@ export const ProcessExample = (
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData }).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData }).layout
     updateLayout(data, data_layout,['posNode','posFlux','attrNode','attrFlux','attrGeneral','freeLabels','Views'],true)
+    callback(data)
   }
   d3.select('.loading_auto_compute').remove()
 
@@ -2044,10 +2047,9 @@ export const RetrieveExcelResults=(
     default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
   }
   const new_data=Object.assign(default_data,server_data) as SankeyData
-  ProcessExample(new_data,updateLayout,convert_data,DefaultSankeyData)
+  ProcessExample(new_data,updateLayout,convert_data,callback,DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
-  callback(new_data)
   delete (new_data as SankeyData & { layout?: SankeyData }).layout
   if (Object.values(new_data.nodeTags).filter(tagg=>tagg.show_legend).length>0) {
     new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg=>tagg[1].show_legend)[0][0]
