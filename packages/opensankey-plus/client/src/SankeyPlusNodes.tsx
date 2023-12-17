@@ -667,8 +667,9 @@ export const node_icon_path=(data:SankeyPlusData,n:SankeyPlusNode)=>{
 
 export const SankeyPlusDrawNodesIcon = (
   data:SankeyPlusData,
+  display_nodes : { [node_id: string]: SankeyPlusNode },
   mode_selection:string,
-  NodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
+  NodeTooltipsContent: (data: SankeyPlusData,display_nodes : { [node_id: string]: SankeyPlusNode }, d: SankeyPlusNode) => string,
 
 ) => {
 
@@ -681,7 +682,7 @@ export const SankeyPlusDrawNodesIcon = (
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data, d as SankeyPlusNode))
+        .html(NodeTooltipsContent(data, display_nodes, d as SankeyPlusNode))
     }
   }
 
