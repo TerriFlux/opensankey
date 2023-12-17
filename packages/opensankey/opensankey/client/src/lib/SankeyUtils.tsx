@@ -753,7 +753,10 @@ export const LinkColor = (l: SankeyLink,data:SankeyData,
  * @param {SankeyData} data
  * @returns {boolean}
  */
-export const LinkVisible = (l: SankeyLink, data: SankeyData,
+export const LinkVisible = (
+  l: SankeyLink, 
+  data: SankeyData,
+  display_nodes : { [node_id: string]: SankeyNode }, 
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 ) => {
   const { dataTags, fluxTags } = data
@@ -765,7 +768,7 @@ export const LinkVisible = (l: SankeyLink, data: SankeyData,
       return false
     }
   }
-  if (!data.nodes[l.idSource] || !NodeDisplayed(data,data.nodes[l.idSource]) || !data.nodes[l.idTarget] || !NodeDisplayed(data,data.nodes[l.idTarget])) {
+  if (!data.nodes[l.idSource] || !display_nodes[l.idSource] || !data.nodes[l.idTarget] || !display_nodes[l.idTarget]) {
     return false
   }
   let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })

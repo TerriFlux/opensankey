@@ -642,7 +642,7 @@ export const DrawArrows = (
     const ori=ReturnValueLink(data,l,'orientation')
     const recy=ReturnValueLink(data,l,'recycling')
     const l_arrow=ReturnValueLink(data,l,'arrow')
-    if (!LinkVisible(l, data,GetLinkValue)) {
+    if (!LinkVisible(l, data,display_nodes,GetLinkValue)) {
       continue
     }
     if(!l_arrow){
@@ -1569,7 +1569,7 @@ const DrawCurve = (
 
 
 ): string => {
-  if (!LinkVisible(link, data,GetLinkValue)) {
+  if (!LinkVisible(link, data, visible_nodes,GetLinkValue)) {
     return ''
   }
   const link_value = TestLinkValue(data, visible_nodes, link,GetLinkValue)
