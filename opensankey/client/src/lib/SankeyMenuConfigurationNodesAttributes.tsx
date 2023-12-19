@@ -9,7 +9,7 @@ import { ReturnCorrectNodeAttributeValue,
   CutName,
   SmoothClasses,
   TooltipValueSurcharge} from './SankeyUtils'
-import { FaAlignLeft,FaAlignCenter,FaAlignRight,FaBold,FaItalic, FaLock, FaLockOpen} from 'react-icons/fa'
+import { FaAlignLeft,FaAlignCenter,FaAlignRight,FaBold,FaItalic, FaLock, FaLockOpen,FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp} from 'react-icons/fa'
 import { Checkbox } from '@chakra-ui/react'
 
 export const OpenSankeyConfigurationNodesAttributes = (
@@ -49,7 +49,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
   const list_of_key=['shape_visible','colorSustainable','node_width',
     'node_height','label_visible','label_color','label_background','show_value',
     'label_box_width','font_size','value_font_size','font_family','bold','uppercase',
-    'italic','label_vert','label_horiz','label_vert_valeur','label_horiz_valeur','shape'] as (keyof SankeyNodeAttrLocal)[]
+    'italic','label_vert','label_horiz','label_vert_valeur','label_horiz_valeur','shape','node_arrow_angle_factor','node_arrow_angle_direction'] as (keyof SankeyNodeAttrLocal)[]
 
   const list_value=IsAllNodeAttrSameValue(data,selected_parameter,list_of_key,menu_for_style)
 
@@ -180,14 +180,13 @@ export const OpenSankeyConfigurationNodesAttributes = (
         <InputGroup.Text
           style={{width:'40%',
             color:(!menu_for_style )?'#666666':'',
-            backgroundColor:(!menu_for_style)?'#cccccc':'',
           }}
         >
           {t('Noeud.apparence.Forme')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape',menu_for_style)?'*':'')}
         </InputGroup.Text>
 
         <Button className='btn_menu_config'
-          style={{width:'30%'}}
+          style={{width:'20%'}}
           value="ellipse"
           variant={list_value['shape'][0]==='ellipse'?'primary':'outline-primary'}
           onClick={() => {
@@ -196,14 +195,100 @@ export const OpenSankeyConfigurationNodesAttributes = (
           }}>{t('Noeud.apparence.Cercle')}</Button>
 
         <Button className='btn_menu_config'
-          style={{width:'30%'}}
+          style={{width:'20%'}}
           variant={list_value['shape'][0]==='rect'?'primary':'outline-primary'}
           onClick={() => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','rect',menu_for_style))
             set_data({ ...data })
           }}>{t('Noeud.apparence.Rectangle')}</Button>
+
+        <Button className='btn_menu_config'
+          style={{width:'20%'}}
+          variant={list_value['shape'][0]==='arrow'?'primary':'outline-primary'}
+          onClick={() => {
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','arrow',menu_for_style))
+            set_data({ ...data })
+          }}>{t('Noeud.apparence.arrow')}</Button>  
       </InputGroup>
     </OverlayTrigger>
+
+    { /* Change the angle of the arrow shaped node */ 
+      list_value['shape'][0]==='arrow'?<>
+        <OverlayTrigger
+          key={'noeud.apparence.tooltips.arrow_angle'}
+        
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'noeud.apparence.tooltips.arrow_angle'}>{t('Noeud.apparence.tooltips.arrow_angle')} </Tooltip>}>
+          <InputGroup>
+            <InputGroup.Text style={{width:'40%'}}>{t('Noeud.apparence.arrow_angle')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'node_arrow_angle_factor',menu_for_style)?'*':'')}</InputGroup.Text>
+            <Form.Range min={5} 
+              max={45}
+              step={5}
+              value={list_value['node_arrow_angle_factor'][0] as number}
+              style={{width:'50%'}}
+              onChange={(evt)=>{
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_factor',+evt.target.value,menu_for_style))
+                set_data({...data})
+              }}
+
+            />
+            <InputGroup.Text style={{width:'10%'}}>{list_value['node_arrow_angle_factor'][0]}°</InputGroup.Text>
+          </InputGroup>
+        </OverlayTrigger>
+
+        <InputGroup >
+          <InputGroup.Text style={{width:'40%'}}>
+            {t('Noeud.apparence.angle_orientation')}
+          </InputGroup.Text>
+
+          <Button
+            className='btn_menu_config'
+            style={{width:'15%'}}
+            variant={list_value['node_arrow_angle_direction'][0]==='left'?'primary':'outline-primary'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','left',menu_for_style))
+              set_data({ ...data })
+            }}
+          ><FaArrowLeft/></Button>
+
+          <Button
+            className='btn_menu_config'
+            style={{width:'15%'}}
+            variant={list_value['node_arrow_angle_direction'][0]==='right'?'primary':'outline-primary'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','right',menu_for_style))
+              set_data({ ...data })
+            }}
+          ><FaArrowRight/></Button>
+
+          <Button
+            className='btn_menu_config'
+            style={{width:'15%'}}
+        
+            variant={list_value['node_arrow_angle_direction'][0]==='top'?'primary':'outline-primary'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','top',menu_for_style))
+              set_data({ ...data })
+            }}
+          ><FaArrowUp/></Button>
+
+          <Button
+            className='btn_menu_config'
+            style={{width:'15%'}}
+        
+            variant={list_value['node_arrow_angle_direction'][0]==='bottom'?'primary':'outline-primary'}
+            onClick={() => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','bottom',menu_for_style))
+              set_data({ ...data })
+            }}
+          ><FaArrowDown/></Button>
+        </InputGroup>
+      
+      
+      </>:<></>
+    }
 
     {/* Largeur minimale du noeud */}
     <OverlayTrigger
@@ -252,7 +337,7 @@ export const OpenSankeyConfigurationNodesAttributes = (
         </InputGroup.Text>
 
         <FormControl
-          min={0} max={100}
+          min={0} 
           type={'number'}
           value={list_value['node_height'][0] as number}
           onChange={
