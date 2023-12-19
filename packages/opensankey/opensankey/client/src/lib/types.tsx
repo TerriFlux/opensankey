@@ -9,7 +9,9 @@ export const SankeyNodeAttrLocalTypes ={
   node_width: PropTypes.number,
   node_height: PropTypes.number,
   color: PropTypes.string,
-  shape: PropTypes.oneOf(['ellipse', 'rect']),
+  shape: PropTypes.oneOf(['ellipse', 'rect','arrow']),
+  node_arrow_angle_factor:PropTypes.number,
+  node_arrow_angle_direction:PropTypes.string,
   colorSustainable: PropTypes.bool,
 
 
@@ -46,7 +48,9 @@ export const SankeyNodeStyleTypes ={
   node_width: PropTypes.number.isRequired,
   node_height: PropTypes.number.isRequired,
   color: PropTypes.string.isRequired,
-  shape: PropTypes.oneOf(['ellipse', 'rect']).isRequired,
+  shape: PropTypes.oneOf(['ellipse', 'rect','arrow']).isRequired,
+  node_arrow_angle_factor:PropTypes.number.isRequired,
+  node_arrow_angle_direction:PropTypes.string.isRequired,
   colorSustainable: PropTypes.bool.isRequired,
 
   // Parameter of node label
