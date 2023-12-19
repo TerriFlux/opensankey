@@ -12,58 +12,135 @@ const default_horiz_shift = 50
  * @returns {string}
  */
 export const draw_arrow = (
-  w: number,
-  p5: number[],
-  v: number,
-  cum: number,
-  vertical: boolean,
+  node_face_size: number,
+  position_node_face: number[],
+  link_size: number,
+  cumulative_link_size: number,
+  horizontal: boolean,
   revert: boolean,
-  arrow_length:number
+  arrow_length:number,
+  node_arrow_shift:number
 ) => {
-  // Il est possible que cum,v et w soit à 0 ce qui entraine => 0/0 qui retourne NaN et cause des problème àl'export png/pdf
+  // Il est possible que cumulative_link_size,link_size et node_face_size soit à 0 ce qui entraine => 0/0 qui retourne NaN et cause des problème àl'export png/pdf
   // Donc on assume que ca vaut 0
-  const pre_ratio_cum = cum / w
-  const pre_ratio_cur = v / w
+  const pre_ratio_cum = cumulative_link_size / node_face_size
+  const pre_ratio_cur = link_size / node_face_size
   const ratio_cum=(isFinite(pre_ratio_cum))?pre_ratio_cum:1
   const ratio_cur=(isFinite(pre_ratio_cur))?pre_ratio_cur:1
 
+  // Coeff to orient arrow in 1 direction or the opposite
   const coeff = revert ? -1 : 1
+  // Create variable to store results of mini-process used multiple time in order to save processing power
+  const arrow_angle=arrow_length+(node_arrow_shift)
+  const angle_shift_oriented=node_arrow_shift*coeff
+  const angle_shift_oriented_and_scaled=(angle_shift_oriented)*ratio_cum
+  const node_face_size_scaled_by_ratio_cumulative_value=node_face_size * ratio_cum
+  const node_face_size_scaled_by_ratio_current_value=node_face_size * ratio_cur
+  const arrow_length_oriented=coeff * arrow_length
+  
   let d
-  if (vertical) {
+  if (horizontal) {
     if (ratio_cum + ratio_cur < 1) {
-      d = ' M ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum)
-      d += ' L ' + String(p5[0] - coeff * arrow_length * (1 - ratio_cum)) + ',' + String(p5[1] - w + w * ratio_cum)
-      d += ' L ' + String(p5[0] - coeff * arrow_length * (1 - ratio_cum) + coeff * arrow_length * ratio_cur) + ',' + String(p5[1] - w + w * ratio_cum + w * ratio_cur)
-      d += ' L ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum + w * ratio_cur) + ' Z'
+      d = ' M ' + String((position_node_face[0] - (arrow_length_oriented))) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0] +(angle_shift_oriented_and_scaled) - (arrow_length_oriented) * (1 - ratio_cum)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0] +(angle_shift_oriented_and_scaled) - (arrow_length_oriented) * (1 - ratio_cum) + coeff * (arrow_angle) * ratio_cur) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
     } else if (ratio_cum > 1) {
-      d = ' M ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum)
-      d += ' L ' + String(p5[0] - coeff * arrow_length * (ratio_cum - 1)) + ',' + String(p5[1] - w + w * ratio_cum)
-      d += ' L ' + String(p5[0] - coeff * arrow_length * (ratio_cum - 1) - coeff * arrow_length * ratio_cur) + ',' + String(p5[1] - w + w * ratio_cum + w * ratio_cur)
-      d += ' L ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum + w * ratio_cur) + ' Z'
+      d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0]+((angle_shift_oriented)) - coeff * (arrow_angle) * (ratio_cum - 1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0]+((angle_shift_oriented)) - coeff * (arrow_angle) * (ratio_cum - 1) - coeff * (arrow_angle) * ratio_cur) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
     } else {
-      d = ' M ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum)
-      d += ' L ' + String(p5[0] - coeff * arrow_length * (1 - ratio_cum)) + ',' + String(p5[1] - w + w * ratio_cum)
-      d += ' L ' + String(p5[0]) + ',' + String(p5[1])
-      d += ' L ' + String(p5[0] - coeff * arrow_length * (ratio_cum - 1) - coeff * arrow_length * ratio_cur) + ',' + String(p5[1] - w + w * ratio_cum + w * ratio_cur)
-      d += ' L ' + String(p5[0] - coeff * arrow_length) + ',' + String(p5[1] - w + w * ratio_cum + w * ratio_cur) + ' Z'
+      d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0]+(angle_shift_oriented_and_scaled) - (arrow_length_oriented) * (1 - ratio_cum)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0]+((angle_shift_oriented))) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0]+((angle_shift_oriented)) - coeff * (arrow_angle) * (ratio_cum - 1) - coeff * (arrow_angle) * ratio_cur) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
     }
   } else {
     if (ratio_cum + ratio_cur < 1) {
-      d = ' M ' + String(p5[0] - w + w * ratio_cum) + ',' + String(p5[1] - coeff * arrow_length)
-      d += ' L ' + String(p5[0] - w + w * ratio_cum) + ',' + String(p5[1] - coeff * arrow_length * (1 - ratio_cum))
-      d += ' L ' + String(p5[0] - w + w * ratio_cum + w * ratio_cur) + ',' + String(p5[1] - coeff * arrow_length * (1 - ratio_cum) + coeff * arrow_length * ratio_cur)
-      d += ' L ' + String(p5[0] - w + w * ratio_cum + w * ratio_cur) + ',' + String(p5[1] - coeff * arrow_length) + ' Z'
+      d = ' M ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1]+(angle_shift_oriented_and_scaled) - (arrow_length_oriented) * (1 - ratio_cum))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1]+(angle_shift_oriented_and_scaled) - (arrow_length_oriented) * (1 - ratio_cum) + coeff * arrow_angle * ratio_cur)
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)) + ' Z'
     } else if (ratio_cum > 1) {
-      d = ' M ' + String(p5[0] - w + w * ratio_cum) + ',' + String(p5[1] - coeff * arrow_length)
-      d += ' L ' + String(p5[0] - w + w * ratio_cum) + ',' + String(p5[1] - coeff * arrow_length * (ratio_cum - 1))
-      d += ' L ' + String(p5[0] - w + w * ratio_cum + w * ratio_cur) + ',' + String(p5[1] - coeff * arrow_length * (ratio_cum - 1) - coeff * arrow_length * ratio_cur)
-      d += ' L ' + String(p5[0] - w + w * ratio_cum + w * ratio_cur) + ',' + String(p5[1] - coeff * arrow_length) + ' Z'
+      d = ' M ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1]+((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1]+((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1) - coeff * arrow_angle * ratio_cur)
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)) + ' Z'
     } else {
-      d = ' M ' + String(p5[0] - w + w * ratio_cum) + ',' + String(p5[1] - coeff * arrow_length)
-      d += ' L ' + String(p5[0] - w + w * ratio_cum) + ',' + String(p5[1] - coeff * arrow_length * (1 - ratio_cum))
-      d += ' L ' + String(p5[0]) + ',' + String(p5[1])
-      d += ' L ' + String(p5[0] - w + w * ratio_cum + w * ratio_cur) + ',' + String(p5[1] - coeff * arrow_length * (ratio_cum - 1) - coeff * arrow_length * ratio_cur)
-      d += ' L ' + String(p5[0] - w + w * ratio_cum + w * ratio_cur) + ',' + String(p5[1] - coeff * arrow_length) + ' Z'
+      d = ' M ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1]+(angle_shift_oriented_and_scaled) - (arrow_length_oriented) * (1 - ratio_cum))
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1]+(angle_shift_oriented))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1]+((angle_shift_oriented)) - coeff * arrow_angle * (ratio_cum - 1) - coeff * arrow_angle * ratio_cur)
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)) + ' Z'
+    }
+  }
+
+  return d
+}
+
+export const DrawLinkSabot = (
+  node_face_size: number,
+  position_node_face: number[],
+  link_size: number,
+  cumulative_link_size: number,
+  horizontal: boolean,
+  revert: boolean,
+  node_arrow_shift:number
+) => {
+  // Il est possible que cumulative_link_size,link_size et node_face_size soit à 0 ce qui entraine => 0/0 qui retourne NaN et cause des problème àl'export png/pdf
+  // Donc on assume que ca vaut 0
+  const pre_ratio_cum = cumulative_link_size / node_face_size
+  const pre_ratio_cur = link_size / node_face_size
+  const ratio_cum=(isFinite(pre_ratio_cum))?pre_ratio_cum:1
+  const ratio_cur=(isFinite(pre_ratio_cur))?pre_ratio_cur:1
+
+  // Coeff to orient arrow in 1 direction or the opposite
+  const coeff = revert ? 1:-1
+  // Create variable to store results of mini-process used multiple time in order to save processing power
+  const node_face_size_scaled_by_ratio_cumulative_value=node_face_size * ratio_cum
+  const node_face_size_scaled_by_ratio_current_value=node_face_size * ratio_cur
+  const arrow_length_oriented=coeff * node_arrow_shift
+
+  let d
+  if (horizontal) {
+    if (ratio_cum + ratio_cur < 1) {
+      d = ' M ' + String((position_node_face[0] - (arrow_length_oriented))) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0])+ ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0] ) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
+      d += ' L ' + String(position_node_face[0] -arrow_length_oriented*(1-ratio_cur)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
+    } else if (ratio_cum > 1) {
+      d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
+    } else {
+      d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)*(1-ratio_cum)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) 
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
+    }
+  } else {
+    if (ratio_cum + ratio_cur < 1) {
+      d = ' M ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] -arrow_length_oriented*(1-ratio_cur)) + ' Z'
+    } else if (ratio_cum > 1) {
+      d = ' M ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)*(ratio_cum-1))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)) + ' Z'
+    } else {
+      d = ' M ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)*(1-ratio_cum))
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1])
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)) 
+      d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   }
 

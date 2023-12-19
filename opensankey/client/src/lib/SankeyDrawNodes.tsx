@@ -5,7 +5,7 @@ import * as d3 from 'd3'
 
 import {NodeColor,ReturnValueNode} from './SankeyUtils'
 import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
-  EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick } from './SankeyDrawFunction'
+  EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
 
 declare const window: Window &
@@ -180,6 +180,22 @@ export const OpenSankeyDrawNodes = (
       .attr('rx', d =>ReturnValueNode(data,d,'node_width') as number / 2)
       .attr('ry', d =>ReturnValueNode(data,d,'node_height') as number / 2)
             
+
+    ggg_nodes
+      .filter(d => ReturnValueNode(data,d,'shape') === 'arrow')
+      .append('path')
+      .classed('node', true)
+      .classed('node_shape', true)
+      .attr('d', d =>{
+        const n_w=ReturnValueNode(data,d,'node_width') as number
+        const n_h=ReturnValueNode(data,d,'node_height') as number
+        const k_angle=ReturnValueNode(data,d,'node_arrow_angle_factor') as number
+        const angle_direction=ReturnValueNode(data,d,'node_arrow_angle_direction') as string
+        // const path='M0,0L'+n_w*(1-k_angle)+',0L'+n_w+','+n_h/2+'L'+n_w*(1-k_angle)+','+n_h+'L0,'+n_h+'L'+n_w*k_angle+','+n_h/2
+        const path=PathNodeArrowShape(n_w,n_h,k_angle,angle_direction)
+        return path
+      })
+
           
 
 
