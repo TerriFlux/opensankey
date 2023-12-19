@@ -1,7 +1,7 @@
 
-import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode } from './types'
-import { DefaultLinkStyle } from 'open-sankey/dist/SankeyUtils'
-import {drag_legend_g_element} from 'open-sankey/dist/SankeyDrawLegend'
+import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink,SankeyPlusLinkAttrLocal } from './types'
+import { DefaultLinkStyle,ReturnValueLink,AssignLinkValueToCorrectVar } from 'open-sankey/src/lib/SankeyUtils'
+import {drag_legend_g_element} from 'open-sankey/src/lib/SankeyDrawLegend'
 import * as d3 from 'd3'
 import { opposing_drag_elements_plus } from './SankeyPlusNodes'
 import React,{ChangeEvent,useRef} from 'react'
@@ -10,7 +10,7 @@ import { TFunction } from 'i18next'
 import { FaFileImport} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
-
+import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/src/lib/types'
 export const default_sankey_plus_style_link=()=>{
   const style=DefaultLinkStyle() as SankeyPlusLinkStyle
   style.gradient=false
@@ -130,4 +130,45 @@ export const is_all_zdt_attr_same_value=(data:SankeyPlusData,m_s_zdt:SankeyPlusL
     all_same=l[k]!==first_value?false:all_same
   })
   return (all_same?[first_value,false]:[0,true])
+}
+// export const PlusIsAllNodeNotLocalAttrSameValue=(data:SankeyPlusData,m_s_n:SankeyPlusNode[],k_list:(keyof SankeyPlusNode)[])=>{
+// return IsAllNodeNotLocalAttrSameValue(data,m_s_n,k_list)
+// }
+type ValueOf<T>=T[keyof T]
+export const OSPIsAllNodeNotLocalAttrSameValue=(data:SankeyPlusData,m_s_n:SankeyPlusNode[],k_list:(keyof SankeyPlusNode)[])=>{
+  // store_value : variable that contain an array forEach key we are looking for
+  // Each array contain in first position the value of the selected nodes attribute 
+  // In second position it contain a boolean that return true if all selected nodes have the same value for the key
+  const store_value={} as {[x:string]:[ValueOf<SankeyPlusNode>,boolean]}
+
+  if(m_s_n.length>0){
+    // For each selected nodes
+    m_s_n.forEach((node,i)=>{
+      // For each attributes we want to check
+      k_list.forEach(k => {
+        // Get the value of the node attribute(k)
+        const val=node[k]
+
+        // Store first value of each node attribute
+        if(i===0){
+          store_value[k]=[val,false]
+        }else{
+          // Check if other nodes selected have the same value, if not we set the 2nd value of the array at true
+          store_value[k][1]=val!==store_value[k][0]?true:store_value[k][1]
+        }
+      })
+    })
+  }else{
+    k_list.forEach(k => {
+      store_value[k]=[false,false]
+    })
+  }
+  return store_value
+}
+
+export const PlusReturnValueLink=(data:SankeyPlusData,l:SankeyPlusLink,k:keyof SankeyPlusLinkAttrLocal | keyof SankeyPlusLinkStyle)=>{
+  return ReturnValueLink(data,l,((k as unknown) as (keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle)))
+}
+export const PlusAssignLinkValueToCorrectVar=(l:SankeyPlusLink|SankeyPlusLinkStyle,k:keyof SankeyPlusLinkAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
+  return AssignLinkValueToCorrectVar(l,k as unknown as keyof SankeyLinkAttrLocal,v,menu_for_style)
 }

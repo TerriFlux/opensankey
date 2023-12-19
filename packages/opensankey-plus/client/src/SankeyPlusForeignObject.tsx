@@ -10,7 +10,8 @@ import ReactQuill from 'react-quill'
 
 import { SankeyPlusData, SankeyPlusNode } from './types'
 
-import { NodeDisplayed,SmoothClasses,IsAllNodeNotLocalAttrSameValue} from 'open-sankey/dist/SankeyUtils'
+import { NodeDisplayed,SmoothClasses} from 'open-sankey/src/lib/SankeyUtils'
+import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
 
 
 
@@ -59,10 +60,9 @@ export const SankeyPlusNodeFO = (
     'list', 'bullet','align'
   ]
   const isQuill_invalid=multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content!==editor_content_fo_node:false
+  const value_of_key=OSPIsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
 
-  const value_of_key=IsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
-
-
+  
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
@@ -144,7 +144,7 @@ export const SankeyPlusNodeFO = (
           iconColor={value_of_key['has_FO'][1]?'#78C2AD':'white'}
           isDisabled={!is_activated}
           isIndeterminate={value_of_key['has_FO'][1]}
-          isChecked={value_of_key['has_FO'][0]}
+          isChecked={value_of_key['has_FO'][0] as boolean}
           onChange={(evt) => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
               .forEach(d => {
@@ -170,7 +170,7 @@ export const SankeyPlusNodeFO = (
           iconColor={value_of_key['is_FO_raw'][1]?'#78C2AD':'white'}
           isDisabled={!is_activated}
           isIndeterminate={value_of_key['is_FO_raw'][1]}
-          isChecked={value_of_key['is_FO_raw'][0]}
+          isChecked={value_of_key['is_FO_raw'][0] as boolean}
           onChange={(evt) => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
               .forEach(d => {

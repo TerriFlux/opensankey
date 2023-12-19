@@ -1,13 +1,13 @@
 import React from 'react'
-import { SankeyLinkValue} from 'open-sankey/src/lib/types'
+import { SankeyLinkValue,SankeyLinkAttrLocal, SankeyData} from 'open-sankey/src/lib/types'
 import * as d3 from 'd3'
 import { OverlayTrigger, Tooltip, InputGroup, Badge} from 'react-bootstrap'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink} from './types'
+import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink, } from './types'
 import { TFunction } from 'i18next'
-import * as OpensankeyDrawFunction  from 'open-sankey/dist/SankeyDrawFunction'
-import * as OpensankeyUtils from 'open-sankey/dist/SankeyUtils'
+import * as OpensankeyDrawFunction  from 'open-sankey/src/lib/SankeyDrawFunction'
+import * as OpensankeyUtils from 'open-sankey/src/lib/SankeyUtils'
 import { Checkbox } from '@chakra-ui/react'
-
+import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
 
 export const menu_conf_link_apparence_gradient=(
   t:TFunction,
@@ -21,7 +21,8 @@ export const menu_conf_link_apparence_gradient=(
 
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
-  const gradChecked=OpensankeyUtils.IsAllLinkAttrSameValue(data,selected_parameter,['gradient'],menu_for_style)['gradient'] as boolean[]
+  const k_list=['gradient'] as unknown as (keyof SankeyLinkAttrLocal)[]
+  const gradChecked=OpensankeyUtils.IsAllLinkAttrSameValue(data,selected_parameter,k_list,menu_for_style)['gradient'] as boolean[]
 
   return <>
     <OverlayTrigger
@@ -40,7 +41,7 @@ export const menu_conf_link_apparence_gradient=(
           iconColor={gradChecked[1]?'#78C2AD':'white'}
           onChange={(evt) => {
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-              OpensankeyUtils.AssignLinkValueToCorrectVar(d,'gradient',evt.target.checked,menu_for_style)
+              PlusAssignLinkValueToCorrectVar(d,'gradient',evt.target.checked,menu_for_style)
             })
             set_data({ ...data })
           }}>
@@ -49,11 +50,11 @@ export const menu_conf_link_apparence_gradient=(
         </Checkbox>
       </InputGroup>
     </OverlayTrigger>
-    {(OpensankeyUtils.IsLinkDiplayingValueLocal(multi_selected_links,'gradient',menu_for_style)?OpensankeyUtils.TooltipValueSurcharge('link_plus_var_',t):<></>)}
+    {(OpensankeyUtils.IsLinkDiplayingValueLocal(multi_selected_links,(('gradient' as unknown) as (keyof SankeyLinkAttrLocal )),menu_for_style)?OpensankeyUtils.TooltipValueSurcharge('link_plus_var_',t):<></>)}
   </>
 }
 
-export const LinkStroke=(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue)=>{
+export const LinkStroke=(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>{
 
   const defGradient = d3.select(' .opensankey #svg #sankey_def')
 
@@ -66,7 +67,7 @@ export const LinkStroke=(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:(data
   const n_target_color=OpensankeyUtils.ReturnValueNode(data,n_target,'color')
 
   const l_ori=OpensankeyUtils.ReturnValueLink(data,l,'orientation')
-  const l_grad=OpensankeyUtils.ReturnValueLink(data,l,'gradient')
+  const l_grad=PlusReturnValueLink(data,l,'gradient')
   const l_recy=OpensankeyUtils.ReturnValueLink(data,l,'recycling')
   const width_src = +d3.select(' .opensankey #shape_' + l.idSource).attr('width')
   const height_src = +d3.select(' .opensankey #shape_' + l.idSource).attr('height')
@@ -498,16 +499,16 @@ export const SankeyPlusDrawArrows = (
   display_links:{ [link_id: string]: SankeyPlusLink },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   display_style: {filter: number},
 
 ) => {
   OpensankeyDrawFunction.DrawArrows(n,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
   for (let i = 0; i < n.inputLinksId.length; i++) {
     const l_arrow=OpensankeyUtils.ReturnValueLink(data,data.links[n.inputLinksId[i]],'arrow')
-    const l_grad=OpensankeyUtils.ReturnValueLink(data,data.links[n.inputLinksId[i]],'gradient')
+    const l_grad=PlusReturnValueLink(data,data.links[n.inputLinksId[i]],'gradient')
     if(l_arrow && l_grad){
-      d3.selectAll(' .opensankey #path_'+n.inputLinksId[i]+'_arrow').attr('fill',OpensankeyUtils.NodeColor(n,data))
+      d3.selectAll(' .opensankey #path_'+n.inputLinksId[i]+'_arrow').attr('fill',OpensankeyUtils.NodeColor(n,data)??'')
     }
   }
 }

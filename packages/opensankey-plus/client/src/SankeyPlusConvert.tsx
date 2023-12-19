@@ -1,9 +1,9 @@
 
 import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
-import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
+import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/src/lib/SankeyConvert'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
-import { DefaultLink, DefaultNode } from 'open-sankey/dist/SankeyUtils'
-import { synchronizeNodesandLinksId } from 'open-sankey/dist/SankeyLayout'
+import { DefaultLink, DefaultNode } from 'open-sankey/src/lib/SankeyUtils'
+import { synchronizeNodesandLinksId } from 'open-sankey/src/lib/SankeyLayout'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
 import { TFunction } from 'i18next'
@@ -93,7 +93,7 @@ export const plus_convert_data = (data:SankeyPlusData,DefaultSankeyData: ()=>San
       v.heredited_attr_from_master=['']
     }
     if((v.view_data as unknown as SankeyPlusData ).version){
-      complete_sankey_data(v.view_data,DefaultSankeyData,DefaultNode,DefaultLink)
+      complete_sankey_data(v.view_data as SankeyPlusData,DefaultSankeyData,DefaultNode,DefaultLink)
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
@@ -360,7 +360,7 @@ export const plus_sankey_layout=(
             // Views are copied identical to what they were
             view_of_new_layout.heredited_attr_from_master = ['']
             // nodeId and linkId must be synchronized with new master
-            synchronizeNodesandLinksId(view_of_new_layout.view_data,data)
+            synchronizeNodesandLinksId((view_of_new_layout.view_data)as SankeyPlusData,data)
             data.view.push(view_of_new_layout)
           } else if((view_of_new_layout.view_data as DiffType).diff!==undefined){
             (view_of_new_layout.view_data as DiffType).diff.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(view_data, {}, diff))

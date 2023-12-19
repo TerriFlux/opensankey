@@ -24,8 +24,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { AdjustSankeyZone,SmoothClasses} from 'open-sankey/dist/SankeyUtils'
-import { updateLayout } from 'open-sankey/dist/SankeyLayout'
+import { AdjustSankeyZone,SmoothClasses} from 'open-sankey/src/lib/SankeyUtils'
+import { updateLayout } from 'open-sankey/src/lib/SankeyLayout'
 
 import { SankeyPlusData,
   SankeyPlusNode,
@@ -1925,7 +1925,7 @@ export const OpenSankeyPlusCheckpointButton=(
   // Boolean used to change the logo of the button to save the current view :
   //  - if there is no differences between the the saved view and the current view, then the logo has a check
   //  - else if it contain difference, the logo contain an exclamation point
-  let is_different=false
+  const is_different=false
   if(view !== 'none' && view_not_saved ==='' && master_data && connected){
     // find another way with a variable. Checking the all view consumes too much time
     // const diff=check_current_view_saved(master_data,data,view)

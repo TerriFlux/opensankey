@@ -1,6 +1,6 @@
-import React,{ChangeEvent, useState,useRef} from 'react'
+import React,{ChangeEvent, useState,useRef, MutableRefObject, RefObject} from 'react'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge} from 'react-bootstrap'
-import { SankeyLinkValue } from 'open-sankey/src/lib/types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode,drawArrowsType } from 'open-sankey/src/lib/types'
 import { TFunction } from 'i18next'
 import * as d3 from 'd3'
 
@@ -8,7 +8,7 @@ import {RemoveAnimate,
   DrawArrows,
   SvgDragMiddleMouseStart,
   SvgDragMiddleMouseMove,
-  SimpleGNodeClick} from 'open-sankey/dist/SankeyDrawFunction'
+  SimpleGNodeClick} from 'open-sankey/src/lib/SankeyDrawFunction'
 import {  GetLinkValue,
   NodeColor,
   LinkColor,
@@ -18,11 +18,10 @@ import {  GetLinkValue,
   IsAllNodeAttrSameValue,
   AssignNodeValueToCorrectVar,
   SmoothClasses,
-  TooltipValueSurcharge,
-  IsAllNodeNotLocalAttrSameValue} from 'open-sankey/dist/SankeyUtils'
-import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
-import { SankeyPlusLabel,SankeyPlusLink,plusDrawArrowsType, SankeyPlusData,SankeyPlusNode,} from './types'
-
+  TooltipValueSurcharge} from 'open-sankey/src/lib/SankeyUtils'
+import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/src/lib/SankeyDrag'
+import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode,} from './types'
+import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import { FaFileImport} from 'react-icons/fa'
 import { faIcons} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -36,20 +35,22 @@ typeof globalThis & {
 
 export const SankeyPlusNodeIcon = (
   t:TFunction,
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
   radio_selected:string,
   is_activated:boolean,
   menu_for_modal=false,
   set_show_modal_import_icons:(b:boolean)=>void
 )=> {
   const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
-  data.icon_catalog=(data.icon_catalog)?data.icon_catalog:{}
+  const data_plus=data as SankeyPlusData
+  data_plus.icon_catalog=(data_plus.icon_catalog)?data_plus.icon_catalog:{}
   const _load_image = useRef<HTMLInputElement>(null)
+  const multi_selected_nodes_plus=multi_selected_nodes as {current:SankeyPlusNode[]}
 
   const isAllNodeVisible=IsAllNodeAttrSameValue(data,multi_selected_nodes.current,['shape_visible'],false)['shape_visible'] as boolean[]
-  const value_of_key=IsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['is_image','iconVisible'])
+  const value_of_key=OSPIsAllNodeNotLocalAttrSameValue(data_plus,multi_selected_nodes_plus.current,['is_image','iconVisible'])
 
   // Change type of illustration if all selected nodes have the same type of illustration 
   // and the button isn't set to type of illustration of the nodes
@@ -73,9 +74,9 @@ export const SankeyPlusNodeIcon = (
           iconColor={value_of_key['iconVisible'][1]?'#78C2AD':'white'}
           isIndeterminate={value_of_key['iconVisible'][1]}
           isDisabled={!is_activated}
-          isChecked={value_of_key['iconVisible'][0]}
+          isChecked={value_of_key['iconVisible'][0] as boolean}
           onChange={(evt) => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+            Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
               .forEach(d => {
                 d.iconVisible = evt.target.checked
                 d.is_image=false
@@ -128,7 +129,7 @@ export const SankeyPlusNodeIcon = (
             {t('Noeud.apparence.Couleur')}
           </InputGroup.Text>
           <Form.Label htmlFor="form_color_icon" style={{width:'60%',
-            'background':(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff',
+            'background':(multi_selected_nodes.current.length === 1) ? multi_selected_nodes_plus.current[0].iconColor : '#ffffff',
             border:'1px solid #ced4da',
             borderTopRightRadius:'4px',
             borderBottomRightRadius:'4px',
@@ -139,10 +140,10 @@ export const SankeyPlusNodeIcon = (
             id='form_color_icon'
             name='form_color_icon'
             disabled={!is_activated?true:(radio_selected !== 'local')}
-            value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes.current[0].iconColor : '#ffffff'}
+            value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes_plus.current[0].iconColor : '#ffffff'}
             onChange={evt => {
               const color = evt.target.value
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
+              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
               set_data({ ...data })
             }}
           />
@@ -169,9 +170,9 @@ export const SankeyPlusNodeIcon = (
           iconColor={value_of_key['is_image'][1]?'#78C2AD':'white'}
           isDisabled={!is_activated}
           isIndeterminate={value_of_key['is_image'][1]}
-          isChecked={value_of_key['is_image'][0]}
+          isChecked={value_of_key['is_image'][0] as boolean}
           onChange={(evt) => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+            Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
               .forEach(d => {
                 d.iconVisible = evt.target.checked
                 d.is_image=false
@@ -216,7 +217,7 @@ export const SankeyPlusNodeIcon = (
           style={{width:'30%'}}
           className='btn_menu_config'
           onClick={()=>{
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+            Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
               .forEach(n=>n.image_src='')
             set_data({...data})
           }}
@@ -235,7 +236,7 @@ export const SankeyPlusNodeIcon = (
               return (e: ProgressEvent<FileReader>) => {
                 const resultat = (e.target as FileReader).result
                 const res=resultat?.toString().replaceAll('=','')
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                   .forEach(n=>n.image_src=(res as string))
 
                 set_data({...data})
@@ -286,7 +287,7 @@ export const SankeyPlusNodeIcon = (
         style={{width:'30%'}}
         variant={button_icon_or_image==='icon'?'primary':'outline-primary'}
         onClick={() => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+          Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
             .forEach(d => {
               d.is_image = false
               d.iconVisible=true
@@ -301,7 +302,7 @@ export const SankeyPlusNodeIcon = (
         style={{width:'30%'}}
         variant={button_icon_or_image==='image'?'primary':'outline-primary'}
         onClick={() => {
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+          Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
             .forEach(d => {
               d.is_image=true
               d.iconVisible = false
@@ -343,17 +344,19 @@ export const SankeyPlusNodeIcon = (
 }
 
 export const SankeyPlusHyperLink=( t:TFunction,
-  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
+  data:SankeyData,set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
   is_activated:boolean)=>{
+  
+   const multi_selected_nodes_plus=multi_selected_nodes as {current:SankeyPlusNode[]}
 
   const hasHyperLink = () => {
     let visible = ''
-    visible=multi_selected_nodes.current[0]?.hyperlink??''
+    visible=multi_selected_nodes_plus.current[0]?.hyperlink??''
     return visible
   }
   const node_hyperlink=hasHyperLink()
-
+  const data_plus =data as SankeyPlusData
   const content_image_tab=multi_selected_nodes.current.length>0?<>
 
     <OverlayTrigger
@@ -373,7 +376,7 @@ export const SankeyPlusHyperLink=( t:TFunction,
         </InputGroup.Text>
 
         <Form.Control value={node_hyperlink} type='text' onChange={(evt)=>{
-          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
+          Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
           set_data({ ...data })
         }}/>
       </InputGroup>
@@ -436,9 +439,9 @@ export const SankeyPlusHyperLink=( t:TFunction,
 }
 
 const calcPath = (
-  data: SankeyPlusData,
-  nodes: { [node_id: string]: SankeyPlusNode },
-  node: SankeyPlusNode,
+  data: SankeyData,
+  nodes: { [node_id: string]: SankeyNode },
+  node: SankeyNode,
   new_links: string[],
 ) => {
   // let number_new_path=0
@@ -457,22 +460,22 @@ const calcPath = (
 }
 
 const node_mouse_click=(
-  data:SankeyPlusData,
+  data:SankeyData,
   set_animating:(b:boolean)=>void,
   event:React.MouseEvent<HTMLButtonElement>,
-  d:SankeyPlusNode,
-  set_data:(d:SankeyPlusData)=>void,
-  nodes_accordion_ref:{ current: HTMLDivElement }| null,
-  multi_selected_nodes:{current: SankeyPlusNode[] },
+  d:SankeyNode,
+  set_data:(d:SankeyData)=>void,
+  nodes_accordion_ref:RefObject<HTMLDivElement>,
+  multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
-  accordion_ref:{ current: HTMLDivElement},
+  accordion_ref:RefObject<HTMLDivElement>,
   button_ref:{ current: HTMLLabelElement},
   accept_simple_click:{current:boolean},
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
 )=>{
   const sankeyTooltip=d3.select('.sankey-tooltip')
-
+  const data_plus =data as SankeyPlusData
   if (event.shiftKey) {
     event.preventDefault()
     set_animating(true)
@@ -495,7 +498,7 @@ const node_mouse_click=(
       return (f.inputLinksId.filter(i => visible_links.includes(i)).length === 0) && (f.outputLinksId.filter(i => visible_links.includes(i)).length > 0)})
     //calcul la profondeur max de nouveau flux (le nombre de nouveau flux consecutif ) afin de calculer le temps qu'il faut avant de changer la variable set_view
     if (start_point.length > 0) {
-      let nb_animation = calcPath(data,data.nodes, d, visible_links)
+      let nb_animation = calcPath(data,data_plus.nodes, d, visible_links)
       nb_animation = (nb_animation !== undefined) ? nb_animation : 0
       time_to_animate += nb_animation * 2000
     }
@@ -519,11 +522,12 @@ const node_mouse_click=(
 }
 
 const branchAnimate = (
-  data:SankeyPlusData,
-  nodeData: SankeyPlusNode,
+  data:SankeyData,
+  nodeData: SankeyNode,
   nodeDisplay: string[],
   node_visible: string[],
 ) => {
+  const data_plus = data as SankeyPlusData
 
   // Permet la progation de l'animation sur l'ensemble du Sankey
   const nodeStart = nodeData.idNode
@@ -560,9 +564,9 @@ const branchAnimate = (
       // Modification des arrows après l'animation
       const arrow=d3.selectAll(' .opensankey #path_'+idLink+'_arrow')
       if(arrow!==undefined && arrow!= null){
-        const colorTarget=(ReturnValueNode(data,data.nodes[idTarget],'shape_visible'))?NodeColor(data.nodes[idTarget],data):((data.nodes[idTarget].iconVisible)?data.nodes[idTarget].iconColor:'grey')
+        const colorTarget=(ReturnValueNode(data,data.nodes[idTarget],'shape_visible'))?NodeColor(data.nodes[idTarget],data):((data_plus.nodes[idTarget].iconVisible)?data_plus.nodes[idTarget].iconColor:'grey')
         // const t=(data.links[idLink].gradient && data.colorMap=='no_colormap')?colorTarget:d3.select(this).attr('stroke')
-        const l_grad=ReturnValueLink(data,data.links[idLink],'gradient')
+        const l_grad=PlusReturnValueLink(data_plus,data_plus.links[idLink],'gradient')
         const t=(l_grad)?colorTarget:LinkColor(data.links[idLink],data,GetLinkValue)
         if(t){
           arrow.attr('fill',t)
@@ -578,17 +582,17 @@ const branchAnimate = (
       if (!nodeDisplay.includes(idTarget)) {
         nodeDisplay.push(idTarget)
         let max=0
-        const tmp=direct_son_as_distant_sibling(data,nodeData,data.nodes[idTarget],0,[idLink],node_visible)
+        const tmp=direct_son_as_distant_sibling(data,nodeData,data_plus.nodes[idTarget],0,[idLink],node_visible)
 
         max=(tmp>max)?tmp:max
         setTimeout(()=>{
-          branchAnimate(data,data.nodes[idTarget], nodeDisplay,node_visible)
+          branchAnimate(data,data_plus.nodes[idTarget], nodeDisplay,node_visible)
         },max*2000)
       }
     })
 }
 
-const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[],
+const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[],
   display_nodes_id:string[],
   
 )=>{
@@ -597,12 +601,13 @@ const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target
   //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
   const next_link = n.outputLinksId.filter(f=>(!ReturnValueLink(data,data.links[f],'recycling') && !Object.values(link_to_avoid).includes(f) && display_nodes_id.includes(data.links[f].idTarget)))
   let max=0
+  const data_plus = data as SankeyPlusData
 
   if(n.idNode === target.idNode){
     return deep-1
   }else if(next_link.length>0) {
     next_link.map(id=>{
-      const next_node=data.nodes[data.links[id].idTarget]
+      const next_node=data_plus.nodes[data.links[id].idTarget]
       //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
       const to_avoid=link_to_avoid.concat([id])
       const tmp=direct_son_as_distant_sibling(data,next_node,target,deep+1,to_avoid,display_nodes_id)
@@ -616,17 +621,17 @@ const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target
 }
 
 export const SankeyPlusNodeClickEvent=(
-  data:SankeyPlusData,
+  data:SankeyData,
   set_animating:(b:boolean)=>void,
-  set_data:(d:SankeyPlusData)=>void,
-  nodes_accordion_ref:{ current: HTMLDivElement }| null,
-  multi_selected_nodes:{current: SankeyPlusNode[] },
+  set_data:(d:SankeyData)=>void,
+  nodes_accordion_ref:RefObject<HTMLDivElement>,
+  multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
-  accordion_ref:{ current: HTMLDivElement},
-  button_ref:{ current: HTMLLabelElement},
+  accordion_ref:RefObject<HTMLDivElement>,
+  button_ref:RefObject<HTMLLabelElement>,
   accept_simple_click:{current:boolean},
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
 )=>{
   d3.selectAll(' .opensankey .ggg_nodes')
     .on('click', (event, d) => {
@@ -643,7 +648,7 @@ export const SankeyPlusNodeClickEvent=(
     })
 }
 
-export const node_icon_fill_color=(data:SankeyPlusData,n:SankeyPlusNode)=>{
+export const node_icon_fill_color=(data:SankeyData,n:SankeyNode)=>{
   if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
     const selected_tag = n.tags[n.colorTag][0]
     const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -653,11 +658,12 @@ export const node_icon_fill_color=(data:SankeyPlusData,n:SankeyPlusNode)=>{
       //console.log('tutu')
     }
   }
-  return n.iconColor
+  return (n as SankeyPlusNode).iconColor
 }
 
-export const node_icon_path=(data:SankeyPlusData,n:SankeyPlusNode)=>{
-  const icon = data.icon_catalog[n.iconName]
+export const node_icon_path=(data:SankeyData,n:SankeyNode)=>{
+
+  const icon = (data as SankeyPlusData).icon_catalog[(n as SankeyPlusNode).iconName]
   if (icon !== undefined) {
     return icon
   } else {
@@ -666,22 +672,22 @@ export const node_icon_path=(data:SankeyPlusData,n:SankeyPlusNode)=>{
 }
 
 export const SankeyPlusDrawNodesIcon = (
-  data:SankeyPlusData,
-  mode_selection:string,
-  NodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
+  data:SankeyData,
+  mode_selection:MutableRefObject<string>,
+  NodeTooltipsContent: (data: SankeyPlusData, d: SankeyNode) => string,
 
 ) => {
 
 
 
-  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    d3.select(t).attr('cursor', (mode_selection === 's')? 'pointer' : 'unset')
+  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:MutableRefObject<string>,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+    d3.select(t).attr('cursor', (mode_selection.current === 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data, d as SankeyPlusNode))
+        .html(NodeTooltipsContent((data as SankeyPlusData), d as SankeyPlusNode))
     }
   }
 
@@ -707,7 +713,7 @@ export const SankeyPlusDrawNodesIcon = (
 
 
 
-  // const direct_son_as_distant_sibling=(data:SankeyPlusData,n:SankeyPlusNode,target:SankeyPlusNode,deep:number,link_to_avoid:string[])=>{
+  // const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[])=>{
   //   //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud
   //   //exemple : n0 -> n1  et n0 -> n2 -> n1
   //   //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
@@ -803,9 +809,9 @@ export const SankeyPlusDrawNodesIcon = (
 }
 
 
-export const context_node_icon=(contextualised_node:SankeyPlusNode,
+export const context_node_icon=(contextualised_node:SankeyNode,
   set_show_menu_node_icon:(b:boolean)=>void,
-  set_contextualised_node:(b:SankeyPlusNode|undefined)=>void,
+  set_contextualised_node:(b:SankeyNode|undefined)=>void,
   t:TFunction
 )=>{
 
@@ -819,16 +825,16 @@ export const context_node_icon=(contextualised_node:SankeyPlusNode,
 
 }
 
-export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[],
+export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyNode|SankeyPlusLabel)[],
   event:{ dx: number; dy: number,x:number,y:number },
-  dragged:SankeyPlusNode|SankeyPlusLabel,
-  data:SankeyPlusData,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
+  dragged:SankeyNode|SankeyPlusLabel,
+  data:SankeyData,
+  multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
 )=>{
 
 
-  opposing_drag_elements(out_of_zone_item,event,dragged,data,multi_selected_nodes)
+  opposing_drag_elements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,data,multi_selected_nodes)
 
   // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
 
@@ -859,20 +865,20 @@ export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyPlusNode|Sanke
 }
 
 export const SankeyPlusNodeDragEvent=(
-  data:SankeyPlusData,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_nodes:{current: SankeyPlusNode[] },
+  data:SankeyData,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
+  multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
   alt_key_pressed:boolean,
-  set_data:(d:SankeyPlusData)=>void,
+  set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyPlusLink[]},
-  LinkText:(data: SankeyPlusData, d: SankeyPlusLink,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  GetSankeyMinWidthAndHeight:(d:SankeyPlusData)=>number[],
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
 
 )=>{
   if(mode_selection.current==='s' && window.SankeyToolsStatic!==true){
@@ -909,20 +915,20 @@ export const SankeyPlusNodeDragEvent=(
 }
 
 export const SankeyPlusdragGNodeEvent=(
-  data:SankeyPlusData,
-  multi_selected_nodes:{current: SankeyPlusNode[] },
+  data:SankeyData,
+  multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
   alt_key_pressed:boolean,
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
+  set_data:(d:SankeyData)=>void,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
   multi_selected_links:{current:SankeyPlusLink[]},
-  LinkText:(data: SankeyPlusData, d: SankeyPlusLink,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  GetSankeyMinWidthAndHeight:(d:SankeyPlusData)=>number[],
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
 
 )=>{
   const node_visible=[] as string[]
@@ -950,18 +956,18 @@ export const SankeyPlusdragGNodeEvent=(
     })
 }
 
-export  const drag_nodes_plus = (node:SankeyPlusNode,
+export  const drag_nodes_plus = (node:SankeyNode,
   event: { dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current: SankeyPlusNode[] },
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_links:{current: SankeyPlusLink[] },
-  LinkText:(data: SankeyPlusData, d: SankeyPlusLink,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetSankeyMinWidthAndHeight:(d:SankeyPlusData)=>number[],
-  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
-  DrawArrows:plusDrawArrowsType,
+  multi_selected_nodes:{current: SankeyNode[] },
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
+  multi_selected_links:{current: SankeyLink[] },
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  DrawArrows:drawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   multi_selected_label:{current:SankeyPlusLabel[]},
@@ -982,25 +988,25 @@ export  const drag_nodes_plus = (node:SankeyPlusNode,
 }
 
 export const drag_elements_plus=(
-  dragged:SankeyPlusNode|SankeyPlusLabel,
-  data:SankeyPlusData,
+  dragged:SankeyNode|SankeyPlusLabel,
+  data:SankeyData,
   event:{ dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current:SankeyPlusNode[]},
+  multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_links:{current: SankeyPlusLink[] },
-  LinkText:(data: SankeyPlusData, d: SankeyPlusLink,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetSankeyMinWidthAndHeight:(d:SankeyPlusData)=>number[],
-  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
-  DrawArrows:plusDrawArrowsType,
+  set_data:(d:SankeyData)=>void,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
+  multi_selected_links:{current: SankeyLink[] },
+  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  DrawArrows:drawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number
 )=>{
   // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
   // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
-  drag_elements(dragged,data,event,multi_selected_nodes,set_data,display_nodes,display_links,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale)
+  drag_elements(dragged as SankeyNode,data,event,multi_selected_nodes,set_data,display_nodes,display_links,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale)
 
 
   // Drag zdt too
@@ -1028,15 +1034,15 @@ export const drag_elements_plus=(
   // }
 }
 
-export const return_out_of_bound_element_plus=(dragged:SankeyPlusNode|SankeyPlusLabel,data:SankeyPlusData,event:{ dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current:SankeyPlusNode[]},node_visible:string[]
+export const return_out_of_bound_element_plus=(dragged:SankeyNode|SankeyPlusLabel,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
+  multi_selected_nodes:{current:SankeyNode[]},node_visible:string[]
 )=>{
 
   // Cherche si des noeuds seront hors zone si on les drag
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
 
 
-  const out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[]=return_out_of_bound_element(dragged,data,event,multi_selected_nodes,node_visible)
+  const out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[]=return_out_of_bound_element(dragged as SankeyNode,data,event,multi_selected_nodes,node_visible) as (SankeyPlusNode|SankeyPlusLabel)[]
 
 
   Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).filter(lb=>{
