@@ -1,6 +1,6 @@
 
-import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode } from './types'
-import { DefaultLinkStyle } from 'open-sankey/dist/SankeyUtils'
+import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink } from './types'
+import { DefaultLinkStyle,ReturnValueLink,NodeColor,LinkColor } from 'open-sankey/dist/SankeyUtils'
 import {drag_legend_g_element} from 'open-sankey/dist/SankeyDrawLegend'
 import * as d3 from 'd3'
 import { opposing_drag_elements_plus } from './SankeyPlusNodes'
@@ -10,6 +10,7 @@ import { TFunction } from 'i18next'
 import { FaFileImport} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
+import {SankeyLinkValue} from 'open-sankey/src/lib/types'
 
 export const default_sankey_plus_style_link=()=>{
   const style=DefaultLinkStyle() as SankeyPlusLinkStyle
@@ -130,4 +131,14 @@ export const is_all_zdt_attr_same_value=(data:SankeyPlusData,m_s_zdt:SankeyPlusL
     all_same=l[k]!==first_value?false:all_same
   })
   return (all_same?[first_value,false]:[0,true])
+}
+
+export const PlusLinkSabotColor = (l: SankeyPlusLink,data:SankeyPlusData,
+  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue
+) => {
+  if(ReturnValueLink(data,l,'gradient')===true){
+    return NodeColor(data.nodes[l.idSource],data)
+  }else{
+    return LinkColor(l,data,GetLinkValue)
+  }
 }
