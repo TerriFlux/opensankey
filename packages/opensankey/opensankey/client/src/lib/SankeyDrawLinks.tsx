@@ -12,7 +12,7 @@ import { drawCurveFunction,
   DeselectVisualyLinks,
   EventLinkContextMenu} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
-import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg} from './SankeyDrawFunction'
+import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg,DrawLinkStartSabot} from './SankeyDrawFunction'
 
 declare const window: Window &
 typeof globalThis & {
@@ -45,8 +45,11 @@ export const OpenSankeyDrawLinks = (
   DrawArrows:drawArrowsType,
   set_display_link_opacity:(s:string)=>void,
   set_contextualised_link:(l:SankeyLink)=>void,
-  pointer_pos:{current:number[]}
-
+  pointer_pos:{current:number[]},
+  LinkSabotColor:(
+    l:SankeyLink,
+    data:SankeyData,
+    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
 
 ) => {
 
@@ -185,7 +188,11 @@ export const OpenSankeyDrawLinks = (
       GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
     DrawArrows:drawArrowsType,
     set_contextualised_link:(l:SankeyLink)=>void,
-    pointer_pos:{current:number[]}
+    pointer_pos:{current:number[]},
+    LinkSabotColor:(
+      l:SankeyLink,
+      data:SankeyData,
+      GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string
   ) => {
     // Structure svg du link
     //- link :
@@ -387,6 +394,15 @@ export const OpenSankeyDrawLinks = (
       .filter((n) => (n as SankeyNode).inputLinksId.length>0?node_arrow_visible(data,(n as SankeyNode)):false)
       .each( (n) => {
         DrawArrows(n as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
+      })
+
+    // Create des coins de départ des flux si le noeud source est en forme de flêche
+    d3.selectAll(' .opensankey .ggg_nodes')
+      .filter((n)=>{
+        return ReturnValueNode(data,(n as SankeyNode),'shape')==='arrow'
+      })
+      .each(n => {
+        DrawLinkStartSabot(data,(n as SankeyNode),display_nodes,display_links,scale,inv_scale,GetLinkValue,LinkSabotColor)
       })
 
     paths.attr('d', d => {
@@ -739,7 +755,7 @@ export const OpenSankeyDrawLinks = (
     link.local.label_position = 'frozen'
   }
 
-  add_links(display_nodes,display_links,LinkStroke,DrawArrows,set_contextualised_link,pointer_pos)
+  add_links(display_nodes,display_links,LinkStroke,DrawArrows,set_contextualised_link,pointer_pos,LinkSabotColor)
   
   return (<>
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>

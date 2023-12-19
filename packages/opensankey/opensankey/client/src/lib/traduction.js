@@ -338,14 +338,13 @@ export const open_resources = {
         sector:'Sector',
         exchange:'Exchange',
         selector:'Select nodes',
-
         tooltips:{
           Nom:'Change the name of the selected node. If several nodes are selected, this field is disabled',
           AS:'Allow to apply a predefined style in the preference menu to the selected node(s)',
           Reorg:'Allows automatic reorganization of incoming and outgoing links (up/down position)',
           SlctOutLink:'Allow to select all outgoing links from the node(s)',
           SlctInLink:'Allow to select all incoming links to the node(s)',
-          IB:'Tooltip : text formatted in HTML and displayed with the tooltip of the node. This tooltip pops on graphic space with SHIFT + MOUSE on the node.'
+          IB:'Tooltip : text formatted in HTML and displayed with the tooltip of the node. This tooltip pops on graphic space with SHIFT + MOUSE on the node.',
         },
         apparence:{
           apparence:'Appearence',
@@ -359,6 +358,9 @@ export const open_resources = {
           TMH:'Minimum height',
           asn:'Apply style to nodes',
           override_type_node_shape:'Override default shape',
+          arrow:'Arrow',
+          arrow_angle:'Angle',
+          angle_orientation:'Angle orientation',
           tooltips: {
             Visibilité:'Makes the selected node(s) visible or invisible',
             Couleur:'Choose the color of the selected node(s)',
@@ -368,6 +370,8 @@ export const open_resources = {
             TML:'Minimum width in pixels of the selected node(s)',
             TMH:'Minimum height in pixels of the selected node(s)',
             override_type_node_shape:'Override the default forced shape of product and sector type nodes',
+            arrow_angle:'Change the angle of node arrow',
+            angle_orientation:'Change the orientation of the node',
           }
         },
         labels:{
@@ -959,7 +963,7 @@ export const open_resources = {
           Reorg:'Permet de réorganiser automatiquement les flux entrant et sortant (position haut / bas)',
           SlctOutLink:'Permettre de sélectionner tous les flux sortants du/des noeud(s)',
           SlctInLink:'Permettre de sélectionner tous les flux entrants vers le/les noeud(s)',
-          IB:'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du noeud. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le noeud'
+          IB:'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du noeud. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le noeud',
         },
         apparence:{
           apparence:'Apparence',
@@ -973,6 +977,9 @@ export const open_resources = {
           TMH:'Hauteur minimale',
           asn:'Appliquer le style aux noeuds',
           override_type_node_shape:'Déverrouiller la forme',
+          arrow:'Flêche',
+          arrow_angle:'Inclinaison flêche',
+          angle_orientation:'Orientation flêche',
           tooltips: {
             Visibilité:'Rend le/les noeud(s) selectionné(s) visible(s) ou invisible(s)',
             Couleur:'Choisir la couleur du/des noeud(s) selectionné(s)',
@@ -982,6 +989,8 @@ export const open_resources = {
             TML:'Largeur minimale en pixel du/des noeud(s) selectionné(s)',
             TMH:'Hauteur minimale en pixel du/des noeud(s) selectionné(s)',
             override_type_node_shape:'Permet de changer la forme forcée par défaut sur les noeuds de types produits et secteur',
+            arrow_angle:'Change l\'angle du noeud en forme  de flêche',
+            angle_orientation:'Change l\'orientation du noeud en forme  de flêche',
           }
         },
         labels:{
