@@ -2486,7 +2486,7 @@ export const DrawLinkStartSabot=(data:SankeyData,
       continue
     }
 
-    if (!LinkVisible(l, data,GetLinkValue)) {
+    if (!LinkVisible(l, data,display_nodes,GetLinkValue)) {
       continue
     }
 
