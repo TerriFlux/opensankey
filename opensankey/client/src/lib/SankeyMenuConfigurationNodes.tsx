@@ -40,7 +40,7 @@ export const OpenSankeyMenuConfigurationNodes = (
   tab_colored:boolean,set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   multi_selected_links: {current:SankeyLink[]},
-  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
+  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>
 ) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
   const ui : {[s:string] : JSX.Element}= {
@@ -56,6 +56,8 @@ export const OpenSankeyMenuConfigurationNodes = (
   
   return ui
 }
+
+
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {t,data, set_data, multi_selected_nodes,set_style_to_apply, menu_configuration_nodes,token }
