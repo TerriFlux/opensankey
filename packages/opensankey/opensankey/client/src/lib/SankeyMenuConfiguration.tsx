@@ -1,6 +1,6 @@
 import Accordion from 'react-bootstrap/Accordion'
 import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode } from './types'
+import { SankeyLink, SankeyData, SankeyNode, showMenuComponentsType } from './types'
 import React, { FunctionComponent, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
@@ -17,7 +17,7 @@ export const OpenSankeyConfigurationsMenus = (
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
   set_style_to_apply:(s:string)=>void,
-  set_show_nav:(d:boolean)=>void,
+  showMenuComponents: showMenuComponentsType,
   menu_configuration_layout: JSX.Element[],
   menu_configuration_node_tags:JSX.Element,
   menu_configuration_link_tags:JSX.Element,
@@ -91,11 +91,11 @@ export const OpenSankeyConfigurationsMenus = (
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('2')
-                  set_show_nav(true)
+                  showMenuComponents.show_nav[1](true)
                 } else {
                   set_sub_nav_item_active('EtiquetteNoeud')
                   set_nav_item_active('2')
-                  set_show_nav(true)
+                  showMenuComponents.show_nav[1](true)
 
                 }
               }
@@ -116,11 +116,11 @@ export const OpenSankeyConfigurationsMenus = (
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('2')
-                  set_show_nav(true)
+                  showMenuComponents.show_nav[1](true)
                 } else {
                   set_sub_nav_item_active('editionNoeud')
                   set_nav_item_active('2')
-                  set_show_nav(true)
+                  showMenuComponents.show_nav[1](true)
 
                 }
               }
@@ -166,11 +166,11 @@ export const OpenSankeyConfigurationsMenus = (
               if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                 set_sub_nav_item_active('')
                 set_nav_item_active('3')
-                set_show_nav(true)
+                showMenuComponents.show_nav[1](true)
               } else {
                 set_sub_nav_item_active('8')
                 set_nav_item_active('3')
-                set_show_nav(true)
+                showMenuComponents.show_nav[1](true)
               }
             }}
           >
@@ -185,11 +185,11 @@ export const OpenSankeyConfigurationsMenus = (
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('3')
-                  set_show_nav(true)
+                  showMenuComponents.show_nav[1](true)
                 } else {
                   set_sub_nav_item_active('editionFlux')
                   set_nav_item_active('3')
-                  set_show_nav(true)
+                  showMenuComponents.show_nav[1](true)
                 }
               }
             }>

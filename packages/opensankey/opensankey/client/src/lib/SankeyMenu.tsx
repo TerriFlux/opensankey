@@ -32,7 +32,9 @@ import {
   SankeyLinkValue,
   SankeyNode,
   TagsCatalog,
-  TagsGroup
+  TagsGroup,
+  showMenuComponentsType,
+  showMenuComponentsPropTypes
 } from './types'
 
 import { complete_sankey_data } from './SankeyConvert'
@@ -344,26 +346,19 @@ const logo_contact=<svg
 
 export const OpenSankeyMenus = (
   t:TFunction,
-  setShowPreference:(b:boolean)=>void,
   Reinitialization:()=>void,
   DefaultSankeyData:()=>SankeyData,
-  set_show_apply_layout:(b:boolean)=>void,
-  set_show_excel_dialog:(b:boolean)=>void,
-  set_show_save_json:(b:boolean)=>void,
+  showMenuComponents:showMenuComponentsType,
   showStyleEdition:()=>void,
   showStyleEditionLink:()=>void,
-  set_show_welcome:(b:boolean)=>void,
   set_never_see_again:(b:boolean)=>void,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  set_show_modalTemplate:(b:boolean)=>void,
-  set_show_modale_support:(b:boolean)=>void,
   external_edition_item:JSX.Element[],
   external_file_item:JSX.Element[],
   externale_save_item:JSX.Element[],
   set_tags_selected:(o:{[x:string]:string})=>void,
-  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
-  set_show_modale_tuto:(b:boolean)=>void,
+  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
@@ -637,7 +632,7 @@ export const OpenSankeyMenus = (
               onClick={Reinitialization} ><FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')} </Dropdown.Item>
 
             <Dropdown.Item
-              onClick={() => { set_show_modalTemplate(true) }}
+              onClick={() => { showMenuComponents.show_modalTemplate[1](true) }}
             >{logo_tempalte} {t('Menu.from_model')} </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
@@ -692,7 +687,7 @@ export const OpenSankeyMenus = (
               }}
             />
             <Dropdown.Item
-              onClick={() => set_show_excel_dialog(true)}
+              onClick={() => showMenuComponents.show_excel_dialog[1](true)}
             >{t('Menu.open_excel')}</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
@@ -706,7 +701,7 @@ export const OpenSankeyMenus = (
           <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faDownload} /></Col><Col className='textIcon'>{t('Menu.enregistrer')}</Col></></Dropdown.Toggle>
           <Dropdown.Menu>
             <Dropdown.Item onClick={()=>{
-              set_show_save_json(true)
+              showMenuComponents.show_save_json[1](true)
             }} >{t('Menu.open_json')}</Dropdown.Item>
             <Dropdown.Item onClick={()=>SankeyUtils.ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</Dropdown.Item>
             {externale_save_item}
@@ -718,7 +713,7 @@ export const OpenSankeyMenus = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-file_setting'}>{t('Menu.tooltips.preference')} </Tooltip>}>
-        <Button size='sm' variant='light' onClick={() => { setShowPreference(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
+        <Button size='sm' variant='light' onClick={() => { showMenuComponents.ShowPreference[1](true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
       </OverlayTrigger>
     ]
 
@@ -728,7 +723,7 @@ export const OpenSankeyMenus = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-edition_layout'}>{t('Menu.tooltips.amp')} </Tooltip>}>
-        <Button size='sm' variant='light' onClick={() => set_show_apply_layout(true)}>
+        <Button size='sm' variant='light' onClick={() => showMenuComponents.show_apply_layout[1](true)}>
           <><Col><FontAwesomeIcon icon={faFileInvoice} /></Col>
             <Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></>
         </Button>
@@ -756,7 +751,7 @@ export const OpenSankeyMenus = (
         rootClose
         overlay={<Tooltip id={'tooltip-help_welcome'}>{t('Menu.tooltips.DisplayWelcome')} </Tooltip>}>
         <Button variant='light' onClick={() =>{
-          set_show_welcome(true)
+          showMenuComponents.show_welcome[1](true)
           set_never_see_again(false)
           localStorage.setItem('dontSeeAggainWelcome','0')
         }}>
@@ -769,7 +764,7 @@ export const OpenSankeyMenus = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-tuto'}>{t('Menu.tooltips.tuto')} </Tooltip>}>
-        <Button variant='light' onClick={() => set_show_modale_tuto(true)} ><Col>{logo_tuto}</Col>
+        <Button variant='light' onClick={() => showMenuComponents.show_modale_tuto[1](true)} ><Col>{logo_tuto}</Col>
           <Col className='textIcon'>{t('Menu.formation')}</Col>
         </Button></OverlayTrigger>,
 
@@ -787,7 +782,7 @@ export const OpenSankeyMenus = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-support'}>{t('Menu.tooltips.support')} </Tooltip>}>
-        <Button variant='light' onClick={() => set_show_modale_support(true)}><Col>{logo_contact}</Col>
+        <Button variant='light' onClick={() => showMenuComponents.show_modale_support[1](true)}><Col>{logo_contact}</Col>
           <Col className='textIcon'>{t('Menu.support')}</Col>
         </Button>
       </OverlayTrigger>
@@ -831,7 +826,6 @@ const MenuPropTypes = {
   formations_menu: PropTypes.object.isRequired,
   url_prefix: PropTypes.string.isRequired,
 
-
   nav_item_active: PropTypes.string.isRequired,
 
   mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
@@ -841,8 +835,7 @@ const MenuPropTypes = {
 
   callback:PropTypes.func.isRequired,
 
-  show_load: PropTypes.bool.isRequired,
-  set_show_load: PropTypes.func.isRequired,
+  showMenuComponents: PropTypes.shape(showMenuComponentsPropTypes).isRequired,
   processing : PropTypes.bool.isRequired,
   setProcessing : PropTypes.func.isRequired,
   failure : PropTypes.bool.isRequired,
@@ -855,36 +848,16 @@ const MenuPropTypes = {
   launch: PropTypes.func.isRequired,
   configurations_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
 
-  show_nav: PropTypes.bool.isRequired,
-  set_show_nav: PropTypes.func.isRequired,
-  show_excel_dialog: PropTypes.bool.isRequired,
-  set_show_excel_dialog: PropTypes.func.isRequired,
-  show_apply_layout: PropTypes.bool.isRequired,
-  set_show_apply_layout: PropTypes.func.isRequired,
-  show_save_json: PropTypes.bool.isRequired,
-  set_show_save_json: PropTypes.func.isRequired,
-  showPreference: PropTypes.bool.isRequired,
-  setShowPreference: PropTypes.func.isRequired,
-  show_publish_dialog:PropTypes.bool.isRequired,
-  set_show_publish_dialog: PropTypes.func.isRequired,
-
   menus: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,
-  show_modalTemplate:PropTypes.bool.isRequired,
-  set_show_modalTemplate:PropTypes.func.isRequired,
   cardsTemplate:PropTypes.element.isRequired,
   external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   GetSankeyMinWidthAndHeight :PropTypes.func.isRequired,
   Reinitialization:PropTypes.func.isRequired,
-  set_show_modale_tuto:PropTypes.func.isRequired,
-  show_modale_tuto:PropTypes.bool.isRequired,
-  show_modale_support:PropTypes.bool.isRequired,
-  set_show_modale_support:PropTypes.func.isRequired,
   additional_nav_item:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
 
   set_contextualised_node:PropTypes.func.isRequired,
   set_contextualised_link:PropTypes.func.isRequired,
   set_tag_contextualised:PropTypes.func.isRequired,
-  set_show_context_zdd:PropTypes.func.isRequired,
   updateLayout:PropTypes.func.isRequired,
   convert_data:PropTypes.func.isRequired,
   node_hspace:PropTypes.number.isRequired,
@@ -921,15 +894,12 @@ const Menu: FunctionComponent<MenuTypes> = (
   { t,
     data, set_data,
     nav_item_active,
-    show_nav,
-    set_show_nav,
+    showMenuComponents,
     logo,logo_terriflux, logo_width,app_name,
     button_ref,
     accordion_ref,
     url_prefix,
     callback,
-    show_load,
-    set_show_load,
     processing,setProcessing,
     failure,setFailure,
     not_started,setNotStarted,
@@ -937,23 +907,15 @@ const Menu: FunctionComponent<MenuTypes> = (
     path,
     launch,
     configurations_menus,
-    show_excel_dialog, set_show_excel_dialog,
-    show_apply_layout, set_show_apply_layout,
-    show_save_json, set_show_save_json,
     menus,
-    show_modalTemplate,
-    set_show_modalTemplate,
     cardsTemplate,
-
     external_modal,
     GetSankeyMinWidthAndHeight,
-    formations_menu,Reinitialization,set_show_modale_tuto,show_modale_tuto,
-    show_modale_support,set_show_modale_support,
+    formations_menu,Reinitialization,
     additional_nav_item,
     set_contextualised_node,
     set_contextualised_link,
     set_tag_contextualised,
-    set_show_context_zdd,
     updateLayout,
     convert_data,
     node_hspace,set_node_hspace,
@@ -1006,9 +968,9 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
-    set_show_nav(!show_nav)
+    showMenuComponents.show_nav[1](!showMenuComponents.show_nav[0])
 
-    if(!show_nav){
+    if(!showMenuComponents.show_nav[0]){
       [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
       const transform=d3.select('.opensankey #svg').attr('transform')
       let scale_svg=1
@@ -1030,7 +992,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const menuButton = () => {
-    if (show_nav) {
+    if (showMenuComponents.show_nav[0]) {
       return <FaAngleDoubleRight />
     } else {
       return <FaAngleDoubleLeft />
@@ -1092,7 +1054,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,Reinitialization,convert_data
                   )
                   set_data({...data})
-                  set_show_modale_tuto(false)
+                  showMenuComponents.show_modale_tuto[1](false)
                 }}
               >{t('useTutoJSON')}</Button>
               {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','.xlsx'))?
@@ -1105,7 +1067,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     SankeyUtils.UploadExemple(
                       'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data
                     )
-                    set_show_modale_tuto(false)
+                    showMenuComponents.show_modale_tuto[1](false)
 
                   }
                   }
@@ -1121,7 +1083,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     SankeyUtils.UploadExemple(
                       'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data
                     )
-                    set_show_modale_tuto(false)
+                    showMenuComponents.show_modale_tuto[1](false)
 
                   }
                   }
@@ -1137,7 +1099,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
   })
 
-  modal_tuto=<Modal size={'xl'} fullscreen={true} id='modal_tutoriel' show={show_modale_tuto} onHide={() => set_show_modale_tuto(false)}>
+  modal_tuto=<Modal size={'xl'} fullscreen={true} id='modal_tutoriel' show={showMenuComponents.show_modale_tuto[0]} onHide={() => showMenuComponents.show_modale_tuto[1](false)}>
     <Modal.Header closeButton>{t('Menu.formation')}</Modal.Header>
     <Modal.Body>
       <Row>
@@ -1183,7 +1145,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   </Col> ): <ButtonGroup> {Object.keys(ordered_menu).map(k=><React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
 
 
-  const modal_support= <Modal size={'lg'} show={show_modale_support} onHide={() => set_show_modale_support(false)}>
+  const modal_support= <Modal size={'lg'} show={showMenuComponents.show_modale_support[0]} onHide={() => showMenuComponents.show_modale_support[1](false)}>
     <Modal.Header closeButton><h2>{t('Menu.c_support')}</h2></Modal.Header>
     <Modal.Body>
       <h3>{t('Menu.rth_support')} :</h3>
@@ -1205,7 +1167,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
         set_contextualised_node(undefined)
         set_contextualised_link(undefined)
-        set_show_context_zdd(false)
+        showMenuComponents.show_context_zdd[1](false)
         set_tag_contextualised(undefined)
       }} >
         <Container className='MenuNavigation'>
@@ -1245,7 +1207,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
 
-      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' {...props} style={{ 'width': menu_config_width+'px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
+      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={showMenuComponents.show_nav[0]} placement='end' {...props} style={{ 'width': menu_config_width+'px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
             nav_item_active={nav_item_active}
@@ -1267,7 +1229,7 @@ const Menu: FunctionComponent<MenuTypes> = (
             className='openMenu'
             type="checkbox"
             variant="primary"
-            checked={show_nav}
+            checked={showMenuComponents.show_nav[0]}
             onChange={(e) => { setChecked(e.currentTarget.checked)}}
             onClick={toggleShow}
             value="menuConfigButton">{menuButton()}
@@ -1285,16 +1247,16 @@ const Menu: FunctionComponent<MenuTypes> = (
       }
       <ApplySaveJSONDialog
         t={t}
-        show_save_json={show_save_json}
-        set_show_save_json={set_show_save_json}
+        show_save_json={showMenuComponents.show_save_json[0]}
+        set_show_save_json={showMenuComponents.show_save_json[1]}
         sankey_data={data}
         additionnal_button_option_save_json={[]}
         ClickSaveDiagram={SankeyUtils.ClickSaveDiagram}
       />
       <ApplyLayoutDialog
         t={t}
-        show_apply_layout={show_apply_layout}
-        set_show_apply_layout={set_show_apply_layout}
+        show_apply_layout={showMenuComponents.show_apply_layout[0]}
+        set_show_apply_layout={showMenuComponents.show_apply_layout[1]}
         sankey_data={data}
         set_sankey_data={set_data}
         updateLayout={updateLayout}
@@ -1312,10 +1274,10 @@ const Menu: FunctionComponent<MenuTypes> = (
       <ExcelModal
         t={t}
         launch={launch}
-        handleCloseDialog={() => set_show_excel_dialog(false)}
+        handleCloseDialog={() => showMenuComponents.show_excel_dialog[1](false)}
         UploadExcelImpl={SankeyUtils.UploadExcelImpl}
-        show_excel_dialog={show_excel_dialog}
-        set_show_excel_dialog={set_show_excel_dialog}
+        show_excel_dialog={showMenuComponents.show_excel_dialog[0]}
+        set_show_excel_dialog={showMenuComponents.show_excel_dialog[1]}
         url_prefix={url_prefix}
         callback={callback} />
 
@@ -1323,8 +1285,8 @@ const Menu: FunctionComponent<MenuTypes> = (
         t={t}
         url_prefix={url_prefix}
         successAction={()=>SankeyUtils.DownloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
-        show_dialog={show_load}
-        set_show_dialog={set_show_load}
+        show_dialog={showMenuComponents.show_load[0]}
+        set_show_dialog={showMenuComponents.show_load[1]}
         processing={processing}
         setProcessing={setProcessing}
         failure={failure}
@@ -1337,7 +1299,7 @@ const Menu: FunctionComponent<MenuTypes> = (
       />
 
       {
-        <Modal size={'xl'}  show={show_modalTemplate} onHide={() => set_show_modalTemplate(false)}>
+        <Modal size={'xl'}  show={showMenuComponents.show_modalTemplate[0]} onHide={() => showMenuComponents.show_modalTemplate[1](false)}>
           <Modal.Header closeButton>{t('Banner.sdr')}</Modal.Header>
           <Modal.Body>
             <Row md={4}>
@@ -1360,8 +1322,7 @@ export default Menu
 export const OpenSankeyModalWelcome=(t:TFunction,
   active_page:string,
   set_active_page:(s:string)=>void,
-  show_modal_welcome:boolean,
-  set_show_modal_welcome:(b:boolean)=>void,
+  showMenuComponents : showMenuComponentsType,
   never_see_again:boolean,
   set_never_see_again:(b:boolean)=>void,
   additional_shortcut_item:JSX.Element[],
@@ -1443,8 +1404,8 @@ export const OpenSankeyModalWelcome=(t:TFunction,
 
 
 
-  return <Modal scrollable size='xl' show={show_modal_welcome && !never_see_again} onHide={()=>{
-    set_show_modal_welcome(false)
+  return <Modal scrollable size='xl' show={showMenuComponents.show_modal_welcome[0] && !never_see_again} onHide={()=>{
+    showMenuComponents.show_modal_welcome[1](false)
   }}>
     <Modal.Header closeButton>
       <Modal.Title>{t('welcome.'+active_page)}</Modal.Title>
@@ -1522,11 +1483,9 @@ export const ContextMenuNode=(
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
-  set_show_menu_node_apparence:React.Dispatch<React.SetStateAction<boolean>>,
-  set_show_menu_node_io:React.Dispatch<React.SetStateAction<boolean>>,
+  showMenuComponents : showMenuComponentsType,
   set_agregation_node:React.Dispatch<React.SetStateAction<string>>,
   set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,
-  set_show_agregation:React.Dispatch<React.SetStateAction<boolean>>,
   set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
   pointer_pos:{current:number[]},
   additional_context_element_menu:JSX.Element[],
@@ -1623,7 +1582,7 @@ export const ContextMenuNode=(
 
 
   const dropdown_c_n_apparence=contextualised_node!==undefined?<Button onClick={()=>{
-    set_show_menu_node_apparence(true)
+    showMenuComponents.show_menu_node_apparence[1](true)
     set_contextualised_node(undefined)
   }} variant='light'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
@@ -1662,7 +1621,7 @@ export const ContextMenuNode=(
   </Dropdown>:<></>
 
   const dropdown_c_n_io=contextualised_node!==undefined?<Button onClick={()=>{
-    set_show_menu_node_io(true)
+    showMenuComponents.show_menu_node_io[1](true)
     set_contextualised_node(undefined)
   }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>:<></>
 
@@ -1810,13 +1769,13 @@ export const ContextMenuNode=(
     <Popover.Body>
       <ButtonGroup vertical>
         {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.NodeContextHasAggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          SankeyUtils.Aggregate(contextualised_node,data,set_agregation_node,set_is_agregation,set_show_agregation)
+          SankeyUtils.Aggregate(contextualised_node,data,set_agregation_node,set_is_agregation,showMenuComponents.show_agregation[1])
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
         }}>Agrégation</Button>:<></>}
         {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          SankeyUtils.Desaggregate(contextualised_node,data,display_nodes,display_links,set_agregation_node,set_is_agregation,set_show_agregation)
+          SankeyUtils.Desaggregate(contextualised_node,data,display_nodes,display_links,set_agregation_node,set_is_agregation,showMenuComponents.show_agregation[1])
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
@@ -2149,16 +2108,15 @@ export const ContextMenuLink=(contextualised_link:SankeyLink|undefined,set_conte
   </Popover>:<></>
 }
 
-export const ContextZdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolean)=>void,
+export const ContextZdd=(
+  showMenuComponents:showMenuComponentsType,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   pointer_pos:{current:number[]},
   node_hspace:number,
   set_node_hspace:(n:number)=>void,
   node_vspace:number,
   set_node_vspace:(n:number)=>void,
-  t:TFunction,
-  set_show_menu_layout:(b:boolean)=>void,
-
+  t:TFunction
 )=>{
   const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
     d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
@@ -2170,7 +2128,7 @@ export const ContextZdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolea
   }
 
   let style_c_zdd='0px 0px auto auto'
-  if(show_context_zdd){
+  if(showMenuComponents.show_context_zdd[0]){
     style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
 
@@ -2334,18 +2292,18 @@ export const ContextZdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolea
       } else if (document.exitFullscreen) {
         document.exitFullscreen()
       }
-      set_show_context_zdd(false)
+      showMenuComponents.show_context_zdd[1](false)
     }}
   >
     {full}
   </Button>
 
   const button_open_layout=<Button onClick={()=>{
-    set_show_menu_layout(true)
-    set_show_context_zdd(false)
+    showMenuComponents.show_menu_layout[1](true)
+    showMenuComponents.show_context_zdd[1](false)
 
   }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>
-  return show_context_zdd?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
+  return showMenuComponents.show_context_zdd[0]?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
         {button_fullscreen}
