@@ -341,3 +341,52 @@ export interface treeFolderType{
   children?:treeFolderType[],
   checked?:1|0.5|0
 }
+export interface showMenuComponentsType {
+  show_nav : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_node_apparence : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_node_io : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_link_data : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_link_appearence : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_layout : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modal_welcome : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modale_tuto : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modale_support : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_agregation : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_context_zdd : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_excel_dialog : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_save_json : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_apply_layout : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  ShowPreference : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modalTemplate : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_welcome : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_load : [boolean,React.Dispatch<React.SetStateAction<boolean>>]
+}
+
+export const showMenuComponentsPropTypes = {
+  show_nav : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_node_apparence : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_node_io : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_link_data : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_link_appearence : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_layout : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_modal_welcome : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_modale_tuto : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_modale_support : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_agregation : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_context_zdd : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_excel_dialog : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_save_json : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_apply_layout : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  ShowPreference : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_modalTemplate : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_welcome : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_load : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired
+}
+
+type showMenuComponentsType2 = InferProps<typeof showMenuComponentsPropTypes>
+
+type IfEquals<T, U, Y=unknown, N=never> =
+  (<G>() => G extends T ? 1 : 2) extends
+  (<G>() => G extends U ? 1 : 2) ? Y : N;
+
+type EQ = IfEquals<showMenuComponentsType,showMenuComponentsType2>
