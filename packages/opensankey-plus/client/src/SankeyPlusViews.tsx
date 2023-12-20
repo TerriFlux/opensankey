@@ -24,8 +24,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { AdjustSankeyZone,SmoothClasses} from 'open-sankey/src/lib/SankeyUtils'
-import { updateLayout } from 'open-sankey/src/lib/SankeyLayout'
+import { AdjustSankeyZone,SmoothClasses} from 'open-sankey/dist/SankeyUtils'
+import { updateLayout } from 'open-sankey/dist/SankeyLayout'
 
 import { SankeyPlusData,
   SankeyPlusNode,

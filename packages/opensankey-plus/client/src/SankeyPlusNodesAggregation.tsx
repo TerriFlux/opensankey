@@ -1,7 +1,7 @@
 import React from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tab, Button } from 'react-bootstrap'
-import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from 'open-sankey/src/lib/SankeyLayout'
-import { DefaultLink } from 'open-sankey/src/lib/SankeyUtils'
+import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from 'open-sankey/dist/SankeyLayout'
+import { DefaultLink } from 'open-sankey/dist/SankeyUtils'
 import { TFunction } from 'i18next'
 import { SankeyData,SankeyNode } from 'open-sankey/src/lib/types'
 

@@ -1,9 +1,9 @@
 
 import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
-import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/src/lib/SankeyConvert'
+import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
-import { DefaultLink, DefaultNode } from 'open-sankey/src/lib/SankeyUtils'
-import { synchronizeNodesandLinksId } from 'open-sankey/src/lib/SankeyLayout'
+import { DefaultLink, DefaultNode } from 'open-sankey/dist/SankeyUtils'
+import { synchronizeNodesandLinksId } from 'open-sankey/dist/SankeyLayout'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
 import { TFunction } from 'i18next'

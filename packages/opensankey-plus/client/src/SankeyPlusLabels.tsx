@@ -4,7 +4,7 @@ import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import { SankeyData, SankeyLinkValue,SankeyNode,SankeyLink, drawArrowsType} from 'open-sankey/src/lib/types'
 
-import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from 'open-sankey/src/lib/SankeyDrawFunction'
+import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from 'open-sankey/dist/SankeyDrawFunction'
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
 declare const window: Window &
 typeof globalThis & {

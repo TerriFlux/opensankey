@@ -8,7 +8,7 @@ import {RemoveAnimate,
   DrawArrows,
   SvgDragMiddleMouseStart,
   SvgDragMiddleMouseMove,
-  SimpleGNodeClick} from 'open-sankey/src/lib/SankeyDrawFunction'
+  SimpleGNodeClick} from 'open-sankey/dist/SankeyDrawFunction'
 import {  GetLinkValue,
   NodeColor,
   LinkColor,
@@ -18,8 +18,8 @@ import {  GetLinkValue,
   IsAllNodeAttrSameValue,
   AssignNodeValueToCorrectVar,
   SmoothClasses,
-  TooltipValueSurcharge} from 'open-sankey/src/lib/SankeyUtils'
-import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/src/lib/SankeyDrag'
+  TooltipValueSurcharge} from 'open-sankey/dist/SankeyUtils'
+import {opposing_drag_elements,drag_elements,drag_node_text,return_out_of_bound_element} from 'open-sankey/dist/SankeyDrag'
 import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode,} from './types'
 import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import { FaFileImport} from 'react-icons/fa'
@@ -469,7 +469,7 @@ const node_mouse_click=(
   multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
   accordion_ref:RefObject<HTMLDivElement>,
-  button_ref:{ current: HTMLLabelElement},
+  button_ref:RefObject<HTMLLabelElement>,
   accept_simple_click:{current:boolean},
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },

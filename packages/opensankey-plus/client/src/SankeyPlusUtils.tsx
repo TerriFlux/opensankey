@@ -1,7 +1,7 @@
 
 import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink,SankeyPlusLinkAttrLocal } from './types'
-import { DefaultLinkStyle,ReturnValueLink,AssignLinkValueToCorrectVar } from 'open-sankey/src/lib/SankeyUtils'
-import {drag_legend_g_element} from 'open-sankey/src/lib/SankeyDrawLegend'
+import { DefaultLinkStyle,ReturnValueLink,AssignLinkValueToCorrectVar } from 'open-sankey/dist/SankeyUtils'
+import {drag_legend_g_element} from 'open-sankey/dist/SankeyDrawLegend'
 import * as d3 from 'd3'
 import { opposing_drag_elements_plus } from './SankeyPlusNodes'
 import React,{ChangeEvent,useRef} from 'react'
