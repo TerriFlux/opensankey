@@ -40,7 +40,7 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faSliders,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { FaAngleDoubleLeft} from 'react-icons/fa'
-import { ReturnValueLink } from './SankeyUtils'
+import { ReturnValueLink,LinkColor } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
 import { OpenSankeyDiagramSelector } from './SankeyMenuDialogs'
 import { SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from './SankeyStyle'
@@ -496,7 +496,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       position,node_arrow_visible,
       LinkTooltipsContent,
       SankeyUtils.LinkText,SankeyUtils.GetLinkValue,set_data,set_displayed_input_link_value,tags_selected,set_tags_selected,LinkStroke,DrawArrows,set_display_link_opacity,
-      set_contextualised_link,pointer_pos
+      set_contextualised_link,pointer_pos,LinkColor
+
     )
 
 
