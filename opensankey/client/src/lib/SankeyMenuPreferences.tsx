@@ -182,11 +182,6 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreferenc
         return <React.Fragment key={i}>{d}</React.Fragment>
       })}
     </Modal.Body>
-    <Modal.Footer>
-      <Button variant="secondary" onClick={() => { setShowPreference(false) }}>
-        Close
-      </Button>
-    </Modal.Footer>
   </Modal>)
 }
 
