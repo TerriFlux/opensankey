@@ -635,6 +635,47 @@ export const compute_auto_sankey = (
         }
       })
   })
+  // for the node which have no input links they should stick to the next output node and
+  // have an horizontal index equal to output node horizontal index minus one
+  for (let horizontal_index=0; horizontal_index<=max_horizontal_index; horizontal_index++) {
+    // Pass if no nodes for this horizontal_index
+    // TODO : if it is the case -> something was wrong before
+    if (!nodes_per_horizontal_indexes[horizontal_index]) {
+      continue
+    }
+    const to_splice : SankeyNode[] = []
+    nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
+      if (node.inputLinksId.length === 0) {
+        let min_next_horizontal_index = max_horizontal_index+1
+        node.outputLinksId.forEach(
+          (idLink) => {
+            if ( display_nodes[data.links[idLink].idSource] && display_nodes[data.links[idLink].idTarget]) {
+              const target_node = data.nodes[data.links[idLink].idTarget]
+              if (target_node === undefined ) {
+                return
+              }
+              if (horizontal_indexes_per_nodes_ids[target_node.idNode] < horizontal_indexes_per_nodes_ids[node.idNode]) {
+                return
+              }
+              if (horizontal_indexes_per_nodes_ids[target_node.idNode]<min_next_horizontal_index) {
+                min_next_horizontal_index = horizontal_indexes_per_nodes_ids[target_node.idNode]
+              }
+            }
+          })
+        if (horizontal_indexes_per_nodes_ids[node.idNode]<min_next_horizontal_index-1) {
+          to_splice.push(node)
+          // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
+          // ce qui lors de l'affectation d'une position x, ceux-ci sont négatif
+          horizontal_indexes_per_nodes_ids[node.idNode] = min_next_horizontal_index - 1
+          if (!nodes_per_horizontal_indexes[min_next_horizontal_index - 1]) {
+            nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
+          }
+          nodes_per_horizontal_indexes[min_next_horizontal_index - 1].push(node)
+        }
+      }
+    })
+    to_splice.forEach(node=>nodes_per_horizontal_indexes[horizontal_index].splice(nodes_per_horizontal_indexes[horizontal_index].indexOf(node),1))
+  }
 
   // Loop on all index "columns"
   let h_left_margin = h_space
@@ -759,6 +800,9 @@ export const compute_auto_sankey = (
     node_id_per_hxv_indexes.push(nodes_ids_per_vertical_index)
   }
   max_horizontal_index = (node_id_per_hxv_indexes.length - 1)
+
+
+
 
   // Update horizontal and vertical position of nodes
   // compute total height of nodes that belong to the same column,

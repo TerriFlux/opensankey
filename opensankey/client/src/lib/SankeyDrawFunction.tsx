@@ -676,7 +676,7 @@ export const DrawArrows = (
 
     const link_direction_same_as_node_arrow= link_input_from_right || link_input_from_left || link_input_from_top || link_input_from_from_bottom
 
-    if (!LinkVisible(l, data,GetLinkValue)) {
+    if (!LinkVisible(l, data,display_nodes,GetLinkValue)) {
       continue
     }
     if((!l_arrow) && !(node_shape!=='arrow')){
@@ -1695,7 +1695,7 @@ const DrawCurve = (
 
 
 ): string => {
-  if (!LinkVisible(link, data,GetLinkValue)) {
+  if (!LinkVisible(link, data, visible_nodes,GetLinkValue)) {
     return ''
   }
   const link_value = TestLinkValue(data, visible_nodes, link,GetLinkValue)
@@ -2486,7 +2486,7 @@ export const DrawLinkStartSabot=(data:SankeyData,
       continue
     }
 
-    if (!LinkVisible(l, data,GetLinkValue)) {
+    if (!LinkVisible(l, data,display_nodes,GetLinkValue)) {
       continue
     }
 

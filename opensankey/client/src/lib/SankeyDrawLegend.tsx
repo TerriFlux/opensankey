@@ -18,6 +18,7 @@ typeof globalThis & {
 export const OpenSankeyDrawLegend = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
+  display_nodes : { [node_id: string]: SankeyNode },
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   t:TFunction,
   pointer_pos:{current:number[]},
@@ -103,7 +104,7 @@ export const OpenSankeyDrawLegend = (
             if(Object.keys(data.fluxTags).includes(data.colorMap)){
               const t=Object.values(data.links).filter(l=>{
                 const tmp=GetLinkValue(data,l.idLink)
-                return LinkVisible(l,data,GetLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag[0])
+                return LinkVisible(l,data,display_nodes,GetLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag[0])
               }).length
               return t>0
             }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
