@@ -34,7 +34,9 @@ import {
   TagsCatalog,
   TagsGroup,
   showMenuComponentsType,
-  showMenuComponentsPropTypes
+  showMenuComponentsPropTypes,
+  MenuTypes,
+  MenuPropTypes
 } from './types'
 
 import { complete_sankey_data } from './SankeyConvert'
@@ -806,82 +808,6 @@ export const OpenSankeyMenus = (
 
 
 }
-
-
-
-
-const MenuPropTypes = {
-  t:PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  logo: PropTypes.string.isRequired,
-  logo_terriflux: PropTypes.string.isRequired,
-  logo_width: PropTypes.number,
-  app_name: PropTypes.string.isRequired,
-
-  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
-  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
-
-  example_menu: PropTypes.element,
-  formations_menu: PropTypes.object.isRequired,
-  url_prefix: PropTypes.string.isRequired,
-
-  nav_item_active: PropTypes.string.isRequired,
-
-  mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
-
-  style_to_apply: PropTypes.string.isRequired,
-  set_style_to_apply: PropTypes.func.isRequired,
-
-  callback:PropTypes.func.isRequired,
-
-  showMenuComponents: PropTypes.shape(showMenuComponentsPropTypes).isRequired,
-  processing : PropTypes.bool.isRequired,
-  setProcessing : PropTypes.func.isRequired,
-  failure : PropTypes.bool.isRequired,
-  setFailure : PropTypes.func.isRequired,
-  not_started : PropTypes.bool.isRequired,
-  setNotStarted : PropTypes.func.isRequired,
-  result : PropTypes.string.isRequired,
-  setResult : PropTypes.func.isRequired,
-  path: PropTypes.string.isRequired,
-  launch: PropTypes.func.isRequired,
-  configurations_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-
-  menus: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,
-  cardsTemplate:PropTypes.element.isRequired,
-  external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  GetSankeyMinWidthAndHeight :PropTypes.func.isRequired,
-  Reinitialization:PropTypes.func.isRequired,
-  additional_nav_item:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-
-  set_contextualised_node:PropTypes.func.isRequired,
-  set_contextualised_link:PropTypes.func.isRequired,
-  set_tag_contextualised:PropTypes.func.isRequired,
-  updateLayout:PropTypes.func.isRequired,
-  convert_data:PropTypes.func.isRequired,
-  node_hspace:PropTypes.number.isRequired,
-  set_node_hspace:PropTypes.func.isRequired,
-  node_vspace:PropTypes.number.isRequired,
-  set_node_vspace:PropTypes.func.isRequired, 
-  elementToDispose:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  apply_transformation_additional_elements: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  DiagramSelector: PropTypes.func.isRequired,
-  is_computing:PropTypes.bool.isRequired,
-  setIsComputing:PropTypes.func.isRequired,
-  set_tags_selected:PropTypes.func.isRequired,
-  RetrieveExcelResults:PropTypes.func.isRequired,
-  DefaultSankeyData: PropTypes.func.isRequired
-}
-/**
- * Description placeholder
- *
- * @typedef {MenuTypes}
- */
-type MenuTypes = InferProps<typeof MenuPropTypes>
-
-
-
 
 /**
  * Description placeholder
