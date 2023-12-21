@@ -1,9 +1,13 @@
 
+// Local files
 import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
-import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
+
+// Opensankey files
+import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
 import { DefaultLink, DefaultNode } from 'open-sankey/dist/SankeyUtils'
 import { synchronizeNodesandLinksId } from 'open-sankey/dist/SankeyLayout'
+import { updateLayoutFuncType } from 'open-sankey/src/lib/FunctionTypes'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
 import { TFunction } from 'i18next'
@@ -154,7 +158,7 @@ export const OpenSankeyPlusDiagramSelector = (
     set_sankey_data: (s:SankeyPlusData)=>null,
     prev_sankey_data: SankeyPlusData,
     set_prev_sankey_data: (s:SankeyPlusData)=>void, 
-    updateLayout: (data: SankeyPlusData,new_layout: SankeyPlusData,mode:string[])=>void, 
+    updateLayout: updateLayoutFuncType, 
     elementToDispose : string[]
   ) => {
     const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)

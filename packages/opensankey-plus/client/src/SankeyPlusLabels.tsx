@@ -2,10 +2,11 @@ import  { InferProps } from 'prop-types'
 import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
-import { SankeyData, SankeyLinkValue,SankeyNode,SankeyLink, drawArrowsType} from 'open-sankey/src/lib/types'
+import { SankeyData, SankeyLinkValue,SankeyNode,SankeyLink} from 'open-sankey/src/lib/types'
 
 import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from 'open-sankey/dist/SankeyDrawFunction'
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
+import { drawArrowsType, LinkTextFuncType } from 'open-sankey/src/lib/FunctionTypes'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -23,7 +24,7 @@ export const SankeyPlusDrawLabels = (
   GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
-  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  LinkText: LinkTextFuncType,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   DrawArrows:drawArrowsType,
   scale:(t:number)=>number,
@@ -186,7 +187,7 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   DrawGrid:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current: SankeyLink[] },
-  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  LinkText: LinkTextFuncType,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   DrawArrows:drawArrowsType,
   scale:(t:number)=>number,

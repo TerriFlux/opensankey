@@ -1,5 +1,5 @@
 import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal} from 'open-sankey/src/lib/types'
-
+import {LinkTextFuncType} from 'open-sankey/src/lib/FunctionTypes'
 export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
 
 export interface SankeyPlusData extends SankeyData {
@@ -94,7 +94,7 @@ export type PlusDrawCurveType = (
     link: SankeyPlusLink,
     error_msg: { text?: string } | undefined,
     multi_selected_links:{current: SankeyPlusLink[] },
-    LinkText:(data: SankeyPlusData, d: SankeyPlusLink,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+    LinkText:LinkTextFuncType,
     GetSankeyMinWidthAndHeight:(d:SankeyPlusData)=>number[],
     GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
     DrawArrows:plusDrawArrowsType

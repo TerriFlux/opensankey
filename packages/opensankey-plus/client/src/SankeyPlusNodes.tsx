@@ -1,6 +1,7 @@
 import React,{ChangeEvent, useState,useRef, MutableRefObject, RefObject} from 'react'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge} from 'react-bootstrap'
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode,drawArrowsType } from 'open-sankey/src/lib/types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode } from 'open-sankey/src/lib/types'
+import { drawArrowsType, LinkTextFuncType } from 'open-sankey/src/lib/FunctionTypes'
 import { TFunction } from 'i18next'
 import * as d3 from 'd3'
 
@@ -348,7 +349,7 @@ export const SankeyPlusHyperLink=( t:TFunction,
   multi_selected_nodes:{current:SankeyNode[]},
   is_activated:boolean)=>{
   
-   const multi_selected_nodes_plus=multi_selected_nodes as {current:SankeyPlusNode[]}
+  const multi_selected_nodes_plus=multi_selected_nodes as {current:SankeyPlusNode[]}
 
   const hasHyperLink = () => {
     let visible = ''
@@ -873,7 +874,7 @@ export const SankeyPlusNodeDragEvent=(
   alt_key_pressed:boolean,
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyPlusLink[]},
-  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  LinkText: LinkTextFuncType,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
@@ -923,7 +924,7 @@ export const SankeyPlusdragGNodeEvent=(
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
   multi_selected_links:{current:SankeyPlusLink[]},
-  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  LinkText:LinkTextFuncType,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
@@ -964,7 +965,7 @@ export  const drag_nodes_plus = (node:SankeyNode,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
   multi_selected_links:{current: SankeyLink[] },
-  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   DrawArrows:drawArrowsType,
@@ -997,7 +998,7 @@ export const drag_elements_plus=(
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
   multi_selected_links:{current: SankeyLink[] },
-  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
+  LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   DrawArrows:drawArrowsType,
