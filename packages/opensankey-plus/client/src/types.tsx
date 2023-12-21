@@ -1,28 +1,20 @@
-import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal, showMenuComponentsType} from 'open-sankey/src/lib/types'
+import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,showMenuComponentsType} from 'open-sankey/src/lib/types'
 
-import  PropTypes from 'prop-types'
-export interface SankeyPlusData extends SankeyData {
-    icon_catalog: { [x: string]: string | null | undefined},
-    nodes:{[x: string]:SankeyPlusNode}
-    links:{[x: string]:SankeyPlusLink}
-    view:ViewType[],
-    current_view:string
-    labels:{[x: string]:SankeyPlusLabel}
-    style_node:{[x: string]:SankeyPlusNodeStyle},
-    style_link:{[x: string]:SankeyPlusLinkStyle},
-    background_image:string
-    is_catalog:boolean,
+export interface SankeyPlusNode extends SankeyNode{
+  iconName: string,
+  iconColor: string,
+  iconVisible: boolean,
+  iconViewBox?:string,
 
+  has_FO:boolean,
+  is_FO_raw:boolean,
+  FO_content:string,
+
+  is_image:boolean,
+  image_src:string,
+
+  hyperlink:string
 }
-
-export type ViewType={
-  id: string,
-   view_data:  DiffType | Omit<SankeyPlusData, 'view'>,
-   nom:string,
-   details:string,
-   heredited_attr_from_master:string[]
-  
-  }
 
 export type DiffType={
     diff:{
@@ -37,22 +29,6 @@ export interface SankeyPlusLinkStyle extends SankeyLinkStyle{
   gradient:boolean,
 }
 
-export interface SankeyPlusNode extends SankeyNode{
-    iconName: string,
-    iconColor: string,
-    iconVisible: boolean,
-    iconViewBox?:string,
-
-    has_FO:boolean,
-    is_FO_raw:boolean,
-    FO_content:string,
-
-    is_image:boolean,
-    image_src:string,
-
-    hyperlink:string
-}
-
 export interface SankeyPlusLinkAttrLocal extends SankeyLinkAttrLocal{
   gradient?:boolean,
 }
@@ -60,6 +36,27 @@ export interface SankeyPlusLinkAttrLocal extends SankeyLinkAttrLocal{
 export interface SankeyPlusLink extends SankeyLink{
   local?:SankeyPlusLinkAttrLocal
 
+}
+
+export type ViewType={
+  id: string,
+   view_data:  DiffType | Omit<SankeyPlusData, 'view'>,
+   nom:string,
+   details:string,
+   heredited_attr_from_master:string[]
+  
+  }
+export interface SankeyPlusData extends SankeyData {
+  icon_catalog: { [x: string]: string | null | undefined},
+  nodes:{[x: string]:SankeyPlusNode}
+  links:{[x: string]:SankeyPlusLink}
+  view:ViewType[],
+  current_view:string
+  labels:{[x: string]:SankeyPlusLabel}
+  style_node:{[x: string]:SankeyPlusNodeStyle},
+  style_link:{[x: string]:SankeyPlusLinkStyle},
+  background_image:string
+  is_catalog:boolean,
 }
 
 export interface SankeyPlusLabel {
@@ -80,25 +77,6 @@ export interface SankeyPlusLabel {
 
     is_image:boolean,
     image_src:string
-}
-
-export const SankeyLabelPropTypes = {
-    idLabel: PropTypes.string.isRequired,
-    title:PropTypes.string.isRequired,
-    content: PropTypes.string.isRequired,
-    opacity:PropTypes.number.isRequired,
-    color:PropTypes.string.isRequired,
-    color_border:PropTypes.string.isRequired,
-    transparent_border:PropTypes.bool.isRequired,
-
-    label_width: PropTypes.number.isRequired,
-    label_height: PropTypes.number.isRequired,
-
-    x: PropTypes.number.isRequired,
-    y: PropTypes.number.isRequired,
-
-    is_image:PropTypes.bool.isRequired,
-    image_src:PropTypes.string.isRequired
 }
 
 // Recration du type drawCureType d'opensankey pour qu'il puissr être utilisé avec des variable de type de sankeyplus
