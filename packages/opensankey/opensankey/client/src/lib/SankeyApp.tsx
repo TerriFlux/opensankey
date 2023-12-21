@@ -302,14 +302,16 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     t,active_page,set_active_page,showMenuComponents,never_see_again,set_never_see_again,[],external_pagination,external_content,exemple_menu
   ):<></>
 
-
+  let display_nodes = {} as {[idLink:string]:SankeyNode}
+  let display_links={} as {[idLink:string]:SankeyLink}
+  
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
   const menu_configuration_layout = OpenSankeyMenuConfigurationLayout(t,data,set_data,user_scale,set_user_scale,legend_position,set_legend_position,<></>)
   //- 1.2 Builds Configuration Menus Node
   //- 1.2.1 Builds Configuration Menus Node Attributes
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes,false,selected_style_node,set_style_to_apply,[],[],[])
-  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity)
+  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,display_nodes,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity)
   //- 1.2.1 Builds Configuration Menus Node Tags
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -464,24 +466,24 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       })
       /* eslint-enable */
 
-  const display_nodes = Object.keys(data.nodes)
+  useEffect(()=>{
+    display_nodes = Object.keys(data.nodes)
     .filter((key) => SankeyUtils.NodeDisplayed(data,data.nodes[key]))
     .reduce((obj, key) => {
       return Object.assign(obj, {
         [key]: data.nodes[key]
       })
     }, {}) as {[idNode:string]:SankeyNode}
-  const pre_display_links=Object.keys(data.links)
-    .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
-    .reduce((obj, key) => {
-      return Object.assign(obj, {
-        [key]: data.links[key]
-      })
-    }, {}) as {[idLink:string]:SankeyLink}
-  const pre_link_key=Object.keys(pre_display_links)
-  const display_links={} as {[idLink:string]:SankeyLink}
-  data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
-  useEffect(()=>{
+    const pre_display_links=Object.keys(data.links)
+      .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
+      .reduce((obj, key) => {
+        return Object.assign(obj, {
+          [key]: data.links[key]
+        })
+      }, {}) as {[idLink:string]:SankeyLink}
+    const pre_link_key=Object.keys(pre_display_links)
+    display_links={} as {[idLink:string]:SankeyLink}
+    data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
     // Call the function that add nodes to the sankey
     OpenSankeyDrawNodes(data,set_data,
       display_nodes,display_links,
@@ -517,7 +519,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
 
     OpenSankeyDrawLegend(
-      data,set_data,
+      data,set_data,display_nodes,
       SankeyUtils.GetLinkValue,
       t,
       pointer_pos,
@@ -551,8 +553,9 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   if(showMenuComponents.show_menu_node_io[0] && multi_selected_nodes.current.length!==1){
     showMenuComponents.show_menu_node_io[1](false)
   }
-  const menu_node_io=SankeyMenuConfigurationNodesIO(t,data,set_data,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity,true)
+  const menu_node_io=SankeyMenuConfigurationNodesIO(t,data,set_data,display_nodes,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity,true)
   const dragNodeIO=showMenuComponents.show_menu_node_io[0]?MenuDraggable(menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),showMenuComponents.show_menu_node_io[1]):<></>
+
 
   const context_n=ContextMenuNode(
     contextualised_node,set_contextualised_node,

@@ -478,8 +478,8 @@ const drag_link = (
     return
   }
   const node = display_nodes[linked_node.node_id]
-  let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && LinkVisible(data.links[id],data,GetLinkValue) })
-  let id_output_filtered=node.outputLinksId.filter(id=>LinkVisible(data.links[id],data,GetLinkValue))
+  let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && LinkVisible(data.links[id],data,display_nodes,GetLinkValue) })
+  let id_output_filtered=node.outputLinksId.filter(id=>LinkVisible(data.links[id],data,display_nodes,GetLinkValue))
   const link_dragged=data.links[idLink]
   const l_ori=ReturnValueLink(data,link_dragged,'orientation')
   const l_recy=ReturnValueLink(data,link_dragged,'recycling')
