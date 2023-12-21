@@ -52,6 +52,7 @@ type SankeyAppTypes = {
   logo_terriflux: string,
 }
 
+
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -138,10 +139,6 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const show_modalTemplate= useState(false)
   const show_welcome=useState(false)
   const show_load=useState(false)
-  // For OpenSankeyConfigurationsMenus
-  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
-  const [pre_idSource,set_pre_idSource]=useState('none')
-  const [pre_idTarget,set_pre_idTarget]=useState('none')
 
   const showMenuComponents : showMenuComponentsType = {
     show_nav: show_nav,
@@ -163,6 +160,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     show_welcome : show_welcome,
     show_load : show_load
   }
+
+  // For OpenSankeyConfigurationsMenus
+  const [sub_nav_item_active, set_sub_nav_item_active] = useState<string>('')
+  const [pre_idSource,set_pre_idSource]=useState('none')
+  const [pre_idTarget,set_pre_idTarget]=useState('none')
 
   //For OpenSankeyMenuConfigurationLegend
   const [legend_position, set_legend_position] = useState(data.legend_position)
