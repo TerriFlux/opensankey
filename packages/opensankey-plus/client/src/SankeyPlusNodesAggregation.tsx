@@ -1,16 +1,16 @@
 import React from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tab, Button } from 'react-bootstrap'
-import { SankeyPlusData, SankeyPlusNode } from './types'
-import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from 'open-sankey/dist/SankeyLayout'
-import { DefaultLink } from 'open-sankey/dist/SankeyUtils'
 import { TFunction } from 'i18next'
+import { DefaultLink,reorganize_node_outputLinksIdOSTyped,reorganize_node_inputLinksIdOSTyped 
+} from './FunctionOSTyped'
 
 
+import { SankeyData,SankeyNode } from 'open-sankey/src/lib/types'
 export const SankeyPlusMenuConfigurationNodesAgregation = (
   t:TFunction,
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
   parent_visible:boolean,
   set_parent_visible:React.Dispatch<React.SetStateAction<boolean>>,
   cube_dimension:string,
@@ -103,7 +103,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
                   data.links[new_link.idLink] = new_link
                   data.linkZIndex.push(new_link.idLink)
                   idLink = idLink+1
-                  reorganize_node_outputLinksId(data.nodes[new_link.idSource], data.nodes, data.links)
+                  reorganize_node_outputLinksIdOSTyped(data,data.nodes[new_link.idSource], data.nodes, data.links)
                 })
                 new_output_nodes.forEach(() => {
                   const new_link = DefaultLink(data)
@@ -111,11 +111,11 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
                   new_link.idLink = 'link' + idLink
                   data.links[new_link.idLink] = new_link
                   data.linkZIndex.push(new_link.idLink)
-                  idLink = idLink+1
-                  reorganize_node_inputLinksId(data.nodes[new_link.idTarget], data.nodes, data.links)
+                  idLink++
+                  reorganize_node_inputLinksIdOSTyped(data,data.nodes[new_link.idTarget], data.nodes, data.links)
                 })
-                reorganize_node_inputLinksId(d, data.nodes, data.links)
-                reorganize_node_outputLinksId(d, data.nodes, data.links)
+                reorganize_node_inputLinksIdOSTyped(data,d, data.nodes, data.links)
+                reorganize_node_outputLinksIdOSTyped(data,d, data.nodes, data.links)
 
                 set_data({ ...data })
               })

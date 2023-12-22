@@ -1,11 +1,14 @@
 import  { InferProps } from 'prop-types'
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink,plusDrawArrowsType} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
-import { SankeyLinkValue} from 'open-sankey/src/lib/types'
 
-import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from 'open-sankey/dist/SankeyDrawFunction'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from './types'
+import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './FunctionOSTyped'
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
+
+import { SankeyData,SankeyNode,SankeyLink} from 'open-sankey/src/lib/types'
+import { drawArrowsType, GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/lib/FunctionTypes'
+
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -13,21 +16,19 @@ typeof globalThis & {
 
 
 export const SankeyPlusDrawLabels = (
-  data:SankeyPlusData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyPlusNode },
   display_links:{ [link_id: string]: SankeyPlusLink },
   multi_selected_label:{current: SankeyPlusLabel[] },
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
   button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
-  GetSankeyMinWidthAndHeight:(data:SankeyPlusData)=>number[],
+  GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
-  LinkText:(data: SankeyPlusData, d: SankeyPlusLink,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
-  DrawArrows:plusDrawArrowsType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
+  LinkText: LinkTextFuncType,
+  GetLinkValue:GetLinkValueFuncType,
+  DrawArrows:drawArrowsType,
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
@@ -35,10 +36,17 @@ export const SankeyPlusDrawLabels = (
   set_show_context_zdt:(b:boolean)=>false
 
 ) => {
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
+  const data_plus=data as SankeyPlusData
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
 
-    Object.values(data.labels).map(d => {
+    Object.values(data_plus.labels).map(d => {
       const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y)
         .attr('id', d.idLabel)
         .attr('class', 'gg_label')
@@ -56,19 +64,18 @@ export const SankeyPlusDrawLabels = (
 
       
 
-      draw_text_zone_handles(data,d,multi_selected_label,set_data)
+      draw_text_zone_handles(data_plus,d,multi_selected_label,set_data)
 
-      gg_label.on('click', (event) => eventLabelClick(event,d,data,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
+      gg_label.on('click', (event) => eventLabelClick(event,d,data_plus,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
       gg_label.on('mousedown',()=>closeAllMenuContext())
       gg_label.on('contextmenu',evt=>{
         if(!window.SankeyToolsStatic){
           evt.preventDefault()
           pointer_pos.current=[evt.pageX,evt.pageY]
           if(!multi_selected_label.current.includes(d)){
-            multi_selected_label.current.forEach(nn=>DeselectVisualyNodes(nn))
-            multi_selected_label.current=[]
+            multi_selected_label.current.forEach(nn=>deselect_visualy_zdt(nn))
             select_visualy_zdt(d)
-            multi_selected_label.current.push(d)
+            multi_selected_label.current=[d]
             
           }
           set_show_context_zdt(true)
@@ -128,7 +135,7 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
   accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
   button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
 )=>{
@@ -178,23 +185,24 @@ export const eventLabelClick=(event:React.MouseEvent<HTMLButtonElement>,d:Sankey
 
 const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   d:SankeyPlusLabel,
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyPlusLink }, 
-  GetSankeyMinWidthAndHeight:(d:SankeyPlusData)=>number[],
-  DrawGrid:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current: SankeyPlusLink[] },
-  LinkText:(data: SankeyPlusData, d: SankeyPlusLink,GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue,
-  DrawArrows:plusDrawArrowsType,
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
+  DrawGrid:(d:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
+  multi_selected_links:{current: SankeyLink[] },
+  LinkText: LinkTextFuncType,
+  GetLinkValue:GetLinkValueFuncType,
+  DrawArrows:drawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   mode_selection:{current:string},
   start_point:{current:number[]}
 )=>{
   const node_visible=[] as string[]
+  const data_plus = data as SankeyPlusData
   return (d3.drag<SVGGElement, unknown>()
     .on('start',(evt)=>{
 
@@ -242,7 +250,7 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
     })
     .on('end',(evt)=>{
       if(mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
-        zone_selection_label(data,multi_selected_label,evt)
+        zone_selection_label(data_plus,multi_selected_label,evt)
 
         NodeVisibleOnsSvg().forEach((k : string)=>DeselectVisualyNodes(data.nodes[k]))
         const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
@@ -254,7 +262,7 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
         const node_visible=NodeVisibleOnsSvg()
         const link_visible_svg=LinkVisibleOnSvg()
         if(evt.shiftKey){
-          Object.values(data.nodes).filter(n=>{
+          Object.values(data_plus.nodes).filter(n=>{
             const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
             const height_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
             return !multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
@@ -265,7 +273,7 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
           // Select links who have both nodeSource and nodeTarget selected
           link_visible_svg.filter((lid:string)=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget) && !id_link_selected.includes(lid)).forEach((lid:string)=>multi_selected_links.current.push(data.links[lid]))
         }else{
-          multi_selected_nodes.current=Object.values(data.nodes).filter(n=>{
+          multi_selected_nodes.current=Object.values(data_plus.nodes).filter(n=>{
             const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
             const height_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
             return node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
@@ -293,16 +301,16 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
 
 
 
-export const sankey_plus_min_width_and_height = (data:SankeyPlusData) => {
+export const sankey_plus_min_width_and_height = (data:SankeyData) => {
   let [width,height]=GetSankeyMinWidthAndHeight(data)
-
-  Object.values(data.labels).forEach(n => {
+  const data_plus=data as SankeyPlusData
+  Object.values(data_plus.labels).forEach(n => {
     height =  Math.max(height, n.y+n.label_height)
     width = Math.max(width, (n.x+n.label_width))
   })
 
-  height = height + (data.grid_square_size * 2 )
-  width = width + (data.grid_square_size * 2 )
+  height = height + (data_plus.grid_square_size * 2 )
+  width = width + (data_plus.grid_square_size * 2 )
 
 
 
@@ -461,6 +469,10 @@ export const sankey_plus_zoom_text_zone=(evt:d3.D3ZoomEvent<SVGElement,unknown>)
   }
 }
 const select_visualy_zdt=(zdt:SankeyPlusLabel)=>{
+  d3.select('#'+zdt.idLabel)
+    .attr('stroke-width', 3)
+}
+const deselect_visualy_zdt=(zdt:SankeyPlusLabel)=>{
   d3.select('#'+zdt.idLabel)
     .attr('stroke-width', 3)
 }

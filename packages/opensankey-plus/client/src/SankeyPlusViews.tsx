@@ -2,7 +2,6 @@ import React, { ChangeEvent, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import LZString from 'lz-string'
-
 import { Accordion,
   Button,
   ButtonGroup,
@@ -24,8 +23,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { AdjustSankeyZone,SmoothClasses} from 'open-sankey/dist/SankeyUtils'
-import { updateLayout } from 'open-sankey/dist/SankeyLayout'
+import { SmoothClasses} from 'open-sankey/dist/SankeyUtils'
 
 import { SankeyPlusData,
   SankeyPlusNode,
@@ -34,8 +32,12 @@ import { SankeyPlusData,
   differenceType,
   DiffType,
   ViewType } from './types'
+import {
+  updateLayoutOSTyped,
+  AdjustSankeyZone } from './FunctionOSTyped'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 import { Checkbox } from '@chakra-ui/react'
+// import{  updateLayout} from 'open-sankey/dist/SankeyLayout'
 
 /* eslint-disable */
 // @ts-ignore
@@ -132,7 +134,8 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   }else{
     data_init=view_object.view_data as SankeyPlusData
   }
-  updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
+  updateLayoutOSTyped(data_init,master_data,view_object.heredited_attr_from_master)
+  // updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
   return data_init
   
 }
@@ -1886,7 +1889,8 @@ export const modal_transparent_view_attr=(show_modal_transparent_view_attr:boole
     </Modal.Body>
 
     <Modal.Footer><Button onClick={()=>{
-      updateLayout(data,master_data,current_view.heredited_attr_from_master)
+      updateLayoutOSTyped(data,master_data,current_view.heredited_attr_from_master)
+      // updateLayout(data,master_data,current_view.heredited_attr_from_master)
       set_data({...data})
     }}>{t('view.updateViewWithMasterVar')}</Button></Modal.Footer>
   </Modal>
@@ -1925,7 +1929,7 @@ export const OpenSankeyPlusCheckpointButton=(
   // Boolean used to change the logo of the button to save the current view :
   //  - if there is no differences between the the saved view and the current view, then the logo has a check
   //  - else if it contain difference, the logo contain an exclamation point
-  let is_different=false
+  const is_different=false
   if(view !== 'none' && view_not_saved ==='' && master_data && connected){
     // find another way with a variable. Checking the all view consumes too much time
     // const diff=check_current_view_saved(master_data,data,view)
