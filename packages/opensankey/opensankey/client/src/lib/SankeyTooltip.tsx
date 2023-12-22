@@ -167,6 +167,7 @@ export const  LinkTooltipsContent = (
  */
 export const NodeTooltipsContent = (
   data : SankeyData,
+  display_nodes : { [node_id: string]: SankeyNode }, 
   d : SankeyNode,
   GetLinkValue:GetLinkValueFuncType
 ) => {
@@ -190,7 +191,7 @@ export const NodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
-      if (!LinkVisible(link,data,GetLinkValue)) {
+      if (!LinkVisible(link,data,display_nodes,GetLinkValue)) {
         continue
       }
       const link_info = GetLinkValue(data,link.idLink)
@@ -222,7 +223,7 @@ export const NodeTooltipsContent = (
       if (link_info.display_value == 'missing') {
         continue
       }
-      if (!LinkVisible(link,data,GetLinkValue)) {
+      if (!LinkVisible(link,data,display_nodes,GetLinkValue)) {
         continue
       }
       
@@ -260,7 +261,7 @@ export const NodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
-      if (!LinkVisible(link,data,GetLinkValue)) {
+      if (!LinkVisible(link,data,display_nodes,GetLinkValue)) {
         continue
       }
       const link_info = GetLinkValue(data,link.idLink)
@@ -291,7 +292,7 @@ export const NodeTooltipsContent = (
           return ''
         }
         const link_info = GetLinkValue(data,link.idLink)
-        if (!LinkVisible(link,data,GetLinkValue)) {
+        if (!LinkVisible(link,data,display_nodes,GetLinkValue)) {
           continue
         }
         let the_value = link_info.value
