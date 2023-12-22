@@ -641,7 +641,7 @@ export const DefaultSankeyData:FunctionTypes.DefaultSankeyDataFuncType = (): San
     legend_bg_border:false,
     legend_bg_color:'grey',
     legend_bg_opacity:0,
-    node_label_separator:' - '
+    node_label_separator:''
 
   }
   const node_style_sect=DefaultNodeSectorStyle()
@@ -744,7 +744,7 @@ export const LinkColor:FunctionTypes.LinkColorFuncType = (l: SankeyLink,data:San
  * @param {SankeyData} data
  * @returns {boolean}
  */
-export const LinkVisible: FunctionTypes.LinkVisibleFunctType=(l: SankeyLink, data: SankeyData,
+export const LinkVisible: FunctionTypes.LinkVisibleFunctType=(l: SankeyLink, data: SankeyData,  display_nodes : { [node_id: string]: SankeyNode },
   GetLinkValue:FunctionTypes.GetLinkValueFuncType
 ): boolean => {
   const { dataTags, fluxTags } = data
@@ -756,7 +756,7 @@ export const LinkVisible: FunctionTypes.LinkVisibleFunctType=(l: SankeyLink, dat
       return false
     }
   }
-  if (!data.nodes[l.idSource] || !NodeDisplayed(data,data.nodes[l.idSource]) || !data.nodes[l.idTarget] || !NodeDisplayed(data,data.nodes[l.idTarget])) {
+  if (!data.nodes[l.idSource] || !display_nodes[l.idSource] || !data.nodes[l.idTarget] || !display_nodes[l.idTarget]) {
     return false
   }
   let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
@@ -1136,6 +1136,7 @@ export const ProcessExample:FunctionTypes.ProcessExampleFuncType = (
   data: SankeyData,
   updateLayout:FunctionTypes.updateLayoutFuncType,
   convert_data:FunctionTypes.ConvertDataFuncType,
+  callback: (server_data: SankeyData) => void,
   DefaultSankeyData: ()=>SankeyData,
 
 ): SankeyData => {
@@ -1143,7 +1144,8 @@ export const ProcessExample:FunctionTypes.ProcessExampleFuncType = (
   convert_data(data,DefaultSankeyData)
   if ( (data as SankeyData & layout_type).layout === undefined) {
     ComputeAutoSankey(data, data.h_space ? data.h_space : 200)
-
+    callback(data)
+    compute_default_input_outputLinksId(data.nodes, data.links)
     // Set sector/product style to node only when it come from an excel file and without a layout 
     SetNodeStyleToTypeNode(data)
   } else {
@@ -1153,6 +1155,7 @@ export const ProcessExample:FunctionTypes.ProcessExampleFuncType = (
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData }).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData }).layout
     updateLayout(data, data_layout,['posNode','posFlux','attrNode','attrFlux','attrGeneral','freeLabels','Views'],true)
+    callback(data)
   }
   d3.select('.loading_auto_compute').remove()
 
@@ -2016,10 +2019,9 @@ export const RetrieveExcelResults:FunctionTypes.RetrieveExcelResultsFuncType =(
     default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
   }
   const new_data=Object.assign(default_data,server_data) as SankeyData
-  ProcessExample(new_data,updateLayout,convert_data,DefaultSankeyData)
+  ProcessExample(new_data,updateLayout,convert_data,callback,DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
-  callback(new_data)
   delete (new_data as SankeyData & { layout?: SankeyData }).layout
   if (Object.values(new_data.nodeTags).filter(tagg=>tagg.show_legend).length>0) {
     new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg=>tagg[1].show_legend)[0][0]
@@ -2155,14 +2157,25 @@ export const updateLayout:FunctionTypes.updateLayoutFuncType = (
   if(mode.includes('addNode')) {
     let difference = deep_diff.diff(data.nodes, new_layout.nodes)
     if (difference) {
+      let nodesId : string[] = []
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
+      difference.forEach((d:{path:string[],kind:string})=>nodesId.push(d.path[0]))
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
+      nodesId.forEach(nodeId=> {
+        data.nodes[nodeId].inputLinksId = []
+        data.nodes[nodeId].outputLinksId = []
+      })
     }
   }
   if(mode.includes('removeNode')) {
     let difference = deep_diff.diff(data.nodes, new_layout.nodes)
     if (difference) {
+      let nodesId : string[] = []
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
+      difference.forEach((d:{path:string[],kind:string})=>nodesId.push(d.path[0]))
+      nodesId.forEach(nodeId=> {
+        DeleteNode(data,data.nodes[nodeId])
+      })      
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
     }
   }
@@ -2170,15 +2183,36 @@ export const updateLayout:FunctionTypes.updateLayoutFuncType = (
   if(mode.includes('addFlux')) {
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
+      let linksId : string[] = [] 
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
+      difference.forEach((d:{path:string[],kind:string})=>linksId.push(d.path[0]))
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
+      linksId.forEach(linkId=> {
+        if (!data.nodes[new_layout.links[linkId].idSource]) {
+          data.nodes[new_layout.links[linkId].idSource] = new_layout.nodes[new_layout.links[linkId].idSource]
+        }
+        if (!data.nodes[new_layout.links[linkId].idTarget]) {
+          data.nodes[new_layout.links[linkId].idTarget] = new_layout.nodes[new_layout.links[linkId].idTarget]
+        }
+        data.nodes[new_layout.links[linkId].idSource].outputLinksId.push(linkId)
+        data.nodes[new_layout.links[linkId].idTarget].inputLinksId.push(linkId)
+        reorganize_node_inputLinksId(data, data.nodes[new_layout.links[linkId].idTarget], data.nodes, data.links)
+        reorganize_node_outputLinksId(data, data.nodes[new_layout.links[linkId].idSource], data.nodes, data.links)
+        data.linkZIndex.push(linkId)
+      })
     }
   }
+
 
   if(mode.includes('removeFlux')) {
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
+      let linksId : string[] = [] 
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
+      difference.forEach((d:{path:string[],kind:string})=>linksId.push(d.path[0]))
+      linksId.forEach(linksId=> {
+        DeleteLink(data,data.links[linksId])
+      })        
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
     }
   }

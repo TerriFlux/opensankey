@@ -24,7 +24,7 @@ export type DefaultSankeyDataFuncType = ()=>SankeyData
 
 export type LinkColorFuncType = (l: SankeyLink,data:SankeyData,GetLinkValue:GetLinkValueFuncType)=>string
 
-export type LinkVisibleFunctType = (l: SankeyLink, data: SankeyData, GetLinkValue: GetLinkValueFuncType) => boolean 
+export type LinkVisibleFunctType = (l: SankeyLink, data: SankeyData, display_nodes : {[d:string]:SankeyNode},GetLinkValue: GetLinkValueFuncType) => boolean 
 
 export type DefaultNodeFuncType = (data: SankeyData) => SankeyNode
 
@@ -46,7 +46,13 @@ export type DeleteNodeFuncType = (data: SankeyData,node: SankeyNode)=> void
 
 export type DownloadExamplesFuncType = (file_name: string,the_url_prefix: string,filetype: string)=> void
 
-export type ProcessExampleFuncType = (data: SankeyData,updateLayout:updateLayoutFuncType,convert_data:ConvertDataFuncType,DefaultSankeyData: DefaultSankeyDataFuncType,)=> SankeyData
+export type ProcessExampleFuncType = (
+    data: SankeyData,
+    updateLayout:updateLayoutFuncType,
+    convert_data:ConvertDataFuncType,
+    callback: (server_data: SankeyData) => void,
+    DefaultSankeyData: DefaultSankeyDataFuncType
+)=> SankeyData
 
 export type SetNodeStyleToTypeNode = (data:SankeyData)=> void
 

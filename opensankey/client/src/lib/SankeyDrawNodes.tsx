@@ -29,8 +29,7 @@ export const OpenSankeyDrawNodes = (
   button_ref:{current:HTMLLabelElement} | null,
 
   alt_key_pressed:boolean,
-  NodeTooltipsContent: (data: SankeyData, d: SankeyNode,
-    GetLinkValue:GetLinkValueFuncType) => string,
+  NodeTooltipsContent: (data: SankeyData, display_nodes : { [node_id: string]: SankeyNode }, d: SankeyNode, GetLinkValue:GetLinkValueFuncType) => string,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   set_displayed_input_link_value:(s:string)=>void,
@@ -47,7 +46,7 @@ export const OpenSankeyDrawNodes = (
       console.log(GetLinkValue)
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data, d as SankeyNode,GetLinkValue))
+        .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue))
     }
   }
     
