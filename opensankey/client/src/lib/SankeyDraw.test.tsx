@@ -6,7 +6,7 @@ import { render } from '@testing-library/react'
 import SankeyDraw,{SankeyDrawDefaultProps} from './SankeyDraw'
 import { SankeyData } from './types'
 import { convert_data } from './SankeyConvert'
-import { compute_auto_sankey } from './SankeyLayout'
+import { ComputeAutoSankey } from './SankeyLayout'
 // const fs = require('fs')
 import fs from 'fs'
 // const path = require('path')
@@ -58,7 +58,7 @@ test.each(the_tests)( 'tyty',(full_path) => {
 
   const new_data = require(full_path)
   convert_data(new_data as SankeyData,DefaultSankeyData)
-  compute_auto_sankey(new_data as SankeyData,200)
+  ComputeAutoSankey(new_data as SankeyData,200)
   const base_file_name = path.basename(full_path,'.json')
   const sankey_file_name = path.join(path.dirname(full_path),base_file_name+'_auto_layout.json')
   fs.writeFile(

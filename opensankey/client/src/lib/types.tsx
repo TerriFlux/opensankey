@@ -312,34 +312,7 @@ export const SankeyDrawCurvePropType={
   curve:PropTypes.func.isRequired
 }
 export type SankeyDrawCurve = InferProps<typeof SankeyDrawCurvePropType>
-export type drawCurveType = (
-  data: SankeyData,
-  set_data:(d:SankeyData)=>void,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
-  display_style: { filter: number; filter_label: number; },
-  nodeTags: TagsCatalog,
-  link: SankeyLink,
-  error_msg: { text?: string } | undefined,
-  multi_selected_links:{current: SankeyLink[] },
-  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  DrawArrows:drawArrowsType
-) => string
 
-
-export type drawArrowsType = (
-  n: SankeyNode,
-  data:SankeyData,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [node_id: string]: SankeyLink },
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  display_style: { filter: number }
-  //selection: d3.Selection<d3.BaseType, SankeyNode, HTMLElement, SankeyNode>
-) => void
 
 
 export interface treeFolderType{
