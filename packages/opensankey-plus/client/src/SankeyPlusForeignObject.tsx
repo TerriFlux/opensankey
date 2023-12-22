@@ -10,9 +10,9 @@ import ReactQuill from 'react-quill'
 
 import { SankeyPlusData, SankeyPlusNode } from './types'
 
-import { NodeDisplayed,SmoothClasses} from 'open-sankey/dist/SankeyUtils'
+import { SmoothClasses} from 'open-sankey/dist/SankeyUtils'
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
-
+import { NodeDisplayed } from './FunctionOSTyped'
 
 
 declare const window: Window &

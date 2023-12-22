@@ -1,16 +1,19 @@
 
-import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink,SankeyPlusLinkAttrLocal,SankeyPlusLink } from './types'
-import { DefaultLinkStyle,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnValueLink,NodeColor,LinkColor } from 'open-sankey/dist/SankeyUtils'
-import {drag_legend_g_element} from 'open-sankey/dist/SankeyDrawLegend'
-import * as d3 from 'd3'
-import { opposing_drag_elements_plus } from './SankeyPlusNodes'
 import React,{ChangeEvent,useRef} from 'react'
 import { OverlayTrigger,Tooltip,Form, InputGroup, Button} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FaFileImport} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import * as d3 from 'd3'
 import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
-import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/src/lib/types'import {SankeyLinkValue} from 'open-sankey/src/lib/types'
+
+import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from './types'
+import { opposing_drag_elements_plus } from './SankeyPlusNodes'
+import { drag_legend_g_elementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './FunctionOSTyped'
+
+import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/src/lib/types'
+import { GetLinkValueFuncType } from 'open-sankey/src/lib/FunctionTypes'
+
 
 export const default_sankey_plus_style_link=()=>{
   const style=DefaultLinkStyle() as SankeyPlusLinkStyle
@@ -25,7 +28,7 @@ export  const drag_legend_plus = (data:SankeyPlusData,
   .subject(Object).on('drag', function (event) {
 
     if(d3.select('.opensankey #svg').nodes().length>0){
-      drag_legend_g_element(data,event)
+      drag_legend_g_elementOSTyped(data,event)
       if(data.legend_position[0]===0 ||data.legend_position[1]===0){
         opposing_drag_elements_plus([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],event,({} as SankeyPlusNode),data,{current:[]},multi_selected_label)
       }
@@ -175,11 +178,7 @@ export const PlusAssignLinkValueToCorrectVar=(l:SankeyPlusLink|SankeyPlusLinkSty
 }
 
 export const PlusLinkSabotColor = (l: SankeyPlusLink,data:SankeyPlusData,
-  GetLinkValue:(data: SankeyPlusData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 ) => {
-  if(ReturnValueLink(data,l,'gradient')===true){
-    return NodeColor(data.nodes[l.idSource],data)
-  }else{
-    return LinkColor(l,data,GetLinkValue)
-  }
+  return PlusReturnValueLink(data,l,'gradient')===true ? NodeColor(data.nodes[l.idSource],data) : LinkColor(l,data,GetLinkValue)
 }

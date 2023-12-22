@@ -2,11 +2,17 @@
 // Local files
 import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
+import { DefaultLink,
+  DefaultNode,
+  synchronizeNodesandLinksIdOSTyped,
+  complete_sankey_data,
+  convert_data,
+  convert_nodes,
+  convert_links,
+  convert_tags} from './FunctionOSTyped'
+
 
 // Opensankey files
-import {convert_tags,convert_links,convert_nodes,convert_data,complete_sankey_data} from 'open-sankey/dist/SankeyConvert'
-import { DefaultLink, DefaultNode } from 'open-sankey/dist/SankeyUtils'
-import { synchronizeNodesandLinksId } from 'open-sankey/dist/SankeyLayout'
 import { updateLayoutFuncType } from 'open-sankey/src/lib/FunctionTypes'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
@@ -364,12 +370,12 @@ export const plus_sankey_layout=(
             // Views are copied identical to what they were
             view_of_new_layout.heredited_attr_from_master = ['']
             // nodeId and linkId must be synchronized with new master
-            synchronizeNodesandLinksId((view_of_new_layout.view_data)as SankeyPlusData,data)
+            synchronizeNodesandLinksIdOSTyped((view_of_new_layout.view_data)as SankeyPlusData,data)
             data.view.push(view_of_new_layout)
           } else if((view_of_new_layout.view_data as DiffType).diff!==undefined){
             (view_of_new_layout.view_data as DiffType).diff.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(view_data, {}, diff))
             // nodeId and linkId must be synchronized with new master
-            synchronizeNodesandLinksId(view_data,data)
+            synchronizeNodesandLinksIdOSTyped(view_data,data)
             const data_view_diff = deep_diff.diff(data,view_data) as {path:string[],kind:string,rhs:string}[]
             (view_of_new_layout.view_data as DiffType).diff = data_view_diff.filter((d:{path:string[]}) => !d.path.includes('view'))
             // Views are copied identical to what they were

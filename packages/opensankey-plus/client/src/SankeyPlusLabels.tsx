@@ -1,12 +1,14 @@
 import  { InferProps } from 'prop-types'
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
-import { SankeyData, SankeyLinkValue,SankeyNode,SankeyLink} from 'open-sankey/src/lib/types'
 
-import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from 'open-sankey/dist/SankeyDrawFunction'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from './types'
+import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './FunctionOSTyped'
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
-import { drawArrowsType, LinkTextFuncType } from 'open-sankey/src/lib/FunctionTypes'
+
+import { SankeyData,SankeyNode,SankeyLink} from 'open-sankey/src/lib/types'
+import { drawArrowsType, GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/lib/FunctionTypes'
+
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -25,10 +27,8 @@ export const SankeyPlusDrawLabels = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   LinkText: LinkTextFuncType,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
   DrawArrows:drawArrowsType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
@@ -36,6 +36,12 @@ export const SankeyPlusDrawLabels = (
   set_show_context_zdt:(b:boolean)=>false
 
 ) => {
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const data_plus=data as SankeyPlusData
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
@@ -188,7 +194,7 @@ const dragLabelEvent=(multi_selected_label:{current:SankeyPlusLabel[]},
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current: SankeyLink[] },
   LinkText: LinkTextFuncType,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
   DrawArrows:drawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
