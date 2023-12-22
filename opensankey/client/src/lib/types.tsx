@@ -321,3 +321,115 @@ export interface treeFolderType{
   children?:treeFolderType[],
   checked?:1|0.5|0
 }
+export interface showMenuComponentsType {
+  show_nav : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_node_apparence : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_node_io : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_link_data : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_link_appearence : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_layout : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modal_welcome : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modale_tuto : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modale_support : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_agregation : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_context_zdd : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_excel_dialog : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_save_json : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_apply_layout : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  ShowPreference : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modalTemplate : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_welcome : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_load : [boolean,React.Dispatch<React.SetStateAction<boolean>>]
+}
+
+export const showMenuComponentsPropTypes = {
+  show_nav : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_node_apparence : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_node_io : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_link_data : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_link_appearence : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_menu_layout : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_modal_welcome : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_modale_tuto : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_modale_support : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_agregation : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_context_zdd : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_excel_dialog : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_save_json : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_apply_layout : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  ShowPreference : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_modalTemplate : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_welcome : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired,
+  show_load : PropTypes.shape({0 : PropTypes.bool.isRequired, 1 : PropTypes.func.isRequired}).isRequired
+}
+
+export const MenuPropTypes = {
+  t:PropTypes.func.isRequired,
+  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
+  set_data: PropTypes.func.isRequired,
+  logo: PropTypes.string.isRequired,
+  logo_terriflux: PropTypes.string.isRequired,
+  logo_width: PropTypes.number,
+  app_name: PropTypes.string.isRequired,
+
+  button_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLLabelElement)}).isRequired,
+  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
+
+  example_menu: PropTypes.element,
+  formations_menu: PropTypes.object.isRequired,
+  url_prefix: PropTypes.string.isRequired,
+
+  nav_item_active: PropTypes.string.isRequired,
+
+  mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
+
+  style_to_apply: PropTypes.string.isRequired,
+  set_style_to_apply: PropTypes.func.isRequired,
+
+  callback:PropTypes.func.isRequired,
+
+  showMenuComponents: PropTypes.shape(showMenuComponentsPropTypes).isRequired,
+  processing : PropTypes.bool.isRequired,
+  setProcessing : PropTypes.func.isRequired,
+  failure : PropTypes.bool.isRequired,
+  setFailure : PropTypes.func.isRequired,
+  not_started : PropTypes.bool.isRequired,
+  setNotStarted : PropTypes.func.isRequired,
+  result : PropTypes.string.isRequired,
+  setResult : PropTypes.func.isRequired,
+  path: PropTypes.string.isRequired,
+  launch: PropTypes.func.isRequired,
+  configurations_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+
+  menus: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,
+  cardsTemplate:PropTypes.element.isRequired,
+  external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  GetSankeyMinWidthAndHeight :PropTypes.func.isRequired,
+  Reinitialization:PropTypes.func.isRequired,
+  additional_nav_item:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+
+  set_contextualised_node:PropTypes.func.isRequired,
+  set_contextualised_link:PropTypes.func.isRequired,
+  set_tag_contextualised:PropTypes.func.isRequired,
+  updateLayout:PropTypes.func.isRequired,
+  convert_data:PropTypes.func.isRequired,
+  node_hspace:PropTypes.number.isRequired,
+  set_node_hspace:PropTypes.func.isRequired,
+  node_vspace:PropTypes.number.isRequired,
+  set_node_vspace:PropTypes.func.isRequired, 
+  elementToDispose:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  apply_transformation_additional_elements: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+  DiagramSelector: PropTypes.func.isRequired,
+  is_computing:PropTypes.bool.isRequired,
+  setIsComputing:PropTypes.func.isRequired,
+  set_tags_selected:PropTypes.func.isRequired,
+  RetrieveExcelResults:PropTypes.func.isRequired,
+  DefaultSankeyData: PropTypes.func.isRequired
+}
+
+/**
+ * Description placeholder
+ *
+ * @typedef {MenuTypes}
+ */
+export type MenuTypes = InferProps<typeof MenuPropTypes>
