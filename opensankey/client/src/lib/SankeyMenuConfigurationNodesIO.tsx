@@ -1,11 +1,11 @@
 import React from 'react'
 import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyData, SankeyNode,SankeyLinkValue,SankeyLink } from './types'
-import { LinkVisible,LinkColor,ReturnValueLink} from './SankeyUtils'
+import { SankeyData, SankeyNode,SankeyLink } from './types'
+import { LinkVisible,LinkColor,ReturnValueLink,reorganize_node_inputLinksId,reorganize_node_outputLinksId} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
-import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { SelectVisualyLinks } from './SankeyDrawFunction'
+import { GetLinkValueFuncType } from './FunctionTypes'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them
 const getIOLink=(
@@ -14,7 +14,7 @@ const getIOLink=(
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,
   io:string,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
 
 
 )=>{
@@ -135,7 +135,7 @@ const handleUpLinkIOPos=(
   k_link:string,
   pos:string,
   io:string,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 )=>{
   const n=multi_selected_nodes.current[0]
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
@@ -257,7 +257,7 @@ const handleDownLinkIOPos=(
   k_link:string,
   pos:string,
   io:string,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 )=>{
   const n=multi_selected_nodes.current[0]
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
@@ -372,7 +372,7 @@ const has_link_come_from=(
   multi_selected_nodes:{current:SankeyNode[]},
   io:string,
   pos:string,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 )=>{
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
   return link_io.length==0
@@ -393,7 +393,7 @@ const tab_pos_link=(
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,io:string,tab_colored:boolean,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 )=>{
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
   return (
@@ -447,7 +447,7 @@ export const SankeyMenuConfigurationNodesIO = (
   set_link_pos:React.Dispatch<React.SetStateAction<string>>,
   tab_colored:boolean,
   set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
   multi_selected_links: {current:SankeyLink[]},
   set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
   menu_for_modal=false
