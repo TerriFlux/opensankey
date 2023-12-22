@@ -1,4 +1,4 @@
-import { SankeyData,SankeyLinkValue, SankeyNode,SankeyLink } from './types'
+import { SankeyData, SankeyNode,SankeyLink } from './types'
 import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
@@ -8,6 +8,7 @@ import { TFunction } from 'i18next'
 import { opposing_drag_elements } from './SankeyDrag'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
+import { GetLinkValueFuncType, drag_legend_g_elementFuncType } from './FunctionTypes'
 
 
 declare const window: Window &
@@ -18,7 +19,7 @@ typeof globalThis & {
 export const OpenSankeyDrawLegend = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
   t:TFunction,
   pointer_pos:{current:number[]},
   set_tag_contextualised:(t:string)=>void,
@@ -379,7 +380,7 @@ export const drag_legend=(data:SankeyData,
     }
   }).on('end',()=>set_data({...data}))
 
-export const drag_legend_g_element=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
+export const drag_legend_g_element:drag_legend_g_elementFuncType=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
   let scale_for_legend=1
   const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
   const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
@@ -417,7 +418,7 @@ export const context_legend_tags=(tag_contextualised:string|undefined,
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   pointer_pos:{current:number[]},
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
 
 )=>{
   let style_c_t='0px 0px auto auto'

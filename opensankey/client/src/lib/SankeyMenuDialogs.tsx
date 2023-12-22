@@ -6,13 +6,14 @@ import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
 import { complete_sankey_data } from './SankeyConvert'
 import { DefaultLink, DefaultNode, SmoothClasses } from './SankeyUtils'
 import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from './SankeyDrawFunction'
-import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
+import { arrangeNodes, ComputeAutoSankey } from './SankeyLayout'
 import { MenuDraggable } from './SankeyMenu'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
+import { updateLayoutFuncType } from './FunctionTypes'
 /**
  * Define ApplyLayoutDialog
  *
@@ -542,7 +543,7 @@ export const ApplyLayoutDialog = ({
           <Button
             size="sm"
             onClick={() => {
-              compute_auto_sankey(sankey_data, node_hspace)
+              ComputeAutoSankey(sankey_data, node_hspace)
               set_sankey_data({ ...sankey_data })
             }}>
             {t('MEP.PA')}
@@ -760,7 +761,7 @@ export const OpenSankeyDiagramSelector = (
   set_sankey_data: (s:SankeyData)=>null,
   prev_sankey_data: SankeyData,
   set_prev_sankey_data: (s:SankeyData)=>void, 
-  updateLayout: (data: SankeyData,new_layout: SankeyData,mode:string[],synchronize:boolean)=>void, 
+  updateLayout: updateLayoutFuncType, 
   elementToDispose : string[],
   DefaultSankeyData: ()=>SankeyData
 ) => {

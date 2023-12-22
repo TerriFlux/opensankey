@@ -2,7 +2,7 @@ import React, { FunctionComponent, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyData } from './types'
 import PropTypes, { InferProps } from 'prop-types'
-import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode, GetLinkValue } from './SankeyUtils'
+import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -13,6 +13,7 @@ import {SankeyMenuConfigurationLinksTooltip} from './SankeyMenuConfigurationLink
 import {ValueSelectedParameter,NodeVisibleOnsSvg} from './SankeyDrawFunction'
 
 import { TFunction } from 'i18next'
+import { GetLinkValueFuncType } from './FunctionTypes'
 
 const SankeyMenuConfigurationLinksPropTypes = {
   t: PropTypes.func.isRequired,
@@ -49,6 +50,8 @@ export const OpenSankeyMenuConfigurationLinks = (
   set_pre_idSource:(s:string)=>void,
   pre_idTarget:string,
   set_pre_idTarget:(s:string)=>void,
+  GetLinkValue:GetLinkValueFuncType,
+
 ) => {
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {

@@ -2,6 +2,7 @@
 import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal,SankeyNodeStyle, SankeyNodeAttrLocal, SankeyLinkStyle} from './types'
 import colormap from 'colormap'
 import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
+import { ConvertDataFuncType, DefaultSankeyDataFuncType, complete_sankey_dataFunctType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from './FunctionTypes'
 
 
 interface ConvertSankeyNode {
@@ -137,9 +138,9 @@ const normalize_name = (name: string) => {
   return new_name
 }
 
-export const complete_sankey_data = (
+export const complete_sankey_data:complete_sankey_dataFunctType = (
   data: SankeyData,
-  DefaultSankeyData: ()=>SankeyData,
+  DefaultSankeyData: DefaultSankeyDataFuncType,
   DefaultNode: (data:SankeyData)=>SankeyNode,
   DefaultLink: (data:SankeyData)=>SankeyLink
 ): void => {
@@ -360,7 +361,7 @@ export const compute_flux_max = (
   }
 }
 
-export const convert_tags = (
+export const convert_tags:convert_tagsFuncType = (
   data: SankeyData
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
@@ -706,7 +707,7 @@ export const convert_tags = (
 
 }
 
-export const convert_nodes = (
+export const convert_nodes:convert_nodesFuncType = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
@@ -953,7 +954,7 @@ export const convert_nodes = (
   )
 }
 
-export const convert_links = (
+export const convert_links:convert_linksFuncType = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
@@ -1423,10 +1424,9 @@ export const convert_links = (
 
 }
 
-export const convert_data = (
+export const convert_data:ConvertDataFuncType = (
   data: SankeyData,
   DefaultSankeyData: ()=>SankeyData,
-
 ): void => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
   const { display_style,units_names } = data_to_convert

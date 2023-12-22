@@ -590,7 +590,8 @@ export const open_resources = {
         tooltipSelection:'Allows to drag the nodes',
         tooltipHelp:'Show the help dialog',
         tooltipAjoutNode:'Adds a node to the mouse click',
-        tooltipLiason:'Create node(s) or link(s)'
+        tooltipLiason:'Create node(s) or link(s)',
+        select_sibling:'Select siblings'
       },
       welcome:{
         welcome:'Welcome to OpenSankey web application',
@@ -1185,7 +1186,7 @@ export const open_resources = {
         ndd:'Niveaux de détail',
         ndd_lst:'Groupes d\'étiquettes',
         ndd_chk:'Appliquer les couleurs associées',
-        sdr:'Type de diagramme',
+        sdr:'Type de données',
         sdd:'Sélection des données',
         tl:'Téléchargements',
         rslt:'Téléchargement résultats',
@@ -1210,7 +1211,9 @@ export const open_resources = {
         tooltipStructure:'Paramétrage visuel de la structure du diagramme',
         tooltipSelection:'Sélectionner ou de déplacer les noeuds',
         tooltipHelp:'Affiche le dialogue d\'aide',
-        tooltipLiason:'Créer un noeud ou un flux'
+        tooltipLiason:'Créer un noeud ou un flux',
+        select_sibling:'Selectionner ses frères '
+
       },
       welcome:{
         welcome:'Bienvenue sur l\'application web OpenSankey',

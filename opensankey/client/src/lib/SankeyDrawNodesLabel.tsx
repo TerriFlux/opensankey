@@ -1,9 +1,10 @@
-import { SankeyData, SankeyNode,SankeyLinkValue } from './types'
+import { SankeyData, SankeyNode } from './types'
 import * as d3 from 'd3'
 
 import { dragNodeTextEventWidthBoxEvent} from './SankeyDrag'
 import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelValuePosY,NodeLabeLText,TextNodeWrap} from './SankeyDrawFunction'
 import { ReturnValueNode } from './SankeyUtils'
+import { GetLinkValueFuncType } from './FunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -28,7 +29,7 @@ export const OpenSankeyDrawNodesLabel = (
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current: SankeyNode[] },
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
   
 ) => {
   const display_nodes=data.nodes
