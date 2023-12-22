@@ -30,6 +30,7 @@ import {RemoveAnimate,
 import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/SankeyUtils'
 import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/src/lib/types'
 import { drawArrowsType, GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/lib/FunctionTypes'
+import { SankeyPlusNodeDragEventType } from './FunctionTypes'
 
 
 declare const window: Window &
@@ -872,7 +873,7 @@ export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyNode|SankeyPlu
   }
 }
 
-export const SankeyPlusNodeDragEvent=(
+export const SankeyPlusNodeDragEvent : SankeyPlusNodeDragEventType =(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },

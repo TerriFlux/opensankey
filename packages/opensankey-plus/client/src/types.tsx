@@ -37,32 +37,32 @@ export type SankeyPlusNodeStyle = SankeyNodeStyle
 export interface SankeyPlusLinkStyle extends SankeyLinkStyle{
   gradient:boolean,
 }
+interface SankeyPlusNodeIntern {
+  iconName: string,
+  iconColor: string,
+  iconVisible: boolean,
+  iconViewBox?:string,
 
-export interface SankeyPlusNode extends SankeyNode{
-    iconName: string,
-    iconColor: string,
-    iconVisible: boolean,
-    iconViewBox?:string,
+  has_FO:boolean,
+  is_FO_raw:boolean,
+  FO_content:string,
 
-    has_FO:boolean,
-    is_FO_raw:boolean,
-    FO_content:string,
+  is_image:boolean,
+  image_src:string,
 
-    is_image:boolean,
-    image_src:string,
-
-    hyperlink:string
+  hyperlink:string  
 }
+
+export type SankeyPlusNode = SankeyNode & SankeyPlusNodeIntern
 
 export interface SankeyPlusLinkAttrLocal extends SankeyLinkAttrLocal{
   gradient?:boolean,
 }
 
-export interface SankeyPlusLink extends SankeyLink{
+interface SankeyPlusLinkIntern {
   local?:SankeyPlusLinkAttrLocal
-
 }
-
+export type SankeyPlusLink = SankeyLink & SankeyPlusLinkIntern
 export interface SankeyPlusLabel {
     // identification
     idLabel: string,
