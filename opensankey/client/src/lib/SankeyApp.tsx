@@ -31,7 +31,6 @@ import {LinkStroke,
   ZoomFunction,
   RepositionneSidebar} from './SankeyDrawFunction'
 import i18next from './traduction'
-import { updateLayout } from './SankeyLayout'
 import {SankeyMenuConfigurationNodesIO} from './SankeyMenuConfigurationNodesIO'
 
 import {SankeyMenuConfigurationLinksData} from './SankeyMenuConfigurationLinksData'
@@ -40,7 +39,7 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faSliders,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { FaAngleDoubleLeft} from 'react-icons/fa'
-import { ReturnValueLink,LinkColor } from './SankeyUtils'
+import { ReturnValueLink,LinkColor,updateLayout } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
 import { OpenSankeyDiagramSelector } from './SankeyMenuDialogs'
 import { SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from './SankeyStyle'
@@ -81,10 +80,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const mode_selection= useRef('s')
   const multi_selected_nodes = useRef([])
   const multi_selected_links = useRef([])
-  const button_ref = useRef<HTMLLabelElement>(null)
-  const accordion_ref = useRef<HTMLDivElement>(null)
-  const links_accordion_ref = useRef<HTMLDivElement>(null)
-  const nodes_accordion_ref = useRef<HTMLDivElement>(null)
+  const button_ref = useRef<HTMLLabelElement>(null) as {current:HTMLLabelElement}
+  const accordion_ref = useRef<HTMLDivElement>(null) as {current:HTMLDivElement}
+  const links_accordion_ref = useRef<HTMLDivElement>(null) as {current:HTMLDivElement}
+  const nodes_accordion_ref = useRef<HTMLDivElement>(null) as {current:HTMLDivElement}
   const [data,pre_set_data] = useState<SankeyData>(initial_sankey_data)
   const [show_nav,set_show_nav] = useState(false)
   const [show_modal_welcome,set_show_modal_welcome]=useState(true)
@@ -310,7 +309,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     [],
     display_link_opacity,set_display_link_opacity,
     pre_idSource,set_pre_idSource,
-    pre_idTarget,set_pre_idTarget
+    pre_idTarget,set_pre_idTarget,
+    SankeyUtils.GetLinkValue
   )
   //- 1.3.2 Builds Configuration Menus Link tags
   const  menu_configuration_link_tags=<SankeySettingsEditionElementTags

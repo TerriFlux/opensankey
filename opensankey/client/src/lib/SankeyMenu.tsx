@@ -41,7 +41,6 @@ import * as SankeyUtils from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
-import { reorganize_node_inputLinksId,reorganize_node_outputLinksId } from './SankeyLayout'
 import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
 import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faUpRightFromSquare,faFile,faPlus} from '@fortawesome/free-solid-svg-icons'
@@ -49,7 +48,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { addAllDropDownNode } from './SankeyMenuBanner'
 import { reorganize_inputLinksId } from './SankeyLayout'
 import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinksAppearence'
-import { arrangeNodes, compute_auto_sankey } from './SankeyLayout'
+import { arrangeNodes, ComputeAutoSankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
 import { SelectVisualyLinks} from './SankeyDrawFunction'
@@ -1089,7 +1088,7 @@ const Menu: FunctionComponent<MenuTypes> = (
               <Button variant='primary'
                 onClick={() => {
                   SankeyUtils.UploadExemple(
-                    ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,Reinitialization,convert_data
+                    ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,Reinitialization,convert_data,DefaultSankeyData
                   )
                   set_data({...data})
                   set_show_modale_tuto(false)
@@ -1103,7 +1102,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
 
                     SankeyUtils.UploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data,DefaultSankeyData
                     )
                     set_show_modale_tuto(false)
 
@@ -1119,7 +1118,7 @@ const Menu: FunctionComponent<MenuTypes> = (
                     launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
 
                     SankeyUtils.UploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data,DefaultSankeyData
                     )
                     set_show_modale_tuto(false)
 
@@ -1863,11 +1862,11 @@ export const ContextMenuNode=(
         <Button
           variant='light'
           onClick={() => {
-            reorganize_node_inputLinksId(data,contextualised_node, data.nodes, data.links)
-            reorganize_node_outputLinksId(data,contextualised_node, data.nodes, data.links)
+            SankeyUtils.reorganize_node_inputLinksId(data,contextualised_node, data.nodes, data.links)
+            SankeyUtils.reorganize_node_outputLinksId(data,contextualised_node, data.nodes, data.links)
             multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
-              reorganize_node_inputLinksId(data,n, data.nodes, data.links)
-              reorganize_node_outputLinksId(data,n, data.nodes, data.links)
+              SankeyUtils.reorganize_node_inputLinksId(data,n, data.nodes, data.links)
+              SankeyUtils.reorganize_node_outputLinksId(data,n, data.nodes, data.links)
             })
             set_contextualised_node(undefined)
             set_data({ ...data })
@@ -2165,9 +2164,6 @@ export const ContextZdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolea
     d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
     d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
 
-  const GetRandomInt=(max:number) =>{
-    return Math.floor(Math.random() * max)
-  }
 
   let style_c_zdd='0px 0px auto auto'
   if(show_context_zdd){
@@ -2187,7 +2183,7 @@ export const ContextZdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolea
   }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
   </>
   const button_assgn_rand_node_color=<><Button variant='light' onClick={()=>{
-    const color_selected=list_palette_color[GetRandomInt(list_palette_color.length)]
+    const color_selected=list_palette_color[SankeyUtils.GetRandomInt(list_palette_color.length)]
     const n_keys=Object.keys(data.nodes)
     const size_color=n_keys.length
 
@@ -2303,7 +2299,7 @@ export const ContextZdd=(show_context_zdd:boolean,set_show_context_zdd:(b:boolea
       </Dropdown>
 
       <Dropdown.Item as={Button} variant='light' onClick={() => {
-        compute_auto_sankey(data, node_hspace)
+        ComputeAutoSankey(data, node_hspace)
         set_data({ ...data })
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>

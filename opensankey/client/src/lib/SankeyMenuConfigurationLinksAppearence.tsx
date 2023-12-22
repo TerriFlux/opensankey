@@ -1,6 +1,6 @@
 import React,{useState} from 'react'
 import { Row, Form, Tab, FormControl, OverlayTrigger, Tooltip, InputGroup, Button, ButtonGroup, Dropdown} from 'react-bootstrap'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal,SankeyNode,SankeyLinkValue } from './types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal,SankeyNode } from './types'
 import { TFunction } from 'i18next'
 import { FaAlignLeft,FaAlignCenter,FaAlignRight} from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH } from 'react-icons/fa'
@@ -10,6 +10,7 @@ import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge} from './SankeyUtils'
 import { LinkStrokeWidth,scale,inv_scale } from './SankeyDrawFunction'
+import { GetLinkValueFuncType } from './FunctionTypes'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
   width="26"
@@ -72,7 +73,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
   selected_style_link:string,
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
   menu_for_modal=false
 )=>{
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
@@ -200,7 +201,7 @@ export const SankeyMenuConfigurationLinksAppearence = (
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
       if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? CutName(data.style_link[style_to_display].idLink, 25) : 'Multiple style parmi les noeuds sélectionnés'
+        return (inchangee) ? CutName(data.style_link[style_to_display].idLink, 25 ) : 'Multiple style parmi les noeuds sélectionnés'
       } else {
         return 'Aucun'
       }

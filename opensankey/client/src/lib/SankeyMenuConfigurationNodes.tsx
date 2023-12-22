@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState,useRef} from 'react'
 import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup,Overlay,Popover, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
-import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLinkValue,SankeyLink,treeFolderType} from './types'
+import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLink,treeFolderType} from './types'
 import { DeleteNode,ReturnValueNode,ApplyStyleToNodes,AddNewNode,CutName,FolderIcon,FolderOpenIcon,FileIcon} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus, FaEye,} from 'react-icons/fa'
@@ -16,6 +16,7 @@ import { TFunction } from 'i18next'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import FolderTree from 'react-folder-tree'
 import 'react-folder-tree/dist/style.css'
+import { GetLinkValueFuncType } from './FunctionTypes'
 
 const SankeyNodeEditionPropTypes = {
   t:PropTypes.func.isRequired,
@@ -39,7 +40,7 @@ export const OpenSankeyMenuConfigurationNodes = (
   link_io:string,set_link_io:React.Dispatch<React.SetStateAction<string>>,
   link_pos:string,set_link_pos:React.Dispatch<React.SetStateAction<string>>,
   tab_colored:boolean,set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  GetLinkValue:GetLinkValueFuncType,
   multi_selected_links: {current:SankeyLink[]},
   set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
 ) => {
@@ -244,7 +245,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
         {/* {dropdownMultiNode()} */}
         <Button style={{width:'70%'}} ref={target_node_selector} variant='outline-primary' id='button-node_selector' onClick={()=>{set_show_node_selector(!show_node_selector)}} >
-          {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n=>n.name).join(','),25):'None'}
+          {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n => n.name).join(','), 25 ):'None'}
         </Button>
       </OverlayTrigger>
       {overlayNodeSlector}

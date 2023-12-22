@@ -1,5 +1,5 @@
 import  { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve,SankeyLinkValue,drawArrowsType} from './types'
+import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve} from './types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
@@ -13,6 +13,7 @@ import { drawCurveFunction,
   EventLinkContextMenu} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg,DrawLinkStartSabot} from './SankeyDrawFunction'
+import { GetLinkValueFuncType, LinkStrokeFuncType,drawArrowsType, LinkTextFuncType, LinkColorFuncType } from './FunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -32,24 +33,19 @@ export const OpenSankeyDrawLinks = (
   position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
   LinkTooltipsContent:(data: SankeyData, l: SankeyLink,
-    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  LinkText:(data: SankeyData, d: SankeyLink,GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+    GetLinkValue:GetLinkValueFuncType) => string,
+  LinkText:LinkTextFuncType,
+  GetLinkValue:GetLinkValueFuncType,
   set_data:(d:SankeyData)=>void,
   set_displayed_input_link_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
-  LinkStroke:(l:SankeyLink,
-    data:SankeyData,
-    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
+  LinkStroke:LinkStrokeFuncType,
   DrawArrows:drawArrowsType,
   set_display_link_opacity:(s:string)=>void,
   set_contextualised_link:(l:SankeyLink)=>void,
   pointer_pos:{current:number[]},
-  LinkSabotColor:(
-    l:SankeyLink,
-    data:SankeyData,
-    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
+  LinkSabotColor:LinkColorFuncType,
 
 ) => {
 
@@ -183,16 +179,11 @@ export const OpenSankeyDrawLinks = (
   const add_links = (
     display_nodes:{ [node_id: string]: SankeyNode },
     display_links:{ [link_id: string]: SankeyLink },
-    LinkStroke:(l:SankeyLink,
-      data:SankeyData,
-      GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string,
+    LinkStroke:LinkStrokeFuncType,
     DrawArrows:drawArrowsType,
     set_contextualised_link:(l:SankeyLink)=>void,
     pointer_pos:{current:number[]},
-    LinkSabotColor:(
-      l:SankeyLink,
-      data:SankeyData,
-      GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue)=>string
+    LinkSabotColor:LinkColorFuncType
   ) => {
     // Structure svg du link
     //- link :

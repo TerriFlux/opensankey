@@ -1,12 +1,12 @@
-import  { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode,SankeyLinkValue} from './types'
-import React, { Requireable } from 'react'
+import { SankeyLink, SankeyData, SankeyNode} from './types'
+import React from 'react'
 import * as d3 from 'd3'
 
 import {NodeColor,ReturnValueNode} from './SankeyUtils'
 import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
   EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
+import { GetLinkValueFuncType, LinkTextFuncType } from './FunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -18,47 +18,32 @@ export const OpenSankeyDrawNodes = (
   set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
-  nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
-  links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
+  nodes_accordion_ref:{current:HTMLDivElement } | null,
+  links_accordion_ref:{current:HTMLDivElement; } | null,
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
   mode_selection:{current:string},
   first_selected_node:object,
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
-  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
+  accordion_ref:{current:HTMLDivElement } | null,
+  button_ref:{current:HTMLLabelElement} | null,
 
   alt_key_pressed:boolean,
-  NodeTooltipsContent: (data: SankeyData, display_nodes : { [node_id: string]: SankeyNode }, d: SankeyNode,
-    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  LinkText:(data: SankeyData, d: SankeyLink,
-    GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue) => string,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  NodeTooltipsContent: (data: SankeyData, display_nodes : { [node_id: string]: SankeyNode }, d: SankeyNode, GetLinkValue:GetLinkValueFuncType) => string,
+  LinkText:LinkTextFuncType,
+  GetLinkValue:GetLinkValueFuncType,
   set_displayed_input_link_value:(s:string)=>void,
   accept_simple_click:{current:boolean},
   set_contextualised_node:(n:SankeyNode)=>void,
   pointer_pos:{current:number[]}
 
 ) => {
-  // const display_nodes = Object.keys(data.nodes)
-  //   .filter((key) => NodeDisplayed(data,data.nodes[key]))
-  //   .reduce((obj, key) => {
-  //     return Object.assign(obj, {
-  //       [key]: data.nodes[key]
-  //     })
-  //   }, {}) as {[idNode:string]:SankeyNode}
-  // const display_links=Object.keys(data.links)
-  // .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
-  // .reduce((obj, key) => {
-  //   return Object.assign(obj, {
-  //     [key]: data.links[key]
-  //   })
-  // }, {}) as {[idLink:string]:SankeyLink}
+  
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic ||event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
-
+      console.log(GetLinkValue)
       sankeyTooltip
         .style('opacity', 1)
         .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue))
