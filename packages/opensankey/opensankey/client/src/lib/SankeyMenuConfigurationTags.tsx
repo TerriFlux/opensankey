@@ -5,7 +5,7 @@ import { SankeyDataPropTypes,  TagsGroup } from './types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
-import { AddTag,AddGroupTag } from './SankeyUtils'
+import { AddTag,AddGroupTag, GetRandomInt } from './SankeyUtils'
 import { FaEye,FaEyeSlash} from 'react-icons/fa'
 
 
@@ -73,9 +73,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     set_data({ ...data })
   }
 
-  const GetRandomInt=(max:number) =>{
-    return Math.floor(Math.random() * max)
-  }
 
   // Delete a groupTag
   const handleDelGroupTag = (tags_group_key: string) => {

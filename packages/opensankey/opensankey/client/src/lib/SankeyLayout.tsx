@@ -4,7 +4,6 @@ import {
   SankeyDataPropTypes,
   SankeyLink,
   SankeyLinkPropTypes,
-  SankeyLinkValue,
   SankeyNode,
   SankeyNodePropTypes
 } from './types'
@@ -15,177 +14,17 @@ import {
   FindMaxLinkValue,
   GetLinkValue,
   NodeDisplayed,
-  ReturnValueLink,
   ReturnValueNode,
-  TestLinkValue
+  TestLinkValue,
+  reorganize_node_inputLinksId,
+  reorganize_node_outputLinksId,
 } from './SankeyUtils'
 import React, { FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
+import { ComputeAutoSankeyFuncType, GetLinkValueFuncType } from './FunctionTypes'
 
-/**
- * Reorganize vertically all links
- * to given node
- *
- * @param {SankeyData} data Data structure for Sankey
- * @param {SankeyNode} node Node on which input links positions must be reorganized
- * @param {object} nodes Dict of node to reorganize
- * @param {object} links Dict of links to reorganize
- */
-export const reorganize_node_inputLinksId = (
-  data: SankeyData,
-  node: SankeyNode,
-  nodes: {[idNode:string]:SankeyNode},
-  links: {[idLink:string]:SankeyLink}
-) => {
-  // Get list of input links of given node
-  const input_links = Object.values(links).filter(
-    link => (link.idTarget === node.idNode)
-  )
 
-  // Sorting algorithm between two input links
-  input_links.sort((l1, l2) => {
-    const n1Id = l1.idSource
-    const n2Id = l2.idSource
-    const l1_recy=ReturnValueLink(data,l1,'recycling')
-    const l2_recy=ReturnValueLink(data,l2,'recycling')
-    const l1_v_s=ReturnValueLink(data,l1,'vert_shift') as number
-    const l2_v_s=ReturnValueLink(data,l2,'vert_shift') as number
-    const l1_ori=ReturnValueLink(data,l1,'orientation')
-    const l2_ori=ReturnValueLink(data,l2,'orientation')
-
-    if (n1Id !== n2Id) {
-      const n1 = nodes[n1Id]
-      const n2 = nodes[n2Id]
-      if (n2.position == 'relative') {
-        return 1
-      }
-      if (n1.position == 'relative') {
-        return -1
-      }
-      if ( l1_recy && !l2_recy) {
-        if (l1_v_s && l1_v_s < 0) {
-          return -1
-        }
-        return 1
-      }
-      if ( !l1_recy && l2_recy) {
-        if (l2_v_s && l2_v_s < 0) {
-          return 1
-        }
-        return -1
-      }
-      if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
-        if (n1 && n2 && n1.x < n2.x) {
-          return -1
-        }
-        return 1
-      }
-      if (n1 && n2 && n1.y < n2.y) {
-        return -1
-      }
-      return 1
-    } else {
-      const n1 = nodes[n1Id]
-      if (n1) {
-        const output_l1_index = n1.outputLinksId.indexOf(l1.idLink)
-        const output_l2_index = n1.outputLinksId.indexOf(l2.idLink)
-        const l1_index = input_links.indexOf(l1)
-        const l2_index = input_links.indexOf(l1)
-        if ((output_l1_index < output_l2_index && l1_index < l2_index) ||
-          (output_l1_index > output_l2_index && l1_index > l2_index)) {
-          return 1
-        }
-        return -1
-      } else {
-        return 1
-      }
-    }
-  })
-  node.inputLinksId = input_links.map(l=>l.idLink)
-}
-
-/**
- * Reorganize vertically all output links
- * from given node
- *
- * @param {SankeyData} data Data structure for Sankey
- * @param {SankeyNode} node Node on which output links positions must be reorganized
- * @param {object} nodes Dict of node to reorganize
- * @param {object} links Dict of links to reorganize
- */
-export const reorganize_node_outputLinksId = (
-  data: SankeyData,
-  node: SankeyNode,
-  nodes: {[idNode:string]: SankeyNode},
-  links: {[idLink:string]: SankeyLink}
-) => {
-  // Get list of output links of given node
-  const output_links = Object.values(links).filter(
-    l => l.idSource === node.idNode
-  )
-
-  // Sorting algorithm
-  output_links.sort((l1, l2) => {
-    const n1Id = l1.idTarget
-    const n2Id = l2.idTarget
-    const l1_recy=ReturnValueLink(data,l1,'recycling')
-    const l2_recy=ReturnValueLink(data,l2,'recycling')
-    const l1_v_s=ReturnValueLink(data,l1,'vert_shift') as number
-    const l2_v_s=ReturnValueLink(data,l2,'vert_shift') as number
-    const l1_ori=ReturnValueLink(data,l1,'orientation')
-    const l2_ori=ReturnValueLink(data,l2,'orientation')
-
-    if (n1Id !== n2Id) {
-      const n1 = nodes[n1Id]
-      const n2 = nodes[n2Id]
-      if (n2.position == 'relative') {
-        return -1
-      }
-      if (n1.position == 'relative') {
-        return 1
-      }
-      if ( l1_recy && !l2_recy) {
-        if (l1_v_s && l1_v_s < 0) {
-          return 1
-        }
-        return -1
-      }
-      if ( !l1_recy && l2_recy) {
-        if (l2_v_s && l2_v_s < 0) {
-          return 1
-        }
-        return -1
-      }
-      if (l1_ori === 'vh' && l2_ori === 'vh' || l1_ori === 'vv' && l2_ori === 'vv') {
-        if (n1 && n2 && n1.x < n2.x) {
-          return -1
-        }
-        return 1
-      }
-      if (n1 && n2 && n1.y < n2.y) {
-        return -1
-      }
-      return 1
-    } else {
-      const n1 = nodes[n1Id]
-      if (n1) {
-        const input_l1_index = n1.inputLinksId.indexOf(l1.idLink)
-        const input_l2_index = n1.inputLinksId.indexOf(l2.idLink)
-        const l1_index = output_links.indexOf(l1)
-        const l2_index = output_links.indexOf(l1)
-        if ((input_l1_index < input_l2_index && l1_index < l2_index) ||
-          (input_l1_index > input_l2_index && l1_index > l2_index)) {
-          return 1
-        }
-        return -1
-      } else {
-        return 1
-      }
-    }
-  })
-  node.outputLinksId = output_links.map(l=>l.idLink)
-}
 
 export const reorganize_inputLinksId = (
   data:SankeyData,
@@ -228,10 +67,7 @@ export const compute_default_input_outputLinksId = (
   })
 }
 
-const normalize_name = (name: string) => {
-  const new_name = name.split('\\n').join('').split(' ').join('')
-  return new_name
-}
+
 
 export const apply_input_outputLinksId = (
   ref_nodes: { [node_id : string]:SankeyNode},
@@ -468,7 +304,7 @@ export const nodeHeight = (
   display_links:{ [link_id: string]: SankeyLink },
   inv_scale: (t:number)=>number,
   scale: (t:number)=>number,
-  GetLinkValue: (data: SankeyData, idLink: string, up?: boolean)=>SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 ) => {
   const res = ComputeTotalOffsets(
     inv_scale,
@@ -502,7 +338,7 @@ export const nodeHeight = (
  * @param {SankeyData} data Data structure for Sankey
  * @param {number} h_space Horizontal spacing factor
  */
-export const compute_auto_sankey = (
+export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   data: SankeyData,
   h_space : number,
 ) => {
@@ -841,7 +677,6 @@ export const compute_auto_sankey = (
   data.height = v_margin*2 + max_height_cumul
 
   reorganize_all_input_outputLinksId(data,data.nodes, data.links)
-  return []
 }
 
 /**
@@ -864,295 +699,8 @@ export const reorganize_all_input_outputLinksId = (
     })
 }
 
-export const synchronizeNodesandLinksId = (
-  dataModify: SankeyData,
-  dataRef: SankeyData
-) => {
-  //- Stores a mapping between idNode of initial data and layout idNodes
-  const idNodesMap: {[s:string]:string} = {}
-  Object.values(dataModify.nodes).forEach( nodeModify => {
-    const nodesRef = Object.values(dataRef.nodes).filter(nodeRef=>normalize_name(nodeModify.name) === normalize_name(nodeRef.name))
-    if (nodesRef.length === 0) {
-      idNodesMap[nodeModify.idNode] = nodeModify.idNode
-      return
-    }
-    const nodeRef = nodesRef[0]
-    idNodesMap[nodeModify.idNode] = nodeRef.idNode
-  })
-  Object.values(dataModify.nodes).forEach(nodeModify=>{
-    nodeModify.idNode=idNodesMap[nodeModify.idNode]
-    Object.keys(nodeModify.dimensions).forEach(dim => {
-      if (nodeModify.dimensions[dim].parent_name) {
-        nodeModify.dimensions[dim].parent_name = idNodesMap[nodeModify.dimensions[dim].parent_name??0]
-      }
-    })})
-  dataModify.nodes = Object.assign({}, ...Object.values(dataModify.nodes).map(n => ({ [n.idNode]: { ...n } })))
 
-  Object.values(dataModify.links).forEach(lModify=>{
-    lModify.idSource=idNodesMap[lModify.idSource]
-    lModify.idTarget=idNodesMap[lModify.idTarget]
-  })
 
-  //- Stores a mapping between idLink of initial data and layout idLinks
-  const idLinksMap: {[s:string]:string} = {}
-  const links_with_no_match : SankeyLink [] = []
-  Object.values(dataModify.links).forEach( lModify => {
-    const lRef = dataRef.links[lModify.idLink]
-    if (!lRef || lRef.idSource !== lModify.idSource || lRef.idTarget !== lModify.idTarget) {
-      links_with_no_match.push(lModify)
-      return
-    }
-    idLinksMap[lModify.idLink] = lRef.idLink
-  })
-  links_with_no_match.forEach( l => {
-    const linksRef = Object.values(dataRef.links).filter(lRef =>
-      l.idSource === lRef.idSource && l.idTarget === lRef.idTarget
-    )
-    if (linksRef.length === 0) {
-      idLinksMap[l.idLink] = l.idSource+'---'+l.idTarget
-      return
-    }
-    const layout_link = linksRef[0]
-    idLinksMap[l.idLink] = layout_link.idLink
-  })
-
-  const newLinkZIndex : string[]= []
-  dataModify.linkZIndex.forEach(idLink=>newLinkZIndex.push(idLinksMap[idLink]))
-  dataModify.linkZIndex = newLinkZIndex
-
-  Object.values(dataModify.links).forEach(l=>l.idLink=idLinksMap[l.idLink])
-  dataModify.links = Object.assign({}, ...Object.values(dataModify.links).map(lModify => ({ [lModify.idLink]: { ...lModify } })))
-
-  Object.values(dataModify.nodes).forEach(n=>{
-    const newInputLinksId : string[] = []
-    n.inputLinksId.forEach(linkId=>newInputLinksId.push(idLinksMap[linkId]))
-    n.inputLinksId = newInputLinksId
-    const newOutputLinksId : string[] = []
-    n.outputLinksId.forEach(linkId=>newOutputLinksId.push(idLinksMap[linkId]))
-    n.outputLinksId = newOutputLinksId
-  })
-  // compute_default_input_outputLinksId(dataModify.nodes, dataModify.links)
-}
-
-export const updateLayout = (
-  data: SankeyData,
-  new_layout: SankeyData,
-  mode:string[],
-  synchronize = false
-) => {
-  if (synchronize) {
-    synchronizeNodesandLinksId(data, new_layout)
-  }
-  /* eslint-disable */
-  // @ts-ignore
-  const deep_diff = require('deep-diff')
-  /* eslint-enable */
-
-  if(mode.includes('attrGeneral')) {
-    let difference = deep_diff.diff(data, new_layout)
-    if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => d.kind === 'E' && d.path.length ===1 )
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data, {}, diff))
-    }
-  }
-
-  if(mode.includes('addNode')) {
-    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
-    if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
-    }
-  }
-  if(mode.includes('removeNode')) {
-    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
-    if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
-    }
-  }
-
-  if(mode.includes('addFlux')) {
-    let difference = deep_diff.diff(data.links, new_layout.links)
-    if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
-    }
-  }
-
-  if(mode.includes('removeFlux')) {
-    let difference = deep_diff.diff(data.links, new_layout.links)
-    if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
-    }
-  }
-
-  if(mode.includes('posNode')){
-    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
-    if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) => d.kind === 'E' && ['x','y','x_label','y_label'].includes(d.path[1]) )
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
-    }
-  }
-
-  if (mode.includes('posFlux')) {
-    const geometry_attributes = [
-      'orientation',
-      'left_horiz_shift',
-      'right_horiz_shift',
-      'vert_shift',
-      'curvature',
-      'curved',
-      'recycling',
-      'arrow_size',
-      // Geometry link labels
-      'x_label',
-      'y_label',
-      'label_position',
-      'orthogonal_label_position',
-      'label_on_path'
-    ]
-    let difference = deep_diff.diff(data.links, new_layout.links)
-    if (difference) {
-      difference = difference.filter((d :{path:string[],kind:string}) =>
-        (d.kind === 'D' || d.kind === 'N') && d.path.length === 3 && d.path[1] === 'local' && geometry_attributes.includes(d.path[2]) ||
-      (d.kind === 'E' && geometry_attributes.includes(d.path[1]))
-      )
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
-    }
-    Object.entries(data.nodes).forEach( ([key,node]) => {
-      const layoutNode = new_layout.nodes[key]
-      if (!layoutNode) {
-        return
-      }
-      const commonInputLinksId = layoutNode.inputLinksId.filter(id=>node.inputLinksId.indexOf(id) !== -1)
-      let justInNode = node.inputLinksId.filter(id=>layoutNode.inputLinksId.indexOf(id) === -1)
-      const newInputLinksId = commonInputLinksId.concat(justInNode)
-      node.inputLinksId = newInputLinksId
-      const commonOutputLinksId = layoutNode.outputLinksId.filter(id=>node.outputLinksId.indexOf(id) !== -1)
-      justInNode = node.inputLinksId.filter(id=>layoutNode.inputLinksId.indexOf(id) === -1)
-      const newOutputLinksId = commonOutputLinksId.concat(justInNode)
-      node.outputLinksId = newOutputLinksId
-    })
-  }
-
-  if (mode.includes('attrNode')) {
-    Object.entries(data.nodes).forEach( ([key,node]) => {
-      const layoutNode = new_layout.nodes[key]
-      if (!layoutNode) {
-        return
-      }
-      if (!node.local) {
-        node.local = {}
-      }
-      if (!layoutNode.local) {
-        layoutNode.local = {}
-      }
-      const difference = deep_diff.diff(node.local, layoutNode.local)
-      if (difference) {
-        difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(node.local, {}, diff))
-      }
-    })
-  }
-  if (mode.includes('attrFlux')){
-    Object.entries(data.links).forEach( ([key,link]) => {
-      const layoutLink = new_layout.links[key]
-      if (!layoutLink) {
-        return
-      }
-      if (!link.local) {
-        link.local = {}
-      }
-      if (!layoutLink.local) {
-        layoutLink.local = {}
-      }
-      const difference = deep_diff.diff(link.local, layoutLink.local)
-      if (difference) {
-        difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(link.local, {}, diff))
-      }
-    })
-  }
-
-  if (mode.includes('Values')){
-    Object.entries(data.links).forEach( ([key,link]) => {
-      const layoutLink = new_layout.links[key]
-      if (!layoutLink) {
-        return
-      }
-      const difference = deep_diff.diff(link.value, layoutLink.value)
-      if (difference) {
-        difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(link.value, {}, diff))
-      }
-    })
-  }
-
-  if (mode.includes('tagLevel')) {
-    const difference = deep_diff.diff(data.levelTags, new_layout.levelTags)
-    if (difference) {
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.levelTags, {}, diff))
-    }
-  }
-  if (mode.includes('tagNode')) {
-    const difference = deep_diff.diff(data.nodeTags, new_layout.nodeTags)
-    if (difference) {
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodeTags, {}, diff))
-    }
-    Object.entries(data.nodes).forEach( ([key,node]) => {
-      const layoutNode = new_layout.nodes[key]
-      if (!layoutNode) {
-        return
-      }
-      const difference = deep_diff.diff(node.tags, layoutNode.tags)
-      if (difference) {
-        difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(node.tags, {}, diff))
-      }
-    })
-  }
-  if(mode.includes('tagFlux')){
-    const difference = deep_diff.diff(data.fluxTags, new_layout.fluxTags)
-    if (difference) {
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.fluxTags, {}, diff))
-    }
-  }
-
-  if(mode.includes('tagData')){
-    const difference = deep_diff.diff(data.dataTags, new_layout.dataTags)
-    if (difference) {
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.dataTags, {}, diff))
-    }
-  }
-
-  //- Sanity check
-  const nodes_to_remove = Object.entries(data.nodes).filter(([,n])=>!n.idNode)
-  nodes_to_remove.forEach(([key])=>delete data.nodes[key])
-  const links_to_remove = Object.entries(data.links).filter(([,l])=>!l.idLink)
-  links_to_remove.forEach(([key])=>delete data.links[key])
-  if (links_to_remove.length>0) {
-    compute_default_input_outputLinksId(data.nodes, data.links)
-  }
-  Object.values(data.nodes).forEach(n=>{
-    const newInputLinksId : string[] = []
-    n.inputLinksId.forEach(linkId=> {
-      if (data.links[linkId]) {
-        newInputLinksId.push(linkId)
-      }
-      // } else {
-      //   console.log('tutu1')
-      // }
-    })
-    n.inputLinksId = newInputLinksId
-    const newOutputLinksId : string[] = []
-    n.outputLinksId.forEach(linkId=> {
-      if (data.links[linkId]) {
-        newOutputLinksId.push(linkId)
-      }
-      // } else {
-      //   console.log('tutu2')
-      // }
-    })
-    n.outputLinksId = newOutputLinksId
-  })
-}
 
 /**
  * TODO
@@ -1160,7 +708,7 @@ export const updateLayout = (
  * @param {SankeyData} data Data structure for Sankey
  * @param {string} idNode Id of node that we desagregate
  * @param {string} cur_dimension Dimension on which we desagregage node
- * @param {boolean} compute_auto_sankey Has the function been called from compute_auto_sankey ?
+ * @param {boolean} ComputeAutoSankey Has the function been called from ComputeAutoSankey ?
  */
 export const desagregation = (
   data: SankeyData,
@@ -1168,7 +716,7 @@ export const desagregation = (
   display_links:{ [link_id: string]: SankeyLink },
   idNode: string,
   cur_dimension: string,
-  compute_auto_sankey=false
+  to_compute_auto_sankey=false
 ) => {
   const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
   if (dim_desagregate_nodes.length == 0) {
@@ -1196,7 +744,7 @@ export const desagregation = (
       n.local = {}
     }
     setLocalAgregation(n, data, true)
-    if (compute_auto_sankey) {
+    if (to_compute_auto_sankey) {
       if (n.outputLinksId.length === 0) {
         AssignNodeLocalAttribute(n,'label_horiz', 'right')
         AssignNodeLocalAttribute(n,'label_vert', 'middle')
@@ -1215,7 +763,7 @@ export const desagregation = (
     clicked_node.local = {}
   }
   setLocalAgregation(clicked_node, data, false)
-  if (compute_auto_sankey && nb_desagregated > 0) {
+  if (to_compute_auto_sankey && nb_desagregated > 0) {
     agregation(data,dim_desagregate_nodes[0].idNode,cur_dimension)
   }
 }
