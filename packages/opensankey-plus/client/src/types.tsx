@@ -1,29 +1,6 @@
-import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal} from 'open-sankey/src/lib/types'
+import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,showMenuComponentsType} from 'open-sankey/src/lib/types'
 import {GetLinkValueFuncType, LinkTextFuncType} from 'open-sankey/src/lib/FunctionTypes'
 export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
-
-export interface SankeyPlusData extends SankeyData {
-    icon_catalog: { [x: string]: string | null | undefined},
-    nodes:{[x: string]:SankeyPlusNode}
-    links:{[x: string]:SankeyPlusLink}
-    view:ViewType[],
-    current_view:string
-    labels:{[x: string]:SankeyPlusLabel}
-    style_node:{[x: string]:SankeyPlusNodeStyle},
-    style_link:{[x: string]:SankeyPlusLinkStyle},
-    background_image:string
-    is_catalog:boolean,
-
-}
-
-export type ViewType={
-  id: string,
-   view_data:  DiffType | Omit<SankeyPlusData, 'view'>,
-   nom:string,
-   details:string,
-   heredited_attr_from_master:string[]
-  
-  }
 
 export type DiffType={
     diff:{
@@ -63,6 +40,28 @@ interface SankeyPlusLinkIntern {
   local?:SankeyPlusLinkAttrLocal
 }
 export type SankeyPlusLink = SankeyLink & SankeyPlusLinkIntern
+
+export type ViewType={
+  id: string,
+   view_data:  DiffType | Omit<SankeyPlusData, 'view'>,
+   nom:string,
+   details:string,
+   heredited_attr_from_master:string[]
+  
+  }
+export interface SankeyPlusData extends SankeyData {
+  icon_catalog: { [x: string]: string | null | undefined},
+  nodes:{[x: string]:SankeyPlusNode}
+  links:{[x: string]:SankeyPlusLink}
+  view:ViewType[],
+  current_view:string
+  labels:{[x: string]:SankeyPlusLabel}
+  style_node:{[x: string]:SankeyPlusNodeStyle},
+  style_link:{[x: string]:SankeyPlusLinkStyle},
+  background_image:string
+  is_catalog:boolean,
+}
+
 export interface SankeyPlusLabel {
     // identification
     idLabel: string,
@@ -81,7 +80,6 @@ export interface SankeyPlusLabel {
 
     is_image:boolean,
     image_src:string
-
 }
 
 // Recration du type drawCureType d'opensankey pour qu'il puissr être utilisé avec des variable de type de sankeyplus
@@ -119,3 +117,11 @@ export interface differenceType{
     lhs?:object,
     item:{kind:string,lhs?:object}
   } 
+
+export interface SankeyPlusShowMenuComponentsType extends showMenuComponentsType {
+  show_menu_node_icon : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modal_import_icons : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_menu_zdt : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_context_zdt : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
+  show_modal_transparent_view_attr : [boolean,React.Dispatch<React.SetStateAction<boolean>>]
+}
