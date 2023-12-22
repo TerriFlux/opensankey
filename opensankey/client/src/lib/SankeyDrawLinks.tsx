@@ -234,7 +234,7 @@ export const OpenSankeyDrawLinks = (
       // On gere la visibilité directement sur gg_nodes avec un display <inline />
       .style('display', (d) => {
         let display: string
-        if (LinkVisible(d, data,GetLinkValue)) { display = 'inline' } else { display = 'none' }
+        if (LinkVisible(d, data,display_nodes,GetLinkValue)) { display = 'inline' } else { display = 'none' }
         return display
       })
       .attr('pointer-events', 'auto')
@@ -298,7 +298,7 @@ export const OpenSankeyDrawLinks = (
         let tmp=GetLinkValue(data, d.idLink).value
         tmp=(tmp)?tmp:0
 
-        return  LinkVisible(d, data,GetLinkValue) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
+        return  LinkVisible(d, data,display_nodes,GetLinkValue) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
       })
 
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
@@ -552,8 +552,8 @@ export const OpenSankeyDrawLinks = (
       return
     }
     const node = display_nodes[linked_node.node_id]
-    let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && LinkVisible(data.links[id],data,GetLinkValue) })
-    let id_output_filtered=node.outputLinksId.filter(id=>LinkVisible(data.links[id],data,GetLinkValue))
+    let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && LinkVisible(data.links[id],data,display_nodes,GetLinkValue) })
+    let id_output_filtered=node.outputLinksId.filter(id=>LinkVisible(data.links[id],data,display_nodes,GetLinkValue))
     const link_dragged=data.links[idLink]
     let io=''
     const link_dragged_orientation=ReturnValueLink(data,link_dragged,'orientation')
