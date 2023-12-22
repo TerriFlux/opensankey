@@ -1319,7 +1319,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         callback={callback} />
 
       <SankeyLoad
-        t={t}
+        t={t as TFunction<"translation", undefined>}
         url_prefix={url_prefix}
         successAction={()=>SankeyUtils.DownloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
         show_dialog={show_load}

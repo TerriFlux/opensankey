@@ -31,7 +31,7 @@ const SankeyNodeEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 export const OpenSankeyMenuConfigurationNodes = (
-  t:TFunction,
+  t:TFunction<"translation", undefined>,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   display_nodes: { [node_id: string]: SankeyNode },
@@ -72,7 +72,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const pre_filter_node=(has_node_type)?Object.keys(data.nodeTags['Type de noeud'].tags):[]
   const [filter_node_selector,set_filter_node_selector]=useState<string[]>(pre_filter_node)
 
-  const tree_of_nodes=tree_data_nodes(t,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
+  const tree_of_nodes=tree_data_nodes(t as TFunction<"translation", undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
   // const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
   //Renvoie le menu déroulant pour la sélection des noeuds
@@ -365,7 +365,7 @@ export default SankeyNodeEdition
 
 
 
-export const tree_data_nodes=(t:TFunction,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
+export const tree_data_nodes=(t:TFunction<"translation", undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
   filter_node_selector:string[]
 )=>{
 
