@@ -12,6 +12,8 @@ import {
   AssignLinkLocalAttribute,
   AssignNodeLocalAttribute,
   ComputeTotalOffsets,
+  DeleteLink,
+  DeleteNode,
   FindMaxLinkValue,
   GetLinkValue,
   NodeDisplayed,
@@ -1003,14 +1005,25 @@ export const updateLayout = (
   if(mode.includes('addNode')) {
     let difference = deep_diff.diff(data.nodes, new_layout.nodes)
     if (difference) {
+      let nodesId : string[] = []
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
+      difference.forEach((d:{path:string[],kind:string})=>nodesId.push(d.path[0]))
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
+      nodesId.forEach(nodeId=> {
+        data.nodes[nodeId].inputLinksId = []
+        data.nodes[nodeId].outputLinksId = []
+      })
     }
   }
   if(mode.includes('removeNode')) {
     let difference = deep_diff.diff(data.nodes, new_layout.nodes)
     if (difference) {
+      let nodesId : string[] = []
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
+      difference.forEach((d:{path:string[],kind:string})=>nodesId.push(d.path[0]))
+      nodesId.forEach(nodeId=> {
+        DeleteNode(data,data.nodes[nodeId])
+      })      
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
     }
   }
@@ -1018,15 +1031,36 @@ export const updateLayout = (
   if(mode.includes('addFlux')) {
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
+      let linksId : string[] = [] 
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
+      difference.forEach((d:{path:string[],kind:string})=>linksId.push(d.path[0]))
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
+      linksId.forEach(linkId=> {
+        if (!data.nodes[new_layout.links[linkId].idSource]) {
+          data.nodes[new_layout.links[linkId].idSource] = new_layout.nodes[new_layout.links[linkId].idSource]
+        }
+        if (!data.nodes[new_layout.links[linkId].idTarget]) {
+          data.nodes[new_layout.links[linkId].idTarget] = new_layout.nodes[new_layout.links[linkId].idTarget]
+        }
+        data.nodes[new_layout.links[linkId].idSource].outputLinksId.push(linkId)
+        data.nodes[new_layout.links[linkId].idTarget].inputLinksId.push(linkId)
+        reorganize_node_inputLinksId(data, data.nodes[new_layout.links[linkId].idTarget], data.nodes, data.links)
+        reorganize_node_outputLinksId(data, data.nodes[new_layout.links[linkId].idSource], data.nodes, data.links)
+        data.linkZIndex.push(linkId)
+      })
     }
   }
+
 
   if(mode.includes('removeFlux')) {
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
+      let linksId : string[] = [] 
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
+      difference.forEach((d:{path:string[],kind:string})=>linksId.push(d.path[0]))
+      linksId.forEach(linksId=> {
+        DeleteLink(data,data.links[linksId])
+      })        
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
     }
   }
