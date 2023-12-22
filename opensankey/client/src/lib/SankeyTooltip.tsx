@@ -1,5 +1,6 @@
-import { SankeyNode, SankeyLink, SankeyData,SankeyLinkValue } from './types'
+import { SankeyNode, SankeyLink, SankeyData } from './types'
 import { ToPrecision,LinkVisible,NodeDisplayed,ReturnValueLink } from './SankeyUtils'
+import { GetLinkValueFuncType } from './FunctionTypes'
 
 
 /**
@@ -18,7 +19,7 @@ function WriteChildrenTable(
   data: SankeyData,
   t: string, 
   l: SankeyLink,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 
 ) {
   let header_written = false
@@ -75,7 +76,7 @@ const TooltipLinkToPrecision=(data : SankeyData,
 export const  LinkTooltipsContent = (
   data : SankeyData,
   d : SankeyLink | SankeyNode,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 
 ) => {  
   const l = d as SankeyLink
@@ -167,7 +168,7 @@ export const  LinkTooltipsContent = (
 export const NodeTooltipsContent = (
   data : SankeyData,
   d : SankeyNode,
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
+  GetLinkValue:GetLinkValueFuncType
 ) => {
   const n = d as SankeyNode
   const {nodes} = data

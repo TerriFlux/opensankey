@@ -27,6 +27,7 @@ import { faShareNodes,
   faSliders} from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
+import { ConvertDataFuncType, DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType, setDiagramFuncType } from './FunctionTypes'
 
 // Delete all local node variable : local_aggregation when we switch general aggregation 
 const delete_local_aggregation=(data:SankeyData)=>{
@@ -70,6 +71,21 @@ export const addSimpleLevelDropDown = (
   }else{
     return <></>
   }
+
+}
+export const col_title_level_filter=(t:TFunction,data:SankeyData)=>{
+  const {levelTags}=data
+  let banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.banner !== 'none')
+  
+  const nb_level_tag = Object.values(levelTags).filter(tags_group=>(Object.keys(tags_group.tags).length > 0 )).length
+  if (nb_level_tag > 1) {
+    banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
+  } else {
+    banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => Object.keys(tags_group.tags).length > 1)
+  }
+
+  const levelTags_has_siblings=banner_grouptag.filter(([,tagGroup])=>tagGroup.siblings !== undefined && tagGroup.siblings.length > 0).length>0
+  return <FormGroup as={Row}><Col xs={6}>{t('Menu.group')}</Col>{levelTags_has_siblings?<Col xs={6}>{t('Banner.select_sibling')}</Col>:<></>}</FormGroup>
 
 }
 
@@ -175,50 +191,38 @@ export const addAllDropDownNode = (
             {banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}
           </Row>
           <Row>
-            <OverlayTrigger
-              key={'Banner.ndd_lst.4'}
-              placement={'bottom'}
-              delay={500}
-              overlay={<Tooltip id={'Banner.ndd_lst.4'}>{t('Banner.ndd_lst')} </Tooltip>}>
-              <Col xs={10}>
-                <Form.Select
-                  style={{ width: '200px', color: 'black' }}
-                  key={tags_group.group_name}
-                  value={selected}
-                  placeholder='all'
-                  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    delete_local_aggregation(data)
-                    handleSimpleDropdown(evt, tags_group, data, set_data) 
+            <Col xs={7}>
+              <Form.Select
+                style={{color: 'black' }}
+                key={tags_group.group_name}
+                value={selected}
+                placeholder='all'
+                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                  delete_local_aggregation(data)
+                  handleSimpleDropdown(evt, tags_group, data, set_data) 
                     
-                  }}>{
-                    Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                      return (<option key={i} value={tag_key}>{tag.name}</option>)
-                    })}
-                </Form.Select>
-              </Col>
-            </OverlayTrigger>
+                }}>{
+                  Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
+                    return (<option key={i} value={tag_key}>{tag.name}</option>)
+                  })}
+              </Form.Select>
+            </Col>
             {tags_group.siblings !== undefined && tags_group.siblings.length > 0 ?
-              <Col xs={2}>
-                <OverlayTrigger
-                  key={'Banner.ndd_chk.4'}
-                  placement={'bottom'}
-                  delay={500}
-                  overlay={<Tooltip id={'Banner.ndd_chk.4'}>{t('Banner.ndd_chk')} </Tooltip>}>
-                  <FormCheck inline
-                    type='switch'
-                    checked={tags_group.activated}
-                    onChange={evt => {
-                      tags_group.activated = evt.target.checked
-                      const first_antagonist_tag = data.levelTags[tags_group.siblings[0]]
-                      // Respectively activate and desactivate in the two antagonist tags  group
-                      // Same as of current tag group
-                      first_antagonist_tag.siblings.forEach(sibling=>data.levelTags[sibling].activated = tags_group.activated)
-                      // Opposed to current tag group
-                      tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = !tags_group.activated)
-                      set_data({ ...data })
-                    }}
-                  />
-                </OverlayTrigger>
+              <Col xs={3} style={{margin:'auto'}}>
+                <FormCheck inline
+                  type='switch'
+                  checked={tags_group.activated}
+                  onChange={evt => {
+                    tags_group.activated = evt.target.checked
+                    const first_antagonist_tag = data.levelTags[tags_group.siblings[0]]
+                    // Respectively activate and desactivate in the two antagonist tags  group
+                    // Same as of current tag group
+                    first_antagonist_tag.siblings.forEach(sibling=>data.levelTags[sibling].activated = tags_group.activated)
+                    // Opposed to current tag group
+                    tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = !tags_group.activated)
+                    set_data({ ...data })
+                  }}
+                />
               </Col> : <></>
             }
           </Row>
@@ -356,10 +360,10 @@ declare const window: Window &
     } & { [key: string]: SankeyData }
   }
 
-export const setDiagram = (
+export const setDiagram:setDiagramFuncType = (
   the_diagram : string,
   set_data : (d:SankeyData)=>void,
-  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData,)=>void,
+  convert_data:ConvertDataFuncType,
   DefaultSankeyData: ()=>SankeyData,
 ) => {
   const sous_filieres = window.sankey.sous_filieres
@@ -387,16 +391,16 @@ export const toolbar_builder = (
   url_prefix: string,
   first_selected_node:object,
   set_first_selected_node:(o:object)=>void,
-  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
-  setDiagram : (the_diagram : string, set_data : (d:SankeyData)=>void,convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,DefaultSankeyData: ()=>SankeyData,)=>void,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  setDiagram: setDiagramFuncType,
   set_show_modal_welcome:(b:boolean)=>void,
   set_never_see_again:(b:boolean)=>void,
-  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData,)=>void,
+  convert_data:ConvertDataFuncType,
   maximum_flux:number | null | undefined,
   set_maximum_flux:(n:number)=>void,
   minimum_flux:number | null | undefined,
   set_minimum_flux:(n:number)=>void,
-  DefaultSankeyData: ()=>SankeyData,
+  DefaultSankeyData: DefaultSankeyDataFuncType,
 ) => {
   const level_filter = Object.entries(data.levelTags).length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
@@ -720,24 +724,20 @@ export const toolbar_builder = (
   // Add button for the edition of the sankey
   if(!window.SankeyToolsStatic){
     mouse_mode_edition=<>
-      {/* Boutons Sélection classique des éléments */}
-      <OverlayTrigger
-        key={'tooltip-selection'}
-        placement={'left'}
-        delay={500}
-        overlay={<Tooltip id={'tooltip-selection'}>{t('Banner.tooltipSelection')} </Tooltip>}>
-        <Button  variant={(!(mode_selection.current == 's')) ? 'info' : 'info'} onClick={() => { setSelectionMode('s') }} >
-          <Col><FontAwesomeIcon icon={faArrowPointer} /></Col>
-        </Button>
-      </OverlayTrigger>
+      {/* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */}
       <OverlayTrigger
         key={'tooltip-liaison'}
         placement={'left'}
         delay={500}
-        overlay={<Tooltip id={'tooltip-liason'}>{t('Banner.tooltipLiason')} </Tooltip>}>
-        <Button variant={(!(mode_selection.current == 'ln')) ? 'secondary' : 'secondary'} onClick={() => { setSelectionMode('ln') }} >
-          {/* Ajout liaison entre noeud */}
-          <Col><FontAwesomeIcon icon={faShareNodes}/></Col>
+        overlay={<Tooltip id={'tooltip-liason'}>{(mode_selection.current == 'ln')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')} </Tooltip>}>
+        <Button variant={(!(mode_selection.current == 'ln')) ? 'secondary' : 'secondary'} onClick={() => {
+          if(mode_selection.current=='ln'){
+            setSelectionMode('s') 
+          }else{
+            setSelectionMode('ln') 
+          }
+        }} >
+          <Col><FontAwesomeIcon icon={(mode_selection.current == 'ln')?faShareNodes:faArrowPointer}/></Col>
         </Button>
       </OverlayTrigger>
     </>
@@ -847,7 +847,7 @@ export const toolbar_builder = (
 }
 
 
-export const stretchButtons=(data:SankeyData,GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],t:TFunction)=>{
+export const stretchButtons=(data:SankeyData,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,t:TFunction)=>{
   return <> <OverlayTrigger
     key={'tooltip-adjust-h'}
     placement={'left'}
