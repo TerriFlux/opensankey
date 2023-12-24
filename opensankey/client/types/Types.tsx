@@ -401,7 +401,7 @@ export const MenuPropTypes = {
   launch: PropTypes.func.isRequired,
   configurations_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
 
-  menus: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.element.isRequired).isRequired).isRequired,
+  menus: PropTypes.objectOf(PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,PropTypes.element.isRequired]).isRequired).isRequired,
   cardsTemplate:PropTypes.element.isRequired,
   external_modal:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
   GetSankeyMinWidthAndHeight :PropTypes.func.isRequired,

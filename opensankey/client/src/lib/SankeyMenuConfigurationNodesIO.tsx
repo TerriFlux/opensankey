@@ -1,11 +1,12 @@
 import React from 'react'
 import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyData, SankeyNode,SankeyLink } from './types'
+import { SankeyData, SankeyNode,SankeyLink } from '../../types/Types'
 import { LinkVisible,LinkColor,ReturnValueLink,reorganize_node_inputLinksId,reorganize_node_outputLinksId} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import { SelectVisualyLinks } from './SankeyDrawFunction'
-import { GetLinkValueFuncType } from './FunctionTypes'
+import { GetLinkValueFuncType } from '../../types/FunctionTypes'
+import { SankeyMenuConfigurationNodesIOFType} from '../../types/SankeyMenuConfigurationNodesIOTypes'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them
 const getIOLink=(
@@ -435,7 +436,7 @@ const tab_pos_link=(
   )
 }
 
-export const SankeyMenuConfigurationNodesIO = (
+export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -449,7 +450,7 @@ export const SankeyMenuConfigurationNodesIO = (
   set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
   GetLinkValue:GetLinkValueFuncType,
   multi_selected_links: {current:SankeyLink[]},
-  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
+  set_display_link_opacity:(s:string)=>void,
   menu_for_modal=false
 ) => {
 

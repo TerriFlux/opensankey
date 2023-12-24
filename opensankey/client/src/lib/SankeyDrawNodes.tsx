@@ -1,4 +1,4 @@
-import { SankeyLink, SankeyData, SankeyNode} from './types'
+import { SankeyLink, SankeyData, SankeyNode} from '../../types/Types'
 import React from 'react'
 import * as d3 from 'd3'
 
@@ -6,7 +6,7 @@ import {NodeColor,ReturnValueNode} from './SankeyUtils'
 import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
   EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
-import { GetLinkValueFuncType, LinkTextFuncType } from './FunctionTypes'
+import { GetLinkValueFuncType, LinkTextFuncType } from '../../types/FunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {

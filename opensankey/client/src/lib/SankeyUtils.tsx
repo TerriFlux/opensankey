@@ -8,7 +8,7 @@ import { SankeyData,
   SankeyNodeStyle,
   SankeyLinkAttrLocal,
   SankeyLinkStyle,
-  TagsCatalog } from './types'
+  TagsCatalog } from '../../types/Types'
 import FileSaver from 'file-saver'
 import { complete_sankey_data } from './SankeyConvert'
 import {  ComputeAutoSankey,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
@@ -22,7 +22,7 @@ import { TFunction } from 'i18next'
 import { faCircleInfo} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-import * as FunctionTypes from './FunctionTypes'
+import * as FunctionTypes from '../../types/FunctionTypes'
 
 declare const window: Window &
   typeof globalThis & {
