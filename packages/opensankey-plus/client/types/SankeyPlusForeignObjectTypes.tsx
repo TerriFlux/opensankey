@@ -1,5 +1,6 @@
 import { TFunction } from "i18next"
 import { SankeyData, SankeyPlusData, SankeyPlusNode } from "./Types"
+import { NodeTooltipsContentFType } from "open-sankey/types/SankeyTooltipTypes"
 
 export type SankeyPlusNodeFOFType = (
   t:TFunction,
@@ -15,6 +16,6 @@ export type SankeyPlusDrawNodesFOFType = (
   data:SankeyData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
   mode_selection:{current:string},
-  NodeTooltipsContent: (data: SankeyPlusData,display_nodes : { [node_id: string]: SankeyPlusNode }, d: SankeyPlusNode) => string
+  NodeTooltipsContent: NodeTooltipsContentFType
 ) => JSX.Element
 

@@ -31,6 +31,7 @@ import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/San
 import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/types/Types'
 import { drawArrowsType, GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/types/FunctionTypes'
 import { SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, SankeyPlusNodeClickEventFType, SankeyPlusNodeDragEventFType, SankeyPlusNodeIconFType, context_node_iconFType, drag_elements_plusFType, node_icon_fill_colorFType, node_icon_pathFType, opposing_drag_elements_plusFType, return_out_of_bound_element_plusFType} from '../types/SankeyPlusNodesTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/types/SankeyTooltipTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -687,7 +688,8 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
   data:SankeyData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
   mode_selection: {current:string},
-  NodeTooltipsContent: (data: SankeyPlusData,display_nodes : { [node_id: string]: SankeyPlusNode }, d: SankeyNode) => string,
+  NodeTooltipsContent: NodeTooltipsContentFType,
+  GetLinkValue:GetLinkValueFuncType
 ) => {
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection.current === 's')? 'pointer' : 'unset')
@@ -696,7 +698,7 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent((data as SankeyPlusData),display_nodes, d as SankeyPlusNode))
+        .html(NodeTooltipsContent((data as SankeyPlusData),display_nodes, d as SankeyPlusNode,GetLinkValue))
     }
   }
 

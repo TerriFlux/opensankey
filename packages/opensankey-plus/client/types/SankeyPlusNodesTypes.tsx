@@ -2,6 +2,7 @@ import { TFunction } from "i18next"
 import { SankeyData, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from "./Types"
 import { SankeyLink, SankeyNode } from 'open-sankey/types/Types'
 import { GetLinkValueFuncType, LinkTextFuncType, drawArrowsType } from 'open-sankey/types/FunctionTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/types/SankeyTooltipTypes'
 
 export type SankeyPlusNodeIconFType = (
   t:TFunction,
@@ -50,7 +51,8 @@ export type SankeyPlusDrawNodesIconFType = (
   data:SankeyData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
   mode_selection: {current:string},
-  NodeTooltipsContent: (data: SankeyPlusData,display_nodes : { [node_id: string]: SankeyPlusNode }, d: SankeyNode) => string,
+  NodeTooltipsContent: NodeTooltipsContentFType,
+  GetLinkValue:GetLinkValueFuncType
 ) => void
 
 export type context_node_iconFType = (
