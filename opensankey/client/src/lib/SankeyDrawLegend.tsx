@@ -1,4 +1,4 @@
-import { SankeyData, SankeyNode,SankeyLink } from './types'
+import { SankeyData, SankeyNode,SankeyLink } from '../../types/Types'
 import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
@@ -8,7 +8,7 @@ import { TFunction } from 'i18next'
 import { opposing_drag_elements } from './SankeyDrag'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
-import { GetLinkValueFuncType, drag_legend_g_elementFuncType } from './FunctionTypes'
+import { GetLinkValueFuncType, drag_legend_g_elementFuncType } from '../../types/FunctionTypes'
 
 
 declare const window: Window &

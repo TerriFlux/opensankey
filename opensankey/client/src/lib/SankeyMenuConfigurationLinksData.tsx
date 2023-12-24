@@ -1,6 +1,6 @@
 import React from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyData, SankeyLink } from './types'
+import { SankeyData, SankeyLink } from '../../types/Types'
 import {ValueSelectedParameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
 import {TFunction} from 'i18next'

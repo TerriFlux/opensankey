@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes} from './types'
+import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes} from '../../types/Types'
 import PropTypes, { InferProps } from 'prop-types'
 import {  DeleteLink,DeleteNode,ClickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'

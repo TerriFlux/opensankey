@@ -13,7 +13,7 @@ import {OpenSankeyMenuConfigurationNodes} from './SankeyMenuConfigurationNodes'
 import {OpenSankeyMenuConfigurationLinks} from './SankeyMenuConfigurationLinks'
 import { LinkTooltipsContent, NodeTooltipsContent } from './SankeyTooltip'
 import { useTranslation } from 'react-i18next'
-import { SankeyData, SankeyLink, SankeyNode, showMenuComponentsType } from './types'
+import { SankeyData, SankeyLink, SankeyNode, showMenuComponentsType } from '../../types/Types'
 import { OpenSankeyMenuConfigurationLayout } from './SankeyMenuConfigurationLayout'
 import { keyHandler } from './SankeyDraw'
 import { OpenSankeyDrawNodes } from './SankeyDrawNodes'
@@ -297,10 +297,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   </Pagination.Item>
 
   const external_pagination=[pagination_intro]
-  const external_content={'intro':intro}
+  const external_content = {'intro':intro}
 
   const intro_modal=!window.SankeyToolsStatic?OpenSankeyModalWelcome(
-    t,active_page,set_active_page,showMenuComponents,never_see_again,set_never_see_again,[],external_pagination,external_content,exemple_menu
+    t,active_page,set_active_page,showMenuComponents,never_see_again,set_never_see_again,[],external_pagination,
+    external_content as { 'read_me': string | JSX.Element | JSX.Element[]; 'intro': JSX.Element; 'rc': JSX.Element; licence: JSX.Element; 'news': JSX.Element; },
+    exemple_menu
   ):<></>
 
   let display_nodes = {} as {[idLink:string]:SankeyNode}

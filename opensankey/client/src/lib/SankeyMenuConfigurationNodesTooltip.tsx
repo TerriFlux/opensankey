@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Row, Form, Col, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
-import { SankeyData, SankeyNode} from './types'
+import { SankeyData, SankeyNode} from '../../types/Types'
 
 export const SankeyMenuConfigurationNodesTooltip = (
   t:TFunction,

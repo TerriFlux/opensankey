@@ -1,6 +1,6 @@
 import React from 'react'
 import { Row, Form, Col, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
-import { SankeyData, SankeyLink } from './types'
+import { SankeyData, SankeyLink } from '../../types/Types'
 import { TFunction } from 'i18next'
 
 export const SankeyMenuConfigurationLinksTooltip = (

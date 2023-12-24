@@ -1,8 +1,8 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal,SankeyNodeStyle, SankeyNodeAttrLocal, SankeyLinkStyle} from './types'
+import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal,SankeyNodeStyle, SankeyNodeAttrLocal, SankeyLinkStyle} from '../../types/Types'
 import colormap from 'colormap'
 import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
-import { ConvertDataFuncType, DefaultSankeyDataFuncType, complete_sankey_dataFunctType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from './FunctionTypes'
+import { ConvertDataFuncType, DefaultSankeyDataFuncType, complete_sankey_dataFunctType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from '../../types/FunctionTypes'
 
 
 interface ConvertSankeyNode {

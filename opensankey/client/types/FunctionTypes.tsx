@@ -1,5 +1,5 @@
 import { Requireable } from 'react'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup } from './types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup } from './Types'
 import { InferProps } from 'prop-types'
 
 export type GetLinkValueFuncType=(data: SankeyData,idLink: string,up?:boolean)=> SankeyLinkValue 

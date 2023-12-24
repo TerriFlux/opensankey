@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { Requireable } from 'react'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve } from './types'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve } from '../../types/Types'
 import { InferProps } from 'prop-types'
 import { ComputeTotalOffsets,
   TestLinkValue,
@@ -19,7 +19,7 @@ import { ComputeTotalOffsets,
 import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
 import { menu_config_width } from './SankeyMenu'
 import * as SankeyShapes from './SankeyShapes'
-import * as FunctionTypes from './FunctionTypes'
+import * as FunctionTypes from '../../types/FunctionTypes'
 // Function that create the dashed pattern on links
 
 const default_handle_size = 10

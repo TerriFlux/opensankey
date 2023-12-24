@@ -2,7 +2,7 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
-import { SankeyData, SankeyDataPropTypes, SankeyLink, } from './types'
+import { SankeyData, SankeyDataPropTypes, SankeyLink, } from '../../types/Types'
 import { complete_sankey_data } from './SankeyConvert'
 import { DefaultLink, DefaultNode, SmoothClasses } from './SankeyUtils'
 import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from './SankeyDrawFunction'
@@ -13,7 +13,7 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
-import { updateLayoutFuncType } from './FunctionTypes'
+import { updateLayoutFuncType } from '../../types/FunctionTypes'
 /**
  * Define ApplyLayoutDialog
  *
