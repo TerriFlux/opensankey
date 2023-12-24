@@ -54,7 +54,9 @@ export const OpenSankeyMenuConfigurationNodes = (
     ui['Tags'] = SankeyMenuConfigurationNodesTags(t,data,set_data,multi_selected_nodes,tags_group_key,set_tags_group_key)
   }
   
-  ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(t,data,set_data,display_nodes,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,GetLinkValue,multi_selected_links,set_display_link_opacity)
+  ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(
+    t,data,set_data,display_nodes,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,GetLinkValue,multi_selected_links,set_display_link_opacity
+  )
   
   return ui
 }

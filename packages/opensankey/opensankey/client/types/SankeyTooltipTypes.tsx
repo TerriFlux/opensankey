@@ -9,7 +9,7 @@ import { SankeyData, SankeyLink, SankeyNode } from "./Types"
  * @param {(SankeyLink | SankeyNode)} d
  * @returns {string}
  */
-export type  LinkTooltipsContent = (
+export type  LinkTooltipsContentFType = (
   data : SankeyData,
   d : SankeyLink | SankeyNode,
   GetLinkValue:GetLinkValueFuncType
@@ -24,7 +24,7 @@ export type  LinkTooltipsContent = (
  * @param {SankeyNode} d
  * @returns {string}
  */
-export type NodeTooltipsContent = (
+export type NodeTooltipsContentFType = (
   data : SankeyData,
   display_nodes : { [node_id: string]: SankeyNode }, 
   d : SankeyNode,
