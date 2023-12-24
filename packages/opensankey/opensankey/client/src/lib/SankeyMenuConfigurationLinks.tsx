@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyData } from './types'
+import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyData } from '../../types/Types'
 import PropTypes, { InferProps } from 'prop-types'
 import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
@@ -13,7 +13,7 @@ import {SankeyMenuConfigurationLinksTooltip} from './SankeyMenuConfigurationLink
 import {ValueSelectedParameter,NodeVisibleOnsSvg} from './SankeyDrawFunction'
 
 import { TFunction } from 'i18next'
-import { GetLinkValueFuncType } from './FunctionTypes'
+import { GetLinkValueFuncType } from '../../types/FunctionTypes'
 
 const SankeyMenuConfigurationLinksPropTypes = {
   t: PropTypes.func.isRequired,

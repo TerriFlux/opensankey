@@ -1,0 +1,14 @@
+import { TFunction } from "i18next";
+import { SankeyData } from "./Types";
+
+export type OpenSankeyMenuConfigurationLayout = (
+  t:TFunction,
+  data: SankeyData,
+  set_data:(d:SankeyData)=>void,
+  user_scale:number,
+  set_user_scale:(n:number)=>void,
+  legend_position:number[],
+  set_legend_position:(n:number[])=>void,
+  extra_background_element:JSX.Element
+) => JSX.Element
+

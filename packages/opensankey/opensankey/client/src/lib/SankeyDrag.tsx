@@ -1,8 +1,8 @@
 import * as d3 from 'd3'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve } from './types'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve } from '../../types/Types'
 import {RemoveAnimate,ComputeEndPoints, GetSankeyMinWidthAndHeight,drawCurveFunction, DrawArrows,LinkStrokeWidth} from './SankeyDrawFunction'
 import {   LinkVisible,TestLinkValue,ReturnValueNode,AssignNodeLocalAttribute,ReturnValueLink,AssignLinkLocalAttribute} from './SankeyUtils'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,drag_elementsFuncType,drag_node_textFuncType,drawArrowsType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from './FunctionTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,drag_elementsFuncType,drag_node_textFuncType,drawArrowsType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from '../../types/FunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {

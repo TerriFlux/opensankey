@@ -1,6 +1,6 @@
 import React,{useState} from 'react'
 import { FormControl, Form, OverlayTrigger, Tooltip,InputGroup, Button } from 'react-bootstrap'
-import { SankeyData } from './types'
+import { SankeyData } from '../../types/Types'
 import { TFunction } from 'i18next'
 import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

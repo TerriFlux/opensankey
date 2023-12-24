@@ -37,7 +37,7 @@ import {
   showMenuComponentsPropTypes,
   MenuTypes,
   MenuPropTypes
-} from './types'
+} from '../../types/Types'
 
 import { complete_sankey_data } from './SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
@@ -56,7 +56,7 @@ import { arrangeNodes, ComputeAutoSankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
 import { SelectVisualyLinks} from './SankeyDrawFunction'
-
+import {ContextZddFType, OpenSankeyMenusFType, OpenSankeyModalWelcomeFType} from '../../types/SankeyMenuTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -345,7 +345,7 @@ const logo_contact=<svg
     d='M 73.899976,875.90139 C 40.937168,869.42787 12.296795,840.1985 5.9081337,806.51127 c -2.7238299,-14.36281 -2.7238299,-598.39643 0,-612.75924 6.5424433,-34.49806 35.0100633,-62.96568 69.5081303,-69.50811 14.424371,-2.73553 834.743106,-2.73553 849.167476,0 34.49807,6.54243 62.96569,35.01005 69.50811,69.50811 2.72385,14.36281 2.72385,598.39643 0,612.75924 -6.54242,34.49807 -35.01004,62.96569 -69.50811,69.50811 -12.97147,2.46 -838.139611,2.34552 -850.683764,-0.11801 z M 757.27835,680.87137 618.28561,541.87862 568.34724,591.53493 c -41.79051,41.55444 -51.28209,50.05497 -58.17393,52.0997 -16.55644,4.91214 -19.12525,3.10924 -75.61314,-53.06836 L 383.65363,539.93937 243.69127,679.90173 103.72888,819.86411 H 499.99999 896.2711 Z M 204.56487,362.25953 C 129.15162,287.28205 66.237927,225.23952 64.756655,224.38723 c -2.2938,-1.3198 -2.693233,39.63262 -2.693233,276.13089 V 778.19865 L 201.87164,638.39044 341.67987,498.58221 Z M 937.93658,499.6489 V 222.06467 L 798.9048,361.09648 659.873,500.12826 798.41526,638.68068 c 76.19825,76.20385 138.76257,138.55244 139.0318,138.55244 0.26924,0 0.48952,-124.91291 0.48952,-277.58422 z M 699.59057,377.0831 896.26733,180.39919 H 500.48086 c -217.68253,0 -395.78644,0.30148 -395.78644,0.66997 0,1.39663 395.3274,392.69785 396.73839,392.69785 0.81457,0 89.98555,-88.50776 198.15776,-196.68391 z'
   /></svg>
 
-export const OpenSankeyMenus = (
+export const OpenSankeyMenus : OpenSankeyMenusFType = (
   t:TFunction,
   Reinitialization:()=>void,
   DefaultSankeyData:()=>SankeyData,
@@ -366,9 +366,6 @@ export const OpenSankeyMenus = (
   const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const DT_length=Object.keys(data.dataTags).length
-
-
-
 
   // Function that return a simple or multiple dropdown of groupTag of data and links
   // This allow us to choose wich grouptag to select and wich tag of these group to display
@@ -801,11 +798,7 @@ export const OpenSankeyMenus = (
         {item_dropdown_filter}
       </OverlayTrigger>]
   }
-
-
   return ui
-
-
 }
 
 /**
@@ -926,7 +919,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
 
-  const ordered_menu: {[s: string]: ReactElementLike[]} = {}
+  const ordered_menu: {[s: string]: JSX.Element[] | JSX.Element} = {}
   const ordered_key: string[] = [
     'file',
     'edition',
@@ -1244,7 +1237,7 @@ Menu.propTypes = MenuPropTypes
 
 export default Menu
 
-export const OpenSankeyModalWelcome=(t:TFunction,
+export const OpenSankeyModalWelcome : OpenSankeyModalWelcomeFType=(t:TFunction,
   active_page:string,
   set_active_page:(s:string)=>void,
   showMenuComponents : showMenuComponentsType,
@@ -1252,13 +1245,15 @@ export const OpenSankeyModalWelcome=(t:TFunction,
   set_never_see_again:(b:boolean)=>void,
   additional_shortcut_item:JSX.Element[],
   external_pagination:JSX.Element[],
-  external_content:{[s:string]:JSX.Element},
+  external_content:{
+    read_me: string | JSX.Element | JSX.Element[];
+    intro: JSX.Element;
+    rc: JSX.Element;
+    licence: JSX.Element;
+    news: JSX.Element;
+  },
   exemple_menu: object,
 )=>{
-
-
-
-
   const content_rc_static=<>
     <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
@@ -1324,11 +1319,6 @@ export const OpenSankeyModalWelcome=(t:TFunction,
     }
   }
 
-
-
-
-
-
   return <Modal scrollable size='xl' show={showMenuComponents.show_modal_welcome[0] && !never_see_again} onHide={()=>{
     showMenuComponents.show_modal_welcome[1](false)
   }}>
@@ -1336,7 +1326,7 @@ export const OpenSankeyModalWelcome=(t:TFunction,
       <Modal.Title>{t('welcome.'+active_page)}</Modal.Title>
     </Modal.Header>
     <Modal.Body>
-      {external_content[active_page]}
+      {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
     </Modal.Body>
 
     <Modal.Footer style={{justifyContent:'center'}}>
@@ -2033,7 +2023,7 @@ export const ContextMenuLink=(contextualised_link:SankeyLink|undefined,set_conte
   </Popover>:<></>
 }
 
-export const ContextZdd=(
+export const ContextZdd : ContextZddFType =(
   showMenuComponents:showMenuComponentsType,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   pointer_pos:{current:number[]},
