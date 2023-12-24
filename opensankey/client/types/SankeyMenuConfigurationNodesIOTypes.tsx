@@ -17,7 +17,7 @@ export type SankeyMenuConfigurationNodesIOFType = (
   GetLinkValue:GetLinkValueFuncType,
   multi_selected_links: {current:SankeyLink[]},
   set_display_link_opacity:(s:string)=>void,
-  menu_for_modal : boolean
+  menu_for_modal ? : boolean
 ) => JSX.Element
 
 
