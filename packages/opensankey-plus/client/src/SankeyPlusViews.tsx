@@ -22,8 +22,8 @@ import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaCopy} from 'react-ico
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
-import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/lib/types'
-import { SmoothClasses} from 'open-sankey/dist/SankeyUtils'
+import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/types/Types'
+import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
 
 import { SankeyPlusData,
   SankeyPlusNode,
@@ -31,13 +31,13 @@ import { SankeyPlusData,
   SankeyPlusLabel,
   differenceType,
   DiffType,
-  ViewType } from './types'
+  ViewType } from '../types/Types'
 import {
   updateLayoutOSTyped,
   AdjustSankeyZone } from './FunctionOSTyped'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 import { Checkbox } from '@chakra-ui/react'
-// import{  updateLayout} from 'open-sankey/dist/SankeyLayout'
+// import{  updateLayout} from 'open-sankey/dist/src/lib/SankeyLayout'
 
 /* eslint-disable */
 // @ts-ignore

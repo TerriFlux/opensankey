@@ -7,12 +7,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import * as d3 from 'd3'
 import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
 
-import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from './types'
+import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from '../types/Types'
 import { opposing_drag_elements_plus } from './SankeyPlusNodes'
 import { drag_legend_g_elementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './FunctionOSTyped'
 
-import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/src/lib/types'
-import { GetLinkValueFuncType } from 'open-sankey/src/lib/FunctionTypes'
+import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/types/Types'
+import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
 
 
 export const default_sankey_plus_style_link=()=>{

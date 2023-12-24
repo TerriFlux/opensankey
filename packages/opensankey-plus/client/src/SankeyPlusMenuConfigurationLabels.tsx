@@ -9,7 +9,7 @@ import { Row,
   Popover,
   ButtonGroup,
   Badge} from 'react-bootstrap'
-import {  SankeyPlusData,SankeyPlusLabel} from './types'
+import {  SankeyPlusData,SankeyPlusLabel} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
@@ -21,9 +21,9 @@ import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 import { Quill } from 'react-quill'
 import * as d3 from 'd3'
 
-import {  preferenceCheck } from 'open-sankey/dist/SankeyMenuPreferences'
+import {  preferenceCheck } from 'open-sankey/dist/src/lib/SankeyMenuPreferences'
 import { Checkbox } from '@chakra-ui/react'
-import { SmoothClasses} from 'open-sankey/dist/SankeyUtils'
+import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
 import { is_all_zdt_attr_same_value } from './SankeyPlusUtils'
 
 

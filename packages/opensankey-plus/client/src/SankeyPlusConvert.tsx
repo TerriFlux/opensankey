@@ -1,6 +1,6 @@
 
 // Local files
-import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from './types'
+import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from '../types/Types'
 import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
 import { DefaultLink,
   DefaultNode,
@@ -13,7 +13,7 @@ import { DefaultLink,
 
 
 // Opensankey files
-import { updateLayoutFuncType } from 'open-sankey/src/lib/FunctionTypes'
+import { updateLayoutFuncType } from 'open-sankey/types/FunctionTypes'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
 import { TFunction } from 'i18next'

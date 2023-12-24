@@ -8,7 +8,7 @@ import * as d3 from 'd3'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
-import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode,} from './types'
+import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode,} from '../types/Types'
 import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import {RemoveAnimate,
   DrawArrows,
@@ -27,18 +27,17 @@ import {RemoveAnimate,
   return_out_of_bound_element
 } from './FunctionOSTyped'
 
-import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/SankeyUtils'
-import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/src/lib/types'
-import { drawArrowsType, GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/lib/FunctionTypes'
-import { SankeyPlusNodeDragEventType } from './FunctionTypes'
-
+import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
+import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/types/Types'
+import { drawArrowsType, GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/types/FunctionTypes'
+import { SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, SankeyPlusNodeClickEventFType, SankeyPlusNodeDragEventFType, SankeyPlusNodeIconFType, context_node_iconFType, drag_elements_plusFType, node_icon_fill_colorFType, node_icon_pathFType, opposing_drag_elements_plusFType, return_out_of_bound_element_plusFType} from '../types/SankeyPlusNodesTypes'
 
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const SankeyPlusNodeIcon = (
+export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -348,7 +347,8 @@ export const SankeyPlusNodeIcon = (
   </Tab>
 }
 
-export const SankeyPlusHyperLink=( t:TFunction,
+export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
+  t:TFunction,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
   is_activated:boolean)=>{
@@ -627,7 +627,7 @@ const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyN
 
 }
 
-export const SankeyPlusNodeClickEvent=(
+export const SankeyPlusNodeClickEvent : SankeyPlusNodeClickEventFType =(
   data:SankeyData,
   set_animating:(b:boolean)=>void,
   set_data:(d:SankeyData)=>void,
@@ -657,7 +657,9 @@ export const SankeyPlusNodeClickEvent=(
     })
 }
 
-export const node_icon_fill_color=(data:SankeyData,n:SankeyNode)=>{
+export const node_icon_fill_color : node_icon_fill_colorFType = (
+  data:SankeyData,n:SankeyNode
+)=>{
   if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
     const selected_tag = n.tags[n.colorTag][0]
     const tag = data.nodeTags[n.colorTag].tags[selected_tag]
@@ -670,27 +672,24 @@ export const node_icon_fill_color=(data:SankeyData,n:SankeyNode)=>{
   return (n as SankeyPlusNode).iconColor
 }
 
-export const node_icon_path=(data:SankeyData,n:SankeyNode)=>{
-
+export const node_icon_path : node_icon_pathFType =(
+  data:SankeyData,
+  n:SankeyNode
+)=>{
   const icon = (data as SankeyPlusData).icon_catalog[(n as SankeyPlusNode).iconName]
-  if (icon !== undefined) {
+  if (icon !== undefined && icon !== null) {
     return icon
-  } else {
-    return ''
   }
+  return ''
 }
 
-export const SankeyPlusDrawNodesIcon = (
+export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
   data:SankeyData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
-  mode_selection:MutableRefObject<string>,
+  mode_selection: {current:string},
   NodeTooltipsContent: (data: SankeyPlusData,display_nodes : { [node_id: string]: SankeyPlusNode }, d: SankeyNode) => string,
-
 ) => {
-
-
-
-  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:MutableRefObject<string>,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection.current === 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
@@ -819,7 +818,8 @@ export const SankeyPlusDrawNodesIcon = (
 }
 
 
-export const context_node_icon=(contextualised_node:SankeyNode,
+export const context_node_icon : context_node_iconFType = (
+  contextualised_node:SankeyNode,
   set_show_menu_node_icon:(b:boolean)=>void,
   set_contextualised_node:(b:SankeyNode|undefined)=>void,
   t:TFunction
@@ -835,7 +835,8 @@ export const context_node_icon=(contextualised_node:SankeyNode,
 
 }
 
-export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyNode|SankeyPlusLabel)[],
+export const opposing_drag_elements_plus : opposing_drag_elements_plusFType = (
+  out_of_zone_item:(SankeyNode|SankeyPlusLabel)[],
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:SankeyNode|SankeyPlusLabel,
   data:SankeyData,
@@ -874,7 +875,7 @@ export const opposing_drag_elements_plus=(out_of_zone_item:(SankeyNode|SankeyPlu
   }
 }
 
-export const SankeyPlusNodeDragEvent : SankeyPlusNodeDragEventType =(
+export const SankeyPlusNodeDragEvent : SankeyPlusNodeDragEventFType =(
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
@@ -929,7 +930,7 @@ export const SankeyPlusNodeDragEvent : SankeyPlusNodeDragEventType =(
 
 }
 
-const SankeyPlusdragGNodeEvent=(
+const SankeyPlusdragGNodeEvent = (
   data:SankeyData,
   multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
@@ -943,8 +944,7 @@ const SankeyPlusdragGNodeEvent=(
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[],
-
+  GetSankeyMinWidthAndHeight:(d:SankeyData)=>number[]
 )=>{
   const node_visible=[] as string[]
   return d3.drag<SVGGElement, SankeyPlusNode>()
@@ -1002,7 +1002,7 @@ const drag_nodes_plus = (node:SankeyNode,
 
 }
 
-export const drag_elements_plus=(
+export const drag_elements_plus : drag_elements_plusFType = (
   dragged:SankeyNode|SankeyPlusLabel,
   data:SankeyData,
   event:{ dx: number; dy: number,x:number,y:number },
@@ -1049,7 +1049,10 @@ export const drag_elements_plus=(
   // }
 }
 
-export const return_out_of_bound_element_plus=(dragged:SankeyNode|SankeyPlusLabel,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
+export const return_out_of_bound_element_plus : return_out_of_bound_element_plusFType = (
+  dragged:SankeyNode|SankeyPlusLabel,
+  data:SankeyData,
+  event:{ dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current:SankeyNode[]},node_visible:string[]
 )=>{
 
@@ -1068,11 +1071,6 @@ export const return_out_of_bound_element_plus=(dragged:SankeyNode|SankeyPlusLabe
   return out_of_zone_item
 
 }
-
-
-
-
-
 
 export const scale = d3.scaleLinear()
   .domain([0, 100])

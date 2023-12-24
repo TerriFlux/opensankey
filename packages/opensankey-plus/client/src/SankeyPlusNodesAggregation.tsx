@@ -5,7 +5,7 @@ import { DefaultLink,reorganize_node_outputLinksIdOSTyped,reorganize_node_inputL
 } from './FunctionOSTyped'
 
 
-import { SankeyData,SankeyNode } from 'open-sankey/src/lib/types'
+import { SankeyData,SankeyNode } from 'open-sankey/types/Types'
 export const SankeyPlusMenuConfigurationNodesAgregation = (
   t:TFunction,
   data:SankeyData,

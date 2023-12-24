@@ -2,12 +2,12 @@ import  { InferProps } from 'prop-types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from './types'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from '../types/Types'
 import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './FunctionOSTyped'
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
 
-import { SankeyData,SankeyNode,SankeyLink} from 'open-sankey/src/lib/types'
-import { drawArrowsType, GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/lib/FunctionTypes'
+import { SankeyData,SankeyNode,SankeyLink} from 'open-sankey/types/Types'
+import { drawArrowsType, GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/types/FunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {

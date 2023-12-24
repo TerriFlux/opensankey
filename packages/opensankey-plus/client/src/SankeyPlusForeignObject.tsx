@@ -8,9 +8,9 @@ import { Checkbox } from '@chakra-ui/react'
 import * as d3 from 'd3'
 import ReactQuill from 'react-quill'
 
-import { SankeyPlusData, SankeyPlusNode } from './types'
+import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
 
-import { SmoothClasses} from 'open-sankey/dist/SankeyUtils'
+import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
 import { NodeDisplayed } from './FunctionOSTyped'
 

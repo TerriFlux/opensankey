@@ -1,9 +1,9 @@
-import * as OpensankeyUtils from 'open-sankey/dist/SankeyUtils'
-import * as OpenSankeyDrawFunc from 'open-sankey/dist/SankeyDrawFunction'
-import * as OpensankeyDragFunc from 'open-sankey/dist/SankeyDrag'
-import * as OpensankeyConvert from 'open-sankey/dist/SankeyConvert'
-import * as FunctionTypes from 'open-sankey/src/lib/FunctionTypes'
-import { drag_legend_g_element} from 'open-sankey/dist/SankeyDrawLegend'
+import * as OpensankeyUtils from 'open-sankey/dist/src/lib/SankeyUtils'
+import * as OpenSankeyDrawFunc from 'open-sankey/dist/src/lib/SankeyDrawFunction'
+import * as OpensankeyDragFunc from 'open-sankey/dist/src/lib/SankeyDrag'
+import * as OpensankeyConvert from 'open-sankey/dist/src/lib/SankeyConvert'
+import * as FunctionTypes from 'open-sankey/types/FunctionTypes'
+import { drag_legend_g_element} from 'open-sankey/dist/src/lib/SankeyDrawLegend'
 
 
 export const ReturnValueLink=OpensankeyUtils.ReturnValueLink as FunctionTypes.ReturnValueLinkFuncType

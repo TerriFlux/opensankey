@@ -1,5 +1,5 @@
-import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,showMenuComponentsType} from 'open-sankey/src/lib/types'
-import {GetLinkValueFuncType, LinkTextFuncType} from 'open-sankey/src/lib/FunctionTypes'
+import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,showMenuComponentsType} from 'open-sankey/types/Types'
+import {GetLinkValueFuncType, LinkTextFuncType} from 'open-sankey/types/FunctionTypes'
 export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
 
 export type DiffType={
@@ -49,7 +49,7 @@ export type ViewType={
    heredited_attr_from_master:string[]
   
   }
-export interface SankeyPlusData extends SankeyData {
+export interface ISankeyPlusData {
   icon_catalog: { [x: string]: string | null | undefined},
   nodes:{[x: string]:SankeyPlusNode}
   links:{[x: string]:SankeyPlusLink}
@@ -61,6 +61,8 @@ export interface SankeyPlusData extends SankeyData {
   background_image:string
   is_catalog:boolean,
 }
+
+export type SankeyPlusData = ISankeyPlusData & SankeyData
 
 export interface SankeyPlusLabel {
     // identification
@@ -81,35 +83,6 @@ export interface SankeyPlusLabel {
     is_image:boolean,
     image_src:string
 }
-
-// Recration du type drawCureType d'opensankey pour qu'il puissr être utilisé avec des variable de type de sankeyplus
-export type PlusDrawCurveType = (
-    data: SankeyPlusData,
-    nodes: { [node_id: string]: SankeyPlusNode },
-    links: { [link_id: string]: SankeyPlusLink },
-    display_style: { filter: number; filter_label: number; },
-    nodeTags: TagsCatalog,
-    link: SankeyPlusLink,
-    error_msg: { text?: string } | undefined,
-    multi_selected_links:{current: SankeyPlusLink[] },
-    LinkText:LinkTextFuncType,
-    GetSankeyMinWidthAndHeight:(d:SankeyPlusData)=>number[],
-    GetLinkValue:GetLinkValueFuncType,
-    DrawArrows:plusDrawArrowsType
-
-) => string
-
-
-// Recration du type drawArrowsType d'opensankey pour qu'il puissr être utilisé avec des variable de type de sankeyplus
-export type plusDrawArrowsType = (
-    n: SankeyPlusNode,
-    selected_tags: { [tag_group: string]: string[] },
-    data:SankeyPlusData,
-    scale:(t:number)=>number,
-    inv_scale:(t:number)=>number,
-    GetLinkValue:GetLinkValueFuncType,
-    display_style: {filter: number},
-  ) => void
 
 export interface differenceType{
     kind:string,

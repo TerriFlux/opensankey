@@ -5,12 +5,13 @@ import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplayingValueLocal, NodeColor, LinkStrokeOSTyped, DrawArrows } from './FunctionOSTyped'
-import {SankeyPlusData,SankeyPlusNode,SankeyPlusLink, } from './types'
+import { SankeyPlusData,SankeyPlusNode,SankeyPlusLink } from '../types/Types'
+import { SankeyPlusDrawArrowsFType } from '../types/SankeyPlusGradientTypes'
 
-import { SankeyLinkAttrLocal} from 'open-sankey/src/lib/types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode} from 'open-sankey/types/Types'
 import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
-import { GetLinkValueFuncType } from 'open-sankey/src/lib/FunctionTypes'
-import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/SankeyUtils'
+import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
+import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
 
 
 export const menu_conf_link_apparence_gradient=(
@@ -495,11 +496,11 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
 }
 
 
-export const SankeyPlusDrawArrows = (
-  n: SankeyPlusNode,
-  data:SankeyPlusData,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
+export const SankeyPlusDrawArrows : SankeyPlusDrawArrowsFType = (
+  n: SankeyNode,
+  data:SankeyData,
+  display_nodes:{ [node_id: string]: SankeyNode },
+  display_links:{ [link_id: string]: SankeyLink },
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
@@ -509,7 +510,7 @@ export const SankeyPlusDrawArrows = (
   DrawArrows(n,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
   for (const id_link of n.inputLinksId) {
     const l_arrow=ReturnValueLink(data,data.links[id_link],'arrow')
-    const l_grad=PlusReturnValueLink(data,data.links[id_link],'gradient')
+    const l_grad=PlusReturnValueLink(data as SankeyPlusData,data.links[id_link] as SankeyPlusLink,'gradient')
     if(l_arrow && l_grad){
       d3.selectAll(' .opensankey #path_'+id_link+'_arrow').attr('fill',NodeColor(n,data)??'')
     }
