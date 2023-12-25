@@ -8,15 +8,15 @@ import * as d3 from 'd3'
 import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from '../types/Types'
-import {drag_legend_plusFType} from '../types/SankeyPlusUtilsTypes'
+import {OSPIsAllNodeNotLocalAttrSameValueFType, PlusAssignLinkValueToCorrectVarFType, PlusLinkSabotColorFType, PlusReturnValueLinkFType, ValueOf, default_sankey_plus_style_linkFType, drag_legend_plusFType, import_image_as_svg_BGFType, is_all_zdt_attr_same_valueFType, set_svg_bgFType} from '../types/SankeyPlusUtilsTypes'
 import { opposing_drag_elements_plus } from './SankeyPlusNodes'
-import { drag_legend_g_elementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './FunctionOSTyped'
+import { drag_legend_g_elementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './import/OpenSankey'
 
 import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/types/Types'
 import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
 
 
-export const default_sankey_plus_style_link=()=>{
+export const default_sankey_plus_style_link : default_sankey_plus_style_linkFType = () => {
   const style=DefaultLinkStyle() as SankeyPlusLinkStyle
   style.gradient=false
   return style
@@ -37,7 +37,7 @@ export  const drag_legend_plus : drag_legend_plusFType = (data:SankeyPlusData,
   }).on('end',()=>set_data({...data}))
 
 
-export const import_image_as_svg_BG=(
+export const import_image_as_svg_BG : import_image_as_svg_BGFType = (
   t:TFunction,
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   has_open_sankey_plus:boolean)=>{
@@ -111,7 +111,7 @@ export const import_image_as_svg_BG=(
   return content_image
 }
 
-export const set_svg_bg=(data:SankeyPlusData)=>{
+export const set_svg_bg : set_svg_bgFType =(data:SankeyPlusData)=>{
   d3.select('#svg')
     .filter(()=>data.background_image===undefined || data.background_image==='')
     .style('background-image',null)
@@ -125,7 +125,11 @@ export const set_svg_bg=(data:SankeyPlusData)=>{
     .style('background-repeat','no-repeat')
 }
 
-export const is_all_zdt_attr_same_value=(data:SankeyPlusData,m_s_zdt:SankeyPlusLabel[],k:keyof SankeyPlusLabel)=>{
+export const is_all_zdt_attr_same_value  : is_all_zdt_attr_same_valueFType = (
+  data:SankeyPlusData,
+  m_s_zdt:SankeyPlusLabel[],
+  k:keyof SankeyPlusLabel
+)=>{
   if(m_s_zdt.length===0){
     return [null,null]
   }
@@ -139,8 +143,11 @@ export const is_all_zdt_attr_same_value=(data:SankeyPlusData,m_s_zdt:SankeyPlusL
 // export const PlusIsAllNodeNotLocalAttrSameValue=(data:SankeyPlusData,m_s_n:SankeyPlusNode[],k_list:(keyof SankeyPlusNode)[])=>{
 // return IsAllNodeNotLocalAttrSameValue(data,m_s_n,k_list)
 // }
-type ValueOf<T>=T[keyof T]
-export const OSPIsAllNodeNotLocalAttrSameValue=(data:SankeyPlusData,m_s_n:SankeyPlusNode[],k_list:(keyof SankeyPlusNode)[])=>{
+export const OSPIsAllNodeNotLocalAttrSameValue : OSPIsAllNodeNotLocalAttrSameValueFType = (
+  data:SankeyPlusData,
+  m_s_n:SankeyPlusNode[],
+  k_list:(keyof SankeyPlusNode)[]
+)=>{
   // store_value : variable that contain an array forEach key we are looking for
   // Each array contain in first position the value of the selected nodes attribute 
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
@@ -171,14 +178,20 @@ export const OSPIsAllNodeNotLocalAttrSameValue=(data:SankeyPlusData,m_s_n:Sankey
   return store_value
 }
 
-export const PlusReturnValueLink=(data:SankeyPlusData,l:SankeyPlusLink,k:keyof SankeyPlusLinkAttrLocal | keyof SankeyPlusLinkStyle)=>{
+export const PlusReturnValueLink : PlusReturnValueLinkFType = (
+  data:SankeyPlusData,
+  l:SankeyPlusLink,
+  k:keyof SankeyPlusLinkAttrLocal | keyof SankeyPlusLinkStyle
+)=>{
   return ReturnValueLink(data,l,((k as unknown) as (keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle)))
 }
-export const PlusAssignLinkValueToCorrectVar=(l:SankeyPlusLink|SankeyPlusLinkStyle,k:keyof SankeyPlusLinkAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
+export const PlusAssignLinkValueToCorrectVar : PlusAssignLinkValueToCorrectVarFType =(l:SankeyPlusLink|SankeyPlusLinkStyle,k:keyof SankeyPlusLinkAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
   return AssignLinkValueToCorrectVar(l,k as unknown as keyof SankeyLinkAttrLocal,v,menu_for_style)
 }
 
-export const PlusLinkSabotColor = (l: SankeyPlusLink,data:SankeyPlusData,
+export const PlusLinkSabotColor : PlusLinkSabotColorFType = (
+  l: SankeyPlusLink,
+  data:SankeyPlusData,
   GetLinkValue:GetLinkValueFuncType
 ) => {
   return PlusReturnValueLink(data,l,'gradient')===true ? NodeColor(data.nodes[l.idSource],data) : LinkColor(l,data,GetLinkValue)

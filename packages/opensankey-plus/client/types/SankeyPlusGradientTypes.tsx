@@ -1,7 +1,7 @@
-import { TFunction } from "i18next"
-import { SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from "./Types"
+import { TFunction } from 'i18next'
+import { SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
-import { SankeyData, SankeyLink, SankeyNode } from "open-sankey/types/Types"
+import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/types/Types'
 
 export type menu_conf_link_apparence_gradientFType=(
   t:TFunction,
@@ -24,7 +24,7 @@ export type dragNodeRedrawGradientFType=(
   nodes:{ [node_id: string]: SankeyPlusNode },
   link:SankeyPlusLink,
   data:SankeyPlusData,
-)=>string
+)=>void
 
 
 export type SankeyPlusDrawArrowsFType = (

@@ -1,5 +1,4 @@
-import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,TagsCatalog,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,showMenuComponentsType} from 'open-sankey/types/Types'
-import {GetLinkValueFuncType, LinkTextFuncType} from 'open-sankey/types/FunctionTypes'
+import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,showMenuComponentsType} from 'open-sankey/types/Types'
 export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
 
 export type DiffType={
@@ -14,7 +13,7 @@ export type SankeyPlusNodeStyle = SankeyNodeStyle
 export interface SankeyPlusLinkStyle extends SankeyLinkStyle{
   gradient:boolean,
 }
-interface SankeyPlusNodeIntern {
+export interface SankeyPlusNode extends SankeyNode {
   iconName: string,
   iconColor: string,
   iconVisible: boolean,
@@ -29,8 +28,6 @@ interface SankeyPlusNodeIntern {
 
   hyperlink:string  
 }
-
-export type SankeyPlusNode = SankeyNode & SankeyPlusNodeIntern
 
 export interface SankeyPlusLinkAttrLocal extends SankeyLinkAttrLocal{
   gradient?:boolean,
@@ -49,7 +46,7 @@ export type ViewType={
    heredited_attr_from_master:string[]
   
   }
-export interface ISankeyPlusData {
+export interface SankeyPlusData extends SankeyData {
   icon_catalog: { [x: string]: string | null | undefined},
   nodes:{[x: string]:SankeyPlusNode}
   links:{[x: string]:SankeyPlusLink}
@@ -62,7 +59,7 @@ export interface ISankeyPlusData {
   is_catalog:boolean,
 }
 
-export type SankeyPlusData = ISankeyPlusData & SankeyData
+//export type SankeyPlusData = ISankeyPlusData & SankeyData
 
 export interface SankeyPlusLabel {
     // identification
@@ -92,9 +89,9 @@ export interface differenceType{
   } 
 
 export interface SankeyPlusShowMenuComponentsType extends showMenuComponentsType {
-  show_menu_node_icon : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_modal_import_icons : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_menu_zdt : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_context_zdt : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_modal_transparent_view_attr : [boolean,React.Dispatch<React.SetStateAction<boolean>>]
+  show_menu_node_icon : [boolean,(_:boolean)=>void],
+  show_modal_import_icons : [boolean,(_:boolean)=>void],
+  show_menu_zdt : [boolean,(_:boolean)=>void],
+  show_context_zdt : [boolean,(_:boolean)=>void],
+  show_modal_transparent_view_attr : [boolean,(_:boolean)=>void]
 }

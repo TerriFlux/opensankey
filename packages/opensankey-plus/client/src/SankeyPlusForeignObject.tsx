@@ -12,7 +12,10 @@ import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
 
 import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
-import { NodeDisplayed } from './FunctionOSTyped'
+import { NodeDisplayed } from './import/OpenSankey'
+import {SankeyPlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/types/SankeyTooltipTypes'
+import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
 
 
 declare const window: Window &
@@ -20,7 +23,7 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const SankeyPlusNodeFO = (
+export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   t:TFunction,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
@@ -210,22 +213,22 @@ export const SankeyPlusNodeFO = (
 }
 
 
-export const SankeyPlusDrawNodesFO = (
-  data:SankeyPlusData,
+export const SankeyPlusDrawNodesFO : SankeyPlusDrawNodesFOFType = (
+  data : SankeyPlusData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
-  mode_selection:string,
-  NodeTooltipsContent: (data: SankeyPlusData,display_nodes : { [node_id: string]: SankeyPlusNode }, d: SankeyPlusNode) => string,
-
+  mode_selection:{current:string},
+  NodeTooltipsContent: NodeTooltipsContentFType,
+  GetLinkValue:GetLinkValueFuncType
 ) => {
 
-  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    d3.select(t).attr('cursor', (mode_selection === 's')? 'pointer' : 'unset')
+  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:{current :string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+    d3.select(t).attr('cursor', (mode_selection.current === 's')? 'pointer' : 'unset')
     if (NodeDisplayed(data,(d as SankeyPlusNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data,display_nodes, d as SankeyPlusNode))
+        .html(NodeTooltipsContent(data,display_nodes, d as SankeyPlusNode,GetLinkValue))
     }
   }
 

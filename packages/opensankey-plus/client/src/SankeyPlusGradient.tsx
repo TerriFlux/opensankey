@@ -4,9 +4,9 @@ import { OverlayTrigger, Tooltip, InputGroup, Badge} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 
-import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplayingValueLocal, NodeColor, LinkStrokeOSTyped, DrawArrows } from './FunctionOSTyped'
+import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplayingValueLocal, NodeColor, LinkStrokeOSTyped, DrawArrows } from './import/OpenSankey'
 import { SankeyPlusData,SankeyPlusNode,SankeyPlusLink } from '../types/Types'
-import { SankeyPlusDrawArrowsFType } from '../types/SankeyPlusGradientTypes'
+import { LinkStrokeFType, SankeyPlusDrawArrowsFType, dragNodeRedrawGradientFType, menu_conf_link_apparence_gradientFType } from '../types/SankeyPlusGradientTypes'
 
 import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode} from 'open-sankey/types/Types'
 import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
@@ -14,7 +14,7 @@ import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
 import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
 
 
-export const menu_conf_link_apparence_gradient=(
+export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradientFType =(
   t:TFunction,
   multi_selected_links:{current:SankeyPlusLink[]},
   data:SankeyPlusData,
@@ -59,7 +59,7 @@ export const menu_conf_link_apparence_gradient=(
   </>
 }
 
-export const LinkStroke=(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:GetLinkValueFuncType)=>{
+export const LinkStroke : LinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:GetLinkValueFuncType)=>{
 
   const defGradient = d3.select(' .opensankey #svg #sankey_def')
 
@@ -320,7 +320,8 @@ export const LinkStroke=(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:GetLi
 }
 
 // Function used to create gradient for each link, but are used only if the link has the gradient varibale at true
-export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode },
+export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
+  nodes:{ [node_id: string]: SankeyPlusNode },
   link:SankeyPlusLink,
   data:SankeyPlusData
 )=>{
@@ -494,7 +495,6 @@ export const dragNodeRedrawGradient=(nodes:{ [node_id: string]: SankeyPlusNode }
 
   }
 }
-
 
 export const SankeyPlusDrawArrows : SankeyPlusDrawArrowsFType = (
   n: SankeyNode,

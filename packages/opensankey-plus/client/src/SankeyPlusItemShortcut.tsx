@@ -2,8 +2,9 @@
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Accordion } from 'react-bootstrap'
+import {SankeyPlusShortcutFType} from '../types/SankeyPlusItemShortcutTypes'
 
-export const SankeyPlusShortcut=(t:TFunction)=>{
+export const SankeyPlusShortcut : SankeyPlusShortcutFType =(t:TFunction)=>{
   return (<Accordion>
     <Accordion.Item eventKey='OSP'>
       <Accordion.Header>

@@ -1,17 +1,17 @@
-import { TFunction } from "i18next"
-import { SankeyLinkValue, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, TagsGroup, ViewType } from "./Types"
+import { TFunction } from 'i18next'
+import { SankeyLinkValue, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, TagsGroup, ViewType } from './Types'
 
-export type setDiagram = (
+export type setDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
   set_view: (s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
 ) => void
 
-export type view_toast = JSX.Element
+export type view_toastFType = JSX.Element
 
-export type view_toast_update_view = JSX.Element
+export type view_toast_update_viewFType = JSX.Element
 
-export type setValue = (
+export type setValueFType = (
   dataTags: TagsGroup[],
   v_target: {[key:string] : SankeyLinkValue},
   v_source: {[key:string] : SankeyLinkValue},
@@ -21,36 +21,36 @@ export type setValue = (
 export type get_data_from_viewFType =(
   master_data:SankeyPlusData,
   id_view_to_see:string
-)=> SankeyPlusData
+)=> SankeyPlusData | undefined
 
-export type filter_view = (
+export type filter_viewFType = (
   pre_diff:{path:string[],kind:string,item:{kind:string}}[]
 ) => {path:string[],kind:string,item:{kind:string}}
 
-export type recompute_views = (
+export type recompute_viewsFType = (
   new_master_data: SankeyPlusData,
   prev_master_data: SankeyPlusData,
   set_master_data: (d:SankeyPlusData)=>void
 ) => void
 
-export type keyHandler = (
+export type keyHandlerFType = (
   t:TFunction,
   e: KeyboardEvent,
   master:boolean,
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
   data:SankeyPlusData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  set_data:(_:SankeyPlusData)=>void,
   view:string,
-  set_view:React.Dispatch<React.SetStateAction<string>>,
+  set_view:(_:string)=>void,
   multi_selected_labels:{current:SankeyPlusLabel[]},
-  set_show_toast_new_view:React.Dispatch<React.SetStateAction<boolean>>,
-  set_show_toast_updated_view:React.Dispatch<React.SetStateAction<boolean>>,
+  set_show_toast_new_view:(_:boolean)=>void,
+  set_show_toast_updated_view:(_:boolean)=>void,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
 ) => void
 
-export type selecteur_view=(
+export type selecteur_viewFType = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string,
@@ -70,7 +70,7 @@ export type selecteur_view=(
   // fullscreen=false
 ) => JSX.Element
 
-export type viewsAccordion = (
+export type viewsAccordionFType = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   nav_item_active: string,
@@ -96,11 +96,11 @@ export type viewsAccordion = (
 
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
-export type check_current_view_saved=(
+export type check_current_view_savedFType = (
   master_data:SankeyPlusData,
   data:SankeyPlusData,
   view:string
-)=> void
+)=> string[]
 
 // Function that return a toolbar to navigate,create or modify view, it contain :
 // - a button to return to master data
@@ -111,7 +111,7 @@ export type check_current_view_saved=(
 // - a button to choose variable of the view that get their value from master
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
-export type SankeyPlusBannerView=(
+export type SankeyPlusBannerViewFType = (
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
@@ -134,16 +134,16 @@ export type SankeyPlusBannerView=(
   DefaultSankeyData: ()=>SankeyPlusData,
 )=> JSX.Element
 
-export type SankeyPlusMenuPreferenceView=(
+export type SankeyPlusMenuPreferenceViewFType = (
   t:TFunction,
   data:SankeyPlusData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  set_data:(_:SankeyPlusData)=>void,
   preferenceCheck:(str: string, data: SankeyPlusData) => void
 ) => JSX.Element
 
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
-export type modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
+export type modal_view_not_savedFType = (view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
   data:SankeyPlusData,
@@ -151,7 +151,7 @@ export type modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:st
   view:string
 )=> JSX.Element
 
-export type modal_transparent_view_attr=(show_modal_transparent_view_attr:boolean,
+export type modal_transparent_view_attrFType = (show_modal_transparent_view_attr:boolean,
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
@@ -161,14 +161,14 @@ export type modal_transparent_view_attr=(show_modal_transparent_view_attr:boolea
   t:TFunction
 )=> JSX.Element
 
-export type MenuEnregistrerView = (
+export type MenuEnregistrerViewFType = (
   master_data:SankeyPlusData,
   t:TFunction,
   save_only_view:boolean,
   set_save_only_view:(b:boolean)=>void
 )=> JSX.Element
 
-export type OpenSankeyPlusCheckpointButton=(
+export type OpenSankeyPlusCheckpointButtonFType = (
   master_data:SankeyPlusData,
   data:SankeyPlusData,
   view:string, 

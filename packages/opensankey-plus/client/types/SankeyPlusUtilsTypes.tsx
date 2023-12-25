@@ -1,5 +1,5 @@
-import { TFunction } from "i18next"
-import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle } from "./Types"
+import { TFunction } from 'i18next'
+import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle, SankeyPlusNode } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
 
 export type default_sankey_plus_style_linkFType = () => SankeyPlusLinkStyle
@@ -22,13 +22,13 @@ export type is_all_zdt_attr_same_valueFType = (
   data:SankeyPlusData,
   m_s_zdt:SankeyPlusLabel[],
   k:keyof SankeyPlusLabel
-)=> [number,boolean]
+)=> null[] | (string | number | boolean)[]
 
 export type PlusReturnValueLinkFType = (
   data:SankeyPlusData,
   l:SankeyPlusLink,
   k:keyof SankeyPlusLinkAttrLocal | keyof SankeyPlusLinkStyle
-) => string
+) => string | number | boolean
 
 export type PlusAssignLinkValueToCorrectVarFType = (
   l:SankeyPlusLink|SankeyPlusLinkStyle,
@@ -40,3 +40,13 @@ export type PlusLinkSabotColorFType = (
   l: SankeyPlusLink,data:SankeyPlusData,
   GetLinkValue:GetLinkValueFuncType
 ) => string
+
+export type OSPIsAllNodeNotLocalAttrSameValueFType = (
+  data:SankeyPlusData,
+  m_s_n:SankeyPlusNode[],
+  k_list:(keyof SankeyPlusNode)[]
+)=> {
+  [x: string]: [ValueOf<SankeyPlusNode>, boolean];
+}
+
+export type ValueOf<T>=T[keyof T]

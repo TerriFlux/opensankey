@@ -1,21 +1,22 @@
 import React from 'react'
 import { Row, Form, FormLabel, Col, FormCheck, Tab, Button } from 'react-bootstrap'
 import { TFunction } from 'i18next'
-import { DefaultLink,reorganize_node_outputLinksIdOSTyped,reorganize_node_inputLinksIdOSTyped 
-} from './FunctionOSTyped'
+import { reorganize_node_outputLinksIdOSTyped,reorganize_node_inputLinksIdOSTyped 
+} from './import/OpenSankey'
+import { SankeyPlusMenuConfigurationNodesAgregationFType } from '../types/SankeyPlusNodesAggregationTypes'
 
+import { SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from '../types/Types'
 
-import { SankeyData,SankeyNode } from 'open-sankey/types/Types'
-export const SankeyPlusMenuConfigurationNodesAgregation = (
+export const SankeyPlusMenuConfigurationNodesAgregation : SankeyPlusMenuConfigurationNodesAgregationFType = (
   t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
+  data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  multi_selected_nodes:{current:SankeyPlusNode[]},
   parent_visible:boolean,
-  set_parent_visible:React.Dispatch<React.SetStateAction<boolean>>,
+  set_parent_visible:(_:boolean)=>void,
   cube_dimension:string,
-  set_cube_dimension:React.Dispatch<React.SetStateAction<string>>
-
+  set_cube_dimension:(_:string)=>void,
+  SankeyPlusDefaultLink : (_:SankeyPlusData)=>SankeyPlusLink
 ) => {
 
   if (Object.values(data.levelTags).length > 0 && cube_dimension === 'Primaire') {
@@ -96,7 +97,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
                   output_links.forEach( idLink => new_output_nodes.push(data.links[idLink].idTarget))
                 })
                 new_input_nodes.forEach(idSource => {
-                  const new_link = DefaultLink(data)
+                  const new_link = SankeyPlusDefaultLink(data)
                   new_link.idSource = idSource
                   new_link.idTarget = d.idNode
                   new_link.idLink = 'link' + idLink
@@ -106,7 +107,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation = (
                   reorganize_node_outputLinksIdOSTyped(data,data.nodes[new_link.idSource], data.nodes, data.links)
                 })
                 new_output_nodes.forEach(() => {
-                  const new_link = DefaultLink(data)
+                  const new_link = SankeyPlusDefaultLink(data)
                   new_link.idSource = d.idNode
                   new_link.idLink = 'link' + idLink
                   data.links[new_link.idLink] = new_link

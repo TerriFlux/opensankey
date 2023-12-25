@@ -1,11 +1,11 @@
-import { SankeyData } from 'open-sankey/types/Types';
-import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from "./Types";
-import { GetLinkValueFuncType, LinkTextFuncType, drawArrowsType } from 'open-sankey/types/FunctionTypes';
+import { SankeyData } from 'open-sankey/types/Types'
+import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
+import { GetLinkValueFuncType, LinkTextFuncType, drawArrowsType } from 'open-sankey/types/FunctionTypes'
 import * as d3 from 'd3'
 
 export type SankeyPlusDrawLabelsFType = (
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+  data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
   display_nodes:{ [node_id: string]: SankeyPlusNode },
   display_links:{ [link_id: string]: SankeyPlusLink },
   multi_selected_label:{current: SankeyPlusLabel[] },

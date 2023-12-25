@@ -9,8 +9,9 @@ import { DefaultLink,
   convert_data,
   convert_nodes,
   convert_links,
-  convert_tags} from './FunctionOSTyped'
+  convert_tags} from './import/OpenSankey'
 
+import {OpenSankeyPlusDiagramSelectorFType, apply_transformation_opensankey_plus_elementsFType, plus_convert_dataFType, plus_sankey_layoutFType } from '../types/SankeyPlusConvertTypes'
 
 // Opensankey files
 import { updateLayoutFuncType } from 'open-sankey/types/FunctionTypes'
@@ -33,7 +34,10 @@ const deep_diff = require('deep-diff')
 /* eslint-enable */
 
 
-export const plus_convert_data = (data:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData,)=>{
+export const plus_convert_data : plus_convert_dataFType = (
+  data:SankeyPlusData,
+  DefaultSankeyData: ()=>SankeyPlusData
+)=>{
   if(data.background_image===undefined){
     data.background_image=''
   }
@@ -147,7 +151,7 @@ export const plus_convert_data = (data:SankeyPlusData,DefaultSankeyData: ()=>San
   })
 }
 
-export const OpenSankeyPlusDiagramSelector = (
+export const OpenSankeyPlusDiagramSelector : OpenSankeyPlusDiagramSelectorFType = (
   master_data : SankeyPlusData,
   set_master_data : (d:SankeyPlusData)=>void,
   view : string,
@@ -284,11 +288,11 @@ export const OpenSankeyPlusDiagramSelector = (
   return OpenSankeyPlusDiagramSelectorInner
 }
 
-export const apply_transformation_opensankey_plus_elements = (
+export const apply_transformation_opensankey_plus_elements : apply_transformation_opensankey_plus_elementsFType = (
   data:SankeyPlusData,
   t:TFunction,
   forceUpdate: boolean,
-  setForceUpdate: (b:boolean)=>null,
+  setForceUpdate: (b:boolean)=>void,
   elementToDispose: string[]
 ) => {
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
@@ -344,7 +348,7 @@ export const apply_transformation_opensankey_plus_elements = (
     </OverlayTrigger>
   ]}
 
-export const plus_sankey_layout=(
+export const plus_sankey_layout : plus_sankey_layoutFType =(
   data:SankeyPlusData,
   new_layout:SankeyPlusData,
   mode:string[]

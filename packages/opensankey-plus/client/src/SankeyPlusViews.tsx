@@ -24,6 +24,7 @@ import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawes
 
 import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/types/Types'
 import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
+import { MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, SankeyPlusMenuPreferenceViewFType, check_current_view_savedFType, filter_viewFType, get_data_from_viewFType, keyHandlerFType, modal_transparent_view_attrFType, modal_view_not_savedFType, recompute_viewsFType, selecteur_viewFType, setDiagramFType, setValueFType, view_toastFType, view_toast_update_viewFType, viewsAccordionFType} from '../types/SankeyPlusViewsTypes'
 
 import { SankeyPlusData,
   SankeyPlusNode,
@@ -34,7 +35,7 @@ import { SankeyPlusData,
   ViewType } from '../types/Types'
 import {
   updateLayoutOSTyped,
-  AdjustSankeyZone } from './FunctionOSTyped'
+  AdjustSankeyZone } from './import/OpenSankey'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 import { Checkbox } from '@chakra-ui/react'
 // import{  updateLayout} from 'open-sankey/dist/src/lib/SankeyLayout'
@@ -43,11 +44,11 @@ import { Checkbox } from '@chakra-ui/react'
 // @ts-ignore
 const deep_diff = require('deep-diff')
 /* eslint-enable */
-export const setDiagram = (
+export const setDiagram : setDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
   set_view: (s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
-) => {
+)  => {
   return (
     the_diagram : string,
     set_data : (d:SankeyPlusData)=>void,
@@ -74,17 +75,17 @@ export const setDiagram = (
   }
 }
 
-export const view_toast = (<Toast bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
+export const view_toast : view_toastFType = (<Toast bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
   <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Enregistrement</small> </Toast.Header>
   <Toast.Body>Vue sauvegardée</Toast.Body>
 </Toast>)
 
-export const view_toast_update_view = (<Toast bg='info' className='toastView' style={{ 'position': 'absolute', 'marginTop': window.innerHeight/4,'marginLeft': window.innerWidth/2, 'zIndex': 100 }}>
+export const view_toast_update_view : view_toast_update_viewFType = (<Toast bg='info' className='toastView' style={{ 'position': 'absolute', 'marginTop': window.innerHeight/4,'marginLeft': window.innerWidth/2, 'zIndex': 100 }}>
   <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Mise à jour</small> </Toast.Header>
   <Toast.Body>Vue mise à jour</Toast.Body>
 </Toast>)
 
-export const setValue = (
+export const setValue : setValueFType = (
   dataTags: TagsGroup[],
   v_target: {[key:string] : SankeyLinkValue},
   v_source: {[key:string] : SankeyLinkValue},
@@ -108,7 +109,10 @@ export const setValue = (
   }
 }
 
-export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:string)=>{
+export const get_data_from_view : get_data_from_viewFType = (
+  master_data:SankeyPlusData,
+  id_view_to_see:string
+)=>{
   const applyChange = deep_diff.applyChange
   // Copy master data
   if (!master_data) {
@@ -140,7 +144,7 @@ export const get_data_from_view=(master_data:SankeyPlusData,id_view_to_see:strin
   
 }
 
-export const filter_view=(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
+export const filter_view : filter_viewFType =(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
   return JSON.parse(JSON.stringify(pre_diff))
     .filter((d:{path:string[]})=>{
       return !d.path.includes('view')
@@ -159,7 +163,7 @@ export const filter_view=(pre_diff:{path:string[],kind:string,item:{kind:string}
     })
 }
 
-export const recompute_views = (
+export const recompute_views : recompute_viewsFType = (
   new_master_data: SankeyPlusData,
   prev_master_data: SankeyPlusData,
   set_master_data: (d:SankeyPlusData)=>void
@@ -188,19 +192,19 @@ export const recompute_views = (
   set_master_data({...JSON.parse(JSON.stringify(new_master_data))})
 }
 
-export const keyHandler = (
+export const keyHandler : keyHandlerFType = (
   t:TFunction,
   e: KeyboardEvent,
   master:boolean,
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
   data:SankeyPlusData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  set_data:(_:SankeyPlusData)=>void,
   view:string,
-  set_view:React.Dispatch<React.SetStateAction<string>>,
+  set_view:(_:string)=>void,
   multi_selected_labels:{current:SankeyPlusLabel[]},
-  set_show_toast_new_view:React.Dispatch<React.SetStateAction<boolean>>,
-  set_show_toast_updated_view:React.Dispatch<React.SetStateAction<boolean>>,
+  set_show_toast_new_view:(_:boolean)=>void,
+  set_show_toast_updated_view:(_:boolean)=>void,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
 ) => {
@@ -510,7 +514,7 @@ export const keyHandler = (
   }
 }
 
-export const selecteur_view=(data:SankeyPlusData,
+export const selecteur_view : selecteur_viewFType =(data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
@@ -606,7 +610,7 @@ export const selecteur_view=(data:SankeyPlusData,
 
   return connected && select_or_edit==='edit'?editeur_name:selecteur
 }
-export const viewsAccordion = (
+export const viewsAccordion : viewsAccordionFType = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   nav_item_active: string,
@@ -837,7 +841,7 @@ export const viewsAccordion = (
 
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
-export const check_current_view_saved=(
+export const check_current_view_saved : check_current_view_savedFType =(
   master_data:SankeyPlusData,
   data:SankeyPlusData,
   view:string
@@ -879,7 +883,7 @@ declare const window: Window &
 // - a button to choose variable of the view that get their value from master
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
-export const SankeyPlusBannerView=(
+export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
@@ -1472,7 +1476,12 @@ export const SankeyPlusBannerView=(
   </>
 }
 
-export const SankeyPlusMenuPreferenceView=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,preferenceCheck:(str: string, data: SankeyPlusData) => void)=>{
+export const SankeyPlusMenuPreferenceView : SankeyPlusMenuPreferenceViewFType =(
+  t:TFunction,
+  data:SankeyPlusData,
+  set_data:(_:SankeyPlusData)=>void,
+  preferenceCheck:(str: string, data: SankeyPlusData) => void
+)=>{
   return <InputGroup>
     <Checkbox 
       sx={SmoothClasses({})}
@@ -1490,13 +1499,15 @@ export const SankeyPlusMenuPreferenceView=(t:TFunction,data:SankeyPlusData,set_d
 
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
-export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
+export const modal_view_not_saved : modal_view_not_savedFType =(
+  view_not_saved:string,
+  set_view_not_saved:(s:string)=>void,
+  t:TFunction,
   master_data:SankeyPlusData,
   set_master_data:(d:SankeyPlusData)=>void,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string
-
 )=>{
   return (
     <Modal
@@ -1601,7 +1612,7 @@ export const modal_view_not_saved=(view_not_saved:string,set_view_not_saved:(s:s
 
 // }
 
-export const modal_transparent_view_attr=(show_modal_transparent_view_attr:boolean,
+export const modal_transparent_view_attr : modal_transparent_view_attrFType =(show_modal_transparent_view_attr:boolean,
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
@@ -1896,7 +1907,12 @@ export const modal_transparent_view_attr=(show_modal_transparent_view_attr:boole
   </Modal>
 }
 
-export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_only_view:boolean,set_save_only_view:(b:boolean)=>void)=>{
+export const MenuEnregistrerView : MenuEnregistrerViewFType = (
+  master_data:SankeyPlusData,
+  t:TFunction,
+  save_only_view:boolean,
+  set_save_only_view:(b:boolean)=>void
+)=>{
   return <InputGroup>
     <OverlayTrigger
       key={'buttonExportViewDisabled'}
@@ -1917,7 +1933,7 @@ export const MenuEnregistrerView=(master_data:SankeyPlusData,t:TFunction,save_on
 
 
 
-export const OpenSankeyPlusCheckpointButton=(
+export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFType = (
   master_data:SankeyPlusData,
   data:SankeyPlusData,
   view:string, 

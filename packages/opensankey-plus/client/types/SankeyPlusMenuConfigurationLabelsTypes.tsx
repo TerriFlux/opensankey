@@ -1,5 +1,5 @@
-import { TFunction } from "i18next"
-import { SankeyPlusData, SankeyPlusLabel } from "./Types"
+import { TFunction } from 'i18next'
+import { SankeyPlusData, SankeyPlusLabel } from './Types'
 import ReactQuill from 'react-quill'
 
 export type SankeyPlusMenuPreferenceLabelsFType=(
@@ -12,13 +12,13 @@ export interface selected_type  {'label':string;'value':string}
 
 export type SankeyPlusMenuConfigurationFreeLabelsFType = (
   data:SankeyPlusData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  set_data:(_:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]},
   t: TFunction,
   forceUpdate:boolean,
-  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
+  setForceUpdate:(_:boolean)=>void,
   nav_item_active:string,
-  set_nav_item_active:React.Dispatch<React.SetStateAction<string>>,
+  set_nav_item_active:(_:string)=>void,
   is_activated:boolean,
   menu_for_modal:boolean,
   editor_content_fo_zdt:string,

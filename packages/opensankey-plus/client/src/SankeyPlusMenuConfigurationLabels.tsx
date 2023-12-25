@@ -25,10 +25,15 @@ import {  preferenceCheck } from 'open-sankey/dist/src/lib/SankeyMenuPreferences
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
 import { is_all_zdt_attr_same_value } from './SankeyPlusUtils'
+import { SankeyPlusMenuConfigurationFreeLabelsFType, SankeyPlusMenuPreferenceLabelsFType, blur_ZDT_wysiwygFType, context_zdtFType } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
 
 
 
-export const SankeyPlusMenuPreferenceLabels=(t:TFunction,data:SankeyPlusData,set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>)=>{
+export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFType = (
+  t:TFunction,
+  data:SankeyPlusData,
+  set_data:(_:SankeyPlusData)=>void
+)=>{
   return <InputGroup>
     <Checkbox 
       sx={SmoothClasses({})}
@@ -51,15 +56,15 @@ export const SankeyPlusMenuPreferenceLabels=(t:TFunction,data:SankeyPlusData,set
  */
 export interface selected_type  {'label':string;'value':string}
 
-export const SankeyPlusMenuConfigurationFreeLabels = (
+export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfigurationFreeLabelsFType = (
   data:SankeyPlusData,
-  set_data:React.Dispatch<React.SetStateAction<SankeyPlusData>>,
+  set_data:(_:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]},
   t: TFunction,
   forceUpdate:boolean,
-  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
+  setForceUpdate:(_:boolean)=>void,
   nav_item_active:string,
-  set_nav_item_active:React.Dispatch<React.SetStateAction<string>>,
+  set_nav_item_active:(_:string)=>void,
   is_activated:boolean,
   menu_for_modal:boolean,
   editor_content_fo_zdt:string,
@@ -626,7 +631,7 @@ export const SankeyPlusMenuConfigurationFreeLabels = (
 }
 
 
-export const context_zdt=(show_context_zdt:boolean,set_show_context_zdt:(b:boolean)=>void,
+export const context_zdt : context_zdtFType =(show_context_zdt:boolean,set_show_context_zdt:(b:boolean)=>void,
   pointer_pos:{current:number[]},
   t:TFunction,
   set_show_menu_zdt:(b:boolean)=>void
@@ -651,9 +656,11 @@ export const context_zdt=(show_context_zdt:boolean,set_show_context_zdt:(b:boole
   </Popover>:<></>
 }
 
-const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
+const icon_open_modal =<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 
-export const blur_ZDT_wysiwyg=(refWysiwygZDT:{current:ReactQuill})=>{
+export const blur_ZDT_wysiwyg : blur_ZDT_wysiwygFType = (
+  refWysiwygZDT:{current:ReactQuill}
+)=>{
   if(refWysiwygZDT && refWysiwygZDT.current && (d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??false)){
     refWysiwygZDT.current.getEditor().focus()
     refWysiwygZDT.current.getEditor().blur()
