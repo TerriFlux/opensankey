@@ -31,18 +31,18 @@ const SankeyNodeEditionPropTypes = {
 type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 export const OpenSankeyMenuConfigurationNodes = (
-  t:TFunction<"translation", undefined>,
+  t:TFunction<'translation', undefined>,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes_attributes:JSX.Element[],
-  link_io:string,set_link_io:React.Dispatch<React.SetStateAction<string>>,
-  link_pos:string,set_link_pos:React.Dispatch<React.SetStateAction<string>>,
-  tab_colored:boolean,set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
+  link_io:string,set_link_io:(_:string)=>void,
+  link_pos:string,set_link_pos:(_:string)=>void,
+  tab_colored:boolean,set_tab_colored:(_:boolean)=>void,
   GetLinkValue:GetLinkValueFuncType,
   multi_selected_links: {current:SankeyLink[]},
-  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>
+  set_display_link_opacity:(_:string)=>void
 ) => {
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
   const ui : {[s:string] : JSX.Element}= {
@@ -76,7 +76,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const pre_filter_node=(has_node_type)?Object.keys(data.nodeTags['Type de noeud'].tags):[]
   const [filter_node_selector,set_filter_node_selector]=useState<string[]>(pre_filter_node)
 
-  const tree_of_nodes=tree_data_nodes(t as TFunction<"translation", undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
+  const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
   // const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
   //Renvoie le menu déroulant pour la sélection des noeuds
@@ -369,7 +369,7 @@ export default SankeyNodeEdition
 
 
 
-export const tree_data_nodes=(t:TFunction<"translation", undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
+export const tree_data_nodes=(t:TFunction<'translation', undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
   filter_node_selector:string[]
 )=>{
 

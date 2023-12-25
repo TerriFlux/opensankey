@@ -11,8 +11,6 @@ import {
   AssignLinkLocalAttribute,
   AssignNodeLocalAttribute,
   ComputeTotalOffsets,
-  DeleteLink,
-  DeleteNode,
   FindMaxLinkValue,
   GetLinkValue,
   NodeDisplayed,

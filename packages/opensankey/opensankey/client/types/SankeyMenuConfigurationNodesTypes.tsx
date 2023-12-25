@@ -21,12 +21,12 @@ export type OpenSankeyMenuConfigurationNodesFType = (
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes_attributes:JSX.Element[],
-  link_io:string,set_link_io:React.Dispatch<React.SetStateAction<string>>,
-  link_pos:string,set_link_pos:React.Dispatch<React.SetStateAction<string>>,
-  tab_colored:boolean,set_tab_colored:React.Dispatch<React.SetStateAction<boolean>>,
+  link_io:string,set_link_io:(_:string)=>void,
+  link_pos:string,set_link_pos:(_:string)=>void,
+  tab_colored:boolean,set_tab_colored:(_:boolean)=>void,
   GetLinkValue:GetLinkValueFuncType,
   multi_selected_links: {current:SankeyLink[]},
-  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>
+  set_display_link_opacity:(_:string)=>void
 ) => JSX.Element
  
 export type tree_data_nodes=(t:TFunction<"translation", undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],

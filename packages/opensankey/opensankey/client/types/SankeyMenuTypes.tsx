@@ -63,9 +63,9 @@ export type ContextMenuNodeFType = (
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   showMenuComponents : showMenuComponentsType,
-  set_agregation_node:React.Dispatch<React.SetStateAction<string>>,
-  set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,
-  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
+  set_agregation_node:(_:string)=>void,
+  set_is_agregation:(_:boolean)=>void,
+  set_display_link_opacity:(_:string)=>void,
   pointer_pos:{current:number[]},
   additional_context_element_menu:JSX.Element[],
   additional_context_element_other:JSX.Element[]
