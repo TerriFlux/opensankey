@@ -16,7 +16,7 @@ export type AddAllDropDownFluxFType = (
   set_data: (data: SankeyData) => void
 ) => JSX.Element
 
-export type OpenSankeyMenusFTypeFType = (
+export type OpenSankeyMenusFType = (
   t:TFunction,
   Reinitialization:()=>void,
   DefaultSankeyData:()=>SankeyData,
@@ -84,7 +84,7 @@ export type ContextMenuLinkFType = (
   pointer_pos:{current:number[]}
 ) => JSX.Element
 
-export type ContextZddFTypeFType = (
+export type ContextZddFType = (
   showMenuComponents:showMenuComponentsType,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   pointer_pos:{current:number[]},
