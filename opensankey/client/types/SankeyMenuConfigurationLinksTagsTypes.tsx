@@ -1,7 +1,7 @@
 import { TFunction } from "i18next";
 import { SankeyData, SankeyLink } from "./Types";
 
-export type SankeyMenuConfigurationLinksTags = (
+export type SankeyMenuConfigurationLinksTagsFType = (
   data:SankeyData,
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,

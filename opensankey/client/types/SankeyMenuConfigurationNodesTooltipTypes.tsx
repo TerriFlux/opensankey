@@ -1,7 +1,7 @@
 import { TFunction } from "i18next";
 import { SankeyData, SankeyNode } from "./Types";
 
-export type SankeyMenuConfigurationNodesTooltip = (
+export type SankeyMenuConfigurationNodesTooltipFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
