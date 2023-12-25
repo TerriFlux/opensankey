@@ -322,24 +322,24 @@ export interface treeFolderType{
   checked?:1|0.5|0
 }
 export interface showMenuComponentsType {
-  show_nav : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_menu_node_apparence : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_menu_node_io : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_menu_link_data : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_menu_link_appearence : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_menu_layout : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_modal_welcome : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_modale_tuto : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_modale_support : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_agregation : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_context_zdd : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_excel_dialog : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_save_json : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_apply_layout : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  ShowPreference : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_modalTemplate : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_welcome : [boolean,React.Dispatch<React.SetStateAction<boolean>>],
-  show_load : [boolean,React.Dispatch<React.SetStateAction<boolean>>]
+  show_nav : [boolean,(_:boolean)=>void],
+  show_menu_node_apparence : [boolean,(_:boolean)=>void],
+  show_menu_node_io : [boolean,(_:boolean)=>void],
+  show_menu_link_data : [boolean,(_:boolean)=>void],
+  show_menu_link_appearence : [boolean,(_:boolean)=>void],
+  show_menu_layout : [boolean,(_:boolean)=>void],
+  show_modal_welcome : [boolean,(_:boolean)=>void],
+  show_modale_tuto : [boolean,(_:boolean)=>void],
+  show_modale_support : [boolean,(_:boolean)=>void],
+  show_agregation : [boolean,(_:boolean)=>void],
+  show_context_zdd : [boolean,(_:boolean)=>void],
+  show_excel_dialog : [boolean,(_:boolean)=>void],
+  show_save_json : [boolean,(_:boolean)=>void],
+  show_apply_layout : [boolean,(_:boolean)=>void],
+  ShowPreference : [boolean,(_:boolean)=>void],
+  show_modalTemplate : [boolean,(_:boolean)=>void],
+  show_welcome : [boolean,(_:boolean)=>void],
+  show_load : [boolean,(_:boolean)=>void]
 }
 
 export const showMenuComponentsPropTypes = {

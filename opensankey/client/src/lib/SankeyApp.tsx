@@ -472,12 +472,12 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   useEffect(()=>{
     display_nodes = Object.keys(data.nodes)
-    .filter((key) => SankeyUtils.NodeDisplayed(data,data.nodes[key]))
-    .reduce((obj, key) => {
-      return Object.assign(obj, {
-        [key]: data.nodes[key]
-      })
-    }, {}) as {[idNode:string]:SankeyNode}
+      .filter((key) => SankeyUtils.NodeDisplayed(data,data.nodes[key]))
+      .reduce((obj, key) => {
+        return Object.assign(obj, {
+          [key]: data.nodes[key]
+        })
+      }, {}) as {[idNode:string]:SankeyNode}
     const pre_display_links=Object.keys(data.links)
       .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
       .reduce((obj, key) => {

@@ -2157,7 +2157,7 @@ export const updateLayout:FunctionTypes.updateLayoutFuncType = (
   if(mode.includes('addNode')) {
     let difference = deep_diff.diff(data.nodes, new_layout.nodes)
     if (difference) {
-      let nodesId : string[] = []
+      const nodesId : string[] = []
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
       difference.forEach((d:{path:string[],kind:string})=>nodesId.push(d.path[0]))
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.nodes, {}, diff))
@@ -2170,7 +2170,7 @@ export const updateLayout:FunctionTypes.updateLayoutFuncType = (
   if(mode.includes('removeNode')) {
     let difference = deep_diff.diff(data.nodes, new_layout.nodes)
     if (difference) {
-      let nodesId : string[] = []
+      const nodesId : string[] = []
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
       difference.forEach((d:{path:string[],kind:string})=>nodesId.push(d.path[0]))
       nodesId.forEach(nodeId=> {
@@ -2183,7 +2183,7 @@ export const updateLayout:FunctionTypes.updateLayoutFuncType = (
   if(mode.includes('addFlux')) {
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
-      let linksId : string[] = [] 
+      const linksId : string[] = [] 
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'N') && d.path.length ===1 )
       difference.forEach((d:{path:string[],kind:string})=>linksId.push(d.path[0]))
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.links, {}, diff))
@@ -2207,7 +2207,7 @@ export const updateLayout:FunctionTypes.updateLayoutFuncType = (
   if(mode.includes('removeFlux')) {
     let difference = deep_diff.diff(data.links, new_layout.links)
     if (difference) {
-      let linksId : string[] = [] 
+      const linksId : string[] = [] 
       difference = difference.filter((d :{path:string[],kind:string}) => (d.kind === 'D') && d.path.length ===1 )
       difference.forEach((d:{path:string[],kind:string})=>linksId.push(d.path[0]))
       linksId.forEach(linksId=> {

@@ -15,9 +15,9 @@ import { SankeyData } from '../../types/Types'
 export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
   set_data:(d:SankeyData)=>void,
   showStyle:boolean,
-  setShowStyle:React.Dispatch<React.SetStateAction<boolean>>,
+  setShowStyle:(_:boolean)=>void,
   selected_style_node:string,
-  set_selected_style_node:React.Dispatch<React.SetStateAction<string>>,
+  set_selected_style_node:(_:string)=>void,
   additional_node_attribute:JSX.Element[],
   set_style_to_apply:(s:string)=>void,
 ) => {
@@ -105,9 +105,9 @@ export const SankeyPlusModalStyleLink = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   showStyleLink:boolean,
-  setShowStyleLink:React.Dispatch<React.SetStateAction<boolean>>,
+  setShowStyleLink:(_:boolean)=>void,
   selected_style_link:string,
-  set_selected_style_link:React.Dispatch<React.SetStateAction<string>>,
+  set_selected_style_link:(_:string)=>void,
   additional_link_appearence_items:JSX.Element[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void

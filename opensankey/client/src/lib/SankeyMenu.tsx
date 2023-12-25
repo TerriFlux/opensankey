@@ -1,7 +1,6 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
-import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
 import {
   Accordion,
   Button,
@@ -27,14 +26,12 @@ import {
 } from 'react-bootstrap'
 import {
   SankeyData,
-  SankeyDataPropTypes,
   SankeyLink,
   SankeyLinkValue,
   SankeyNode,
   TagsCatalog,
   TagsGroup,
   showMenuComponentsType,
-  showMenuComponentsPropTypes,
   MenuTypes,
   MenuPropTypes
 } from '../../types/Types'
@@ -1200,7 +1197,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         callback={callback} />
 
       <SankeyLoad
-        t={t as TFunction<"translation", undefined>}
+        t={t as TFunction<'translation', undefined>}
         url_prefix={url_prefix}
         successAction={()=>SankeyUtils.DownloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
         show_dialog={showMenuComponents.show_load[0]}
@@ -1399,9 +1396,9 @@ export const ContextMenuNode=(
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   showMenuComponents : showMenuComponentsType,
-  set_agregation_node:React.Dispatch<React.SetStateAction<string>>,
-  set_is_agregation:React.Dispatch<React.SetStateAction<boolean>>,
-  set_display_link_opacity:React.Dispatch<React.SetStateAction<string>>,
+  set_agregation_node:(_:string)=>void,
+  set_is_agregation:(_:boolean)=>void,
+  set_display_link_opacity:(_:string)=>void,
   pointer_pos:{current:number[]},
   additional_context_element_menu:JSX.Element[],
   additional_context_element_other:JSX.Element[]
