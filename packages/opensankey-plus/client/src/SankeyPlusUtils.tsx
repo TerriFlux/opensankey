@@ -8,6 +8,7 @@ import * as d3 from 'd3'
 import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from '../types/Types'
+import {drag_legend_plusFType} from '../types/SankeyPlusUtilsTypes'
 import { opposing_drag_elements_plus } from './SankeyPlusNodes'
 import { drag_legend_g_elementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './FunctionOSTyped'
 
@@ -21,7 +22,7 @@ export const default_sankey_plus_style_link=()=>{
   return style
 }
 
-export  const drag_legend_plus = (data:SankeyPlusData,
+export  const drag_legend_plus : drag_legend_plusFType = (data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]}
 ) => d3.drag<SVGGElement, unknown>()

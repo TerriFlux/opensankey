@@ -7,7 +7,7 @@ export type default_sankey_plus_style_linkFType = () => SankeyPlusLinkStyle
 export  type drag_legend_plusFType = (data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]}
-) => void
+) => d3.DragBehavior<SVGGElement, unknown, unknown>
 
 export type import_image_as_svg_BGFType = (
   t:TFunction,

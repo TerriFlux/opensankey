@@ -18,7 +18,7 @@ export type setValue = (
   depth: number
 ) => void
 
-export type get_data_from_view=(
+export type get_data_from_viewFType =(
   master_data:SankeyPlusData,
   id_view_to_see:string
 )=> SankeyPlusData
