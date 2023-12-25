@@ -1,7 +1,7 @@
 import { TFunction } from "i18next";
 import { SankeyData } from "./Types";
 
-export type OpenSankeyMenuConfigurationLayout = (
+export type OpenSankeyMenuConfigurationLayoutFType = (
   t:TFunction,
   data: SankeyData,
   set_data:(d:SankeyData)=>void,

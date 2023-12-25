@@ -7,14 +7,14 @@ import {
   ValueSelectedParameterFuncType, ZoomFunctionFuncType
 } from "./FunctionTypes"
 
-export type StrokeDasharray =(
+export type StrokeDasharrayFType =(
   d:SankeyLink,
   data:SankeyData,
   GetLinkValue:GetLinkValueFuncType
 )=> string
 
 // Function that return the Y position of link label
-export type TextLinkPosDY=(
+export type TextLinkPosDYFType = (
   l:SankeyLink,
   data:SankeyData,
   scale:(t:number)=>number,
@@ -22,19 +22,19 @@ export type TextLinkPosDY=(
 )=> string
  
 // Function that return the side of link label
-export type TextLinkSide=(
+export type TextLinkSideFType = (
   link:SankeyLink,
   data:SankeyData
 )=>string
 
 // Function that return the link color
 // the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags)
-export type LinkStroke=(l:SankeyLink,data:SankeyData,
+export type LinkStrokeFType = (l:SankeyLink,data:SankeyData,
   GetLinkValue:GetLinkValueFuncType
 )=> string
 
 // Function that compute th position of the begining of the link and the position of where it end
-export type ComputeEndPoints = (
+export type ComputeEndPointsFType = (
   source_node: SankeyNode,
   target_node: SankeyNode,
   link: SankeyLink,
@@ -49,7 +49,7 @@ export type ComputeEndPoints = (
 ) => [number,number,number,number]
 
 // Function to place the node on the draw zone
-export type nodeTransform=(
+export type nodeTransformFType = (
   d:SankeyNode,
   display_nodes:{[node_id:string]:SankeyNode},
   display_links:{[ink_id:string]:SankeyLink}
@@ -57,7 +57,7 @@ export type nodeTransform=(
 
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
-export type EventNodeClick=(
+export type EventNodeClickFType = (
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
@@ -70,14 +70,14 @@ export type EventNodeClick=(
   mode_selection:{current:string}
 )=> void
 
-export type EventNodeContextMenu=(
+export type EventNodeContextMenuFType = (
   ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
   set_contextualised_node:(n:SankeyNode)=>void,
   pointer_pos:{current:number[]},
   multi_selected_nodes:{current: SankeyNode[] },              
 )=> void
 
-export type EventLinkContextMenu=(
+export type EventLinkContextMenuFType = (
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
   set_contextualised_link:(l:SankeyLink)=>void,
@@ -91,13 +91,13 @@ export type EventLinkContextMenu=(
 )=> void
 
 // Function that wrap node text when the length of the label exceed the limit
-export type TextNodeWrap=(
+export type TextNodeWrapFType = (
   d:SankeyNode,
   data:SankeyData
 )=> number
 
 // Function that add marker at the end of links, those marker are arrow
-export type DrawArrows = (
+export type DrawArrowsFType = (
   n: SankeyNode,
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
@@ -109,14 +109,14 @@ export type DrawArrows = (
 ) => void
 
 // Sort the outputLinksId tab of the node by using position of output node
-export type SortOutputLinksIdByYPos=(
+export type SortOutputLinksIdByYPosFType = (
   data:SankeyData,
   n:SankeyNode
 )=> void
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes,
 // or creating a nodes at first click then linking it to a already existing one or the opposite
-export type EventOnMouseUpAddNodesAndLink=(
+export type EventOnMouseUpAddNodesAndLinkFType = (
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   data:SankeyData,
@@ -130,7 +130,7 @@ export type EventOnMouseUpAddNodesAndLink=(
   set_displayed_input_link_value:(s:string)=>void,
 )=> void
 
-export type SetNodesHeight = (
+export type SetNodesHeightFType = (
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
   display_links: { [link_id: string]: SankeyLink },
@@ -138,7 +138,7 @@ export type SetNodesHeight = (
   GetLinkValue:GetLinkValueFuncType
 ) => void
  
-export type PathNodeArrowShape=(
+export type PathNodeArrowShapeFType = (
   node_width:number,
   node_height:number,
   k_angle:number,
@@ -147,18 +147,18 @@ export type PathNodeArrowShape=(
 )=> string
 
 // Function that change the scale of the graph
-export type update_scale = (user_scale: number) => void
+export type update_scaleFType = (user_scale: number) => void
 
 // Function that draw the grid in the background of the sankey zone
 // The grid help to align sankey elements and the step of nodes shift when we press arrow  on the keyboard
-export type DrawGrid = (data:SankeyData) => void
+export type DrawGridFType = (data:SankeyData) => void
 
-export type NodeStrokeWidth=(
+export type NodeStrokeWidthFType = (
   d:SankeyNode,
   multi_selected_nodes:{current:SankeyNode[]}
 )=> number
 
-export type TextNodeValue=(
+export type TextNodeValueFType = (
   d:SankeyNode,
   data:SankeyData,
   display_links:{[link_id:string]:SankeyLink},
@@ -166,27 +166,27 @@ export type TextNodeValue=(
   GetLinkValue:GetLinkValueFuncType
 )=> string
 
-export type NodeLabelPosX=(data:SankeyData,n:SankeyNode) => number
+export type NodeLabelPosXFType = (data:SankeyData,n:SankeyNode) => number
 
-export type NodeLabelPosY=(n:SankeyNode,data:SankeyData) => number
+export type NodeLabelPosYFType = (n:SankeyNode,data:SankeyData) => number
 
-export type NodeLabelValuePosX=(data:SankeyData,n:SankeyNode) => number
+export type NodeLabelValuePosXFType = (data:SankeyData,n:SankeyNode) => number
 
-export type NodeLabelValuePosY=(data:SankeyData,n:SankeyNode)=> number
+export type NodeLabelValuePosYFType = (data:SankeyData,n:SankeyNode)=> number
 
-export type NodeLabeLText=(
+export type NodeLabeLTextFType = (
   data:SankeyData,
   d:SankeyNode
 )=> string
 
-export type DeselectVisualyLinks=(d:SankeyLink)=> void
+export type DeselectVisualyLinksFType = (d:SankeyLink)=> void
 
-export type SelectVisualyLinks=(d:SankeyLink)=> void
+export type SelectVisualyLinksFType = (d:SankeyLink)=> void
 
-export type SelectVisualyNodes=(n:SankeyNode)=> void
+export type SelectVisualyNodesFType = (n:SankeyNode)=> void
 
 // Function that compute the link width
-export type LinkStrokeWidth=(l:SankeyLink,
+export type LinkStrokeWidthFType = (l:SankeyLink,
   data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
@@ -195,7 +195,7 @@ export type LinkStrokeWidth=(l:SankeyLink,
   GetLinkValue:GetLinkValueFuncType,
 )=> number
 
-export type DrawLinkStartSabot=(data:SankeyData,
+export type DrawLinkStartSabotFType = (data:SankeyData,
   n:SankeyNode,
   display_nodes: { [node_id: string]: SankeyNode },
   display_links: { [link_id: string]: SankeyLink },

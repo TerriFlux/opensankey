@@ -9,7 +9,7 @@
  * @param {boolean} revert
  * @returns {string}
  */
-export type draw_arrow = (
+export type draw_arrowFType = (
   node_face_size: number,
   position_node_face: number[],
   link_size: number,
@@ -21,7 +21,7 @@ export type draw_arrow = (
 ) => void
 
 
-export type DrawLinkSabot = (
+export type DrawLinkSabotFType = (
   node_face_size: number,
   position_node_face: number[],
   link_size: number,
@@ -40,7 +40,7 @@ export type DrawLinkSabot = (
  * @param {number[]} y_list
  * @param {({ text?: string } | undefined)} error_msg
  */
-export type check_errors = (
+export type check_errorsFType = (
   source_name: string,
   target_name: string,
   x_list: number[],
@@ -65,7 +65,7 @@ export type check_errors = (
  * @param {({ text?: string } | undefined)} error_msg
  * @returns {string}
  */
-export type bezier_link_classic_vv = (
+export type bezier_link_classic_vvFType = (
   source_name: string,
   target_name: string,
   origin: number[],
@@ -88,7 +88,7 @@ export type bezier_link_classic_vv = (
  * @param {({ text?: string } | undefined)} error_msg
  * @returns {string}
  */
-export type bezier_link_classic_hv = (
+export type bezier_link_classic_hvFType = (
   source_name: string,
   target_name: string,
   origin: number[],
@@ -111,7 +111,7 @@ export type bezier_link_classic_hv = (
  * @param {({ text?: string } | undefined)} error_msg
  * @returns {string}
  */
-export type bezier_link_classic_vh = (
+export type bezier_link_classic_vhFType = (
   source_name: string,
   target_name: string,
   origin: number[],
@@ -140,7 +140,7 @@ export type bezier_link_classic_vh = (
  * @param {(arg0: number) => number} scale
  * @returns {number) => string}
  */
-export type bezier_link_classic_recycling = (
+export type bezier_link_classic_recyclingFType = (
   source_name: string,
   target_name: string,
   link_value: number,

@@ -2,7 +2,7 @@ import { TFunction, i18n } from "i18next"
 import { SankeyData } from "./Types"
 
 
-export type OpenSankeyDefaultModalePreferenceContent=(
+export type OpenSankeyDefaultModalePreferenceContentFType=(
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,

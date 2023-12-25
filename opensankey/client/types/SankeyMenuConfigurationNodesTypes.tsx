@@ -14,7 +14,7 @@ import { GetLinkValueFuncType } from "./FunctionTypes"
 
 // type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
-export type OpenSankeyMenuConfigurationNodes = (
+export type OpenSankeyMenuConfigurationNodesFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,

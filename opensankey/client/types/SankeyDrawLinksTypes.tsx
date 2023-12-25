@@ -1,7 +1,7 @@
 import { GetLinkValueFuncType, LinkColorFuncType, LinkStrokeFuncType, LinkTextFuncType, drawArrowsType } from "./FunctionTypes";
 import { SankeyData, SankeyLink, SankeyNode } from "./Types";
 
-export type OpenSankeyDrawLinks = (
+export type OpenSankeyDrawLinksFType = (
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },

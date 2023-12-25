@@ -20,7 +20,7 @@ import { SankeyData, SankeyLink } from "./Types";
 import { GetLinkValueFuncType } from "./FunctionTypes";
 
 // type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
-export type OpenSankeyMenuConfigurationLinks = (
+export type OpenSankeyMenuConfigurationLinksFType = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},

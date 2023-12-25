@@ -8,7 +8,7 @@ import { SankeyData, SankeyNode } from "./Types"
    *
    * @type {*}
    */
-export type SankeyMenuConfigurationNodesTags = (
+export type SankeyMenuConfigurationNodesTagsFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
