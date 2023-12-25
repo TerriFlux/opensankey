@@ -47,7 +47,7 @@ import { updateLayoutFuncType } from "./FunctionTypes";
 // type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 
 
-export type OpenSankeyDiagramSelector = (
+export type OpenSankeyDiagramSelectorFType = (
   t: TFunction, 
   convert_data: (s:SankeyData,DefaultSankeyData:()=>void)=>null,
   sankey_data: SankeyData,

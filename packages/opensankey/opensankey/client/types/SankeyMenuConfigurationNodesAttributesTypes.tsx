@@ -1,7 +1,7 @@
 import { TFunction } from "i18next"
 import { SankeyData, SankeyNode } from "./Types"
 
-export type OpenSankeyConfigurationNodesAttributes = (
+export type OpenSankeyConfigurationNodesAttributesFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -14,7 +14,7 @@ export type OpenSankeyConfigurationNodesAttributes = (
   advanced_label_value_content:JSX.Element[],
 ) => JSX.Element
 
-export type SankeyMenuConfigurationNodesAttributes = (
+export type SankeyMenuConfigurationNodesAttributesFType = (
   t:TFunction,
   menu_configuration_nodes_attributes:JSX.Element[],
   for_modal : boolean

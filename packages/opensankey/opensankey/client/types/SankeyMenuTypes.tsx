@@ -9,14 +9,14 @@ import { SankeyData, SankeyLink, SankeyNode, TagsCatalog, showMenuComponentsType
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => any}
  */
-export type AddAllDropDownFlux = (
+export type AddAllDropDownFluxFType = (
   t:TFunction,
   fluxTags: TagsCatalog,
   data: SankeyData,
   set_data: (data: SankeyData) => void
 ) => JSX.Element
 
-export type OpenSankeyMenusFType = (
+export type OpenSankeyMenusFTypeFType = (
   t:TFunction,
   Reinitialization:()=>void,
   DefaultSankeyData:()=>SankeyData,
@@ -33,7 +33,7 @@ export type OpenSankeyMenusFType = (
   convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void
 ) => {[s:string]:JSX.Element | JSX.Element[]}
 
-export type OpenSankeyModalWelcomeFType =(
+export type OpenSankeyModalWelcomeFType = (
   t:TFunction,
   active_page:string,
   set_active_page:(s:string)=>void,
@@ -54,7 +54,7 @@ export type OpenSankeyModalWelcomeFType =(
 
 
 
-export type ContextMenuNode=(
+export type ContextMenuNodeFType = (
   contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   display_nodes:{[id:string]:SankeyNode},
@@ -72,7 +72,7 @@ export type ContextMenuNode=(
 )=> JSX.Element
 
 
-export type ContextMenuLink=(
+export type ContextMenuLinkFType = (
   contextualised_link:SankeyLink|undefined,
   set_contextualised_node:(n:SankeyLink|undefined)=>void,
   set_show_menu_link_data:(b:boolean)=>void,
@@ -84,7 +84,7 @@ export type ContextMenuLink=(
   pointer_pos:{current:number[]}
 ) => JSX.Element
 
-export type ContextZddFType=(
+export type ContextZddFTypeFType = (
   showMenuComponents:showMenuComponentsType,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   pointer_pos:{current:number[]},
@@ -95,6 +95,6 @@ export type ContextZddFType=(
   t:TFunction
 )=> JSX.Element
 
-export type OpenSankeySaveButton=(t:TFunction) => JSX.Element
+export type OpenSankeySaveButtonFType = (t:TFunction) => JSX.Element
  
-export type LastCheckpointTime=(t:TFunction) => JSX.Element
+export type LastCheckpointTimeFType = (t:TFunction) => JSX.Element

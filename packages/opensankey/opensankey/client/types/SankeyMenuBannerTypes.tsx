@@ -3,26 +3,26 @@ import { SankeyData } from "./Types"
 import { ConvertDataFuncType, DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType, setDiagramFuncType } from "./FunctionTypes"
 
 
-export type addSimpleLevelDropDown = (
+export type addSimpleLevelDropDownFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void
 ) => JSX.Element
  
-export type col_title_level_filter=(
+export type col_title_level_filterFType=(
   t:TFunction,
   data:SankeyData
 ) => JSX.Element
 
 
-export type addAllDropDownNode = (
+export type addAllDropDownNodeFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   level:boolean
 ) => JSX.Element
 
-export type toolbar_builder = (
+export type toolbar_builderFType = (
   t:TFunction,
   data: SankeyData,
   set_data: (d:SankeyData)=>void,

@@ -43,6 +43,8 @@ interface SankeyLoadProdTypes {
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-export type Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}) => JSX.Element
+export type CounterFType = (
+  {url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}
+) => JSX.Element
 
 //export default SankeyLoad

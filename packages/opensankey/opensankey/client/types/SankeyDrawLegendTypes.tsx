@@ -2,7 +2,7 @@ import { TFunction } from "i18next"
 import { GetLinkValueFuncType, drag_legend_g_elementFuncType } from "./FunctionTypes"
 import { SankeyData, SankeyLink, SankeyNode } from "./Types"
 
-export type OpenSankeyDrawLegend = (
+export type OpenSankeyDrawLegendFType = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   display_nodes : { [node_id: string]: SankeyNode },
@@ -14,11 +14,11 @@ export type OpenSankeyDrawLegend = (
   set_legend_clicked:(b:boolean)=>void,
 ) => JSX.Element
 
-export type drag_legend=(data:SankeyData,
+export type drag_legendFType=(data:SankeyData,
   set_data:(d:SankeyData)=>void
 )=> void
 
-export type context_legend_tags=(
+export type context_legend_tagsFType=(
   tag_contextualised:string|undefined,
   set_tag_contextualised:(t:string|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,

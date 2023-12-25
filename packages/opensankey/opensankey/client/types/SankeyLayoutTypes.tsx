@@ -1,7 +1,7 @@
 import { ComputeAutoSankeyFuncType, GetLinkValueFuncType } from "./FunctionTypes"
 import { SankeyData, SankeyLink, SankeyNode } from "./Types"
 
-export type reorganize_inputLinksId = (
+export type reorganize_inputLinksIdFType = (
   data:SankeyData,
   node: SankeyNode,
   input: boolean,
@@ -17,13 +17,13 @@ export type reorganize_inputLinksId = (
  * @param {SankeyNode} nodes
  * @param {SankeyLink} links
  */
-export type compute_default_input_outputLinksId = (
+export type compute_default_input_outputLinksIdFType = (
   nodes: { [node_id : string]:SankeyNode},
   links: { [link_id : string]:SankeyLink},
 ) => void
 
 
-export type apply_input_outputLinksId = (
+export type apply_input_outputLinksIdFType = (
   ref_nodes: { [node_id : string]:SankeyNode},
   data: SankeyData
 ) => void
@@ -40,7 +40,7 @@ export type apply_input_outputLinksId = (
  * @param {object} links
  * @param {object} nodes
  */
-export type compute_horizontal_index = (
+export type compute_horizontal_indexFType = (
   node: SankeyNode,
   starting_index: number,
   visible_nodes_ids: string[],
@@ -84,7 +84,7 @@ export type compute_horizontal_index = (
  * @param {object} links
  * @param {object} nodes
  */
-export type compute_recycling_horizontal_index = (
+export type compute_recycling_horizontal_indexFType = (
   link: SankeyLink,
   visible_nodes_ids: string[],
   recycling_links_ids: string[],
@@ -93,7 +93,7 @@ export type compute_recycling_horizontal_index = (
   nodes: { [node_id: string]: SankeyNode},
 ) => void
 
-export type arrangeNodes = (
+export type arrangeNodesFType = (
   data: SankeyData
 ) => void
 
@@ -107,7 +107,7 @@ export type arrangeNodes = (
  * @param {Function} scale
  * @param {Function} GetLinkValue
  */
-export type nodeHeight = (
+export type nodeHeightFType = (
   node: SankeyNode,
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -125,7 +125,7 @@ export type nodeHeight = (
  * @param {object} nodes Dict of node to reorganize
  * @param {object} links Dict of links to reorganize
  */
-export type reorganize_all_input_outputLinksId = (
+export type reorganize_all_input_outputLinksIdFType = (
   data:SankeyData,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
@@ -139,7 +139,7 @@ export type reorganize_all_input_outputLinksId = (
  * @param {string} cur_dimension Dimension on which we desagregage node
  * @param {boolean} ComputeAutoSankey Has the function been called from ComputeAutoSankey ?
  */
-export type desagregation = (
+export type desagregationFType = (
   data: SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
@@ -155,7 +155,7 @@ export type desagregation = (
  * @param {string} idNode Id of node that we desagregate
  * @param {string} cur_dimension Dimension on which we desagregage node
  */
-export type agregation = (
+export type agregationFType = (
   data : SankeyData,
   idNode: string,
   cur_dimension: string,

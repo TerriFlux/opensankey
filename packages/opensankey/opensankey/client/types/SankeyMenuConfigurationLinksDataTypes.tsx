@@ -1,7 +1,7 @@
 import { TFunction } from "i18next";
 import { SankeyData, SankeyLink } from "./Types";
 
-export type SankeyMenuConfigurationLinksData = (
+export type SankeyMenuConfigurationLinksDataFType = (
   data:SankeyData,
   tags_selected:{[k: string]: string},
   set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
