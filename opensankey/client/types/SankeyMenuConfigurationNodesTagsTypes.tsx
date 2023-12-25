@@ -14,7 +14,7 @@ export type SankeyMenuConfigurationNodesTagsFType = (
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
   tags_group_key:string,
-  set_tags_group_key:React.Dispatch<React.SetStateAction<string>>
+  set_tags_group_key:(_:string)=>void
 )=> JSX.Element
 
 
