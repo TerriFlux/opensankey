@@ -1,6 +1,6 @@
 import React,{useState} from 'react'
 import { Row, Form, Tab, FormControl, OverlayTrigger, Tooltip, InputGroup, Button, ButtonGroup, Dropdown} from 'react-bootstrap'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal,SankeyNode } from '../../types/Types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal,SankeyNode } from '../types/Types'
 import { TFunction } from 'i18next'
 import { FaAlignLeft,FaAlignCenter,FaAlignRight} from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH } from 'react-icons/fa'
@@ -10,8 +10,8 @@ import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge} from './SankeyUtils'
 import { LinkStrokeWidth,scale,inv_scale } from './SankeyDrawFunction'
-import { GetLinkValueFuncType } from '../../types/FunctionTypes'
-import { SankeyMenuConfigurationLinksAppearenceFType } from '../../types/SankeyMenuConfigurationLinksAppearenceTypes'
+import { GetLinkValueFuncType } from '../types/FunctionTypes'
+import { SankeyMenuConfigurationLinksAppearenceFType } from '../types/SankeyMenuConfigurationLinksAppearenceTypes'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
   width="26"

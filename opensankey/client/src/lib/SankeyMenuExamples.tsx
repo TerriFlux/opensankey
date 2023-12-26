@@ -2,7 +2,7 @@
 import React, {Validator } from 'react'
 import PropTypes, { InferProps,ReactElementLike } from 'prop-types'
 import { NavDropdown, Dropdown, } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes } from '../../types/Types'
+import { SankeyDataPropTypes, SankeyNodePropTypes, SankeyLinkPropTypes } from '../types/Types'
 import { UploadExemple,  } from './SankeyUtils'
 
 

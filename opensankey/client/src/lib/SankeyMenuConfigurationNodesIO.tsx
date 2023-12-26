@@ -1,12 +1,12 @@
 import React from 'react'
 import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyData, SankeyNode,SankeyLink } from '../../types/Types'
+import { SankeyData, SankeyNode,SankeyLink } from '../types/Types'
 import { LinkVisible,LinkColor,ReturnValueLink,reorganize_node_inputLinksId,reorganize_node_outputLinksId} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import { SelectVisualyLinks } from './SankeyDrawFunction'
-import { GetLinkValueFuncType } from '../../types/FunctionTypes'
-import { SankeyMenuConfigurationNodesIOFType} from '../../types/SankeyMenuConfigurationNodesIOTypes'
+import { GetLinkValueFuncType } from '../types/FunctionTypes'
+import { SankeyMenuConfigurationNodesIOFType} from '../types/SankeyMenuConfigurationNodesIOTypes'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them
 const getIOLink=(
