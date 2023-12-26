@@ -8,9 +8,9 @@ import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplaying
 import { SankeyPlusData,SankeyPlusNode,SankeyPlusLink } from '../types/Types'
 import { LinkStrokeFType, SankeyPlusDrawArrowsFType, dragNodeRedrawGradientFType, menu_conf_link_apparence_gradientFType } from '../types/SankeyPlusGradientTypes'
 
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode} from 'open-sankey/types/Types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode} from 'open-sankey/src/types/Types'
 import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
-import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/types/FunctionTypes'
 import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
 
 

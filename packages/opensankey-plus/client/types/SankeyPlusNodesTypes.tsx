@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, drawArrowsType } from 'open-sankey/types/FunctionTypes'
-import { NodeTooltipsContentFType } from 'open-sankey/types/SankeyTooltipTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, drawArrowsType } from 'open-sankey/src/types/FunctionTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
 
 export type SankeyPlusNodeIconFType = (
   t:TFunction,

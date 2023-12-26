@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData } from 'open-sankey/types/Types'
+import { SankeyData } from 'open-sankey/src/types/Types'
 
 export type SankeyPlusModalStyleNodeFType = (
   t:TFunction,data:SankeyData,

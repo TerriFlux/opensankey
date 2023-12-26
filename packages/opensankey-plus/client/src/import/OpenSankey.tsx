@@ -2,7 +2,7 @@ import * as OpensankeyUtils from 'open-sankey/dist/src/lib/SankeyUtils'
 import * as OpenSankeyDrawFunc from 'open-sankey/dist/src/lib/SankeyDrawFunction'
 import * as OpensankeyDragFunc from 'open-sankey/dist/src/lib/SankeyDrag'
 import * as OpensankeyConvert from 'open-sankey/dist/src/lib/SankeyConvert'
-import * as FunctionTypes from 'open-sankey/types/FunctionTypes'
+import * as FunctionTypes from 'open-sankey/src/types/FunctionTypes'
 import { drag_legend_g_element} from 'open-sankey/dist/src/lib/SankeyDrawLegend'
 
 

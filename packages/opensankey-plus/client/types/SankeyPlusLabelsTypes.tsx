@@ -1,6 +1,6 @@
-import { SankeyData } from 'open-sankey/types/Types'
+import { SankeyData } from 'open-sankey/src/types/Types'
 import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
-import { GetLinkValueFuncType, LinkTextFuncType, drawArrowsType } from 'open-sankey/types/FunctionTypes'
+import { GetLinkValueFuncType, LinkTextFuncType, drawArrowsType } from 'open-sankey/src/types/FunctionTypes'
 import * as d3 from 'd3'
 
 export type SankeyPlusDrawLabelsFType = (

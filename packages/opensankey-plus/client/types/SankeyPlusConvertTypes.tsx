@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import { SankeyPlusData } from './Types'
-import { updateLayoutFuncType } from 'open-sankey/types/FunctionTypes'
+import { updateLayoutFuncType } from 'open-sankey/src/types/FunctionTypes'
 
 export type plus_convert_dataFType = (
   data:SankeyPlusData,

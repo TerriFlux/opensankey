@@ -14,8 +14,8 @@ import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
 import { NodeDisplayed } from './import/OpenSankey'
 import {SankeyPlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
-import { NodeTooltipsContentFType } from 'open-sankey/types/SankeyTooltipTypes'
-import { GetLinkValueFuncType } from 'open-sankey/types/FunctionTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/types/FunctionTypes'
 
 
 declare const window: Window &

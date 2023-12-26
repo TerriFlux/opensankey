@@ -28,10 +28,10 @@ import {RemoveAnimate,
 } from './import/OpenSankey'
 
 import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
-import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/types/Types'
-import { drawArrowsType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/types/FunctionTypes'
+import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/src/types/Types'
+import { drawArrowsType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/FunctionTypes'
 import { SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, SankeyPlusNodeClickEventFType, SankeyPlusNodeDragEventFType, SankeyPlusNodeIconFType, context_node_iconFType, drag_elements_plusFType, node_icon_fill_colorFType, node_icon_pathFType, opposing_drag_elements_plusFType, return_out_of_bound_element_plusFType} from '../types/SankeyPlusNodesTypes'
-import { NodeTooltipsContentFType } from 'open-sankey/types/SankeyTooltipTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
 
 declare const window: Window &
 typeof globalThis & {

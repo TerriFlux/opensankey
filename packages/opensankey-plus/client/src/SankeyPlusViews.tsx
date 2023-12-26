@@ -22,7 +22,7 @@ import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaCopy} from 'react-ico
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
-import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/types/Types'
+import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
 import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
 import { MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, SankeyPlusMenuPreferenceViewFType, check_current_view_savedFType, filter_viewFType, get_data_from_viewFType, keyHandlerFType, modal_transparent_view_attrFType, modal_view_not_savedFType, recompute_viewsFType, selecteur_viewFType, setDiagramFType, setValueFType, view_toastFType, view_toast_update_viewFType, viewsAccordionFType} from '../types/SankeyPlusViewsTypes'
 
