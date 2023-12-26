@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState,useRef} from 'react'
 import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup,Overlay,Popover, ButtonGroup } from 'react-bootstrap'
 import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
-import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLink,treeFolderType} from '../../types/Types'
+import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLink,treeFolderType} from '../types/Types'
 import { DeleteNode,ReturnValueNode,ApplyStyleToNodes,AddNewNode,CutName,FolderIcon,FolderOpenIcon,FileIcon} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus, FaEye,} from 'react-icons/fa'
@@ -16,7 +16,7 @@ import { TFunction } from 'i18next'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import FolderTree from 'react-folder-tree'
 import 'react-folder-tree/dist/style.css'
-import { GetLinkValueFuncType } from '../../types/FunctionTypes'
+import { GetLinkValueFuncType } from '../types/FunctionTypes'
 
 const SankeyNodeEditionPropTypes = {
   t:PropTypes.func.isRequired,

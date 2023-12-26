@@ -1,6 +1,6 @@
 import React from 'react'
 import { Row, Form,  Tab, InputGroup } from 'react-bootstrap'
-import { SankeyData, SankeyLink,SankeyLinkValue } from '../../types/Types'
+import { SankeyData, SankeyLink,SankeyLinkValue } from '../types/Types'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'

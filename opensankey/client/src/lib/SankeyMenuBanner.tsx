@@ -11,7 +11,7 @@ import { Row,
   Popover,
   FormControl,
   Overlay } from 'react-bootstrap'
-import {  SankeyData, TagsGroup} from '../../types/Types'
+import {  SankeyData, TagsGroup} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FindMaxLinkValue,AdjustSankeyZone } from './SankeyUtils'
 import * as d3 from 'd3'
@@ -27,7 +27,7 @@ import { faShareNodes,
   faSliders} from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
-import { ConvertDataFuncType, DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType, setDiagramFuncType } from '../../types/FunctionTypes'
+import { ConvertDataFuncType, DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType, setDiagramFuncType } from '../types/FunctionTypes'
 
 // Delete all local node variable : local_aggregation when we switch general aggregation 
 const delete_local_aggregation=(data:SankeyData)=>{

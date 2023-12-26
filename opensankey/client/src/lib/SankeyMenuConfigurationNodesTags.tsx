@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Row, Form, Tab, InputGroup } from 'react-bootstrap'
-import { SankeyData,SankeyNode } from '../../types/Types'
+import { SankeyData,SankeyNode } from '../types/Types'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
 /**

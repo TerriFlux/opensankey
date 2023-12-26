@@ -4,7 +4,7 @@ import { render } from '@testing-library/react'
 //import renderer from 'react-test-renderer';
 //import {DefaultSankeyData, GetLinkValue} from './SankeyUtils'
 import SankeyDraw,{SankeyDrawDefaultProps} from './SankeyDraw'
-import { SankeyData } from '../../types/Types'
+import { SankeyData } from '../types/Types'
 import { convert_data } from './SankeyConvert'
 import { ComputeAutoSankey } from './SankeyLayout'
 // const fs = require('fs')

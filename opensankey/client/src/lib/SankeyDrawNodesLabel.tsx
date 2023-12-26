@@ -1,11 +1,11 @@
-import { SankeyData, SankeyNode } from '../../types/Types'
+import { SankeyData, SankeyNode } from '../types/Types'
 import * as d3 from 'd3'
 
 import { dragNodeTextEventWidthBoxEvent} from './SankeyDrag'
 import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelValuePosY,NodeLabeLText,TextNodeWrap} from './SankeyDrawFunction'
 import { ReturnValueNode } from './SankeyUtils'
-import { GetLinkValueFuncType } from '../../types/FunctionTypes'
-import { OpenSankeyDrawNodesLabelFType } from '../../types/SankeyDrawNodesLabelTypes'
+import { GetLinkValueFuncType } from '../types/FunctionTypes'
+import { OpenSankeyDrawNodesLabelFType } from '../types/SankeyDrawNodesLabelTypes'
 
 declare const window: Window &
 typeof globalThis & {

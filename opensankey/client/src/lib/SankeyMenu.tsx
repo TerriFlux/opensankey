@@ -34,7 +34,7 @@ import {
   showMenuComponentsType,
   MenuTypes,
   MenuPropTypes
-} from '../../types/Types'
+} from '../types/Types'
 
 import { complete_sankey_data } from './SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
@@ -53,7 +53,7 @@ import { arrangeNodes, ComputeAutoSankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
 import { SelectVisualyLinks} from './SankeyDrawFunction'
-import {ContextZddFType, OpenSankeyMenusFType, OpenSankeyModalWelcomeFType} from '../../types/SankeyMenuTypes'
+import {ContextZddFType, OpenSankeyMenusFType, OpenSankeyModalWelcomeFType} from '../types/SankeyMenuTypes'
 
 declare const window: Window &
   typeof globalThis & {

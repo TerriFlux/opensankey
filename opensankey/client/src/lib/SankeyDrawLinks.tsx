@@ -1,5 +1,5 @@
 import  { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve} from '../../types/Types'
+import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve} from '../types/Types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
@@ -13,7 +13,7 @@ import { drawCurveFunction,
   EventLinkContextMenu} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg,DrawLinkStartSabot} from './SankeyDrawFunction'
-import { GetLinkValueFuncType, LinkStrokeFuncType,drawArrowsType, LinkTextFuncType, LinkColorFuncType } from '../../types/FunctionTypes'
+import { GetLinkValueFuncType, LinkStrokeFuncType,drawArrowsType, LinkTextFuncType, LinkColorFuncType } from '../types/FunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {

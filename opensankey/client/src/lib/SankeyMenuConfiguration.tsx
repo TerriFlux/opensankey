@@ -1,10 +1,10 @@
 import Accordion from 'react-bootstrap/Accordion'
 import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, showMenuComponentsType } from '../../types/Types'
+import { SankeyLink, SankeyData, SankeyNode, showMenuComponentsType } from '../types/Types'
 import React, { FunctionComponent, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
-import { OpenSankeyConfigurationsMenusFType } from '../../types/SankeyMenuConfigurationTypes'
+import { OpenSankeyConfigurationsMenusFType } from '../types/SankeyMenuConfigurationTypes'
 import { TFunction } from 'i18next'
 
 
