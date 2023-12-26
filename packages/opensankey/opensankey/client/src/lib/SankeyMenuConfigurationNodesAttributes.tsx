@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip,FormControl, Button, ButtonGroup, InputGroup,Dropdown } from 'react-bootstrap'
-import { SankeyData, SankeyNode, SankeyNodeAttrLocal } from '../../types/Types'
+import { SankeyData, SankeyNode, SankeyNodeAttrLocal } from '../types/Types'
 import { ReturnCorrectNodeAttributeValue,
   AssignNodeValueToCorrectVar,
   IsNodeDisplayingValueLocal,

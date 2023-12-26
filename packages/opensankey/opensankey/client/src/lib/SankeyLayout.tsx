@@ -6,7 +6,7 @@ import {
   SankeyLinkPropTypes,
   SankeyNode,
   SankeyNodePropTypes
-} from '../../types/Types'
+} from '../types/Types'
 import {
   AssignLinkLocalAttribute,
   AssignNodeLocalAttribute,
@@ -22,7 +22,7 @@ import {
 import React, { FunctionComponent, useState } from 'react'
 import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
-import { ComputeAutoSankeyFuncType, GetLinkValueFuncType } from '../../types/FunctionTypes'
+import { ComputeAutoSankeyFuncType, GetLinkValueFuncType } from '../types/FunctionTypes'
 
 
 

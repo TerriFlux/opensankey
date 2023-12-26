@@ -1,13 +1,13 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React from 'react'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
-// import { SankeyLink } from 'open-sankey/types/Types'
+// import { SankeyLink } from 'open-sankey/src/types/Types'
 import {  CutName,DefaultNodeStyle,DefaultLinkStyle, GetLinkValue } from './SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
-import { SankeyData } from '../../types/Types'
+import { SankeyData } from '../types/Types'
 
 
 
