@@ -1,6 +1,5 @@
-import  { InferProps } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve, SankeyLinkAttrLocal, display_styleType} from '../types/Types'
-import React, { Requireable } from 'react'
+import React from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
 import { drawCurveFunction,
@@ -13,22 +12,26 @@ import { drawCurveFunction,
   EventLinkContextMenu} from './SankeyDrawFunction'
 import {add_drag_link_zone} from './SankeyDrag'
 import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg,DrawLinkStartSabot} from './SankeyDrawFunction'
-import { GetLinkValueFuncType, LinkStrokeFuncType,drawArrowsType, LinkTextFuncType, LinkColorFuncType } from '../types/FunctionTypes'
+import { drawArrowsType } from '../types/SankeyDrawFunctionTypes'
+import { LinkStrokeFuncType, OpenSankeyDrawLinksFType  } from '../types/SankeyDrawLinksTypes'
+import {
+  GetLinkValueFuncType, LinkTextFuncType, LinkColorFuncType
+} from '../types/SankeyUtilsTypes'
 
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const OpenSankeyDrawLinks = (
+export const OpenSankeyDrawLinks : OpenSankeyDrawLinksFType = (
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
-  links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
+  links_accordion_ref:{ current: HTMLDivElement; } | null,
   multi_selected_links:{current: SankeyLink[] },
   mode_selection:{current:string},
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
-  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
+  accordion_ref:{ current: HTMLDivElement } | null,
+  button_ref:{ current: HTMLLabelElement} | null,
   alt_key_pressed:boolean,
   position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
@@ -43,7 +46,7 @@ export const OpenSankeyDrawLinks = (
   LinkStroke:LinkStrokeFuncType,
   DrawArrows:drawArrowsType,
   set_display_link_opacity:(s:string)=>void,
-  set_contextualised_link:(l:SankeyLink)=>void,
+  set_contextualised_link:(l:SankeyLink|undefined)=>void,
   pointer_pos:{current:number[]},
   LinkSabotColor:LinkColorFuncType,
 
@@ -58,10 +61,10 @@ export const OpenSankeyDrawLinks = (
   // Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear (center handle,shift handles,drag zone) and add pointer event to those element
   const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLink,
     sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-    accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-    button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+    accordion_ref:{ current: HTMLDivElement; }| null,
+    button_ref:{ current: HTMLLabelElement; }| null,
     multi_selected_links:{current: SankeyLink[] },
-    links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+    links_accordion_ref:{ current: HTMLDivElement; }| null,
     set_data:(d:SankeyData)=>void
   )=>{
     mode_selection.current='s'
@@ -181,7 +184,7 @@ export const OpenSankeyDrawLinks = (
     display_links:{ [link_id: string]: SankeyLink },
     LinkStroke:LinkStrokeFuncType,
     DrawArrows:drawArrowsType,
-    set_contextualised_link:(l:SankeyLink)=>void,
+    set_contextualised_link:(l:SankeyLink|undefined)=>void,
     pointer_pos:{current:number[]},
     LinkSabotColor:LinkColorFuncType
   ) => {
@@ -759,5 +762,3 @@ export const OpenSankeyDrawLinks = (
   </>
   )
 }
-
-

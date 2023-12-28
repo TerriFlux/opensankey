@@ -4,6 +4,7 @@ import { Row, Form, Tab, InputGroup } from 'react-bootstrap'
 import { SankeyData,SankeyNode } from '../types/Types'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
+import { SankeyMenuConfigurationNodesTagsFType } from '../types/SankeyMenuConfigurationNodesTagsTypes'
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
    * To visaulize nodes according to their tag associated, the groupTags must be at least have it banner in mode one or mutliple
@@ -11,7 +12,7 @@ import { SmoothClasses } from './SankeyUtils'
    *
    * @type {*}
    */
-export const SankeyMenuConfigurationNodesTags = (
+export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTagsFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -97,7 +98,7 @@ export const SankeyMenuConfigurationNodesTags = (
 
 // Check if all value of the attribute "k" is the same in the selected nodes (or selected style)
 // If the value come from local attribute or the style of the node doesn't matter, we look only the value
-export const IsAllNodeTagsSame=(m_s_n:SankeyNode[],key_tag:string,key_grp_tag:string)=>{
+const IsAllNodeTagsSame=(m_s_n:SankeyNode[],key_tag:string,key_grp_tag:string)=>{
   // store_value : variable that contain an array forEach key we are looking for
   // Each array contain in first position the value of the selected nodes attribute 
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key

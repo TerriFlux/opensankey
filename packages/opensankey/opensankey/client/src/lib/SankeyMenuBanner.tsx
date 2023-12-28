@@ -27,7 +27,9 @@ import { faShareNodes,
   faSliders} from '@fortawesome/free-solid-svg-icons'
 import { selected_type } from './SankeyMenu'
 import { TFunction } from 'i18next'
-import { ConvertDataFuncType, DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType, setDiagramFuncType } from '../types/FunctionTypes'
+import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
+import { addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType, setDiagramFuncType, stretchButtonsFType, toolbar_builderFType } from '../types/SankeyMenuBannerTypes'
+import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from '../types/SankeyUtilsTypes'
 
 // Delete all local node variable : local_aggregation when we switch general aggregation 
 const delete_local_aggregation=(data:SankeyData)=>{
@@ -38,7 +40,7 @@ const delete_local_aggregation=(data:SankeyData)=>{
   })
 }
 
-export const addSimpleLevelDropDown = (
+export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void
@@ -73,7 +75,10 @@ export const addSimpleLevelDropDown = (
   }
 
 }
-export const col_title_level_filter=(t:TFunction,data:SankeyData)=>{
+export const col_title_level_filter : col_title_level_filterFType = (
+  t:TFunction,
+  data:SankeyData
+)=>{
   const {levelTags}=data
   let banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.banner !== 'none')
   
@@ -89,7 +94,7 @@ export const col_title_level_filter=(t:TFunction,data:SankeyData)=>{
 
 }
 
-export const addAllDropDownNode = (
+export const addAllDropDownNode : addAllDropDownNodeFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -319,7 +324,12 @@ export const addAllDropDownNode = (
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => void}
  */
-const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
+const handleSimpleDropdown  = (
+  evt: React.ChangeEvent<HTMLSelectElement>, 
+  tags_group: TagsGroup, 
+  data: SankeyData, 
+  set_data: (data: SankeyData) => void
+) => {
   const val = evt.target.value
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
   set_data({ ...data })
@@ -378,7 +388,7 @@ export const setDiagram:setDiagramFuncType = (
   set_data({ ...new_data })
 }
 
-export const toolbar_builder = (
+export const toolbar_builder : toolbar_builderFType = (
   t:TFunction,
   data: SankeyData,
   set_data: (d:SankeyData)=>void,
@@ -847,7 +857,11 @@ export const toolbar_builder = (
 }
 
 
-export const stretchButtons=(data:SankeyData,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,t:TFunction)=>{
+export const stretchButtons : stretchButtonsFType =(
+  data:SankeyData,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  t:TFunction
+)=>{
   return <> <OverlayTrigger
     key={'tooltip-adjust-h'}
     placement={'left'}

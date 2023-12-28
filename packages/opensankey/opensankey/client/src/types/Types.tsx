@@ -1,6 +1,7 @@
 import { TFunction } from 'i18next'
 
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, RetrieveExcelResultsFuncType, drawArrowsType, updateLayoutFuncType } from './FunctionTypes'
+import { drawArrowsType } from './SankeyDrawFunctionTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, RetrieveExcelResultsFuncType, updateLayoutFuncType  } from './SankeyUtilsTypes'
 import { OpenSankeyDiagramSelectorFType } from './SankeyMenuDialogsTypes'
 
 export type SankeyNodeAttrLocal ={
@@ -81,7 +82,7 @@ export type SankeyNode = {
   dimensions: {
     [_:string] :{
       parent_name?: string,
-      level: number,
+      level?: number,
     }
   },
 
@@ -311,7 +312,7 @@ export type SankeyDrawCurve={
     GetSankeyMinWidthAndHeight : GetSankeyMinWidthAndHeightFuncType,
     GetLinkValue : GetLinkValueFuncType,
     drawArrows:drawArrowsType
-  ) => any
+  ) => string | number | boolean | readonly (string | number)[] | null
 }
 
 export interface treeFolderType{
@@ -402,3 +403,5 @@ export type MenuTypes = {
   RetrieveExcelResults:RetrieveExcelResultsFuncType,
   DefaultSankeyData:()=>SankeyData
 }
+
+export type callbackFuncType = (server_data: SankeyData) => void

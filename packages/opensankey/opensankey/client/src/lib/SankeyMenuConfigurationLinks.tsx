@@ -13,24 +13,10 @@ import {SankeyMenuConfigurationLinksTooltip} from './SankeyMenuConfigurationLink
 import {ValueSelectedParameter,NodeVisibleOnsSvg} from './SankeyDrawFunction'
 
 import { TFunction } from 'i18next'
-import { GetLinkValueFuncType } from '../types/FunctionTypes'
+import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
+import { OpenSankeyMenuConfigurationLinksFType } from '../types/SankeyMenuConfigurationLinksTypes'
 
-export type SankeyMenuConfigurationLinksTypes = {
-  t: TFunction,
-  data: SankeyData,
-  set_data : (_:SankeyData)=>void,
-  multi_selected_links: {current:SankeyLink[]},
-  multi_selected_nodes: {current:SankeyNode[]},
-  menu_configuration_links: JSX.Element[],
-  set_displayed_input_link_value:(s:string)=>void,
-  tags_selected:{[k: string]: string},
-  set_tags_selected:(_:{[k: string]: string})=>void,
-  set_display_link_opacity:(s:string)=>void,
-  pre_idSource:string,
-  pre_idTarget:string,
-}
-
-export const OpenSankeyMenuConfigurationLinks = (
+export const OpenSankeyMenuConfigurationLinks : OpenSankeyMenuConfigurationLinksFType = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
@@ -66,20 +52,44 @@ export const OpenSankeyMenuConfigurationLinks = (
       pre_idSource,set_pre_idSource,
       pre_idTarget,set_pre_idTarget,false
     ),
-    'appearence': SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity,GetLinkValue),
+    'appearence': SankeyMenuConfigurationLinksAppearence(
+      data,multi_selected_links,set_data,t,additional_link_appearence_items,
+      false,'default',display_link_opacity,set_display_link_opacity,GetLinkValue
+    ),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t)
   }
 
   if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')){
-    ui['tags']=SankeyMenuConfigurationLinksTags(data,multi_selected_links,set_data,tags_group_key,set_tags_group_key,tags_selected,set_tags_selected,t)
+    ui['tags']=SankeyMenuConfigurationLinksTags(
+      data,multi_selected_links,set_data,
+      tags_group_key,set_tags_group_key,
+      tags_selected,set_tags_selected,
+      t
+    )
   }
 
   return ui
 }
 
+type SankeyMenuConfigurationLinksTypes = {
+  t:TFunction,
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  multi_selected_links:{current:SankeyLink[]},
+  multi_selected_nodes:{current:SankeyNode[]},
+  menu_configuration_links : JSX.Element[]
+  set_displayed_input_link_value:(s:string)=>void,
+  tags_selected:{[k: string]: string},
+  set_tags_selected:(_:{[k: string]: string})=>void,
+  set_display_link_opacity:(s:string)=>void,
+  pre_idSource:string,
+  pre_idTarget:string
+}
+
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
   { t,data, set_data,
-    multi_selected_links,multi_selected_nodes,
+    multi_selected_links,
+    multi_selected_nodes,
     menu_configuration_links,
     set_displayed_input_link_value,
     tags_selected,set_tags_selected,
@@ -304,7 +314,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     { (multi_selected_links.current.length !== 0) ? (
       <Tabs defaultActiveKey="flux_data" id="settings-layout" fill={true}>
-        {menu_configuration_links}
+        {menu_configuration_links as unknown as JSX.Element}
       </Tabs>
     ):(<></>)
     }</>)

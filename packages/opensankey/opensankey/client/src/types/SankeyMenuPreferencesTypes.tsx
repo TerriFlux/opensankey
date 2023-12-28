@@ -1,5 +1,5 @@
-import { TFunction, i18n } from "i18next"
-import { SankeyData } from "./Types"
+import { TFunction, i18n } from 'i18next'
+import { SankeyData } from './Types'
 
 
 export type OpenSankeyDefaultModalePreferenceContentFType=(
@@ -7,7 +7,7 @@ export type OpenSankeyDefaultModalePreferenceContentFType=(
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   trad:i18n
-)=> JSX.Element
+)=> { lang: JSX.Element; form: JSX.Element[]; node_label_sep: JSX.Element; }
 
-export type preferenceCheck = (str: string,data:SankeyData) => void
+export type preferenceCheckFType = (str: string,data:SankeyData) => void
 

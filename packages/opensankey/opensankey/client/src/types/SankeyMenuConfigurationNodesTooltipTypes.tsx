@@ -1,5 +1,5 @@
-import { TFunction } from "i18next";
-import { SankeyData, SankeyNode } from "./Types";
+import { TFunction } from 'i18next'
+import { SankeyData, SankeyNode } from './Types'
 
 export type SankeyMenuConfigurationNodesTooltipFType = (
   t:TFunction,

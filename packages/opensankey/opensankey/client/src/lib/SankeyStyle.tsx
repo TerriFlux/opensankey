@@ -10,9 +10,8 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import { SankeyData } from '../types/Types'
 
 
-
-
-export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
+export const SankeyPlusModalStyleNode  = (
+  t:TFunction,data:SankeyData,
   set_data:(d:SankeyData)=>void,
   showStyle:boolean,
   setShowStyle:(_:boolean)=>void,

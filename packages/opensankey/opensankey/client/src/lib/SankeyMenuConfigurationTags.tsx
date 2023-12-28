@@ -10,7 +10,7 @@ import { FaEye,FaEyeSlash} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 
 
-export type SankeySettingsEditionTagsTypes = {
+export type SankeyMenuConfigurationTagsTypes = {
   t:TFunction,
   data: SankeyData,
   set_data : (_:SankeyData)=>void,
@@ -18,7 +18,7 @@ export type SankeySettingsEditionTagsTypes = {
   elementNameProp: 'nodes' | 'links' | 'none'
 }
 
-const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ 
+const SankeySettingsEditionElementTags: FunctionComponent<SankeyMenuConfigurationTagsTypes> = ({ 
   t,data, set_data,elementTagNameProp,elementNameProp 
 }) => {
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
