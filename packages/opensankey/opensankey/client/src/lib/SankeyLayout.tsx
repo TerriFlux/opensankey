@@ -1,12 +1,5 @@
 import * as d3 from 'd3'
-import {
-  SankeyData,
-  SankeyDataPropTypes,
-  SankeyLink,
-  SankeyLinkPropTypes,
-  SankeyNode,
-  SankeyNodePropTypes
-} from '../types/Types'
+import { SankeyData, SankeyLink, SankeyNode, SankeyNodeAttrLocal} from '../types/Types'
 import {
   AssignLinkLocalAttribute,
   AssignNodeLocalAttribute,
@@ -20,10 +13,8 @@ import {
   reorganize_node_outputLinksId,
 } from './SankeyUtils'
 import React, { FunctionComponent, useState } from 'react'
-import PropTypes, { InferProps } from 'prop-types'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 import { ComputeAutoSankeyFuncType, GetLinkValueFuncType } from '../types/FunctionTypes'
-
 
 
 export const reorganize_inputLinksId = (
@@ -782,7 +773,7 @@ export const desagregation = (
     delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,data,display_nodes,display_links,inv_scale,scale,GetLinkValue)
 
     if(n.local==undefined || n.local==null) {
-      n.local = {}
+      n.local = {} as SankeyNodeAttrLocal
     }
     setLocalAgregation(n, data, true)
     if (to_compute_auto_sankey) {
@@ -801,7 +792,7 @@ export const desagregation = (
   })
   const clicked_node=data.nodes[idNode]
   if(clicked_node.local==undefined || clicked_node.local==null) {
-    clicked_node.local = {}
+    clicked_node.local = {} as SankeyNodeAttrLocal
   }
   setLocalAgregation(clicked_node, data, false)
   if (to_compute_auto_sankey && nb_desagregated > 0) {
@@ -853,7 +844,7 @@ export const agregation = (
       mean_y += n.y
     }
     if(n.local==undefined || n.local==null) {
-      n.local = {}
+      n.local = {} as SankeyNodeAttrLocal
     }
     setLocalAgregation(n, data, false)
   })
@@ -865,24 +856,22 @@ export const agregation = (
     parent_node.y = mean_y
   }
   if(parent_node.local==undefined || parent_node.local==null){
-    parent_node.local={}
+    parent_node.local={} as SankeyNodeAttrLocal
   }
   setLocalAgregation(parent_node, data, true)
 }
 
-const AgregationModalPropTypes = {
-  data : PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data : PropTypes.func.isRequired,
-  display_nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
-  display_links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-  agregation_node : PropTypes.string.isRequired,
-  set_agregation_node : PropTypes.func.isRequired,
-  set_show_agregation : PropTypes.func.isRequired,
-  show_agregation : PropTypes.bool.isRequired,
-  is_agregation: PropTypes.bool.isRequired
+export type AgregationModalTypes = {
+  data : SankeyData,
+  set_data : (_:SankeyData)=>void
+  display_nodes : { [node_id: string]: SankeyNode },
+  display_links : { [link_id: string]: SankeyLink },
+  agregation_node : string,
+  set_agregation_node : (_:string)=>void,
+  set_show_agregation : (_:boolean)=>void,
+  show_agregation : boolean,
+  is_agregation: boolean
 }
-
-type  AgregationModalTypes = InferProps<typeof  AgregationModalPropTypes>
 
 export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
   {data, set_data, display_nodes, display_links, agregation_node,set_agregation_node, set_show_agregation,show_agregation,is_agregation}
@@ -1045,14 +1034,14 @@ const setLocalAgregation = (
   local_aggregation: boolean
 ) => {
   if (!n.local) {
-    n.local={}
+    n.local={} as SankeyNodeAttrLocal
   }
   n.local['local_aggregation'] = local_aggregation
   n.inputLinksId.forEach(linkId => {
     const node_types = data.nodes[data.links[linkId].idSource].tags['Type de noeud']
     if (node_types && node_types.includes('echange')) {
       if (data.nodes[data.links[linkId].idSource].local == undefined ) {
-        data.nodes[data.links[linkId].idSource].local = {}
+        data.nodes[data.links[linkId].idSource].local = {} as SankeyNodeAttrLocal
       }
       data.nodes[data.links[linkId].idSource].local!['local_aggregation'] = local_aggregation
     }
@@ -1061,7 +1050,7 @@ const setLocalAgregation = (
     const node_types = data.nodes[data.links[linkId].idTarget].tags['Type de noeud']
     if (node_types && node_types.includes('echange')) {
       if (data.nodes[data.links[linkId].idTarget].local == undefined ) {
-        data.nodes[data.links[linkId].idTarget].local = {}
+        data.nodes[data.links[linkId].idTarget].local = {} as SankeyNodeAttrLocal
       }
       data.nodes[data.links[linkId].idTarget].local!['local_aggregation'] = local_aggregation
     }

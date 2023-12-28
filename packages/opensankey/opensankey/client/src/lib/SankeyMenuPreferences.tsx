@@ -1,18 +1,18 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { FunctionComponent } from 'react'
-import PropTypes, { InferProps } from 'prop-types'
+
 import { Form,  Modal, Button, ButtonGroup, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
 import { SankeyData } from '../types/Types'
 import { TFunction,i18n } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
-const modalPreferencePropTypes = {
-  showPreference: PropTypes.bool.isRequired,
-  setShowPreference: PropTypes.func.isRequired,
-  ui:PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.element),PropTypes.element]).isRequired).isRequired,
-  t:PropTypes.func.isRequired
+
+export type modalPreferenceTypes = {
+  showPreference: boolean,
+  setShowPreference: (_:boolean)=>void,
+  ui: (JSX.Element[] | JSX.Element)[],
+  t:TFunction
 }
-type modalPreferenceTypes = InferProps<typeof modalPreferencePropTypes>
 
 declare const window: Window &
 typeof globalThis & {
@@ -184,8 +184,6 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreferenc
     </Modal.Body>
   </Modal>)
 }
-
-ModalPreference.propTypes = modalPreferencePropTypes
 
 export default ModalPreference
 

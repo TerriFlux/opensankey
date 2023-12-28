@@ -1,6 +1,6 @@
 import { DragBehavior, SubjectPosition } from "d3"
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, drag_elementsFuncType, drag_node_textFuncType, drawArrowsType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from "./FunctionTypes"
-import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode } from "./Types"
+import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, display_styleType } from "./Types"
 
 
 /**
@@ -25,7 +25,7 @@ export type dragLinkEventFType=(
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
   error_msg: { text: string | undefined } | undefined,
-  display_style: {filter: number,filter_label: number,null_flux: boolean,font_family: string[],node_font_family_selected: string},
+  display_style: display_styleType,
   drawCurveFunction : SankeyDrawCurve,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
@@ -100,7 +100,7 @@ export type dragLinkCenterHandleEventFType=(
   display_nodes:{ [link_id: string]: SankeyNode },
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  selected_tags:{[tag_group:string]:string[]},
+  selected_tags:TagsCatalog,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   default_horiz_shift:number,
   DrawGrid:(d:SankeyData)=>void,
@@ -109,7 +109,7 @@ export type dragLinkCenterHandleEventFType=(
   drawCurveFunction : SankeyDrawCurve,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType
-)=> void
+)=> any
 
 /**
  * Function to drag a shift handle on selected links 
@@ -131,12 +131,13 @@ export type dragLinkCenterHandleEventFType=(
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns {...}
  */
-export type dragLinkShiftHandleEventFType=(multi_selected_links:{current: SankeyLink[]},
+export type dragLinkShiftHandleEventFType=(
+  multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   nodes:{ [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
-  display_style: { node_font_size: number;  filter: number; filter_label: number },
-  selected_tags: { [tag_group: string]: string[] },
+  display_style: display_styleType,
+  selected_tags: TagsCatalog,
   position: string,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -263,8 +264,8 @@ export type drag_handleFType = (
   link: SankeyLink,
   nodes: { [node_id: string]: SankeyNode },
   links: { [link_id: string]: SankeyLink },
-  display_style: { filter: number; filter_label: number },
-  selected_tags: { [tag_group: string]: string[] },
+  display_style: display_styleType,
+  selected_tags: TagsCatalog,
   dragged: Element,
   handle_type: string,
   the_event: d3.D3DragEvent<Element, unknown, unknown>,

@@ -1,5 +1,5 @@
 import Accordion from 'react-bootstrap/Accordion'
-import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
+import { ReactElementLike } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode, showMenuComponentsType } from '../types/Types'
 import React, { FunctionComponent, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
@@ -241,17 +241,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
  *
  * @type {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
-const ConfigurationMenuPropTypes = {
-  accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
-  nav_item_active: PropTypes.string.isRequired,
-  configuration_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
+export type ConfigurationMenuTypes = {
+  accordion_ref: {current:HTMLDivElement},
+  nav_item_active: string,
+  configuration_menus: JSX.Element[],
 }
-/**
- * Description placeholder
- *
- * @typedef {MenuTypes}
- */
-type ConfigurationMenuTypes = InferProps<typeof ConfigurationMenuPropTypes>
 
 export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> = (
   {

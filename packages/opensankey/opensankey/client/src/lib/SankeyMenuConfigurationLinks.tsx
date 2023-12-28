@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyDataPropTypes, SankeyLink, SankeyLinkPropTypes,SankeyNodePropTypes, SankeyData } from '../types/Types'
-import PropTypes, { InferProps } from 'prop-types'
+import { SankeyLink, SankeyNode, SankeyData } from '../types/Types'
+
 import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from './SankeyMenu'
@@ -15,22 +15,21 @@ import {ValueSelectedParameter,NodeVisibleOnsSvg} from './SankeyDrawFunction'
 import { TFunction } from 'i18next'
 import { GetLinkValueFuncType } from '../types/FunctionTypes'
 
-const SankeyMenuConfigurationLinksPropTypes = {
-  t: PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  set_displayed_input_link_value:PropTypes.func.isRequired,
-  tags_selected:PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
-  set_tags_selected:PropTypes.func.isRequired,
-  set_display_link_opacity:PropTypes.func.isRequired,
-  pre_idSource:PropTypes.string.isRequired,
-  pre_idTarget:PropTypes.string.isRequired,
+export type SankeyMenuConfigurationLinksTypes = {
+  t: TFunction,
+  data: SankeyData,
+  set_data : (_:SankeyData)=>void,
+  multi_selected_links: {current:SankeyLink[]},
+  multi_selected_nodes: {current:SankeyNode[]},
+  menu_configuration_links: JSX.Element[],
+  set_displayed_input_link_value:(s:string)=>void,
+  tags_selected:{[k: string]: string},
+  set_tags_selected:(_:{[k: string]: string})=>void,
+  set_display_link_opacity:(s:string)=>void,
+  pre_idSource:string,
+  pre_idTarget:string,
 }
 
-type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
 export const OpenSankeyMenuConfigurationLinks = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -39,7 +38,7 @@ export const OpenSankeyMenuConfigurationLinks = (
   tags_group_key:string,
   set_tags_group_key:(_:string)=>void,
   tags_selected:{[k: string]: string},
-  set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
+  set_tags_selected:(_:{[k: string]: string})=>void,
   additional_data_element:JSX.Element[],
   displayed_input_link_value:string,
   set_displayed_input_link_value:(s:string)=>void,
@@ -55,15 +54,17 @@ export const OpenSankeyMenuConfigurationLinks = (
 ) => {
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
-    'data'      : SankeyMenuConfigurationLinksData(data,
-      tags_selected,set_tags_selected,
+    'data'      : SankeyMenuConfigurationLinksData(
+      data,
+      tags_selected,
+      set_tags_selected,
       multi_selected_links,
       set_data,
       t,
       additional_data_element,
       displayed_input_link_value,set_displayed_input_link_value,
       pre_idSource,set_pre_idSource,
-      pre_idTarget,set_pre_idTarget
+      pre_idTarget,set_pre_idTarget,false
     ),
     'appearence': SankeyMenuConfigurationLinksAppearence(data,multi_selected_links,set_data,t,additional_link_appearence_items,false,'default',display_link_opacity,set_display_link_opacity,GetLinkValue),
     'tooltip':SankeyMenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t)
@@ -140,7 +141,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
             multi_selected_links.current = m_s
             if(m_s.length>0){
-              set_display_link_opacity(ReturnValueLink(data,m_s[0],'opacity'))
+              set_display_link_opacity(ReturnValueLink(data,m_s[0],'opacity') as string)
             }
 
             if(multi_selected_links.current.length>0){
@@ -157,7 +158,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
                 set_tags_selected(new_tags_selected)
-                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value)
+                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as string)
 
               }else if(Object.values(data.dataTags).length>0){
                 // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -170,9 +171,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   n_t_s[dt]=tmp[i]
                 })
                 set_tags_selected(n_t_s)
-                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value)
+                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value as string)
               }else{
-                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value)
+                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as string)
               }
             }
 
@@ -224,7 +225,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     nodes[idt].inputLinksId.push(link.idLink)
 
     multi_selected_links.current = [link]
-    set_display_link_opacity(ReturnCorrectLinkAttributeValue(data,link,'opacity',false))
+    set_display_link_opacity(ReturnCorrectLinkAttributeValue(data,link,'opacity',false) as string)
     data.linkZIndex.push(
       link.idLink)
     set_data({ ...data })
@@ -308,8 +309,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     ):(<></>)
     }</>)
 }
-
-SankeyMenuConfigurationLinks.propTypes = SankeyMenuConfigurationLinksPropTypes
 
 export default SankeyMenuConfigurationLinks
 

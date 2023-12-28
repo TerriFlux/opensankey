@@ -1,8 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
-import { SankeyNode, SankeyLink, SankeyDataPropTypes,  SankeyData, SankeyNodePropTypes, SankeyLinkPropTypes} from '../types/Types'
-import PropTypes, { InferProps } from 'prop-types'
+import { SankeyNode, SankeyLink,  SankeyData} from '../types/Types'
 import {  DeleteLink,DeleteNode,ClickSaveDiagram} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import { RemoveAnimate,
@@ -15,6 +14,7 @@ import { RemoveAnimate,
   SvgDragMiddleMouseMove,
   SelectVisualyNodes} from './SankeyDrawFunction'
 import LZString from 'lz-string'
+import { GetSankeyMinWidthAndHeightFuncType } from '../types/FunctionTypes'
 
 
 window.d3 = d3
@@ -23,49 +23,27 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-const SankeyDrawPropTypes = {
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  display_nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
-  display_links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-  animation:PropTypes.bool.isRequired,
-  mode_selection: PropTypes.shape({current:PropTypes.string.isRequired}).isRequired,
-  show_agregation:PropTypes.bool.isRequired, set_show_agregation:PropTypes.func.isRequired,
-  agregation_node:PropTypes.string.isRequired,
-  set_agregation_node:PropTypes.func.isRequired,
-  is_agregation:PropTypes.bool.isRequired,
-  set_alt_key_pressed:PropTypes.func.isRequired,
-  GetSankeyMinWidthAndHeight:PropTypes.func.isRequired,
-  pointer_pos:PropTypes.shape({current:PropTypes.arrayOf(PropTypes.number.isRequired).isRequired}).isRequired,
-  set_show_context_zdd:PropTypes.func.isRequired
-
+export type SankeyDrawTypes = {
+  data: SankeyData,
+  set_data: (_:SankeyData) => void,
+  display_nodes : { [node_id: string]: SankeyNode },
+  display_links : { [node_id: string]: SankeyLink },
+  animation: boolean,
+  mode_selection: {current : string},
+  show_agregation:boolean, 
+  set_show_agregation:(_:boolean)=>void,
+  agregation_node:string,
+  set_agregation_node:(_:string)=>void,
+  is_agregation:boolean,
+  set_alt_key_pressed:(_:boolean)=>void,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  pointer_pos:{current: number[]},
+  set_show_context_zdd:(_:boolean)=>void,
 }
-
-export const SankeyDrawDefaultProps = {
-  set_data: () => null,
-  animation: false,
-
-  multi_selected_label: {current : []},
-  mode_selection: {current:'s'},
-
-  show_agregation:false, set_show_agregation:()=>false,
-  agregation_node:'',
-  set_agregation_node:()=>false,
-  is_agregation:false,
-
-  set_alt_key_pressed:()=>false,
-  GetSankeyMinWidthAndHeight:()=>[],
-  set_show_toast_limit_node:()=>false,
-  pointer_pos:{current:[]},
-  set_show_context_zdd:()=>false
-
-}
-
-type SankeyDrawTypes = InferProps<typeof SankeyDrawPropTypes>
 
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
-  set_data = SankeyDrawDefaultProps.set_data,
+  set_data,
   display_nodes,
   display_links,
   animation,
@@ -74,7 +52,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   agregation_node,
   set_agregation_node,
   is_agregation,
-  set_alt_key_pressed,GetSankeyMinWidthAndHeight,
+  set_alt_key_pressed,
+  GetSankeyMinWidthAndHeight,
   pointer_pos,
   set_show_context_zdd
 }) => {
@@ -403,12 +382,5 @@ export const keyHandler = (e: KeyboardEvent,data:SankeyData,
     
   }
 }
-
-
-
-
-
-SankeyDraw.propTypes = SankeyDrawPropTypes
-SankeyDraw.defaultProps = SankeyDrawDefaultProps
 
 export default SankeyDraw

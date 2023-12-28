@@ -32,8 +32,7 @@ import {
   TagsCatalog,
   TagsGroup,
   showMenuComponentsType,
-  MenuTypes,
-  MenuPropTypes
+  MenuTypes
 } from '../types/Types'
 
 import { complete_sankey_data } from './SankeyConvert'
@@ -814,7 +813,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     button_ref,
     accordion_ref,
     url_prefix,
-    callback,
     processing,setProcessing,
     failure,setFailure,
     not_started,setNotStarted,
@@ -868,7 +866,15 @@ const Menu: FunctionComponent<MenuTypes> = (
     fetch(url, fetchData).then(response => {
       response.text().then(text => {
         try {
-          RetrieveExcelResults(text)
+          RetrieveExcelResults(
+            text,
+            set_data,
+            updateLayout,
+            ()=>null,
+            GetSankeyMinWidthAndHeight,
+            convert_data,
+            DefaultSankeyData
+          )
         } catch(err) {
           alert(err)
         }
@@ -1193,8 +1199,7 @@ const Menu: FunctionComponent<MenuTypes> = (
         UploadExcelImpl={SankeyUtils.UploadExcelImpl}
         show_excel_dialog={showMenuComponents.show_excel_dialog[0]}
         set_show_excel_dialog={showMenuComponents.show_excel_dialog[1]}
-        url_prefix={url_prefix}
-        callback={callback} />
+        url_prefix={url_prefix} />
 
       <SankeyLoad
         t={t as TFunction<'translation', undefined>}
@@ -1229,8 +1234,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     </>
   )
 }
-
-Menu.propTypes = MenuPropTypes
 
 export default Menu
 

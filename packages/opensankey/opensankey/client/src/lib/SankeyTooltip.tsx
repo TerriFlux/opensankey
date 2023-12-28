@@ -48,7 +48,7 @@ function WriteChildrenTable(
         }
         t += '<tr>'
         t += '<td>' + data.nodes[desagregated_link.idSource].name + '->' + data.nodes[desagregated_link.idTarget].name + '</td>'
-        t += '<td>' + ToPrecision((value_to_display)?value_to_display:0) + '</td>'
+        t += '<td>' + ToPrecision((value_to_display)?value_to_display as number:0) + '</td>'
         t += '</tr>'
       }
     )
@@ -97,7 +97,7 @@ export const  LinkTooltipsContent = (
   if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
   } 
-  t += '<td>' + TooltipLinkToPrecision(data,l,(the_value)?the_value:0) +'</td>'
+  t += '<td>' + TooltipLinkToPrecision(data,l,(the_value)?the_value as number:0) +'</td>'
   t += '</td>'
   t += '</tr>'
   Object.entries(link_info.tags).forEach(([tag_group_key,tags])=> {
@@ -200,7 +200,7 @@ export const NodeTooltipsContent = (
         the_value = Number(String(link_info.display_value).replace('*',''))
       } 
       if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
-        total += (the_value)?the_value:0
+        total += (the_value)?the_value as number:0
       }
     }
   }
@@ -233,9 +233,9 @@ export const NodeTooltipsContent = (
       if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
         t += '<tr><td style="white-space: nowrap;">' + source_name + '</td>'
-        t +=  '<td>' + ToPrecision( (the_value)?the_value:0)+'</td>'
+        t +=  '<td>' + ToPrecision( (the_value)?the_value as number:0)+'</td>'
         if (n.inputLinksId.length>1) {
-          const percent = Math.round(((the_value)?the_value:0)*100/total)
+          const percent = Math.round(((the_value)?the_value as number :0)*100/total)
           t += '<td>'+ percent + '%</td>'
           Object.keys(data.fluxTags).forEach(tag_group_key=> {
             const names : string[]= []
@@ -274,7 +274,7 @@ export const NodeTooltipsContent = (
       } 
 
       if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
-        total += (the_value)?the_value:0
+        total += (the_value)?the_value as number:0
       }
     }
     if ( n.outputLinksId.length > 0 ) {
@@ -302,9 +302,9 @@ export const NodeTooltipsContent = (
         if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
           t += '<tr><td style="white-space: nowrap;">' + target_name + '</td>'
-          t +=  '<td>' + ToPrecision( (the_value)?the_value:0)+'</td>'
+          t +=  '<td>' + ToPrecision( (the_value)?the_value as number:0)+'</td>'
           if (n.outputLinksId.length>1) {
-            const percent = Math.round(((the_value)?the_value:0)*100/total)
+            const percent = Math.round(((the_value)?the_value as number:0)*100/total)
             t += '<td>'+ percent + '%</td>'
             Object.keys(data.fluxTags).forEach(tag_group_key=> {
               const names : string[]= []
