@@ -14,7 +14,7 @@ import { DefaultLink,
 import {OpenSankeyPlusDiagramSelectorFType, apply_transformation_opensankey_plus_elementsFType, plus_convert_dataFType, plus_sankey_layoutFType } from '../types/SankeyPlusConvertTypes'
 
 // Opensankey files
-import { updateLayoutFuncType } from 'open-sankey/src/types/FunctionTypes'
+import { updateLayoutFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { useState } from 'react'
 import { TFunction } from 'i18next'

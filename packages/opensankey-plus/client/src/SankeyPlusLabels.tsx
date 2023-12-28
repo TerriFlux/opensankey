@@ -1,15 +1,19 @@
-import  { InferProps } from 'prop-types'
-import React, { Requireable } from 'react'
+import React from 'react'
 import * as d3 from 'd3'
 
+import { SankeyData } from 'open-sankey/src/types/Types'
 import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from '../types/Types'
-import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './import/OpenSankey'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
+import {
+  SankeyPlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
+  sankey_plus_zoom_text_zoneFType, zone_selection_labelFType
+} from '../types/SankeyPlusLabelsTypes'
+import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
+
+import { DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './import/OpenSankey'
+
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
 
-import { SankeyData } from 'open-sankey/src/types/Types'
-import { drawArrowsType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/FunctionTypes'
-
-import {SankeyPlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, sankey_plus_zoom_text_zoneFType, zone_selection_labelFType} from '../types/SankeyPlusLabelsTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -141,8 +145,8 @@ export const SankeyPlusDrawLabels : SankeyPlusDrawLabelsFType = (
 export const eventLabelClick : eventLabelClickFType =(
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyPlusLabel,data:SankeyPlusData,
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-  button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  accordion_ref:{ current: HTMLDivElement } | null,
+  button_ref: { current: HTMLLabelElement }| null,
   multi_selected_label:{current:SankeyPlusLabel[]},
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},

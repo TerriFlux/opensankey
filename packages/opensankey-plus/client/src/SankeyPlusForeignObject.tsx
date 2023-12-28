@@ -15,7 +15,7 @@ import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
 import { NodeDisplayed } from './import/OpenSankey'
 import {SankeyPlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
-import { GetLinkValueFuncType } from 'open-sankey/src/types/FunctionTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 
 declare const window: Window &

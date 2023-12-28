@@ -13,7 +13,7 @@ import { opposing_drag_elements_plus } from './SankeyPlusNodes'
 import { drag_legend_g_elementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './import/OpenSankey'
 
 import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/src/types/Types'
-import { GetLinkValueFuncType } from 'open-sankey/src/types/FunctionTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 
 export const default_sankey_plus_style_link : default_sankey_plus_style_linkFType = () => {

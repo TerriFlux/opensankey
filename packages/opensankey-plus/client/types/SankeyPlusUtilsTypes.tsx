@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle, SankeyPlusNode } from './Types'
-import { GetLinkValueFuncType } from 'open-sankey/src/types/FunctionTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 export type default_sankey_plus_style_linkFType = () => SankeyPlusLinkStyle
 

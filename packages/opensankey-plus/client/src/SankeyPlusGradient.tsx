@@ -10,7 +10,7 @@ import { LinkStrokeFType, SankeyPlusDrawArrowsFType, dragNodeRedrawGradientFType
 
 import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode, display_styleType} from 'open-sankey/src/types/Types'
 import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
-import { GetLinkValueFuncType } from 'open-sankey/src/types/FunctionTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
 
 
