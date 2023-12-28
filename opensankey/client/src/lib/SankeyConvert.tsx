@@ -2,8 +2,11 @@
 import { SankeyData, SankeyLink, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyle,SankeyLinkAttrLocal, SankeyNodeAttrLocal} from '../types/Types'
 import colormap from 'colormap'
 import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
-import { ConvertDataFuncType, DefaultSankeyDataFuncType, complete_sankey_dataFunctType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from '../types/FunctionTypes'
 
+import { ConvertDataFuncType, complete_sankey_dataFunctType, compute_flux_maxFType, compute_initial_colorsFType, convert_booleanFType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from '../types/SankeyConvertTypes'
+import {
+  DefaultSankeyDataFuncType
+} from '../types/SankeyUtilsTypes'
 
 interface ConvertSankeyNode {
   id?: string
@@ -219,7 +222,7 @@ export const complete_sankey_data:complete_sankey_dataFunctType = (
   }
 }
 
-export const compute_initial_colors = (
+export const compute_initial_colors : compute_initial_colorsFType = (
   data: SankeyData
 ) =>{
   Object.values(data.nodeTags).forEach(
@@ -295,7 +298,7 @@ export const compute_initial_colors = (
   )
 }
 
-export const convert_boolean = (
+export const convert_boolean : convert_booleanFType = (
   data : SankeyData
 ) =>{
   
@@ -319,9 +322,9 @@ export const convert_boolean = (
   )
 }
 
-export const compute_flux_max = (
+export const compute_flux_max : compute_flux_maxFType = (
   data: SankeyData
-): void => {
+) : void => {
   let flux_max = 0
   const compute_flux_max_internal =(
     dataTags: TagsGroup[],

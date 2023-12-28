@@ -1,7 +1,38 @@
-import { DragBehavior, SubjectPosition } from "d3"
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, drag_elementsFuncType, drag_node_textFuncType, drawArrowsType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from "./FunctionTypes"
-import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, display_styleType } from "./Types"
+import { DragBehavior, SubjectPosition } from 'd3'
+import { drawArrowsType } from './SankeyDrawFunctionTypes'
+import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, display_styleType } from './Types'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from './SankeyUtilsTypes'
 
+export type return_out_of_bound_elementFuncType = (dragged: SankeyNode,
+  data: SankeyData,
+  event: {dx: number;dy: number;x: number;  y: number;},
+  multi_selected_nodes: {current: SankeyNode[];},
+  node_visible: string[]
+ ) => SankeyNode[]
+
+
+export type opposing_drag_elementsFuncType = (
+  out_of_zone_item: (SankeyNode)[], event: {dx: number;dy: number;x: number;y: number;}, 
+  dragged: SankeyNode, data: SankeyData, multi_selected_nodes: {current: SankeyNode[];}
+) => void
+
+export type drag_elementsFuncType = (dragged: SankeyNode,
+  data: SankeyData,
+  event: {dx: number;dy: number;x: number;y: number;},
+  Smulti_selected_nodes: {current: SankeyNode[];},
+  set_data: (d: SankeyData) => void,
+  Sdisplay_nodes: {[node_id: string]: SankeyNode;},
+  Sdisplay_links: {[link_id: string]: SankeyLink;},
+  multi_selected_links: {current: SankeyLink[];},
+  LinkText: LinkTextFuncType,
+  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
+  GetLinkValue: GetLinkValueFuncType,
+  DrawArrows: drawArrowsType,
+  scale: (t: number) => number,
+  inv_scale: (t: number) => number
+) => void
+
+export type drag_node_textFuncType = (node: SankeyNode, event: d3.D3DragEvent<Element, unknown, unknown>) => void
 
 /**
  *  Function that allow us to change link position in target or source nodes
@@ -34,7 +65,7 @@ export type dragLinkEventFType=(
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:drawArrowsType
-)=> DragBehavior<SVGPathElement, SankeyLink, any>
+)=> DragBehavior<SVGPathElement, SankeyLink, unknown>
  
 /**
  *  Function to freely move the link label if the alt key is pressed
@@ -109,7 +140,7 @@ export type dragLinkCenterHandleEventFType=(
   drawCurveFunction : SankeyDrawCurve,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType
-)=> any
+)=> (selection: d3.Selection<SVGCircleElement, unknown, HTMLElement, unknown>, ...args: unknown[]) => void
 
 /**
  * Function to drag a shift handle on selected links 

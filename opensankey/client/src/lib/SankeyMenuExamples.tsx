@@ -3,8 +3,8 @@ import React from 'react'
 import { NavDropdown, Dropdown, } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyLink } from '../types/Types'
 import { UploadExemple,  } from './SankeyUtils'
-import { ConvertDataFuncType, DefaultSankeyDataFuncType } from '../types/FunctionTypes'
-
+import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
+import {  DefaultSankeyDataFuncType } from '../types/SankeyUtilsTypes'
 
 /**
  * Description placeholder
@@ -38,7 +38,9 @@ export type ExempleItemTypes = {
  * @param {ExempleItemTypes} { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,multi_selected_label,launch}
  * @returns {*}
  */
-export const ExempleItem = ({ exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,launch,Reinitialization,convert_data,DefaultSankeyData}: ExempleItemTypes) => {
+export const ExempleItem = (
+  { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,launch,Reinitialization,convert_data,DefaultSankeyData
+  }: ExempleItemTypes) => {
   return (
     <>
       { ('Files' in exemple_menu) 

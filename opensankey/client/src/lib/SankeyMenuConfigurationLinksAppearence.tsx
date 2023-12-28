@@ -10,8 +10,8 @@ import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge} from './SankeyUtils'
 import { LinkStrokeWidth,scale,inv_scale } from './SankeyDrawFunction'
-import { GetLinkValueFuncType } from '../types/FunctionTypes'
-import { SankeyMenuConfigurationLinksAppearenceFType } from '../types/SankeyMenuConfigurationLinksAppearenceTypes'
+import { SankeyMenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from '../types/SankeyMenuConfigurationLinksAppearenceTypes'
+import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
   width="26"
@@ -1294,7 +1294,9 @@ export const SankeyMenuConfigurationLinksAppearence : SankeyMenuConfigurationLin
 
 //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
 //Permet donc de les déssiner avant
-export const handleUpLink = (data:SankeyData,i: string) => {
+export const handleUpLink : handleUpLinkFType = (
+  data:SankeyData,i: string
+) => {
   const posElemt = data.linkZIndex.indexOf(i)
   data.linkZIndex.splice(posElemt, 1)
   data.linkZIndex.splice(posElemt-1, 0, i)
@@ -1302,7 +1304,9 @@ export const handleUpLink = (data:SankeyData,i: string) => {
 
 //Dépalce la place des flux sélectionnés vers la fin dans le tableau de flux de data
 //Permet donc de les déssiner après
-export const handleDownLink = (data:SankeyData,i: string) => {
+export const handleDownLink : handleDownLinkFType = (
+  data:SankeyData,i: string
+) => {
   const posElemt = data.linkZIndex.indexOf(i)
   data.linkZIndex.splice(posElemt, 1)
   data.linkZIndex.splice(posElemt+1, 0, i)

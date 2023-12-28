@@ -14,8 +14,8 @@ import { RemoveAnimate,
   SvgDragMiddleMouseMove,
   SelectVisualyNodes} from './SankeyDrawFunction'
 import LZString from 'lz-string'
-import { GetSankeyMinWidthAndHeightFuncType } from '../types/FunctionTypes'
-
+import { GetSankeyMinWidthAndHeightFuncType } from '../types/SankeyUtilsTypes'
+import { keyHandlerFType } from '../types/SankeyDrawTypes'
 
 window.d3 = d3
 declare const window: Window &
@@ -225,7 +225,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // Escape key open and close configuration sankey menu
 // ctrl + s save a view of the data
 // Delete key allow us to delete selected elments (nodes,links, free label)
-export const keyHandler = (e: KeyboardEvent,data:SankeyData,
+export const keyHandler : keyHandlerFType = (
+  e: KeyboardEvent,data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
   mode_selection:{current : string},

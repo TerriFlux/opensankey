@@ -1,6 +1,6 @@
-import { TFunction } from "i18next"
-import { SankeyData, SankeyLink } from "./Types"
-import { GetLinkValueFuncType } from "./FunctionTypes"
+import { TFunction } from 'i18next'
+import { SankeyData, SankeyLink } from './Types'
+import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 export type SankeyMenuConfigurationLinksAppearenceFType = (
   data:SankeyData,

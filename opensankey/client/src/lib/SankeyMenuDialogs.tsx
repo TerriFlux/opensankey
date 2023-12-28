@@ -13,7 +13,8 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
-import { ClickSaveDiagramFuncType, ConvertDataFuncType, DefaultSankeyDataFuncType, UploadExcelImplFuncType, updateLayoutFuncType } from '../types/FunctionTypes'
+import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
+import { ClickSaveDiagramFuncType, DefaultSankeyDataFuncType, UploadExcelImplFuncType, updateLayoutFuncType } from '../types/SankeyUtilsTypes'
 import { OpenSankeyDiagramSelectorFType } from '../types/SankeyMenuDialogsTypes'
 /**
  * Define ApplyLayoutDialog

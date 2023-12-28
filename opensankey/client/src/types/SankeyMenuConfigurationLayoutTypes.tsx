@@ -1,5 +1,5 @@
-import { TFunction } from "i18next";
-import { SankeyData } from "./Types";
+import { TFunction } from 'i18next'
+import { SankeyData } from './Types'
 
 export type OpenSankeyMenuConfigurationLayoutFType = (
   t:TFunction,
@@ -10,5 +10,5 @@ export type OpenSankeyMenuConfigurationLayoutFType = (
   legend_position:number[],
   set_legend_position:(n:number[])=>void,
   extra_background_element:JSX.Element
-) => JSX.Element
+) => JSX.Element[]
 

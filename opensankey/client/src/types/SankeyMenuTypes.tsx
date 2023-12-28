@@ -1,5 +1,5 @@
-import { TFunction } from "i18next"
-import { SankeyData, SankeyLink, SankeyNode, TagsCatalog, showMenuComponentsType } from "./Types"
+import { TFunction } from 'i18next'
+import { SankeyData, SankeyLink, SankeyNode, TagsCatalog, showMenuComponentsType } from './Types'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -71,10 +71,17 @@ export type ContextMenuNodeFType = (
   additional_context_element_other:JSX.Element[]
 )=> JSX.Element
 
+export type MenuDraggableFType = (
+  content:JSX.Element|JSX.Element[],
+  pointer_pos:{current:number[]},
+  title:string,
+  set_display_menu:(b:boolean)=>void,
+  width_menu?:number
+)=> JSX.Element
 
 export type ContextMenuLinkFType = (
   contextualised_link:SankeyLink|undefined,
-  set_contextualised_node:(n:SankeyLink|undefined)=>void,
+  set_contextualised_node:(n:SankeyNode|undefined)=>void,
   set_show_menu_link_data:(b:boolean)=>void,
   set_show_menu_link_appearence:(b:boolean)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,

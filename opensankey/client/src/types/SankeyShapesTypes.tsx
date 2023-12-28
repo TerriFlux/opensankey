@@ -18,7 +18,7 @@ export type draw_arrowFType = (
   revert: boolean,
   arrow_length:number,
   node_arrow_shift:number
-) => void
+) => string
 
 
 export type DrawLinkSabotFType = (
@@ -29,7 +29,7 @@ export type DrawLinkSabotFType = (
   horizontal: boolean,
   revert: boolean,
   node_arrow_shift:number
-) => void
+) => string
 
 
 /**
@@ -47,8 +47,6 @@ export type check_errorsFType = (
   y_list: number[],
   error_msg: { text?: string } | undefined
 ) => void
-
-
 
 /**
  * Function to draw particular form of link curve of type vertical-vertical
@@ -75,7 +73,8 @@ export type bezier_link_classic_vvFType = (
   curvature: number,
   horizontal: boolean,
   curved: boolean,
-) => void
+  error_msg: { text?: string } | undefined
+) => string
 /**
  * Function to draw particular form of link curve of type horizontal-vertical
  *
