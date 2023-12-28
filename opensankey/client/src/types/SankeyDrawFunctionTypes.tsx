@@ -1,11 +1,8 @@
-import { SankeyData, SankeyLink, SankeyNode } from "./Types"
+import { SankeyData, SankeyLink, SankeyNode, display_styleType } from "./Types"
 import {
-  DeselectVisualyNodesFuncType, EventOnSankeyZoneMouseDownFuncType, EventOnSankeyZoneMouseMoveFuncType,
-  EventOnSankeyZoneMouseUpFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkVisibleOnsSvgFuncType, 
-  NodeVisibleOnsSvgFuncType, RemoveAnimateFuncType, RepositionneSidebarFuncType, SetNodeHeightFuncType, 
-  SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType, 
-  ValueSelectedParameterFuncType, ZoomFunctionFuncType
+  GetLinkValueFuncType
 } from "./FunctionTypes"
+import * as d3 from 'd3'
 
 export type StrokeDasharrayFType =(
   d:SankeyLink,
@@ -72,7 +69,7 @@ export type EventNodeClickFType = (
 
 export type EventNodeContextMenuFType = (
   ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
-  set_contextualised_node:(n:SankeyNode)=>void,
+  set_contextualised_node:(n:SankeyNode|undefined)=>void,
   pointer_pos:{current:number[]},
   multi_selected_nodes:{current: SankeyNode[] },              
 )=> void
@@ -105,7 +102,7 @@ export type DrawArrowsFType = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
-  display_style: {filter: number}
+  display_style: display_styleType
 ) => void
 
 // Sort the outputLinksId tab of the node by using position of output node

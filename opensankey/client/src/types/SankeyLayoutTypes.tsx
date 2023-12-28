@@ -161,18 +161,4 @@ export type agregationFType = (
   cur_dimension: string,
 ) =>  void
 
-// const AgregationModalPropTypes = {
-//   data : PropTypes.shape(SankeyDataPropTypes).isRequired,
-//   set_data : PropTypes.func.isRequired,
-//   display_nodes: PropTypes.objectOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired,
-//   display_links: PropTypes.objectOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired,
-//   agregation_node : PropTypes.string.isRequired,
-//   set_agregation_node : PropTypes.func.isRequired,
-//   set_show_agregation : PropTypes.func.isRequired,
-//   show_agregation : PropTypes.bool.isRequired,
-//   is_agregation: PropTypes.bool.isRequired
-// }
-
-// type  AgregationModalTypes = InferProps<typeof  AgregationModalPropTypes>
-
 

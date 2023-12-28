@@ -697,7 +697,7 @@ export const toolbar_builder = (
             placeholder='all'
             value={data.show_structure}
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              data.show_structure = evt.target.value
+              data.show_structure = evt.target.value as 'data' | 'structure' | 'reconciled' | 'free_value' | 'free_interval'
               set_data({...data})
             }}>
             <option key='structure'  value='structure' >Structure</option>

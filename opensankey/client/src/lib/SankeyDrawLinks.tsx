@@ -1,5 +1,5 @@
 import  { InferProps } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve} from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve, SankeyLinkAttrLocal, display_styleType} from '../types/Types'
 import React, { Requireable } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
@@ -33,7 +33,7 @@ export const OpenSankeyDrawLinks = (
   position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
   LinkTooltipsContent:(data: SankeyData, l: SankeyLink,
-    GetLinkValue:GetLinkValueFuncType) => string,
+  GetLinkValue:GetLinkValueFuncType) => string,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   set_data:(d:SankeyData)=>void,
@@ -116,7 +116,7 @@ export const OpenSankeyDrawLinks = (
             new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
           }
           set_tags_selected(new_tags_selected)
-          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value)
+          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
         }else if(Object.values(data.dataTags).length>0){
           // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
           const tmp=[] as string[]
@@ -127,9 +127,9 @@ export const OpenSankeyDrawLinks = (
           Object.keys(data.dataTags).forEach((dt,i)=>{
             n_t_s[dt]=tmp[i]
           })
-          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value)
+          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value as unknown as string)
         }else{
-          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value)
+          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
         }
       }else{
         set_displayed_input_link_value('')
@@ -164,10 +164,10 @@ export const OpenSankeyDrawLinks = (
     if (pos === 'middle') {
       return '0.3em'
     } else if (pos === 'below') {
-      const tmp=GetLinkValue(data, l.idLink).value
+      const tmp=GetLinkValue(data, l.idLink).value as number
       return scale((tmp)?tmp:0) / 2 + (ReturnValueLink(data,l,'label_font_size') as string) + 'px'
     } else if (pos === 'above') {
-      const tmp=GetLinkValue(data, l.idLink).value
+      const tmp=GetLinkValue(data, l.idLink).value as number
 
       return -scale((tmp)?tmp:0) / 2 + 'px'
     }
@@ -295,7 +295,7 @@ export const OpenSankeyDrawLinks = (
         return ReturnValueLink(data,l,'text_color')
       })
       .attr('visibility', d => {
-        let tmp=GetLinkValue(data, d.idLink).value
+        let tmp=GetLinkValue(data, d.idLink).value as number
         tmp=(tmp)?tmp:0
 
         return  LinkVisible(d, data,display_nodes,GetLinkValue) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
@@ -324,7 +324,7 @@ export const OpenSankeyDrawLinks = (
       .attr('id', d => 'path_'+d.idLink)
       .attr('fill', 'none')
       .attr('stroke-opacity', d => {
-        let tmp=GetLinkValue(data, d.idLink).value
+        let tmp=GetLinkValue(data, d.idLink).value as number
         tmp=(tmp)?tmp:0
         return  tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(GetLinkValue(data, d.idLink).display_value).includes('[')) ? ReturnValueLink(data,d,'opacity') : ReturnValueLink(data,d,'opacity')) : 0})
       .attr('stroke-width', l =>LinkStrokeWidth(l,data,scale,inv_scale,min_thickness,display_nodes,GetLinkValue))
@@ -345,7 +345,7 @@ export const OpenSankeyDrawLinks = (
         sankeyTooltip
           .html(LinkTooltipsContent(data, d,GetLinkValue))
 
-        let tmp=GetLinkValue(data, d.idLink).value
+        let tmp=GetLinkValue(data, d.idLink).value as number
         tmp=(tmp)?tmp:0
         if (tmp >= display_style.filter) {
           d3.select(' .opensankey #path_'+d.idLink+'_arrow').attr('opacity','0.5')
@@ -370,7 +370,7 @@ export const OpenSankeyDrawLinks = (
           }
         }
         sankeyTooltip.style('opacity', 0)
-        let tmp=GetLinkValue(data, d.idLink).value
+        let tmp=GetLinkValue(data, d.idLink).value as number
         tmp=(tmp)?tmp:0
         if (tmp >= display_style.filter) {
           const opacity = ReturnValueLink(data,d,'opacity')
@@ -398,9 +398,12 @@ export const OpenSankeyDrawLinks = (
 
     paths.attr('d', d => {
       SetNodesHeight(data,display_nodes,display_links, d, GetLinkValue)
-      return drawCurveFunction.curve(data,set_data,
+      return drawCurveFunction.curve(
+        data,set_data,
         display_nodes, display_links, display_style,
-        data.nodeTags, d, error_msg,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
+        data.nodeTags, d, error_msg,
+        multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
+        DrawArrows
       )
     })
 
@@ -438,7 +441,7 @@ export const OpenSankeyDrawLinks = (
     display_nodes:{ [node_id: string]: SankeyNode },
     display_links:{ [link_id: string]: SankeyLink },
     error_msg: { text: string | undefined } | undefined,
-    display_style: {filter: number,filter_label: number,font_family: string[]},
+    display_style: display_styleType,
     drawCurveFunction : SankeyDrawCurve,
     scale:(t:number)=>number,
     inv_scale:(t:number)=>number
@@ -452,10 +455,13 @@ export const OpenSankeyDrawLinks = (
             (link: SankeyLink) => {
               d3.select(' .opensankey #path_' + link.idLink).attr('d',
                 () => {
-                  return drawCurveFunction.curve(data,set_data,
+                  return drawCurveFunction.curve(
+                    data,set_data,
                     display_nodes, display_links, display_style,
                     data.nodeTags, link,
-                    error_msg,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
+                    error_msg,
+                    multi_selected_links,
+                    LinkText,GetSankeyMinWidthAndHeight,GetLinkValue, DrawArrows
                   )
                 }
               )
@@ -536,7 +542,7 @@ export const OpenSankeyDrawLinks = (
   const drag_link = (
     display_nodes: { [node_id: string]: SankeyNode },
     display_links: { [link_id: string]: SankeyLink },
-    display_style: { filter: number; filter_label: number },
+    display_style: display_styleType,
     dragged: SVGPathElement | null,
     event: d3.D3DragEvent<Element, SankeyLink, unknown>,
     data:SankeyData,
@@ -599,12 +605,12 @@ export const OpenSankeyDrawLinks = (
         if (i > source_order) {
           break
         }
-        let tmp=GetLinkValue(data, link.idLink).value
+        let tmp=GetLinkValue(data, link.idLink).value as number
         tmp=(tmp)?tmp:0
         output_offset += tmp
       }
       const number_of_links = id_output_filtered.length
-      const value = GetLinkValue(data, idLink).value
+      const value = GetLinkValue(data, idLink).value as number
       let next_link_index=-1
       let prec_link_index=-1
       if(source_order>0){
@@ -672,12 +678,12 @@ export const OpenSankeyDrawLinks = (
         if (i > target_order) {
           break
         }
-        let tmp=GetLinkValue(data,node.inputLinksId[i - 1]).value
+        let tmp=GetLinkValue(data,node.inputLinksId[i - 1]).value as number
         tmp=(tmp)?tmp:0
         input_offset +=tmp
       }
       const number_of_links = id_input_filtered.length
-      const value = GetLinkValue(data, idLink).value
+      const value = GetLinkValue(data, idLink).value as number
       //Recheche la les flux suivant et précédent qui sont du même coté pour pour ensuite les swap
       let next_link_index=-1
       let prec_link_index=-1
@@ -742,7 +748,7 @@ export const OpenSankeyDrawLinks = (
     d3.select(' .opensankey #text_' + link.idLink).attr('y', new_y)
     link.x_label = new_x
     link.y_label = new_y
-    link.local=(link.local!==undefined && link.local!==null)?link.local:{}
+    link.local=(link.local!==undefined && link.local!==null)?link.local:{} as SankeyLinkAttrLocal
     link.local.label_position = 'frozen'
   }
 

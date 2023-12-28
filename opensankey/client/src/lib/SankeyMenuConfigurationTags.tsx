@@ -1,24 +1,26 @@
 import React, { useState, FunctionComponent } from 'react'
 import { Button, FormControl, Form, FormLabel, Table, ButtonGroup,  OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import PropTypes, { InferProps } from 'prop-types'
-import { SankeyDataPropTypes,  TagsGroup } from '../types/Types'
+
+import { SankeyData,  TagsGroup } from '../types/Types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
 import { AddTag,AddGroupTag, GetRandomInt } from './SankeyUtils'
 import { FaEye,FaEyeSlash} from 'react-icons/fa'
+import { TFunction } from 'i18next'
 
 
-const SankeySettingsEditionTagsPropTypes = {
-  t: PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  elementTagNameProp: PropTypes.oneOf(['nodeTags','fluxTags','dataTags']).isRequired,
-  elementNameProp: PropTypes.oneOf(['nodes','links','none']).isRequired
+export type SankeySettingsEditionTagsTypes = {
+  t:TFunction,
+  data: SankeyData,
+  set_data : (_:SankeyData)=>void,
+  elementTagNameProp: 'nodeTags' | 'fluxTags' | 'dataTags',
+  elementNameProp: 'nodes' | 'links' | 'none'
 }
-type SankeySettingsEditionTagsTypes = InferProps<typeof SankeySettingsEditionTagsPropTypes>
 
-const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ t,data, set_data,elementTagNameProp,elementNameProp }) => {
+const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionTagsTypes> = ({ 
+  t,data, set_data,elementTagNameProp,elementNameProp 
+}) => {
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
   const type_tag_name=elementTagNameProp === 'dataTags' ? 'dataTags' : isNodeTags
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data[type_tag_name]).length > 0 ? Object.keys(data[type_tag_name])[0] : '')
@@ -504,10 +506,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionT
     </>
   )
 }
-
-
-
-SankeySettingsEditionElementTags.propTypes = SankeySettingsEditionTagsPropTypes
 
 export default null
 

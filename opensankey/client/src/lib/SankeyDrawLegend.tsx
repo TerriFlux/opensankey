@@ -412,7 +412,8 @@ export const drag_legend_g_element:drag_legend_g_elementFuncType=(data:SankeyDat
 
 // const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
-export const context_legend_tags=(tag_contextualised:string|undefined,
+export const context_legend_tags=(
+  tag_contextualised:string|undefined,
   set_tag_contextualised:(t:string|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},

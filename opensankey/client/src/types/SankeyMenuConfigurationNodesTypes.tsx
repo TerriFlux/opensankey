@@ -1,18 +1,7 @@
-// const SankeyNodeEditionPropTypes = {
-//   t:PropTypes.func.isRequired,
-//   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-//   set_data: PropTypes.func.isRequired,
-//   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-//   set_style_to_apply: PropTypes.func.isRequired,
-//   menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-//   token:PropTypes.bool.isRequired,
-// }
-
 import { TFunction } from "i18next"
 import { SankeyData, SankeyLink, SankeyNode, treeFolderType } from "./Types"
 import { GetLinkValueFuncType } from "./FunctionTypes"
 
-// type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 export type OpenSankeyMenuConfigurationNodesFType = (
   t:TFunction,
