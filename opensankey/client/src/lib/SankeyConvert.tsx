@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import { SankeyData, SankeyLink, SankeyLinkStyleTypes, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyleTypes,SankeyLinkAttrLocalTypes,SankeyLinkAttrLocal,SankeyNodeStyle, SankeyNodeAttrLocal, SankeyLinkStyle} from '../types/Types'
+import { SankeyData, SankeyLink, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyle,SankeyLinkAttrLocal, SankeyNodeAttrLocal} from '../types/Types'
 import colormap from 'colormap'
 import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
 import { ConvertDataFuncType, DefaultSankeyDataFuncType, complete_sankey_dataFunctType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType } from '../types/FunctionTypes'
@@ -75,7 +75,7 @@ interface ConvertSankeyLink {
   conv?: number[]
   natural_unit?: string
   value: number | number[]
-  value2: {[key:string]:SankeyLinkValue} | {[key:string]:SankeyLinkValueDict}
+  value2: SankeyLinkValue | SankeyLinkValueDict
   display_value?: string | string[]
   data?: boolean
   subchain?: string
@@ -214,7 +214,7 @@ export const complete_sankey_data:complete_sankey_dataFunctType = (
   convert_boolean(data)
   compute_flux_max(data)
 
-  if (data.show_structure == 'free') {
+  if ((data as unknown as ConvertSankeyData).show_structure == 'free') {
     data.show_structure = 'free_interval'
   }
 }
@@ -325,13 +325,13 @@ export const compute_flux_max = (
   let flux_max = 0
   const compute_flux_max_internal =(
     dataTags: TagsGroup[],
-    v: SankeyLinkValue,
+    v: SankeyLinkValue | SankeyLinkValueDict,
     depth:number,
     flux_max:number
   ) => {
     if (dataTags.length == 0 || depth === dataTags.length ) {
-      if (v.value && v.value > flux_max) {
-        flux_max = v.value
+      if (v.value && v.value as number > flux_max) {
+        flux_max = v.value as number
       }
       return flux_max
     }
@@ -339,7 +339,7 @@ export const compute_flux_max = (
     const listKey = Object.keys(dataTag.tags)
 
     for (const i in listKey) {
-      if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
+      if ((v as SankeyLinkValueDict )[listKey[i]]) {
         if ( v === undefined) {
           //console.log(listKey[i] + ' not found in v')
           break
@@ -741,7 +741,7 @@ export const convert_nodes:convert_nodesFuncType = (
     // ==================================================================
     // CONVERSION D'ATTRIBUT OBLIGATOIRE DES NOEUDS EN VARIABLES LOCAL
     if(n_depreciated.display_style!==undefined){
-      n.local=(n.local!=undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!=undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       if (n_depreciated.display_style?.label_vert === 'haut' ) {
         n_depreciated.display_style.label_vert = 'top'
       }
@@ -784,33 +784,33 @@ export const convert_nodes:convert_nodesFuncType = (
 
     // Assign ancienement attribut de noeud obligatoires en tant que var local 
     if (n_depreciated.visible === 1) {
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.shape_visible = true
     }
     if (n_depreciated.visible === 0) {
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.shape_visible = false
     }
     if(n_depreciated.shape_visible || n_depreciated.display){
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.shape_visible=(n_depreciated.shape_visible as boolean)
       delete n_depreciated.shape_visible
       //delete n_depreciated.display
     }
     if(n_depreciated.shape && ((n.local && n.local.shape==undefined) || n.local===undefined)){
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
-      n.local.shape=(n_depreciated.shape)
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
+      n.local.shape=n_depreciated.shape as 'ellipse' | 'rect' | 'arrow'
       delete n_depreciated.shape
 
     }
     if(n_depreciated.node_width && ((n.local && n.local.node_width==undefined) || n.local===undefined)){
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.node_width=(n_depreciated.node_width)
       delete n_depreciated.node_width
 
     }
     if(n_depreciated.node_height && ((n.local && n.local.node_height==undefined) || n.local===undefined)){
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.node_height=(n_depreciated.node_height)
       delete n_depreciated.node_height
     }
@@ -821,12 +821,12 @@ export const convert_nodes:convert_nodesFuncType = (
       delete n_depreciated.color
     }
     if(n_depreciated.colorSustainable && ((n.local && n.local.colorSustainable==undefined) || n.local===undefined)){
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.colorSustainable=(n_depreciated.colorSustainable)
       delete n_depreciated.colorSustainable
     }
     if (n_depreciated.type) {
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.shape = n_depreciated.type === 'product' ? 'ellipse' : 'rect'
       if ( has_product && !n.tags['Type de noeud']) {
         n.tags['Type de noeud'] = []
@@ -837,7 +837,7 @@ export const convert_nodes:convert_nodesFuncType = (
       delete n_depreciated.type
     }
     if (n_depreciated.label_visible && ((n.local && n.local.label_visible==undefined) || n.local===undefined)) {
-      n.local=(n.local!==undefined && n.local!==null)?n.local:{}
+      n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.label_visible=(n_depreciated.label_visible as boolean)
     }
     if (n_depreciated.node_visible !== undefined && n_depreciated.display !== undefined) {
@@ -1048,7 +1048,7 @@ export const convert_links:convert_linksFuncType = (
   const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
   const convert_display =(
     dataTags: TagsGroup[],
-    v: SankeyLinkValue,
+    v: SankeyLinkValue | SankeyLinkValueDict,
     depth:number
   ) => {
     if (dataTags.length == 0 || depth === dataTags.length ) {
@@ -1056,19 +1056,19 @@ export const convert_links:convert_linksFuncType = (
         v.display_value = ''
       } else if (v.display_value === 'default') {
         v.display_value = ''
-      } else if (v.display_value.includes('[')) {
+      } else if ((v.display_value as string).includes('[')) {
         // Variables libres
         let tmp
-        if (v.display_value.includes('-')) {
-          tmp = v.display_value.split('-')
-        } else if (v.display_value.includes(',')) {
-          tmp = v.display_value.split(',')
-        } else if (v.display_value.includes('...')) {
-          tmp = v.display_value.split('...')
-        } else if (v.display_value.includes('  ')) {
-          tmp = v.display_value.split('  ')
+        if ((v.display_value as string).includes('-')) {
+          tmp = (v.display_value as string).split('-')
+        } else if ((v.display_value as string).includes(',')) {
+          tmp = (v.display_value as string).split(',')
+        } else if ((v.display_value as string).includes('...')) {
+          tmp = (v.display_value as string).split('...')
+        } else if ((v.display_value as string).includes('  ')) {
+          tmp = (v.display_value as string).split('  ')
         } else {
-          tmp = v.display_value.split(' ')
+          tmp = (v.display_value as string).split(' ')
         }
         const free_mini = Number(tmp[0].substring(1))
         const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
@@ -1076,8 +1076,8 @@ export const convert_links:convert_linksFuncType = (
           v.extension = {}
         }
         if (v.extension) {
-          v.extension.free_mini = free_mini as unknown as string
-          v.extension.free_maxi = free_maxi as unknown as string
+          (v as SankeyLinkValue).extension.free_mini = free_mini as unknown as string
+          (v as SankeyLinkValue).extension.free_maxi = free_maxi as unknown as string
         }
         v.display_value = ''
       }
@@ -1085,9 +1085,9 @@ export const convert_links:convert_linksFuncType = (
       if ( col_tag) {
         Object.keys(col_tag).forEach(tags_group_key=>{
           if (!(tags_group_key in v.tags)) {
-            v.tags[tags_group_key] = []
+            (v as SankeyLinkValue).tags[tags_group_key] = []
           }
-          v.tags[tags_group_key].push(col_tag[tags_group_key])
+          (v as SankeyLinkValue).tags[tags_group_key].push(col_tag[tags_group_key])
         })
         delete (v as unknown as ConvertSankeyValue).color_tag
       }
@@ -1095,18 +1095,18 @@ export const convert_links:convert_linksFuncType = (
         v.tags = {}
       }
       Object.keys(v.tags).forEach(key=> {
-        if ( !Array.isArray(v.tags[key]) ) {
-          v.tags[key] = [v.tags[key] as unknown as string]
+        if ( !Array.isArray((v as SankeyLinkValue).tags[key]) ) {
+          (v as SankeyLinkValue).tags[key] = [(v as SankeyLinkValue).tags[key] as unknown as string]
         }
       })
       if ( !v.extension) {
         v.extension = {}
       }
       if (data_to_convert.fluxTags['flux_types'] && !('flux_types' in v['tags'])) {
-        if ( v.extension.data_value ) {
-          v['tags']['flux_types'] = ['initial_data']
+        if ( (v as SankeyLinkValue).extension.data_value ) {
+          (v as SankeyLinkValue)['tags']['flux_types'] = ['initial_data']
         } else {
-          v['tags']['flux_types'] = ['computed_data']
+          (v as SankeyLinkValue)['tags']['flux_types'] = ['computed_data']
         }
       }
       return
@@ -1115,7 +1115,7 @@ export const convert_links:convert_linksFuncType = (
     const listKey = Object.keys(dataTag.tags)
 
     for (const i in listKey) {
-      if ((v as { [key: string]: SankeyLinkValueDict })[listKey[i]]) {
+      if ((v as SankeyLinkValueDict)[listKey[i]]) {
         if ( v === undefined) {
           //console.log(listKey[i] + ' not found in v')
           break
@@ -1249,8 +1249,42 @@ export const convert_links:convert_linksFuncType = (
       AssignLinkLocalAttribute(l,'dashed',true)
     }
 
+    const tmp : SankeyLinkAttrLocal = {
+      // Geometry link
+      orientation:'',
+      left_horiz_shift: 0,
+      right_horiz_shift: 0,
+      vert_shift: 0,
+      curvature: 0,
+      curved: true,
+      recycling: true,
+      arrow_size:0,
+
+      // Geometry link labels
+      label_position:'',
+      orthogonal_label_position:'',
+      label_on_path:true,
+
+      //Attributes link
+      arrow:true,
+      color:'',
+      opacity:0,
+      dashed: true,
+      //Attributes link labels
+      label_visible:true,
+      label_font_size:0,
+      text_color:'',
+      to_precision:true,
+      scientific_precision:0,
+      font_family: '',
+      label_unit_visible:true,
+      label_unit:'',
+      custom_digit:true,
+      nb_digit:0
+    }
+
     // Assign missing variable
-    Object.keys(SankeyLinkAttrLocalTypes).forEach((k) =>{
+    Object.keys(tmp).forEach((k) =>{
       const kl=k as keyof SankeyLinkAttrLocal
       if(Object.keys(l).includes(k)){
         l.local=l.local?l.local:{};
@@ -1276,12 +1310,12 @@ export const convert_links:convert_linksFuncType = (
     if (data_to_convert.dataTags['Regions']) {
       region_names = Object.keys(data_to_convert.dataTags['Regions'].tags)
       region_names.forEach(region_name =>
-        Object.values(links_no_type).forEach((link)=> links_no_type[link.idLink].value2[region_name] = {} )
+        Object.values(links_no_type).forEach((link)=> (links_no_type[link.idLink].value2 as SankeyLinkValueDict)[region_name] = {} )
       )
     } else if (data_to_convert.dataTags['Periods']) {
       period_names = Object.keys(data_to_convert.dataTags['Periods'].tags)
       period_names.forEach(period_name =>
-        Object.values(links_no_type).forEach((link) => links_no_type[link.idLink].value2[period_name] = {} )
+        Object.values(links_no_type).forEach((link) => (links_no_type[link.idLink].value2 as SankeyLinkValueDict)[period_name] = {} )
       )
     }
 
@@ -1290,14 +1324,14 @@ export const convert_links:convert_linksFuncType = (
       reg_or_period_names.forEach((region_name,value_index) => {
         Object.values(links_no_type).forEach(
           (link)=> {
-            const editable_link = links_no_type[link.idLink]
-            editable_link.value2[region_name] = {
+            const editable_link = links_no_type[link.idLink];
+            (editable_link.value2 as SankeyLinkValueDict)[region_name] = {
               value          : (link.value as number[])[value_index],
               display_value  : (link.display_value as string[])[value_index],
               tags            : {},
               extension : {}
             }
-            const sankey_link_value = editable_link.value2[region_name] as SankeyLinkValue
+            const sankey_link_value = (editable_link.value2 as SankeyLinkValueDict)[region_name] as SankeyLinkValue
             if (editable_link.mini !== undefined && editable_link.mini !== null) {
               if (!sankey_link_value.extension) {
                 sankey_link_value.extension = {}
@@ -1346,8 +1380,8 @@ export const convert_links:convert_linksFuncType = (
             the_value = (link.value as number[])[0]
             the_display_value = (link.display_value as string[])[0] as string
           }
-          editable_link.value2 = {
-            value : the_value,
+          (editable_link.value2 as SankeyLinkValue) = {
+            value : the_value as number,
             display_value : the_display_value as string,
             tags            : {},
             extension : {}
@@ -1370,8 +1404,8 @@ export const convert_links:convert_linksFuncType = (
             const free_mini = Number(tmp[0].substring(1))
             const free_maxi = Number(tmp[1].substring(0,tmp[1].length -1))
             sankey_link_value.extension.free_mini = free_mini
-            sankey_link_value.extension.free_maxi = free_maxi
-            editable_link.value2.display_value = ''
+            sankey_link_value.extension.free_maxi = free_maxi;
+            (editable_link.value2 as SankeyLinkValue).display_value = ''
           }
           if (editable_link.mini !== undefined && editable_link.mini !== null) {
             let the_mini = editable_link.mini as number
@@ -1486,14 +1520,78 @@ export const convert_data:ConvertDataFuncType = (
     }
   }
 
+  const tmp1 : SankeyLinkStyle = {
+    idLink:'',
+    name:'',
   
+    // Geometry/appearence
+    orientation: '',
+    arrow: true,
+    color: '',
+    opacity: 0,
+    left_horiz_shift: 0,
+    right_horiz_shift: 0,
+    vert_shift: 0,
+    curvature: 0,
+    curved: true,
+    recycling: true,
+    arrow_size:0,
+    dashed: true,
+    // Label
+    label_position: '',
+    orthogonal_label_position: '',
+    label_on_path: true,
+    label_visible: true,
+    label_font_size: 0,
+    text_color: '',
+    to_precision:true,
+    scientific_precision:0,
+    font_family: '',
+    label_unit_visible:true,
+    label_unit:'',
+    custom_digit:true,
+    nb_digit:0,
+  }
+  const tmp2 : SankeyNodeStyle = {
+    idNode: '',
+    name: '',
+  
+    // Parameter of node shape
+    shape_visible: true,
+    label_visible: true,
+    node_width: 0,
+    node_height: 0,
+    color: '',
+    shape: 'ellipse',
+    node_arrow_angle_factor:0,
+    node_arrow_angle_direction:'',
+    colorSustainable: true,
+  
+    // Parameter of node label
+    font_family: '',
+    font_size: 0,
+    uppercase: true,
+    bold: true,
+    italic: true,
+    label_box_width: 0,
+    label_color: true,
+    label_vert: '',
+    label_horiz: '',
+    label_background:true,
+  
+    // Parameter of node value label
+    show_value: true,
+    label_vert_valeur: '',
+    label_horiz_valeur: '',
+    value_font_size: 0,
+  }
 
   // Convert style of node and link
   // Previously tehy were object identical to SankeyNode or SankeyLink, now they are like local attribute  
-  if(Object.keys(data_to_convert.style_link['default'])!== Object.keys(SankeyLinkStyleTypes) ){
+  if(Object.keys(data_to_convert.style_link['default'])!== Object.keys(tmp1) ){
     data.style_link['default'] = DefaultLinkStyle()
   }
-  if(Object.keys(data_to_convert.style_node['default'])!== Object.keys(SankeyNodeStyleTypes) ){
+  if(Object.keys(data_to_convert.style_node['default'])!== Object.keys(tmp2) ){
     data.style_node['default'] = DefaultNodeStyle()
   }
 

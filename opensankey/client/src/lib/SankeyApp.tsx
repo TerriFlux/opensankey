@@ -39,7 +39,7 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes, faArrowPointer,faSliders,faFolderTree, faDiagramProject,faArrowsLeftRight,faArrowsUpDown } from '@fortawesome/free-solid-svg-icons'
 import { FaAngleDoubleLeft} from 'react-icons/fa'
-import { ReturnValueLink,LinkColor,updateLayout } from './SankeyUtils'
+import { ReturnValueLink,LinkColor,updateLayout, RetrieveExcelResults,DefaultSankeyData } from './SankeyUtils'
 import { convert_data } from './SankeyConvert'
 import { OpenSankeyDiagramSelector } from './SankeyMenuDialogs'
 import { SankeyPlusModalStyleLink,SankeyPlusModalStyleNode} from './SankeyStyle'
@@ -172,8 +172,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [user_scale, set_user_scale] = useState(data.user_scale)
   const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
   const [minimum_flux, set_minimum_flux] = useState(data.minimum_flux)
-  const [node_hspace, set_node_hspace] = useState(data.h_space)
-  const [node_vspace, set_node_vspace] = useState(data.v_space)
+  const [node_hspace, set_node_hspace] = useState(data.h_space) as [number,(_:number)=>void]
+  const [node_vspace, set_node_vspace] = useState(data.v_space) as [number,(_:number)=>void]
 
   // For OpenSankeyMenuConfigurationNodes
   const [link_io,set_link_io]=useState<string>('output')
@@ -203,7 +203,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const [processing,setProcessing] = useState(false)
   const [failure,setFailure] = useState(false)
   const [not_started,setNotStarted] = useState(true)
-  const [result,setResult] = useState('')
+  const [result,setResult] = useState('') as [string,(_: string) => void]
   const [path,setPath] = useState('')
   const [is_computing,setIsComputing]=useState(false)
 
@@ -229,7 +229,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   //Réinitialise data et vide les noeud/flux sélectionnés
   const Reinitialization = () => {
-    const data = SankeyUtils.DefaultSankeyData()
+    const data = DefaultSankeyData()
     multi_selected_nodes.current = []
     multi_selected_links.current = []
     set_legend_clicked(false)
@@ -368,7 +368,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- 2. Build Menus
   const sankey_menus = OpenSankeyMenus(
     t,Reinitialization,
-    SankeyUtils.DefaultSankeyData,
+    DefaultSankeyData,
     showMenuComponents,
     showStyleEdition,
     showStyleEditionLink,
@@ -419,7 +419,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       </Popover.Body>
     </Popover>
   const {filter}=data.display_style
-  const toolbar = toolbar_builder(t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',first_selected_node,set_first_selected_node,GetSankeyMinWidthAndHeight,setDiagram,showMenuComponents.show_modalTemplate[1],set_never_see_again,convert_data,maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux,SankeyUtils.DefaultSankeyData)
+  const toolbar = toolbar_builder(
+    t,data,set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,detail_level,'',
+    first_selected_node,set_first_selected_node,GetSankeyMinWidthAndHeight,setDiagram,showMenuComponents.show_modalTemplate[1],
+    set_never_see_again,convert_data,maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux,DefaultSankeyData
+  )
   Object.keys(toolbar).forEach(k=>{
     sankey_menus[k]=[toolbar[k]]
   })
@@ -609,9 +613,17 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   external_menu_modal.push(modale_style_link)
   external_menu_modal.push(modale_style_node)
 
-
-  
-  const processExcel=(text:string)=>SankeyUtils.RetrieveExcelResults(text,data,set_data,updateLayout,()=>0,GetSankeyMinWidthAndHeight,convert_data,SankeyUtils.DefaultSankeyData)
+  const processExcel=(
+    text:string
+  )=> RetrieveExcelResults(
+    text,
+    set_data,
+    updateLayout,
+    ()=>null,
+    GetSankeyMinWidthAndHeight,
+    convert_data,
+    DefaultSankeyData
+  )
 
   const additional_nav_item=[]
 
@@ -630,13 +642,13 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             data={data}
             set_data={set_data}
             nav_item_active={nav_item_active}
-            callback={()=>null}
             path={path}
             launch={launch}
             url_prefix={ ''}
+            example_menu={<></>}
             logo={!window.SankeyToolsStatic ? logo: window.sankey.logo as string}
             logo_terriflux={!window.SankeyToolsStatic ? logo_terriflux: ''}
-            logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width}
+            logo_width={!window.SankeyToolsStatic ? 100 : window.sankey.logo_width as number}
             app_name={!window.SankeyToolsStatic ? 'Pré-version 1.0' : ''}
             mode_selection={mode_selection}
             style_to_apply={style_to_apply}
@@ -676,7 +688,7 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
             setIsComputing={setIsComputing}
             set_tags_selected={set_tags_selected}
             RetrieveExcelResults={processExcel}
-            DefaultSankeyData={SankeyUtils.DefaultSankeyData}
+            DefaultSankeyData={DefaultSankeyData}
           />
         </div>
         {//Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw

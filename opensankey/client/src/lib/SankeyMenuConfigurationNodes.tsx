@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState,useRef} from 'react'
 import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup,Overlay,Popover, ButtonGroup } from 'react-bootstrap'
-import PropTypes, { InferProps, ReactElementLike } from 'prop-types'
-import { SankeyData, SankeyDataPropTypes,  SankeyNode, SankeyNodePropTypes,SankeyLink,treeFolderType} from '../types/Types'
+import { ReactElementLike } from 'prop-types'
+import { SankeyData, SankeyNode,SankeyLink,treeFolderType} from '../types/Types'
 import { DeleteNode,ReturnValueNode,ApplyStyleToNodes,AddNewNode,CutName,FolderIcon,FolderOpenIcon,FileIcon} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FaPlus, FaMinus, FaEye,} from 'react-icons/fa'
@@ -18,17 +18,15 @@ import FolderTree from 'react-folder-tree'
 import 'react-folder-tree/dist/style.css'
 import { GetLinkValueFuncType } from '../types/FunctionTypes'
 
-const SankeyNodeEditionPropTypes = {
-  t:PropTypes.func.isRequired,
-  data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_data: PropTypes.func.isRequired,
-  multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-  set_style_to_apply: PropTypes.func.isRequired,
-  menu_configuration_nodes: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  token:PropTypes.bool.isRequired,
+type SankeyEditionTypes = {
+  t : TFunction,
+  data : SankeyData,
+  set_data : (_:SankeyData)=>void,
+  multi_selected_nodes:{current:SankeyNode[]},
+  set_style_to_apply:(s:string)=>void,
+  menu_configuration_nodes : JSX.Element[],
+  token : boolean
 }
-
-type SankeyEditionTypes = InferProps<typeof SankeyNodeEditionPropTypes>
 
 export const OpenSankeyMenuConfigurationNodes = (
   t:TFunction<'translation', undefined>,
@@ -362,14 +360,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   )
 }
 
-SankeyNodeEdition.propTypes = SankeyNodeEditionPropTypes
-
 export default SankeyNodeEdition
 
-
-
-
-export const tree_data_nodes=(t:TFunction<'translation', undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
+export const tree_data_nodes=(
+  t:TFunction<'translation', undefined>,
+  data:SankeyData,
+  multi_selected_nodes:{current:SankeyNode[]},
+  node_visible:string[],
   filter_node_selector:string[]
 )=>{
 

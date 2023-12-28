@@ -23,6 +23,7 @@ import { faCircleInfo} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import * as FunctionTypes from '../types/FunctionTypes'
+import { DefaultSankeyDataFuncType, GetLinkValueFuncType, RetrieveExcelResultsFuncType, TestLinkValueFuncType } from '../types/FunctionTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -36,7 +37,7 @@ declare const window: Window &
  */
 export const AddDataTags:FunctionTypes.AddDataTagsFuncType = (
   dataTags: TagsGroup[],
-  v: {[key:string] : SankeyLinkValue},
+  v: {[key:string] : SankeyLinkValue | SankeyLinkValueDict },
   depth: number
 ) => {
   const dataTag = Object.values(dataTags)[depth]
@@ -99,7 +100,7 @@ export const GetLinkValue:FunctionTypes.GetLinkValueFuncType = (
       extension: {}
     }
   }
-  let val = ((links[idLink].value as unknown) as { [key: string]: SankeyLinkValueDict })
+  let val = links[idLink].value
   const listKey = [] as string[]
   let missing_key = false
   Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).forEach((dataTag,i) => {
@@ -124,7 +125,7 @@ export const GetLinkValue:FunctionTypes.GetLinkValueFuncType = (
     if (up && +i === (listKey.length - 1)) {
       break
     }
-    val = val[listKey[i]]
+    val = (val as SankeyLinkValueDict)[listKey[i]]
     if (val === undefined) {
       return {
         value: 0,
@@ -146,7 +147,7 @@ export const GetLinkValue:FunctionTypes.GetLinkValueFuncType = (
  */
 export const FindMaxLinkValue:FunctionTypes.FindMaxLinkValueFuncType = (
   max_node_value: number,
-  value_dict: SankeyLinkValueDict
+  value_dict: SankeyLinkValueDict | SankeyLinkValue
 ): number => {
   let new_max_node_value = max_node_value
   // If input does not exist or does not contain any info, return
@@ -171,7 +172,7 @@ export const FindMaxLinkValue:FunctionTypes.FindMaxLinkValueFuncType = (
     })
   }
   else { // If we reached the value, we can compare with ref max value
-    const tmp=(value_dict as SankeyLinkValue).value
+    const tmp=(value_dict as SankeyLinkValue).value as number
     new_max_node_value = (tmp && (tmp > new_max_node_value)) ? tmp : new_max_node_value
   }
   return new_max_node_value
@@ -493,16 +494,16 @@ export const LinkText:FunctionTypes.LinkTextFuncType = (
     }
   }
 
-  if(isNaN(the_link_value)){
+  if(isNaN(the_link_value as number)){
     return the_link_value as string
   }else{
     const nb_sign=(ReturnValueLink(data,d,'scientific_precision') as number)
     if(nb_sign>0){
-      the_link_value=parseFloat(the_link_value.toPrecision(nb_sign))
+      the_link_value=parseFloat((the_link_value as number).toPrecision(nb_sign as number))
     }
 
     if((ReturnValueLink(data,d,'to_precision'))){
-      the_link_value =ToPrecision(the_link_value,nb_sign)
+      the_link_value =ToPrecision(the_link_value as number,nb_sign)
     }else if (ReturnValueLink(data,d,'custom_digit')){
       the_link_value =(the_link_value as number).toFixed((ReturnValueLink(data,d,'nb_digit') as number))
     }
@@ -513,8 +514,11 @@ export const LinkText:FunctionTypes.LinkTextFuncType = (
 
 
 
-export const TestLinkValue:FunctionTypes.TestLinkValueFuncType = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,
-  GetLinkValue:FunctionTypes.GetLinkValueFuncType
+export const TestLinkValue:TestLinkValueFuncType = (
+  data:SankeyData, 
+  nodes: { [node_id: string]: SankeyNode }, 
+  d: SankeyLink,
+  GetLinkValue:GetLinkValueFuncType
 ) => {
   const { dataTags } = data
   const inv_scale = d3.scaleLinear()
@@ -537,7 +541,7 @@ export const TestLinkValue:FunctionTypes.TestLinkValueFuncType = (data:SankeyDat
       return inv_scale(5)
     }
   }
-  let val = ((d.value as unknown) as { [key: string]: SankeyLinkValueDict })
+  let val = d.value
   const listKey: string[] = []
   const idDt=d.idLink.split('_')
   idDt.splice(0,1)
@@ -570,15 +574,15 @@ export const TestLinkValue:FunctionTypes.TestLinkValueFuncType = (data:SankeyDat
     if ( val === undefined) {
       break
     }
-    val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
+    val = (val as SankeyLinkValueDict)[listKey[i]]
   }
   if (val === undefined) {
     return 0
   }
-  if ( data.maximum_flux && scale(((val as unknown) as SankeyLinkValue).value) > data.maximum_flux) {
+  if ( data.maximum_flux && scale((val as SankeyLinkValue).value as number) > data.maximum_flux) {
     return inv_scale(data.maximum_flux)
   }
-  if ( data.minimum_flux && scale(((val as unknown) as SankeyLinkValue).value) < data.minimum_flux) {
+  if ( data.minimum_flux && scale((val as SankeyLinkValue).value as number) < data.minimum_flux) {
     return inv_scale(data.minimum_flux)
   }
   return ((val as unknown) as SankeyLinkValue).value
@@ -588,7 +592,7 @@ export const TestLinkValue:FunctionTypes.TestLinkValueFuncType = (data:SankeyDat
  *
  * @returns {SankeyData}
  */
-export const DefaultSankeyData:FunctionTypes.DefaultSankeyDataFuncType = (): SankeyData => {
+export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
   const data : Omit<SankeyData,'style_node' | 'style_link'> = {
     version: '0.8',
     couleur_fond_sankey:'#f2f2f2',
@@ -744,7 +748,10 @@ export const LinkColor:FunctionTypes.LinkColorFuncType = (l: SankeyLink,data:San
  * @param {SankeyData} data
  * @returns {boolean}
  */
-export const LinkVisible: FunctionTypes.LinkVisibleFunctType=(l: SankeyLink, data: SankeyData,  display_nodes : { [node_id: string]: SankeyNode },
+export const LinkVisible: FunctionTypes.LinkVisibleFunctType=(
+  l: SankeyLink, 
+  data: SankeyData,  
+  display_nodes : { [node_id: string]: SankeyNode },
   GetLinkValue:FunctionTypes.GetLinkValueFuncType
 ): boolean => {
   const { dataTags, fluxTags } = data
@@ -759,7 +766,7 @@ export const LinkVisible: FunctionTypes.LinkVisibleFunctType=(l: SankeyLink, dat
   if (!data.nodes[l.idSource] || !display_nodes[l.idSource] || !data.nodes[l.idTarget] || !display_nodes[l.idTarget]) {
     return false
   }
-  let val = ((l.value as unknown) as { [key: string]: SankeyLinkValueDict })
+  let val = l.value
   const listKey = [] as string[]
   let missing_key = false
   const idDt=l.idLink.split('_')
@@ -783,7 +790,7 @@ export const LinkVisible: FunctionTypes.LinkVisibleFunctType=(l: SankeyLink, dat
   }
 
   for (const i in listKey) {
-    val = ((val as unknown) as { [key: string]: SankeyLinkValueDict })[listKey[i]]
+    val = (val as SankeyLinkValueDict)[listKey[i]]
     if ( val === undefined) {
       break
     }
@@ -846,8 +853,7 @@ export const DefaultNode:FunctionTypes.DefaultNodeFuncType = (
     tags: {},
     colorTag: '',
     dimensions: {},
-    style: 'default',
-
+    style: 'default'
   }
   for (const tag_group_key in data.nodeTags) {
     defaultNode.tags[tag_group_key]  = []
@@ -1636,7 +1642,7 @@ const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
             continue
           }
           if (val && val.value!=undefined) {
-            total_input += val.value
+            total_input += val.value as number
           } else {
             console.log('val is undefined')
           }
@@ -1661,7 +1667,7 @@ const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
             continue
           }
           if (val && val.value!=undefined ) {
-            total_output += val.value
+            total_output += val.value as number
           } else {
             console.log('val is undefined')
           }
@@ -1996,17 +2002,16 @@ export const GetRandomInt=(max:number) =>{
   return Math.floor(Math.random() * max)
 }
 
-export const RetrieveExcelResults:FunctionTypes.RetrieveExcelResultsFuncType =(
+export const RetrieveExcelResults : RetrieveExcelResultsFuncType =(
   text:string,
-  default_data:SankeyData,
   set_data:(d:SankeyData)=>void,
   updateLayout:FunctionTypes.updateLayoutFuncType,
   callback: (server_data: SankeyData) => void,
   GetSankeyMinWidthAndHeight:(data: SankeyData) => number[],
   convert_data:FunctionTypes.ConvertDataFuncType,
-  DefaultSankeyData: ()=>SankeyData,
+  defaultData: ()=>SankeyData
 )=>{
-  
+  const default_data = defaultData()
   const server_data = JSON.parse(text)
   let default_nstyle = default_data.style_node['default']
   let default_lstyle = default_data.style_link['default']
@@ -2101,11 +2106,15 @@ export const TooltipValueSurcharge=(k:string,t:TFunction)=>{
   </OverlayTrigger>
 }
 type ValueOf<T>=T[keyof T]
-export const IsAllNodeNotLocalAttrSameValue=(data:SankeyData,m_s_n:SankeyNode[],k_list:(keyof SankeyNode)[])=>{
+export const IsAllNodeNotLocalAttrSameValue=(
+  data:SankeyData,
+  m_s_n:SankeyNode[],
+  k_list:(keyof SankeyNode)[]
+)=>{
   // store_value : variable that contain an array forEach key we are looking for
   // Each array contain in first position the value of the selected nodes attribute 
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
-  const store_value={} as {[x:string]:[ValueOf<SankeyNode>,boolean]}
+  const store_value={} as { [x: string]: [ValueOf<SankeyNode>|boolean, boolean]; }
 
   if(m_s_n.length>0){
     // For each selected nodes

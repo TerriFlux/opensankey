@@ -1,14 +1,19 @@
 import { Requireable } from 'react'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup } from './Types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, display_styleType } from './Types'
 import { InferProps } from 'prop-types'
 
 export type GetLinkValueFuncType=(data: SankeyData,idLink: string,up?:boolean)=> SankeyLinkValue 
 
-export type AddDataTagsFuncType=(dataTags: TagsGroup[], v: {[key: string]: SankeyLinkValue;}, depth: number) => void
+export type AddDataTagsFuncType=(dataTags: TagsGroup[], v: {[key: string]: SankeyLinkValue | SankeyLinkValueDict }, depth: number) => void
 
-export type FindMaxLinkValueFuncType = (max_node_value: number,value_dict: SankeyLinkValueDict)=> number
+export type FindMaxLinkValueFuncType = (max_node_value: number,value_dict: SankeyLinkValue | SankeyLinkValueDict)=> number
 
-export type TestLinkValueFuncType = (data:SankeyData, nodes: { [node_id: string]: SankeyNode }, d: SankeyLink,GetLinkValue:GetLinkValueFuncType)=>number | ''
+export type TestLinkValueFuncType = (
+    data:SankeyData, 
+    nodes: { [node_id: string]: SankeyNode }, 
+    d: SankeyLink,
+    GetLinkValue:GetLinkValueFuncType
+) => string | number | { value: number; display_value: string; tags: {}; extension: {}; }
 
 export type ComputeTotalOffsetsFuncType=(inv_scale:(t:number)=>number,
 node: SankeyNode,
@@ -153,7 +158,7 @@ export type drawCurveType = (
     set_data:(d:SankeyData)=>void,
     nodes: { [node_id: string]: SankeyNode },
     links: { [link_id: string]: SankeyLink },
-    display_style: { filter: number; filter_label: number; },
+    display_style: display_styleType,
     nodeTags: TagsCatalog,
     link: SankeyLink,
     error_msg: { text?: string } | undefined,
@@ -173,7 +178,7 @@ export type drawArrowsType = (
     scale:(t:number)=>number,
     inv_scale:(t:number)=>number,
     GetLinkValue:GetLinkValueFuncType,
-    display_style: { filter: number }
+    display_style: display_styleType
   ) => void
 
 export type DrawGridFuncType = (data: SankeyData) => void
@@ -270,17 +275,16 @@ export type ValueSelectedParameterFuncType = (data: SankeyData, multi_selected_l
     [k: string]: string;
 }) => SankeyLinkValue
 
-export type callbackFuncType = ((server_data: SankeyData) => number) | (()=>void)
+export type callbackFuncType = (server_data: SankeyData) => void
 
 export type RetrieveExcelResultsFuncType = (
     text: string,
- default_data: SankeyData,
- set_data: (d: SankeyData) => void,
- updateLayout: updateLayoutFuncType,
- callback:callbackFuncType,
- GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
- convert_data: ConvertDataFuncType,
- DefaultSankeyData: () => SankeyData
+    set_data: (d: SankeyData) => void,
+    updateLayout: updateLayoutFuncType,
+    callback:callbackFuncType,
+    GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
+    convert_data: ConvertDataFuncType,
+    defaultData: () => SankeyData
  ) => void
 
 export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => void

@@ -5,11 +5,12 @@ import {ValueSelectedParameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
 import {TFunction} from 'i18next'
 import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar } from './SankeyUtils'
+import { SankeyMenuConfigurationLinksDataFType } from '../types/SankeyMenuConfigurationLinksDataTypes'
 
-export const SankeyMenuConfigurationLinksData = (
+export const SankeyMenuConfigurationLinksData : SankeyMenuConfigurationLinksDataFType = (
   data:SankeyData,
   tags_selected:{[k: string]: string},
-  set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
+  set_tags_selected:(_:{[k: string]: string})=>void,
   // selected_link:{current:SankeyLink},
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
@@ -22,7 +23,7 @@ export const SankeyMenuConfigurationLinksData = (
   pre_idTarget:string,
   set_pre_idTarget:(s:string)=>void,
   menu_for_modal=false,
-)=>{
+) => {
   let is_link_data_invalid=false
   if(multi_selected_links.current.length>0){
     const curr_val=ValueSelectedParameter(data,multi_selected_links,tags_selected).value
@@ -159,11 +160,11 @@ export const SankeyMenuConfigurationLinksData = (
                     //Modifie les paramètres selectionnés
                     const { name, value } = evt.target
                     let tmp={}
-                    set_tags_selected(prevState => {
-                      tmp= ({...prevState,[name]: value})
-                      return ({...prevState,[name]: value})})
-                    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,tmp).value)
-
+                    // set_tags_selected( prevState => {
+                    tmp= ({...tags_selected,[name]: value})
+                    //   return ({...prevState,[name]: value}) 
+                    // } )
+                    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,tmp).value as string)
                   }}>
                 {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                   return (

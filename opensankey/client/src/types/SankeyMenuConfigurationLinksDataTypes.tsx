@@ -4,7 +4,7 @@ import { SankeyData, SankeyLink } from "./Types";
 export type SankeyMenuConfigurationLinksDataFType = (
   data:SankeyData,
   tags_selected:{[k: string]: string},
-  set_tags_selected:React.Dispatch<React.SetStateAction<{[k: string]: string}>>,
+  set_tags_selected:( _ :{[k: string]: string} )=> void,
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
   t:TFunction,

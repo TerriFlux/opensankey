@@ -1,8 +1,8 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
-import PropTypes, { InferProps } from 'prop-types'
+
 import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
-import { SankeyData, SankeyDataPropTypes, SankeyLink, } from '../types/Types'
+import { SankeyData, SankeyLink, } from '../types/Types'
 import { complete_sankey_data } from './SankeyConvert'
 import { DefaultLink, DefaultNode, SmoothClasses } from './SankeyUtils'
 import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from './SankeyDrawFunction'
@@ -13,35 +13,30 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
-import { updateLayoutFuncType } from '../types/FunctionTypes'
+import { ClickSaveDiagramFuncType, ConvertDataFuncType, DefaultSankeyDataFuncType, UploadExcelImplFuncType, updateLayoutFuncType } from '../types/FunctionTypes'
+import { OpenSankeyDiagramSelectorFType } from '../types/SankeyMenuDialogsTypes'
 /**
  * Define ApplyLayoutDialog
  *
  * @type {{ show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
  */
-const ApplyLayoutDialogPropTypes = {
-  t:PropTypes.func.isRequired,
-  show_apply_layout : PropTypes.bool.isRequired,
-  set_show_apply_layout: PropTypes.func.isRequired,
-  sankey_data : PropTypes.shape(SankeyDataPropTypes).isRequired,
-  set_sankey_data : PropTypes.func.isRequired,
-  updateLayout:PropTypes.func.isRequired,
-  convert_data:PropTypes.func.isRequired,
-  node_hspace:PropTypes.number.isRequired,
-  set_node_hspace:PropTypes.func.isRequired,
-  node_vspace:PropTypes.number.isRequired,
-  set_node_vspace:PropTypes.func.isRequired,
-  diagramSelector: PropTypes.func.isRequired,
-  elementToDispose:PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  apply_transformation_additional_elements: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  DefaultSankeyData: PropTypes.func.isRequired,
+export type ApplyLayoutDialogTypes = {
+  t:TFunction,
+  show_apply_layout : boolean,
+  set_show_apply_layout:(_:boolean)=>void,
+  sankey_data : SankeyData,
+  set_sankey_data : (_:SankeyData)=>void,
+  updateLayout:updateLayoutFuncType,
+  convert_data:ConvertDataFuncType,
+  node_hspace:number,
+  set_node_hspace:(_:number)=>void,
+  node_vspace:number,
+  set_node_vspace:(_:number)=>void,
+  diagramSelector: OpenSankeyDiagramSelectorFType,
+  elementToDispose:string[],
+  apply_transformation_additional_elements: JSX.Element[],
+  DefaultSankeyData: DefaultSankeyDataFuncType,
 }
-
-/**
- *
- * @typedef {ApplyLayoutDialogTypes}
- */
-type ApplyLayoutDialogTypes = InferProps<typeof ApplyLayoutDialogPropTypes>
 
 /**
  *
@@ -118,7 +113,8 @@ export const ApplyLayoutDialog = ({
       </InputGroup>
       
 
-      {diagramSelector(t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose,DefaultSankeyData)}
+      {diagramSelector(
+        t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose,DefaultSankeyData)}
       <OverlayTrigger
         key={'TransforShortCut'}
         placement={'bottom'}
@@ -578,24 +574,23 @@ export const ApplyLayoutDialog = ({
  *
  * @type {{ show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
  */
-const ApplySaveJSONPropTypes = {
-  t:PropTypes.func.isRequired,
-  show_save_json : PropTypes.bool.isRequired,
-  set_show_save_json: PropTypes.func.isRequired,
-  sankey_data : PropTypes.shape(SankeyDataPropTypes).isRequired,
-  additionnal_button_option_save_json:PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-  ClickSaveDiagram:PropTypes.func.isRequired
+export type ApplySaveJSONTypes = {
+  t : TFunction
+  show_save_json : boolean,
+  set_show_save_json: (_:boolean)=>void,
+  sankey_data : SankeyData,
+  additionnal_button_option_save_json:JSX.Element[],
+  ClickSaveDiagram:ClickSaveDiagramFuncType
 }
-
-
-type ApplySaveJSONTypes = InferProps<typeof ApplySaveJSONPropTypes>
 
 /**
  *
  * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,ClickSaveDiagram }
  * @returns {*}
  */
-export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sankey_data,additionnal_button_option_save_json,ClickSaveDiagram }: ApplySaveJSONTypes) => {
+export const ApplySaveJSONDialog = (
+  { t,show_save_json, set_show_save_json,sankey_data,additionnal_button_option_save_json,ClickSaveDiagram }: ApplySaveJSONTypes
+) => {
   const [mode_save,set_mode_save]=useState(true)
   const [mode_visible_element,set_mode_visible_element]=useState(false)
 
@@ -691,18 +686,15 @@ export const ApplySaveJSONDialog = ({ t,show_save_json, set_show_save_json,sanke
   )
 }
 
-const ExcelModalPropTypes = {
-  t:PropTypes.func.isRequired,
-  UploadExcelImpl: PropTypes.func.isRequired,
-  handleCloseDialog: PropTypes.func.isRequired,
-  show_excel_dialog: PropTypes.bool.isRequired,
-  set_show_excel_dialog: PropTypes.func.isRequired,
-  url_prefix: PropTypes.string.isRequired,
-  callback: PropTypes.func.isRequired,
-  launch: PropTypes.func.isRequired
+export type ExcelModalTypes = {
+  t : TFunction,
+  UploadExcelImpl: UploadExcelImplFuncType,
+  handleCloseDialog: () => void,
+  show_excel_dialog: boolean,
+  set_show_excel_dialog: (_:boolean)=>void,
+  url_prefix: string,
+  launch: (path: string) => void
 }
-
-type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
 
 /**
  * Return the modal when we try to open an excel file
@@ -710,7 +702,7 @@ type ExcelModalTypes = InferProps<typeof ExcelModalPropTypes>
  * @param {{ UploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { UploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, handleCloseDialog, show_excel_dialog, set_show_excel_dialog,url_prefix,callback,launch }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, handleCloseDialog, show_excel_dialog, set_show_excel_dialog,url_prefix,launch }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
 
   return (
@@ -740,7 +732,9 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
           onClick={
             () => {
               launch('')
-              UploadExcelImpl(set_show_excel_dialog,input_file_name,url_prefix,callback)
+              UploadExcelImpl(
+                set_show_excel_dialog,input_file_name as Blob,url_prefix
+              )
             }
           }
         >Ouvrir</Button>
@@ -752,18 +746,16 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
     </Modal>)
 }
 
-ExcelModal.propTypes = ExcelModalPropTypes
-
-export const OpenSankeyDiagramSelector = (
+export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
   t: TFunction, 
-  convert_data: (s:SankeyData,DefaultSankeyData:()=>void)=>null,
+  convert_data: ConvertDataFuncType,
   sankey_data: SankeyData,
-  set_sankey_data: (s:SankeyData)=>null,
+  set_sankey_data: (s:SankeyData)=>void,
   prev_sankey_data: SankeyData,
   set_prev_sankey_data: (s:SankeyData)=>void, 
   updateLayout: updateLayoutFuncType, 
   elementToDispose : string[],
-  DefaultSankeyData: ()=>SankeyData
+  defaultData: ()=>SankeyData
 ) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   return <Form>
@@ -791,8 +783,8 @@ export const OpenSankeyDiagramSelector = (
                   if (result) {
                     result = String(result)
                     const new_layout = JSON.parse(result)
-                    convert_data(new_layout,DefaultSankeyData)
-                    complete_sankey_data(new_layout, DefaultSankeyData, DefaultNode, DefaultLink)
+                    convert_data(new_layout,defaultData)
+                    complete_sankey_data(new_layout, defaultData, DefaultNode, DefaultLink)
                     set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
                     updateLayout(sankey_data, new_layout, elementToDispose, true)
                     set_sankey_data({ ...sankey_data })

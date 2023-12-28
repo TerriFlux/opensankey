@@ -35,21 +35,3 @@ export type OpenSankeyConfigurationsMenusFType = (
   pre_idTarget:string
 ) => JSX.Element[]
 
-
-// /**
-//  * Variable that define the Menu element, it's variable and function
-//  *
-//  * @type {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
-//  */
-// const ConfigurationMenuPropTypes = {
-//   accordion_ref: PropTypes.shape({current:PropTypes.instanceOf(HTMLDivElement)}).isRequired,
-//   nav_item_active: PropTypes.string.isRequired,
-//   configuration_menus: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-// }
-// /**
-//  * Description placeholder
-//  *
-//  * @typedef {MenuTypes}
-//  */
-// type ConfigurationMenuTypes = InferProps<typeof ConfigurationMenuPropTypes>
-

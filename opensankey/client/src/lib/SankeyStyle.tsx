@@ -19,7 +19,7 @@ export const SankeyPlusModalStyleNode  = (t:TFunction,data:SankeyData,
   selected_style_node:string,
   set_selected_style_node:(_:string)=>void,
   additional_node_attribute:JSX.Element[],
-  set_style_to_apply:(s:string)=>void,
+  set_style_to_apply:(s:string)=>void
 ) => {
 
   if(!Object.keys(data.style_node).includes(selected_style_node)){

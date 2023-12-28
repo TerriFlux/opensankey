@@ -22,7 +22,7 @@ export type OpenSankeyDrawNodesFType = (
   GetLinkValue:GetLinkValueFuncType,
   set_displayed_input_link_value:(s:string)=>void,
   accept_simple_click:{current:boolean},
-  set_contextualised_node:(n:SankeyNode)=>void,
+  set_contextualised_node:(n:SankeyNode|undefined)=>void,
   pointer_pos:{current:number[]}
 
 ) => void

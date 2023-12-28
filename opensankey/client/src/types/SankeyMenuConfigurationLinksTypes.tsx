@@ -1,25 +1,8 @@
-
-
-// const SankeyMenuConfigurationLinksPropTypes = {
-//   t: PropTypes.func.isRequired,
-//   data: PropTypes.shape(SankeyDataPropTypes).isRequired,
-//   set_data: PropTypes.func.isRequired,
-//   multi_selected_links: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyLinkPropTypes).isRequired).isRequired}).isRequired,
-//   multi_selected_nodes: PropTypes.shape({current:PropTypes.arrayOf(PropTypes.shape(SankeyNodePropTypes).isRequired).isRequired}).isRequired,
-//   menu_configuration_links: PropTypes.arrayOf(PropTypes.element.isRequired).isRequired,
-//   set_displayed_input_link_value:PropTypes.func.isRequired,
-//   tags_selected:PropTypes.objectOf(PropTypes.string.isRequired).isRequired,
-//   set_tags_selected:PropTypes.func.isRequired,
-//   set_display_link_opacity:PropTypes.func.isRequired,
-//   pre_idSource:PropTypes.string.isRequired,
-//   pre_idTarget:PropTypes.string.isRequired,
-// }
-
 import { TFunction } from "i18next";
 import { SankeyData, SankeyLink } from "./Types";
 import { GetLinkValueFuncType } from "./FunctionTypes";
 
-// type SankeyMenuConfigurationLinksTypes = InferProps<typeof SankeyMenuConfigurationLinksPropTypes>
+
 export type OpenSankeyMenuConfigurationLinksFType = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
