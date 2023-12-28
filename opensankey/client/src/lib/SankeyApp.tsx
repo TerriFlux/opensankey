@@ -104,8 +104,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
     }
     pre_set_data({...ndata})
   }
-  const [contextualised_node,set_contextualised_node]=useState<SankeyNode>()
-  const [contextualised_link,set_contextualised_link]=useState<SankeyLink>()
+  const [contextualised_node,set_contextualised_node]=useState<SankeyNode>() as [SankeyNode,(n: SankeyNode | undefined) => void]
+  const [contextualised_link,set_contextualised_link]=useState<SankeyLink>() as [SankeyLink,(n: SankeyLink | undefined) => void]
 
   const pointer_pos=useRef([0,0])
   const [tag_contextualised,set_tag_contextualised]=useState<string>()
@@ -314,7 +314,11 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   //- 1.2 Builds Configuration Menus Node
   //- 1.2.1 Builds Configuration Menus Node Attributes
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(t,data,set_data,multi_selected_nodes,false,selected_style_node,set_style_to_apply,[],[],[])
-  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(t,data,set_data,display_nodes,multi_selected_nodes,menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity)
+  const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(
+    t,data,set_data,display_nodes,multi_selected_nodes,
+    menu_configuration_nodes_attributes,link_io,set_link_io,link_pos,set_link_pos,
+    tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity
+  )
   //- 1.2.1 Builds Configuration Menus Node Tags
   const menu_configuration_nodes_tags=<SankeySettingsEditionElementTags
     t={t}
@@ -520,7 +524,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       alt_key_pressed,
       position,node_arrow_visible,
       LinkTooltipsContent,
-      SankeyUtils.LinkText,SankeyUtils.GetLinkValue,set_data,set_displayed_input_link_value,tags_selected,set_tags_selected,LinkStroke,DrawArrows,set_display_link_opacity,
+      SankeyUtils.LinkText,SankeyUtils.GetLinkValue,set_data,set_displayed_input_link_value,tags_selected,set_tags_selected,
+      LinkStroke,DrawArrows,set_display_link_opacity,
       set_contextualised_link,pointer_pos,LinkColor
 
     )
@@ -555,14 +560,18 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
 
   // MENU DRAGGABLE NODE ATTR
   const menu_node_attr=menu_configuration_nodes_attributes
-  const dragNodeAttr=showMenuComponents.show_menu_node_apparence[0]?MenuDraggable(menu_node_attr,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.apparence.apparence'),showMenuComponents.show_menu_node_apparence[1]):<></>
+  const dragNodeAttr=showMenuComponents.show_menu_node_apparence[0]? MenuDraggable(
+    menu_node_attr,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.apparence.apparence'),showMenuComponents.show_menu_node_apparence[1]
+  ):<></>
 
   // MENU DRAGGABLE NODE IO
   if(showMenuComponents.show_menu_node_io[0] && multi_selected_nodes.current.length!==1){
     showMenuComponents.show_menu_node_io[1](false)
   }
   const menu_node_io=SankeyMenuConfigurationNodesIO(t,data,set_data,display_nodes,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,SankeyUtils.GetLinkValue,multi_selected_links,set_display_link_opacity,true)
-  const dragNodeIO=showMenuComponents.show_menu_node_io[0]?MenuDraggable(menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),showMenuComponents.show_menu_node_io[1]):<></>
+  const dragNodeIO=showMenuComponents.show_menu_node_io[0]?MenuDraggable(
+    menu_node_io,pointer_pos,t('Menu.Noeuds')+' '+t('Noeud.PF.PFM'),showMenuComponents.show_menu_node_io[1]
+  ):<></>
 
 
   const context_n=ContextMenuNode(
@@ -593,7 +602,8 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
   const dragLink_appearence=show_menu_link_appearence?MenuDraggable(menu_link_appearence,pointer_pos,t('Menu.flux')+' '+t('Flux.apparence.apparence'),showMenuComponents.show_menu_link_appearence[1]):<></>
 
   const context_l=ContextMenuLink(
-    contextualised_link,set_contextualised_link,
+    contextualised_link,
+    set_contextualised_node,
     showMenuComponents.show_menu_link_data[1],
     showMenuComponents.show_menu_link_appearence[1],
     data,set_data,tags_selected,multi_selected_links,t,pointer_pos
@@ -760,7 +770,10 @@ export const SankeyApp = ({initial_sankey_data,exemple_menu,formations_menu,logo
       EventOnSankeyZoneMouseMove(mode_selection,data,first_selected_node,set_first_selected_node,evt,start_point)
     })
     svgSankey.on('mouseup',evt=>{
-      EventOnSankeyZoneMouseUp(mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,true,()=>false,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value,evt,start_point,set_legend_clicked)
+      EventOnSankeyZoneMouseUp(
+        mode_selection,data,set_data,multi_selected_nodes,multi_selected_links,first_selected_node,set_first_selected_node,true,()=>false,
+        accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value,evt,start_point,set_legend_clicked
+      )
     })
   }, 100)
 

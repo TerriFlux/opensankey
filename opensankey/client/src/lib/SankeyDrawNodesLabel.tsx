@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { dragNodeTextEventWidthBoxEvent} from './SankeyDrag'
 import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelValuePosY,NodeLabeLText,TextNodeWrap} from './SankeyDrawFunction'
 import { ReturnValueNode } from './SankeyUtils'
-import { GetLinkValueFuncType } from '../types/FunctionTypes'
+import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
 import { OpenSankeyDrawNodesLabelFType } from '../types/SankeyDrawNodesLabelTypes'
 
 declare const window: Window &
@@ -60,7 +60,7 @@ export const OpenSankeyDrawNodesLabel : OpenSankeyDrawNodesLabelFType = (
       .classed('test_new_file',true)
       .attr('id', n => 'text_' + (n as SankeyNode).idNode)
       .attr('x',n => NodeLabelPosX(data,n as SankeyNode))
-      .attr('y', n => NodeLabelPosY((n as SankeyNode),data))
+      .attr('y', n => NodeLabelPosY(data,n as SankeyNode))
       .attr('text-anchor', n => {
         if (ReturnValueNode(data,n,'label_horiz') == 'middle') {
           return 'middle'
@@ -90,7 +90,7 @@ export const OpenSankeyDrawNodesLabel : OpenSankeyDrawNodesLabelFType = (
         .attr('id',d=>'fo_input_label_'+d.idNode)
         .attr('class','fo_input_label')
         .attr('x',(n)=>NodeLabelPosX(data,n as SankeyNode))
-        .attr('y',(n)=>NodeLabelPosY(n as SankeyNode,data))
+        .attr('y',(n)=>NodeLabelPosY(data,n as SankeyNode))
         .style('width',d=>((d.name.length))+'rem')
         .attr('height',d=>Number(ReturnValueNode(data,d,'font_size'))+2)
         .style('display','none')

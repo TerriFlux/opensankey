@@ -5,7 +5,7 @@ import { LinkVisible,LinkColor,ReturnValueLink,reorganize_node_inputLinksId,reor
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import { SelectVisualyLinks } from './SankeyDrawFunction'
-import { GetLinkValueFuncType } from '../types/FunctionTypes'
+import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
 import { SankeyMenuConfigurationNodesIOFType} from '../types/SankeyMenuConfigurationNodesIOTypes'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them

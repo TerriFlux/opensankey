@@ -1,5 +1,5 @@
-import { GetLinkValueFuncType } from "./FunctionTypes"
-import { SankeyData, SankeyLink, SankeyNode } from "./Types"
+import { GetLinkValueFuncType } from './SankeyUtilsTypes'
+import { SankeyData, SankeyLink, SankeyNode } from './Types'
 
 /**
  * Function used to fill the tooltip of link

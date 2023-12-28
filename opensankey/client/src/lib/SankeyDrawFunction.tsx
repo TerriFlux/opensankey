@@ -1,9 +1,8 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
-import React, { Requireable } from 'react'
+import React from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType } from '../types/Types'
-import { InferProps } from 'prop-types'
 import { ComputeTotalOffsets,
   TestLinkValue,
   LinkColor,
@@ -20,12 +19,45 @@ import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} f
 import { menu_config_width } from './SankeyMenu'
 import * as SankeyShapes from './SankeyShapes'
 import { 
-  DeselectVisualyNodesFuncType, EventOnSankeyZoneMouseDownFuncType, EventOnSankeyZoneMouseMoveFuncType, 
-  EventOnSankeyZoneMouseUpFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, 
-  LinkTextFuncType, LinkVisibleOnsSvgFuncType, NodeVisibleOnsSvgFuncType, RemoveAnimateFuncType, RepositionneSidebarFuncType, 
-  SetNodeHeightFuncType, SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, 
-  SvgDragMiddleMouseStartFuncType, ValueSelectedParameterFuncType, ZoomFunctionFuncType, drawArrowsType 
-} from '../types/FunctionTypes'
+  ComputeEndPointsFType,
+  DeselectVisualyLinksFType,
+  DrawGridFType,
+  DrawLinkStartSabotFType,
+  EventLinkContextMenuFType,
+  EventNodeClickFType,
+  EventNodeContextMenuFType,
+  EventOnMouseUpAddNodesAndLinkFType,
+  EventOnSankeyZoneMouseDownFuncType, EventOnSankeyZoneMouseMoveFuncType, 
+  EventOnSankeyZoneMouseUpFuncType, 
+  LinkStrokeFType, 
+  LinkStrokeWidthFType, 
+  NodeLabeLTextFType, 
+  NodeLabelValuePosXFType, 
+  NodeLabelValuePosYFType, 
+  NodeStrokeWidthFType, 
+  PathNodeArrowShapeFType, 
+  RepositionneSidebarFuncType, 
+  SelectVisualyLinksFType, 
+  SelectVisualyNodesFType, 
+  SetNodesHeightFType, 
+  SortOutputLinksIdByYPosFType, 
+  StrokeDasharrayFType, 
+  TextLinkPosDYFType, 
+  TextLinkSideFType, 
+  TextNodeValueFType, 
+  TextNodeWrapFType, 
+  ValueSelectedParameterFuncType, ZoomFunctionFuncType, clipFType, nodeTransformFType, update_scaleFType
+} from '../types/SankeyDrawFunctionTypes'
+import { 
+  DeselectVisualyNodesFuncType,
+  LinkVisibleOnsSvgFuncType, NodeVisibleOnsSvgFuncType, RemoveAnimateFuncType,
+  SetNodeHeightFuncType,
+  SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, 
+  SvgDragMiddleMouseStartFuncType, drawArrowsType 
+} from '../types/SankeyDrawFunctionTypes'
+import {
+  GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType
+} from '../types/SankeyUtilsTypes'
 // Function that create the dashed pattern on links
 
 const default_handle_size = 10
@@ -37,7 +69,7 @@ declare const window: Window &
     SankeyToolsStatic: boolean
   }
 
-export const StrokeDasharray =(
+export const StrokeDasharray : StrokeDasharrayFType =(
   d:SankeyLink,
   data:SankeyData,
   GetLinkValue:GetLinkValueFuncType
@@ -71,7 +103,10 @@ export const StrokeDasharray =(
 }
 
 // Function that return the Y position of link label
-export const TextLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>number,
+export const TextLinkPosDY : TextLinkPosDYFType  =(
+  l:SankeyLink,
+  data:SankeyData,
+  scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 )=>{
   const orth_pos=ReturnValueLink(data,l,'orthogonal_label_position')
@@ -89,7 +124,9 @@ export const TextLinkPosDY=(l:SankeyLink,data:SankeyData,scale:(t:number)=>numbe
   return '0.3em'
 }
 // Function that return the side of link label
-export const TextLinkSide=(link:SankeyLink,data:SankeyData)=>{
+export const TextLinkSide : TextLinkSideFType = (
+  link:SankeyLink,data:SankeyData
+)=>{
   const recy=ReturnValueLink(data,link,'recycling')
   const ori=ReturnValueLink(data,link,'label_position')
   const lab_pos=ReturnValueLink(data,link,'orientation')
@@ -113,13 +150,14 @@ export const TextLinkSide=(link:SankeyLink,data:SankeyData)=>{
 
 // Function that return the link color
 // the color depend of if a tag is selected (nodeTAgs,linkTags or dataTags)
-export const LinkStroke=(l:SankeyLink,data:SankeyData,
+export const LinkStroke : LinkStrokeFType = (
+  l:SankeyLink,data:SankeyData,
   GetLinkValue:GetLinkValueFuncType
 )=>{
   return LinkColor(l,data,GetLinkValue) as string
 }
 // Function that compute th position of the begining of the link and the position of where it end
-export const ComputeEndPoints = (
+export const ComputeEndPoints : ComputeEndPointsFType = (
   source_node: SankeyNode,
   target_node: SankeyNode,
   link: SankeyLink,
@@ -352,7 +390,11 @@ export const ComputeEndPoints = (
   return [xs, ys, xt, yt]
 }
 // Function to place the node on the draw zone
-export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyNode},display_links:{[ink_id:string]:SankeyLink})=>{
+export const nodeTransform : nodeTransformFType = (
+  d:SankeyNode,
+  display_nodes:{[node_id:string]:SankeyNode},
+  display_links:{[ink_id:string]:SankeyLink}
+)=>{
   if (d.position === 'relative') {
     if (d.inputLinksId.length > 0) {
       if ( !display_links[d.inputLinksId[0]]) {
@@ -384,12 +426,13 @@ export const nodeTransform=(d:SankeyNode,display_nodes:{[node_id:string]:SankeyN
 }
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
-export const EventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
+export const EventNodeClick : EventNodeClickFType =(
+  event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
+  accordion_ref:{ current: HTMLDivElement; }| null,
+  button_ref:{ current: HTMLLabelElement; }| null,
   multi_selected_nodes:{current: SankeyNode[] },
-  nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  nodes_accordion_ref:{ current: HTMLDivElement; }| null,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   mode_selection:{current:string}
@@ -435,8 +478,10 @@ export const EventNodeClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyN
   }
 }
 
-export const EventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
-  set_contextualised_node:(n:SankeyNode)=>void,pointer_pos:{current:number[]},
+export const EventNodeContextMenu : EventNodeContextMenuFType =(
+  ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
+  set_contextualised_node:(n:SankeyNode|undefined)=>void,
+  pointer_pos:{current:number[]},
   multi_selected_nodes:{current: SankeyNode[] },              
 )=>{
   ev.preventDefault()
@@ -452,14 +497,17 @@ export const EventNodeContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,n:Sank
   }
 }
 
-export const EventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:SankeyLink,set_contextualised_link:(l:SankeyLink)=>void,pointer_pos:{current:number[]},
+export const EventLinkContextMenu : EventLinkContextMenuFType = (
+  ev:React.MouseEvent<HTMLButtonElement>,
+  l:SankeyLink,
+  set_contextualised_link:(l:SankeyLink|undefined)=>void,
+  pointer_pos:{current:number[]},
   data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
   set_displayed_input_link_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
-  set_display_link_opacity:(s:string)=>void,
-
+  set_display_link_opacity:(s:string)=>void
 )=>{
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
@@ -507,7 +555,9 @@ export const EventLinkContextMenu=(ev:React.MouseEvent<HTMLButtonElement>,l:Sank
 }
 
 // Function that wrap node text when the length of the label exceed the limit
-export const TextNodeWrap=(d:SankeyNode,data:SankeyData)=>{
+export const TextNodeWrap : TextNodeWrapFType = (
+  d:SankeyNode,data:SankeyData
+)=>{
   const wrap = textwrap()
     .bounds({ height: 100, width: ((ReturnValueNode(data,d,'label_box_width') as number) != 0) ? (ReturnValueNode(data,d,'label_box_width') as number) : 110 })
     .method('tspans')
@@ -615,7 +665,9 @@ const Inside = function (p: number[], cp1: number[], cp2: number[]) {
     (cp2[0] - cp1[0]) * (p[1] - cp1[1]) > (cp2[1] - cp1[1]) * (p[0] - cp1[0])
   )
 }
-export const clip = (subjectPolygon: number[][], clipPolygon: number[][]) => {
+export const clip : clipFType = (
+  subjectPolygon: number[][], clipPolygon: number[][]
+) => {
   const outputList = JSON.parse(JSON.stringify(subjectPolygon))
   let outputList2 =[]
   let cp1 = JSON.parse(JSON.stringify(clipPolygon[clipPolygon.length - 1]))
@@ -642,7 +694,7 @@ export const clip = (subjectPolygon: number[][], clipPolygon: number[][]) => {
 }
 
 // Function that add marker at the end of links, those marker are arrow
-export const DrawArrows = (
+export const DrawArrows : drawArrowsType = (
   n: SankeyNode,
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
@@ -811,7 +863,7 @@ export const DrawArrows = (
 
 
 
-export const EventOnSankeyZoneMouseDown:EventOnSankeyZoneMouseDownFuncType=(
+export const EventOnSankeyZoneMouseDown : EventOnSankeyZoneMouseDownFuncType = (
   mode_selection:{current:string},
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -870,7 +922,7 @@ export const EventOnSankeyZoneMouseDown:EventOnSankeyZoneMouseDownFuncType=(
  
 
 }
-export const EventOnSankeyZoneMouseMove:EventOnSankeyZoneMouseMoveFuncType=(
+export const EventOnSankeyZoneMouseMove : EventOnSankeyZoneMouseMoveFuncType = (
   mode_selection:{current:string},
   data:SankeyData,
   first_selected_node:object,
@@ -953,7 +1005,7 @@ export const EventOnSankeyZoneMouseMove:EventOnSankeyZoneMouseMoveFuncType=(
     }
   }
 }
-export const EventOnSankeyZoneMouseUp:EventOnSankeyZoneMouseUpFuncType=(
+export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
   mode_selection:{current:string},
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -963,9 +1015,9 @@ export const EventOnSankeyZoneMouseUp:EventOnSankeyZoneMouseUpFuncType=(
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
   token:boolean,
   set_show_toast_limit_node:(b:boolean)=>void,
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
-  links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }> | null,
+  accordion_ref:{ current: HTMLDivElement; }| null,
+  button_ref:{ current: HTMLLabelElement; }| null,
+  links_accordion_ref:{ current: HTMLDivElement; } | null,
   set_displayed_input_link_value:(s:string)=>void,
   evt:MouseEvent,
   start_point:{current:number[]},
@@ -1138,24 +1190,26 @@ export const EventOnSankeyZoneMouseUp:EventOnSankeyZoneMouseUpFuncType=(
 }
 
 // Sort the outputLinksId tab of the node by using position of output node
-export const SortOutputLinksIdByYPos=(data:SankeyData,n:SankeyNode)=>{
+export const SortOutputLinksIdByYPos : SortOutputLinksIdByYPosFType = (
+  data:SankeyData,n:SankeyNode
+)=>{
   return n.outputLinksId.filter(idL=>data.nodes[data.links[idL].idTarget].position!=='relative')
     .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y 
     )
-  
 }
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes,
 // or creating a nodes at first click then linking it to a already existing one or the opposite
-export const EventOnMouseUpAddNodesAndLink=(event:React.MouseEvent<HTMLButtonElement>,
+export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType = (
+  event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,data:SankeyData,
   set_data:(d:SankeyData)=>void,
   first_selected_node:object,
   set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
   multi_selected_links:{current:SankeyLink[]},
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
-  button_ref: InferProps<{ current: Requireable<HTMLLabelElement>; }>| null,
-  links_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement>; }>| null,
+  accordion_ref:{ current: HTMLDivElement; }| null,
+  button_ref: { current: HTMLLabelElement; }| null,
+  links_accordion_ref:{ current: HTMLDivElement; }| null,
   set_displayed_input_link_value:(s:string)=>void,
 )=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
@@ -1247,7 +1301,7 @@ export const inv_scale = d3.scaleLinear()
 
 
 
-export const SetNodesHeight = (
+export const SetNodesHeight : SetNodesHeightFType = (
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
   display_links: { [link_id: string]: SankeyLink },
@@ -1333,7 +1387,7 @@ export const SetNodesHeight = (
   }
 }
 
-export const PathNodeArrowShape=(
+export const PathNodeArrowShape : PathNodeArrowShapeFType = (
   node_width:number,
   node_height:number,
   k_angle:number,
@@ -1546,10 +1600,11 @@ const AddCenterHandle=(
       .attr('fill','black')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
-      .call(dragLinkCenterHandleEvent(
-        multi_selected_links,link,display_links,display_nodes,data,set_data,selected_tags,
-        GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue
-      )
+      .call(
+        dragLinkCenterHandleEvent(
+          multi_selected_links,link,display_links,display_nodes,data,set_data,selected_tags,
+          GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue
+        )
       )
   }
 
@@ -1633,7 +1688,7 @@ const AddShiftHandle = (
 }
 
 // Function that change the scale of the graph
-export const update_scale = (user_scale: number) => {
+export const update_scale : update_scaleFType  = (user_scale: number) => {
   scale.domain([0, user_scale])
   inv_scale.range([0, user_scale])
 }
@@ -1989,7 +2044,7 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (da
 
 // Function that draw the grid in the background of the sankey zone
 // The grid help to align sankey elements and the step of nodes shift when we press arrow  on the keyboard
-export const DrawGrid = (data:SankeyData) => {
+export const DrawGrid : DrawGridFType= (data:SankeyData) => {
 
   d3.select(' .opensankey #svg #grid').selectAll('.line').remove()
   if (data.grid_visible && !window.SankeyToolsStatic ) {
@@ -2022,7 +2077,9 @@ export const DrawGrid = (data:SankeyData) => {
   }
 
 }
-export const NodeStrokeWidth=(d:SankeyNode,multi_selected_nodes:{current:SankeyNode[]})=>{
+export const NodeStrokeWidth : NodeStrokeWidthFType =(
+  d:SankeyNode,multi_selected_nodes:{current:SankeyNode[]}
+)=>{
   if (multi_selected_nodes.current.map(d => { if (d != undefined) { return d.idNode } else { return '' } }).includes((d as SankeyNode).idNode)) {
     return 2
   } else {
@@ -2030,7 +2087,10 @@ export const NodeStrokeWidth=(d:SankeyNode,multi_selected_nodes:{current:SankeyN
   }
 }
 
-export const TextNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id:string]:SankeyLink},display_nodes:{[nodes_id:string]:SankeyNode},
+export const TextNodeValue : TextNodeValueFType =(
+  d:SankeyNode,data:SankeyData,
+  display_links:{[link_id:string]:SankeyLink},
+  display_nodes:{[nodes_id:string]:SankeyNode},
   GetLinkValue:GetLinkValueFuncType
 )=>{
   let total = 0
@@ -2088,9 +2148,9 @@ export const TextNodeValue=(d:SankeyNode,data:SankeyData,display_links:{[link_id
   }
 }
 
-
-
-export const NodeLabelPosX=(data:SankeyData,n:SankeyNode)=>{
+export const NodeLabelPosX : NodeLabelValuePosXFType =(
+  data:SankeyData,n:SankeyNode
+)=>{
   if (d3.select(' .opensankey #shape_' + n.idNode).empty()) {
     return 0
   }
@@ -2107,7 +2167,9 @@ export const NodeLabelPosX=(data:SankeyData,n:SankeyNode)=>{
     return 0
   }
 }
-export const NodeLabelPosY=(n:SankeyNode,data:SankeyData)=>{
+export const NodeLabelPosY : NodeLabelValuePosYFType = (
+  data:SankeyData,n:SankeyNode
+)=>{
   if (d3.select(' .opensankey #shape_' + n.idNode).empty()) {
     return 0
   }
@@ -2124,7 +2186,9 @@ export const NodeLabelPosY=(n:SankeyNode,data:SankeyData)=>{
     return 0
   }
 }
-export const NodeLabelValuePosX=(data:SankeyData,n:SankeyNode)=>{
+export const NodeLabelValuePosX : NodeLabelValuePosXFType = (
+  data:SankeyData,n:SankeyNode
+)=>{
   const width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
   const val=(ReturnValueNode(data,n,'label_horiz_valeur') as string)
   if (val== 'middle') {
@@ -2138,7 +2202,9 @@ export const NodeLabelValuePosX=(data:SankeyData,n:SankeyNode)=>{
   }
 }
 
-export const NodeLabelValuePosY=(data:SankeyData,n:SankeyNode)=>{
+export const NodeLabelValuePosY : NodeLabelValuePosYFType = (
+  data:SankeyData,n:SankeyNode
+)=>{
   const height = +d3.select(' .opensankey #shape_' + n.idNode).attr('height')
   const _text = document.getElementById('text_'+n.idNode)
   const height_text = (_text) ? _text.getBoundingClientRect().height : 0
@@ -2156,7 +2222,9 @@ export const NodeLabelValuePosY=(data:SankeyData,n:SankeyNode)=>{
   }
 }
 
-const NodeValueAndTextSamePos=(data:SankeyData,node :SankeyNode)=>{
+const NodeValueAndTextSamePos = (
+  data:SankeyData,node :SankeyNode
+)=>{
   const val_visible=(ReturnValueNode(data,node,'label_visible') as number)
   const val_l_h_v=(ReturnValueNode(data,node,'label_horiz_valeur') as string)
   const val_l_h=(ReturnValueNode(data,node,'label_horiz') as string)
@@ -2166,9 +2234,7 @@ const NodeValueAndTextSamePos=(data:SankeyData,node :SankeyNode)=>{
   return (val_visible && val_l_h_v==val_l_h && val_l_v_v==val_l_v)
 }
 
-
-
-export const NodeLabeLText=(
+export const NodeLabeLText : NodeLabeLTextFType = (
   data:SankeyData,
   d:SankeyNode
 )=>{
@@ -2207,7 +2273,9 @@ export const ValueSelectedParameter:ValueSelectedParameterFuncType = (data:Sanke
 
 }
 
-export const DeselectVisualyLinks=(d:SankeyLink)=>{
+export const DeselectVisualyLinks : DeselectVisualyLinksFType = (
+  d:SankeyLink
+)=>{
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '0')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('cursor', 'pointer')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('cursor', 'pointer')
@@ -2216,7 +2284,7 @@ export const DeselectVisualyLinks=(d:SankeyLink)=>{
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '0')
   
 }
-export const SelectVisualyLinks=(d:SankeyLink)=>{
+export const SelectVisualyLinks : SelectVisualyLinksFType=(d:SankeyLink)=>{
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '1')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '1')
@@ -2227,7 +2295,9 @@ export const DeselectVisualyNodes:DeselectVisualyNodesFuncType=(n:SankeyNode)=>{
   d3.select(' .opensankey #shape_' + n.idNode).style('stroke-width',0)
   d3.select(' .opensankey #ggg_' + n.idNode+' .box_width_threshold').attr('visibility','hidden')
 }
-export const SelectVisualyNodes=(n:SankeyNode)=>{
+export const SelectVisualyNodes : SelectVisualyNodesFType=(
+  n:SankeyNode
+)=>{
   d3.select(' .opensankey #shape_' + n.idNode).style('stroke-width',2)
 }
 
@@ -2236,7 +2306,8 @@ export const RepositionneSidebar:RepositionneSidebarFuncType =(show_nav:boolean)
 }
 
 // Function that compute the link width
-export const LinkStrokeWidth=(l:SankeyLink,
+export const LinkStrokeWidth : LinkStrokeWidthFType = (
+  l:SankeyLink,
   data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
@@ -2432,11 +2503,11 @@ export const ZoomFunction:ZoomFunctionFuncType=(evt:d3.D3ZoomEvent<SVGElement,un
 export const SimpleGNodeClick:SimpleGNodeClickFuncType =(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
-  nodes_accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
+  nodes_accordion_ref:{ current: HTMLDivElement } | null,
   multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
-  accordion_ref:InferProps<{ current: Requireable<HTMLDivElement> }> | null,
-  button_ref:InferProps<{ current: Requireable<HTMLLabelElement>}> | null,
+  accordion_ref:{ current: HTMLDivElement } | null,
+  button_ref:{ current: HTMLLabelElement} | null,
   accept_simple_click:{current:boolean},
 
 )=>{
@@ -2453,7 +2524,8 @@ export const SimpleGNodeClick:SimpleGNodeClickFuncType =(event:React.MouseEvent<
   }
 }
 
-export const DrawLinkStartSabot=(data:SankeyData,
+export const DrawLinkStartSabot : DrawLinkStartSabotFType=(
+  data:SankeyData,
   n:SankeyNode,
   display_nodes: { [node_id: string]: SankeyNode },
   display_links: { [link_id: string]: SankeyLink },

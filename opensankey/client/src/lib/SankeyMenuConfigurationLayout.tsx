@@ -8,8 +8,9 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { Checkbox } from '@chakra-ui/react'
 
 import { SmoothClasses } from './SankeyUtils'
+import { OpenSankeyMenuConfigurationLayoutFType} from '../types/SankeyMenuConfigurationLayoutTypes'
 
-export const OpenSankeyMenuConfigurationLayout = (
+export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
   t:TFunction,
   data: SankeyData,
   set_data:(d:SankeyData)=>void,

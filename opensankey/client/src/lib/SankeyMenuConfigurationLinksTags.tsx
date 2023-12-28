@@ -4,8 +4,9 @@ import { SankeyData, SankeyLink,SankeyLinkValue } from '../types/Types'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
+import { SankeyMenuConfigurationLinksTagsFType } from '../types/SankeyMenuConfigurationLinksTagsTypes'
 
-export const SankeyMenuConfigurationLinksTags = (
+export const SankeyMenuConfigurationLinksTags : SankeyMenuConfigurationLinksTagsFType = (
   data:SankeyData,
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,

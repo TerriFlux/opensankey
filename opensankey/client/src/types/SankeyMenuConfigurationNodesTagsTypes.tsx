@@ -1,5 +1,5 @@
-import { TFunction } from "i18next"
-import { SankeyData, SankeyNode } from "./Types"
+import { TFunction } from 'i18next'
+import { SankeyData, SankeyNode } from './Types'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group

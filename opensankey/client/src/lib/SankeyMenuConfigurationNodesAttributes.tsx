@@ -11,8 +11,9 @@ import { ReturnCorrectNodeAttributeValue,
   TooltipValueSurcharge} from './SankeyUtils'
 import { FaAlignLeft,FaAlignCenter,FaAlignRight,FaBold,FaItalic, FaLock, FaLockOpen,FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp} from 'react-icons/fa'
 import { Checkbox } from '@chakra-ui/react'
+import { OpenSankeyConfigurationNodesAttributesFType } from '../types/SankeyMenuConfigurationNodesAttributesTypes'
 
-export const OpenSankeyConfigurationNodesAttributes = (
+export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNodesAttributesFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,

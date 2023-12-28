@@ -1,5 +1,5 @@
-import { TFunction } from "i18next";
-import { SankeyData, SankeyLink, SankeyNode, showMenuComponentsType } from "./Types";
+import { TFunction } from 'i18next'
+import { SankeyData, SankeyLink, SankeyNode, showMenuComponentsType } from './Types'
 
 export type OpenSankeyConfigurationsMenusFType = (
   t:TFunction,

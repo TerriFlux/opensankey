@@ -8,15 +8,15 @@ import { TFunction } from 'i18next'
 import { opposing_drag_elements } from './SankeyDrag'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
-import { GetLinkValueFuncType, drag_legend_g_elementFuncType } from '../types/FunctionTypes'
-
+import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
+import { OpenSankeyDrawLegendFType, context_legend_tagsFType, drag_legendFType, drag_legend_g_elementFuncType} from '../types/SankeyDrawLegendTypes'
 
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const OpenSankeyDrawLegend = (
+export const OpenSankeyDrawLegend : OpenSankeyDrawLegendFType= (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   display_nodes : { [node_id: string]: SankeyNode },
@@ -368,7 +368,8 @@ export const OpenSankeyDrawLegend = (
   )
 }
 
-export const drag_legend=(data:SankeyData,
+export const drag_legend : drag_legendFType = (
+  data:SankeyData,
   set_data:(d:SankeyData)=>void
 )=>d3.drag<SVGGElement, unknown>()
   .subject(Object).on('drag', function (event) {
@@ -409,10 +410,9 @@ export const drag_legend_g_element:drag_legend_g_elementFuncType=(data:SankeyDat
   d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
 }
 
-
 // const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
-export const context_legend_tags=(
+export const context_legend_tags : context_legend_tagsFType=(
   tag_contextualised:string|undefined,
   set_tag_contextualised:(t:string|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
@@ -467,7 +467,12 @@ export const context_legend_tags=(
     </Popover.Body>
   </Popover>:<></>
 }
-const draw_legend_handles=(data:SankeyData,set_data:(d:SankeyData)=>void,legend_clicked:boolean,h:number)=>{
+const draw_legend_handles =(
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void,
+  legend_clicked:boolean,
+  h:number
+)=>{
   ['left','right'].forEach(pos=>{
     add_legend_handle(pos,data,set_data,legend_clicked,h)
   })

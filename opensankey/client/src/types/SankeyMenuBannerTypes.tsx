@@ -1,7 +1,14 @@
-import { TFunction } from "i18next"
-import { SankeyData } from "./Types"
-import { ConvertDataFuncType, DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType, setDiagramFuncType } from "./FunctionTypes"
+import { TFunction } from 'i18next'
+import { SankeyData } from './Types'
+import { ConvertDataFuncType } from './SankeyConvertTypes'
+import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 
+export type setDiagramFuncType = (
+  the_diagram: string, 
+  set_data: (d: SankeyData) => void, 
+  convert_data: ConvertDataFuncType, 
+  DefaultSankeyData:DefaultSankeyDataFuncType
+) => void
 
 export type addSimpleLevelDropDownFType = (
   t:TFunction,
@@ -45,9 +52,9 @@ export type toolbar_builderFType = (
   minimum_flux:number | null | undefined,
   set_minimum_flux:(n:number)=>void,
   DefaultSankeyData: DefaultSankeyDataFuncType,
-) => JSX.Element
+) => {[s:string] :JSX.Element}
 
-export type stretchButtons=(
+export type stretchButtonsFType=(
   data:SankeyData,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   t:TFunction

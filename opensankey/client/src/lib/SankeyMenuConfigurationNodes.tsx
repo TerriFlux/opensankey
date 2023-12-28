@@ -16,7 +16,8 @@ import { TFunction } from 'i18next'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import FolderTree from 'react-folder-tree'
 import 'react-folder-tree/dist/style.css'
-import { GetLinkValueFuncType } from '../types/FunctionTypes'
+import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
+import { OpenSankeyMenuConfigurationNodesFType, add_childrenFType, check_node_has_node_typeFType, getNodeFromTreeFType, tree_data_nodesFType } from '../types/SankeyMenuConfigurationNodesTypes'
 
 type SankeyEditionTypes = {
   t : TFunction,
@@ -28,7 +29,7 @@ type SankeyEditionTypes = {
   token : boolean
 }
 
-export const OpenSankeyMenuConfigurationNodes = (
+export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
   t:TFunction<'translation', undefined>,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -58,8 +59,6 @@ export const OpenSankeyMenuConfigurationNodes = (
   
   return ui
 }
-
-
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {t,data, set_data, multi_selected_nodes,set_style_to_apply, menu_configuration_nodes,token }
@@ -362,7 +361,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
 export default SankeyNodeEdition
 
-export const tree_data_nodes=(
+export const tree_data_nodes : tree_data_nodesFType =(
   t:TFunction<'translation', undefined>,
   data:SankeyData,
   multi_selected_nodes:{current:SankeyNode[]},
@@ -403,7 +402,12 @@ const check_node_has_no_valid_dimensions=(n:SankeyNode)=>{
   return invalid
 }
 
-export const add_children=(nodes:{[x:string]:SankeyNode},n:SankeyNode,multi_selected_nodes:{current:SankeyNode[]},displayed_node_selector:boolean,node_visible:string[],filter_node_selector:string[])=>{
+export const add_children : add_childrenFType =(
+  nodes:{[x:string]:SankeyNode},n:SankeyNode,
+  multi_selected_nodes:{current:SankeyNode[]},
+  displayed_node_selector:boolean,
+  node_visible:string[],filter_node_selector:string[]
+)=>{
   const children:treeFolderType[]=[]
   Object.entries(nodes)
     .filter(nd=> check_node_has_node_type(nd[1] as SankeyNode,filter_node_selector))
@@ -426,7 +430,8 @@ export const add_children=(nodes:{[x:string]:SankeyNode},n:SankeyNode,multi_sele
   return children
 }
 
-export const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
+export const getNodeFromTree : getNodeFromTreeFType =(
+  path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
       
   if(tree.children && path.length>0){
     const index=path.shift()??-1
@@ -438,7 +443,9 @@ export const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,chec
   }
 }
 
-export const check_node_has_node_type=(n:SankeyNode,filter_node_selector:string[])=>{
+export const check_node_has_node_type : check_node_has_node_typeFType =(
+  n:SankeyNode,filter_node_selector:string[]
+)=>{
   if(n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'].length>0 && filter_node_selector.length>0){
     return (filter_node_selector.includes(n.tags['Type de noeud'][0]))
   }else{

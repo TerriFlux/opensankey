@@ -6,6 +6,7 @@ import { SankeyData } from '../types/Types'
 import { TFunction,i18n } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
+import { OpenSankeyDefaultModalePreferenceContentFType, preferenceCheckFType } from '../types/SankeyMenuPreferencesTypes'
 
 export type modalPreferenceTypes = {
   showPreference: boolean,
@@ -20,7 +21,7 @@ typeof globalThis & {
 }
 
 
-export const OpenSankeyDefaultModalePreferenceContent=(
+export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -158,7 +159,7 @@ export const OpenSankeyDefaultModalePreferenceContent=(
 
   return ui
 }
-export const preferenceCheck = (str: string,data:SankeyData) => {
+export const preferenceCheck : preferenceCheckFType  = (str: string,data:SankeyData) => {
   sessionStorage.removeItem('modepref')
   if (!data.accordeonToShow.includes(str)) {
     data.accordeonToShow.push(str)

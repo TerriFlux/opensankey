@@ -52,7 +52,7 @@ import { arrangeNodes, ComputeAutoSankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
 import { SelectVisualyLinks} from './SankeyDrawFunction'
-import {ContextZddFType, OpenSankeyMenusFType, OpenSankeyModalWelcomeFType} from '../types/SankeyMenuTypes'
+import {AddAllDropDownFluxFType, ContextMenuLinkFType, ContextMenuNodeFType, ContextZddFType, LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeyModalWelcomeFType, OpenSankeySaveButtonFType} from '../types/SankeyMenuTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -135,7 +135,7 @@ const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => any}
  */
-export const AddAllDropDownFlux = (
+export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
   t:TFunction,
   fluxTags: TagsCatalog,
   data: SankeyData,
@@ -1360,7 +1360,13 @@ const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem
   overflowY:'auto'
 } as CSSProperties
 
-export const MenuDraggable=(content:JSX.Element|JSX.Element[],pointer_pos:{current:number[]},title:string,set_display_menu:(b:boolean)=>void,width_menu=25)=>{
+export const MenuDraggable : MenuDraggableFType=(
+  content:JSX.Element|JSX.Element[],
+  pointer_pos:{current:number[]},
+  title:string,
+  set_display_menu:(b:boolean)=>void,
+  width_menu=25
+)=>{
   const class_name=title.replaceAll('/','').replaceAll('.','').split(' ').join('_')
   const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
   n_style_menu_draggable.width=width_menu+'%'
@@ -1390,7 +1396,7 @@ const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFr
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
-export const ContextMenuNode=(
+export const ContextMenuNode : ContextMenuNodeFType =(
   contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   display_nodes:{[id:string]:SankeyNode},
@@ -1767,7 +1773,9 @@ export const ContextMenuNode=(
   </Popover>:<></>
 }
 
-export const ContextMenuLink=(contextualised_link:SankeyLink|undefined,set_contextualised_node:(n:SankeyLink|undefined)=>void,
+export const ContextMenuLink : ContextMenuLinkFType = (
+  contextualised_link:SankeyLink|undefined,
+  set_contextualised_node:(n:SankeyNode|undefined)=>void,
   set_show_menu_link_data:(b:boolean)=>void,
   set_show_menu_link_appearence:(b:boolean)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
@@ -2353,7 +2361,9 @@ const  DataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
   })
   return allDD
 }
-export const OpenSankeySaveButton=(t:TFunction)=>{
+export const OpenSankeySaveButton : OpenSankeySaveButtonFType = (
+  t:TFunction
+)=>{
   return <>
     <OverlayTrigger
       key={'buttonCheckpoint'}
@@ -2367,7 +2377,9 @@ export const OpenSankeySaveButton=(t:TFunction)=>{
         }
       }}  ><FontAwesomeIcon style={{width:'2rem',height:'2rem'}} icon={faFloppyDisk} /></Button></OverlayTrigger></>
 }
-export const LastCheckpointTime=(t:TFunction)=>{
+export const LastCheckpointTime : LastCheckpointTimeFType =(
+  t:TFunction
+)=>{
   const last_save=localStorage.getItem('last_save')
   let l_s_c=''
   const has_save=last_save!==undefined && last_save!==null

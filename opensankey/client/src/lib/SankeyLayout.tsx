@@ -14,10 +14,11 @@ import {
 } from './SankeyUtils'
 import React, { FunctionComponent, useState } from 'react'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
-import { ComputeAutoSankeyFuncType, GetLinkValueFuncType } from '../types/FunctionTypes'
+import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
+import {ComputeAutoSankeyFuncType, agregationFType, apply_input_outputLinksIdFType, arrangeNodesFType, compute_default_input_outputLinksIdFType, desagregationFType, nodeHeightFType, reorganize_all_input_outputLinksIdFType, reorganize_inputLinksIdFType} from '../types/SankeyLayoutTypes'
 
 
-export const reorganize_inputLinksId = (
+export const reorganize_inputLinksId : reorganize_inputLinksIdFType = (
   data:SankeyData,
   node: SankeyNode,
   input: boolean,
@@ -41,7 +42,7 @@ export const reorganize_inputLinksId = (
  * @param {SankeyNode} nodes
  * @param {SankeyLink} links
  */
-export const compute_default_input_outputLinksId = (
+export const compute_default_input_outputLinksId : compute_default_input_outputLinksIdFType = (
   nodes: { [node_id : string]:SankeyNode},
   links: { [link_id : string]:SankeyLink},
 ) => {
@@ -58,9 +59,7 @@ export const compute_default_input_outputLinksId = (
   })
 }
 
-
-
-export const apply_input_outputLinksId = (
+export const apply_input_outputLinksId : apply_input_outputLinksIdFType  = (
   ref_nodes: { [node_id : string]:SankeyNode},
   data: SankeyData
 ) => {
@@ -108,7 +107,7 @@ export const apply_input_outputLinksId = (
  * @param {object} links
  * @param {object} nodes
  */
-export const compute_horizontal_index = (
+const compute_horizontal_index = (
   node: SankeyNode,
   starting_index: number,
   visible_nodes_ids: string[],
@@ -206,7 +205,7 @@ export const compute_horizontal_index = (
  * @param {object} links
  * @param {object} nodes
  */
-export const compute_recycling_horizontal_index = (
+const compute_recycling_horizontal_index = (
   link: SankeyLink,
   visible_nodes_ids: string[],
   recycling_links_ids: string[],
@@ -264,7 +263,7 @@ export const compute_recycling_horizontal_index = (
   }
 }
 
-export const arrangeNodes = (
+export const arrangeNodes : arrangeNodesFType = (
   data: SankeyData
 ) => {
   Object.values(data.nodes).forEach(node => {
@@ -288,7 +287,7 @@ export const arrangeNodes = (
  * @param {Function} scale
  * @param {Function} GetLinkValue
  */
-export const nodeHeight = (
+export const nodeHeight : nodeHeightFType = (
   node: SankeyNode,
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -722,7 +721,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
  * @param {object} nodes Dict of node to reorganize
  * @param {object} links Dict of links to reorganize
  */
-export const reorganize_all_input_outputLinksId = (
+export const reorganize_all_input_outputLinksId : reorganize_all_input_outputLinksIdFType = (
   data:SankeyData,
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
@@ -742,7 +741,7 @@ export const reorganize_all_input_outputLinksId = (
  * @param {string} cur_dimension Dimension on which we desagregage node
  * @param {boolean} ComputeAutoSankey Has the function been called from ComputeAutoSankey ?
  */
-export const desagregation = (
+export const desagregation : desagregationFType = (
   data: SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
@@ -807,7 +806,7 @@ export const desagregation = (
  * @param {string} idNode Id of node that we desagregate
  * @param {string} cur_dimension Dimension on which we desagregage node
  */
-export const agregation = (
+export const agregation : agregationFType = (
   data : SankeyData,
   idNode: string,
   cur_dimension: string,
@@ -1012,7 +1011,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Button
             variant="secondary"
             onClick={()=> {
-              desagregation(data,display_nodes,display_links,agregation_node,dim_name)
+              desagregation(data,display_nodes,display_links,agregation_node,dim_name,false)
               set_data({...data})
               set_show_agregation(false)
               set_dim_name('')

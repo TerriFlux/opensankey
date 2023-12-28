@@ -6,14 +6,14 @@ import {NodeColor,ReturnValueNode} from './SankeyUtils'
 import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
   EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
-import { GetLinkValueFuncType, LinkTextFuncType } from '../types/FunctionTypes'
-
+import { GetLinkValueFuncType, LinkTextFuncType } from '../types/SankeyUtilsTypes'
+import { OpenSankeyDrawNodesFType } from '../types/SankeyDrawNodesTypes'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const OpenSankeyDrawNodes = (
+export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -34,7 +34,7 @@ export const OpenSankeyDrawNodes = (
   GetLinkValue:GetLinkValueFuncType,
   set_displayed_input_link_value:(s:string)=>void,
   accept_simple_click:{current:boolean},
-  set_contextualised_node:(n:SankeyNode)=>void,
+  set_contextualised_node:(n:SankeyNode|undefined)=>void,
   pointer_pos:{current:number[]}
 
 ) => {

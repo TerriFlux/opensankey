@@ -1,6 +1,6 @@
 import { SankeyNode, SankeyLink, SankeyData } from '../types/Types'
 import { ToPrecision,LinkVisible,NodeDisplayed,ReturnValueLink } from './SankeyUtils'
-import { GetLinkValueFuncType } from '../types/FunctionTypes'
+import {  GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
 
 
 /**

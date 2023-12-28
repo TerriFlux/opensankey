@@ -1,3 +1,4 @@
+import { DrawLinkSabotFType, bezier_link_classic_vvFType, draw_arrowFType } from '../types/SankeyShapesTypes'
 const default_horiz_shift = 50
 
 /**
@@ -11,7 +12,7 @@ const default_horiz_shift = 50
  * @param {boolean} revert
  * @returns {string}
  */
-export const draw_arrow = (
+export const draw_arrow : draw_arrowFType = (
   node_face_size: number,
   position_node_face: number[],
   link_size: number,
@@ -80,7 +81,7 @@ export const draw_arrow = (
   return d
 }
 
-export const DrawLinkSabot = (
+export const DrawLinkSabot : DrawLinkSabotFType = (
   node_face_size: number,
   position_node_face: number[],
   link_size: number,
@@ -155,7 +156,7 @@ export const DrawLinkSabot = (
  * @param {number[]} y_list
  * @param {({ text?: string } | undefined)} error_msg
  */
-export const check_errors = (
+const check_errors = (
   source_name: string,
   target_name: string,
   x_list: number[],
@@ -189,7 +190,6 @@ export const check_errors = (
   }
 }
 
-
 /**
  * Function to draw particular form of link curve of type vertical-vertical
  *
@@ -205,7 +205,7 @@ export const check_errors = (
  * @param {({ text?: string } | undefined)} error_msg
  * @returns {string}
  */
-export const bezier_link_classic_vv = (
+export const bezier_link_classic_vv : bezier_link_classic_vvFType = (
   source_name: string,
   target_name: string,
   origin: number[],

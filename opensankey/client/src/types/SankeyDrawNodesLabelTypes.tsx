@@ -1,5 +1,5 @@
-import { GetLinkValueFuncType } from "./FunctionTypes";
-import { SankeyData, SankeyNode } from "./Types";
+import { GetLinkValueFuncType } from './SankeyUtilsTypes'
+import { SankeyData, SankeyNode } from './Types'
 
 export type OpenSankeyDrawNodesLabelFType = (
   data:SankeyData, 

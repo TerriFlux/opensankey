@@ -2,7 +2,11 @@ import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve, display_styleType } from '../types/Types'
 import {RemoveAnimate,ComputeEndPoints, GetSankeyMinWidthAndHeight,drawCurveFunction, DrawArrows,LinkStrokeWidth} from './SankeyDrawFunction'
 import {   LinkVisible,TestLinkValue,ReturnValueNode,AssignNodeLocalAttribute,ReturnValueLink,AssignLinkLocalAttribute} from './SankeyUtils'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,drag_elementsFuncType,drag_node_textFuncType,drawArrowsType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from '../types/FunctionTypes'
+import { add_drag_link_zoneFType, dragGNodeEventFType, dragLinkEventFType, dragLinkIOPositionFType, dragLinkTextEventFType, dragNodeTextEventWidthBoxEventFType, drag_elementsFuncType,drag_node_textFuncType, drag_nodesFType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from '../types/SankeyDragTypes'
+import { drawArrowsType } from '../types/SankeyDrawFunctionTypes'
+import {
+  GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,
+} from '../types/SankeyUtilsTypes'
 import { dragLinkCenterHandleEventFType, dragLinkShiftHandleEventFType, drag_handleFType} from '../types/SankeyDragTypes'
 
 declare const window: Window &
@@ -40,7 +44,7 @@ typeof globalThis & {
  * @param {number} min_thickness
  * @returns
  */
-export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
+export const dragLinkEvent : dragLinkEventFType =(multi_selected_links:{current: SankeyLink[]},
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -63,16 +67,17 @@ export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
         drag_link(display_nodes, display_links, display_style, this, event,data,scale,inv_scale,min_thickness,GetLinkValue,DrawArrows)
         Object.values(display_links).forEach(
           (link: SankeyLink) => {
-            d3.select(' .opensankey #path_' + l.idLink).attr('d',        () => {
-              return drawCurveFunction.curve(
-                data,set_data,
-                display_nodes, display_links, 
-                display_style,
-                data.nodeTags, link,
-                error_msg,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,
-                GetLinkValue,DrawArrows
-              )
-            }
+            d3.select(' .opensankey #path_' + l.idLink).attr('d',
+              () => {
+                return drawCurveFunction.curve(
+                  data,set_data,
+                  display_nodes, display_links, 
+                  display_style,
+                  data.nodeTags, link,
+                  error_msg,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,
+                  GetLinkValue,DrawArrows
+                )
+              }
             )
           }
         )
@@ -85,7 +90,7 @@ export const dragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
  * @param {boolean} alt_key_pressed
  * @returns {*}
  */
-export const dragLinkTextEvent=(alt_key_pressed:boolean,
+export const dragLinkTextEvent : dragLinkTextEventFType =(alt_key_pressed:boolean,
 )=>{
   return d3.drag<SVGTextElement, SankeyLink>()
     .subject(Object).on('drag', function (event, link) {
@@ -109,7 +114,8 @@ export const dragLinkTextEvent=(alt_key_pressed:boolean,
  * @param {number} min_thickness
  * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => string}
  */
-export const dragLinkIOPosition=(multi_selected_links:{current: SankeyLink[]},
+export const dragLinkIOPosition : dragLinkIOPositionFType =(
+  multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -268,7 +274,7 @@ export const dragLinkShiftHandleEvent : dragLinkShiftHandleEventFType = (
  * @param {boolean} alt_key_pressed
  * @returns {{}, DrawGrid: () => void, scale: (t: number) => number, inv_scale: ...}
  */
-export const dragGNodeEvent=(
+export const dragGNodeEvent : dragGNodeEventFType = (
   data:SankeyData,
   display_nodes:{ [node_id: string]: SankeyNode },
   display_links:{ [link_id: string]: SankeyLink },
@@ -320,7 +326,9 @@ export const dragGNodeEvent=(
  * @param {React.Dispatch<React.SetStateAction<SankeyData>>} set_data
  * @returns {*}
  */
-export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:(d:SankeyData)=>void)=>{
+export const dragNodeTextEventWidthBoxEvent : dragNodeTextEventWidthBoxEventFType = (
+  data:SankeyData,set_data:(d:SankeyData)=>void
+)=>{
   return d3.drag<SVGRectElement, SankeyNode>()
     .subject(Object).on('drag', function (event, node) {
       if(event.dx<100){
@@ -366,7 +374,7 @@ export const dragNodeTextEventWidthBoxEvent = (data:SankeyData,set_data:(d:Sanke
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns
  */
-export  const drag_nodes = (
+export  const drag_nodes : drag_nodesFType = (
   node:SankeyNode,
   event: { dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current: SankeyNode[] },
@@ -395,10 +403,6 @@ export  const drag_nodes = (
   drag_elements(node,data,event,multi_selected_nodes,set_data,display_nodes,display_links,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale)
     
 }
-
-
-
-
 
 /**
  * Function triggerd when a link is dragged, it identify if the mouse is closer of the target or the source and return the closest node of the two
@@ -923,7 +927,7 @@ const drag_zone_position=(link:SankeyLink,
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns {number, inv_scale: (t...)}
  */
-export const add_drag_link_zone=(
+export const add_drag_link_zone : add_drag_link_zoneFType =(
   link: SankeyLink,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
@@ -1014,9 +1018,8 @@ export const drag_node_text:drag_node_textFuncType = (
   d3.select(' .opensankey #text_' + node.idNode ).selectAll('tspan').attr('x', new_x)
 }
 
-
-
-export const return_out_of_bound_element:return_out_of_bound_elementFuncType=(dragged:SankeyNode,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
+export const return_out_of_bound_element:return_out_of_bound_elementFuncType=(
+  dragged:SankeyNode,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current:SankeyNode[]},node_visible:string[]
 )=>{
 

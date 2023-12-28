@@ -1,5 +1,8 @@
-import { GetLinkValueFuncType, LinkColorFuncType, LinkStrokeFuncType, LinkTextFuncType, drawArrowsType } from "./FunctionTypes";
-import { SankeyData, SankeyLink, SankeyNode } from "./Types";
+import { drawArrowsType } from './SankeyDrawFunctionTypes'
+import { GetLinkValueFuncType, LinkColorFuncType, LinkTextFuncType } from './SankeyUtilsTypes'
+import { SankeyData, SankeyLink, SankeyNode } from './Types'
+
+export type LinkStrokeFuncType = (l: SankeyLink, data: SankeyData, GetLinkValue: GetLinkValueFuncType) => string
 
 export type OpenSankeyDrawLinksFType = (
   data:SankeyData,
@@ -23,7 +26,7 @@ export type OpenSankeyDrawLinksFType = (
   LinkStroke:LinkStrokeFuncType,
   DrawArrows:drawArrowsType,
   set_display_link_opacity:(s:string)=>void,
-  set_contextualised_link:(l:SankeyLink)=>void,
+  set_contextualised_link:(l:SankeyLink|undefined)=>void,
   pointer_pos:{current:number[]},
   LinkSabotColor:LinkColorFuncType
 ) => JSX.Element

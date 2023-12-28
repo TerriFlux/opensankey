@@ -1,8 +1,62 @@
-import { SankeyData, SankeyLink, SankeyNode, display_styleType } from "./Types"
-import {
-  GetLinkValueFuncType
-} from "./FunctionTypes"
+import React from 'react'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, display_styleType } from './Types'
+import { GetLinkValueFuncType } from './SankeyUtilsTypes'
+
 import * as d3 from 'd3'
+
+export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => void
+
+export type ValueSelectedParameterFuncType = (data: SankeyData, multi_selected_links: {
+  current: SankeyLink[];
+}, tags_selected: {
+  [k: string]: string;
+}) => SankeyLinkValue
+
+export type SetNodeHeightFuncType = (
+  n: SankeyNode, display_nodes: {[node_id: string]: SankeyNode;},
+  display_links: {[link_id: string]: SankeyLink;},
+  data: SankeyData,
+  scale: (t: number) => number,
+  inv_scale: (t: number) => number,
+  GetLinkValue: GetLinkValueFuncType
+) => void
+
+export type drawArrowsType = (
+  n: SankeyNode,
+  data:SankeyData,
+  display_nodes: { [node_id: string]: SankeyNode },
+  display_links: { [node_id: string]: SankeyLink },
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
+  GetLinkValue:GetLinkValueFuncType,
+  display_style: display_styleType
+) => void
+
+export type NodeVisibleOnsSvgFuncType = () => string[]
+
+export type LinkVisibleOnsSvgFuncType = () => string[]
+
+export type DeselectVisualyNodesFuncType = (n: SankeyNode) => void
+
+export type RemoveAnimateFuncType = () => void
+
+export type SvgDragMiddleMouseStartFuncType = () => void
+
+export type SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unknown, unknown>, data: SankeyData) => void
+
+export type SimpleGNodeClickFuncType = (event: React.MouseEvent<HTMLButtonElement>, d: SankeyNode, data: SankeyData, set_data: (d: SankeyData) => void, nodes_accordion_ref: {
+    current: HTMLDivElement
+} | null, multi_selected_nodes: {
+    current: SankeyNode[];
+}, mode_selection: {
+    current: string;
+}, accordion_ref: {
+    current: HTMLDivElement;
+} | null, button_ref: {
+    current: HTMLLabelElement;
+} | null, accept_simple_click: {
+    current: boolean;
+}) => void
 
 export type StrokeDasharrayFType =(
   d:SankeyLink,
@@ -37,7 +91,7 @@ export type ComputeEndPointsFType = (
   link: SankeyLink,
   display_nodes: { [node_id: string]: SankeyNode },
   display_links: { [link_id: string]: SankeyLink },
-  selected_tags: { [tag_group: string]: string[] },
+  selected_tags: TagsCatalog,
   data:SankeyData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
@@ -77,7 +131,7 @@ export type EventNodeContextMenuFType = (
 export type EventLinkContextMenuFType = (
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
-  set_contextualised_link:(l:SankeyLink)=>void,
+  set_contextualised_link:(l:SankeyLink|undefined)=>void,
   pointer_pos:{current:number[]},
   data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
@@ -91,7 +145,7 @@ export type EventLinkContextMenuFType = (
 export type TextNodeWrapFType = (
   d:SankeyNode,
   data:SankeyData
-)=> number
+)=> void
 
 // Function that add marker at the end of links, those marker are arrow
 export type DrawArrowsFType = (
@@ -109,7 +163,7 @@ export type DrawArrowsFType = (
 export type SortOutputLinksIdByYPosFType = (
   data:SankeyData,
   n:SankeyNode
-)=> void
+)=> string[]
 
 // Similar to eventOnSankeyZone for the addition of 2 nodes + a link, this one trigger when the click is made on a already existing node. It allow us to link 2 already existings nodes,
 // or creating a nodes at first click then linking it to a already existing one or the opposite
@@ -204,3 +258,35 @@ export type DrawLinkStartSabotFType = (data:SankeyData,
     data:SankeyData,
     GetLinkValue:GetLinkValueFuncType)=>string
 )=> void
+
+export type RepositionneSidebarFuncType = (show_nav: boolean) => void
+
+export type EventOnSankeyZoneMouseDownFuncType =(mode_selection: {
+  current: string;
+}, data: SankeyData, set_data: (d: SankeyData) => void, set_first_selected_node: React.Dispatch<React.SetStateAction<object>>, token: boolean, set_show_toast_limit_node: (b: boolean) => void, evt2: unknown, start_point: {
+  current: number[];
+}, closeAllMenuContext: () => void) => void
+
+export type EventOnSankeyZoneMouseMoveFuncType = (mode_selection: {
+  current: string;
+}, data: SankeyData, first_selected_node: object, set_first_selected_node: React.Dispatch<React.SetStateAction<object>>, evt: MouseEvent, start_point: {
+  current: number[];
+}) => void
+
+export  type EventOnSankeyZoneMouseUpFuncType = (mode_selection: {
+  current: string;
+}, data: SankeyData, set_data: (d: SankeyData) => void, multi_selected_nodes: {
+  current: SankeyNode[];
+}, multi_selected_links: {
+  current: SankeyLink[];
+}, first_selected_node: object, set_first_selected_node: React.Dispatch<React.SetStateAction<object>>, token: boolean, set_show_toast_limit_node: (b: boolean) => void, accordion_ref: {
+  current: HTMLDivElement
+} | null, button_ref: {
+  current: HTMLLabelElement;
+} | null, links_accordion_ref: {
+  current: HTMLDivElement
+} | null, set_displayed_input_link_value: (s: string) => void, evt: MouseEvent, start_point: {
+  current: number[];
+}, set_legend_clicked: (b: boolean) => void) => void
+
+export type clipFType  = (subjectPolygon: number[][], clipPolygon: number[][]) => void  

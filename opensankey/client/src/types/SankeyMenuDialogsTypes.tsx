@@ -1,7 +1,7 @@
-import { TFunction } from "i18next";
-import { SankeyData } from "./Types";
-import { ConvertDataFuncType, updateLayoutFuncType } from "./FunctionTypes";
-
+import { TFunction } from 'i18next'
+import { SankeyData } from './Types'
+import { ConvertDataFuncType  } from './SankeyConvertTypes'
+import { updateLayoutFuncType } from './SankeyUtilsTypes'
 
 export type OpenSankeyDiagramSelectorFType = (
   t: TFunction, 

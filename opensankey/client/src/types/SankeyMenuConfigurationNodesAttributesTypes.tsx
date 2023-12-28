@@ -1,5 +1,5 @@
-import { TFunction } from "i18next"
-import { SankeyData, SankeyNode } from "./Types"
+import { TFunction } from 'i18next'
+import { SankeyData, SankeyNode } from './Types'
 
 export type OpenSankeyConfigurationNodesAttributesFType = (
   t:TFunction,
@@ -12,7 +12,7 @@ export type OpenSankeyConfigurationNodesAttributesFType = (
   advanced_appearence_content:JSX.Element[],
   advanced_label_content:JSX.Element[],
   advanced_label_value_content:JSX.Element[],
-) => JSX.Element
+) => JSX.Element[]
 
 export type SankeyMenuConfigurationNodesAttributesFType = (
   t:TFunction,

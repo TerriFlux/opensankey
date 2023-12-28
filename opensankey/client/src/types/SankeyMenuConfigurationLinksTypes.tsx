@@ -1,6 +1,7 @@
-import { TFunction } from "i18next";
-import { SankeyData, SankeyLink } from "./Types";
-import { GetLinkValueFuncType } from "./FunctionTypes";
+import { TFunction } from 'i18next'
+import { SankeyData, SankeyLink } from './Types'
+import { GetLinkValueFuncType } from './SankeyUtilsTypes'
+
 
 
 export type OpenSankeyMenuConfigurationLinksFType = (
@@ -24,5 +25,5 @@ export type OpenSankeyMenuConfigurationLinksFType = (
   set_pre_idTarget:(s:string)=>void,
   GetLinkValue:GetLinkValueFuncType,
 
-) => JSX.Element
+) => { [s: string]: JSX.Element; }
 
