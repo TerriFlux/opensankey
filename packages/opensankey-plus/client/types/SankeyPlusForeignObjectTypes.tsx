@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyPlusData, SankeyPlusNode } from './Types'
+import { SankeyPlusData, SankeyPlusNode } from './Types'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
 import { GetLinkValueFuncType } from 'open-sankey/src/types/FunctionTypes'
 

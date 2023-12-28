@@ -41,12 +41,10 @@ export type PlusLinkSabotColorFType = (
   GetLinkValue:GetLinkValueFuncType
 ) => string
 
+export type ValueOf<T>=T[keyof T]
+
 export type OSPIsAllNodeNotLocalAttrSameValueFType = (
   data:SankeyPlusData,
   m_s_n:SankeyPlusNode[],
   k_list:(keyof SankeyPlusNode)[]
-)=> {
-  [x: string]: [ValueOf<SankeyPlusNode>, boolean];
-}
-
-export type ValueOf<T>=T[keyof T]
+) => { [x: string]: [ValueOf<SankeyPlusNode>|boolean, boolean]; }

@@ -6,7 +6,7 @@ import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from '.
 import {DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './import/OpenSankey'
 import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
 
-import { SankeyData,SankeyNode,SankeyLink} from 'open-sankey/src/types/Types'
+import { SankeyData } from 'open-sankey/src/types/Types'
 import { drawArrowsType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/FunctionTypes'
 
 import {SankeyPlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, sankey_plus_zoom_text_zoneFType, zone_selection_labelFType} from '../types/SankeyPlusLabelsTypes'

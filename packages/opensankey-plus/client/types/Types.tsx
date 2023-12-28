@@ -1,5 +1,8 @@
-import {SankeyData, SankeyLink, SankeyNode, SankeyLinkValue, SankeyLinkValueDict, TagsGroup,SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,showMenuComponentsType} from 'open-sankey/src/types/Types'
-export type {SankeyLinkValue,SankeyLinkValueDict,SankeyData,TagsGroup}
+import {
+  SankeyData, SankeyLink, SankeyNode, 
+  SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,
+  showMenuComponentsType
+} from 'open-sankey/src/types/Types'
 
 export type DiffType={
     diff:{

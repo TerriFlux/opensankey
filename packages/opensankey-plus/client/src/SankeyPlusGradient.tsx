@@ -8,7 +8,7 @@ import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplaying
 import { SankeyPlusData,SankeyPlusNode,SankeyPlusLink } from '../types/Types'
 import { LinkStrokeFType, SankeyPlusDrawArrowsFType, dragNodeRedrawGradientFType, menu_conf_link_apparence_gradientFType } from '../types/SankeyPlusGradientTypes'
 
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode} from 'open-sankey/src/types/Types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode, display_styleType} from 'open-sankey/src/types/Types'
 import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
 import { GetLinkValueFuncType } from 'open-sankey/src/types/FunctionTypes'
 import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
@@ -504,7 +504,7 @@ export const SankeyPlusDrawArrows : SankeyPlusDrawArrowsFType = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
-  display_style: {filter: number},
+  display_style: display_styleType,
 
 ) => {
   DrawArrows(n,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)

@@ -151,7 +151,7 @@ export const OSPIsAllNodeNotLocalAttrSameValue : OSPIsAllNodeNotLocalAttrSameVal
   // store_value : variable that contain an array forEach key we are looking for
   // Each array contain in first position the value of the selected nodes attribute 
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
-  const store_value={} as {[x:string]:[ValueOf<SankeyPlusNode>,boolean]}
+  const store_value={} as {[x:string]:[ValueOf<SankeyPlusNode>|false,boolean]}
 
   if(m_s_n.length>0){
     // For each selected nodes

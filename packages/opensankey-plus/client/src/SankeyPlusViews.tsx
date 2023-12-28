@@ -22,7 +22,7 @@ import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaCopy} from 'react-ico
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
-import { SankeyLinkValue, SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
+import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
 import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
 import { MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, SankeyPlusMenuPreferenceViewFType, check_current_view_savedFType, filter_viewFType, get_data_from_viewFType, keyHandlerFType, modal_transparent_view_attrFType, modal_view_not_savedFType, recompute_viewsFType, selecteur_viewFType, setDiagramFType, setValueFType, view_toastFType, view_toast_update_viewFType, viewsAccordionFType} from '../types/SankeyPlusViewsTypes'
 
@@ -87,8 +87,8 @@ export const view_toast_update_view : view_toast_update_viewFType = (<Toast bg='
 
 export const setValue : setValueFType = (
   dataTags: TagsGroup[],
-  v_target: {[key:string] : SankeyLinkValue},
-  v_source: {[key:string] : SankeyLinkValue},
+  v_target: SankeyLinkValueDict,
+  v_source: SankeyLinkValueDict,
   depth: number
 ) => {
   const dataTag = Object.values(dataTags)[depth]
@@ -98,12 +98,12 @@ export const setValue : setValueFType = (
       v_target[listKey[i]] = v_source[listKey[i]]
     } else {
       if ( v_target[listKey[i]] === undefined ) {
-        (v_target[listKey[i]] as SankeyLinkValueDict) = {}
+        v_target[listKey[i]] = {}
       }
       setValue(
         dataTags,
-        v_target[listKey[i]] as unknown as {[key:string] : SankeyLinkValue},
-        v_source[listKey[i]] as unknown as {[key:string] : SankeyLinkValue},
+        v_target[listKey[i]] as SankeyLinkValueDict,
+        v_source[listKey[i]] as SankeyLinkValueDict,
         depth + 1)
     }
   }

@@ -1,5 +1,6 @@
 import { TFunction } from 'i18next'
-import { SankeyLinkValue, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, TagsGroup, ViewType } from './Types'
+import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, ViewType } from './Types'
+import { SankeyLinkValueDict, TagsGroup } from 'open-sankey/src/types/Types'
 
 export type setDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
@@ -13,8 +14,8 @@ export type view_toast_update_viewFType = JSX.Element
 
 export type setValueFType = (
   dataTags: TagsGroup[],
-  v_target: {[key:string] : SankeyLinkValue},
-  v_source: {[key:string] : SankeyLinkValue},
+  v_target: SankeyLinkValueDict,
+  v_source: SankeyLinkValueDict,
   depth: number
 ) => void
 

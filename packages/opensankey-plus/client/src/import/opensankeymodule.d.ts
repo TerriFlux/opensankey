@@ -14,18 +14,14 @@ declare module 'open-sankey/dist/src/lib/SankeyMenu';
 declare module 'open-sankey/dist/src/lib/traduction';
 declare module 'open-sankey/dist/src/lib/SankeyDrawFunction';
 declare module 'open-sankey/dist/src/lib/SankeyDrag';
-declare module 'react-multiselect-dropdown-bootstrap';
-declare module 'react-beforeunload';
-declare module 'lz-string';
-declare module 'd3-textwrap';
-declare module 'quill-image-resize-module-react';
 declare module 'open-sankey/dist/src/lib/SankeyMenuConfigurationNodesAttributes';
 declare module 'open-sankey/dist/src/lib/SankeyMenuConfigurationNodesLabel';
 declare module 'open-sankey/dist/src/lib/SankeyMenuConfigurationLinksAppearence';
 declare module 'open-sankey/dist/src/lib/SankeyMenuConfigurationLinksLabel';
 declare module 'open-sankey/dist/src/lib/SankeyDrawLegend';
-declare module 'sankeyicons/dist/SankeyIconsUtils';
 declare module 'open-sankey/dist/src/lib/SankeyMenuConfigurationNodes'
+
 declare module 'afmsankey/dist/SankeyTrade';
-declare module 'colormap';
-declare module 'react-multi-select-component';
+
+declare module 'sankeyicons/dist/SankeyIconsUtils';
+
