@@ -11,8 +11,8 @@ export type OpenSankeyDrawNodesFType = (
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
   mode_selection:{current:string},
-  first_selected_node:object,
-  set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
+  first_selected_node:SankeyNode,
+  set_first_selected_node:(_:SankeyNode)=>void,
   accordion_ref:{current:HTMLDivElement } | null,
   button_ref:{current:HTMLLabelElement} | null,
 

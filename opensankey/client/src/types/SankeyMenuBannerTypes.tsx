@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData } from './Types'
+import { SankeyData, SankeyNode } from './Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 
@@ -40,8 +40,8 @@ export type toolbar_builderFType = (
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,
   url_prefix: string,
-  first_selected_node:object,
-  set_first_selected_node:(o:object)=>void,
+  first_selected_node:SankeyNode,
+  set_first_selected_node:(o:SankeyNode)=>void,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   setDiagram: setDiagramFuncType,
   set_show_modal_welcome:(b:boolean)=>void,

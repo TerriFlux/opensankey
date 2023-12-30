@@ -1,7 +1,6 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React from 'react'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
-// import { SankeyLink } from 'open-sankey/src/types/Types'
 import {  CutName,DefaultNodeStyle,DefaultLinkStyle, GetLinkValue } from './SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
@@ -10,7 +9,7 @@ import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationL
 import { SankeyData } from '../types/Types'
 
 
-export const SankeyPlusModalStyleNode  = (
+export const SankeyModalStyleNode  = (
   t:TFunction,data:SankeyData,
   set_data:(d:SankeyData)=>void,
   showStyle:boolean,
@@ -99,7 +98,7 @@ export const SankeyPlusModalStyleNode  = (
 
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export const SankeyPlusModalStyleLink = (
+export const SankeyModalStyleLink = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,

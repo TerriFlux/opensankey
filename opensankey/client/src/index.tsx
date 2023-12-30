@@ -4,12 +4,12 @@ import './css/main.css'
 import React from 'react'
 import { render } from 'react-dom'
 
-import SankeyApp from './lib/SankeyApp'
+import SankeyApp from './SankeyApp'
 import { convert_data,complete_sankey_data } from './lib/SankeyConvert'
 import { DefaultLink, DefaultNode, DefaultSankeyData } from './lib/SankeyUtils'
 import LZString from 'lz-string'
-import { SankeyData } from './lib/types'
-import './lib/traduction'
+import { SankeyData } from './types/Types'
+import './traduction'
 
 let logo = ''
 try {
