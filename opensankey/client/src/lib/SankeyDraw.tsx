@@ -1,8 +1,8 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
-import React, { FunctionComponent, useEffect } from 'react'
-import { SankeyNode, SankeyLink,  SankeyData} from '../types/Types'
-import {  DeleteLink,DeleteNode,ClickSaveDiagram} from './SankeyUtils'
+import React, { FunctionComponent, useEffect, useState } from 'react'
+import { SankeyNode, SankeyLink,  SankeyData } from '../types/Types'
+import {  DeleteLink,DeleteNode,ClickSaveDiagram, windowSankey} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
 import { RemoveAnimate,
   DrawGrid,
@@ -14,32 +14,7 @@ import { RemoveAnimate,
   SvgDragMiddleMouseMove,
   SelectVisualyNodes} from './SankeyDrawFunction'
 import LZString from 'lz-string'
-import { GetSankeyMinWidthAndHeightFuncType } from '../types/SankeyUtilsTypes'
-import { keyHandlerFType } from '../types/SankeyDrawTypes'
-
-window.d3 = d3
-declare const window: Window &
-typeof globalThis & {
-  SankeyToolsStatic: boolean
-}
-
-export type SankeyDrawTypes = {
-  data: SankeyData,
-  set_data: (_:SankeyData) => void,
-  display_nodes : { [node_id: string]: SankeyNode },
-  display_links : { [node_id: string]: SankeyLink },
-  animation: boolean,
-  mode_selection: {current : string},
-  show_agregation:boolean, 
-  set_show_agregation:(_:boolean)=>void,
-  agregation_node:string,
-  set_agregation_node:(_:string)=>void,
-  is_agregation:boolean,
-  set_alt_key_pressed:(_:boolean)=>void,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  pointer_pos:{current: number[]},
-  set_show_context_zdd:(_:boolean)=>void,
-}
+import { SankeyDrawTypes, keyHandlerFType } from '../types/SankeyDrawTypes'
 
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   data,
@@ -48,7 +23,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   display_links,
   animation,
   mode_selection,
-  show_agregation, set_show_agregation,
   agregation_node,
   set_agregation_node,
   is_agregation,
@@ -57,6 +31,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   pointer_pos,
   set_show_context_zdd
 }) => {
+  const [show_agregation, set_show_agregation]=useState(false)
 
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
@@ -81,11 +56,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   })
 
 
-  const position = (window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? 'relative' : 'absolute'
+  const position = (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute'
  
-
-
-
   useEffect(() => {
     if (animation) {
       return
@@ -151,7 +123,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     svgSankey.on('contextmenu',(evt)=>{
       evt.preventDefault()
       pointer_pos.current=[evt.pageX,evt.pageY]
-      if(d3.select(evt.target).attr('class')=='mode_selection' && !window.SankeyToolsStatic){
+      if(d3.select(evt.target).attr('class')=='mode_selection' && !windowSankey.SankeyToolsStatic){
         set_show_context_zdd(true)
       }
     })
@@ -182,7 +154,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
   })
   let border = '0px'
-  if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
+  if (!(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false)) {
     border = '2px solid #d3d3d3'
   }
 

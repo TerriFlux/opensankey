@@ -1,6 +1,6 @@
 import Accordion from 'react-bootstrap/Accordion'
 import { ReactElementLike } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode, showMenuComponentsType } from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode } from '../types/Types'
 import React, { FunctionComponent, Ref } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
@@ -12,14 +12,16 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
+  set_show_nav: (_:boolean)=>void,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
+  sub_nav_item_active:string,
+  set_sub_nav_item_active:(s:string)=>void,
   nodes_accordion_ref:{ current:HTMLDivElement},
   links_accordion_ref:{ current:HTMLDivElement},
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
   set_style_to_apply:(s:string)=>void,
-  showMenuComponents: showMenuComponentsType,
   menu_configuration_layout: JSX.Element[],
   menu_configuration_node_tags:JSX.Element,
   menu_configuration_link_tags:JSX.Element,
@@ -31,8 +33,6 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
     [s: string]: JSX.Element;
   },
   menu_configuration_free_labels:JSX.Element,
-  sub_nav_item_active:string,
-  set_sub_nav_item_active:(s:string)=>void,
   token:boolean,
   set_displayed_input_link_value:(s:string)=>void,
   tags_selected:{[k: string]: string},
@@ -92,11 +92,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('2')
-                  showMenuComponents.show_nav[1](true)
+                  set_show_nav(true)
                 } else {
                   set_sub_nav_item_active('EtiquetteNoeud')
                   set_nav_item_active('2')
-                  showMenuComponents.show_nav[1](true)
+                  set_show_nav(true)
 
                 }
               }
@@ -117,11 +117,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('2')
-                  showMenuComponents.show_nav[1](true)
+                  set_show_nav(true)
                 } else {
                   set_sub_nav_item_active('editionNoeud')
                   set_nav_item_active('2')
-                  showMenuComponents.show_nav[1](true)
+                  set_show_nav(true)
 
                 }
               }
@@ -167,11 +167,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                 set_sub_nav_item_active('')
                 set_nav_item_active('3')
-                showMenuComponents.show_nav[1](true)
+                set_show_nav(true)
               } else {
                 set_sub_nav_item_active('8')
                 set_nav_item_active('3')
-                showMenuComponents.show_nav[1](true)
+                set_show_nav(true)
               }
             }}
           >
@@ -186,11 +186,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('3')
-                  showMenuComponents.show_nav[1](true)
+                  set_show_nav(true)
                 } else {
                   set_sub_nav_item_active('editionFlux')
                   set_nav_item_active('3')
-                  showMenuComponents.show_nav[1](true)
+                  set_show_nav(true)
                 }
               }
             }>

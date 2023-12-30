@@ -33,7 +33,7 @@ export type OpenSankeyMenusFType = (
   convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void
 ) => {[s:string]:JSX.Element | JSX.Element[]}
 
-export type OpenSankeyModalWelcomeFType = (
+export type SankeyModalWelcomeFType = (
   t:TFunction,
   active_page:string,
   set_active_page:(s:string)=>void,
@@ -46,7 +46,7 @@ export type OpenSankeyModalWelcomeFType = (
     read_me: string | JSX.Element | JSX.Element[];
     intro: JSX.Element;
     rc: JSX.Element;
-    licence: JSX.Element;
+    licence?: JSX.Element;
     news: JSX.Element;
   },
   exemple_menu: object
@@ -93,6 +93,8 @@ export type ContextMenuLinkFType = (
 
 export type ContextZddFType = (
   showMenuComponents:showMenuComponentsType,
+  show_context_zdd : boolean,
+  set_show_context_zdd : (_:boolean)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
   pointer_pos:{current:number[]},
   node_hspace:number,

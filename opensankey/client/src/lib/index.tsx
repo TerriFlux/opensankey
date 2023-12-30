@@ -1,5 +1,5 @@
 
-import SankeyApp from './SankeyApp'
+import SankeyApp from '../SankeyApp'
 import SankeyDraw from './SankeyDraw'
 import {convert_data} from './SankeyConvert'
 import {ComputeAutoSankey} from './SankeyLayout'

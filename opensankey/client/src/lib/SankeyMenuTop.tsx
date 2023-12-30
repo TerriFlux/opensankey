@@ -2,7 +2,6 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
 import {
-  Accordion,
   Button,
   ButtonGroup,
   Card,
@@ -18,7 +17,6 @@ import {
   Navbar,
   Offcanvas,
   OverlayTrigger,
-  Pagination,
   Popover,
   Row,
   ToggleButton,
@@ -27,8 +25,6 @@ import {
 import {
   SankeyData,
   SankeyLink,
-  SankeyLinkValue,
-  SankeyNode,
   TagsCatalog,
   TagsGroup,
   showMenuComponentsType,
@@ -37,22 +33,18 @@ import {
 
 import { complete_sankey_data } from './SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
-import * as SankeyUtils from './SankeyUtils'
 import SankeyLoad from './SankeyLoad'
 import { SankeyConfigurationMenu } from './SankeyMenuConfiguration'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from './SankeyMenuDialogs'
 import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
-import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faUpRightFromSquare,faFile,faPlus} from '@fortawesome/free-solid-svg-icons'
+import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,faPlus} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { addAllDropDownNode } from './SankeyMenuBanner'
-import { reorganize_inputLinksId } from './SankeyLayout'
-import { handleUpLink,handleDownLink } from './SankeyMenuConfigurationLinksAppearence'
-import { arrangeNodes, ComputeAutoSankey } from './SankeyLayout'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import { SelectVisualyLinks} from './SankeyDrawFunction'
-import {AddAllDropDownFluxFType, ContextMenuLinkFType, ContextMenuNodeFType, ContextZddFType, LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeyModalWelcomeFType, OpenSankeySaveButtonFType} from '../types/SankeyMenuTypes'
+import {AddAllDropDownFluxFType, LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from '../types/SankeyMenuTypes'
+import { RecursionDataTag, DefaultNode, DefaultLink, ClickSaveExcel, FindMaxLinkValue, UploadExemple, ClickSaveDiagram, UploadExcelImpl, DownloadExamples } from './SankeyUtils'
 
 declare const window: Window &
   typeof globalThis & {
@@ -344,7 +336,7 @@ const logo_contact=<svg
 export const OpenSankeyMenus : OpenSankeyMenusFType = (
   t:TFunction,
   Reinitialization:()=>void,
-  DefaultSankeyData:()=>SankeyData,
+  get_default_data:()=>SankeyData,
   showMenuComponents:showMenuComponentsType,
   showStyleEdition:()=>void,
   showStyleEditionLink:()=>void,
@@ -355,7 +347,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   external_file_item:JSX.Element[],
   externale_save_item:JSX.Element[],
   set_tags_selected:(o:{[x:string]:string})=>void,
-  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void
+  convert_data:(d:SankeyData,get_default_data: ()=>SankeyData)=>void
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
@@ -458,7 +450,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 
                   Object.values(pureLinks).forEach(l=>{
                     const suffix=''
-                    SankeyUtils.RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                    RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
                   })
                   data.links=new_links
                   set_data({...data})
@@ -658,14 +650,14 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
                   return (e: ProgressEvent<FileReader>) => {
                     Reinitialization()
                     const result = String((e.target as FileReader).result)
-                    const new_data = DefaultSankeyData()
+                    const new_data = get_default_data()
                     const result_data = JSON.parse(result)
                     Object.assign(new_data, result_data)
                     if (result_data.version === undefined) {
                       (new_data.version as unknown as undefined) = undefined
                     }
-                    convert_data(new_data,DefaultSankeyData)
-                    complete_sankey_data(new_data,DefaultSankeyData,SankeyUtils.DefaultNode,SankeyUtils.DefaultLink)
+                    convert_data(new_data,get_default_data)
+                    complete_sankey_data(new_data,get_default_data,DefaultNode,DefaultLink)
                     console.log('open json')
 
                     set_data(new_data)
@@ -697,7 +689,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
             <Dropdown.Item onClick={()=>{
               showMenuComponents.show_save_json[1](true)
             }} >{t('Menu.open_json')}</Dropdown.Item>
-            <Dropdown.Item onClick={()=>SankeyUtils.ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</Dropdown.Item>
+            <Dropdown.Item onClick={()=>ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</Dropdown.Item>
             {externale_save_item}
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
@@ -805,20 +797,17 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
  * @returns
  */
 const Menu: FunctionComponent<MenuTypes> = (
-  { t,
-    data, set_data,
-    nav_item_active,
+  {
+    applicationContext,
+    applicationData,
+    uiElementsRef,
+    elementsSelected,
+    contextMenu,
+    processFunctions,
     showMenuComponents,
-    logo,logo_terriflux, logo_width,app_name,
-    button_ref,
-    accordion_ref,
-    url_prefix,
-    processing,setProcessing,
-    failure,setFailure,
-    not_started,setNotStarted,
-    result,setResult,
-    path,
-    launch,
+    show_nav,
+    set_show_nav,
+    nav_item_active,
     configurations_menus,
     menus,
     cardsTemplate,
@@ -826,28 +815,21 @@ const Menu: FunctionComponent<MenuTypes> = (
     GetSankeyMinWidthAndHeight,
     formations_menu,Reinitialization,
     additional_nav_item,
-    set_contextualised_node,
-    set_contextualised_link,
-    set_tag_contextualised,
     updateLayout,
     convert_data,
     node_hspace,set_node_hspace,
     node_vspace,set_node_vspace,
     elementToDispose,
     apply_transformation_additional_elements,
-    DiagramSelector,
-    is_computing, setIsComputing,
-    set_tags_selected,
-    RetrieveExcelResults,
-    DefaultSankeyData
+    DiagramSelector
   }
 ) => {
 
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
   let max_link_value = 0
-  Object.values(data.links).forEach(link => {
-    const new_max_link_value = SankeyUtils.FindMaxLinkValue(
+  Object.values(applicationData.data.links).forEach(link => {
+    const new_max_link_value = FindMaxLinkValue(
       max_link_value,
       link.value
     )
@@ -855,9 +837,9 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  if (not_started == false && processing == false) {
+  if (processFunctions.not_started == false && processFunctions.processing == false) {
     const path = window.location.href
-    const url = path + url_prefix + 'loads_retrieves_result'
+    const url = path + applicationContext.url_prefix + 'loads_retrieves_result'
     const form_data = new FormData()
     const fetchData = {
       method: 'POST',
@@ -866,39 +848,39 @@ const Menu: FunctionComponent<MenuTypes> = (
     fetch(url, fetchData).then(response => {
       response.text().then(text => {
         try {
-          RetrieveExcelResults(
+          processFunctions.RetrieveExcelResults(
             text,
-            set_data,
+            applicationData.set_data,
             updateLayout,
             ()=>null,
             GetSankeyMinWidthAndHeight,
             convert_data,
-            DefaultSankeyData
+            applicationData.get_default_data
           )
         } catch(err) {
           alert(err)
         }
       }).then(()=>{
-        setIsComputing(false)
+        processFunctions.setIsComputing(false)
       })
     })
-    setProcessing(false)
-    setFailure(false)
-    setNotStarted(true)
+    processFunctions.setProcessing(false)
+    processFunctions.setFailure(false)
+    processFunctions.setNotStarted(true)
   }
 
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
-    showMenuComponents.show_nav[1](!showMenuComponents.show_nav[0])
+    set_show_nav(!show_nav)
 
-    if(!showMenuComponents.show_nav[0]){
-      [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
+    if(!show_nav){
+      [applicationData.data.width, applicationData.data.height] = GetSankeyMinWidthAndHeight(applicationData.data)
       const transform=d3.select('.opensankey #svg').attr('transform')
       let scale_svg=1
       if(transform!==undefined && transform!==null){
         scale_svg=Number(transform.split('scale(')[1].replace(')',''))
       }
-      d3.select('.scroll_zone').style('width',((data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
+      d3.select('.scroll_zone').style('width',((applicationData.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
@@ -913,7 +895,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   }
 
   const menuButton = () => {
-    if (showMenuComponents.show_nav[0]) {
+    if (show_nav) {
       return <FaAngleDoubleRight />
     } else {
       return <FaAngleDoubleLeft />
@@ -971,44 +953,44 @@ const Menu: FunctionComponent<MenuTypes> = (
             <ButtonGroup>
               <Button variant='primary'
                 onClick={() => {
-                  SankeyUtils.UploadExemple(
-                    ('Formations/'+(d[0])+'/sankey/'+dd), url_prefix, data, set_data,Reinitialization,convert_data,DefaultSankeyData
+                  UploadExemple(
+                    ('Formations/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                   )
-                  set_data({...data})
+                  applicationData.set_data({...applicationData.data})
                   showMenuComponents.show_modale_tuto[1](false)
                 }}
-              >{t('useTutoJSON')}</Button>
+              >{applicationContext.t('useTutoJSON')}</Button>
               {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','.xlsx'))?
                 <Button variant='info'
                   onClick={() => {
 
 
-                    launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
+                    processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
 
-                    SankeyUtils.UploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data,DefaultSankeyData
+                    UploadExemple(
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                     )
                     showMenuComponents.show_modale_tuto[1](false)
 
                   }
                   }
-                >{t('useTutoExcel')}</Button>
+                >{applicationContext.t('useTutoExcel')}</Button>
                 :<></>}
               {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','_reconciled.xlsx'))?
                 <Button variant='info'
                   onClick={() => {
 
 
-                    launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
+                    processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
 
-                    SankeyUtils.UploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), url_prefix, data, set_data,Reinitialization,convert_data,DefaultSankeyData
+                    UploadExemple(
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                     )
                     showMenuComponents.show_modale_tuto[1](false)
 
                   }
                   }
-                >{t('useTutoExcel')}</Button>
+                >{applicationContext.t('useTutoExcel')}</Button>
                 :<></>}
 
             </ButtonGroup>
@@ -1021,7 +1003,7 @@ const Menu: FunctionComponent<MenuTypes> = (
   })
 
   modal_tuto=<Modal size={'xl'} fullscreen={true} id='modal_tutoriel' show={showMenuComponents.show_modale_tuto[0]} onHide={() => showMenuComponents.show_modale_tuto[1](false)}>
-    <Modal.Header closeButton>{t('Menu.formation')}</Modal.Header>
+    <Modal.Header closeButton>{applicationContext.t('Menu.formation')}</Modal.Header>
     <Modal.Body>
       <Row>
         <Nav variant="tabs" className='sub_nav' activeKey={modale_sub_tuto}>
@@ -1051,7 +1033,7 @@ const Menu: FunctionComponent<MenuTypes> = (
           // Nav item that open a subnav when clicked
           return <Nav.Item>
             <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
-              {t('Menu.'+m)}
+              {applicationContext.t('Menu.'+m)}
             </Nav.Link>
           </Nav.Item>
           
@@ -1067,18 +1049,18 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
   const modal_support= <Modal size={'lg'} show={showMenuComponents.show_modale_support[0]} onHide={() => showMenuComponents.show_modale_support[1](false)}>
-    <Modal.Header closeButton><h2>{t('Menu.c_support')}</h2></Modal.Header>
+    <Modal.Header closeButton><h2>{applicationContext.t('Menu.c_support')}</h2></Modal.Header>
     <Modal.Body>
-      <h3>{t('Menu.rth_support')} :</h3>
-      <p>{t('Menu.support_explication').split('[]')[0]}<a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a>{t('Menu.support_explication').split('[]')[1]}</p>
+      <h3>{applicationContext.t('Menu.rth_support')} :</h3>
+      <p>{applicationContext.t('Menu.support_explication').split('[]')[0]}<a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a>{applicationContext.t('Menu.support_explication').split('[]')[1]}</p>
     </Modal.Body>
   </Modal>
 
-  const data_tags = Object.assign({},data.dataTags)
+  const data_tags = Object.assign({},applicationData.data.dataTags)
   const show_data=Object.values(data_tags).length>0
   let DDDT=[] as (JSX.Element|undefined)[]
   if(show_data){
-    DDDT=DataTagsDDNavBar(data,set_data,set_tags_selected)
+    DDDT=DataTagsDDNavBar(applicationData.data,applicationData.set_data,elementsSelected.set_tags_selected)
   }
 
   return (
@@ -1086,19 +1068,19 @@ const Menu: FunctionComponent<MenuTypes> = (
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
       {/* Top Navbar with navigation and edition elements */}
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
-        set_contextualised_node(undefined)
-        set_contextualised_link(undefined)
-        showMenuComponents.show_context_zdd[1](false)
-        set_tag_contextualised(undefined)
+        contextMenu.set_contextualised_node(undefined)
+        contextMenu.set_contextualised_link(undefined)
+        contextMenu.set_show_context_zdd(false)
+        contextMenu.set_tag_contextualised(undefined)
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>
-            <Navbar.Brand style={{marginRight:'0px'}} href="https://terriflux.com/" ><img src={logo_terriflux} width={100} /> </Navbar.Brand>
+            <Navbar.Brand style={{marginRight:'0px'}} href="https://terriflux.com/" ><img src={applicationContext.logo_terriflux} width={100} /> </Navbar.Brand>
             <div style={{display:'inline-block',width:'0px',marginLeft:'5px',marginRight:'5px',height:'40px',borderRight:'solid 1px #ddd',borderLeft:'solid 1px #ddd',padding:'0'}}></div>
           </>:<></>
           }
 
-          <Navbar.Brand /*onClick={()=>set_welcome_text(window.sankey.welcome_text)}*/><img src={logo} width={logo_width ? logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
+          <Navbar.Brand /*onClick={()=>set_welcome_text(window.sankey.welcome_text)}*/><img src={applicationContext.logo} width={applicationContext.logo_width ? applicationContext.logo_width : 200} /> {window.SankeyToolsStatic?window.sankey.header:<></>} </Navbar.Brand>
           {menu_nav}
           {DDDT}
 
@@ -1114,12 +1096,12 @@ const Menu: FunctionComponent<MenuTypes> = (
         <Container className='sankeyFooter' >
 
           <span style={{display:'inline'}}>
-        ©<a  href="https://terriflux.com/" ><img width={75} src={logo_terriflux} /></a> - {t('tdr')}
+        ©<a  href="https://terriflux.com/" ><img width={75} src={applicationContext.logo_terriflux} /></a> - {applicationContext.t('tdr')}
           </span>
           <span style={{display:'inline'}}>
-            {app_name}
+            {applicationContext.app_name}
           </span>
-          <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a></span>
+          <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>{applicationContext.t('legal')}</a></span>
           <span style={{display:'inline'}}><a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a></span>
           <span style={{display:'inline'}}>
           9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)6 21 83 56 76
@@ -1128,11 +1110,11 @@ const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
 
-      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={showMenuComponents.show_nav[0]} placement='end' {...props} style={{ 'width': menu_config_width+'px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
+      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' {...props} style={{ 'width': menu_config_width+'px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
             nav_item_active={nav_item_active}
-            accordion_ref={accordion_ref}
+            accordion_ref={uiElementsRef.accordion_ref}
             configuration_menus={configurations_menus} />
         </Offcanvas.Body>
       </Offcanvas>
@@ -1145,12 +1127,12 @@ const Menu: FunctionComponent<MenuTypes> = (
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
           <ToggleButton
-            ref={button_ref as Ref<HTMLLabelElement>}
+            ref={uiElementsRef.button_ref as Ref<HTMLLabelElement>}
             id="toggle-check"
             className='openMenu'
             type="checkbox"
             variant="primary"
-            checked={showMenuComponents.show_nav[0]}
+            checked={show_nav}
             onChange={(e) => { setChecked(e.currentTarget.checked)}}
             onClick={toggleShow}
             value="menuConfigButton">{menuButton()}
@@ -1160,26 +1142,26 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 
       {
-        processing ? (
+        processFunctions.processing ? (
           <Modal.Dialog >
             <Button className="btn btn-sm btn-warning col-md-12">
               <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
             </Button></Modal.Dialog>) : (<></>)
       }
       <ApplySaveJSONDialog
-        t={t}
+        t={applicationContext.t}
         show_save_json={showMenuComponents.show_save_json[0]}
         set_show_save_json={showMenuComponents.show_save_json[1]}
-        sankey_data={data}
+        sankey_data={applicationData.data}
         additionnal_button_option_save_json={[]}
-        ClickSaveDiagram={SankeyUtils.ClickSaveDiagram}
+        ClickSaveDiagram={ClickSaveDiagram}
       />
       <ApplyLayoutDialog
-        t={t}
+        t={applicationContext.t}
         show_apply_layout={showMenuComponents.show_apply_layout[0]}
         set_show_apply_layout={showMenuComponents.show_apply_layout[1]}
-        sankey_data={data}
-        set_sankey_data={set_data}
+        sankey_data={applicationData.data}
+        set_sankey_data={applicationData.set_data}
         updateLayout={updateLayout}
         convert_data={convert_data}
         node_hspace={node_hspace}
@@ -1189,38 +1171,38 @@ const Menu: FunctionComponent<MenuTypes> = (
         elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
-        DefaultSankeyData={DefaultSankeyData}
+        DefaultSankeyData={applicationData.get_default_data}
       />
 
       <ExcelModal
-        t={t}
-        launch={launch}
+        t={applicationContext.t}
+        launch={processFunctions.launch}
         handleCloseDialog={() => showMenuComponents.show_excel_dialog[1](false)}
-        UploadExcelImpl={SankeyUtils.UploadExcelImpl}
+        UploadExcelImpl={UploadExcelImpl}
         show_excel_dialog={showMenuComponents.show_excel_dialog[0]}
         set_show_excel_dialog={showMenuComponents.show_excel_dialog[1]}
-        url_prefix={url_prefix} />
+        url_prefix={applicationContext.url_prefix} />
 
       <SankeyLoad
-        t={t as TFunction<'translation', undefined>}
-        url_prefix={url_prefix}
-        successAction={()=>SankeyUtils.DownloadExamples(path, url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+        t={applicationContext.t}
+        url_prefix={applicationContext.url_prefix}
+        successAction={()=>DownloadExamples(processFunctions.path, applicationContext.url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
         show_dialog={showMenuComponents.show_load[0]}
         set_show_dialog={showMenuComponents.show_load[1]}
-        processing={processing}
-        setProcessing={setProcessing}
-        failure={failure}
-        setFailure={setFailure}
-        setNotStarted={setNotStarted}
-        result={result}
-        setResult={setResult}
-        is_computing={is_computing}
-        setIsComputing={setIsComputing}
+        processing={processFunctions.processing}
+        setProcessing={processFunctions.setProcessing}
+        failure={processFunctions.failure}
+        setFailure={processFunctions.setFailure}
+        setNotStarted={processFunctions.setNotStarted}
+        result={processFunctions.result}
+        setResult={processFunctions.setResult}
+        is_computing={processFunctions.is_computing}
+        setIsComputing={processFunctions.setIsComputing}
       />
 
       {
         <Modal size={'xl'}  show={showMenuComponents.show_modalTemplate[0]} onHide={() => showMenuComponents.show_modalTemplate[1](false)}>
-          <Modal.Header closeButton>{t('Banner.sdr')}</Modal.Header>
+          <Modal.Header closeButton>{applicationContext.t('Banner.sdr')}</Modal.Header>
           <Modal.Body>
             <Row md={4}>
               {cardsTemplate}
@@ -1237,116 +1219,7 @@ const Menu: FunctionComponent<MenuTypes> = (
 
 export default Menu
 
-export const OpenSankeyModalWelcome : OpenSankeyModalWelcomeFType=(t:TFunction,
-  active_page:string,
-  set_active_page:(s:string)=>void,
-  showMenuComponents : showMenuComponentsType,
-  never_see_again:boolean,
-  set_never_see_again:(b:boolean)=>void,
-  additional_shortcut_item:JSX.Element[],
-  external_pagination:JSX.Element[],
-  external_content:{
-    read_me: string | JSX.Element | JSX.Element[];
-    intro: JSX.Element;
-    rc: JSX.Element;
-    licence: JSX.Element;
-    news: JSX.Element;
-  },
-  exemple_menu: object,
-)=>{
-  const content_rc_static=<>
-    <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
-    <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
-    <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
 
-    <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
-    <p><b>{t('Menu.rcc_F8_bold')}</b>{t('Menu.rcc_F8')}</p>
-    <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
-
-  </>
-
-  const content_rc_not_static=<Accordion className='accordion_new_welcome' defaultActiveKey={'OS'}>
-    <Accordion.Item eventKey='OS'>
-      <Accordion.Header>
-        <h2>{t('Menu.rcc_titre_princ')}</h2>
-      </Accordion.Header>
-      <Accordion.Body>
-        <h5>{t('Menu.rcc_titre_select')}:</h5>
-        <p><b>{t('Menu.rcc_cn_bold')}</b>{t('Menu.rcc_cn')}</p>
-        <p><b>{t('Menu.rcc_ctrl_cn_bold')}</b>{t('Menu.rcc_ctrl_cn')}</p>
-        <p><b>{t('Menu.rcc_cf_bold')}</b>{t('Menu.rcc_cf')}</p>
-        <p><b>{t('Menu.rcc_ctrl_cf_bold')}</b>{t('Menu.rcc_ctrl_cf')}</p>
-        <p><b>{t('Menu.rcc_cs_bold')}</b>{t('Menu.rcc_cs')}</p>
-        <p><b>{t('Menu.rcc_click_and_drag_bold')}</b>{t('Menu.rcc_click_and_drag')}</p>
-        <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
-        <p><b>{t('Menu.rcc_ad_bold')}</b>{t('Menu.rcc_ad')}</p>
-
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-        <h5>{t('Menu.rcc_titre_edi')} :</h5>
-
-        <p><b>{t('Menu.rcc_e_cn_bold')}</b>{t('Menu.rcc_e_cn')}</p>
-        <p><b>{t('Menu.rcc_e_ds_bold')}</b>{t('Menu.rcc_e_ds')}</p>
-        <p><b>{t('Menu.rcc_e_dn_bold')}</b>{t('Menu.rcc_e_dn')}</p>
-
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-        <h5>{t('Menu.rcc_titre_autre')} :</h5>
-
-        <p><b>{t('Menu.rcc_a_s_bold')}</b>{t('Menu.rcc_a_s')}</p>
-        <p><b>{t('Menu.rcc_a_fc_bold')}</b>{t('Menu.rcc_a_fc')}</p>
-        <p><b>{t('Menu.rcc_a_dbm_bold')}</b>{t('Menu.rcc_a_dbm')}</p>
-        <p><b>{t('Menu.rcc_a_ech_bold')}</b>{t('Menu.rcc_a_ech')}</p>
-        <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
-        <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-      </Accordion.Body>
-    </Accordion.Item>
-
-
-    {additional_shortcut_item}
-  </Accordion>
-  external_content['rc']=window.SankeyToolsStatic?content_rc_static:content_rc_not_static
-
-  const tmp=JSON.parse(JSON.stringify(exemple_menu))
-  let list_template_data=[] as string[]
-  // Si exemple_menu contient OpenSankey et que ce sous dossier contient les templates simple alors remple la liste des templates avec les modèle simples
-  if(Object.keys(tmp).length!==0 && Object.keys(tmp).includes('OpenSankey') && Object.keys(tmp['OpenSankey']).includes('easy_template') ){
-    list_template_data=tmp['OpenSankey']['easy_template'].filter((f:string)=>!f.includes('.xlsx'))
-    // Si l'un des sous dossier d'OpenSankey dans exemple_menu est expert_template alors ajoute les modèles expert à la liste des modèles
-    if( Object.keys(tmp['OpenSankey']).includes('expert_template') ){
-      list_template_data.push(tmp['OpenSankey']['expert_template'])
-      list_template_data=list_template_data.flat()
-    }
-  }
-
-  return <Modal scrollable size='xl' show={showMenuComponents.show_modal_welcome[0] && !never_see_again} onHide={()=>{
-    showMenuComponents.show_modal_welcome[1](false)
-  }}>
-    <Modal.Header closeButton>
-      <Modal.Title>{t('welcome.'+active_page)}</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
-    </Modal.Body>
-
-    <Modal.Footer style={{justifyContent:'center'}}>
-      <Pagination >
-        {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
-
-        <Pagination.Item active={active_page==='rc'} key={'rc'} onClick={()=>{
-          set_active_page('rc')
-        }}>
-          {t('welcome.rc')}
-        </Pagination.Item>
-
-      </Pagination>
-      <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again} onChange={evt=>{
-        set_never_see_again(evt.target.checked)
-        localStorage.setItem('dontSeeAggainWelcome','1')
-      }}/>
-    </Modal.Footer>
-  </Modal>
-}
 
 const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem','paddingRight':'0.75rem',
   'position': 'fixed',
@@ -1389,859 +1262,6 @@ export const MenuDraggable : MenuDraggableFType=(
       </div>
     </div>
   </Draggable>
-}
-
-
-const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
-const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
-const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
-
-export const ContextMenuNode : ContextMenuNodeFType =(
-  contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  display_nodes:{[id:string]:SankeyNode},
-  display_links:{[id:string]:SankeyLink},
-  multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_links:{current:SankeyLink[]},
-  t:TFunction,
-  showMenuComponents : showMenuComponentsType,
-  set_agregation_node:(_:string)=>void,
-  set_is_agregation:(_:boolean)=>void,
-  set_display_link_opacity:(_:string)=>void,
-  pointer_pos:{current:number[]},
-  additional_context_element_menu:JSX.Element[],
-  additional_context_element_other:JSX.Element[]
-)=>{
-  let style_c_n='0px 0px auto auto'
-  if(contextualised_node!==undefined){
-    style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
-  }
-
-  // b:before,m:middle,a:after
-  const align_node=(ref:'min'|'max',attr:'x'|'y',pos:'b'|'m'|'a')=>{
-    const node_ref=multi_selected_nodes.current.filter(nf=>nf.position!='relative').sort((n1,n2)=>{
-      return ref=='min'?n1[attr]-n2[attr]:n2[attr]-n1[attr]
-    })[0]
-    const pos_ref=node_ref[attr]
-    const wORh=(attr=='x')?'width':'height'
-    const is_circle=d3.select('#shape_'+node_ref.idNode).attr('rx')!==null
-
-    const wORh_ref=is_circle?Number(d3.select('#shape_'+node_ref.idNode).attr('r'+attr)):Number(d3.select('#shape_'+node_ref.idNode).attr(wORh))
-    let center_ref=0
-
-    if (pos==='m'){
-      center_ref=pos_ref+(wORh_ref/2)
-    }
-
-    multi_selected_nodes.current.filter(n=>n!=node_ref && n.position!='relative').forEach(n=>{
-
-      const is_circle_to_shift=d3.select('#shape_'+n.idNode).attr('rx')!==null
-      const wORh_to_shift=is_circle_to_shift?Number(d3.select('#shape_'+n.idNode).attr('r'+attr)):Number(d3.select('#shape_'+n.idNode).attr(wORh))
-
-      if (pos==='m'){
-        n[attr]=center_ref-((wORh_to_shift)/2)
-      }else if(pos==='b'){
-        n[attr]=pos_ref
-      }else if(pos==='a'){
-        n[attr]=(pos_ref+wORh_ref)-wORh_to_shift
-
-      }
-    })
-  }
-
-  // Dropdown to change some pararmeter concerning the appearence of the node
-  const has_node_tags=Object.values(data.nodeTags).filter(nt=>nt.group_name!=='Type de noeud').length>0
-  const dropdown_c_n_tag=(contextualised_node!==undefined && has_node_tags) ?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Menu.Transformation.tagNode_assign')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu  variant='light'>
-      {Object.entries(data.nodeTags).filter(nt=>Object.keys(nt[1].tags).length>0).map(nt=>{
-        return <Dropdown autoClose='outside' drop='end'>
-          <Dropdown.Toggle variant="light" id="dropdown-basic">
-            {nt[1].group_name}
-          </Dropdown.Toggle>
-          <Dropdown.Menu  variant='light'>
-            {Object.keys(nt[1].tags).map(t=>{
-              return <Dropdown.Item as={Button} variant='light' onClick={()=>{
-                // Contextualised node
-                if(!Object.keys(contextualised_node.tags).includes(nt[0])){
-                  contextualised_node.tags[nt[0]]=[]
-                }
-                if(!contextualised_node.tags[nt[0]].includes(t)){
-                  contextualised_node.tags[nt[0]].push(t)
-                }else{
-                  contextualised_node.tags[nt[0]].splice(contextualised_node.tags[nt[0]].indexOf(t))
-                }
-                //Selected nodes
-                multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
-                  if(!Object.keys(n.tags).includes(nt[0])){
-                    n.tags[nt[0]]=[]
-                  }
-                  if(!n.tags[nt[0]].includes(t)){
-                    n.tags[nt[0]].push(t)
-                  }else{
-                    n.tags[nt[0]].splice(n.tags[nt[0]].indexOf(t))
-                  }
-                })
-
-                set_data({...data})
-              }}>
-                {nt[1].tags[t].name}{checked(contextualised_node.tags[nt[0]] &&contextualised_node.tags[nt[0]].includes(t))}
-              </Dropdown.Item>
-            })}
-          </Dropdown.Menu>
-        </Dropdown>
-      })}
-
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-
-
-
-
-
-  const dropdown_c_n_apparence=contextualised_node!==undefined?<Button onClick={()=>{
-    showMenuComponents.show_menu_node_apparence[1](true)
-    set_contextualised_node(undefined)
-  }} variant='light'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>:<></>
-
-
-  // Dropdown to change some pararmeter concerning the style of the node
-  const dropdown_c_n_style_select=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.SelectStyle')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      {
-        Object.values(data.style_node).map(sn=>{
-          return <Dropdown.Item onClick={()=>{
-            contextualised_node.style=sn.idNode
-            multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>n.style=sn.idNode)
-
-            set_data({...data})
-          }}>{sn.name}{checked(contextualised_node.style==sn.idNode)}</Dropdown.Item>
-        })
-      }
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-  const dropdown_c_n_style=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.Style')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item  as={Button} variant='light' onClick={()=>{
-        delete contextualised_node.local
-        multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>delete n.local)
-        set_data({...data})
-      }}>{t('Noeud.AS')}</Dropdown.Item>
-      {dropdown_c_n_style_select}
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-  const dropdown_c_n_io=contextualised_node!==undefined?<Button onClick={()=>{
-    showMenuComponents.show_menu_node_io[1](true)
-    set_contextualised_node(undefined)
-  }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>:<></>
-
-  const dropdown_c_n_align_h_min_ori=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.align_horiz_min')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
-        align_node('min','x','b')
-        set_data({...data})
-      }}>{t('Noeud.align_horiz_left')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('min','x','m')
-        set_data({...data})
-      }}>{t('Noeud.align_horiz_center')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('min','x','a')
-        set_data({...data})
-      }}>{t('Noeud.align_horiz_right')}
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-  const dropdown_c_n_align_h_max_ori=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.align_horiz_max')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
-        align_node('max','x','b')
-        set_data({...data})
-      }}>{t('Noeud.align_horiz_left')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('max','x','m')
-        set_data({...data})
-      }}>{t('Noeud.align_horiz_center')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('max','x','a')
-        set_data({...data})
-      }}>{t('Noeud.align_horiz_right')}
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-
-  const dropdown_c_n_align_h=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.align_horiz')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      {dropdown_c_n_align_h_min_ori}
-      {dropdown_c_n_align_h_max_ori}
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-
-
-
-
-  // ===============ALIGNEMENT VERTICAL DES NOEUDS=======================================
-
-  const dropdown_c_n_align_v_min_ori=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.align_vert_min')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
-        align_node('min','y','b')
-        set_data({...data})
-      }}>{t('Noeud.align_vert_top')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('min','y','m')
-        set_data({...data})
-      }}>{t('Noeud.align_horiz_center')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('min','y','a')
-        set_data({...data})
-      }}>{t('Noeud.align_vert_bottom')}
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-  const dropdown_c_n_align_v_max_ori=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.align_vert_max')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
-        align_node('max','y','b')
-        set_data({...data})
-      }}>{t('Noeud.align_vert_top')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('max','y','m')
-        set_data({...data})
-      }}>{t('Noeud.align_horiz_center')}
-      </Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        align_node('max','y','a')
-        set_data({...data})
-      }}>{t('Noeud.align_vert_bottom')}
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-  const dropdown_c_n_align_v=contextualised_node!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.align_vert')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      {dropdown_c_n_align_v_min_ori}
-      {dropdown_c_n_align_v_max_ori}
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-  const button_edit_label_node=contextualised_node!==undefined?<Button variant='light'
-    onClick={()=>{
-      const label_x=document.getElementById('text_'+contextualised_node.idNode)?.getBoundingClientRect().x??0
-      const label_y=document.getElementById('text_'+contextualised_node.idNode)?.getBoundingClientRect().y??0
-      const node_x=document.getElementById('shape_'+contextualised_node.idNode)?.getBoundingClientRect().x??0
-      const node_y=document.getElementById('shape_'+contextualised_node.idNode)?.getBoundingClientRect().y??0
-
-      d3.select('#fo_input_label_'+contextualised_node.idNode).style('display','inline-block')
-      d3.select('#fo_input_label_'+contextualised_node.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
-      d3.select('#text_'+contextualised_node.idNode).style('display','none')
-      document.getElementById('input_label_'+contextualised_node.idNode)?.focus()
-
-      set_contextualised_node(undefined)
-
-    }}
-  >
-    {t('Noeud.labels.edit_node_label')}
-  </Button>:<></>
-
-
-  // Pop over that serve as context menu
-  return contextualised_node!==undefined?<Popover  id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
-    <Popover.Body>
-      <ButtonGroup vertical>
-        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.NodeContextHasAggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          SankeyUtils.Aggregate(contextualised_node,data,set_agregation_node,set_is_agregation,showMenuComponents.show_agregation[1])
-          multi_selected_nodes.current =[]
-          set_data({...data})
-          set_contextualised_node(undefined)
-        }}>Agrégation</Button>:<></>}
-        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && SankeyUtils.NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          SankeyUtils.Desaggregate(contextualised_node,data,display_nodes,display_links,set_agregation_node,set_is_agregation,showMenuComponents.show_agregation[1])
-          multi_selected_nodes.current =[]
-          set_data({...data})
-          set_contextualised_node(undefined)
-        }}>Désagrégation</Button>:<></>}
-        {sep}
-        {button_edit_label_node}
-        {sep}
-        <Button
-          variant='light'
-          onClick={() => {
-            multi_selected_nodes.current.map(d => SankeyUtils.DeleteNode(data, d))
-            multi_selected_nodes.current = []
-            set_contextualised_node(undefined)
-            set_data({ ...data })
-
-          }}>
-          {t('Menu.suppr')}
-        </Button>
-        {sep}
-        <Button
-          variant='light'
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-              const opacity=SankeyUtils.ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-              set_display_link_opacity(opacity)
-            })
-            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-          }}>
-          {t('Noeud.SlctOutLink')}
-        </Button>
-        <Button
-          variant='light'
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-              const opacity=SankeyUtils.ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-              set_display_link_opacity(opacity)
-            })
-            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-          }}>
-          {t('Noeud.SlctInLink')}
-        </Button>
-        <Button
-          variant='light'
-          onClick={() => {
-            SankeyUtils.reorganize_node_inputLinksId(data,contextualised_node, data.nodes, data.links)
-            SankeyUtils.reorganize_node_outputLinksId(data,contextualised_node, data.nodes, data.links)
-            multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
-              SankeyUtils.reorganize_node_inputLinksId(data,n, data.nodes, data.links)
-              SankeyUtils.reorganize_node_outputLinksId(data,n, data.nodes, data.links)
-            })
-            set_contextualised_node(undefined)
-            set_data({ ...data })
-          }}>
-          {t('Noeud.Reorg')}
-        </Button>
-        {multi_selected_nodes.current.length==1?dropdown_c_n_io:<></>}
-        {sep}
-        {dropdown_c_n_align_h}
-        {dropdown_c_n_align_v}
-        {has_node_tags?sep:<></>}
-        {dropdown_c_n_tag}
-        {sep}
-
-        {dropdown_c_n_apparence}
-        {additional_context_element_menu}
-        {sep}
-        {dropdown_c_n_style}
-        {additional_context_element_other}
-
-      </ButtonGroup>
-    </Popover.Body>
-  </Popover>:<></>
-}
-
-export const ContextMenuLink : ContextMenuLinkFType = (
-  contextualised_link:SankeyLink|undefined,
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  set_show_menu_link_data:(b:boolean)=>void,
-  set_show_menu_link_appearence:(b:boolean)=>void,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  tags_selected:{[k: string]: string},
-  multi_selected_links:{current:SankeyLink[]},
-  t:TFunction,
-  pointer_pos:{current:number[]}
-)=>{
-  let style_c_l='0px 0px auto auto'
-  if(contextualised_link!==undefined){
-    style_c_l=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
-  }
-
-  const invert_flux=(l:SankeyLink,nodes_to_reorganize: SankeyNode[])=>{
-
-    const tmp = l.idSource
-    const previous_node_s = data.nodes[l.idSource]
-    previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-    const source_node = data.nodes[l.idTarget]
-    l.idSource = source_node.idNode
-    source_node.outputLinksId.push(l.idLink)
-    nodes_to_reorganize.push(source_node)
-    const previous_node_t = data.nodes[l.idTarget]
-    previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-    const target_node = data.nodes[tmp]
-    l.idTarget = target_node.idNode
-    target_node.inputLinksId.push(l.idLink)
-    nodes_to_reorganize.push(target_node)
-
-
-  }
-
-  const value_selected_parameter_contextualised_link = (): SankeyLinkValue => {
-    if(contextualised_link===undefined){
-      return ({} as SankeyLinkValue)
-    }else{
-      if ( Object.keys(data.links).length === 0 || !(contextualised_link.idLink in data.links) ) {
-        let val = JSON.parse(JSON.stringify(Object(contextualised_link.value)))
-        Object.values(tags_selected).map(tag_selected => {
-          if (val[tag_selected] === undefined) {
-            val[tag_selected] = {}
-          }
-          val = val[tag_selected]
-        })
-        return val
-      }
-      let val = JSON.parse(JSON.stringify(Object(data.links[contextualised_link.idLink].value)))
-      Object.values(tags_selected).map(tag_selected => {
-        if (val[tag_selected] === undefined) {
-          val[tag_selected] = {'display_value': '',tags:{},value:0}
-        }
-        val = val[tag_selected]
-      })
-      return val
-    }
-
-  }
-  const has_flux_tags=Object.values(data.fluxTags).length>0
-  // Dropdown to change some pararmeter concerning the appearence of the node
-  const dropdown_c_l_tag=(contextualised_link!==undefined && has_flux_tags) && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Menu.Transformation.tagFlux_assign')}
-    </Dropdown.Toggle>
-
-    <Dropdown.Menu  variant='light'>
-      {Object.entries(data.fluxTags).filter(nt=>Object.keys(nt[1].tags).length>0).map(nt=>{
-        return <Dropdown as={Button} variant='light' autoClose='outside' drop='end'>
-          <Dropdown.Toggle variant="light" id="dropdown-basic">
-            {nt[1].group_name}
-          </Dropdown.Toggle>
-          <Dropdown.Menu  variant='light'>
-            {Object.keys(nt[1].tags).map(t=>{
-              return <Dropdown.Item onClick={()=>{
-                // Assign tag to selected links
-                multi_selected_links.current.filter(l=>l!==contextualised_link).forEach(l=>{
-                  let val = Object(l.value)
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  if(!Object.keys(val.tags).includes(nt[0])){
-                    val.tags[nt[0]]=[]
-                  }
-                  if(!val.tags[nt[0]].includes(t)){
-                    val.tags[nt[0]].push(t)
-                  }else{
-                    val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
-                  }
-                })
-
-                // Assign tag to contextualised link
-                let val = Object(contextualised_link.value)
-                Object.values(tags_selected).forEach(tag => {
-                  if (val[tag] === undefined) {
-                    val[tag] = {}
-                  }
-                  val = val[tag]
-                })
-                if(!Object.keys(val.tags).includes(nt[0])){
-                  val.tags[nt[0]]=[]
-                }
-                if(!val.tags[nt[0]].includes(t)){
-                  val.tags[nt[0]].push(t)
-                }else{
-                  val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
-                }
-
-
-                set_data({...data})
-              }}>
-                {nt[1].tags[t].name}{checked(value_selected_parameter_contextualised_link().tags[nt[0]].includes(t))}
-              </Dropdown.Item>
-            })}
-          </Dropdown.Menu>
-        </Dropdown>
-      })}
-
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-
-  const button_open_link_appearence=contextualised_link!==undefined?<Button onClick={()=>{
-    set_show_menu_link_appearence(true)
-    set_contextualised_node(undefined)
-  }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
-
-  // Dropdown to change some pararmeter concerning the style of the node
-  const dropdown_c_l_style_select=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.SelectStyle')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      {
-        Object.values(data.style_node).map(sn=>{
-          return <Dropdown.Item onClick={()=>{
-            contextualised_link.style=sn.idNode
-            multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>n.style=sn.idNode)
-
-            set_data({...data})
-          }}>{sn.name}{checked(contextualised_link.style==sn.idNode)}</Dropdown.Item>
-        })
-      }
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-  const dropdown_c_l_style=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.Style')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item as={Button} variant='light' onClick={()=>{
-        delete contextualised_link.local
-        multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>delete n.local)
-        set_data({...data})
-      }}>{t('Noeud.AS')}</Dropdown.Item>
-      {dropdown_c_l_style_select}
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-  const dropdown_c_l_layout=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Flux.layout')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
-        multi_selected_links.current.forEach(n=>handleDownLink(data,n.idLink))
-        set_data({...data})
-      }}>{t('Flux.layoutUp')}</Dropdown.Item>
-      <Dropdown.Item onClick={()=>{
-        multi_selected_links.current.map(l => {
-          const i = l.idLink
-          const { links } = data
-          const listElmt = Object.keys(links)
-          const posElemt = listElmt.indexOf(i)
-          listElmt.splice(posElemt, 1)
-          listElmt.splice(listElmt.length, 0, i)
-          const new_cat: { [key: string]: SankeyLink } = {}
-          listElmt.forEach(elt => {
-            new_cat[elt] = links[elt]
-          })
-          for (const member in links) delete links[member]
-          Object.assign(links, new_cat)
-        })
-        set_data({...data})
-      }}>{t('Flux.layoutTop')}</Dropdown.Item>
-
-
-
-
-
-      <Dropdown.Item onClick={()=>{
-        multi_selected_links.current.forEach(n=>handleUpLink(data,n.idLink))
-        set_data({...data})
-      }}>{t('Flux.layoutDown')}</Dropdown.Item>
-
-      <Dropdown.Item onClick={()=>{
-        multi_selected_links.current.map(l => {
-          const i = l.idLink
-          const { links } = data
-          const listElmt = Object.keys(links)
-          const posElemt = listElmt.indexOf(i)
-          listElmt.splice(posElemt, 1)
-          listElmt.splice(0, 0, i)
-          const new_cat: { [key: string]: SankeyLink } = {}
-          listElmt.forEach(elt => {
-            new_cat[elt] = links[elt]
-          })
-          for (const member in links) delete links[member]
-          Object.assign(links, new_cat)
-        })
-        set_data({...data})
-      }}>{t('Flux.layoutBottom')}</Dropdown.Item>
-
-    </Dropdown.Menu>
-  </Dropdown>:<></>
-
-  const button_open_link_data=contextualised_link!==undefined?<Button onClick={()=>{
-    set_show_menu_link_data(true)
-    set_contextualised_node(undefined)
-  }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
-
-
-
-  // Pop over that serve as context menu
-  return contextualised_link!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
-    <Popover.Body >
-      <ButtonGroup vertical>
-        <Button variant='light' onClick={()=>{
-          const nodes_to_reorganize: SankeyNode[] = []
-          invert_flux(contextualised_link,nodes_to_reorganize)
-          multi_selected_links.current.filter(l=>l!==contextualised_link).forEach(l => {
-            invert_flux(l,nodes_to_reorganize)
-          })
-          nodes_to_reorganize.forEach(n => {
-            reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
-          })
-          set_data({ ...data })
-        }}>{t('Flux.if')}</Button>
-
-        {sep}
-        {dropdown_c_l_layout}
-        {has_flux_tags && sep}
-        {dropdown_c_l_tag}
-        {sep}
-        {button_open_link_data}
-        {button_open_link_appearence}
-        {sep}
-        {dropdown_c_l_style}
-
-      </ButtonGroup>
-    </Popover.Body>
-  </Popover>:<></>
-}
-
-export const ContextZdd : ContextZddFType =(
-  showMenuComponents:showMenuComponentsType,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  pointer_pos:{current:number[]},
-  node_hspace:number,
-  set_node_hspace:(n:number)=>void,
-  node_vspace:number,
-  set_node_vspace:(n:number)=>void,
-  t:TFunction
-)=>{
-  const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
-    d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
-    d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
-    d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
-
-
-  let style_c_zdd='0px 0px auto auto'
-  if(showMenuComponents.show_context_zdd[0]){
-    style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
-  }
-
-  const button_bg_color=<Form as={Button} variant='light'><Form.Control hidden type='color' id='color_bg_zdd' name='color_bg_zdd' onChange={(evt)=>{
-    data.couleur_fond_sankey=evt.target.value
-    set_data({...data})
-  }}></Form.Control>
-  <Form.Label htmlFor='color_bg_zdd'>{t('Menu.BgC')}</Form.Label>
-  </Form>
-
-  const button_bg_grid=<><Button variant='light' onClick={()=>{
-    data.grid_visible = !data.grid_visible
-    set_data({...data})
-  }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
-  </>
-  const button_assgn_rand_node_color=<><Button variant='light' onClick={()=>{
-    const color_selected=list_palette_color[SankeyUtils.GetRandomInt(list_palette_color.length)]
-    const n_keys=Object.keys(data.nodes)
-    const size_color=n_keys.length
-
-    for(const i in d3.range(size_color)){
-      // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
-      SankeyUtils.AssignNodeLocalAttribute(data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
-    }
-    set_data({...data})
-  }}>{t('Menu.rand_node_color')}</Button>
-  </>
-
-
-  const dropdown_c_zdd_scale=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('MEP.Echelle')}
-    </Dropdown.Toggle>
-
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item as={Button} variant='light'>
-        <Form.Control
-          type="text"
-          value={data.user_scale}
-          onChange={evt => {
-            data.user_scale = +evt.target.value
-            set_data({ ...data })
-          }}
-        />
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>
-
-  const dropdown_c_zdd_max_size_link=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('MEP.MaxFlux')}
-    </Dropdown.Toggle>
-
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item as={Button} variant='light'>
-        <Form.Control
-          type="text"
-          value={data.maximum_flux == null ? undefined :data.maximum_flux}
-          onChange={(evt) => {
-            const maximum_flux =isNaN(+evt.target.value)?null:+evt.target.value
-            data.maximum_flux = maximum_flux
-            set_data({ ...data })
-          }}
-        />
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>
-
-  const dropdown_c_zdd_min_size_link=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('MEP.MinFlux')}
-    </Dropdown.Toggle>
-
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item as={Button} variant='light'>
-        <Form.Control
-          type="text"
-          value={data.minimum_flux == null ? undefined :data.minimum_flux}
-          onChange={(evt) => {
-            const minimum_flux =isNaN(+evt.target.value)?null:+evt.target.value
-            data.minimum_flux = minimum_flux
-            set_data({ ...data })
-          }}
-        />
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>
-
-  const button_pa=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('MEP.PA')}
-    </Dropdown.Toggle>
-
-    <Dropdown.Menu variant='light'>
-
-      {/* Set vertical value for automatic positionning */}
-      <Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-        <Dropdown.Toggle variant="light" id="dropdown-basic">
-          {t('MEP.Horizontal')}
-        </Dropdown.Toggle>
-        <Dropdown.Menu variant='light'>
-          <Dropdown.Item as={Button} variant='light'>
-            <Form.Control
-              type="text"
-              value={node_hspace}
-              onChange={evt => {
-                set_node_hspace(+evt.target.value)
-                data.h_space = +evt.target.value
-              }}
-            /></Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
-
-      {/* Set vertical value for automatic positionning */}
-      <Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-        <Dropdown.Toggle variant="light" id="dropdown-basic">
-          {t('MEP.Vertical')}
-        </Dropdown.Toggle>
-        <Dropdown.Menu variant='light'>
-          <Dropdown.Item as={Button} variant='light'>
-            <Form.Control
-              type="text"
-              value={node_vspace}
-              onChange={evt => {
-                set_node_vspace(+evt.target.value)
-                data.h_space = +evt.target.value
-              }}
-            /></Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
-
-      <Dropdown.Item as={Button} variant='light' onClick={() => {
-        ComputeAutoSankey(data, node_hspace)
-        set_data({ ...data })
-      }}>{t('MEP.PA_action')}</Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>
-
-
-
-  const button_an=<Button variant='light'
-    onClick={() => {
-      arrangeNodes(data)
-      set_data({ ...data })
-    }}>
-    {t('MEP.AN')}
-  </Button>
-
-
-  let full=t('fullscreen')
-  if (!document.fullscreenElement) {
-    full=t('fullscreen')
-  } else {
-    full=t('exitFullscreen')
-  }
-
-  const button_fullscreen=<Button variant='light'
-    onClick={()=>{
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen()
-      } else if (document.exitFullscreen) {
-        document.exitFullscreen()
-      }
-      showMenuComponents.show_context_zdd[1](false)
-    }}
-  >
-    {full}
-  </Button>
-
-  const button_open_layout=<Button onClick={()=>{
-    showMenuComponents.show_menu_layout[1](true)
-    showMenuComponents.show_context_zdd[1](false)
-
-  }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>
-  return showMenuComponents.show_context_zdd[0]?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
-    <Popover.Body >
-      <ButtonGroup vertical>
-        {button_fullscreen}
-        {sep}
-        {button_open_layout}
-        {sep}
-        {button_assgn_rand_node_color}
-        {button_bg_color}
-        {button_bg_grid}
-        {dropdown_c_zdd_scale}
-        {dropdown_c_zdd_min_size_link}
-        {dropdown_c_zdd_max_size_link}
-        {sep}
-        {button_pa}
-        {button_an}
-      </ButtonGroup>
-    </Popover.Body>
-  </Popover>:<></>
 }
 
 const  DataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tags_selected:(o:{[x:string]:string})=>void) => {
@@ -2348,7 +1368,7 @@ const  DataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
 
                   Object.values(pureLinks).forEach(l=>{
                     const suffix=''
-                    SankeyUtils.RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
+                    RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
                   })
                   data.links=new_links
                   data.linkZIndex=Object.keys(new_links)

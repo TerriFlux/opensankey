@@ -172,8 +172,8 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   d:SankeyNode,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  first_selected_node:object,
-  set_first_selected_node:React.Dispatch<React.SetStateAction<object>>,
+  first_selected_node:SankeyNode,
+  set_first_selected_node:(_:SankeyNode)=>void,
   multi_selected_links:{current:SankeyLink[]},
   accordion_ref:{ current:HTMLDivElement}| null,
   button_ref: { current: HTMLLabelElement }| null,
@@ -263,13 +263,13 @@ export type RepositionneSidebarFuncType = (show_nav: boolean) => void
 
 export type EventOnSankeyZoneMouseDownFuncType =(mode_selection: {
   current: string;
-}, data: SankeyData, set_data: (d: SankeyData) => void, set_first_selected_node: React.Dispatch<React.SetStateAction<object>>, token: boolean, set_show_toast_limit_node: (b: boolean) => void, evt2: unknown, start_point: {
+}, data: SankeyData, set_data: (d: SankeyData) => void, set_first_selected_node: (_:SankeyNode)=>void, token: boolean, set_show_toast_limit_node: (b: boolean) => void, evt2: unknown, start_point: {
   current: number[];
 }, closeAllMenuContext: () => void) => void
 
 export type EventOnSankeyZoneMouseMoveFuncType = (mode_selection: {
   current: string;
-}, data: SankeyData, first_selected_node: object, set_first_selected_node: React.Dispatch<React.SetStateAction<object>>, evt: MouseEvent, start_point: {
+}, data: SankeyData, first_selected_node: SankeyNode, set_first_selected_node: (_:SankeyNode)=>void, evt: MouseEvent, start_point: {
   current: number[];
 }) => void
 
@@ -279,7 +279,8 @@ export  type EventOnSankeyZoneMouseUpFuncType = (mode_selection: {
   current: SankeyNode[];
 }, multi_selected_links: {
   current: SankeyLink[];
-}, first_selected_node: object, set_first_selected_node: React.Dispatch<React.SetStateAction<object>>, token: boolean, set_show_toast_limit_node: (b: boolean) => void, accordion_ref: {
+}, first_selected_node: SankeyNode, 
+  set_first_selected_node: (_:SankeyNode)=>void, token: boolean, set_show_toast_limit_node: (b: boolean) => void, accordion_ref: {
   current: HTMLDivElement
 } | null, button_ref: {
   current: HTMLLabelElement;

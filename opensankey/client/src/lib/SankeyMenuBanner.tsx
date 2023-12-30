@@ -11,7 +11,7 @@ import { Row,
   Popover,
   FormControl,
   Overlay } from 'react-bootstrap'
-import {  SankeyData, TagsGroup} from '../types/Types'
+import {  SankeyData, SankeyNode, TagsGroup} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FindMaxLinkValue,AdjustSankeyZone } from './SankeyUtils'
 import * as d3 from 'd3'
@@ -25,7 +25,7 @@ import { faShareNodes,
   faArrowsLeftRight,
   faArrowsUpDown,
   faSliders} from '@fortawesome/free-solid-svg-icons'
-import { selected_type } from './SankeyMenu'
+import { selected_type } from './SankeyMenuTop'
 import { TFunction } from 'i18next'
 import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
 import { addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType, setDiagramFuncType, stretchButtonsFType, toolbar_builderFType } from '../types/SankeyMenuBannerTypes'
@@ -399,8 +399,8 @@ export const toolbar_builder : toolbar_builderFType = (
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,
   url_prefix: string,
-  first_selected_node:object,
-  set_first_selected_node:(o:object)=>void,
+  first_selected_node:SankeyNode,
+  set_first_selected_node:(o:SankeyNode)=>void,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   setDiagram: setDiagramFuncType,
   set_show_modal_welcome:(b:boolean)=>void,
@@ -431,7 +431,7 @@ export const toolbar_builder : toolbar_builderFType = (
     d3.selectAll(' .opensankey #svg #path-flux').remove()
     if(val=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
       data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
-      set_first_selected_node({})
+      set_first_selected_node({} as SankeyNode)
     }
   }
   let sous_filieres = undefined
