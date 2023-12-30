@@ -102,7 +102,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const {t} = useTranslation()
   const applicationContext : applicationContextType = {
     t:t,
-    logo_width : 200,//TODO
+    logo_width : 100,
     app_name : 'SankeySuite',//TODO
     url_prefix : '', //TODO
     logo : logo,
