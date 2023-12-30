@@ -27,7 +27,7 @@ import {RemoveAnimate,
   return_out_of_bound_element
 } from './import/OpenSankey'
 
-import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
+import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/lib/SankeyUtils'
 import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { 

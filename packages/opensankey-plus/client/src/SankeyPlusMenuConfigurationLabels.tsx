@@ -21,9 +21,9 @@ import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 import { Quill } from 'react-quill'
 import * as d3 from 'd3'
 
-import {  preferenceCheck } from 'open-sankey/dist/src/lib/SankeyMenuPreferences'
+import {  preferenceCheck } from 'open-sankey/dist/lib/SankeyMenuPreferences'
 import { Checkbox } from '@chakra-ui/react'
-import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
+import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
 import { is_all_zdt_attr_same_value } from './SankeyPlusUtils'
 import { SankeyPlusMenuConfigurationFreeLabelsFType, SankeyPlusMenuPreferenceLabelsFType, blur_ZDT_wysiwygFType, context_zdtFType } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
 

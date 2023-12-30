@@ -11,7 +11,7 @@ import { LinkStrokeFType, SankeyPlusDrawArrowsFType, dragNodeRedrawGradientFType
 import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode, display_styleType} from 'open-sankey/src/types/Types'
 import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
 import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
-import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/src/lib/SankeyUtils'
+import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/lib/SankeyUtils'
 
 
 export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradientFType =(

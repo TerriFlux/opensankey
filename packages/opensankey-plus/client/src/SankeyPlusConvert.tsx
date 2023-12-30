@@ -152,8 +152,8 @@ export const plus_convert_data : plus_convert_dataFType = (
 }
 
 export const OpenSankeyPlusDiagramSelector : OpenSankeyPlusDiagramSelectorFType = (
-  master_data : SankeyPlusData,
-  set_master_data : (d:SankeyPlusData)=>void,
+  master_data : SankeyPlusData | undefined,
+  set_master_data : (d:SankeyPlusData| undefined)=>void,
   view : string,
   view_selected:string,
   set_view_selected:(s:string)=>void,
@@ -222,7 +222,7 @@ export const OpenSankeyPlusDiagramSelector : OpenSankeyPlusDiagramSelectorFType 
                 return
               }
               //- current view is updated by master data
-              updateLayout(sankey_data,master_data,elementToDispose)
+              updateLayout(sankey_data,master_data!,elementToDispose)
               set_sankey_data({ ...JSON.parse(JSON.stringify(sankey_data)) })
             } else {
               // A view is selected to update either another view or the master data

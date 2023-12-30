@@ -10,7 +10,7 @@ import ReactQuill from 'react-quill'
 
 import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
 
-import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
+import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
 import { NodeDisplayed } from './import/OpenSankey'
 import {SankeyPlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'

@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import { SankeyData } from 'open-sankey/src/types/Types'
 
-export type SankeyPlusModalStyleNodeFType = (
+export type SankeyModalStyleNodeFType = (
   t:TFunction,data:SankeyData,
   set_data:(d:SankeyData)=>void,
   showStyle:boolean,
@@ -13,7 +13,7 @@ export type SankeyPlusModalStyleNodeFType = (
 ) => JSX.Element
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export type SankeyPlusModalStyleLinkFType = (
+export type SankeyModalStyleLinkFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,

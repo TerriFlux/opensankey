@@ -20,7 +20,7 @@ export type setValueFType = (
 ) => void
 
 export type get_data_from_viewFType =(
-  master_data:SankeyPlusData,
+  master_data:SankeyPlusData| undefined,
   id_view_to_see:string
 )=> SankeyPlusData | undefined
 
@@ -29,17 +29,17 @@ export type filter_viewFType = (
 ) => {path:string[],kind:string,item:{kind:string}}
 
 export type recompute_viewsFType = (
-  new_master_data: SankeyPlusData,
-  prev_master_data: SankeyPlusData,
-  set_master_data: (d:SankeyPlusData)=>void
+  new_master_data: SankeyPlusData | undefined,
+  prev_master_data: SankeyPlusData | undefined,
+  set_master_data: (d:SankeyPlusData | undefined)=>void
 ) => void
 
 export type keyHandlerFType = (
   t:TFunction,
   e: KeyboardEvent,
   master:boolean,
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData| undefined,
+  set_master_data:(d:SankeyPlusData| undefined)=>void,
   data:SankeyPlusData,
   set_data:(_:SankeyPlusData)=>void,
   view:string,
@@ -59,8 +59,8 @@ export type selecteur_viewFType = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData|undefined,
+  set_master_data:(d:SankeyPlusData|undefined)=>void,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
@@ -81,8 +81,8 @@ export type viewsAccordionFType = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData|undefined,
+  set_master_data:(d:SankeyPlusData|undefined)=>void,
   _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
@@ -98,7 +98,7 @@ export type viewsAccordionFType = (
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
 export type check_current_view_savedFType = (
-  master_data:SankeyPlusData,
+  master_data:SankeyPlusData | undefined,
   data:SankeyPlusData,
   view:string
 )=> string[]
@@ -119,8 +119,8 @@ export type SankeyPlusBannerViewFType = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData | undefined,
+  set_master_data:(d:SankeyPlusData|undefined)=>void,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
@@ -145,8 +145,8 @@ export type SankeyPlusMenuPreferenceViewFType = (
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
 export type modal_view_not_savedFType = (view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData | undefined,
+  set_master_data:(d:SankeyPlusData | undefined)=>void,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string
@@ -156,21 +156,21 @@ export type modal_transparent_view_attrFType = (show_modal_transparent_view_attr
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData| undefined,
+  set_master_data:(d:SankeyPlusData| undefined)=>void,
   current_view:ViewType,
   t:TFunction
 )=> JSX.Element
 
 export type MenuEnregistrerViewFType = (
-  master_data:SankeyPlusData,
+  master_data:SankeyPlusData| undefined,
   t:TFunction,
   save_only_view:boolean,
   set_save_only_view:(b:boolean)=>void
 )=> JSX.Element
 
 export type OpenSankeyPlusCheckpointButtonFType = (
-  master_data:SankeyPlusData,
+  master_data:SankeyPlusData| undefined,
   data:SankeyPlusData,
   view:string, 
   view_not_saved:string,

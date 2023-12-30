@@ -95,6 +95,5 @@ export interface SankeyPlusShowMenuComponentsType extends showMenuComponentsType
   show_menu_node_icon : [boolean,(_:boolean)=>void],
   show_modal_import_icons : [boolean,(_:boolean)=>void],
   show_menu_zdt : [boolean,(_:boolean)=>void],
-  show_context_zdt : [boolean,(_:boolean)=>void],
   show_modal_transparent_view_attr : [boolean,(_:boolean)=>void]
 }

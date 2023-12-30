@@ -8,8 +8,8 @@ export type plus_convert_dataFType = (
 )=> void
 
 export type OpenSankeyPlusDiagramSelectorFType = (
-  master_data : SankeyPlusData,
-  set_master_data : (d:SankeyPlusData)=>void,
+  master_data : SankeyPlusData|undefined,
+  set_master_data : (d:SankeyPlusData|undefined)=>void,
   view : string,
   view_selected:string,
   set_view_selected:(s:string)=>void,

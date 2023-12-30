@@ -23,8 +23,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
-import { SmoothClasses} from 'open-sankey/dist/src/lib/SankeyUtils'
-import { MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, SankeyPlusMenuPreferenceViewFType, check_current_view_savedFType, filter_viewFType, get_data_from_viewFType, keyHandlerFType, modal_transparent_view_attrFType, modal_view_not_savedFType, recompute_viewsFType, selecteur_viewFType, setDiagramFType, setValueFType, view_toastFType, view_toast_update_viewFType, viewsAccordionFType} from '../types/SankeyPlusViewsTypes'
+import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
+import { 
+  MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, 
+  SankeyPlusMenuPreferenceViewFType, check_current_view_savedFType, filter_viewFType, 
+  get_data_from_viewFType, keyHandlerFType, modal_transparent_view_attrFType, 
+  modal_view_not_savedFType, recompute_viewsFType, selecteur_viewFType, setDiagramFType, 
+  setValueFType, view_toastFType, view_toast_update_viewFType, viewsAccordionFType
+} from '../types/SankeyPlusViewsTypes'
 
 import { SankeyPlusData,
   SankeyPlusNode,
@@ -38,7 +44,7 @@ import {
   AdjustSankeyZone } from './import/OpenSankey'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 import { Checkbox } from '@chakra-ui/react'
-// import{  updateLayout} from 'open-sankey/dist/src/lib/SankeyLayout'
+// import{  updateLayout} from 'open-sankey/dist/lib/SankeyLayout'
 
 /* eslint-disable */
 // @ts-ignore
@@ -110,7 +116,7 @@ export const setValue : setValueFType = (
 }
 
 export const get_data_from_view : get_data_from_viewFType = (
-  master_data:SankeyPlusData,
+  master_data:SankeyPlusData|undefined,
   id_view_to_see:string
 )=>{
   const applyChange = deep_diff.applyChange
@@ -164,12 +170,12 @@ export const filter_view : filter_viewFType =(pre_diff:{path:string[],kind:strin
 }
 
 export const recompute_views : recompute_viewsFType = (
-  new_master_data: SankeyPlusData,
-  prev_master_data: SankeyPlusData,
-  set_master_data: (d:SankeyPlusData)=>void
+  new_master_data: SankeyPlusData | undefined,
+  prev_master_data: SankeyPlusData| undefined,
+  set_master_data: (d:SankeyPlusData| undefined,)=>void
 ) =>{
   if ( prev_master_data) {
-    new_master_data.view.forEach(current_v => {
+    new_master_data!.view.forEach(current_v => {
       if ( prev_master_data.view.filter(v=>v.id===current_v.id).length === 0) {
         return
       }
@@ -196,8 +202,8 @@ export const keyHandler : keyHandlerFType = (
   t:TFunction,
   e: KeyboardEvent,
   master:boolean,
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData| undefined,
+  set_master_data:(d:SankeyPlusData| undefined)=>void,
   data:SankeyPlusData,
   set_data:(_:SankeyPlusData)=>void,
   view:string,
@@ -256,10 +262,10 @@ export const keyHandler : keyHandlerFType = (
       set_data({...copy_data})
     } else {
       const new_ind = 'view_' + String(new Date().getTime())
-      const current_view_object=master_data.view.filter(v=>v.id === view)[0]
+      const current_view_object=master_data!.view.filter(v=>v.id === view)[0]
 
       const copy_data = JSON.parse(JSON.stringify(current_view_object.view_data))
-      master_data.view.push({
+      master_data!.view.push({
         id: new_ind,
         view_data: copy_data,
         nom: t('view.prefix_copy')+' '+current_view_object.nom,
@@ -270,9 +276,9 @@ export const keyHandler : keyHandlerFType = (
       
      
       // master data is now set
-      master_data.current_view=new_ind
+      master_data!.current_view=new_ind
       set_view(new_ind)
-      set_master_data({...master_data})
+      set_master_data({...master_data!})
       // get view data & set_data to avoid synchronisation problem
       const n_data=get_data_from_view(master_data,new_ind)
       if(n_data){
@@ -297,10 +303,10 @@ export const keyHandler : keyHandlerFType = (
 
       // Check wich format of the view is better optimized for memory storage
       const raw_is_smaller_than_diff=JSON.stringify(data).length<JSON.stringify(difference).length
-      master_data.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff?JSON.parse(JSON.stringify(data)):{diff:difference}
+      master_data!.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff?JSON.parse(JSON.stringify(data)):{diff:difference}
 
       // Save master data with the view we are currently working on updated
-      set_master_data({...master_data})
+      set_master_data({...master_data!})
       // Save master_data data in localStorage
       localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
 
@@ -336,7 +342,7 @@ export const keyHandler : keyHandlerFType = (
       set_view('none')
       set_data(JSON.parse(JSON.stringify(master_data)))
       setTimeout(()=>{
-        AdjustSankeyZone(master_data,sankey_plus_min_width_and_height)
+        AdjustSankeyZone(master_data!,sankey_plus_min_width_and_height)
       },100)
 
     }
@@ -347,15 +353,15 @@ export const keyHandler : keyHandlerFType = (
       // going backward
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
-      master_data.view.map((v, i) => {
+      master_data!.view.map((v, i) => {
         ind = (v.id === view) ? i : ind
       })
       if (ind === -1) {
         ind = 1
       } else if (ind===0) {
-        ind = Object.keys(master_data.view).length
+        ind = Object.keys(master_data!.view).length
       }
-      const data_view=get_data_from_view(master_data,master_data.view[ind-1].id) as SankeyPlusData
+      const data_view=get_data_from_view(master_data,master_data!.view[ind-1].id) as SankeyPlusData
 
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
@@ -365,12 +371,12 @@ export const keyHandler : keyHandlerFType = (
         if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
           set_view_not_saved(view)
-          set_view(master_data.view[ind-1].id)
+          set_view(master_data!.view[ind-1].id)
         }
       }
       if(saved){
         set_data({...data_view as SankeyPlusData})
-        set_view(master_data.view[ind-1].id)
+        set_view(master_data!.view[ind-1].id)
         // AdjustSankeyZone(master_data.view[ind-1].view_data as SankeyPlusData,GetSankeyMinWidthAndHeight)
         setTimeout(()=>{
           AdjustSankeyZone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
@@ -378,7 +384,7 @@ export const keyHandler : keyHandlerFType = (
       }
 
     } else if (e.key === 'F9') {
-      let new_master_data : SankeyPlusData
+      let new_master_data : SankeyPlusData | undefined
       if (master) {
         new_master_data = data
         recompute_views(new_master_data,master_data,set_master_data)
@@ -387,11 +393,11 @@ export const keyHandler : keyHandlerFType = (
       }
       //Cherche la position de la vue sélectionné dans le tableau de vue
       let ind = -1
-      new_master_data.view.map((v, i) => {
+      new_master_data!.view.map((v, i) => {
         ind = (v.id === view) ? i : ind
       })
       //si la vue est trouvé alors on lance l'animation entre cette vue et la suivante
-      if (ind === Object.keys(new_master_data.view).length - 1) {
+      if (ind === Object.keys(new_master_data!.view).length - 1) {
         ind = -1
       } else if (ind === -1) {
         ind = -1
@@ -399,7 +405,7 @@ export const keyHandler : keyHandlerFType = (
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
       if(view==='none'){
-        new_master_data.current_view=master_data.view[ind+1].id
+        new_master_data!.current_view=master_data!.view[ind+1].id
         set_master_data(new_master_data)
       }
       let saved=true
@@ -408,13 +414,13 @@ export const keyHandler : keyHandlerFType = (
         if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
           set_view_not_saved(view)
-          set_view(master_data.view[ind+1].id)
+          set_view(master_data!.view[ind+1].id)
         }
       }
-      const data_view=get_data_from_view(new_master_data,new_master_data.view[ind+1].id) as SankeyPlusData
+      const data_view=get_data_from_view(new_master_data,new_master_data!.view[ind+1].id) as SankeyPlusData
       if(saved){
         set_data(data_view)
-        set_view(new_master_data.view[ind+1].id)
+        set_view(new_master_data!.view[ind+1].id)
         setTimeout(()=>{
           AdjustSankeyZone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
         },100)
@@ -521,8 +527,8 @@ export const selecteur_view : selecteur_viewFType =(data:SankeyPlusData,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData|undefined,
+  set_master_data:(d:SankeyPlusData|undefined)=>void,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
@@ -582,7 +588,7 @@ export const selecteur_view : selecteur_viewFType =(data:SankeyPlusData,
             set_view(evt.target.value)
             set_data(JSON.parse(JSON.stringify(master_data)))
             setTimeout(()=>{
-              AdjustSankeyZone(master_data,sankey_plus_min_width_and_height)
+              AdjustSankeyZone(master_data!,sankey_plus_min_width_and_height)
             },100)
           }
         }
@@ -602,8 +608,8 @@ export const selecteur_view : selecteur_viewFType =(data:SankeyPlusData,
       set_value_editor_name_view(evt.target.value)
     }}
     onBlur={()=>{
-      master_data.view.filter(v=>v.id===view)[0].nom=value_editor_name_view
-      set_master_data({...master_data})
+      master_data!.view.filter(v=>v.id===view)[0].nom=value_editor_name_view
+      set_master_data({...master_data!})
       set_select_or_edit('select')
     }}
   />
@@ -620,8 +626,8 @@ export const viewsAccordion : viewsAccordionFType = (
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData|undefined,
+  set_master_data:(d:SankeyPlusData|undefined)=>void,
   _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
@@ -636,7 +642,11 @@ export const viewsAccordion : viewsAccordionFType = (
 
   // const _load_multiple_json = useRef<HTMLInputElement>(null)
 
-  const selector=selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,false,value_editor_name_view,set_value_editor_name_view,select_or_edit,set_select_or_edit)
+  const selector=selecteur_view(
+    data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,
+    master_data,set_master_data,t,set_view_not_saved,false,value_editor_name_view,set_value_editor_name_view,
+    select_or_edit,set_select_or_edit
+  )
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
 
@@ -812,10 +822,10 @@ export const viewsAccordion : viewsAccordionFType = (
           const result = String((e.target as FileReader).result)
           const result_data = JSON.parse(result)
           let ind = -1
-          master_data.view.map((v, i) => {
+          master_data!.view.map((v, i) => {
             ind = (v.id === _load_json.current?.id) ? i : ind
           })
-          const cur_view = master_data.view[ind]
+          const cur_view = master_data!.view[ind]
           const imported_data=JSON.parse(JSON.stringify(result_data))
           imported_data.view=[]
           convert_data(imported_data,DefaultSankeyData)
@@ -826,7 +836,7 @@ export const viewsAccordion : viewsAccordionFType = (
 
           cur_view.nom = (files[0].name).replace('.json','')
 
-          set_master_data({...master_data})
+          set_master_data({...master_data!})
           set_data({...imported_data})
           set_view(cur_view.id)
         }
@@ -842,8 +852,8 @@ export const viewsAccordion : viewsAccordionFType = (
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
 export const check_current_view_saved : check_current_view_savedFType =(
-  master_data:SankeyPlusData,
-  data:SankeyPlusData,
+  master_data:SankeyPlusData| undefined,
+  data:SankeyPlusData| undefined,
   view:string
 )=>{
   const view_data = get_data_from_view(master_data,view)
@@ -890,8 +900,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData| undefined,
+  set_master_data:(d:SankeyPlusData| undefined)=>void,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
@@ -1111,26 +1121,26 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
           // Delete the view
           () => {
             let ind = -1
-            master_data.view.map((v, i) => {
+            master_data!.view.map((v, i) => {
               ind = (v.id === view) ? i : ind
             })
-            master_data.view.splice(ind, 1)
+            master_data!.view.splice(ind, 1)
             // If master is not a catalog & we delete the current view then we go to master
             // If master is a catalog and the catalog of view is empty then we got to master 
-            if((master_data.current_view===view && master_data.is_catalog===false) || (master_data.view.length===0 && master_data.is_catalog===true)){
+            if((master_data!.current_view===view && master_data!.is_catalog===false) || (master_data!.view.length===0 && master_data!.is_catalog===true)){
               set_view('none')
-              set_data({ ...master_data })
-            }else if(master_data.is_catalog && master_data.view.length>0){
+              set_data({ ...master_data! })
+            }else if(master_data!.is_catalog && master_data!.view.length>0){
               // If master is a catalog and the catalog is not empty then we got to the first view 
-              set_view(master_data.view[0].id)
-              const tmp=get_data_from_view(master_data,master_data.view[0].id) as SankeyPlusData
+              set_view(master_data!.view[0].id)
+              const tmp=get_data_from_view(master_data,master_data!.view[0].id) as SankeyPlusData
               set_data({ ...tmp })
             }
-            if(master_data.view.length===0){
-              master_data.is_catalog=false
-              set_data({...master_data})
+            if(master_data!.view.length===0){
+              master_data!.is_catalog=false
+              set_data({...master_data!})
             }
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
           }
         }
       ><Col><FaMinus/></Col>{!connected?
@@ -1239,9 +1249,9 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     <Popover.Body >
       <Form.Control 
         type='text'
-        value={master_data && master_data.current_view && master_data.current_view!=='none'?master_data.view.filter(v=>v.id===master_data.current_view)[0].nom:''}
+        value={master_data && master_data.current_view && master_data.current_view!=='none'?master_data.view.filter(v=>v.id===master_data!.current_view)[0].nom:''}
         onChange={(evt)=>{
-          master_data?master_data.view.filter(v=>v.id===master_data.current_view).forEach(v=>v.nom=evt.target.value):''
+          master_data?master_data.view.filter(v=>v.id===master_data!.current_view).forEach(v=>v.nom=evt.target.value):''
           set_data({...data})
         }}
       >
@@ -1260,14 +1270,14 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
       master_data=(master_data)?master_data:JSON.parse(JSON.stringify(data))
-      master_data.is_catalog=true
-      master_data.nodeTags={}
-      master_data.fluxTags={}
-      master_data.dataTags={}
-      master_data.nodes={}
-      master_data.links={}
-      master_data.labels={}
-      master_data.linkZIndex=[]
+      master_data!.is_catalog=true
+      master_data!.nodeTags={}
+      master_data!.fluxTags={}
+      master_data!.dataTags={}
+      master_data!.nodes={}
+      master_data!.links={}
+      master_data!.labels={}
+      master_data!.linkZIndex=[]
 
       // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
       for(const i in files){
@@ -1290,7 +1300,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
                   new_ind=v.id
                   first_data=view_from_imported_data
                 }
-                master_data.view.push({
+                master_data!.view.push({
                   id: v.id,
                   view_data: view_from_imported_data,
                   nom: (files[i].name).replace('.json','')+' '+v.nom,
@@ -1302,7 +1312,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
               // Import only master data  when it doesn't have view
               imported_data.view=[]
               first_data=imported_data
-              master_data.view.push({
+              master_data!.view.push({
                 id: new_ind,
                 view_data: imported_data,
                 nom: (files[i].name).replace('.json',''),
@@ -1313,10 +1323,10 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             if(i==='0'){
 
               set_view(new_ind)
-              master_data.current_view=new_ind
+              master_data!.current_view=new_ind
               set_data({...first_data})
             }
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
         })()
@@ -1463,7 +1473,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     </span>
   </OverlayTrigger>
   {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,connected,value_editor_name_view,set_value_editor_name_view,select_or_edit,set_select_or_edit)}</>:<></>}
-  {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data.current_view!=='none' && !window.SankeyToolsStatic?<>
+  {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data!.current_view!=='none' && !window.SankeyToolsStatic?<>
     {button_delete_actual_view}
     {master_data && !master_data.is_catalog?button_heredited_attr_from_master:<></>}
     {/* {button_clone_view} */}
@@ -1503,8 +1513,8 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
   view_not_saved:string,
   set_view_not_saved:(s:string)=>void,
   t:TFunction,
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData|undefined,
+  set_master_data:(d:SankeyPlusData|undefined)=>void,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string
@@ -1532,9 +1542,9 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
                 AdjustSankeyZone(data_view,sankey_plus_min_width_and_height)
               },100)
             } else if(view === 'none'){
-              set_data({...master_data})
+              set_data({...master_data!})
               setTimeout(()=>{
-                AdjustSankeyZone(master_data,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(master_data!,sankey_plus_min_width_and_height)
               },100)
             }
             set_view_not_saved('')
@@ -1547,7 +1557,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
             let difference = deep_diff.diff(master_data, data)
             difference=(difference !== undefined)?difference:[]
             difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-            master_data.view.filter(v => v.id === view_not_saved)[0].view_data = {diff:difference}
+            master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = {diff:difference}
 
             if(view !== 'none'){
               const data_view=get_data_from_view(master_data,view) as SankeyPlusData
@@ -1560,7 +1570,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
             } else if(view === 'none'){
               set_data({...JSON.parse(JSON.stringify(master_data))})
               setTimeout(()=>{
-                AdjustSankeyZone(master_data,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(master_data!,sankey_plus_min_width_and_height)
               },100)
             }
             set_view_not_saved('')
@@ -1616,13 +1626,13 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
   set_show_modal_transparent_view_attr:(b:boolean)=>void,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
-  master_data:SankeyPlusData,
-  set_master_data:(d:SankeyPlusData)=>void,
+  master_data:SankeyPlusData|undefined,
+  set_master_data:(d:SankeyPlusData|undefined)=>void,
   current_view:ViewType,
   t:TFunction
 )=>{
   return <Modal size='xl' show={show_modal_transparent_view_attr} onHide={()=>{
-    recompute_views(data,data,set_data)
+    recompute_views(data,data,set_data as (d: SankeyPlusData | undefined) => void)
     set_show_modal_transparent_view_attr(false)}}>
     <Modal.Header closeButton>{t('view.setTransparentAttr')}</Modal.Header>
     <Modal.Body>
@@ -1641,7 +1651,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1658,7 +1668,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1675,7 +1685,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }>{t('Menu.Transformation.addFlux')}</Button>
@@ -1691,7 +1701,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }>{t('Menu.Transformation.removeFlux')}</Button>
@@ -1712,7 +1722,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }>{t('Menu.Transformation.PosNoeud')}</Button>
@@ -1728,7 +1738,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }> {t('Menu.Transformation.posFlux')}</Button>
@@ -1749,7 +1759,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1773,7 +1783,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1790,7 +1800,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1812,7 +1822,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
           }
           }
         >{t('Menu.Transformation.tagNode')}</Button>
@@ -1828,7 +1838,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1845,7 +1855,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1867,7 +1877,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1889,7 +1899,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'),1)
             }
             set_data({...data})
-            set_master_data({...master_data})
+            set_master_data({...master_data!})
 
           }
           }
@@ -1900,7 +1910,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
     </Modal.Body>
 
     <Modal.Footer><Button onClick={()=>{
-      updateLayoutOSTyped(data,master_data,current_view.heredited_attr_from_master)
+      updateLayoutOSTyped(data,master_data!,current_view.heredited_attr_from_master)
       // updateLayout(data,master_data,current_view.heredited_attr_from_master)
       set_data({...data})
     }}>{t('view.updateViewWithMasterVar')}</Button></Modal.Footer>
@@ -1908,7 +1918,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
 }
 
 export const MenuEnregistrerView : MenuEnregistrerViewFType = (
-  master_data:SankeyPlusData,
+  master_data:SankeyPlusData|undefined,
   t:TFunction,
   save_only_view:boolean,
   set_save_only_view:(b:boolean)=>void
@@ -1934,7 +1944,7 @@ export const MenuEnregistrerView : MenuEnregistrerViewFType = (
 
 
 export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFType = (
-  master_data:SankeyPlusData,
+  master_data:SankeyPlusData|undefined,
   data:SankeyPlusData,
   view:string, 
   view_not_saved:string,
