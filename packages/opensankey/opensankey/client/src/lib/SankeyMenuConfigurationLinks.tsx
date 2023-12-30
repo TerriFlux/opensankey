@@ -4,7 +4,7 @@ import { SankeyLink, SankeyNode, SankeyData } from '../types/Types'
 
 import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
-import { selected_type } from './SankeyMenu'
+import { selected_type } from './SankeyMenuTop'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import {SankeyMenuConfigurationLinksData} from './SankeyMenuConfigurationLinksData'
 import {SankeyMenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'

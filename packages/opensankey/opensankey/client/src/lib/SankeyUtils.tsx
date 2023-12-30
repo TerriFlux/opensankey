@@ -14,7 +14,7 @@ import { complete_sankey_data } from './SankeyConvert'
 import {  ComputeAutoSankey,compute_default_input_outputLinksId,agregation,desagregation} from './SankeyLayout'
 import * as d3 from 'd3'
 import colormap from 'colormap'
-import { menu_config_width } from './SankeyMenu'
+import { menu_config_width } from './SankeyMenuTop'
 import React from 'react'
 import { FaCaretRight } from 'react-icons/fa'
 import { OverlayTrigger,Tooltip } from 'react-bootstrap'
@@ -1828,7 +1828,12 @@ export const NodeContextHasAggregate:NodeContextHasAggregateFuncType = (n:Sankey
   }
 
 }
-export const Aggregate:AggregateFuncType =(n:SankeyNode,data:SankeyData,set_agregation_node:(s:string)=>void,set_is_agregation:(b:boolean)=>void,set_show_agregation:(b:boolean)=>void)=>{
+export const Aggregate:AggregateFuncType =(
+  n:SankeyNode,data:SankeyData,
+  set_agregation_node:(s:string)=>void,
+  set_is_agregation:(b:boolean)=>void,
+  set_show_agregation:(b:boolean)=>void
+)=>{
   const parent_names: string[] = []
   const dim_names: string[] = []
   Object.keys(n.dimensions).forEach(
@@ -2638,4 +2643,25 @@ export const reorganize_node_outputLinksId:reorganize_node_outputLinksIdFuncType
     }
   })
   node.outputLinksId = output_links.map(l=>l.idLink)
+}
+
+export const windowSankey = window as Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+  sankey: {
+    sankey_data_file:RequestInfo
+    sous_filieres : { [ key : string ] : string }
+    units: string[]
+    flask_logo? : string
+    flask_header? : string
+    logo_width? : number
+    legend_average : string
+    legend_uncert : string
+    help_text : string
+    welcome_text: string
+    excel : string
+    logo: string,
+    advanced: boolean,
+    intro: string
+  }
 }

@@ -3,6 +3,7 @@ import { TFunction } from 'i18next'
 import { drawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, RetrieveExcelResultsFuncType, updateLayoutFuncType  } from './SankeyUtilsTypes'
 import { OpenSankeyDiagramSelectorFType } from './SankeyMenuDialogsTypes'
+import { ConvertDataFuncType } from './SankeyConvertTypes'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -322,7 +323,6 @@ export interface treeFolderType{
   checked?:1|0.5|0
 }
 export interface showMenuComponentsType {
-  show_nav : [boolean,(_:boolean)=>void],
   show_menu_node_apparence : [boolean,(_:boolean)=>void],
   show_menu_node_io : [boolean,(_:boolean)=>void],
   show_menu_link_data : [boolean,(_:boolean)=>void],
@@ -331,8 +331,6 @@ export interface showMenuComponentsType {
   show_modal_welcome : [boolean,(_:boolean)=>void],
   show_modale_tuto : [boolean,(_:boolean)=>void],
   show_modale_support : [boolean,(_:boolean)=>void],
-  show_agregation : [boolean,(_:boolean)=>void],
-  show_context_zdd : [boolean,(_:boolean)=>void],
   show_excel_dialog : [boolean,(_:boolean)=>void],
   show_save_json : [boolean,(_:boolean)=>void],
   show_apply_layout : [boolean,(_:boolean)=>void],
@@ -342,30 +340,66 @@ export interface showMenuComponentsType {
   show_load : [boolean,(_:boolean)=>void]
 }
 
-export type MenuTypes = {
+export type applicationContextType = {
   t: TFunction,
-  data: SankeyData,
-  set_data : (_:SankeyData)=>void,
-  logo: string,
-  logo_terriflux: string,
-  logo_width: number,
+  logo : string 
+  logo_terriflux : string,
+  logo_width : number,
   app_name: string,
+  url_prefix: string
+}
 
-  button_ref: {current:HTMLLabelElement},
-  accordion_ref: {current:HTMLDivElement},
+export type applicationDataType = {
+  data : SankeyData,
+  set_data : (_:SankeyData)=>void,
+  get_default_data : ()=>SankeyData,
+  display_nodes : {[_:string]:SankeyNode},
+  display_links : {[_:string]:SankeyLink},
+}
 
-  example_menu: JSX.Element,
-  formations_menu: object,
-  url_prefix: string,
+export type uiElementsRefType = {
+  button_ref : {
+    current: HTMLLabelElement;
+  },
+  accordion_ref : {
+    current: HTMLDivElement;
+  },
+  links_accordion_ref : {
+    current: HTMLDivElement;
+  },
+  nodes_accordion_ref : {
+    current: HTMLDivElement;
+  }
+}
 
-  nav_item_active: string,
+export type elementsSelectedType = {
+  multi_selected_nodes : { current : SankeyNode[] },
+  multi_selected_links : { current : SankeyLink[] },
+  //multi_selected_label : { current : SankeyLabel[] }
+  tags_selected : {[k: string]: string }
+  set_tags_selected : (_:{[k: string]: string})=>void
+  selected_style_node : string,
+  set_selected_style_node : (_:string)=>void,
+  selected_style_link : string,
+  set_selected_style_link : (_:string)=>void,
+  first_selected_node : SankeyNode,
+  set_first_selected_node : (_:SankeyNode)=>void    
+}
 
-  mode_selection: { current : string },
+export type contextMenuType = {
+  contextualised_node : SankeyNode | undefined,
+  set_contextualised_node : (_:SankeyNode | undefined) => void,
+  contextualised_link : SankeyLink | undefined,
+  set_contextualised_link : (_:SankeyLink | undefined) => void,
+  tag_contextualised : string | undefined,
+  set_tag_contextualised : (_:string | undefined) => void,
+  closeAllMenuContext : () => void,
+  pointer_pos : { current : number[] }, 
+  show_context_zdd : boolean,
+  set_show_context_zdd : (_:boolean)=>void
+}
 
-  style_to_apply: string,
-  set_style_to_apply: (_:string)=>void,
-
-  showMenuComponents: showMenuComponentsType
+export type processFunctionsType = {
   processing : boolean,
   setProcessing : (_:boolean)=>void,
   failure : boolean,
@@ -376,6 +410,33 @@ export type MenuTypes = {
   setResult : (_:string)=>void,
   path: string,
   launch: (path:string) => void,
+  is_computing:boolean,
+  setIsComputing:(_:boolean)=>void,
+  RetrieveExcelResults:RetrieveExcelResultsFuncType
+}
+
+export type MenuTypes = {
+  applicationContext : applicationContextType,
+  applicationData : applicationDataType,
+  uiElementsRef : uiElementsRefType,
+  elementsSelected : elementsSelectedType,
+  contextMenu : contextMenuType,
+  processFunctions : processFunctionsType,
+  showMenuComponents: showMenuComponentsType,
+
+  show_nav: boolean,
+  set_show_nav: (_:boolean)=>void,
+
+  example_menu: JSX.Element,
+  formations_menu: object,
+
+  nav_item_active: string,
+
+  mode_selection: { current : string },
+
+  style_to_apply: string,
+  set_style_to_apply: (_:string)=>void,
+
   configurations_menus: JSX.Element[],
 
   menus: {[s: string]: JSX.Element[] | JSX.Element},
@@ -385,9 +446,6 @@ export type MenuTypes = {
   Reinitialization:() => void,
   additional_nav_item:JSX.Element[],
 
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  set_contextualised_link:(n:SankeyLink|undefined)=>void,
-  set_tag_contextualised:(t:string|undefined)=>void,
   updateLayout:updateLayoutFuncType,
   convert_data:(data: SankeyData, DefaultSankeyData: () => SankeyData)=>void
   node_hspace:number,
@@ -396,12 +454,46 @@ export type MenuTypes = {
   set_node_vspace:(n:number)=>void,
   elementToDispose:string[]
   apply_transformation_additional_elements: JSX.Element[],
-  DiagramSelector: OpenSankeyDiagramSelectorFType,
-  is_computing:boolean,
-  setIsComputing:(_:boolean)=>void,
-  set_tags_selected:(o:{[x:string]:string})=>void,
-  RetrieveExcelResults:RetrieveExcelResultsFuncType,
-  DefaultSankeyData:()=>SankeyData
+  DiagramSelector: OpenSankeyDiagramSelectorFType
 }
 
 export type callbackFuncType = (server_data: SankeyData) => void
+
+export type SankeyAppTypes = {
+  initial_sankey_data : SankeyData
+  exemple_menu        : object
+  formations_menu      : object
+  logo: string,
+  logo_terriflux: string,
+}
+
+export type SankeyAppBuilderTypes = {
+  applicationContext : applicationContextType,
+  applicationData:applicationDataType,
+  uiElementsRef : uiElementsRefType,
+  elementsSelected : elementsSelectedType,
+  contextMenu:contextMenuType,
+  show_nav: boolean,
+  set_show_nav:(_:boolean)=>void,
+  displayed_input_link_value: string,
+  set_displayed_input_link_value: (s:string)=>void,
+  exemple_menu        : object,
+  formations_menu      : object,
+  mode_selection: {current:string},
+  user_scale:number,
+  set_user_scale:(n:number)=>void,
+  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
+  Reinitialization:()=>void,
+  size_of_draw_zone:(d:SankeyData)=>number[],
+  display_link_opacity:string,
+  set_display_link_opacity:(s:string)=>void,
+  legend_position:number[],
+  set_legend_position:(n:number[])=>void,
+  set_agregation_node:(b:string)=>void,
+  set_is_agregation:(b:boolean)=>void,
+  convert_data:ConvertDataFuncType,
+  maximum_flux:number|null|undefined,
+  set_maximum_flux:(n:number)=>void,
+  callback: callbackFuncType,
+  set_show_agregation : (_:boolean)=>void
+}
