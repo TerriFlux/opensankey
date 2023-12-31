@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Dropdown, ButtonGroup, Button, Popover } from 'react-bootstrap'
-import { ContextMenuLinkFType } from '../types/SankeyMenuTypes'
+import { ContextMenuLinkFType } from '../types/SankeyMenuContextLinkTypes'
 import { SankeyLink, SankeyNode, SankeyData, SankeyLinkValue } from '../types/Types'
 import { reorganize_inputLinksId} from './SankeyLayout'
 import { handleDownLink, handleUpLink } from './SankeyMenuConfigurationLinksAppearence'

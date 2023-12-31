@@ -8,7 +8,7 @@ import { TFunction, t } from 'i18next'
 import { ConvertDataFuncType } from 'open-sankey/src/types/SankeyConvertTypes'
 import React from 'react'
 import { UploadExemple, DownloadExempleExcel, windowSankey } from './SankeyUtils'
-import { SankeyModalWelcomeFType } from '../types/SankeyMenuTypes'
+import { SankeyModalWelcomeFType } from '../types/SankeyMenuTopTypes'
 
 export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   t:TFunction,

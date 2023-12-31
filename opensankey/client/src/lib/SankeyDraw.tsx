@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyNode, SankeyLink,  SankeyData } from '../types/Types'
 import {  DeleteLink,DeleteNode,ClickSaveDiagram, windowSankey} from './SankeyUtils'
 import { AgregationModal } from './SankeyLayout'
@@ -23,6 +23,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   display_links,
   animation,
   mode_selection,
+  show_agregation, 
+  set_show_agregation,
   agregation_node,
   set_agregation_node,
   is_agregation,
@@ -31,8 +33,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   pointer_pos,
   set_show_context_zdd
 }) => {
-  const [show_agregation, set_show_agregation]=useState(false)
-
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
 

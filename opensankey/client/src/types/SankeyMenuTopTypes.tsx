@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyLink, SankeyNode, TagsCatalog, showMenuComponentsType } from './Types'
+import { SankeyData, TagsCatalog, showMenuComponentsType } from './Types'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -52,56 +52,12 @@ export type SankeyModalWelcomeFType = (
   exemple_menu: object
 )=> JSX.Element
 
-
-
-export type ContextMenuNodeFType = (
-  contextualised_node:SankeyNode|undefined,set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  display_nodes:{[id:string]:SankeyNode},
-  display_links:{[id:string]:SankeyLink},
-  multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_links:{current:SankeyLink[]},
-  t:TFunction,
-  showMenuComponents : showMenuComponentsType,
-  set_agregation_node:(_:string)=>void,
-  set_is_agregation:(_:boolean)=>void,
-  set_display_link_opacity:(_:string)=>void,
-  pointer_pos:{current:number[]},
-  additional_context_element_menu:JSX.Element[],
-  additional_context_element_other:JSX.Element[]
-)=> JSX.Element
-
 export type MenuDraggableFType = (
   content:JSX.Element|JSX.Element[],
   pointer_pos:{current:number[]},
   title:string,
   set_display_menu:(b:boolean)=>void,
   width_menu?:number
-)=> JSX.Element
-
-export type ContextMenuLinkFType = (
-  contextualised_link:SankeyLink|undefined,
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  set_show_menu_link_data:(b:boolean)=>void,
-  set_show_menu_link_appearence:(b:boolean)=>void,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  tags_selected:{[k: string]: string},
-  multi_selected_links:{current:SankeyLink[]},
-  t:TFunction,
-  pointer_pos:{current:number[]}
-) => JSX.Element
-
-export type ContextZddFType = (
-  showMenuComponents:showMenuComponentsType,
-  show_context_zdd : boolean,
-  set_show_context_zdd : (_:boolean)=>void,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  pointer_pos:{current:number[]},
-  node_hspace:number,
-  set_node_hspace:(n:number)=>void,
-  node_vspace:number,
-  set_node_vspace:(n:number)=>void,
-  t:TFunction
 )=> JSX.Element
 
 export type OpenSankeySaveButtonFType = (t:TFunction) => JSX.Element
