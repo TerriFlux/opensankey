@@ -11,7 +11,7 @@ import { DefaultLink,
   convert_links,
   convert_tags} from './import/OpenSankey'
 
-import {OpenSankeyPlusDiagramSelectorFType, apply_transformation_opensankey_plus_elementsFType, plus_convert_dataFType, plus_sankey_layoutFType } from '../types/SankeyPlusConvertTypes'
+import {SankeyPlusDiagramSelectorFType, apply_transformation_opensankey_plus_elementsFType, plus_convert_dataFType, plus_sankey_layoutFType } from '../types/SankeyPlusConvertTypes'
 
 // Opensankey files
 import { updateLayoutFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
@@ -21,6 +21,7 @@ import { TFunction } from 'i18next'
 import { FaCheck } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { SankeyData } from 'open-sankey/src/types/Types'
 
 interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
   transparent?:boolean,
@@ -151,23 +152,23 @@ export const plus_convert_data : plus_convert_dataFType = (
   })
 }
 
-export const OpenSankeyPlusDiagramSelector : OpenSankeyPlusDiagramSelectorFType = (
+export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
   master_data : SankeyPlusData | undefined,
   set_master_data : (d:SankeyPlusData| undefined)=>void,
   view : string,
   view_selected:string,
   set_view_selected:(s:string)=>void,
   diagramType:string,
-  setDiagramType:(s:string)=>void,
+  setDiagramName:(s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
 ) => {
-  const OpenSankeyPlusDiagramSelectorInner = (
+  const SankeyPlusDiagramSelectorInner = (
     t: TFunction, 
-    convert_data: (s:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>null,
-    sankey_data: SankeyPlusData,
-    set_sankey_data: (s:SankeyPlusData)=>null,
-    prev_sankey_data: SankeyPlusData,
-    set_prev_sankey_data: (s:SankeyPlusData)=>void, 
+    convert_data: (s:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
+    sankey_data: SankeyData,
+    set_sankey_data: (s:SankeyData)=>void,
+    prev_sankey_data: SankeyData,
+    set_prev_sankey_data: (s:SankeyData)=>void, 
     updateLayout: updateLayoutFuncType, 
     elementToDispose : string[]
   ) => {
@@ -182,7 +183,7 @@ export const OpenSankeyPlusDiagramSelector : OpenSankeyPlusDiagramSelectorFType 
         variant={diagramType==='File'?'primary':'outline-primary'}
         onClick={
           () => {
-            setDiagramType('File')
+            setDiagramName('File')
           }}>{t('Menu.other_file')}</Button>
       <Button 
         className='btn_menu_config'
@@ -190,7 +191,7 @@ export const OpenSankeyPlusDiagramSelector : OpenSankeyPlusDiagramSelectorFType 
         variant={diagramType==='View'?'primary':'outline-primary'}
         onClick={
           () => {
-            setDiagramType('View')
+            setDiagramName('View')
           }}>{t('Menu.view_actual_file')}</Button>
       
       {diagramType==='File' ? <>
@@ -285,7 +286,7 @@ export const OpenSankeyPlusDiagramSelector : OpenSankeyPlusDiagramSelectorFType 
       
     </InputGroup>
   }
-  return OpenSankeyPlusDiagramSelectorInner
+  return SankeyPlusDiagramSelectorInner
 }
 
 export const apply_transformation_opensankey_plus_elements : apply_transformation_opensankey_plus_elementsFType = (

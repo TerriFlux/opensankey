@@ -1,31 +1,22 @@
 import { TFunction } from 'i18next'
 import { SankeyPlusData } from './Types'
-import { updateLayoutFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
+import { OpenSankeyDiagramSelectorFType } from 'open-sankey/src/types/SankeyMenuDialogsTypes'
 
 export type plus_convert_dataFType = (
   data:SankeyPlusData,
   DefaultSankeyData: ()=>SankeyPlusData
 )=> void
 
-export type OpenSankeyPlusDiagramSelectorFType = (
+export type SankeyPlusDiagramSelectorFType = (
   master_data : SankeyPlusData|undefined,
   set_master_data : (d:SankeyPlusData|undefined)=>void,
   view : string,
   view_selected:string,
   set_view_selected:(s:string)=>void,
   diagramType:string,
-  setDiagramType:(s:string)=>void,
+  setDiagramName:(s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
-) => (
-    t: TFunction, 
-    convert_data: (s:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>null,
-    sankey_data: SankeyPlusData,
-    set_sankey_data: (s:SankeyPlusData)=>null,
-    prev_sankey_data: SankeyPlusData,
-    set_prev_sankey_data: (s:SankeyPlusData)=>void, 
-    updateLayout: updateLayoutFuncType, 
-    elementToDispose : string[]
-  ) => JSX.Element
+) => OpenSankeyDiagramSelectorFType
 
 export type apply_transformation_opensankey_plus_elementsFType = (
   data:SankeyPlusData,

@@ -1,12 +1,13 @@
 import { TFunction } from 'i18next'
 import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, ViewType } from './Types'
 import { SankeyLinkValueDict, TagsGroup } from 'open-sankey/src/types/Types'
+import { setDiagramFuncType } from 'open-sankey/src/types/SankeyMenuBannerTypes'
 
-export type setDiagramFType = (
+export type getSetDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
   set_view: (s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
-) => void
+) => setDiagramFuncType
 
 export type view_toastFType = JSX.Element
 

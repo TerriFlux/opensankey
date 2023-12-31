@@ -28,7 +28,7 @@ import {
   MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, 
   SankeyPlusMenuPreferenceViewFType, check_current_view_savedFType, filter_viewFType, 
   get_data_from_viewFType, keyHandlerFType, modal_transparent_view_attrFType, 
-  modal_view_not_savedFType, recompute_viewsFType, selecteur_viewFType, setDiagramFType, 
+  modal_view_not_savedFType, recompute_viewsFType, selecteur_viewFType, getSetDiagramFType, 
   setValueFType, view_toastFType, view_toast_update_viewFType, viewsAccordionFType
 } from '../types/SankeyPlusViewsTypes'
 
@@ -50,7 +50,7 @@ import { Checkbox } from '@chakra-ui/react'
 // @ts-ignore
 const deep_diff = require('deep-diff')
 /* eslint-enable */
-export const setDiagram : setDiagramFType = (
+export const getSetDiagramFunc : getSetDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
   set_view: (s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
