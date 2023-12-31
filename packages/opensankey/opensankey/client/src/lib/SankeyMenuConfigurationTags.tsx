@@ -1,24 +1,15 @@
 import React, { useState, FunctionComponent } from 'react'
 import { Button, FormControl, Form, FormLabel, Table, ButtonGroup,  OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 
-import { SankeyData,  TagsGroup } from '../types/Types'
+import { TagsGroup } from '../types/Types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
 import { AddTag,AddGroupTag, GetRandomInt } from './SankeyUtils'
 import { FaEye,FaEyeSlash} from 'react-icons/fa'
-import { TFunction } from 'i18next'
+import { SankeySettingsEditionElementTagsTypes } from '../types/SankeyMenuConfigurationTagsTypes'
 
-
-export type SankeyMenuConfigurationTagsTypes = {
-  t:TFunction,
-  data: SankeyData,
-  set_data : (_:SankeyData)=>void,
-  elementTagNameProp: 'nodeTags' | 'fluxTags' | 'dataTags',
-  elementNameProp: 'nodes' | 'links' | 'none'
-}
-
-const SankeySettingsEditionElementTags: FunctionComponent<SankeyMenuConfigurationTagsTypes> = ({ 
+const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionElementTagsTypes> = ({ 
   t,data, set_data,elementTagNameProp,elementNameProp 
 }) => {
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'

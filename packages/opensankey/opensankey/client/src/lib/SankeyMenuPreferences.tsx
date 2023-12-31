@@ -6,14 +6,8 @@ import { SankeyData } from '../types/Types'
 import { TFunction,i18n } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
-import { OpenSankeyDefaultModalePreferenceContentFType, preferenceCheckFType } from '../types/SankeyMenuPreferencesTypes'
+import { OpenSankeyDefaultModalePreferenceContentFType, modalPreferenceTypes, preferenceCheckFType } from '../types/SankeyMenuPreferencesTypes'
 
-export type modalPreferenceTypes = {
-  showPreference: boolean,
-  setShowPreference: (_:boolean)=>void,
-  ui: (JSX.Element[] | JSX.Element)[],
-  t:TFunction
-}
 
 declare const window: Window &
 typeof globalThis & {
@@ -170,10 +164,9 @@ export const preferenceCheck : preferenceCheckFType  = (str: string,data:SankeyD
 
 }
 
-
-
-const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreference,setShowPreference,ui,t})=>{
-
+export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
+  {showPreference,setShowPreference,ui,t
+  })=>{
   return (<Modal show={showPreference} onHide={() => { setShowPreference(false) }}>
     <Modal.Header closeButton>
       <Modal.Title>{t('Menu.title_pref')}</Modal.Title>
@@ -185,6 +178,4 @@ const ModalPreference: FunctionComponent<modalPreferenceTypes> = ({showPreferenc
     </Modal.Body>
   </Modal>)
 }
-
-export default ModalPreference
 

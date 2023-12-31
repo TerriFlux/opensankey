@@ -28,7 +28,10 @@ import { faShareNodes,
 import { selected_type } from './SankeyMenuTop'
 import { TFunction } from 'i18next'
 import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
-import { addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType, setDiagramFuncType, stretchButtonsFType, toolbar_builderFType } from '../types/SankeyMenuBannerTypes'
+import { 
+  addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType, 
+  setDiagramFuncType, stretchButtonsFType, toolbar_builderFType 
+} from '../types/SankeyMenuBannerTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from '../types/SankeyUtilsTypes'
 
 // Delete all local node variable : local_aggregation when we switch general aggregation 
