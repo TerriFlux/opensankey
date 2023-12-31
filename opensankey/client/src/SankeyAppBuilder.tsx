@@ -5,14 +5,14 @@ import { useTranslation } from 'react-i18next'
 
 import i18next from './traduction'
 
-import { SankeyAppBuilderTypes, SankeyData, processFunctionsType, showMenuComponentsType } from './types/Types'
-import Menu, { OpenSankeyMenus,MenuDraggable,OpenSankeySaveButton,LastCheckpointTime } from './lib/SankeyMenuTop'
+import { SankeyAppBuilderTypes, SankeyData, applicationDrawType, processFunctionsType, showMenuComponentsType } from './types/Types'
+import { Menu, OpenSankeyMenus, MenuDraggable,OpenSankeySaveButton,LastCheckpointTime } from './lib/SankeyMenuTop'
 import { SankeySettingsEditionElementTags } from './lib/SankeyMenuConfigurationTags'
 import { OpenSankeyMenuConfigurationLayout } from './lib/SankeyMenuConfigurationLayout'
 import { OpenSankeyConfigurationNodesAttributes} from './lib/SankeyMenuConfigurationNodesAttributes'
 import { OpenSankeyMenuConfigurationNodes} from './lib/SankeyMenuConfigurationNodes'
 import { OpenSankeyDiagramSelector} from './lib/SankeyMenuDialogs'
-import { OpenSankeyMenusFType} from './types/SankeyMenuTypes'
+import { OpenSankeyMenusFType} from './types/SankeyMenuTopTypes'
 
 import {SankeyMenuConfigurationNodesIO} from './lib/SankeyMenuConfigurationNodesIO'
 import {SankeyMenuConfigurationNodesIOFType} from './types/SankeyMenuConfigurationNodesIOTypes'
@@ -22,13 +22,13 @@ import {SankeyMenuConfigurationLinksData} from './lib/SankeyMenuConfigurationLin
 import {SankeyMenuConfigurationLinksAppearence} from './lib/SankeyMenuConfigurationLinksAppearence'
 
 import {toolbar_builder,addSimpleLevelDropDown,setDiagram} from './lib/SankeyMenuBanner'
-import ModalPreference,{OpenSankeyDefaultModalePreferenceContent} from './lib/SankeyMenuPreferences'
+import { ModalPreference,OpenSankeyDefaultModalePreferenceContent} from './lib/SankeyMenuPreferences'
 import { keyHandler } from './lib/SankeyDraw'
 import { context_legend_tags } from './lib/SankeyDrawLegend'
 import { RetrieveExcelResults, updateLayout, windowSankey } from './lib/SankeyUtils'
 import { ContextMenuLink } from './lib/SankeyMenuContextLink'
 import { ContextMenuNode } from './lib/SankeyMenuContextNode'
-import { ContextZdd } from './lib/SankeyMenuContextZDD'
+import { ContextMenuZdd } from './lib/SankeyMenuContextZDD'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './lib/SankeyStyle'
 import { OpenSankeyConfigurationsMenus } from './lib/SankeyMenuConfiguration'
 import { CardsTemplateBuilder, welcomeModalBuilder } from './lib/SankeyModalWelcome'
@@ -146,12 +146,22 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     result,
     setResult,
     path,
+    setPath,
     launch,
     is_computing,
     setIsComputing,
     RetrieveExcelResults
   }
   
+  const applicationDraw : applicationDrawType = {
+    GetSankeyMinWidthAndHeight : size_of_draw_zone,
+    updateLayout,
+    node_hspace,
+    set_node_hspace,
+    node_vspace,
+    set_node_vspace
+  }
+
   // Modals
   const [showStyle, setShowStyle] = useState(false)
 
@@ -572,7 +582,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     t('Menu.MEP'),
     showMenuComponents.show_menu_layout[1]):<></>
 
-  const context_for_zdd = ContextZdd(
+  const context_for_zdd = ContextMenuZdd(
     showMenuComponents,
     contextMenu.show_context_zdd,contextMenu.set_show_context_zdd,
     applicationData.data,applicationData.set_data,
@@ -609,6 +619,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
           contextMenu={contextMenu}
           processFunctions={processFunctions}
           showMenuComponents={showMenuComponents}
+          applicationDraw={applicationDraw}
           nav_item_active={nav_item_active}
           show_nav={show_nav}
           set_show_nav={set_show_nav}
@@ -620,16 +631,10 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
           menus={sankey_menus}
           cardsTemplate={cardsTemplate}
           external_modal={external_menu_modal}
-          GetSankeyMinWidthAndHeight={size_of_draw_zone}
           Reinitialization={Reinitialization}
           formations_menu={formations_menu}
           additional_nav_item={additional_nav_item}
-          updateLayout={updateLayout}
           convert_data={convert_data}
-          node_hspace={node_hspace}
-          set_node_hspace={set_node_hspace}
-          node_vspace={node_vspace}
-          set_node_vspace={set_node_vspace}
           elementToDispose={elementToDispose}
           apply_transformation_additional_elements={apply_transformation_additional_elements}
           DiagramSelector={DiagramSelector}

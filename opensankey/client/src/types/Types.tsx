@@ -409,10 +409,20 @@ export type processFunctionsType = {
   result : string,
   setResult : (_:string)=>void,
   path: string,
+  setPath : (_:string) => void,
   launch: (path:string) => void,
   is_computing:boolean,
   setIsComputing:(_:boolean)=>void,
   RetrieveExcelResults:RetrieveExcelResultsFuncType
+}
+
+export type applicationDrawType = {
+  GetSankeyMinWidthAndHeight :GetSankeyMinWidthAndHeightFuncType,
+  updateLayout:updateLayoutFuncType,
+  node_hspace:number,
+  set_node_hspace:(n:number)=>void,
+  node_vspace:number,
+  set_node_vspace:(n:number)=>void
 }
 
 export type MenuTypes = {
@@ -423,38 +433,28 @@ export type MenuTypes = {
   contextMenu : contextMenuType,
   processFunctions : processFunctionsType,
   showMenuComponents: showMenuComponentsType,
+  applicationDraw: applicationDrawType,
 
   show_nav: boolean,
   set_show_nav: (_:boolean)=>void,
-
-  example_menu: JSX.Element,
-  formations_menu: object,
-
   nav_item_active: string,
 
   mode_selection: { current : string },
-
   style_to_apply: string,
   set_style_to_apply: (_:string)=>void,
+  Reinitialization:() => void,
+  convert_data:(data: SankeyData, DefaultSankeyData: () => SankeyData)=>void
+  elementToDispose:string[]
+  DiagramSelector: OpenSankeyDiagramSelectorFType,
 
   configurations_menus: JSX.Element[],
-
   menus: {[s: string]: JSX.Element[] | JSX.Element},
   cardsTemplate:JSX.Element,
   external_modal:JSX.Element[],
-  GetSankeyMinWidthAndHeight :GetSankeyMinWidthAndHeightFuncType,
-  Reinitialization:() => void,
-  additional_nav_item:JSX.Element[],
-
-  updateLayout:updateLayoutFuncType,
-  convert_data:(data: SankeyData, DefaultSankeyData: () => SankeyData)=>void
-  node_hspace:number,
-  set_node_hspace:(n:number)=>void,
-  node_vspace:number,
-  set_node_vspace:(n:number)=>void,
-  elementToDispose:string[]
   apply_transformation_additional_elements: JSX.Element[],
-  DiagramSelector: OpenSankeyDiagramSelectorFType
+  additional_nav_item:JSX.Element[],
+  example_menu: JSX.Element,
+  formations_menu: object
 }
 
 export type callbackFuncType = (server_data: SankeyData) => void

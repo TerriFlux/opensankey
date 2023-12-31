@@ -43,7 +43,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { addAllDropDownNode } from './SankeyMenuBanner'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import {AddAllDropDownFluxFType, LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from '../types/SankeyMenuTypes'
+import {AddAllDropDownFluxFType, LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from '../types/SankeyMenuTopTypes'
 import { RecursionDataTag, DefaultNode, DefaultLink, ClickSaveExcel, FindMaxLinkValue, UploadExemple, ClickSaveDiagram, UploadExcelImpl, DownloadExamples } from './SankeyUtils'
 
 declare const window: Window &
@@ -796,7 +796,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
  *
  * @returns
  */
-const Menu: FunctionComponent<MenuTypes> = (
+export const Menu: FunctionComponent<MenuTypes> = (
   {
     applicationContext,
     applicationData,
@@ -805,6 +805,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     contextMenu,
     processFunctions,
     showMenuComponents,
+    applicationDraw,
     show_nav,
     set_show_nav,
     nav_item_active,
@@ -812,13 +813,9 @@ const Menu: FunctionComponent<MenuTypes> = (
     menus,
     cardsTemplate,
     external_modal,
-    GetSankeyMinWidthAndHeight,
     formations_menu,Reinitialization,
     additional_nav_item,
-    updateLayout,
     convert_data,
-    node_hspace,set_node_hspace,
-    node_vspace,set_node_vspace,
     elementToDispose,
     apply_transformation_additional_elements,
     DiagramSelector
@@ -851,9 +848,9 @@ const Menu: FunctionComponent<MenuTypes> = (
           processFunctions.RetrieveExcelResults(
             text,
             applicationData.set_data,
-            updateLayout,
+            applicationDraw.updateLayout,
             ()=>null,
-            GetSankeyMinWidthAndHeight,
+            applicationDraw.GetSankeyMinWidthAndHeight,
             convert_data,
             applicationData.get_default_data
           )
@@ -874,7 +871,7 @@ const Menu: FunctionComponent<MenuTypes> = (
     set_show_nav(!show_nav)
 
     if(!show_nav){
-      [applicationData.data.width, applicationData.data.height] = GetSankeyMinWidthAndHeight(applicationData.data)
+      [applicationData.data.width, applicationData.data.height] = applicationDraw.GetSankeyMinWidthAndHeight(applicationData.data)
       const transform=d3.select('.opensankey #svg').attr('transform')
       let scale_svg=1
       if(transform!==undefined && transform!==null){
@@ -1162,12 +1159,12 @@ const Menu: FunctionComponent<MenuTypes> = (
         set_show_apply_layout={showMenuComponents.show_apply_layout[1]}
         sankey_data={applicationData.data}
         set_sankey_data={applicationData.set_data}
-        updateLayout={updateLayout}
+        updateLayout={applicationDraw.updateLayout}
         convert_data={convert_data}
-        node_hspace={node_hspace}
-        set_node_hspace={set_node_hspace}
-        node_vspace={node_vspace}
-        set_node_vspace={set_node_vspace}
+        node_hspace={applicationDraw.node_hspace}
+        set_node_hspace={applicationDraw.set_node_hspace}
+        node_vspace={applicationDraw.node_vspace}
+        set_node_vspace={applicationDraw.set_node_vspace}
         elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
@@ -1216,10 +1213,6 @@ const Menu: FunctionComponent<MenuTypes> = (
     </>
   )
 }
-
-export default Menu
-
-
 
 const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem','paddingRight':'0.75rem',
   'position': 'fixed',

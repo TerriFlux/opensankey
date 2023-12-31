@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Dropdown, ButtonGroup, Button, Popover, Form } from 'react-bootstrap'
-import { ContextZddFType } from '../types/SankeyMenuTypes'
+import { ContextMenuZddFType } from '../types/SankeyMenuContextZDDTypes'
 import { SankeyData, showMenuComponentsType } from '../types/Types'
 import { ComputeAutoSankey, arrangeNodes } from './SankeyLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -13,7 +13,7 @@ const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFr
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
-export const ContextZdd : ContextZddFType =(
+export const ContextMenuZdd : ContextMenuZddFType =(
   showMenuComponents:showMenuComponentsType,
   show_context_zdd : boolean,
   set_show_context_zdd : (_:boolean)=>void,

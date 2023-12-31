@@ -11,3 +11,9 @@ export type OpenSankeyDefaultModalePreferenceContentFType=(
 
 export type preferenceCheckFType = (str: string,data:SankeyData) => void
 
+export type modalPreferenceTypes = {
+  showPreference: boolean,
+  setShowPreference: (_:boolean)=>void,
+  ui: (JSX.Element[] | JSX.Element)[],
+  t:TFunction
+}
