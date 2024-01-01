@@ -1,5 +1,5 @@
 import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve, SankeyLinkAttrLocal, display_styleType} from '../types/Types'
-import React from 'react'
+import React, { RefObject } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
 import { drawCurveFunction,
@@ -40,13 +40,13 @@ export const OpenSankeyDrawLinks : OpenSankeyDrawLinksFType = (
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   set_data:(d:SankeyData)=>void,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
   LinkStroke:LinkStrokeFuncType,
   DrawArrows:drawArrowsType,
   set_display_link_opacity:(s:string)=>void,
-  set_contextualised_link:(l:SankeyLink|undefined)=>void,
+  contextualised_link:{ current :SankeyLink|undefined},
   pointer_pos:{current:number[]},
   LinkSabotColor:LinkColorFuncType,
 
@@ -119,7 +119,9 @@ export const OpenSankeyDrawLinks : OpenSankeyDrawLinksFType = (
             new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
           }
           set_tags_selected(new_tags_selected)
-          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+          if (displayedInputLinkValueRef.current) {
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+          }
         }else if(Object.values(data.dataTags).length>0){
           // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
           const tmp=[] as string[]
@@ -130,12 +132,18 @@ export const OpenSankeyDrawLinks : OpenSankeyDrawLinksFType = (
           Object.keys(data.dataTags).forEach((dt,i)=>{
             n_t_s[dt]=tmp[i]
           })
-          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value as unknown as string)
+          if (displayedInputLinkValueRef.current) {
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,n_t_s).value as unknown as string)
+          }
         }else{
-          set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+          if (displayedInputLinkValueRef.current) {
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+          }
         }
       }else{
-        set_displayed_input_link_value('')
+        if (displayedInputLinkValueRef.current) {
+          displayedInputLinkValueRef.current.value = ''
+        }
       }
       set_data({...data})
     }
@@ -184,7 +192,7 @@ export const OpenSankeyDrawLinks : OpenSankeyDrawLinksFType = (
     display_links:{ [link_id: string]: SankeyLink },
     LinkStroke:LinkStrokeFuncType,
     DrawArrows:drawArrowsType,
-    set_contextualised_link:(l:SankeyLink|undefined)=>void,
+    contextualised_link:{current:SankeyLink|undefined},
     pointer_pos:{current:number[]},
     LinkSabotColor:LinkColorFuncType
   ) => {
@@ -247,8 +255,8 @@ export const OpenSankeyDrawLinks : OpenSankeyDrawLinksFType = (
       })
     gg_links.on('contextmenu', (ev, l) => {
       if(!window.SankeyToolsStatic){
-        return EventLinkContextMenu(ev,l,set_contextualised_link,pointer_pos,data,set_data,
-          multi_selected_links,set_displayed_input_link_value,tags_selected,set_tags_selected,set_display_link_opacity
+        return EventLinkContextMenu(ev,l,contextualised_link,pointer_pos,data,set_data,
+          multi_selected_links,displayedInputLinkValueRef,tags_selected,set_tags_selected,set_display_link_opacity
         )}}
     )
 
@@ -755,7 +763,7 @@ export const OpenSankeyDrawLinks : OpenSankeyDrawLinksFType = (
     link.local.label_position = 'frozen'
   }
 
-  add_links(display_nodes,display_links,LinkStroke,DrawArrows,set_contextualised_link,pointer_pos,LinkSabotColor)
+  add_links(display_nodes,display_links,LinkStroke,DrawArrows,contextualised_link,pointer_pos,LinkSabotColor)
   
   return (<>
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>

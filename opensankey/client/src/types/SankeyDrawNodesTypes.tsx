@@ -1,7 +1,10 @@
+import { RefObject } from 'react'
 import { GetLinkValueFuncType, LinkTextFuncType } from './SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode } from './Types'
+import { SankeyData, SankeyLink, SankeyNode, contextMenuType } from './Types'
+import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 
 export type OpenSankeyDrawNodesFType = (
+  contextMenu:contextMenuType,
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -15,15 +18,11 @@ export type OpenSankeyDrawNodesFType = (
   set_first_selected_node:(_:SankeyNode)=>void,
   accordion_ref:{current:HTMLDivElement } | null,
   button_ref:{current:HTMLLabelElement} | null,
-
   alt_key_pressed:boolean,
-  NodeTooltipsContent: (data: SankeyData, display_nodes : { [node_id: string]: SankeyNode }, d: SankeyNode, GetLinkValue:GetLinkValueFuncType) => string,
+  NodeTooltipsContent: NodeTooltipsContentFType,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   accept_simple_click:{current:boolean},
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  pointer_pos:{current:number[]}
-
 ) => void
   

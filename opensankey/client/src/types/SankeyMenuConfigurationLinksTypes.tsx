@@ -1,6 +1,7 @@
 import { TFunction } from 'i18next'
 import { SankeyData, SankeyLink } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
+import { RefObject } from 'react'
 
 
 
@@ -14,8 +15,7 @@ export type OpenSankeyMenuConfigurationLinksFType = (
   tags_selected:{[k: string]: string},
   set_tags_selected:(_:{[k: string]: string})=>void,
   additional_data_element:JSX.Element[],
-  displayed_input_link_value:string,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   additional_link_appearence_items:JSX.Element[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,

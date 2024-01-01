@@ -1,20 +1,19 @@
 import { TFunction } from 'i18next'
 import { SankeyData, SankeyLink } from './Types'
+import { RefObject } from 'react'
 
 export type SankeyMenuConfigurationLinksDataFType = (
   data:SankeyData,
   tags_selected:{[k: string]: string},
-  set_tags_selected:( _ :{[k: string]: string} )=> void,
   multi_selected_links:{current:SankeyLink[]},
   set_data:(d:SankeyData)=>void,
   t:TFunction,
   additional_data_element:JSX.Element[],
-  displayed_input_link_value:string,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef : RefObject<HTMLInputElement>,
   pre_idSource:string,
   set_pre_idSource:(s:string)=>void,
   pre_idTarget:string,
   set_pre_idTarget:(s:string)=>void,
   menu_for_modal : boolean,
-)=> JSX.Element
+) => JSX.Element
 

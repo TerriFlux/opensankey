@@ -1,3 +1,4 @@
+import { RefObject } from 'react'
 import { drawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkColorFuncType, LinkTextFuncType } from './SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode } from './Types'
@@ -20,13 +21,13 @@ export type OpenSankeyDrawLinksFType = (
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   set_data:(d:SankeyData)=>void,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
   LinkStroke:LinkStrokeFuncType,
   DrawArrows:drawArrowsType,
   set_display_link_opacity:(s:string)=>void,
-  set_contextualised_link:(l:SankeyLink|undefined)=>void,
+  contextualised_link:{ current:SankeyLink|undefined},
   pointer_pos:{current:number[]},
   LinkSabotColor:LinkColorFuncType
 ) => JSX.Element
