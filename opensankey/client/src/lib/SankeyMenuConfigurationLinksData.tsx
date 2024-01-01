@@ -1,29 +1,26 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyData, SankeyLink } from '../types/Types'
 import {ValueSelectedParameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
-import {TFunction} from 'i18next'
 import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar } from './SankeyUtils'
 import { SankeyMenuConfigurationLinksDataFType } from '../types/SankeyMenuConfigurationLinksDataTypes'
 
 export const SankeyMenuConfigurationLinksData : SankeyMenuConfigurationLinksDataFType = (
-  data:SankeyData,
-  tags_selected:{[k: string]: string},
-  set_tags_selected:(_:{[k: string]: string})=>void,
-  // selected_link:{current:SankeyLink},
-  multi_selected_links:{current:SankeyLink[]},
-  set_data:(d:SankeyData)=>void,
-  t:TFunction,
-  additional_data_element:JSX.Element[],
-  displayed_input_link_value:string,
-  set_displayed_input_link_value:(s:string)=>void,
-  pre_idSource:string,
-  set_pre_idSource:(s:string)=>void,
-  pre_idTarget:string,
-  set_pre_idTarget:(s:string)=>void,
-  menu_for_modal=false,
+  data,
+  tags_selected,
+  multi_selected_links,
+  set_data,
+  t,
+  additional_data_element,
+  displayedInputLinkValueRef,
+  pre_idSource,
+  set_pre_idSource,
+  pre_idTarget,
+  set_pre_idTarget,
+  menu_for_modal
 ) => {
+  //const displayedInputLinkValueRef = useRef<RefObject<HTMLInputElement>>()
+  const [displayed_input_link_value,set_displayed_input_link_value]=useState('')
   let is_link_data_invalid=false
   if(multi_selected_links.current.length>0){
     const curr_val=ValueSelectedParameter(data,multi_selected_links,tags_selected).value
@@ -193,6 +190,7 @@ export const SankeyMenuConfigurationLinksData : SankeyMenuConfigurationLinksData
           className='inputValueLink'
           style={{width:'60%'}}
           type='text'
+          ref={displayedInputLinkValueRef}
           value={displayed_input_link_value}
           isInvalid={is_link_data_invalid}
           onChange={

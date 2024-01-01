@@ -1065,8 +1065,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
       {/* Top Navbar with navigation and edition elements */}
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
-        contextMenu.set_contextualised_node(undefined)
-        contextMenu.set_contextualised_link(undefined)
+        contextMenu.contextualised_node.current =undefined
+        contextMenu.contextualised_link.current = undefined
         contextMenu.set_show_context_zdd(false)
         contextMenu.set_tag_contextualised(undefined)
       }} >

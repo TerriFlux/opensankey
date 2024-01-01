@@ -1,5 +1,5 @@
 // General import
-import React, { useState, FunctionComponent } from 'react'
+import React, { useState, FunctionComponent, useRef, useEffect } from 'react'
 import { Popover, Form} from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 
@@ -33,6 +33,7 @@ import { SankeyModalStyleLink, SankeyModalStyleNode } from './lib/SankeyStyle'
 import { OpenSankeyConfigurationsMenus } from './lib/SankeyMenuConfiguration'
 import { CardsTemplateBuilder, welcomeModalBuilder } from './lib/SankeyModalWelcome'
 
+
 /*****************************************************************************/
 
 export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
@@ -43,13 +44,10 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   contextMenu,
   show_nav,
   set_show_nav,
-  displayed_input_link_value,
-  set_displayed_input_link_value,
+  displayedInputLinkValueRef,
   exemple_menu,
   formations_menu,
   mode_selection,
-  user_scale,
-  set_user_scale,
   GetLinkValue,
   Reinitialization,
   size_of_draw_zone,
@@ -92,6 +90,9 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   const [not_started,setNotStarted] = useState(true)
   const [result,setResult] = useState('')
   const [path,setPath] = useState('')
+
+  const userScaleRef = useRef(applicationData.data.user_scale)
+  userScaleRef.current = applicationData.data.user_scale
 
   const show_menu_node_apparence=useState(false)
   const show_menu_node_io=useState(false)
@@ -220,7 +221,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
   const  menu_configuration_layout= OpenSankeyMenuConfigurationLayout(t,
     applicationData.data,applicationData.set_data,
-    user_scale, set_user_scale,
+    userScaleRef,
     legend_position, set_legend_position,
     <></>
   )
@@ -276,7 +277,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     elementsSelected.tags_selected, 
     elementsSelected.set_tags_selected,
     [<></>],
-    displayed_input_link_value, set_displayed_input_link_value,
+    displayedInputLinkValueRef,
     [<></>],
     display_link_opacity, set_display_link_opacity,
     pre_idSource,set_pre_idSource,
@@ -324,7 +325,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     menu_configuration_links,
     <></>,
     false, //TODO
-    set_displayed_input_link_value,
+    displayedInputLinkValueRef,
     elementsSelected.tags_selected, 
     elementsSelected.set_tags_selected,
     set_display_link_opacity,
@@ -449,7 +450,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
   const {filter}=applicationData.data.display_style
   const toolbar = toolbar_builder(
-    t,applicationData.data,applicationData.set_data,mode_selection,user_scale,set_user_scale,filter,func_current_filter,
+    t,applicationData.data,applicationData.set_data,mode_selection,userScaleRef,filter,func_current_filter,
     detail_level,'',elementsSelected.first_selected_node,elementsSelected.set_first_selected_node,size_of_draw_zone,
     setDiagram,
     showMenuComponents.show_modal_welcome[1],set_never_see_again,convert_data,
@@ -503,37 +504,36 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
   const DiagramSelector = OpenSankeyDiagramSelector
 
-  const context_n = ContextMenuNode (
-    contextMenu.contextualised_node,
-    contextMenu.set_contextualised_node,
-    set_show_agregation,
-    applicationData.data,
-    applicationData.set_data,
-    applicationData.display_nodes,
-    applicationData.display_links,
-    elementsSelected.multi_selected_nodes,
-    elementsSelected.multi_selected_links,
-    t,
+  const context_n = ContextMenuNode(
+    applicationContext,
+    applicationData,
+    elementsSelected,
+    contextMenu,
     showMenuComponents,
-    set_agregation_node,set_is_agregation,
+    set_show_agregation,
+    set_agregation_node,
+    set_is_agregation,
     set_display_link_opacity,
-    contextMenu.pointer_pos,
     [<></>],
     [<></>]
   )
-
+  useEffect(()=> {
+    contextMenu.contextNodeRef.current!.hidden = true    
+  })
 
   // MENU DRAGGABLE LINK DATA
   const menu_link_data = SankeyMenuConfigurationLinksData(
     applicationData.data,
-    elementsSelected.tags_selected,elementsSelected.set_tags_selected,
+    elementsSelected.tags_selected,
     elementsSelected.multi_selected_links,
     applicationData.set_data,
     t,
     [<></>],
-    displayed_input_link_value,set_displayed_input_link_value,
-    pre_idSource,set_pre_idSource,
-    pre_idTarget,set_pre_idTarget,
+    displayedInputLinkValueRef,
+    pre_idSource,
+    set_pre_idSource,
+    pre_idTarget,
+    set_pre_idTarget,
     true
   )
 
@@ -565,7 +565,6 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
   const context_l = ContextMenuLink(
     contextMenu.contextualised_link,
-    contextMenu.set_contextualised_node,
     showMenuComponents.show_menu_link_data[1],
     showMenuComponents.show_menu_link_appearence[1],
     applicationData.data,applicationData.set_data,

@@ -14,13 +14,13 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
   t:TFunction,
   data: SankeyData,
   set_data:(d:SankeyData)=>void,
-  user_scale:number,
-  set_user_scale:(n:number)=>void,
+  userScaleRef:{current :number},
   legend_position:number[],
   set_legend_position:(n:number[])=>void,
   extra_background_element:JSX.Element
 ) => {
   const [current_legend_bg_opacity,set_current_legend_bg_opacity]=useState(data.legend_bg_opacity)
+  const [,set_user_scale]=useState(data.user_scale)
   return [
     <h5>{t('Menu.background')}</h5>,
     /* Couleur du fond de la page */
@@ -107,13 +107,14 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         overlay={<Tooltip id={'MEP.tooltips.Echelle'}>{t('MEP.tooltips.Echelle')} </Tooltip>}>
         <FormControl
           type="text"
-          value={user_scale}
-          isInvalid={user_scale!=data.user_scale}
+          value={userScaleRef.current }
+          isInvalid={userScaleRef.current!=data.user_scale}
           onChange={evt => {
+            userScaleRef.current = +evt.target.value
             set_user_scale(+evt.target.value)
           }}
           onBlur={() => {
-            data.user_scale = user_scale
+            data.user_scale = userScaleRef.current
             set_data({ ...data })
           }}/>
       </OverlayTrigger>

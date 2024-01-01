@@ -1,7 +1,7 @@
 import Accordion from 'react-bootstrap/Accordion'
 import { ReactElementLike } from 'prop-types'
 import { SankeyLink, SankeyData, SankeyNode } from '../types/Types'
-import React, { FunctionComponent, Ref } from 'react'
+import React, { FunctionComponent, Ref, RefObject } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { OpenSankeyConfigurationsMenusFType } from '../types/SankeyMenuConfigurationTypes'
@@ -34,7 +34,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   },
   menu_configuration_free_labels:JSX.Element,
   token:boolean,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   tags_selected:{[k: string]: string},
   set_tags_selected:( s :{[k: string]: string} )=> void,
   set_display_link_opacity:(s:string)=>void,
@@ -203,7 +203,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 multi_selected_links={multi_selected_links}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_links={Object.values(menu_configuration_links)}
-                set_displayed_input_link_value={set_displayed_input_link_value}
+                displayedInputLinkValueRef={displayedInputLinkValueRef}
                 tags_selected={tags_selected}
                 set_tags_selected={set_tags_selected}
                 set_display_link_opacity={set_display_link_opacity}

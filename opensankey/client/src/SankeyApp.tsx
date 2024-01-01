@@ -1,5 +1,5 @@
 // General import
-import React, { useState, useEffect, useRef, FunctionComponent } from 'react'
+import React, { useState, useEffect, useRef, FunctionComponent, RefObject } from 'react'
 import * as d3 from 'd3'
 import { useTranslation } from 'react-i18next'
 
@@ -40,8 +40,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const nodes_accordion_ref = useRef<HTMLDivElement>(null) as {current : HTMLDivElement}
   const [data, pre_set_data] = useState<SankeyData>(initial_sankey_data)
   const start_point=useRef([0,0])
-  const [contextualised_node, set_contextualised_node] = useState<SankeyNode>()
-  const [contextualised_link, set_contextualised_link] = useState<SankeyLink>()
+  const contextualised_node = useRef<SankeyNode>()
+  const contextNodeRef = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
+  const contextualised_link = useRef<SankeyLink>()
   const pointer_pos=useRef([0,0])
   const [legend_clicked,set_legend_clicked]=useState(false)
   const [show_agregation,set_show_agregation] = useState(false)
@@ -63,15 +64,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const [display_link_opacity,set_display_link_opacity]=useState('0')
   const accept_simple_click=useRef(true)
 
-  const [displayed_input_link_value,set_displayed_input_link_value]=useState('')
-
-  const [user_scale, set_user_scale] = useState(data.user_scale)
+  const displayedInputLinkValueRef = useRef<HTMLInputElement>() as RefObject<HTMLInputElement>
 
   //For OpenSankeyMenuConfigurationLegend
   const [legend_position, set_legend_position] = useState(data.legend_position)
 
   const set_data=(ndata:SankeyData)=>{
-    set_user_scale(ndata.user_scale)
+    //userScaleRef.current = data.user_scale
     if(ndata.legend_position!==legend_position){
       set_legend_position(ndata.legend_position)
     }
@@ -130,17 +129,16 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
 
   const closeAllMenuContext=()=>{
-    set_contextualised_node(undefined)
-    set_contextualised_link(undefined)
+    contextualised_node.current = undefined
+    contextualised_link.current = undefined
     set_tag_contextualised(undefined)
     set_show_context_zdd(false)
   } 
 
   const contextMenu : contextMenuType = {
+    contextNodeRef : contextNodeRef,
     contextualised_node : contextualised_node,
-    set_contextualised_node : set_contextualised_node as contextMenuType['set_contextualised_node'],
-    contextualised_link : contextualised_link as contextMenuType['contextualised_link'],
-    set_contextualised_link : set_contextualised_link as contextMenuType['set_contextualised_link'],
+    contextualised_link : contextualised_link,
     tag_contextualised : tag_contextualised,
     set_tag_contextualised : set_tag_contextualised,
     closeAllMenuContext : closeAllMenuContext,
@@ -166,8 +164,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     localStorage.removeItem('icon_imported')
     set_selected_style_node('default')
     set_selected_style_link('default')
-    set_contextualised_node(undefined)
-    set_contextualised_link(undefined)
+    contextualised_node.current = undefined
+    contextualised_node.current = undefined
     set_tag_contextualised(undefined)
     set_data(new_data)
     sessionStorage.setItem('dismiss_warning_sankey_plus','0')
@@ -218,6 +216,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   useEffect(() => {
     // Call the function that add nodes to the sankey
     OpenSankeyDrawNodes(
+      contextMenu,
       data,set_data as (d:SankeyData)=>void,
       display_nodes,display_links,
       nodes_accordion_ref,links_accordion_ref,
@@ -228,9 +227,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       alt_key_pressed,
       NodeTooltipsContent,
       SankeyLinkText, //LinkText
-      SuiteGetLinkValue,set_displayed_input_link_value,accept_simple_click,
-      set_contextualised_node as (n:SankeyNode|undefined)=>void,
-      pointer_pos
+      SuiteGetLinkValue,
+      displayedInputLinkValueRef,
+      accept_simple_click
     )
     OpenSankeyDrawNodesLabel(data,set_data as (d:SankeyData)=>void,multi_selected_nodes,SuiteGetLinkValue)
 
@@ -259,13 +258,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       SankeyLinkText,
       SuiteGetLinkValue,
       set_data,
-      set_displayed_input_link_value,
+      displayedInputLinkValueRef,
       tags_selected,
       set_tags_selected,
       suiteLinkStroke as LinkStrokeFuncType,
       suiteDrawArrows,
       set_display_link_opacity,
-      set_contextualised_link as (d:SankeyLink|undefined)=>void,
+      contextualised_link as { current :SankeyLink|undefined },
       pointer_pos,
       ()=>''
     )
@@ -323,8 +322,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           formations_menu={formations_menu}
           exemple_menu={exemple_menu}
           mode_selection={mode_selection}
-          user_scale={user_scale}
-          set_user_scale={set_user_scale}
           GetLinkValue={GetLinkValue}
           Reinitialization={Reinitialization}
           size_of_draw_zone={size_of_draw_zone}
@@ -337,8 +334,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           convert_data={convert_data}
           maximum_flux={maximum_flux}
           set_maximum_flux={set_maximum_flux}
-          displayed_input_link_value={displayed_input_link_value}
-          set_displayed_input_link_value={set_displayed_input_link_value}
+          displayedInputLinkValueRef={displayedInputLinkValueRef}
           callback={()=>null}
           set_show_agregation={set_show_agregation}
         />
@@ -400,7 +396,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           accordion_ref,
           button_ref,
           links_accordion_ref,
-          set_displayed_input_link_value,
+          displayedInputLinkValueRef,
           evt,
           start_point,
           set_legend_clicked)

@@ -1,5 +1,5 @@
-import React from 'react'
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, display_styleType } from './Types'
+import React, { RefObject } from 'react'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, contextMenuType, display_styleType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 import * as d3 from 'd3'
@@ -122,20 +122,20 @@ export type EventNodeClickFType = (
 )=> void
 
 export type EventNodeContextMenuFType = (
-  ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  pointer_pos:{current:number[]},
+  ev:React.MouseEvent<HTMLButtonElement>,
+  n:SankeyNode,
+  contextMenu:contextMenuType,
   multi_selected_nodes:{current: SankeyNode[] },              
 )=> void
 
 export type EventLinkContextMenuFType = (
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
-  set_contextualised_link:(l:SankeyLink|undefined)=>void,
+  contextualised_link:{current:SankeyLink|undefined},
   pointer_pos:{current:number[]},
   data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
-  set_displayed_input_link_value:(s:string)=>void,
+    displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
   set_display_link_opacity:(s:string)=>void,
@@ -178,7 +178,7 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   accordion_ref:{ current:HTMLDivElement}| null,
   button_ref: { current: HTMLLabelElement }| null,
   links_accordion_ref:{ current:HTMLDivElement}| null,
-  set_displayed_input_link_value:(s:string)=>void,
+    displayedInputLinkValueRef: RefObject<HTMLInputElement>,
 )=> void
 
 export type SetNodesHeightFType = (
@@ -273,20 +273,21 @@ export type EventOnSankeyZoneMouseMoveFuncType = (mode_selection: {
   current: number[];
 }) => void
 
-export  type EventOnSankeyZoneMouseUpFuncType = (mode_selection: {
-  current: string;
-}, data: SankeyData, set_data: (d: SankeyData) => void, multi_selected_nodes: {
-  current: SankeyNode[];
-}, multi_selected_links: {
-  current: SankeyLink[];
-}, first_selected_node: SankeyNode, 
-  set_first_selected_node: (_:SankeyNode)=>void, token: boolean, set_show_toast_limit_node: (b: boolean) => void, accordion_ref: {
-  current: HTMLDivElement
-} | null, button_ref: {
-  current: HTMLLabelElement;
-} | null, links_accordion_ref: {
-  current: HTMLDivElement
-} | null, set_displayed_input_link_value: (s: string) => void, evt: MouseEvent, start_point: {
+export  type EventOnSankeyZoneMouseUpFuncType = (
+  mode_selection: {current: string;}, 
+  data: SankeyData, 
+  set_data: (d: SankeyData) => void, 
+  multi_selected_nodes: {current: SankeyNode[];}, 
+  multi_selected_links: {current: SankeyLink[];}, 
+  first_selected_node: SankeyNode, 
+  set_first_selected_node: (_:SankeyNode)=>void, 
+  token: boolean, 
+  set_show_toast_limit_node: (b: boolean) => void, 
+  accordion_ref: {current: HTMLDivElement} | null, 
+  button_ref: {current: HTMLLabelElement;} | null, 
+  links_accordion_ref: {current: HTMLDivElement} | null, 
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>, 
+  evt: MouseEvent, start_point: {
   current: number[];
 }, set_legend_clicked: (b: boolean) => void) => void
 

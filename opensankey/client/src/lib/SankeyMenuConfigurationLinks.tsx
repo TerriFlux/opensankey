@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, RefObject, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { SankeyLink, SankeyNode, SankeyData } from '../types/Types'
 
@@ -26,8 +26,7 @@ export const OpenSankeyMenuConfigurationLinks : OpenSankeyMenuConfigurationLinks
   tags_selected:{[k: string]: string},
   set_tags_selected:(_:{[k: string]: string})=>void,
   additional_data_element:JSX.Element[],
-  displayed_input_link_value:string,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   additional_link_appearence_items:JSX.Element[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
@@ -43,14 +42,14 @@ export const OpenSankeyMenuConfigurationLinks : OpenSankeyMenuConfigurationLinks
     'data'      : SankeyMenuConfigurationLinksData(
       data,
       tags_selected,
-      set_tags_selected,
       multi_selected_links,
       set_data,
       t,
       additional_data_element,
-      displayed_input_link_value,set_displayed_input_link_value,
+      displayedInputLinkValueRef,
       pre_idSource,set_pre_idSource,
-      pre_idTarget,set_pre_idTarget,false
+      pre_idTarget,set_pre_idTarget,
+      false
     ),
     'appearence': SankeyMenuConfigurationLinksAppearence(
       data,multi_selected_links,set_data,t,additional_link_appearence_items,
@@ -78,7 +77,7 @@ type SankeyMenuConfigurationLinksTypes = {
   multi_selected_links:{current:SankeyLink[]},
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_links : JSX.Element[]
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   tags_selected:{[k: string]: string},
   set_tags_selected:(_:{[k: string]: string})=>void,
   set_display_link_opacity:(s:string)=>void,
@@ -91,7 +90,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     multi_selected_links,
     multi_selected_nodes,
     menu_configuration_links,
-    set_displayed_input_link_value,
+    displayedInputLinkValueRef,
     tags_selected,set_tags_selected,
     set_display_link_opacity,
     pre_idSource,
@@ -168,7 +167,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
                 set_tags_selected(new_tags_selected)
-                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as string)
 
               }else if(Object.values(data.dataTags).length>0){
                 // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -181,9 +180,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   n_t_s[dt]=tmp[i]
                 })
                 set_tags_selected(n_t_s)
-                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(data,multi_selected_links,n_t_s).value as string)
               }else{
-                set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as string)
               }
             }
 

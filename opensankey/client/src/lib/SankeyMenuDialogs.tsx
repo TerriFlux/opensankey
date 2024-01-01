@@ -16,6 +16,7 @@ import { Checkbox } from '@chakra-ui/react'
 import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
 import { ClickSaveDiagramFuncType, DefaultSankeyDataFuncType, UploadExcelImplFuncType, updateLayoutFuncType } from '../types/SankeyUtilsTypes'
 import { OpenSankeyDiagramSelectorFType } from '../types/SankeyMenuDialogsTypes'
+
 /**
  * Define ApplyLayoutDialog
  *
@@ -565,7 +566,6 @@ export const ApplyLayoutDialog = ({
     </Tab>
     <Tab key='trans_topo' eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
   </Tabs>
-
   const dragLayout=show_apply_layout?MenuDraggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.Transformation.title'),set_show_apply_layout,60):<></>
   return dragLayout
 

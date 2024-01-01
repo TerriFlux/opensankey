@@ -396,8 +396,7 @@ export const toolbar_builder : toolbar_builderFType = (
   data: SankeyData,
   set_data: (d:SankeyData)=>void,
   mode_selection:{current:string},
-  user_scale:number,
-  set_user_scale:(n:number)=>void,
+  userScaleRef:{current:number},
   filter:number,
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,
@@ -420,6 +419,7 @@ export const toolbar_builder : toolbar_builderFType = (
   const target_link_threshold=useRef(null)
   const [show_detail_level,set_show_detail_level]=useState(false)
   const target_detail_level=useRef(null)
+  const [,set_user_scale]=useState(data.user_scale)
   /**
    * Change the mouse behavior
    *
@@ -498,14 +498,15 @@ export const toolbar_builder : toolbar_builderFType = (
           <Col xs={5}>
             <FormControl
               type="text"
-              value={user_scale}
-              isInvalid={user_scale!=data.user_scale}
+              value={  userScaleRef.current }
+              isInvalid={userScaleRef.current!=data.user_scale}
 
               onChange={evt => {
+                userScaleRef.current =+evt.target.value
                 set_user_scale(+evt.target.value)
               }}
               onBlur={() => {
-                data.user_scale = user_scale
+                data.user_scale = userScaleRef.current
                 set_data({ ...data })
               }}
             />

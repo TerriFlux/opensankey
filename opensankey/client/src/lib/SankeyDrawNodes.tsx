@@ -1,5 +1,5 @@
 import { SankeyLink, SankeyData, SankeyNode} from '../types/Types'
-import React from 'react'
+import React, { RefObject } from 'react'
 import * as d3 from 'd3'
 
 import {NodeColor,ReturnValueNode} from './SankeyUtils'
@@ -8,12 +8,14 @@ import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
 import {  dragGNodeEvent } from './SankeyDrag'
 import { GetLinkValueFuncType, LinkTextFuncType } from '../types/SankeyUtilsTypes'
 import { OpenSankeyDrawNodesFType } from '../types/SankeyDrawNodesTypes'
+import { NodeTooltipsContentFType } from '../types/SankeyTooltipTypes'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
 export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
+  contextMenu,
   data:SankeyData, 
   set_data:(d:SankeyData)=>void,
   display_nodes:{ [node_id: string]: SankeyNode },
@@ -27,16 +29,12 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
   set_first_selected_node:(_:SankeyNode)=>void,
   accordion_ref:{current:HTMLDivElement } | null,
   button_ref:{current:HTMLLabelElement} | null,
-
   alt_key_pressed:boolean,
-  NodeTooltipsContent: (data: SankeyData, display_nodes : { [node_id: string]: SankeyNode }, d: SankeyNode, GetLinkValue:GetLinkValueFuncType) => string,
+  NodeTooltipsContent:NodeTooltipsContentFType,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  set_displayed_input_link_value:(s:string)=>void,
-  accept_simple_click:{current:boolean},
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  pointer_pos:{current:number[]}
-
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
+  accept_simple_click:{current:boolean}
 ) => {
   
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
@@ -76,9 +74,7 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
   }
   
     
-  const add_nodes = (
-    pointer_pos:{current:number[]}
-  ) => {
+  const add_nodes = () => {
         
     // The majority of data used to design the node are located in data['nodes']
     // Or if you want information about the type of these variable, you can find them in file types.tsx
@@ -138,7 +134,11 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
             set_first_selected_node(d)
           }
         })
-          .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(event,d,data,set_data,first_selected_node,set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref,set_displayed_input_link_value))
+          .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(
+            event,d,data,set_data,first_selected_node,
+            set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref,displayedInputLinkValueRef
+          )
+          )
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s' && window.SankeyToolsStatic!==true){
@@ -146,7 +146,7 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
       }
     }
     // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-    ggg_nodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return EventNodeContextMenu(ev,n,set_contextualised_node,pointer_pos,multi_selected_nodes)}})
+    ggg_nodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)}})
     
     ggg_nodes
       .filter(d => ReturnValueNode(data,d,'shape') === 'rect')
@@ -217,7 +217,7 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
         
   }
   
-  add_nodes(pointer_pos)
+  add_nodes()
         
 }
 
