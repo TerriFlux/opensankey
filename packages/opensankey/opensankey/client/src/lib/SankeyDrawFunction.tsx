@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
-import React from 'react'
+import React, { RefObject } from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType } from '../types/Types'
 import { ComputeTotalOffsets,
   TestLinkValue,
@@ -479,32 +479,36 @@ export const EventNodeClick : EventNodeClickFType =(
 }
 
 export const EventNodeContextMenu : EventNodeContextMenuFType =(
-  ev:React.MouseEvent<HTMLButtonElement>,n:SankeyNode,
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
-  pointer_pos:{current:number[]},
-  multi_selected_nodes:{current: SankeyNode[] },              
+  ev,
+  n,
+  contextMenu,
+  multi_selected_nodes,              
 )=>{
+  const {pointer_pos,contextualised_node,contextNodeRef} = contextMenu
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
   if(multi_selected_nodes.current.includes(n)){
-    set_contextualised_node(n)
+    contextualised_node.current = n
   }else{
     multi_selected_nodes.current.forEach(nn=>DeselectVisualyNodes(nn))
     multi_selected_nodes.current=[]
     SelectVisualyNodes(n)
     multi_selected_nodes.current.push(n)
-    set_contextualised_node(n)
+    contextualised_node.current = n
   }
+  const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+  contextNodeRef.current!.attributes[4].value = 'max-width: 100%; position: absolute; inset: '+style_c_n
+  contextNodeRef.current!.hidden = false
 }
 
 export const EventLinkContextMenu : EventLinkContextMenuFType = (
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
-  set_contextualised_link:(l:SankeyLink|undefined)=>void,
+  contextualised_link,
   pointer_pos:{current:number[]},
   data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
   set_display_link_opacity:(s:string)=>void
@@ -512,13 +516,13 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
   if(multi_selected_links.current.includes(l)){
-    set_contextualised_link(l)
+    contextualised_link.current = l
   }else{
     multi_selected_links.current.forEach(ll=>DeselectVisualyLinks(ll))
     multi_selected_links.current=[]
     SelectVisualyLinks(l)
     multi_selected_links.current.push(l)
-    set_contextualised_link(l)
+    contextualised_link.current = l
   }
   const link_data_ref=l.idLink
   let new_tags_selected=tags_selected
@@ -533,7 +537,9 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
       new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
     }
     set_tags_selected(new_tags_selected)
-    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+    if (displayedInputLinkValueRef.current) {
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+    }
   }else if(Object.values(data.dataTags).length>0){
     // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
     const tmp=[] as string[]
@@ -544,9 +550,13 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
     Object.keys(data.dataTags).forEach((dt,i)=>{
       n_t_s[dt]=tmp[i]
     })
-    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,n_t_s).value as unknown as string)
+    if (displayedInputLinkValueRef.current) {
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,n_t_s).value as unknown as string)
+    }
   }else{
-    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+    if (displayedInputLinkValueRef.current) {
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+    }
   }
 
 
@@ -1018,7 +1028,7 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
   accordion_ref:{ current: HTMLDivElement; }| null,
   button_ref:{ current: HTMLLabelElement; }| null,
   links_accordion_ref:{ current: HTMLDivElement; } | null,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   evt:MouseEvent,
   start_point:{current:number[]},
   set_legend_clicked:(b:boolean)=>void
@@ -1142,7 +1152,9 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
       data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
       multi_selected_links.current=[new_link]
       data.linkZIndex.push(new_link.idLink)
-      set_displayed_input_link_value('')
+      if (displayedInputLinkValueRef.current) {
+        displayedInputLinkValueRef.current.value = ''
+      }
       open_links_menu()
       set_first_selected_node({} as SankeyNode)
       set_data({...data})
@@ -1178,7 +1190,9 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
       fsn.outputLinksId=SortOutputLinksIdByYPos(data,fsn)
       n_node.inputLinksId.push(n_link.idLink)
       data.linkZIndex.push(n_link.idLink)
-      set_displayed_input_link_value('')
+      if (displayedInputLinkValueRef.current) {
+        displayedInputLinkValueRef.current.value = ''
+      }
       multi_selected_links.current=[n_link]
       open_links_menu()
 
@@ -1210,7 +1224,7 @@ export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType =
   accordion_ref:{ current: HTMLDivElement; }| null,
   button_ref: { current: HTMLLabelElement; }| null,
   links_accordion_ref:{ current: HTMLDivElement; }| null,
-  set_displayed_input_link_value:(s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
 )=>{
   if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
 
@@ -1238,7 +1252,9 @@ export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType =
       fsn.outputLinksId.push(n_link.idLink)
       d.inputLinksId.push(n_link.idLink)
       data.linkZIndex.push(n_link.idLink)
-      set_displayed_input_link_value('')
+      if (displayedInputLinkValueRef.current) {
+        displayedInputLinkValueRef.current.value = ''
+      }
       multi_selected_links.current=[n_link]
 
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {

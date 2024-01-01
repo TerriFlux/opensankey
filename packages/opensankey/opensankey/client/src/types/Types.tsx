@@ -4,6 +4,7 @@ import { drawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, RetrieveExcelResultsFuncType, updateLayoutFuncType  } from './SankeyUtilsTypes'
 import { OpenSankeyDiagramSelectorFType } from './SankeyMenuDialogsTypes'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
+import { RefObject } from 'react'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -387,10 +388,9 @@ export type elementsSelectedType = {
 }
 
 export type contextMenuType = {
-  contextualised_node : SankeyNode | undefined,
-  set_contextualised_node : (_:SankeyNode | undefined) => void,
-  contextualised_link : SankeyLink | undefined,
-  set_contextualised_link : (_:SankeyLink | undefined) => void,
+  contextNodeRef : RefObject<HTMLDivElement>,
+  contextualised_node : { current : SankeyNode | undefined },
+  contextualised_link : { current : SankeyLink | undefined },
   tag_contextualised : string | undefined,
   set_tag_contextualised : (_:string | undefined) => void,
   closeAllMenuContext : () => void,
@@ -475,13 +475,10 @@ export type SankeyAppBuilderTypes = {
   contextMenu:contextMenuType,
   show_nav: boolean,
   set_show_nav:(_:boolean)=>void,
-  displayed_input_link_value: string,
-  set_displayed_input_link_value: (s:string)=>void,
+  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   exemple_menu        : object,
   formations_menu      : object,
   mode_selection: {current:string},
-  user_scale:number,
-  set_user_scale:(n:number)=>void,
   GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
   Reinitialization:()=>void,
   size_of_draw_zone:(d:SankeyData)=>number[],

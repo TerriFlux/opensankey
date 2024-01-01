@@ -1,9 +1,8 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyLink, SankeyNode } from './Types'
+import { SankeyData, SankeyLink } from './Types'
 
 export type ContextMenuLinkFType = (
-  contextualised_link:SankeyLink|undefined,
-  set_contextualised_node:(n:SankeyNode|undefined)=>void,
+  contextualised_link:{ current : SankeyLink | undefined },
   set_show_menu_link_data:(b:boolean)=>void,
   set_show_menu_link_appearence:(b:boolean)=>void,
   data:SankeyData,set_data:(d:SankeyData)=>void,
