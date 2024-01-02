@@ -1,7 +1,7 @@
 
 // Local files
 import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from '../types/Types'
-import { get_data_from_view, recompute_views,filter_view } from './SankeyPlusViews'
+import { GetDataFromView, RecomputeViews,FilterView } from './SankeyPlusViews'
 import { DefaultLink,
   DefaultNode,
   synchronizeNodesandLinksIdOSTyped,
@@ -135,7 +135,7 @@ export const plus_convert_data : plus_convert_dataFType = (
 
 
     } else if((v.view_data as unknown as DiffType).diff!==undefined){
-      const d_view=get_data_from_view(data,v.id) as SankeyPlusData
+      const d_view=GetDataFromView(data,v.id) as SankeyPlusData
       convert_data(d_view,DefaultSankeyData)
       plus_convert_data(d_view,DefaultSankeyData)
       const copy_data={...data}
@@ -145,7 +145,7 @@ export const plus_convert_data : plus_convert_dataFType = (
       plus_convert_data(converted_master,DefaultSankeyData)
       let difference = deep_diff.diff(converted_master, d_view)
       difference=(difference !== undefined)?difference:[]
-      difference=filter_view(difference)
+      difference=FilterView(difference)
       v.view_data={diff:difference}
     }
 
@@ -231,12 +231,12 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
                 // No update of view by itself
                 return
               }                
-              const data_view=get_data_from_view(master_data,view_selected) as SankeyPlusData
+              const data_view=GetDataFromView(master_data,view_selected) as SankeyPlusData
               updateLayout(sankey_data,data_view,elementToDispose)
               const copy_data = JSON.parse(JSON.stringify(sankey_data))
               set_sankey_data(copy_data)
               if (view === 'none' ) {
-                recompute_views(copy_data,master_data,set_master_data)
+                RecomputeViews(copy_data,master_data,set_master_data)
               }
             }
             return

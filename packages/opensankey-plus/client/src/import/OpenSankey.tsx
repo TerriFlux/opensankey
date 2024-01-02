@@ -2,7 +2,7 @@ import * as OpensankeyUtils from 'open-sankey/dist/lib/SankeyUtils'
 import * as OpenSankeyDrawFunc from 'open-sankey/dist/lib/SankeyDrawFunction'
 import * as OpensankeyDragFunc from 'open-sankey/dist/lib/SankeyDrag'
 import * as OpensankeyConvert from 'open-sankey/dist/lib/SankeyConvert'
-import { drag_legend_g_element} from 'open-sankey/dist/lib/SankeyDrawLegend'
+import { DragLegendGElement} from 'open-sankey/dist/lib/SankeyDrawLegend'
 
 import { 
   ReturnValueLinkFuncType, ReturnValueNodeFuncType, IsAllLinkAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, 
@@ -58,7 +58,7 @@ export const IsAllNodeAttrSameValue = OpensankeyUtils.IsAllNodeAttrSameValue as 
 
 export const AssignNodeValueToCorrectVar:AssignNodeValueToCorrectVarFuncType = OpensankeyUtils.AssignNodeValueToCorrectVar
 
-export const opposing_drag_elements:opposing_drag_elementsFuncType = OpensankeyDragFunc.opposing_drag_elements
+export const OpposingDragElements:opposing_drag_elementsFuncType = OpensankeyDragFunc.OpposingDragElements
 
 export const drag_elements:drag_elementsFuncType = OpensankeyDragFunc.drag_elements
 
@@ -66,7 +66,7 @@ export const drag_node_text:drag_node_textFuncType = OpensankeyDragFunc.drag_nod
 
 export const return_out_of_bound_element:return_out_of_bound_elementFuncType =OpensankeyDragFunc.return_out_of_bound_element
 
-export const drag_legend_g_elementOSTyped:drag_legend_g_elementFuncType = drag_legend_g_element
+export const DragLegendGElementOSTyped:drag_legend_g_elementFuncType = DragLegendGElement
 
 export const LinkColor:LinkColorFuncType=OpensankeyUtils.LinkColor
 

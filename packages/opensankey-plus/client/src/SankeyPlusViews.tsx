@@ -26,9 +26,9 @@ import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
 import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
 import { 
   MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, 
-  SankeyPlusMenuPreferenceViewFType, check_current_view_savedFType, filter_viewFType, 
-  get_data_from_viewFType, keyHandlerFType, modal_transparent_view_attrFType, 
-  modal_view_not_savedFType, recompute_viewsFType, selecteur_viewFType, getSetDiagramFType, 
+  SankeyPlusMenuPreferenceViewFType, CheckCurrentViewSavedFType, FilterViewFType, 
+  GetDataFromViewFType, keyHandlerFType, modal_transparent_view_attrFType, 
+  modal_view_not_savedFType, RecomputeViewsFType, SelecteurViewFType, getSetDiagramFType, 
   setValueFType, view_toastFType, view_toast_update_viewFType, viewsAccordionFType
 } from '../types/SankeyPlusViewsTypes'
 
@@ -72,7 +72,7 @@ export const getSetDiagramFunc : getSetDiagramFType = (
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
       set_master_data(new_data)
       set_view(new_data.view[0].id)
-      set_data(get_data_from_view(new_data,new_data.view[0].id) as SankeyPlusData)
+      set_data(GetDataFromView(new_data,new_data.view[0].id) as SankeyPlusData)
     } else {
       set_master_data(undefined)
       set_data(new_data)
@@ -115,7 +115,7 @@ export const setValue : setValueFType = (
   }
 }
 
-export const get_data_from_view : get_data_from_viewFType = (
+export const GetDataFromView : GetDataFromViewFType = (
   master_data:SankeyPlusData|undefined,
   id_view_to_see:string
 )=>{
@@ -150,7 +150,7 @@ export const get_data_from_view : get_data_from_viewFType = (
   
 }
 
-export const filter_view : filter_viewFType =(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
+export const FilterView : FilterViewFType =(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
   return JSON.parse(JSON.stringify(pre_diff))
     .filter((d:{path:string[]})=>{
       return !d.path.includes('view')
@@ -169,7 +169,7 @@ export const filter_view : filter_viewFType =(pre_diff:{path:string[],kind:strin
     })
 }
 
-export const recompute_views : recompute_viewsFType = (
+export const RecomputeViews : RecomputeViewsFType = (
   new_master_data: SankeyPlusData | undefined,
   prev_master_data: SankeyPlusData| undefined,
   set_master_data: (d:SankeyPlusData| undefined,)=>void
@@ -179,14 +179,14 @@ export const recompute_views : recompute_viewsFType = (
       if ( prev_master_data.view.filter(v=>v.id===current_v.id).length === 0) {
         return
       }
-      const data_view=get_data_from_view(prev_master_data,current_v.id) as SankeyPlusData
+      const data_view=GetDataFromView(prev_master_data,current_v.id) as SankeyPlusData
       
       if((current_v.view_data as SankeyPlusData).version){
         current_v.view_data=data_view
       }else{
         let difference = deep_diff.diff(new_master_data,data_view)
         difference = (difference !== undefined) ? difference : []
-        difference = filter_view(difference)
+        difference = FilterView(difference)
         if (difference.length > 0) {
           (current_v.view_data as DiffType).diff = difference
         }
@@ -249,7 +249,7 @@ export const keyHandler : keyHandlerFType = (
         details: '',
         heredited_attr_from_master:[]
       })
-      recompute_views(new_master_data,master_data,set_master_data)
+      RecomputeViews(new_master_data,master_data,set_master_data)
       // master data is now set
       // at this stage data is a view and is equal with master data
       set_show_toast_new_view(true)
@@ -280,7 +280,7 @@ export const keyHandler : keyHandlerFType = (
       set_view(new_ind)
       set_master_data({...master_data!})
       // get view data & set_data to avoid synchronisation problem
-      const n_data=get_data_from_view(master_data,new_ind)
+      const n_data=GetDataFromView(master_data,new_ind)
       if(n_data){
         set_data({...n_data})
       }
@@ -299,7 +299,7 @@ export const keyHandler : keyHandlerFType = (
       let difference = deep_diff.diff(master_data, data)
       difference=(difference !== undefined)?difference:[]
       difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      difference=filter_view(difference)
+      difference=FilterView(difference)
 
       // Check wich format of the view is better optimized for memory storage
       const raw_is_smaller_than_diff=JSON.stringify(data).length<JSON.stringify(difference).length
@@ -330,7 +330,7 @@ export const keyHandler : keyHandlerFType = (
     // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
     let saved=true
     if(view !== 'none' && connected ){
-      const diff=check_current_view_saved(master_data,data,view)
+      const diff=CheckCurrentViewSaved(master_data,data,view)
       if(diff.length>0 && !window.SankeyToolsStatic){
         saved=false
         set_view_not_saved(view)
@@ -361,13 +361,13 @@ export const keyHandler : keyHandlerFType = (
       } else if (ind===0) {
         ind = Object.keys(master_data!.view).length
       }
-      const data_view=get_data_from_view(master_data,master_data!.view[ind-1].id) as SankeyPlusData
+      const data_view=GetDataFromView(master_data,master_data!.view[ind-1].id) as SankeyPlusData
 
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
       let saved=true
       if(view !== 'none' &&  connected ){
-        const diff=check_current_view_saved(master_data,data,view)
+        const diff=CheckCurrentViewSaved(master_data,data,view)
         if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
           set_view_not_saved(view)
@@ -387,7 +387,7 @@ export const keyHandler : keyHandlerFType = (
       let new_master_data : SankeyPlusData | undefined
       if (master) {
         new_master_data = data
-        recompute_views(new_master_data,master_data,set_master_data)
+        RecomputeViews(new_master_data,master_data,set_master_data)
       } else {
         new_master_data = master_data
       }
@@ -410,14 +410,14 @@ export const keyHandler : keyHandlerFType = (
       }
       let saved=true
       if(view !== 'none' && connected ){
-        const diff=check_current_view_saved(new_master_data,data,view)
+        const diff=CheckCurrentViewSaved(new_master_data,data,view)
         if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
           set_view_not_saved(view)
           set_view(master_data!.view[ind+1].id)
         }
       }
-      const data_view=get_data_from_view(new_master_data,new_master_data!.view[ind+1].id) as SankeyPlusData
+      const data_view=GetDataFromView(new_master_data,new_master_data!.view[ind+1].id) as SankeyPlusData
       if(saved){
         set_data(data_view)
         set_view(new_master_data!.view[ind+1].id)
@@ -520,7 +520,7 @@ export const keyHandler : keyHandlerFType = (
   }
 }
 
-export const selecteur_view : selecteur_viewFType =(data:SankeyPlusData,
+export const SelecteurView : SelecteurViewFType =(data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
@@ -555,7 +555,7 @@ export const selecteur_view : selecteur_viewFType =(data:SankeyPlusData,
         // If not, we display a modal that will warn the user with the possibility to save before exit
         let saved=true
         if(view !== 'none' ){
-          const difference=check_current_view_saved(master_data,data,view)
+          const difference=CheckCurrentViewSaved(master_data,data,view)
           if(difference.length !== 0 && !window.SankeyToolsStatic){
             saved=false
             set_view_not_saved(view)
@@ -570,12 +570,12 @@ export const selecteur_view : selecteur_viewFType =(data:SankeyPlusData,
             let new_master_data : SankeyPlusData
             if (view === 'none') {
               new_master_data = JSON.parse(JSON.stringify(data))
-              recompute_views(new_master_data,master_data,set_master_data)
+              RecomputeViews(new_master_data,master_data,set_master_data)
             } else {
               new_master_data= JSON.parse(JSON.stringify(master_data)) as SankeyPlusData
             }
             set_view(evt.target.value)
-            const data_view=get_data_from_view(new_master_data,evt.target.value) as SankeyPlusData
+            const data_view=GetDataFromView(new_master_data,evt.target.value) as SankeyPlusData
             set_data(data_view)
             new_master_data.current_view=evt.target.value
             set_master_data(new_master_data)
@@ -642,7 +642,7 @@ export const viewsAccordion : viewsAccordionFType = (
 
   // const _load_multiple_json = useRef<HTMLInputElement>(null)
 
-  const selector=selecteur_view(
+  const selector=SelecteurView(
     data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,
     master_data,set_master_data,t,set_view_not_saved,false,value_editor_name_view,set_value_editor_name_view,
     select_or_edit,set_select_or_edit
@@ -786,7 +786,7 @@ export const viewsAccordion : viewsAccordionFType = (
                         }else if(master_data.is_catalog && master_data.view.length>0){
                         // If master is a catalog and the catalog is not empty then we got to the first view 
                           set_view(master_data.view[0].id)
-                          const tmp=get_data_from_view(master_data,master_data.view[0].id) as SankeyPlusData
+                          const tmp=GetDataFromView(master_data,master_data.view[0].id) as SankeyPlusData
                           set_data({ ...tmp })
                         }
                         if(master_data.view.length===0){
@@ -851,12 +851,12 @@ export const viewsAccordion : viewsAccordionFType = (
 
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
-export const check_current_view_saved : check_current_view_savedFType =(
+export const CheckCurrentViewSaved : CheckCurrentViewSavedFType =(
   master_data:SankeyPlusData| undefined,
   data:SankeyPlusData| undefined,
   view:string
 )=>{
-  const view_data = get_data_from_view(master_data,view)
+  const view_data = GetDataFromView(master_data,view)
   //const data=JSON.parse(JSON.stringify(data))
   //const updated_diff=JSON.parse(JSON.stringify(original_diff))
 
@@ -1041,7 +1041,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   //           })
   //           set_view(new_ind)
   //           set_master_data({...master_data})
-  //           set_data(get_data_from_view(master_data,new_ind))
+  //           set_data(GetDataFromView(master_data,new_ind))
   //         }
   //       }
   //     >
@@ -1133,7 +1133,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             }else if(master_data!.is_catalog && master_data!.view.length>0){
               // If master is a catalog and the catalog is not empty then we got to the first view 
               set_view(master_data!.view[0].id)
-              const tmp=get_data_from_view(master_data,master_data!.view[0].id) as SankeyPlusData
+              const tmp=GetDataFromView(master_data,master_data!.view[0].id) as SankeyPlusData
               set_data({ ...tmp })
             }
             if(master_data!.view.length===0){
@@ -1218,7 +1218,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   //       variant='light'
   //       disabled={!connected}
   //       onClick={()=>{
-  //         const to_download=get_data_from_view(master_data,current_view.id)
+  //         const to_download=GetDataFromView(master_data,current_view.id)
   //         to_download.view=[]
   //         ClickSaveDiagram(to_download,current_view.nom)
   //       }}
@@ -1293,7 +1293,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             if(imported_data.view && imported_data.view.length>0){
               // Import all view from the coming file
               imported_data.view.forEach((v,i2)=>{
-                const view_from_imported_data=get_data_from_view(imported_data,v.id) as SankeyPlusData
+                const view_from_imported_data=GetDataFromView(imported_data,v.id) as SankeyPlusData
                 convert_data(view_from_imported_data,DefaultSankeyData)
 
                 if(i2===0 && i==='0'){
@@ -1472,7 +1472,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
       </Button>
     </span>
   </OverlayTrigger>
-  {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{selecteur_view(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,connected,value_editor_name_view,set_value_editor_name_view,select_or_edit,set_select_or_edit)}</>:<></>}
+  {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{SelecteurView(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,connected,value_editor_name_view,set_value_editor_name_view,select_or_edit,set_select_or_edit)}</>:<></>}
   {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data!.current_view!=='none' && !window.SankeyToolsStatic?<>
     {button_delete_actual_view}
     {master_data && !master_data.is_catalog?button_heredited_attr_from_master:<></>}
@@ -1536,7 +1536,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
           onClick={()=>{
             // Don't save the view before changing to the selected one
             if(view !== 'none'){
-              const data_view=get_data_from_view(master_data,view) as SankeyPlusData
+              const data_view=GetDataFromView(master_data,view) as SankeyPlusData
               set_data(data_view)
               setTimeout(()=>{
                 AdjustSankeyZone(data_view,sankey_plus_min_width_and_height)
@@ -1560,7 +1560,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
             master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = {diff:difference}
 
             if(view !== 'none'){
-              const data_view=get_data_from_view(master_data,view) as SankeyPlusData
+              const data_view=GetDataFromView(master_data,view) as SankeyPlusData
               set_master_data({...JSON.parse(JSON.stringify(master_data))})
               set_data(data_view)
               setTimeout(()=>{
@@ -1632,7 +1632,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
   t:TFunction
 )=>{
   return <Modal size='xl' show={show_modal_transparent_view_attr} onHide={()=>{
-    recompute_views(data,data,set_data as (d: SankeyPlusData | undefined) => void)
+    RecomputeViews(data,data,set_data as (d: SankeyPlusData | undefined) => void)
     set_show_modal_transparent_view_attr(false)}}>
     <Modal.Header closeButton>{t('view.setTransparentAttr')}</Modal.Header>
     <Modal.Body>
@@ -1958,7 +1958,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
   const is_different=false
   if(view !== 'none' && view_not_saved ==='' && master_data && connected){
     // find another way with a variable. Checking the all view consumes too much time
-    // const diff=check_current_view_saved(master_data,data,view)
+    // const diff=CheckCurrentViewSaved(master_data,data,view)
     // if(diff.length>0){
     //   is_different=true
     // }

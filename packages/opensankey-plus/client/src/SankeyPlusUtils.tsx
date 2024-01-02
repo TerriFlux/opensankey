@@ -8,36 +8,36 @@ import * as d3 from 'd3'
 import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from '../types/Types'
-import {OSPIsAllNodeNotLocalAttrSameValueFType, PlusAssignLinkValueToCorrectVarFType, PlusLinkSabotColorFType, PlusReturnValueLinkFType, ValueOf, default_sankey_plus_style_linkFType, drag_legend_plusFType, import_image_as_svg_BGFType, is_all_zdt_attr_same_valueFType, set_svg_bgFType} from '../types/SankeyPlusUtilsTypes'
-import { opposing_drag_elements_plus } from './SankeyPlusNodes'
-import { drag_legend_g_elementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './import/OpenSankey'
+import {OSPIsAllNodeNotLocalAttrSameValueFType, PlusAssignLinkValueToCorrectVarFType, PlusLinkSabotColorFType, PlusReturnValueLinkFType, ValueOf, DefaultSankeyPlusStyleLinkFType, DragLegendPlusFType, ImportImageAsSvgBgFType, IsAllZdtAttrSameValueFType, SetSvgBgFType} from '../types/SankeyPlusUtilsTypes'
+import { OpposingDragElementsPlus } from './SankeyPlusNodes'
+import { DragLegendGElementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './import/OpenSankey'
 
 import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 
-export const default_sankey_plus_style_link : default_sankey_plus_style_linkFType = () => {
+export const DefaultSankeyPlusStyleLink : DefaultSankeyPlusStyleLinkFType = () => {
   const style=DefaultLinkStyle() as SankeyPlusLinkStyle
   style.gradient=false
   return style
 }
 
-export  const drag_legend_plus : drag_legend_plusFType = (data:SankeyPlusData,
+export  const DragLegendPlus : DragLegendPlusFType = (data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]}
 ) => d3.drag<SVGGElement, unknown>()
   .subject(Object).on('drag', function (event) {
 
     if(d3.select('.opensankey #svg').nodes().length>0){
-      drag_legend_g_elementOSTyped(data,event)
+      DragLegendGElementOSTyped(data,event)
       if(data.legend_position[0]===0 ||data.legend_position[1]===0){
-        opposing_drag_elements_plus([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],event,({} as SankeyPlusNode),data,{current:[]},multi_selected_label)
+        OpposingDragElementsPlus([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],event,({} as SankeyPlusNode),data,{current:[]},multi_selected_label)
       }
     }
   }).on('end',()=>set_data({...data}))
 
 
-export const import_image_as_svg_BG : import_image_as_svg_BGFType = (
+export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
   t:TFunction,
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   has_open_sankey_plus:boolean)=>{
@@ -111,7 +111,7 @@ export const import_image_as_svg_BG : import_image_as_svg_BGFType = (
   return content_image
 }
 
-export const set_svg_bg : set_svg_bgFType =(data:SankeyPlusData)=>{
+export const SetSvgBg : SetSvgBgFType =(data:SankeyPlusData)=>{
   d3.select('#svg')
     .filter(()=>data.background_image===undefined || data.background_image==='')
     .style('background-image',null)
@@ -125,7 +125,7 @@ export const set_svg_bg : set_svg_bgFType =(data:SankeyPlusData)=>{
     .style('background-repeat','no-repeat')
 }
 
-export const is_all_zdt_attr_same_value  : is_all_zdt_attr_same_valueFType = (
+export const IsAllZdtAttrSameValue  : IsAllZdtAttrSameValueFType = (
   data:SankeyPlusData,
   m_s_zdt:SankeyPlusLabel[],
   k:keyof SankeyPlusLabel

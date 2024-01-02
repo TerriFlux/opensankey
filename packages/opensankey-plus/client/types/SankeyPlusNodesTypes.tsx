@@ -55,13 +55,13 @@ export type SankeyPlusDrawNodesIconFType = (
   GetLinkValue:GetLinkValueFuncType
 ) => void
 
-export type context_node_iconFType = (
+export type ContextNodeIconFType = (
   contextualised_node:{ current : SankeyPlusNode | undefined },
   set_show_menu_node_icon:(_:boolean)=>void,
   t:TFunction
 )=> JSX.Element
 
-export type opposing_drag_elements_plusFType = (
+export type OpposingDragElementsPlusFType = (
   out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[],
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:SankeyPlusNode|SankeyPlusLabel,

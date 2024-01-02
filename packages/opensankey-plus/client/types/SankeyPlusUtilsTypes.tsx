@@ -2,23 +2,23 @@ import { TFunction } from 'i18next'
 import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle, SankeyPlusNode } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
-export type default_sankey_plus_style_linkFType = () => SankeyPlusLinkStyle
+export type DefaultSankeyPlusStyleLinkFType = () => SankeyPlusLinkStyle
 
-export  type drag_legend_plusFType = (data:SankeyPlusData,
+export  type DragLegendPlusFType = (data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]}
 ) => d3.DragBehavior<SVGGElement, unknown, unknown>
 
-export type import_image_as_svg_BGFType = (
+export type ImportImageAsSvgBgFType = (
   t:TFunction,
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   has_open_sankey_plus:boolean)=> JSX.Element
 
-export type set_svg_bgFType = (
+export type SetSvgBgFType = (
   data:SankeyPlusData
 ) => void
 
-export type is_all_zdt_attr_same_valueFType = (
+export type IsAllZdtAttrSameValueFType = (
   data:SankeyPlusData,
   m_s_zdt:SankeyPlusLabel[],
   k:keyof SankeyPlusLabel

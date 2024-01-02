@@ -12,7 +12,7 @@ import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 
 import { DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './import/OpenSankey'
 
-import { drag_elements_plus,return_out_of_bound_element_plus,opposing_drag_elements_plus } from './SankeyPlusNodes'
+import { drag_elements_plus,return_out_of_bound_element_plus,OpposingDragElementsPlus } from './SankeyPlusNodes'
 
 
 declare const window: Window &
@@ -254,7 +254,7 @@ const dragLabelEvent = (
         const out_of_zone_item=return_out_of_bound_element_plus(d,data,event,multi_selected_nodes,node_visible)
         // Pousse les element non sélectionnés dans la direction opposé
         if(out_of_zone_item.length>0){
-          opposing_drag_elements_plus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
+          OpposingDragElementsPlus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
         }
         drag_elements_plus(
           d,data,event,multi_selected_nodes,multi_selected_label,set_data,display_nodes,display_links,multi_selected_links,LinkText,

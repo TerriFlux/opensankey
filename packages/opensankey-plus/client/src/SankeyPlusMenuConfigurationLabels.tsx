@@ -24,7 +24,7 @@ import * as d3 from 'd3'
 import {  preferenceCheck } from 'open-sankey/dist/lib/SankeyMenuPreferences'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
-import { is_all_zdt_attr_same_value } from './SankeyPlusUtils'
+import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
 import { SankeyPlusMenuConfigurationFreeLabelsFType, SankeyPlusMenuPreferenceLabelsFType, blur_ZDT_wysiwygFType, context_zdtFType } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
 
 
@@ -183,7 +183,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfiguration
     return (display_size) ? opa : 0
   }
   
-  const valAllLabelBorderTransparent=is_all_zdt_attr_same_value(data,multi_selected_label.current,'transparent_border') as boolean[]
+  const valAllLabelBorderTransparent=IsAllZdtAttrSameValue(data,multi_selected_label.current,'transparent_border') as boolean[]
  
   // Create a custom size list of font-size
   const list_size=[]

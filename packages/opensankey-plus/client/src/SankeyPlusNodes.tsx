@@ -21,7 +21,7 @@ import {RemoveAnimate,
   IsNodeDisplayingValueLocal,
   IsAllNodeAttrSameValue,
   AssignNodeValueToCorrectVar,
-  opposing_drag_elements,
+  OpposingDragElements,
   drag_elements,
   drag_node_text,
   return_out_of_bound_element
@@ -32,8 +32,8 @@ import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { 
   SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, SankeyPlusNodeClickEventFType, SankeyPlusNodeDragEventFType, 
-  SankeyPlusNodeIconFType, context_node_iconFType, drag_elements_plusFType, node_icon_fill_colorFType, 
-  node_icon_pathFType, opposing_drag_elements_plusFType, return_out_of_bound_element_plusFType
+  SankeyPlusNodeIconFType, ContextNodeIconFType, drag_elements_plusFType, node_icon_fill_colorFType, 
+  node_icon_pathFType, OpposingDragElementsPlusFType, return_out_of_bound_element_plusFType
 } from '../types/SankeyPlusNodesTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
 import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
@@ -831,7 +831,7 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
 }
 
 
-export const context_node_icon : context_node_iconFType = (
+export const ContextNodeIcon : ContextNodeIconFType = (
   contextualised_node,
   set_show_menu_node_icon:(_:boolean)=>void,
   t:TFunction
@@ -844,7 +844,7 @@ export const context_node_icon : context_node_iconFType = (
 
 }
 
-export const opposing_drag_elements_plus : opposing_drag_elements_plusFType = (
+export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
   out_of_zone_item:(SankeyNode|SankeyPlusLabel)[],
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:SankeyNode|SankeyPlusLabel,
@@ -854,7 +854,7 @@ export const opposing_drag_elements_plus : opposing_drag_elements_plusFType = (
 )=>{
 
 
-  opposing_drag_elements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,data,multi_selected_nodes)
+  OpposingDragElements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,data,multi_selected_nodes)
 
   // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
 
@@ -1004,7 +1004,7 @@ const drag_nodes_plus = (
   const out_of_zone_item=return_out_of_bound_element_plus(node,data,event,multi_selected_nodes,node_visible)
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
-    opposing_drag_elements_plus(out_of_zone_item,event,node,data,multi_selected_nodes,multi_selected_label)
+    OpposingDragElementsPlus(out_of_zone_item,event,node,data,multi_selected_nodes,multi_selected_label)
   }
 
   drag_elements_plus(

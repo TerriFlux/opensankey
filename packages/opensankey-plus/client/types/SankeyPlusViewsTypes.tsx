@@ -20,16 +20,16 @@ export type setValueFType = (
   depth: number
 ) => void
 
-export type get_data_from_viewFType =(
+export type GetDataFromViewFType =(
   master_data:SankeyPlusData| undefined,
   id_view_to_see:string
 )=> SankeyPlusData | undefined
 
-export type filter_viewFType = (
+export type FilterViewFType = (
   pre_diff:{path:string[],kind:string,item:{kind:string}}[]
 ) => {path:string[],kind:string,item:{kind:string}}
 
-export type recompute_viewsFType = (
+export type RecomputeViewsFType = (
   new_master_data: SankeyPlusData | undefined,
   prev_master_data: SankeyPlusData | undefined,
   set_master_data: (d:SankeyPlusData | undefined)=>void
@@ -52,7 +52,7 @@ export type keyHandlerFType = (
   set_view_not_saved:(s:string)=>void,
 ) => void
 
-export type selecteur_viewFType = (
+export type SelecteurViewFType = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   view:string,
@@ -98,7 +98,7 @@ export type viewsAccordionFType = (
 
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
-export type check_current_view_savedFType = (
+export type CheckCurrentViewSavedFType = (
   master_data:SankeyPlusData | undefined,
   data:SankeyPlusData,
   view:string
