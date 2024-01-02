@@ -397,7 +397,7 @@ export  const drag_nodes : drag_nodesFType = (
   const out_of_zone_item=return_out_of_bound_element(node,data,event,multi_selected_nodes,node_visible)
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
-    opposing_drag_elements(out_of_zone_item,event,node,data,multi_selected_nodes)
+    OpposingDragElements(out_of_zone_item,event,node,data,multi_selected_nodes)
   }
 
   drag_elements(node,data,event,multi_selected_nodes,set_data,display_nodes,display_links,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale)
@@ -1047,7 +1047,7 @@ export const return_out_of_bound_element:return_out_of_bound_elementFuncType=(
   return out_of_zone_item
 
 }
-export const opposing_drag_elements:opposing_drag_elementsFuncType=(out_of_zone_item:(SankeyNode)[],
+export const OpposingDragElements:opposing_drag_elementsFuncType=(out_of_zone_item:(SankeyNode)[],
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:SankeyNode,
   data:SankeyData,
