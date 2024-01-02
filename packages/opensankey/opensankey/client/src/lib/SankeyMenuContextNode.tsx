@@ -12,7 +12,7 @@ import { ContextMenuNodeFType } from '../types/SankeyMenuContextNodeTypes'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
-const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
+// const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuNode : ContextMenuNodeFType = (
   applicationContext,
