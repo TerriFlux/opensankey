@@ -141,6 +141,11 @@ export type EventLinkContextMenuFType = (
   set_display_link_opacity:(s:string)=>void,
 )=> void
 
+export type EventZDDContextMenuFType = (
+  ev:React.MouseEvent<HTMLButtonElement>,
+  contextMenu:contextMenuType,
+)=> void
+
 // Function that wrap node text when the length of the label exceed the limit
 export type TextNodeWrapFType = (
   d:SankeyNode,
