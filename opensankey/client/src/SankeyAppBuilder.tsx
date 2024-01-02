@@ -24,7 +24,7 @@ import {MenuConfigurationLinksAppearence} from './lib/SankeyMenuConfigurationLin
 import {toolbar_builder,addSimpleLevelDropDown,setDiagram} from './lib/SankeyMenuBanner'
 import { ModalPreference,OpenSankeyDefaultModalePreferenceContent} from './lib/SankeyMenuPreferences'
 import { keyHandler } from './lib/SankeyDraw'
-import { context_legend_tags } from './lib/SankeyDrawLegend'
+import { ContextLegendTags } from './lib/SankeyDrawLegend'
 import { RetrieveExcelResults, updateLayout, windowSankey } from './lib/SankeyUtils'
 import { ContextMenuLink } from './lib/SankeyMenuContextLink'
 import { ContextMenuNode } from './lib/SankeyMenuContextNode'
@@ -581,13 +581,12 @@ showMenuComponents
 
   // MENU DRAGGABLE ZDT
     
-  const context_for_tag_legend = context_legend_tags(
-    contextMenu.tag_contextualised,contextMenu.set_tag_contextualised,
-    applicationData.data,applicationData.set_data,
-    elementsSelected.multi_selected_nodes,
-    elementsSelected.multi_selected_links,
-    t,
-    contextMenu.pointer_pos,GetLinkValue
+  const context_for_tag_legend = ContextLegendTags(
+    applicationData,
+    applicationContext,
+    elementsSelected,
+    contextMenu,
+    GetLinkValue
   )
 
   return (<>

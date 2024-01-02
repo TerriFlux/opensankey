@@ -1,6 +1,5 @@
-import { TFunction } from 'i18next'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, applicationContextType, applicationDataType, contextMenuType } from './Types'
+import { SankeyData, applicationContextType, applicationDataType, contextMenuType, elementsSelectedType } from './Types'
 
 export type DrawLegendFType = (
   applicationData:applicationDataType,
@@ -16,14 +15,11 @@ export type drag_legendFType=(
   set_data:(d:SankeyData)=>void
 )=> (selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, ...args: unknown[]) => void
 
-export type context_legend_tagsFType=(
-  tag_contextualised:string|undefined,
-  set_tag_contextualised:(t:string|undefined)=>void,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_links:{current:SankeyLink[]},
-  t:TFunction,
-  pointer_pos:{current:number[]},
+export type ContextLegendTagsFType=(
+  applicationData:applicationDataType,
+  applicationContext:applicationContextType,
+  elementsSelected:elementsSelectedType,
+  contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
 )=> JSX.Element
 
