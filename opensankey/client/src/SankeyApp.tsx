@@ -264,7 +264,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       suiteLinkStroke as LinkStrokeFuncType,
       suiteDrawArrows,
       set_display_link_opacity,
-      contextualised_link as { current :SankeyLink|undefined },
+      contextualised_link,
       pointer_pos,
       ()=>''
     )
