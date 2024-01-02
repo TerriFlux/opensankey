@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
+import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
@@ -66,18 +66,13 @@ export type OpposingDragElementsPlusFType = (
   multi_selected_label:{current:SankeyPlusLabel[]},
 )=> void
 
-export type SankeyPlusNodeDragEventFType = (
-  data:SankeyPlusData,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_nodes:{current: SankeyPlusNode[] },
+export type PlusNodeDragEventFType = (
+  applicaTionData:SankeyPlusApplicationDataType,
+  elementsSelected:PlusElementsSelectedType,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
-  set_data:(d:SankeyPlusData)=>void,
-  multi_selected_links:{current:SankeyPlusLink[]},
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  multi_selected_label:{current:SankeyPlusLabel[]},
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=> void
 

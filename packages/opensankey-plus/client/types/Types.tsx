@@ -2,7 +2,8 @@ import {
   SankeyData, SankeyLink, SankeyNode, 
   SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,
   showMenuComponentsType,
-  applicationDataType
+  applicationDataType,
+  elementsSelectedType
 } from 'open-sankey/src/types/Types'
 
 export type DiffType={
@@ -108,4 +109,10 @@ export interface SankeyPlusApplicationDataType extends applicationDataType {
   view : string,
   set_view : (_:string)=>void,
   get_default_data : () => SankeyPlusData
+}
+
+export interface PlusElementsSelectedType extends elementsSelectedType{
+  multi_selected_nodes:{current:SankeyPlusNode[]}
+  multi_selected_links:{current:SankeyPlusLink[]}
+  multi_selected_label:{current:SankeyPlusLabel[]}
 }

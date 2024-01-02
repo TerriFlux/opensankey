@@ -31,7 +31,7 @@ import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/lib/SankeyU
 import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { 
-  SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, SankeyPlusNodeDragEventFType, 
+  SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, PlusNodeDragEventFType, 
   SankeyPlusNodeIconFType, ContextNodeIconFType, drag_elements_plusFType, node_icon_fill_colorFType, 
   node_icon_pathFType, OpposingDragElementsPlusFType, return_out_of_bound_element_plusFType
 } from '../types/SankeyPlusNodesTypes'
@@ -882,20 +882,18 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
   }
 }
 
-export const SankeyPlusNodeDragEvent : SankeyPlusNodeDragEventFType =(
-  data:SankeyPlusData,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_nodes:{current: SankeyPlusNode[] },
+export const PlusNodeDragEvent : PlusNodeDragEventFType =(
+  applicaTionData,
+  elementsSelected,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
-  set_data:(_:SankeyPlusData)=>void,
-  multi_selected_links:{current:SankeyPlusLink[]},
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  multi_selected_label:{current:SankeyPlusLabel[]},
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=>{
+  const {data,set_data,display_nodes,display_links}=applicaTionData
+  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=elementsSelected
+  
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, data.user_scale])
