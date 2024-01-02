@@ -1,15 +1,14 @@
-import { SankeyData, SankeyNode,SankeyLink } from '../types/Types'
+import { SankeyData, SankeyNode } from '../types/Types'
 import React from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
 import { LinkVisible} from './SankeyUtils'
-import { TFunction } from 'i18next'
 import { OpposingDragElements } from './SankeyDrag'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
-import { DrawLegendFType, context_legend_tagsFType, drag_legendFType, drag_legend_g_elementFuncType} from '../types/SankeyDrawLegendTypes'
+import { DrawLegendFType, ContextLegendTagsFType, drag_legendFType, drag_legend_g_elementFuncType} from '../types/SankeyDrawLegendTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -412,17 +411,18 @@ export const DragLegendGElement:drag_legend_g_elementFuncType=(data:SankeyData,e
 
 // const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
-export const context_legend_tags : context_legend_tagsFType=(
-  tag_contextualised:string|undefined,
-  set_tag_contextualised:(t:string|undefined)=>void,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_links:{current:SankeyLink[]},
-  t:TFunction,
-  pointer_pos:{current:number[]},
+export const ContextLegendTags : ContextLegendTagsFType=(
+  applicationData,
+  applicationContext,
+  elementsSelected,
+  contextMenu,
   GetLinkValue:GetLinkValueFuncType,
 
 )=>{
+  const {data,set_data}=applicationData
+  const {t}=applicationContext
+  const {pointer_pos,tag_contextualised,set_tag_contextualised}=contextMenu
+  const {multi_selected_links,multi_selected_nodes}=elementsSelected
   let style_c_t='0px 0px auto auto'
   if(tag_contextualised!==undefined){
     style_c_t=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
