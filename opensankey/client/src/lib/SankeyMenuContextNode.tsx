@@ -107,7 +107,7 @@ export const ContextMenuNode : ContextMenuNodeFType = (
 
                 set_data({...data})
               }}>
-                {nt[1].tags[t].name}{checked(contextualised_node.current!.tags[nt[0]] &&contextualised_node.current!.tags[nt[0]].includes(t))}
+                {nt[1].tags[t].name}{/*checked(contextualised_node.current!.tags[nt[0]] &&contextualised_node.current!.tags[nt[0]].includes(t))*/}
               </Dropdown.Item>
             })}
           </Dropdown.Menu>
@@ -117,16 +117,10 @@ export const ContextMenuNode : ContextMenuNodeFType = (
     </Dropdown.Menu>
   </Dropdown>:<></>
 
-
-
-
-
-
   const dropdown_c_n_apparence=<Button onClick={()=>{
     showMenuComponents.show_menu_node_apparence[1](true)
     contextualised_node.current = undefined
   }} variant='light'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>
-
 
   // Dropdown to change some pararmeter concerning the style of the node
   const dropdown_c_n_style_select=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
@@ -165,7 +159,6 @@ export const ContextMenuNode : ContextMenuNodeFType = (
     showMenuComponents.show_menu_node_io[1](true)
     contextualised_node.current = undefined
   }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>
-
   const dropdown_c_n_align_h_min_ori=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.align_horiz_min')}
@@ -223,12 +216,7 @@ export const ContextMenuNode : ContextMenuNodeFType = (
     </Dropdown.Menu>
   </Dropdown>
 
-
-
-
-
   // ===============ALIGNEMENT VERTICAL DES NOEUDS=======================================
-
   const dropdown_c_n_align_v_min_ori=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.align_vert_min')}
