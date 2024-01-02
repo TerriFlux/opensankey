@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData } from 'open-sankey/src/types/Types'
+import { SankeyData, applicationContextType, applicationDataType, elementsSelectedType } from 'open-sankey/src/types/Types'
 
 export type SankeyModalStyleNodeFType = (
   t:TFunction,data:SankeyData,
@@ -14,13 +14,11 @@ export type SankeyModalStyleNodeFType = (
 
 //Modal et fonctions pour l'edition et affectation des style de flux
 export type SankeyModalStyleLinkFType = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+  applicationData:applicationDataType,
+  applicationContext:applicationContextType,
+  elementsSelected:elementsSelectedType,
   showStyleLink:boolean,
   setShowStyleLink:(_:boolean)=>void,
-  selected_style_link:string,
-  set_selected_style_link:(_:string)=>void,
   additional_link_appearence_items:JSX.Element[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void
