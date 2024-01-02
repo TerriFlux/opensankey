@@ -1,6 +1,6 @@
 import { DragBehavior, SubjectPosition } from 'd3'
 import { drawArrowsType } from './SankeyDrawFunctionTypes'
-import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, display_styleType } from './Types'
+import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, applicationDataType,  display_styleType, elementsSelectedType } from './Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from './SankeyUtilsTypes'
 
 export type return_out_of_bound_elementFuncType = (dragged: SankeyNode,
@@ -49,12 +49,9 @@ export type drag_node_textFuncType = (node: SankeyNode, event: d3.D3DragEvent<El
  * @param {number} min_thickness
  * @returns
  */
-export type dragLinkEventFType=(
-  multi_selected_links:{current: SankeyLink[]},
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+export type DragLinkEventFType=(
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   error_msg: { text: string | undefined } | undefined,
   display_style: display_styleType,
   drawCurveFunction : SankeyDrawCurve,
