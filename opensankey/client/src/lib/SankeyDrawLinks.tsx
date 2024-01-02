@@ -1,5 +1,5 @@
 import { SankeyLink, SankeyData, SankeyNode, SankeyDrawCurve, SankeyLinkAttrLocal, display_styleType} from '../types/Types'
-import React, { RefObject } from 'react'
+import React from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
 import { drawCurveFunction,
@@ -13,9 +13,8 @@ import { drawCurveFunction,
 import {add_drag_link_zone} from './SankeyDrag'
 import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg,DrawLinkStartSabot} from './SankeyDrawFunction'
 import { drawArrowsType } from '../types/SankeyDrawFunctionTypes'
-import { LinkStrokeFuncType, OpenSankeyDrawLinksFType  } from '../types/SankeyDrawLinksTypes'
-import {
-  GetLinkValueFuncType, LinkTextFuncType, LinkColorFuncType
+import { LinkStrokeFuncType, DrawLinksFType  } from '../types/SankeyDrawLinksTypes'
+import { LinkColorFuncType
 } from '../types/SankeyUtilsTypes'
 
 declare const window: Window &
@@ -23,35 +22,29 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const OpenSankeyDrawLinks : OpenSankeyDrawLinksFType = (
-  data:SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
-  links_accordion_ref:{ current: HTMLDivElement; } | null,
-  multi_selected_links:{current: SankeyLink[] },
-  mode_selection:{current:string},
-  accordion_ref:{ current: HTMLDivElement } | null,
-  button_ref:{ current: HTMLLabelElement} | null,
-  alt_key_pressed:boolean,
-  position:'absolute' | 'relative',
-  node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
-  LinkTooltipsContent:(data: SankeyData, l: SankeyLink,
-  GetLinkValue:GetLinkValueFuncType) => string,
-  LinkText:LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  set_data:(d:SankeyData)=>void,
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
-  tags_selected:{[k: string]: string},
-  set_tags_selected:(o:{[k: string]: string})=>void,
-  LinkStroke:LinkStrokeFuncType,
-  DrawArrows:drawArrowsType,
-  set_display_link_opacity:(s:string)=>void,
-  contextualised_link:{ current :SankeyLink|undefined},
-  pointer_pos:{current:number[]},
-  LinkSabotColor:LinkColorFuncType,
+export const DrawLinks : DrawLinksFType = (
+  contextMenu,
+  applicationData,
+  uiElementsRef,
+  elementsSelected,
+  mode_selection,
+  alt_key_pressed,
+  position,
+  node_arrow_visible,
+  LinkTooltipsContent,
+  LinkText,
+  GetLinkValue,
+  displayedInputLinkValueRef,
+  LinkStroke,
+  DrawArrows,
+  set_display_link_opacity,
+  LinkSabotColor
 
 ) => {
-
+  const{pointer_pos,contextualised_link} =contextMenu
+  const{button_ref,accordion_ref,links_accordion_ref} =uiElementsRef
+  const{data,set_data,display_nodes,display_links} =applicationData
+  const {tags_selected,set_tags_selected,multi_selected_links}=elementsSelected
   const default_handle_size = 10
   const default_horiz_shift = 50
 

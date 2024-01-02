@@ -57,7 +57,7 @@ import {
   SvgDragMiddleMouseStartFuncType, drawArrowsType 
 } from '../types/SankeyDrawFunctionTypes'
 import {
-  GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType
+  GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkColorFuncType, LinkTextFuncType
 } from '../types/SankeyUtilsTypes'
 // Function that create the dashed pattern on links
 
@@ -2564,10 +2564,7 @@ export const DrawLinkStartSabot : DrawLinkStartSabotFType=(
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
-  LinkSabotColor:(
-    l:SankeyLink,
-    data:SankeyData,
-    GetLinkValue:GetLinkValueFuncType)=>string
+  LinkSabotColor:LinkColorFuncType
 )=>{
   let cum_v_left = 0
   let cum_h_top = 0

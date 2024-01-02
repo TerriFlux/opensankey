@@ -9,11 +9,11 @@ import SankeyDraw from './lib/SankeyDraw'
 import { LinkStrokeFuncType } from './types/SankeyDrawLinksTypes'
 import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, RepositionneSidebar, EventOnSankeyZoneMouseDown, EventOnSankeyZoneMouseMove, EventOnSankeyZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
 import { OpenSankeyDrawLegend } from './lib/SankeyDrawLegend'
-import { OpenSankeyDrawLinks } from './lib/SankeyDrawLinks'
+import { DrawLinks } from './lib/SankeyDrawLinks'
 import { DrawNodes } from './lib/SankeyDrawNodes'
 import { OpenSankeyDrawNodesLabel } from './lib/SankeyDrawNodesLabel'
 import { NodeTooltipsContent, LinkTooltipsContent } from './lib/SankeyTooltip'
-import { GetLinkValue, NodeDisplayed, ReturnValueLink, LinkText, LinkVisible, AdjustSankeyZone, DefaultSankeyData, windowSankey } from './lib/SankeyUtils'
+import { GetLinkValue, NodeDisplayed, ReturnValueLink, LinkText, LinkVisible, AdjustSankeyZone, DefaultSankeyData, windowSankey, LinkColor } from './lib/SankeyUtils'
 import { SankeyAppBuilder } from './SankeyAppBuilder'
 import { convert_data } from './lib/SankeyConvert'
 
@@ -242,31 +242,23 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     // Call the function that add links to the sankey
     d3.select(' .opensankey #svg #sankey_def').remove()
     d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
-    OpenSankeyDrawLinks(
-      data,
-      display_nodes,
-      display_links,
-      links_accordion_ref,
-      multi_selected_links,
+    DrawLinks(
+      contextMenu,
+      applicationData,
+      uiElementsRef,
+      elementsSelected,
       mode_selection,
-      accordion_ref,
-      button_ref,
       alt_key_pressed,
       position,
       default_node_arrow_visible,
       LinkTooltipsContent,
-      SankeyLinkText,
-      SuiteGetLinkValue,
-      set_data,
+      LinkText,
+      GetLinkValue,
       displayedInputLinkValueRef,
-      tags_selected,
-      set_tags_selected,
-      suiteLinkStroke as LinkStrokeFuncType,
-      suiteDrawArrows,
+      LinkStroke,
+      DrawArrows,
       set_display_link_opacity,
-      contextualised_link,
-      pointer_pos,
-      ()=>''
+      LinkColor
     )
     // Create traduction function
     OpenSankeyDrawLegend(
