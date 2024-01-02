@@ -1,26 +1,21 @@
 import Accordion from 'react-bootstrap/Accordion'
 import { ReactElementLike } from 'prop-types'
-import { SankeyLink, SankeyData, SankeyNode } from '../types/Types'
 import React, { FunctionComponent, Ref, RefObject } from 'react'
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { OpenSankeyConfigurationsMenusFType } from '../types/SankeyMenuConfigurationTypes'
-import { TFunction } from 'i18next'
 
 
 export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+  applicationData,
+  elementsSelected,
+  applicationContext,
+  uiElementsRef,
   set_show_nav: (_:boolean)=>void,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
   sub_nav_item_active:string,
   set_sub_nav_item_active:(s:string)=>void,
-  nodes_accordion_ref:{ current:HTMLDivElement},
-  links_accordion_ref:{ current:HTMLDivElement},
-  multi_selected_nodes:{current: SankeyNode[] },
-  multi_selected_links:{current: SankeyLink[] },
   set_style_to_apply:(s:string)=>void,
   menu_configuration_layout: JSX.Element[],
   menu_configuration_node_tags:JSX.Element,
@@ -35,12 +30,15 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   menu_configuration_free_labels:JSX.Element,
   token:boolean,
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
-  tags_selected:{[k: string]: string},
-  set_tags_selected:( s :{[k: string]: string} )=> void,
   set_display_link_opacity:(s:string)=>void,
   pre_idSource:string,
   pre_idTarget:string
 ) => {
+  const {data,set_data}=applicationData
+  const {t}=applicationContext
+  const {links_accordion_ref,nodes_accordion_ref}=uiElementsRef
+  const {multi_selected_nodes}=elementsSelected
+
   return [
     <Accordion.Item
       key='1'
@@ -197,15 +195,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             <Accordion.Header className='level2'>{t('Menu.EdF')}</Accordion.Header>
             <Accordion.Body>
               <SankeyMenuConfigurationLinks
-                t={t}
-                data={data}
-                set_data={set_data}
-                multi_selected_links={multi_selected_links}
-                multi_selected_nodes={multi_selected_nodes}
+                applicationData={applicationData}
+                applicationContext={applicationContext}
+                elementsSelected={elementsSelected}
                 menu_configuration_links={Object.values(menu_configuration_links)}
                 displayedInputLinkValueRef={displayedInputLinkValueRef}
-                tags_selected={tags_selected}
-                set_tags_selected={set_tags_selected}
                 set_display_link_opacity={set_display_link_opacity}
                 pre_idSource={pre_idSource}
                 pre_idTarget={pre_idTarget}
