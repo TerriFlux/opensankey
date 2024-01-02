@@ -84,7 +84,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     pre_set_data({...ndata})
   }
 
-  // For OpenSankeyMenuConfigurationLinks
+  // For MenuConfigurationLinks
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,

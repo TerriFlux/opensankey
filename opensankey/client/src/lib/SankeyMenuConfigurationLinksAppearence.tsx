@@ -1,7 +1,6 @@
 import React,{useState} from 'react'
 import { Row, Form, Tab, FormControl, OverlayTrigger, Tooltip, InputGroup, Button, ButtonGroup, Dropdown} from 'react-bootstrap'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal,SankeyNode } from '../types/Types'
-import { TFunction } from 'i18next'
+import { SankeyData, SankeyLinkAttrLocal,SankeyNode } from '../types/Types'
 import { FaAlignLeft,FaAlignCenter,FaAlignRight} from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowsAltH } from 'react-icons/fa'
 import { reorganize_inputLinksId } from './SankeyLayout'
@@ -10,7 +9,7 @@ import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge} from './SankeyUtils'
 import { LinkStrokeWidth,scale,inv_scale } from './SankeyDrawFunction'
-import { SankeyMenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from '../types/SankeyMenuConfigurationLinksAppearenceTypes'
+import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from '../types/SankeyMenuConfigurationLinksAppearenceTypes'
 import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
@@ -64,19 +63,20 @@ const svg_label_bottom=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 2
 const svg_label_center=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z"/></svg>
 
 
-export const SankeyMenuConfigurationLinksAppearence : SankeyMenuConfigurationLinksAppearenceFType = (
-  data:SankeyData,
-  multi_selected_links:{current:SankeyLink[]},
-  set_data:(d:SankeyData)=>void,
-  t:TFunction,
+export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearenceFType = (
+  applicationData,
+  elementsSelected,
+  applicationContext,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,
-  selected_style_link:string,
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
   GetLinkValue:GetLinkValueFuncType,
   menu_for_modal=false
 )=>{
+  const {t}=applicationContext
+  const {data,set_data}=applicationData
+  const {selected_style_link,multi_selected_links}=elementsSelected
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
