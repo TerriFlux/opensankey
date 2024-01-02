@@ -3,6 +3,7 @@ import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from 
 import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
+import { applicationDataType, elementsSelectedType, uiElementsRefType } from 'open-sankey/src/types/Types'
 
 export type SankeyPlusNodeIconFType = (
   t:TFunction,
@@ -22,18 +23,13 @@ export type SankeyPlusHyperLinkFType=(
   is_activated:boolean
 ) => JSX.Element
 
-export type SankeyPlusNodeClickEventFType=(
-  data:SankeyPlusData,
+export type PlusNodeClickEventFType=(
+  applicaTionData:applicationDataType,
+  elementsSelected:elementsSelectedType,
+  uiElementsRef:uiElementsRefType,
   set_animating:(b:boolean)=>void,
-  set_data:(d:SankeyPlusData)=>void,
-  nodes_accordion_ref:{current:HTMLDivElement},
-  multi_selected_nodes:{current: SankeyPlusNode[] },
   mode_selection:{current:string},
-  accordion_ref:{current:HTMLDivElement},
-  button_ref:{current:HTMLLabelElement},
   accept_simple_click:{current:boolean},
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
   GetLinkValue:GetLinkValueFuncType
 )=> void
 

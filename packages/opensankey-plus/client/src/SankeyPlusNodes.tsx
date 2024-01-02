@@ -31,7 +31,7 @@ import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/lib/SankeyU
 import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { 
-  SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, SankeyPlusNodeClickEventFType, SankeyPlusNodeDragEventFType, 
+  SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, SankeyPlusNodeDragEventFType, 
   SankeyPlusNodeIconFType, ContextNodeIconFType, drag_elements_plusFType, node_icon_fill_colorFType, 
   node_icon_pathFType, OpposingDragElementsPlusFType, return_out_of_bound_element_plusFType
 } from '../types/SankeyPlusNodesTypes'
@@ -634,20 +634,18 @@ const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyN
 
 }
 
-export const SankeyPlusNodeClickEvent : SankeyPlusNodeClickEventFType =(
-  data:SankeyPlusData,
+export const PlusNodeClickEvent : PlusNodeClickEventFType =(
+  applicationData,
+  elementsSelected,
+  uiElementsRef,
   set_animating:(_:boolean)=>void,
-  set_data:(_:SankeyPlusData)=>void,
-  nodes_accordion_ref:{current:HTMLDivElement},
-  multi_selected_nodes:{current: SankeyPlusNode[] },
   mode_selection:{current:string},
-  accordion_ref:{current:HTMLDivElement},
-  button_ref:{current:HTMLLabelElement},
   accept_simple_click:{current:boolean},
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
   GetLinkValue:GetLinkValueFuncType
 )=>{
+  const {data,set_data,display_nodes,display_links}=applicationData
+  const {multi_selected_nodes}=elementsSelected
+  const {nodes_accordion_ref,accordion_ref,button_ref}=uiElementsRef
   d3.selectAll(' .opensankey .ggg_nodes')
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
