@@ -7,7 +7,7 @@ import { SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, applicationContextT
 
 import SankeyDraw from './lib/SankeyDraw'
 import { LinkStrokeFuncType } from './types/SankeyDrawLinksTypes'
-import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, RepositionneSidebar, EventOnSankeyZoneMouseDown, EventOnSankeyZoneMouseMove, EventOnSankeyZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
+import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, RepositionneSidebar, EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
 import { DrawLegend } from './lib/SankeyDrawLegend'
 import { DrawLinks } from './lib/SankeyDrawLinks'
 import { DrawNodes } from './lib/SankeyDrawNodes'
@@ -369,24 +369,29 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       const svgSankey=d3.select('.opensankey #svg')
   
       svgSankey.on('mousedown',evt=>{
-        EventOnSankeyZoneMouseDown(mode_selection,data,set_data as (d:SankeyData)=>void,
-        set_first_selected_node as (_:SankeyNode)=>void,false,()=>null,evt,start_point,closeAllMenuContext)
-      })
-      svgSankey.on('mousemove',evt=>{
-        EventOnSankeyZoneMouseMove(mode_selection,data,first_selected_node,set_first_selected_node as (_:SankeyNode)=>void,evt,start_point)
-      })
-      svgSankey.on('mouseup',evt=>{
-        EventOnSankeyZoneMouseUp(
+        EventOnZoneMouseDown(
           mode_selection,
-          data, set_data as (d:SankeyData)=>void,
-          multi_selected_nodes,
-          multi_selected_links,
-          first_selected_node, set_first_selected_node as (_:SankeyNode)=>void,
+          applicationData,
+          elementsSelected,
           false,
           ()=>null,
-          accordion_ref,
-          button_ref,
-          links_accordion_ref,
+          evt,
+          start_point,
+          closeAllMenuContext)
+      })
+      svgSankey.on('mousemove',evt=>{
+        EventOnZoneMouseMove(mode_selection,  
+          applicationData,
+          elementsSelected,evt,start_point)
+      })
+      svgSankey.on('mouseup',evt=>{
+        EventOnZoneMouseUp(
+          mode_selection,
+          applicationData,
+          elementsSelected,
+          uiElementsRef,
+          false,
+          ()=>null,
           displayedInputLinkValueRef,
           evt,
           start_point,
