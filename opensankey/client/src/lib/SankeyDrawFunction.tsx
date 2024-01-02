@@ -27,8 +27,8 @@ import {
   EventNodeClickFType,
   EventNodeContextMenuFType,
   EventOnMouseUpAddNodesAndLinkFType,
-  EventOnSankeyZoneMouseDownFuncType, EventOnSankeyZoneMouseMoveFuncType, 
-  EventOnSankeyZoneMouseUpFuncType, 
+  EventOnZoneMouseDownFuncType, EventOnZoneMouseMoveFuncType, 
+  EventOnZoneMouseUpFuncType, 
   EventZDDContextMenuFType, 
   LinkStrokeFType, 
   LinkStrokeWidthFType, 
@@ -889,17 +889,18 @@ export const DrawArrows : drawArrowsType = (
 
 
 
-export const EventOnSankeyZoneMouseDown : EventOnSankeyZoneMouseDownFuncType = (
+export const EventOnZoneMouseDown : EventOnZoneMouseDownFuncType = (
   mode_selection:{current:string},
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  set_first_selected_node:(d:SankeyNode)=>void,
+  applicationData,
+  elementsSelected,
   token:boolean,
   set_show_toast_limit_node:(b:boolean)=>void,
   evt2:unknown,
   start_point:{current:number[]},
   closeAllMenuContext:()=>void
 )=>{
+  const {data,set_data}=applicationData
+  const {set_first_selected_node}=elementsSelected
   closeAllMenuContext()
   const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
@@ -948,15 +949,16 @@ export const EventOnSankeyZoneMouseDown : EventOnSankeyZoneMouseDownFuncType = (
  
 
 }
-export const EventOnSankeyZoneMouseMove : EventOnSankeyZoneMouseMoveFuncType = (
+export const EventOnZoneMouseMove : EventOnZoneMouseMoveFuncType = (
   mode_selection:{current:string},
-  data:SankeyData,
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
+  applicationData,
+  elementsSelected,
   evt:MouseEvent,
   start_point:{current:number[]}
   
 )=>{
+  const {data}=applicationData
+  const {first_selected_node,set_first_selected_node}=elementsSelected
   //Empêche lors du drag de la souris d'avoir
   // l'effet sélection de texte sur les labels des éléments de diagramme
 
@@ -1031,32 +1033,28 @@ export const EventOnSankeyZoneMouseMove : EventOnSankeyZoneMouseMoveFuncType = (
     }
   }
 }
-export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
+export const EventOnZoneMouseUp : EventOnZoneMouseUpFuncType = (
   mode_selection:{current:string},
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
-  multi_selected_links:{current:SankeyLink[]},
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
+  applicationData,
+  elementsSelected,
+  uiElementsRef,
   token:boolean,
   set_show_toast_limit_node:(b:boolean)=>void,
-  accordion_ref:{ current: HTMLDivElement; }| null,
-  button_ref:{ current: HTMLLabelElement; }| null,
-  links_accordion_ref:{ current: HTMLDivElement; } | null,
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   evt:MouseEvent,
   start_point:{current:number[]},
   set_legend_clicked:(b:boolean)=>void
 )=>{
-
+  const {data,set_data} =applicationData
+  const {multi_selected_links,multi_selected_nodes,first_selected_node,set_first_selected_node}= elementsSelected
+  const {links_accordion_ref,button_ref,accordion_ref} = uiElementsRef
   set_legend_clicked(false)
 
-  const open_links_menu=()=>{
-    if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+  const OpenLinksMenu=()=>{
+    if ( button_ref?.current && accordion_ref && accordion_ref.current==null) {
       button_ref.current.click()
     }
-    if ( accordion_ref && accordion_ref.current) {
+    if ( accordion_ref?.current) {
       for ( const child in accordion_ref.current.children) {
         if (accordion_ref.current.children[child].id === 'Flux') {
           (accordion_ref.current.children[0] as HTMLLabelElement).click();
@@ -1171,7 +1169,7 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
       if (displayedInputLinkValueRef.current) {
         displayedInputLinkValueRef.current.value = ''
       }
-      open_links_menu()
+      OpenLinksMenu()
       set_first_selected_node({} as SankeyNode)
       set_data({...data})
     }else if((!evt.ctrlKey && !evt.metaKey) && Object.keys(first_selected_node).length > 0 && d3.select(evt_recast).attr('class')!='node node_shape'){
@@ -1210,7 +1208,7 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
         displayedInputLinkValueRef.current.value = ''
       }
       multi_selected_links.current=[n_link]
-      open_links_menu()
+      OpenLinksMenu()
 
       set_first_selected_node({} as SankeyNode)
       set_data({ ...data })
