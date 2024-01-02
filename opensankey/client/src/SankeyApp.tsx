@@ -10,7 +10,7 @@ import { LinkStrokeFuncType } from './types/SankeyDrawLinksTypes'
 import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, RepositionneSidebar, EventOnSankeyZoneMouseDown, EventOnSankeyZoneMouseMove, EventOnSankeyZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
 import { OpenSankeyDrawLegend } from './lib/SankeyDrawLegend'
 import { OpenSankeyDrawLinks } from './lib/SankeyDrawLinks'
-import { OpenSankeyDrawNodes } from './lib/SankeyDrawNodes'
+import { DrawNodes } from './lib/SankeyDrawNodes'
 import { OpenSankeyDrawNodesLabel } from './lib/SankeyDrawNodesLabel'
 import { NodeTooltipsContent, LinkTooltipsContent } from './lib/SankeyTooltip'
 import { GetLinkValue, NodeDisplayed, ReturnValueLink, LinkText, LinkVisible, AdjustSankeyZone, DefaultSankeyData, windowSankey } from './lib/SankeyUtils'
@@ -218,15 +218,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   useEffect(() => {
     // Call the function that add nodes to the sankey
-    OpenSankeyDrawNodes(
+    DrawNodes(
       contextMenu,
-      data,set_data as (d:SankeyData)=>void,
-      display_nodes,display_links,
-      nodes_accordion_ref,links_accordion_ref,
-      multi_selected_nodes,multi_selected_links,
+      applicationData,
+      uiElementsRef,
+      elementsSelected,
       mode_selection,
-      first_selected_node,set_first_selected_node as (_: SankeyNode) => void,
-      accordion_ref,button_ref,
       alt_key_pressed,
       NodeTooltipsContent,
       SankeyLinkText, //LinkText
