@@ -272,7 +272,6 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           maxW={'60%'}
           isChecked={data.legend_bg_border}
           onChange={(evt) => {
-            console.log(data.legend_bg_border)
             data.legend_bg_border = evt.target.checked
             set_data({ ...data })
           }}

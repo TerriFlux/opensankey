@@ -29,6 +29,7 @@ import {
   EventOnMouseUpAddNodesAndLinkFType,
   EventOnSankeyZoneMouseDownFuncType, EventOnSankeyZoneMouseMoveFuncType, 
   EventOnSankeyZoneMouseUpFuncType, 
+  EventZDDContextMenuFType, 
   LinkStrokeFType, 
   LinkStrokeWidthFType, 
   NodeLabeLTextFType, 
@@ -496,9 +497,9 @@ export const EventNodeContextMenu : EventNodeContextMenuFType =(
     multi_selected_nodes.current.push(n)
     contextualised_node.current = n
   }
+  contextNodeRef.current!.hidden = false
   const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   contextNodeRef.current!.attributes[4].value = 'max-width: 100%; position: absolute; inset: '+style_c_n
-  contextNodeRef.current!.hidden = false
 }
 
 export const EventLinkContextMenu : EventLinkContextMenuFType = (
@@ -562,6 +563,21 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
 
   set_display_link_opacity(ReturnValueLink(data,l,'opacity') as string)
   set_data({...data})
+}
+
+export const EventZDDContextMenu : EventZDDContextMenuFType =(
+  ev,
+  contextMenu,
+)=>{
+  const {pointer_pos,contextZDDRef} = contextMenu
+  ev.preventDefault()
+  pointer_pos.current=[ev.pageX,ev.pageY]
+
+  contextMenu.show_context_zdd.current=true
+  contextZDDRef.current!.hidden = false
+
+  const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+  contextZDDRef.current!.attributes[4].value = 'max-width: 100%; position: absolute; inset: '+style_c_n
 }
 
 // Function that wrap node text when the length of the label exceed the limit

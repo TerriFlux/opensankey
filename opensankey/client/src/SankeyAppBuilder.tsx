@@ -519,6 +519,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   )
   useEffect(()=> {
     contextMenu.contextNodeRef.current!.hidden = true    
+    contextMenu.contextZDDRef.current!.hidden = true    
   })
 
   // MENU DRAGGABLE LINK DATA
@@ -580,13 +581,11 @@ showMenuComponents
     showMenuComponents.show_menu_layout[1]):<></>
 
   const context_for_zdd = ContextMenuZdd(
+    applicationContext,
+    applicationData,
+    contextMenu,
     showMenuComponents,
-    contextMenu.show_context_zdd,contextMenu.set_show_context_zdd,
-    applicationData.data,applicationData.set_data,
-    contextMenu.pointer_pos,
-    node_hspace,set_node_hspace,
-    node_vspace,set_node_vspace,
-    t
+    applicationDraw
   )
 
   // MENU DRAGGABLE ZDT

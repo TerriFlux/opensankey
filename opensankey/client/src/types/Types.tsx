@@ -389,14 +389,14 @@ export type elementsSelectedType = {
 
 export type contextMenuType = {
   contextNodeRef : RefObject<HTMLDivElement>,
+  contextZDDRef : RefObject<HTMLDivElement>,
   contextualised_node : { current : SankeyNode | undefined },
   contextualised_link : { current : SankeyLink | undefined },
   tag_contextualised : string | undefined,
   set_tag_contextualised : (_:string | undefined) => void,
   closeAllMenuContext : () => void,
   pointer_pos : { current : number[] }, 
-  show_context_zdd : boolean,
-  set_show_context_zdd : (_:boolean)=>void
+  show_context_zdd : {current:boolean},
 }
 
 export type processFunctionsType = {

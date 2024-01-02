@@ -1,9 +1,7 @@
 import * as d3 from 'd3'
-import { TFunction } from 'i18next'
 import React from 'react'
 import { Dropdown, ButtonGroup, Button, Popover, Form } from 'react-bootstrap'
 import { ContextMenuZddFType } from '../types/SankeyMenuContextZDDTypes'
-import { SankeyData, showMenuComponentsType } from '../types/Types'
 import { ComputeAutoSankey, arrangeNodes } from './SankeyLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
@@ -14,17 +12,17 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
 const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuZdd : ContextMenuZddFType =(
-  showMenuComponents:showMenuComponentsType,
-  show_context_zdd : boolean,
-  set_show_context_zdd : (_:boolean)=>void,
-  data:SankeyData,set_data:(d:SankeyData)=>void,
-  pointer_pos:{current:number[]},
-  node_hspace:number,
-  set_node_hspace:(n:number)=>void,
-  node_vspace:number,
-  set_node_vspace:(n:number)=>void,
-  t:TFunction
+  applicationContext,
+  applicationData,
+  contextMenu,
+  showMenuComponents,
+  applicationDrawVar
 )=>{
+  const { pointer_pos,show_context_zdd} = contextMenu
+  const { data, set_data } = applicationData
+  const { t } = applicationContext
+  const {node_hspace,set_node_hspace,node_vspace,set_node_vspace } =applicationDrawVar
+  
   const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
     d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
     d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
@@ -32,7 +30,7 @@ export const ContextMenuZdd : ContextMenuZddFType =(
 
 
   let style_c_zdd='0px 0px auto auto'
-  if(show_context_zdd){
+  if(!contextMenu.contextZDDRef.current?.hidden){
     style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
 
@@ -196,7 +194,7 @@ export const ContextMenuZdd : ContextMenuZddFType =(
       } else if (document.exitFullscreen) {
         document.exitFullscreen()
       }
-      set_show_context_zdd(false)
+      show_context_zdd.current=false
     }}
   >
     {full}
@@ -204,10 +202,10 @@ export const ContextMenuZdd : ContextMenuZddFType =(
 
   const button_open_layout=<Button onClick={()=>{
     showMenuComponents.show_menu_layout[1](true)
-    set_show_context_zdd(false)
+    show_context_zdd.current=false
 
   }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>
-  return show_context_zdd?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
+  return <Popover id="context_zdd_pop_over" ref={contextMenu.contextZDDRef} style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
         {button_fullscreen}
@@ -225,5 +223,5 @@ export const ContextMenuZdd : ContextMenuZddFType =(
         {button_an}
       </ButtonGroup>
     </Popover.Body>
-  </Popover>:<></>
+  </Popover>
 }
