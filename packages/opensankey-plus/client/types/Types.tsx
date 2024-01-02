@@ -1,7 +1,8 @@
 import {
   SankeyData, SankeyLink, SankeyNode, 
   SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,
-  showMenuComponentsType
+  showMenuComponentsType,
+  applicationDataType
 } from 'open-sankey/src/types/Types'
 
 export type DiffType={
@@ -96,4 +97,15 @@ export interface SankeyPlusShowMenuComponentsType extends showMenuComponentsType
   show_modal_import_icons : [boolean,(_:boolean)=>void],
   show_menu_zdt : [boolean,(_:boolean)=>void],
   show_modal_transparent_view_attr : [boolean,(_:boolean)=>void]
+}
+
+export interface SankeyPlusApplicationDataType extends applicationDataType {
+  data : SankeyPlusData,
+  display_nodes : { [idNode: string]: SankeyPlusNode; }
+  display_links : { [idLink: string]: SankeyPlusLink; }
+  master_data : SankeyPlusData|undefined,
+  set_master_data : (_:SankeyPlusData|undefined)=>void,
+  view : string,
+  set_view : (_:string)=>void,
+  get_default_data : () => SankeyPlusData
 }

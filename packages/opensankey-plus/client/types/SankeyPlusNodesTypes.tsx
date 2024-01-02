@@ -56,9 +56,8 @@ export type SankeyPlusDrawNodesIconFType = (
 ) => void
 
 export type context_node_iconFType = (
-  contextualised_node:SankeyPlusNode,
+  contextualised_node:{ current : SankeyPlusNode | undefined },
   set_show_menu_node_icon:(_:boolean)=>void,
-  set_contextualised_node:(_:SankeyPlusNode|undefined)=>void,
   t:TFunction
 )=> JSX.Element
 
