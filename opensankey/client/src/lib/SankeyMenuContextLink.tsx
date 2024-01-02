@@ -1,8 +1,7 @@
-import { TFunction } from 'i18next'
 import React from 'react'
 import { Dropdown, ButtonGroup, Button, Popover } from 'react-bootstrap'
 import { ContextMenuLinkFType } from '../types/SankeyMenuContextLinkTypes'
-import { SankeyLink, SankeyNode, SankeyData, SankeyLinkValue } from '../types/Types'
+import { SankeyLink, SankeyNode,  SankeyLinkValue } from '../types/Types'
 import { reorganize_inputLinksId} from './SankeyLayout'
 import { handleDownLink, handleUpLink } from './SankeyMenuConfigurationLinksAppearence'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -13,15 +12,18 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
 const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuLink : ContextMenuLinkFType = (
-  contextualised_link,
-  set_show_menu_link_data,
-  set_show_menu_link_appearence,
-  data:SankeyData,set_data,
-  tags_selected,
-  multi_selected_links,
-  t:TFunction,
-  pointer_pos
+  applicationContext,
+  applicationData,
+  elementsSelected,
+  contextMenu,
+  showMenuComponents
 )=>{
+
+  const { contextualised_link,pointer_pos } = contextMenu
+  const { multi_selected_links,tags_selected } = elementsSelected
+  const { data, set_data } = applicationData
+  const { t } = applicationContext
+
   let style_c_l='0px 0px auto auto'
   if(contextualised_link.current!==undefined){
     style_c_l=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
@@ -138,7 +140,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
 
 
   const button_open_link_appearence=contextualised_link.current!==undefined?<Button onClick={()=>{
-    set_show_menu_link_appearence(true)
+    showMenuComponents.show_menu_link_appearence[1](true)
     contextualised_link.current = undefined
   }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
@@ -232,7 +234,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
   </Dropdown>:<></>
 
   const button_open_link_data=contextualised_link.current!==undefined?<Button onClick={()=>{
-    set_show_menu_link_data(true)
+    showMenuComponents.show_menu_link_data[1](true)
     contextualised_link.current = undefined
   }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
 

@@ -564,14 +564,12 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     showMenuComponents.show_menu_link_appearence[1]):<></>
 
   const context_l = ContextMenuLink(
-    contextMenu.contextualised_link,
-    showMenuComponents.show_menu_link_data[1],
-    showMenuComponents.show_menu_link_appearence[1],
-    applicationData.data,applicationData.set_data,
-    elementsSelected.tags_selected,
-    elementsSelected.multi_selected_links,
-    t,
-    contextMenu.pointer_pos)
+    applicationContext,
+applicationData,
+elementsSelected,
+contextMenu,
+showMenuComponents
+)
 
 
   // MENU DRAGGABLE LAYOUT
