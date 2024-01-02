@@ -1,4 +1,4 @@
-import { SankeyLink, SankeyData, SankeyNode} from '../types/Types'
+import { SankeyData, SankeyNode} from '../types/Types'
 import React, { RefObject } from 'react'
 import * as d3 from 'd3'
 
@@ -7,28 +7,19 @@ import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
   EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape } from './SankeyDrawFunction'
 import {  dragGNodeEvent } from './SankeyDrag'
 import { GetLinkValueFuncType, LinkTextFuncType } from '../types/SankeyUtilsTypes'
-import { OpenSankeyDrawNodesFType } from '../types/SankeyDrawNodesTypes'
+import { DrawNodesFType } from '../types/SankeyDrawNodesTypes'
 import { NodeTooltipsContentFType } from '../types/SankeyTooltipTypes'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
+export const DrawNodes : DrawNodesFType = (
   contextMenu,
-  data:SankeyData, 
-  set_data:(d:SankeyData)=>void,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
-  nodes_accordion_ref:{current:HTMLDivElement } | null,
-  links_accordion_ref:{current:HTMLDivElement; } | null,
-  multi_selected_nodes:{current: SankeyNode[] },
-  multi_selected_links:{current: SankeyLink[] },
+  applicationData,
+  uiElementsRef,
+  elementsSelected,
   mode_selection:{current:string},
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
-  accordion_ref:{current:HTMLDivElement } | null,
-  button_ref:{current:HTMLLabelElement} | null,
   alt_key_pressed:boolean,
   NodeTooltipsContent:NodeTooltipsContentFType,
   LinkText:LinkTextFuncType,
@@ -36,7 +27,10 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   accept_simple_click:{current:boolean}
 ) => {
-  
+  const {data,set_data,display_nodes,display_links}=applicationData
+  const {button_ref,accordion_ref,nodes_accordion_ref,links_accordion_ref} =uiElementsRef
+  const {multi_selected_links,multi_selected_nodes,first_selected_node,set_first_selected_node}=elementsSelected
+
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic ||event.shiftKey)) {
