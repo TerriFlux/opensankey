@@ -5,28 +5,28 @@ import { textwrap } from 'd3-textwrap'
 
 import { LinkVisible} from './SankeyUtils'
 import { TFunction } from 'i18next'
-import { opposing_drag_elements } from './SankeyDrag'
+import { OpposingDragElements } from './SankeyDrag'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
-import { OpenSankeyDrawLegendFType, context_legend_tagsFType, drag_legendFType, drag_legend_g_elementFuncType} from '../types/SankeyDrawLegendTypes'
+import { DrawLegendFType, context_legend_tagsFType, drag_legendFType, drag_legend_g_elementFuncType} from '../types/SankeyDrawLegendTypes'
 
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const OpenSankeyDrawLegend : OpenSankeyDrawLegendFType= (
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes : { [node_id: string]: SankeyNode },
-  GetLinkValue:GetLinkValueFuncType,
-  t:TFunction,
-  pointer_pos:{current:number[]},
-  set_tag_contextualised:(t:string)=>void,
-  legend_clicked:boolean,
-  set_legend_clicked:(b:boolean)=>void,
+export const DrawLegend : DrawLegendFType= (
+  applicationData,
+  applicationContext,
+  contextMenu,
+  GetLinkValue,
+  legend_clicked,
+  set_legend_clicked
 ) => {
+  const {data,set_data,display_nodes}=applicationData
+  const {t}=applicationContext
+  const {pointer_pos,set_tag_contextualised}=contextMenu
   // Function that add legend of tags
   // In the legend it draw the legend (color of the tag and it name) that are visually reprensented on the graph
   const drawLegend = () => {
@@ -375,14 +375,14 @@ export const drag_legend : drag_legendFType = (
   .subject(Object).on('drag', function (event) {
 
     if(d3.select('.opensankey #svg').nodes().length>0){
-      drag_legend_g_element(data,event)
+      DragLegendGElement(data,event)
       if(data.legend_position[0]==0 ||data.legend_position[1]==0){
-        opposing_drag_elements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
+        OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
       }
     }
   }).on('end',()=>set_data({...data}))
 
-export const drag_legend_g_element:drag_legend_g_elementFuncType=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
+export const DragLegendGElement:drag_legend_g_elementFuncType=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
   let scale_for_legend=1
   const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
   const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1

@@ -8,7 +8,7 @@ import { SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, applicationContextT
 import SankeyDraw from './lib/SankeyDraw'
 import { LinkStrokeFuncType } from './types/SankeyDrawLinksTypes'
 import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, RepositionneSidebar, EventOnSankeyZoneMouseDown, EventOnSankeyZoneMouseMove, EventOnSankeyZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
-import { OpenSankeyDrawLegend } from './lib/SankeyDrawLegend'
+import { DrawLegend } from './lib/SankeyDrawLegend'
 import { DrawLinks } from './lib/SankeyDrawLinks'
 import { DrawNodes } from './lib/SankeyDrawNodes'
 import { OpenSankeyDrawNodesLabel } from './lib/SankeyDrawNodesLabel'
@@ -261,17 +261,18 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       LinkColor
     )
     // Create traduction function
-    OpenSankeyDrawLegend(
-      data, set_data as (d:SankeyData)=>void,display_nodes,
-      SuiteGetLinkValue, t,
-      pointer_pos,
-      set_tag_contextualised,
-      legend_clicked,set_legend_clicked
+    DrawLegend(
+      applicationData,
+      applicationContext,
+      contextMenu,
+      GetLinkValue,
+      legend_clicked,
+      set_legend_clicked
     )
 
     //const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown> //TODO
     // if(!window.SankeyToolsStatic){
-    //   g_legend.call(drag_legend_plus(data,set_data as (d:SankeyData)=>void,multi_selected_label))
+    //   g_legend.call(DragLegendPlus(data,set_data as (d:SankeyData)=>void,multi_selected_label))
     // }
 
     // Zoom Behavior

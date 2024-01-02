@@ -1,15 +1,12 @@
 import { TFunction } from 'i18next'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode } from './Types'
+import { SankeyData, SankeyLink, SankeyNode, applicationContextType, applicationDataType, contextMenuType } from './Types'
 
-export type OpenSankeyDrawLegendFType = (
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes : { [node_id: string]: SankeyNode },
+export type DrawLegendFType = (
+  applicationData:applicationDataType,
+  applicationContext:applicationContextType,
+  contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
-  t:TFunction,
-  pointer_pos:{current:number[]},
-  set_tag_contextualised:(t:string)=>void,
   legend_clicked:boolean,
   set_legend_clicked:(b:boolean)=>void,
 ) => JSX.Element
