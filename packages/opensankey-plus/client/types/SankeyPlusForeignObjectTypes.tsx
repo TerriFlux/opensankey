@@ -13,7 +13,7 @@ export type SankeyPlusNodeFOFType = (
   set_editor_content_fo_node:(s:string)=>void
 ) => JSX.Element
 
-export type SankeyPlusDrawNodesFOFType = (
+export type PlusDrawNodesFOFType = (
   data:SankeyPlusData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
   mode_selection:{current:string},

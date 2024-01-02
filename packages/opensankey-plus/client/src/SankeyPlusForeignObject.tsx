@@ -13,7 +13,7 @@ import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
 import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
 import { NodeDisplayed } from './import/OpenSankey'
-import {SankeyPlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
+import {PlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
 import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
@@ -213,7 +213,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
 }
 
 
-export const SankeyPlusDrawNodesFO : SankeyPlusDrawNodesFOFType = (
+export const PlusDrawNodesFO : PlusDrawNodesFOFType = (
   data : SankeyPlusData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
   mode_selection:{current:string},
