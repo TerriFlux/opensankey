@@ -1,21 +1,20 @@
 import React from 'react'
 import { Row, Form,  Tab, InputGroup } from 'react-bootstrap'
-import { SankeyData, SankeyLink,SankeyLinkValue } from '../types/Types'
-import { TFunction } from 'i18next'
+import {SankeyLinkValue } from '../types/Types'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
-import { SankeyMenuConfigurationLinksTagsFType } from '../types/SankeyMenuConfigurationLinksTagsTypes'
+import { MenuConfigurationLinksTagsFType } from '../types/SankeyMenuConfigurationLinksTagsTypes'
 
-export const SankeyMenuConfigurationLinksTags : SankeyMenuConfigurationLinksTagsFType = (
-  data:SankeyData,
-  multi_selected_links:{current:SankeyLink[]},
-  set_data:(d:SankeyData)=>void,
+export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
+  applicationData,
+  elementsSelected,
+  applicationContext,
   tags_group_key:string,
   set_tags_group_key:(_:string)=>void,
-  tags_selected:{[k: string]: string},
-  set_tags_selected:( _ :{[k: string]: string} )=> void,
-  t:TFunction
 )=>{
+  const {data,set_data}=applicationData
+  const {multi_selected_links,tags_selected}=elementsSelected
+  const {t}=applicationContext
 
   const {fluxTags}=data
   const tags_visible = Object.keys(fluxTags).length > 0

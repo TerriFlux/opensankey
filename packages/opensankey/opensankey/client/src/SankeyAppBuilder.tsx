@@ -17,9 +17,9 @@ import { OpenSankeyMenusFType} from './types/SankeyMenuTopTypes'
 import {SankeyMenuConfigurationNodesIO} from './lib/SankeyMenuConfigurationNodesIO'
 import {SankeyMenuConfigurationNodesIOFType} from './types/SankeyMenuConfigurationNodesIOTypes'
 
-import {OpenSankeyMenuConfigurationLinks} from './lib/SankeyMenuConfigurationLinks'
-import {SankeyMenuConfigurationLinksData} from './lib/SankeyMenuConfigurationLinksData'
-import {SankeyMenuConfigurationLinksAppearence} from './lib/SankeyMenuConfigurationLinksAppearence'
+import {MenuConfigurationLinks} from './lib/SankeyMenuConfigurationLinks'
+import {MenuConfigurationLinksData} from './lib/SankeyMenuConfigurationLinksData'
+import {MenuConfigurationLinksAppearence} from './lib/SankeyMenuConfigurationLinksAppearence'
 
 import {toolbar_builder,addSimpleLevelDropDown,setDiagram} from './lib/SankeyMenuBanner'
 import { ModalPreference,OpenSankeyDefaultModalePreferenceContent} from './lib/SankeyMenuPreferences'
@@ -167,7 +167,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   const [showStyle, setShowStyle] = useState(false)
 
   //- Modals and Dialogs
-  // For OpenSankeyMenuConfigurationLinks
+  // For MenuConfigurationLinks
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(applicationData.data.fluxTags).length > 0 ? Object.keys(applicationData.data.fluxTags)[0] : '')
 
   // Modal et fonctions pour l'edition et affectation des style de flux
@@ -269,13 +269,11 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   // const add_link_appearence_item=[] as JSX.Element[]
 
   //- 1.3.1.2 Builds the core for Menu Links
-  const menu_configuration_links = OpenSankeyMenuConfigurationLinks(
-    applicationData.data,applicationData.set_data,
-    elementsSelected.multi_selected_links,
-    t,
+  const menu_configuration_links = MenuConfigurationLinks(
+    applicationData,
+    elementsSelected,
+    applicationContext,
     tags_group_key, set_tags_group_key,
-    elementsSelected.tags_selected, 
-    elementsSelected.set_tags_selected,
     [<></>],
     displayedInputLinkValueRef,
     [<></>],
@@ -307,15 +305,13 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
   //- 1.7 Finish builds Configuration Menus
   const configurations_menus =  OpenSankeyConfigurationsMenus(
-    t,
-    applicationData.data,applicationData.set_data as (d:SankeyData)=>void,
+   applicationData,
+   elementsSelected,
+   applicationContext,
+   uiElementsRef,
     set_show_nav,
     nav_item_active, set_nav_item_active,
     sub_nav_item_active, set_sub_nav_item_active,
-    uiElementsRef.nodes_accordion_ref,
-    uiElementsRef.links_accordion_ref,
-    elementsSelected.multi_selected_nodes,
-    elementsSelected.multi_selected_links,
     set_style_to_apply,
     menu_configuration_layout,
     menu_configuration_nodes_tags, 
@@ -326,8 +322,6 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     <></>,
     false, //TODO
     displayedInputLinkValueRef,
-    elementsSelected.tags_selected, 
-    elementsSelected.set_tags_selected,
     set_display_link_opacity,
     pre_idSource,
     pre_idTarget
@@ -374,10 +368,11 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
   const add_style_link_appearence_item=[] as JSX.Element[]
 
-  const modale_style_link=<React.Fragment key={'modale_style_link'}>{SankeyModalStyleLink(t,
-    applicationData.data, applicationData.set_data as (_:SankeyData)=>void,
+  const modale_style_link=<React.Fragment key={'modale_style_link'}>{SankeyModalStyleLink(
+    applicationData,
+    applicationContext,
+    elementsSelected,
     showStyleLink, setShowStyleLink,
-    elementsSelected.selected_style_link, elementsSelected.set_selected_style_link,
     add_style_link_appearence_item,
     display_link_opacity, set_display_link_opacity)
   }</React.Fragment>
@@ -523,12 +518,10 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   })
 
   // MENU DRAGGABLE LINK DATA
-  const menu_link_data = SankeyMenuConfigurationLinksData(
-    applicationData.data,
-    elementsSelected.tags_selected,
-    elementsSelected.multi_selected_links,
-    applicationData.set_data,
-    t,
+  const menu_link_data = MenuConfigurationLinksData(
+    applicationData,
+    elementsSelected,
+    applicationContext,
     [<></>],
     displayedInputLinkValueRef,
     pre_idSource,
@@ -546,14 +539,12 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
 
   // MENU DRAGGABLE LINK APPEARENCE
-  const menu_link_appearence = SankeyMenuConfigurationLinksAppearence(
-    applicationData.data,
-    elementsSelected.multi_selected_links,
-    applicationData.set_data,
-    t,
+  const menu_link_appearence = MenuConfigurationLinksAppearence(
+    applicationData,
+    elementsSelected,
+    applicationContext,
     add_style_link_appearence_item,
     false,
-    'default',
     display_link_opacity,set_display_link_opacity,
     GetLinkValue,
     true)

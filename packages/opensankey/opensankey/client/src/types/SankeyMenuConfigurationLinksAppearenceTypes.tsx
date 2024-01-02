@@ -1,15 +1,12 @@
-import { TFunction } from 'i18next'
-import { SankeyData, SankeyLink } from './Types'
+import { SankeyData, applicationContextType, applicationDataType, elementsSelectedType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
-export type SankeyMenuConfigurationLinksAppearenceFType = (
-  data:SankeyData,
-  multi_selected_links:{current:SankeyLink[]},
-  set_data:(d:SankeyData)=>void,
-  t:TFunction,
+export type MenuConfigurationLinksAppearenceFType = (
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
+  applicationContext:applicationContextType,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,
-  selected_style_link:string,
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
   GetLinkValue:GetLinkValueFuncType,

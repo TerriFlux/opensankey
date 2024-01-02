@@ -2,9 +2,9 @@ import React from 'react'
 import { Row, Form, Col, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyData, SankeyLink } from '../types/Types'
 import { TFunction } from 'i18next'
-import { SankeyMenuConfigurationLinksTooltipFType } from '../types/SankeyMenuConfigurationLinksTooltipTypes'
+import { MenuConfigurationLinksTooltipFType } from '../types/SankeyMenuConfigurationLinksTooltipTypes'
 
-export const SankeyMenuConfigurationLinksTooltip : SankeyMenuConfigurationLinksTooltipFType = (
+export const MenuConfigurationLinksTooltip : MenuConfigurationLinksTooltipFType = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},

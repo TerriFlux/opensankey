@@ -3,14 +3,12 @@ import { Form, Tab, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import {ValueSelectedParameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
 import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar } from './SankeyUtils'
-import { SankeyMenuConfigurationLinksDataFType } from '../types/SankeyMenuConfigurationLinksDataTypes'
+import { MenuConfigurationLinksDataFType } from '../types/SankeyMenuConfigurationLinksDataTypes'
 
-export const SankeyMenuConfigurationLinksData : SankeyMenuConfigurationLinksDataFType = (
-  data,
-  tags_selected,
-  multi_selected_links,
-  set_data,
-  t,
+export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
+  applicationData,
+  elementsSelected,
+  applicationContext,
   additional_data_element,
   displayedInputLinkValueRef,
   pre_idSource,
@@ -19,6 +17,9 @@ export const SankeyMenuConfigurationLinksData : SankeyMenuConfigurationLinksData
   set_pre_idTarget,
   menu_for_modal
 ) => {
+  const {data,set_data}=applicationData
+  const {t} =applicationContext
+  const {multi_selected_links,tags_selected}=elementsSelected
   //const displayedInputLinkValueRef = useRef<RefObject<HTMLInputElement>>()
   const [displayed_input_link_value,set_displayed_input_link_value]=useState('')
   let is_link_data_invalid=false
