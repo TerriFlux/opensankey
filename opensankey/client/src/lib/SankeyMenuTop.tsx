@@ -1067,8 +1067,10 @@ export const Menu: FunctionComponent<MenuTypes> = (
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
         contextMenu.contextualised_node.current =undefined
         contextMenu.contextualised_link.current = undefined
-        contextMenu.set_show_context_zdd(false)
+        contextMenu.show_context_zdd.current=false
         contextMenu.set_tag_contextualised(undefined)
+        contextMenu.contextNodeRef.current!.hidden = true    
+        contextMenu.contextZDDRef.current!.hidden = true   
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>

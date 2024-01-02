@@ -42,6 +42,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const start_point=useRef([0,0])
   const contextualised_node = useRef<SankeyNode>()
   const contextNodeRef = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
+  const contextZDDRef = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
   const contextualised_link = useRef<SankeyLink>()
   const pointer_pos=useRef([0,0])
   const [legend_clicked,set_legend_clicked]=useState(false)
@@ -49,7 +50,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
   const [tag_contextualised,set_tag_contextualised]= useState<string>() as [string|undefined,(t: string | undefined) => void]
 
-  const [show_context_zdd, set_show_context_zdd]=useState(false)
+  const show_context_zdd=useRef(false)
   const [show_nav, set_show_nav] = useState(false)
 
   //- Styles
@@ -132,11 +133,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     contextualised_node.current = undefined
     contextualised_link.current = undefined
     set_tag_contextualised(undefined)
-    set_show_context_zdd(false)
+    show_context_zdd.current=false
+    contextMenu.contextNodeRef.current!.hidden = true    
+    contextMenu.contextZDDRef.current!.hidden = true    
   } 
 
   const contextMenu : contextMenuType = {
     contextNodeRef : contextNodeRef,
+    contextZDDRef : contextZDDRef,
     contextualised_node : contextualised_node,
     contextualised_link : contextualised_link,
     tag_contextualised : tag_contextualised,
@@ -144,7 +148,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     closeAllMenuContext : closeAllMenuContext,
     pointer_pos : pointer_pos,
     show_context_zdd : show_context_zdd,
-    set_show_context_zdd : set_show_context_zdd
   }
 
   const mode_pref=sessionStorage.getItem('modepref')
@@ -268,7 +271,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       pointer_pos,
       ()=>''
     )
-    console.log(legend_clicked)
     // Create traduction function
     OpenSankeyDrawLegend(
       data, set_data as (d:SankeyData)=>void,display_nodes,
@@ -349,6 +351,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         }, [])}
 
         <SankeyDraw
+          contextMenu={contextMenu}
           data={data}
           set_data={set_data}
           display_nodes={display_nodes}
@@ -362,8 +365,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           is_agregation={is_agregation}
           set_alt_key_pressed={set_alt_key_pressed}
           GetSankeyMinWidthAndHeight={size_of_draw_zone}
-          pointer_pos={pointer_pos}
-          set_show_context_zdd={set_show_context_zdd}
 
         />
 

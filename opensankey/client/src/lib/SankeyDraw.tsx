@@ -12,11 +12,16 @@ import { RemoveAnimate,
   DeselectVisualyNodes,
   SvgDragMiddleMouseStart,
   SvgDragMiddleMouseMove,
-  SelectVisualyNodes} from './SankeyDrawFunction'
+  SelectVisualyNodes,
+  EventZDDContextMenu} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 import { SankeyDrawTypes, keyHandlerFType } from '../types/SankeyDrawTypes'
-
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+}
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
+  contextMenu,
   data,
   set_data,
   display_nodes,
@@ -30,8 +35,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   is_agregation,
   set_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
-  pointer_pos,
-  set_show_context_zdd
 }) => {
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
@@ -121,11 +124,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       )
     svgSankey.on('contextmenu',(evt)=>{
-      evt.preventDefault()
-      pointer_pos.current=[evt.pageX,evt.pageY]
-      if(d3.select(evt.target).attr('class')=='mode_selection' && !windowSankey.SankeyToolsStatic){
-        set_show_context_zdd(true)
-      }
+
+      if(!window.SankeyToolsStatic && d3.select(evt.target).attr('class')=='mode_selection'){return EventZDDContextMenu(evt,contextMenu)}
     })
 
     DrawGrid(data)

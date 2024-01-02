@@ -41,7 +41,6 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic ||event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
-      console.log(GetLinkValue)
       sankeyTooltip
         .style('opacity', 1)
         .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue))
