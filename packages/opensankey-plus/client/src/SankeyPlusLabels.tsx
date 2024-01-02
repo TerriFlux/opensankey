@@ -5,7 +5,7 @@ import { SankeyData } from 'open-sankey/src/types/Types'
 import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import {
-  SankeyPlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
+  PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
   sankey_plus_zoom_text_zoneFType, zone_selection_labelFType
 } from '../types/SankeyPlusLabelsTypes'
 import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
@@ -21,26 +21,25 @@ typeof globalThis & {
 }
 
 
-export const SankeyPlusDrawLabels : SankeyPlusDrawLabelsFType = (
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_label:{current: SankeyPlusLabel[] },
-  accordion_ref:{ current: HTMLDivElement } | null,
-  button_ref:{ current: HTMLLabelElement} | null,
+export const PlusDrawLabels : PlusDrawLabelsFType = (
+  applicaTionData,
+  elementsSelected,
+  uiElementsRef,
+  contextMenu,
+
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:drawArrowsType,
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
-  pointer_pos:{current:number[]},
   set_show_context_zdt:(b:boolean)=>void
 ) => {
+  const {data,set_data,display_nodes,display_links}=applicaTionData
+  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=elementsSelected
+  const {button_ref,accordion_ref}=uiElementsRef
+  const {pointer_pos}=contextMenu
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, data.user_scale])

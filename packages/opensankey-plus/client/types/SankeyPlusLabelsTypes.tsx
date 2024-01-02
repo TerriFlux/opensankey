@@ -1,28 +1,22 @@
-import { SankeyData } from 'open-sankey/src/types/Types'
-import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
+import { SankeyData, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
 
-export type SankeyPlusDrawLabelsFType = (
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_label:{current: SankeyPlusLabel[] },
-  accordion_ref:{ current: HTMLDivElement } | null,
-  button_ref:{ current: HTMLLabelElement} | null,
+export type PlusDrawLabelsFType = (
+  applicaTionData:SankeyPlusApplicationDataType,
+  elementsSelected:PlusElementsSelectedType,
+  uiElementsRef:uiElementsRefType,
+  contextMenu:contextMenuType,
   GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:drawArrowsType,
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
-  pointer_pos:{current:number[]},
   set_show_context_zdt:(b:boolean)=>void
 ) => void
 
