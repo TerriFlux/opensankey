@@ -832,18 +832,14 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
 
 
 export const context_node_icon : context_node_iconFType = (
-  contextualised_node:SankeyPlusNode,
+  contextualised_node,
   set_show_menu_node_icon:(_:boolean)=>void,
-  set_contextualised_node:(b:SankeyPlusNode|undefined)=>void,
   t:TFunction
 )=>{
-
   const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
-
-
-  return contextualised_node!==undefined?<Button onClick={()=>{
+  return <Button onClick={()=>{
     set_show_menu_node_icon(true)
-    set_contextualised_node(undefined)
+    contextualised_node.current = undefined
   }} variant='light'>{t('Noeud.icon.icon')} {icon_open_modal}</Button>:<></>
 
 }
