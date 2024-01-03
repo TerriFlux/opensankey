@@ -1074,7 +1074,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         contextMenu.contextualised_node.current![0][1](undefined)
         contextMenu.contextualised_link.current![0][1](undefined)
         contextMenu.show_context_zdd.current![0][1](false)
-        contextMenu.tagContext.current![0][1](undefined)
+        contextMenu.tagContext.current?.forEach(tag_ref=>tag_ref[1](undefined))
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>
