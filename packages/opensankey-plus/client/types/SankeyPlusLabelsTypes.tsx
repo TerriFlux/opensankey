@@ -1,6 +1,6 @@
 import { SankeyData, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
-import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
+import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
@@ -13,7 +13,7 @@ export type PlusDrawLabelsFType = (
   GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType,
+  DrawArrows:DrawArrowsType,
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,

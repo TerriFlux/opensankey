@@ -2,17 +2,17 @@ import React from 'react'
 import * as d3 from 'd3'
 
 import { SankeyData } from 'open-sankey/src/types/Types'
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink} from '../types/Types'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink, PlusElementsSelectedType, SankeyPlusApplicationDataType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import {
   PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
   sankey_plus_zoom_text_zoneFType, zone_selection_labelFType
 } from '../types/SankeyPlusLabelsTypes'
-import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
+import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 
 import { DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './import/OpenSankey'
 
-import { drag_elements_plus,return_out_of_bound_element_plus,OpposingDragElementsPlus } from './SankeyPlusNodes'
+import { PlusDragElements,PlusReturnOutOfBoundElements,OpposingDragElementsPlus } from './SankeyPlusNodes'
 
 
 declare const window: Window &
@@ -30,13 +30,13 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType,
+  DrawArrows:DrawArrowsType,
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
   set_show_context_zdt:(b:boolean)=>void
 ) => {
-  const {data,set_data,display_nodes,display_links}=applicaTionData
+  const {data,set_data}=applicaTionData
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}=elementsSelected
   const {button_ref,accordion_ref}=uiElementsRef
   const {pointer_pos}=contextMenu
@@ -113,8 +113,9 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
 
       gg_label.call(
         dragLabelEvent(
-          multi_selected_label,d,data,set_data as (_:SankeyData)=>void,display_nodes,display_links,
-          GetSankeyMinWidthAndHeight,DrawGrid,multi_selected_nodes,multi_selected_links,
+          applicaTionData,elementsSelected,
+          d,
+          GetSankeyMinWidthAndHeight,DrawGrid,
           LinkText,GetLinkValue,DrawArrows,scale,inv_scale,mode_selection,start_point
         )
       )
@@ -196,24 +197,21 @@ export const eventLabelClick : eventLabelClickFType =(
 // To be dragged you need to select the free label
 
 const dragLabelEvent = (
-  multi_selected_label:{current:SankeyPlusLabel[]},
+  applicationData:SankeyPlusApplicationDataType,
+  elementsSelected:PlusElementsSelectedType,
   d:SankeyPlusLabel,
-  data:SankeyPlusData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink }, 
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   DrawGrid:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current: SankeyPlusLink[] },
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType,
+  DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   mode_selection:{current:string},
   start_point:{current:number[]}
 )=>{
+  const {data,set_data}=applicationData
+  const {multi_selected_links,multi_selected_label,multi_selected_nodes}=elementsSelected
   const node_visible=[] as string[]
   const data_plus = data as SankeyPlusData
   return (d3.drag<SVGGElement, unknown>()
@@ -250,13 +248,15 @@ const dragLabelEvent = (
         // Drag zdt
         // Cherche si des element seront hors zone si on les drag 
         // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-        const out_of_zone_item=return_out_of_bound_element_plus(d,data,event,multi_selected_nodes,node_visible)
+        const out_of_zone_item=PlusReturnOutOfBoundElements(d,data,event,multi_selected_nodes,node_visible)
         // Pousse les element non sélectionnés dans la direction opposé
         if(out_of_zone_item.length>0){
           OpposingDragElementsPlus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
         }
-        drag_elements_plus(
-          d,data,event,multi_selected_nodes,multi_selected_label,set_data,display_nodes,display_links,multi_selected_links,LinkText,
+        PlusDragElements(
+          applicationData,
+          elementsSelected,
+          d,event,LinkText,
           GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
         )
       }

@@ -12,12 +12,12 @@ import {
 } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { complete_sankey_dataFunctType, ConvertDataFuncType, convert_nodesFuncType, convert_linksFuncType, convert_tagsFuncType } from 'open-sankey/src/types/SankeyConvertTypes'
 import { 
-  drawArrowsType, NodeVisibleOnsSvgFuncType, 
+  DrawArrowsType, NodeVisibleOnsSvgFuncType, 
   LinkVisibleOnsSvgFuncType, DeselectVisualyNodesFuncType, RemoveAnimateFuncType, 
   SvgDragMiddleMouseStartFuncType, SvgDragMiddleMouseMoveFuncType, SimpleGNodeClickFuncType, DrawGridFType 
 } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { LinkStrokeFuncType } from 'open-sankey/src/types/SankeyDrawLinksTypes'
-import { drag_elementsFuncType, drag_node_textFuncType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from 'open-sankey/src/types/SankeyDragTypes'
+import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from 'open-sankey/src/types/SankeyDragTypes'
 import { drag_legend_g_elementFuncType } from 'open-sankey/src/types/SankeyDrawLegendTypes'
 
 export const ReturnValueLink=OpensankeyUtils.ReturnValueLink as ReturnValueLinkFuncType
@@ -32,7 +32,7 @@ export const NodeColor = OpensankeyUtils.NodeColor as NodeColorFuncType
 
 export const LinkStrokeOSTyped = OpenSankeyDrawFunc.LinkStroke as LinkStrokeFuncType
 
-export const DrawArrows = OpenSankeyDrawFunc.DrawArrows as drawArrowsType
+export const DrawArrows = OpenSankeyDrawFunc.DrawArrows as DrawArrowsType
 
 export const DrawGrid = OpenSankeyDrawFunc.DrawGrid as DrawGridFType
 
@@ -58,13 +58,13 @@ export const IsAllNodeAttrSameValue = OpensankeyUtils.IsAllNodeAttrSameValue as 
 
 export const AssignNodeValueToCorrectVar:AssignNodeValueToCorrectVarFuncType = OpensankeyUtils.AssignNodeValueToCorrectVar
 
-export const OpposingDragElements:opposing_drag_elementsFuncType = OpensankeyDragFunc.OpposingDragElements
+export const OpposingDragElements:opposing_DragElementsFuncType = OpensankeyDragFunc.OpposingDragElements
 
-export const drag_elements:drag_elementsFuncType = OpensankeyDragFunc.drag_elements
+export const DragElements:DragElementsFuncType = OpensankeyDragFunc.DragElements
 
 export const drag_node_text:drag_node_textFuncType = OpensankeyDragFunc.drag_node_text
 
-export const return_out_of_bound_element:return_out_of_bound_elementFuncType =OpensankeyDragFunc.return_out_of_bound_element
+export const ReturnOutOfBoundElement:ReturnOutOfBoundElementFuncType =OpensankeyDragFunc.ReturnOutOfBoundElement
 
 export const DragLegendGElementOSTyped:drag_legend_g_elementFuncType = DragLegendGElement
 

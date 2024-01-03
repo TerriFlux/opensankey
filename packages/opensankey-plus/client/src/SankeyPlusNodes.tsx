@@ -8,7 +8,7 @@ import * as d3 from 'd3'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
-import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode,} from '../types/Types'
+import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType,} from '../types/Types'
 import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import {RemoveAnimate,
   DrawArrows,
@@ -22,21 +22,21 @@ import {RemoveAnimate,
   IsAllNodeAttrSameValue,
   AssignNodeValueToCorrectVar,
   OpposingDragElements,
-  drag_elements,
+  DragElements,
   drag_node_text,
-  return_out_of_bound_element
+  ReturnOutOfBoundElement
 } from './import/OpenSankey'
 
 import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/lib/SankeyUtils'
-import { SankeyData, SankeyLink, SankeyNode } from 'open-sankey/src/types/Types'
+import { SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { 
   SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, PlusNodeDragEventFType, 
-  SankeyPlusNodeIconFType, ContextNodeIconFType, drag_elements_plusFType, node_icon_fill_colorFType, 
-  node_icon_pathFType, OpposingDragElementsPlusFType, return_out_of_bound_element_plusFType
+  SankeyPlusNodeIconFType, ContextNodeIconFType, PlusDragElementsFType, node_icon_fill_colorFType, 
+  node_icon_pathFType, OpposingDragElementsPlusFType, PlusReturnOutOfBoundElementsFType
 } from '../types/SankeyPlusNodesTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
-import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
+import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -472,21 +472,18 @@ const calcPath = (
 }
 
 const node_mouse_click=(
-  data:SankeyData,
+  applicationData:SankeyPlusApplicationDataType,
+  elementsSelected:PlusElementsSelectedType,
+  uiElementsRef:uiElementsRefType,
   set_animating:(b:boolean)=>void,
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
-  set_data:(d:SankeyData)=>void,
-  nodes_accordion_ref:{current:HTMLDivElement},
-  multi_selected_nodes:{current: SankeyNode[] },
   mode_selection:{current:string},
-  accordion_ref:{current : HTMLDivElement},
-  button_ref:{current : HTMLLabelElement},
   accept_simple_click:{current:boolean},
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
   GetLinkValue:GetLinkValueFuncType
 )=>{
+  const {data,display_links,display_nodes}=applicationData
+
   const sankeyTooltip=d3.select('.sankey-tooltip')
   const data_plus =data as SankeyPlusData
   if (event.shiftKey) {
@@ -529,7 +526,7 @@ const node_mouse_click=(
       window.open(n.hyperlink)
     }
   }else{
-    SimpleGNodeClick(event,d,data,set_data,nodes_accordion_ref,multi_selected_nodes,mode_selection,accordion_ref,button_ref,accept_simple_click)
+    SimpleGNodeClick(applicationData,uiElementsRef,elementsSelected,event,d,mode_selection,accept_simple_click)
 
   }
 }
@@ -643,25 +640,16 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
   accept_simple_click:{current:boolean},
   GetLinkValue:GetLinkValueFuncType
 )=>{
-  const {data,set_data,display_nodes,display_links}=applicationData
-  const {multi_selected_nodes}=elementsSelected
-  const {nodes_accordion_ref,accordion_ref,button_ref}=uiElementsRef
   d3.selectAll(' .opensankey .ggg_nodes')
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
       node_mouse_click(
-        data,
+        applicationData,elementsSelected,uiElementsRef,
         set_animating,
         event,
         (d as SankeyPlusNode),
-        set_data as (_:SankeyData)=>void,
-        nodes_accordion_ref,
-        multi_selected_nodes,
         mode_selection,
-        accordion_ref,
-        button_ref,
         accept_simple_click,
-        display_nodes,display_links,
         GetLinkValue
       )
     })
@@ -891,8 +879,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   GetLinkValue:GetLinkValueFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=>{
-  const {data,set_data,display_nodes,display_links}=applicaTionData
-  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=elementsSelected
+  const {data,set_data}=applicaTionData
   
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -903,9 +890,8 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
 
   if(mode_selection.current==='s' && window.SankeyToolsStatic!==true){
     (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(
-      SankeyPlusdragGNodeEvent(
-        data,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,display_nodes,display_links,
-        multi_selected_links,LinkText,GetLinkValue,scale,inv_scale,multi_selected_label,GetSankeyMinWidthAndHeight
+      SankeyPlusDragGNodeEvent(applicaTionData,elementsSelected,
+        mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight
       )
     )
   }
@@ -934,22 +920,18 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
 
 }
 
-const SankeyPlusdragGNodeEvent = (
-  data:SankeyPlusData,
-  multi_selected_nodes:{current: SankeyPlusNode[] },
+const SankeyPlusDragGNodeEvent = (
+  applicationData:SankeyPlusApplicationDataType,
+  elementsSelected:PlusElementsSelectedType,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_links:{current:SankeyPlusLink[]},
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  multi_selected_label:{current:SankeyPlusLabel[]},
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=>{
+  const {data,set_data}=applicationData
   const node_visible=[] as string[]
   return d3.drag<SVGGElement, SankeyPlusNode>()
     .subject(Object)
@@ -963,8 +945,7 @@ const SankeyPlusdragGNodeEvent = (
         if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else {
-          drag_nodes_plus(node,event,multi_selected_nodes,data,
-            set_data,display_nodes,display_links,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,multi_selected_label,node_visible
+          PlusDragNodes(applicationData,elementsSelected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
           )
         }
       }
@@ -975,63 +956,53 @@ const SankeyPlusdragGNodeEvent = (
     })
 }
 
-const drag_nodes_plus = (
+const PlusDragNodes = (
+  applicationData:SankeyPlusApplicationDataType,
+  elementsSelected:PlusElementsSelectedType,
   node:SankeyPlusNode,
   event: { dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current: SankeyPlusNode[] },
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_links:{current: SankeyPlusLink[] },
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType,
+  DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  multi_selected_label:{current:SankeyPlusLabel[]},
   node_visible:string[]
 ) => {
   RemoveAnimate()
-
+  const {data,}=applicationData
+  const {multi_selected_nodes,multi_selected_label}=elementsSelected
   // Cherche si des element seront hors zone si on les drag
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-  const out_of_zone_item=return_out_of_bound_element_plus(node,data,event,multi_selected_nodes,node_visible)
+  const out_of_zone_item=PlusReturnOutOfBoundElements(node,data,event,multi_selected_nodes,node_visible)
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
     OpposingDragElementsPlus(out_of_zone_item,event,node,data,multi_selected_nodes,multi_selected_label)
   }
 
-  drag_elements_plus(
-    node,data,event,multi_selected_nodes,multi_selected_label,set_data,display_nodes,display_links,
-    multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
+  PlusDragElements(
+    applicationData,elementsSelected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
   )
 
 }
 
-export const drag_elements_plus : drag_elements_plusFType = (
+export const PlusDragElements : PlusDragElementsFType = (
+  applicationData,
+  elementsSelected,
   dragged:SankeyPlusNode|SankeyPlusLabel,
-  data:SankeyData,
   event:{ dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_links:{current: SankeyPlusLink[] },
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType,
+  DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number
 )=>{
+  const {multi_selected_label}=elementsSelected
   // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
   // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
-  drag_elements(
-    dragged as SankeyNode,data,event,multi_selected_nodes,set_data as (_:SankeyData)=>void,
-    display_nodes,display_links,multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,
+  DragElements(
+    dragged as SankeyNode,applicationData,elementsSelected,event,LinkText,GetSankeyMinWidthAndHeight,
     GetLinkValue,DrawArrows,scale,inv_scale
   )
 
@@ -1061,7 +1032,7 @@ export const drag_elements_plus : drag_elements_plusFType = (
   // }
 }
 
-export const return_out_of_bound_element_plus : return_out_of_bound_element_plusFType = (
+export const PlusReturnOutOfBoundElements : PlusReturnOutOfBoundElementsFType = (
   dragged:SankeyNode|SankeyPlusLabel,
   data:SankeyData,
   event:{ dx: number; dy: number,x:number,y:number },
@@ -1072,7 +1043,7 @@ export const return_out_of_bound_element_plus : return_out_of_bound_element_plus
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
 
 
-  const out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[]=return_out_of_bound_element(dragged as SankeyNode,data,event,multi_selected_nodes,node_visible) as (SankeyPlusNode|SankeyPlusLabel)[]
+  const out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[]=ReturnOutOfBoundElement(dragged as SankeyNode,data,event,multi_selected_nodes,node_visible) as (SankeyPlusNode|SankeyPlusLabel)[]
 
 
   Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).filter(lb=>{

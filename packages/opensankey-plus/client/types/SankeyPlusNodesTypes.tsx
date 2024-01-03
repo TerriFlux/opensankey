@@ -1,9 +1,9 @@
 import { TFunction } from 'i18next'
-import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
-import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
+import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode } from './Types'
+import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
-import { applicationDataType, elementsSelectedType, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { applicationDataType, uiElementsRefType } from 'open-sankey/src/types/Types'
 
 export type SankeyPlusNodeIconFType = (
   t:TFunction,
@@ -24,8 +24,8 @@ export type SankeyPlusHyperLinkFType=(
 ) => JSX.Element
 
 export type PlusNodeClickEventFType=(
-  applicaTionData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  applicaTionData:SankeyPlusApplicationDataType,
+  elementsSelected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
   set_animating:(b:boolean)=>void,
   mode_selection:{current:string},
@@ -76,26 +76,21 @@ export type PlusNodeDragEventFType = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=> void
 
-export type drag_elements_plusFType = (
+export type PlusDragElementsFType = (
+  applicationData:applicationDataType,
+  elementsSelected:PlusElementsSelectedType,
   dragged:SankeyPlusNode|SankeyPlusLabel,
-  data:SankeyPlusData,
   event:{ dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  set_data:(d:SankeyPlusData)=>void,
-  display_nodes:{ [node_id: string]: SankeyPlusNode },
-  display_links:{ [link_id: string]: SankeyPlusLink },
-  multi_selected_links:{current: SankeyPlusLink[] },
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType,
+  DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number
 )=> void
 
 
-export type return_out_of_bound_element_plusFType=(
+export type PlusReturnOutOfBoundElementsFType=(
   dragged:SankeyPlusNode|SankeyPlusLabel,
   data:SankeyPlusData,
   event:{ dx: number; dy: number,x:number,y:number },
