@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 
-import { drawArrowsType } from './SankeyDrawFunctionTypes'
+import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, RetrieveExcelResultsFuncType, updateLayoutFuncType  } from './SankeyUtilsTypes'
 import { OpenSankeyDiagramSelectorFType } from './SankeyMenuDialogsTypes'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
@@ -301,19 +301,16 @@ export interface SankeyAppState {
 
 export type SankeyDrawCurve={
   curve:(
-    data : SankeyData,
-    set_data : (_:SankeyData)=>void,
-    display_nodes : { [node_id: string]: SankeyNode }, 
-    display_links: { [node_id: string]: SankeyLink }, 
+    applicationData:applicationDataType,
+    elementsSelected:elementsSelectedType,
     display_style : display_styleType,
     nodeTags : TagsCatalog,
     l : SankeyLink,
     error_msg : { text?: string | undefined; } | undefined,
-    multi_selected_links:{current: SankeyLink[]},
     LinkText : LinkTextFuncType,
     GetSankeyMinWidthAndHeight : GetSankeyMinWidthAndHeightFuncType,
     GetLinkValue : GetLinkValueFuncType,
-    drawArrows:drawArrowsType
+    DrawArrows:DrawArrowsType
   ) => string | number | boolean | readonly (string | number)[] | null
 }
 
