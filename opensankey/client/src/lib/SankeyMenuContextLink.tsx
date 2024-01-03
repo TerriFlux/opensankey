@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Dropdown, ButtonGroup, Button, Popover } from 'react-bootstrap'
 import { ContextMenuLinkFType } from '../types/SankeyMenuContextLinkTypes'
 import { SankeyLink, SankeyNode,  SankeyLinkValue } from '../types/Types'
@@ -18,14 +18,17 @@ export const ContextMenuLink : ContextMenuLinkFType = (
   contextMenu,
   showMenuComponents
 )=>{
-
-  const { contextualised_link,pointer_pos } = contextMenu
+  const [ contextualised_link, set_contextualised_link] = useState<SankeyLink>()
+  if (contextMenu.contextualised_link.current!.length == 0) {
+    contextMenu.contextualised_link.current!.push([contextualised_link,set_contextualised_link])
+  }
+  const { pointer_pos } = contextMenu
   const { multi_selected_links,tags_selected } = elementsSelected
   const { data, set_data } = applicationData
   const { t } = applicationContext
 
   let style_c_l='0px 0px auto auto'
-  if(contextualised_link.current!==undefined){
+  if(contextualised_link){
     style_c_l=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
 
@@ -49,11 +52,11 @@ export const ContextMenuLink : ContextMenuLinkFType = (
   }
 
   const value_selected_parameter_contextualised_link = (): SankeyLinkValue => {
-    if(contextualised_link.current===undefined){
+    if(contextualised_link===undefined){
       return ({} as SankeyLinkValue)
     }else{
-      if ( Object.keys(data.links).length === 0 || !(contextualised_link.current!.idLink in data.links) ) {
-        let val = JSON.parse(JSON.stringify(Object(contextualised_link.current!.value)))
+      if ( Object.keys(data.links).length === 0 || !(contextualised_link!.idLink in data.links) ) {
+        let val = JSON.parse(JSON.stringify(Object(contextualised_link!.value)))
         Object.values(tags_selected).map(tag_selected => {
           if (val[tag_selected] === undefined) {
             val[tag_selected] = {}
@@ -62,7 +65,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
         })
         return val
       }
-      let val = JSON.parse(JSON.stringify(Object(data.links[contextualised_link.current!.idLink].value)))
+      let val = JSON.parse(JSON.stringify(Object(data.links[contextualised_link!.idLink].value)))
       Object.values(tags_selected).map(tag_selected => {
         if (val[tag_selected] === undefined) {
           val[tag_selected] = {'display_value': '',tags:{},value:0}
@@ -75,7 +78,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
   }
   const has_flux_tags=Object.values(data.fluxTags).length>0
   // Dropdown to change some pararmeter concerning the appearence of the node
-  const dropdown_c_l_tag=(contextualised_link.current!==undefined && has_flux_tags) && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
+  const dropdown_c_l_tag=(contextualised_link!==undefined && has_flux_tags) && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Menu.Transformation.tagFlux_assign')}
     </Dropdown.Toggle>
@@ -90,7 +93,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
             {Object.keys(nt[1].tags).map(t=>{
               return <Dropdown.Item onClick={()=>{
                 // Assign tag to selected links
-                multi_selected_links.current.filter(l=>l!==contextualised_link.current).forEach(l=>{
+                multi_selected_links.current.filter(l=>l!==contextualised_link).forEach(l=>{
                   let val = Object(l.value)
                   Object.values(tags_selected).forEach(tag => {
                     if (val[tag] === undefined) {
@@ -109,7 +112,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
                 })
 
                 // Assign tag to contextualised link
-                let val = Object(contextualised_link.current!.value)
+                let val = Object(contextualised_link!.value)
                 Object.values(tags_selected).forEach(tag => {
                   if (val[tag] === undefined) {
                     val[tag] = {}
@@ -139,13 +142,13 @@ export const ContextMenuLink : ContextMenuLinkFType = (
   </Dropdown>:<></>
 
 
-  const button_open_link_appearence=contextualised_link.current!==undefined?<Button onClick={()=>{
+  const button_open_link_appearence=contextualised_link!==undefined?<Button onClick={()=>{
     showMenuComponents.show_menu_link_appearence[1](true)
-    contextualised_link.current = undefined
+    set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
   // Dropdown to change some pararmeter concerning the style of the node
-  const dropdown_c_l_style_select=contextualised_link.current!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+  const dropdown_c_l_style_select=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.SelectStyle')}
     </Dropdown.Toggle>
@@ -153,30 +156,30 @@ export const ContextMenuLink : ContextMenuLinkFType = (
       {
         Object.values(data.style_node).map(sn=>{
           return <Dropdown.Item onClick={()=>{
-            contextualised_link.current!.style=sn.idNode
-            multi_selected_links.current.filter(n=>n!=contextualised_link.current).forEach(n=>n.style=sn.idNode)
+            contextualised_link!.style=sn.idNode
+            multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>n.style=sn.idNode)
 
             set_data({...data})
-          }}>{sn.name}{checked(contextualised_link.current!.style==sn.idNode)}</Dropdown.Item>
+          }}>{sn.name}{checked(contextualised_link!.style==sn.idNode)}</Dropdown.Item>
         })
       }
     </Dropdown.Menu>
   </Dropdown>:<></>
-  const dropdown_c_l_style=contextualised_link.current!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+  const dropdown_c_l_style=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.Style')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
       <Dropdown.Item as={Button} variant='light' onClick={()=>{
-        delete contextualised_link.current!.local
-        multi_selected_links.current.filter(n=>n!=contextualised_link.current).forEach(n=>delete n.local)
+        delete contextualised_link!.local
+        multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>delete n.local)
         set_data({...data})
       }}>{t('Noeud.AS')}</Dropdown.Item>
       {dropdown_c_l_style_select}
     </Dropdown.Menu>
   </Dropdown>:<></>
 
-  const dropdown_c_l_layout=contextualised_link.current!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+  const dropdown_c_l_layout=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Flux.layout')}
     </Dropdown.Toggle>
@@ -233,19 +236,19 @@ export const ContextMenuLink : ContextMenuLinkFType = (
     </Dropdown.Menu>
   </Dropdown>:<></>
 
-  const button_open_link_data=contextualised_link.current!==undefined?<Button onClick={()=>{
+  const button_open_link_data=contextualised_link!==undefined?<Button onClick={()=>{
     showMenuComponents.show_menu_link_data[1](true)
-    contextualised_link.current = undefined
+    set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
 
   // Pop over that serve as context menu
-  return contextualised_link.current!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
+  return contextualised_link!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
     <Popover.Body >
       <ButtonGroup vertical>
         <Button variant='light' onClick={()=>{
           const nodes_to_reorganize: SankeyNode[] = []
-          invert_flux(contextualised_link.current!,nodes_to_reorganize)
-          multi_selected_links.current.filter(l=>l!==contextualised_link.current).forEach(l => {
+          invert_flux(contextualised_link!,nodes_to_reorganize)
+          multi_selected_links.current.filter(l=>l!==contextualised_link).forEach(l => {
             invert_flux(l,nodes_to_reorganize)
           })
           nodes_to_reorganize.forEach(n => {

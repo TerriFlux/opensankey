@@ -1,5 +1,5 @@
 import { SankeyData, SankeyNode } from '../types/Types'
-import React from 'react'
+import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
@@ -20,12 +20,11 @@ export const DrawLegend : DrawLegendFType= (
   applicationContext,
   contextMenu,
   GetLinkValue,
-  legend_clicked,
-  set_legend_clicked
+  legend_clicked
 ) => {
   const {data,set_data,display_nodes}=applicationData
   const {t}=applicationContext
-  const {pointer_pos,set_tag_contextualised}=contextMenu
+  const {pointer_pos,tagContext}=contextMenu
   // Function that add legend of tags
   // In the legend it draw the legend (color of the tag and it name) that are visually reprensented on the graph
   const drawLegend = () => {
@@ -51,7 +50,7 @@ export const DrawLegend : DrawLegendFType= (
       .attr('height','5px')
       .attr('rx','2px')
       .attr('ry','2px')
-      .attr('stroke-dasharray',()=>legend_clicked?'6,6':'')
+      .attr('stroke-dasharray',()=>'')
       .attr('stroke',data.legend_bg_border?data.legend_bg_color:'none')
       .attr('fill',data.legend_bg_color)
       .attr('fill-opacity',data.legend_bg_opacity)
@@ -65,7 +64,13 @@ export const DrawLegend : DrawLegendFType= (
         d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke',data.legend_bg_border?data.legend_bg_color:'none')
 
       })
-      .on('mousedown',()=>set_legend_clicked(true))
+      .on('mousedown',()=>{
+        legend_clicked.current = true
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray',()=>'6,6')
+        let h=document.getElementById('g_legend')?.getBoundingClientRect().height
+        h=h?h:50
+        draw_legend_handles(data,set_data,legend_clicked.current ,h)
+      })
 
 
     let scale_for_legend=1
@@ -207,7 +212,7 @@ export const DrawLegend : DrawLegendFType= (
           if(!window.SankeyToolsStatic){
             evt.preventDefault()
             pointer_pos.current=[evt.pageX,evt.pageY]
-            set_tag_contextualised(d[0])  
+            tagContext.current![0][1](d[0])  
           }
           
         })
@@ -354,7 +359,7 @@ export const DrawLegend : DrawLegendFType= (
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
   
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
-    draw_legend_handles(data,set_data,legend_clicked,h)
+    draw_legend_handles(data,set_data,legend_clicked.current,h)
   }
   if(!data.mask_legend){
     drawLegend()
@@ -419,12 +424,16 @@ export const ContextLegendTags : ContextLegendTagsFType=(
   GetLinkValue:GetLinkValueFuncType,
 
 )=>{
+  const [ tag_contextualised, set_tag_contextualised] = useState<string>()
   const {data,set_data}=applicationData
   const {t}=applicationContext
-  const {pointer_pos,tag_contextualised,set_tag_contextualised}=contextMenu
+  const {pointer_pos,tagContext}=contextMenu
+  if (tagContext.current!.length === 0) {
+    tagContext.current!.push([ tag_contextualised, set_tag_contextualised])
+  }
   const {multi_selected_links,multi_selected_nodes}=elementsSelected
   let style_c_t='0px 0px auto auto'
-  if(tag_contextualised!==undefined){
+  if(tag_contextualised ){
     style_c_t=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
 
@@ -444,7 +453,7 @@ export const ContextLegendTags : ContextLegendTagsFType=(
   }else if(NodeOrLinkTag=='dataTags'){
     text_button_select_element_by_tag=t('Menu.selectDataAttrubutedToTag')
   }
-  const button_select_element_tagged=tag_contextualised!==undefined &&['nodeTags','fluxTags','dataTags'].includes(NodeOrLinkTag) ?<Button onClick={()=>{
+  const button_select_element_tagged=tag_contextualised &&['nodeTags','fluxTags','dataTags'].includes(NodeOrLinkTag) ?<Button onClick={()=>{
     if(NodeOrLinkTag=='nodeTags'){
       multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag_contextualised)))
     }else if(NodeOrLinkTag=='fluxTags'){
@@ -459,7 +468,7 @@ export const ContextLegendTags : ContextLegendTagsFType=(
 
 
   // Pop over that serve as context menu 
-  return tag_contextualised!==undefined?<Popover id="context_tag_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_t}}>
+  return tag_contextualised?<Popover id="context_tag_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_t}}>
     <Popover.Body >
       <ButtonGroup vertical>
         {button_select_element_tagged}
@@ -467,7 +476,8 @@ export const ContextLegendTags : ContextLegendTagsFType=(
     </Popover.Body>
   </Popover>:<></>
 }
-const draw_legend_handles =(
+
+export const draw_legend_handles =(
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   legend_clicked:boolean,
