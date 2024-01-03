@@ -20,7 +20,7 @@ import {MenuConfigurationLinks} from './lib/SankeyMenuConfigurationLinks'
 import {MenuConfigurationLinksData} from './lib/SankeyMenuConfigurationLinksData'
 import {MenuConfigurationLinksAppearence} from './lib/SankeyMenuConfigurationLinksAppearence'
 
-import {toolbar_builder,addSimpleLevelDropDown,setDiagram} from './lib/SankeyMenuBanner'
+import {ToolbarBuilder,addSimpleLevelDropDown,setDiagram} from './lib/SankeyMenuBanner'
 import { ModalPreference,OpenSankeyDefaultModalePreferenceContent} from './lib/SankeyMenuPreferences'
 import { keyHandler } from './lib/SankeyDraw'
 import { ContextLegendTags } from './lib/SankeyDrawLegend'
@@ -442,7 +442,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   }
 
   const {filter}=applicationData.data.display_style
-  const toolbar = toolbar_builder(
+  const toolbar = ToolbarBuilder(
     t,applicationData.data,applicationData.set_data,mode_selection,userScaleRef,filter,func_current_filter,
     detail_level,'',elementsSelected.first_selected_node,size_of_draw_zone,
     setDiagram,

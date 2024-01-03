@@ -166,7 +166,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
                 set_tags_selected(new_tags_selected)
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as string)
 
               }else if(Object.values(data.dataTags).length>0){
                 // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -179,9 +179,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   n_t_s[dt]=tmp[i]
                 })
                 set_tags_selected(n_t_s)
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(data,multi_selected_links,n_t_s).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:n_t_s} as elementsSelectedType).value as string)
               }else{
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as string)
               }
             }
 

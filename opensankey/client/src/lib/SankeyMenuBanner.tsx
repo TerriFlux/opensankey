@@ -30,7 +30,7 @@ import { TFunction } from 'i18next'
 import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
 import { 
   addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType, 
-  setDiagramFuncType, stretchButtonsFType, toolbar_builderFType 
+  setDiagramFuncType, stretchButtonsFType, ToolbarBuilderFType 
 } from '../types/SankeyMenuBannerTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from '../types/SankeyUtilsTypes'
 
@@ -391,7 +391,7 @@ export const setDiagram:setDiagramFuncType = (
   set_data({ ...new_data })
 }
 
-export const toolbar_builder : toolbar_builderFType = (
+export const ToolbarBuilder : ToolbarBuilderFType = (
   t:TFunction,
   data: SankeyData,
   set_data: (d:SankeyData)=>void,

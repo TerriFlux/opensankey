@@ -1,9 +1,9 @@
 import { DragBehavior, SubjectPosition } from 'd3'
-import { drawArrowsType } from './SankeyDrawFunctionTypes'
+import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, applicationDataType,  display_styleType, elementsSelectedType } from './Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from './SankeyUtilsTypes'
 
-export type return_out_of_bound_elementFuncType = (dragged: SankeyNode,
+export type ReturnOutOfBoundElementFuncType = (dragged: SankeyNode,
   data: SankeyData,
   event: {dx: number;dy: number;x: number;  y: number;},
   multi_selected_nodes: {current: SankeyNode[];},
@@ -11,23 +11,20 @@ export type return_out_of_bound_elementFuncType = (dragged: SankeyNode,
  ) => SankeyNode[]
 
 
-export type opposing_drag_elementsFuncType = (
+export type opposing_DragElementsFuncType = (
   out_of_zone_item: (SankeyNode)[], event: {dx: number;dy: number;x: number;y: number;}, 
   dragged: SankeyNode, data: SankeyData, multi_selected_nodes: {current: SankeyNode[];}
 ) => void
 
-export type drag_elementsFuncType = (dragged: SankeyNode,
-  data: SankeyData,
+export type DragElementsFuncType = (
+  dragged: SankeyNode,
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   event: {dx: number;dy: number;x: number;y: number;},
-  Smulti_selected_nodes: {current: SankeyNode[];},
-  set_data: (d: SankeyData) => void,
-  Sdisplay_nodes: {[node_id: string]: SankeyNode;},
-  Sdisplay_links: {[link_id: string]: SankeyLink;},
-  multi_selected_links: {current: SankeyLink[];},
   LinkText: LinkTextFuncType,
   GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue: GetLinkValueFuncType,
-  DrawArrows: drawArrowsType,
+  DrawArrows: DrawArrowsType,
   scale: (t: number) => number,
   inv_scale: (t: number) => number
 ) => void
@@ -61,7 +58,7 @@ export type DragLinkEventFType=(
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType
+  DrawArrows:DrawArrowsType
 )=> DragBehavior<SVGPathElement, SankeyLink, unknown>
  
 /**
@@ -87,12 +84,10 @@ export type dragLinkTextEventFType =(alt_key_pressed:boolean,
  * @param {number} min_thickness
  * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => string}
  */
-export type dragLinkIOPositionFType=(multi_selected_links:{current: SankeyLink[]},
+export type DragLinkIOPositionFType=(
   link:SankeyLink,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   error_msg: { text: string | undefined } | undefined,
   drawCurveFunction : SankeyDrawCurve,
   scale:(t:number)=>number,
@@ -101,7 +96,7 @@ export type dragLinkIOPositionFType=(multi_selected_links:{current: SankeyLink[]
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType
+  DrawArrows:DrawArrowsType
 )=> DragBehavior<SVGRectElement, unknown, unknown>
 
 
@@ -121,13 +116,10 @@ export type dragLinkIOPositionFType=(multi_selected_links:{current: SankeyLink[]
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns {{}, default_horiz_shift: number, DrawGrid: () => void, scale: (t: number) => number, inv_scale: (t: number) => number, drawCurveFunction: string) => string}
  */
-export type dragLinkCenterHandleEventFType=(
-  multi_selected_links:{current: SankeyLink[]},
+export type DragLinkCenterHandleEventFType=(
   link:SankeyLink,
-  display_links:{ [link_id: string]: SankeyLink },
-  display_nodes:{ [link_id: string]: SankeyNode },
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   selected_tags:TagsCatalog,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   default_horiz_shift:number,
@@ -159,16 +151,13 @@ export type dragLinkCenterHandleEventFType=(
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns {...}
  */
-export type dragLinkShiftHandleEventFType=(
-  multi_selected_links:{current: SankeyLink[]},
+export type DragLinkShiftHandleEventFType=(
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   link:SankeyLink,
-  nodes:{ [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
   display_style: display_styleType,
   selected_tags: TagsCatalog,
   position: string,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   default_horiz_shift:number,
   DrawGrid:(d:SankeyData)=>void,
@@ -201,15 +190,11 @@ export type dragLinkShiftHandleEventFType=(
  * @param {boolean} alt_key_pressed
  * @returns {{}, DrawGrid: () => void, scale: (t: number) => number, inv_scale: ...}
  */
-export type dragGNodeEventFType=(
-  data:SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
-  multi_selected_nodes:{current: SankeyNode[] },
+export type DragGNodeEventFType=(
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_links:{current:SankeyLink[]},
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,
@@ -250,26 +235,22 @@ export type dragNodeTextEventWidthBoxEventFType = (
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns
  */
-export type drag_nodesFType = (
+export type DragNodesFType = (
   node:SankeyNode,
   event: { dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current: SankeyNode[] },
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink }, 
-  multi_selected_links:{current: SankeyLink[] },
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType,
+  DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   node_visible:string[]
 ) => void
 
 /**
- * Function taht shift the handle of links (called by dragLinkShiftHandleEvent)
+ * Function taht shift the handle of links (called by DragLinkShiftHandleEvent)
  *
  * @param {SankeyLink} link
  * @param {{ [node_id: string]: SankeyNode }} nodes
@@ -288,24 +269,21 @@ export type drag_nodesFType = (
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns {{}, default_hori...}
  */
-export type drag_handleFType = (
+export type DragHandleFType = (
   link: SankeyLink,
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
   dragged: Element,
   handle_type: string,
   the_event: d3.D3DragEvent<Element, unknown, unknown>,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   default_horiz_shift:number,
   DrawGrid:(d:SankeyData)=>void,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   drawCurveFunction:SankeyDrawCurve,
-  multi_selected_links:{current: SankeyLink[] },
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType
 ) => void
@@ -328,14 +306,11 @@ export type drag_handleFType = (
  * @param {SankeyDrawCurve} drawCurveFunction
  * @returns {number, inv_scale: (t...)}
  */
-export type add_drag_link_zoneFType=(
+export type AddDragLinkZoneFType=(
   link: SankeyLink,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_links:{current:SankeyLink[]},
-  display_nodes:{[node_id:string]:SankeyNode},
-  display_links:{[link_id:string]:SankeyLink},
-  default_handle_size:number,
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
+    default_handle_size:number,
   default_horiz_shift:number,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
@@ -343,5 +318,5 @@ export type add_drag_link_zoneFType=(
   drawCurveFunction:SankeyDrawCurve,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType
+  DrawArrows:DrawArrowsType
 )=> void

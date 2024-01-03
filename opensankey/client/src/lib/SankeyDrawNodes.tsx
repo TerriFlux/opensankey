@@ -5,7 +5,7 @@ import * as d3 from 'd3'
 import {NodeColor,ReturnValueNode} from './SankeyUtils'
 import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
   EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape } from './SankeyDrawFunction'
-import {  dragGNodeEvent } from './SankeyDrag'
+import {  DragGNodeEvent } from './SankeyDrag'
 import { GetLinkValueFuncType, LinkTextFuncType } from '../types/SankeyUtilsTypes'
 import { DrawNodesFType } from '../types/SankeyDrawNodesTypes'
 import { NodeTooltipsContentFType } from '../types/SankeyTooltipTypes'
@@ -28,7 +28,7 @@ export const DrawNodes : DrawNodesFType = (
   accept_simple_click:{current:boolean}
 ) => {
   const {data,set_data,display_nodes,display_links}=applicationData
-  const {button_ref,accordion_ref,nodes_accordion_ref,links_accordion_ref} =uiElementsRef
+  const {button_ref,accordion_ref,links_accordion_ref} =uiElementsRef
   const {multi_selected_links,multi_selected_nodes,first_selected_node}=elementsSelected
 
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
@@ -118,7 +118,7 @@ export const DrawNodes : DrawNodesFType = (
       }
 
       ggg_nodes
-        .on('click', (event, d) => SimpleGNodeClick(event,d,data,set_data,nodes_accordion_ref,multi_selected_nodes,mode_selection,accordion_ref,button_ref,accept_simple_click))
+        .on('click', (event, d) => SimpleGNodeClick(applicationData,uiElementsRef,elementsSelected,event,d,mode_selection,accept_simple_click))
         .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
 
       if (mode_selection.current == 'ln') {
@@ -135,7 +135,7 @@ export const DrawNodes : DrawNodesFType = (
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s' && window.SankeyToolsStatic!==true){
-        ggg_nodes.call(dragGNodeEvent(data,display_nodes,display_links,multi_selected_nodes,mode_selection,alt_key_pressed,set_data,multi_selected_links,LinkText,GetLinkValue,scale,inv_scale))
+        ggg_nodes.call(DragGNodeEvent(applicationData,elementsSelected,mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale))
       }
     }
     // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
