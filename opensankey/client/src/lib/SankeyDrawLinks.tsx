@@ -1,4 +1,4 @@
-import { SankeyLink, SankeyData, SankeyNode,SankeyLinkAttrLocal} from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode,SankeyLinkAttrLocal, elementsSelectedType} from '../types/Types'
 import React from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
@@ -10,9 +10,9 @@ import { drawCurveFunction,
   GetSankeyMinWidthAndHeight,
   DeselectVisualyLinks,
   EventLinkContextMenu} from './SankeyDrawFunction'
-import {DragLinkEvent, add_drag_link_zone} from './SankeyDrag'
+import {DragLinkEvent, AddDragLinkZone} from './SankeyDrag'
 import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg,DrawLinkStartSabot} from './SankeyDrawFunction'
-import { drawArrowsType } from '../types/SankeyDrawFunctionTypes'
+import { DrawArrowsType } from '../types/SankeyDrawFunctionTypes'
 import { LinkStrokeFuncType, DrawLinksFType  } from '../types/SankeyDrawLinksTypes'
 import { LinkColorFuncType
 } from '../types/SankeyUtilsTypes'
@@ -113,7 +113,7 @@ export const DrawLinks : DrawLinksFType = (
           }
           set_tags_selected(new_tags_selected)
           if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as unknown as string)
           }
         }else if(Object.values(data.dataTags).length>0){
           // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -126,11 +126,11 @@ export const DrawLinks : DrawLinksFType = (
             n_t_s[dt]=tmp[i]
           })
           if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,n_t_s).value as unknown as string)
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:n_t_s} as elementsSelectedType).value as unknown as string)
           }
         }else{
           if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as unknown as string)
           }
         }
       }else{
@@ -184,7 +184,7 @@ export const DrawLinks : DrawLinksFType = (
     display_nodes:{ [node_id: string]: SankeyNode },
     display_links:{ [link_id: string]: SankeyLink },
     LinkStroke:LinkStrokeFuncType,
-    DrawArrows:drawArrowsType,
+    DrawArrows:DrawArrowsType,
     contextualised_link:{current:SankeyLink|undefined},
     pointer_pos:{current:number[]},
     LinkSabotColor:LinkColorFuncType
@@ -248,7 +248,7 @@ export const DrawLinks : DrawLinksFType = (
       })
     gg_links.on('contextmenu', (ev, l) => {
       if(!window.SankeyToolsStatic){
-        return EventLinkContextMenu(ev,l,contextualised_link,pointer_pos,data,set_data,
+        return EventLinkContextMenu(applicationData,ev,l,contextualised_link,pointer_pos,
           multi_selected_links,displayedInputLinkValueRef,tags_selected,set_tags_selected,set_display_link_opacity
         )}}
     )
@@ -403,10 +403,10 @@ export const DrawLinks : DrawLinksFType = (
     paths.attr('d', d => {
       SetNodesHeight(data,display_nodes,display_links, d, GetLinkValue)
       return drawCurveFunction.curve(
-        data,set_data,
-        display_nodes, display_links, display_style,
+        applicationData,elementsSelected,
+        display_style,
         data.nodeTags, d, error_msg,
-        multi_selected_links,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
+        LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
         DrawArrows
       )
     })
@@ -417,7 +417,7 @@ export const DrawLinks : DrawLinksFType = (
       })
       .each(function (l) {
         if(ReturnValueLink(data,(l as SankeyLink),'orientation')=='vv' ||ReturnValueLink(data,(l as SankeyLink),'orientation')=='hh'){
-          add_drag_link_zone((l as SankeyLink),data,set_data,multi_selected_links,display_nodes,display_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
+          AddDragLinkZone((l as SankeyLink),applicationData,elementsSelected,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
         }
       })
     if (error_msg && error_msg.text) {
