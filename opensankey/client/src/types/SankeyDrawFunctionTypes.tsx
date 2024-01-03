@@ -6,11 +6,9 @@ import * as d3 from 'd3'
 
 export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => void
 
-export type ValueSelectedParameterFuncType = (data: SankeyData, multi_selected_links: {
-  current: SankeyLink[];
-}, tags_selected: {
-  [k: string]: string;
-}) => SankeyLinkValue
+export type ValueSelectedParameterFuncType = (applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType
+  ) => SankeyLinkValue
 
 export type SetNodeHeightFuncType = (
   n: SankeyNode, display_nodes: {[node_id: string]: SankeyNode;},
@@ -21,7 +19,7 @@ export type SetNodeHeightFuncType = (
   GetLinkValue: GetLinkValueFuncType
 ) => void
 
-export type drawArrowsType = (
+export type DrawArrowsType = (
   n: SankeyNode,
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
@@ -44,17 +42,16 @@ export type SvgDragMiddleMouseStartFuncType = () => void
 
 export type SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unknown, unknown>, data: SankeyData) => void
 
-export type SimpleGNodeClickFuncType = (event: React.MouseEvent<HTMLButtonElement>, d: SankeyNode, data: SankeyData, set_data: (d: SankeyData) => void, nodes_accordion_ref: {
-    current: HTMLDivElement
-} | null, multi_selected_nodes: {
-    current: SankeyNode[];
-}, mode_selection: {
+export type SimpleGNodeClickFuncType = (
+  applicationData:applicationDataType,
+  uiElementsRef:uiElementsRefType,
+  elementsSelected:elementsSelectedType,
+  event: React.MouseEvent<HTMLButtonElement>,
+   d: SankeyNode,
+
+ mode_selection: {
     current: string;
-}, accordion_ref: {
-    current: HTMLDivElement;
-} | null, button_ref: {
-    current: HTMLLabelElement;
-} | null, accept_simple_click: {
+},accept_simple_click: {
     current: boolean;
 }) => void
 
@@ -109,15 +106,13 @@ export type nodeTransformFType = (
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
 export type EventNodeClickFType = (
+  applicationData:applicationDataType,
+  uiElementsRef:uiElementsRefType,
+  elementsSelected:elementsSelectedType,
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  accordion_ref:{ current: HTMLDivElement }| null,
-  button_ref:{ current: HTMLLabelElement }| null,
-  multi_selected_nodes:{current: SankeyNode[] },
-  nodes_accordion_ref:{ current: HTMLDivElement }| null,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+ 
   mode_selection:{current:string}
 )=> void
 
@@ -129,11 +124,11 @@ export type EventNodeContextMenuFType = (
 )=> void
 
 export type EventLinkContextMenuFType = (
+  applicationData:applicationDataType,
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
   contextualised_link:{current:SankeyLink|undefined},
   pointer_pos:{current:number[]},
-  data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
     displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   tags_selected:{[k: string]: string},

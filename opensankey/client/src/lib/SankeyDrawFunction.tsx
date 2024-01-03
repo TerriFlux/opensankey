@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { RefObject } from 'react'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType } from '../types/Types'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType, applicationDataType, elementsSelectedType } from '../types/Types'
 import { ComputeTotalOffsets,
   TestLinkValue,
   LinkColor,
@@ -15,7 +15,7 @@ import { ComputeTotalOffsets,
   ReturnValueLink,
   AssignLinkLocalAttribute,
   ToPrecision} from './SankeyUtils'
-import {dragLinkCenterHandleEvent,dragLinkShiftHandleEvent,add_drag_link_zone} from './SankeyDrag'
+import {DragLinkCenterHandleEvent,DragLinkShiftHandleEvent,AddDragLinkZone} from './SankeyDrag'
 import { menu_config_width } from './SankeyMenuTop'
 import * as SankeyShapes from './SankeyShapes'
 import { 
@@ -54,7 +54,7 @@ import {
   LinkVisibleOnsSvgFuncType, NodeVisibleOnsSvgFuncType, RemoveAnimateFuncType,
   SetNodeHeightFuncType,
   SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, 
-  SvgDragMiddleMouseStartFuncType, drawArrowsType 
+  SvgDragMiddleMouseStartFuncType, DrawArrowsType 
 } from '../types/SankeyDrawFunctionTypes'
 import {
   GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkColorFuncType, LinkTextFuncType
@@ -428,16 +428,14 @@ export const nodeTransform : nodeTransformFType = (
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
 export const EventNodeClick : EventNodeClickFType =(
+  applicationData,uiElementsRef,elementsSelected,
   event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  accordion_ref:{ current: HTMLDivElement; }| null,
-  button_ref:{ current: HTMLLabelElement; }| null,
-  multi_selected_nodes:{current: SankeyNode[] },
-  nodes_accordion_ref:{ current: HTMLDivElement; }| null,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
   mode_selection:{current:string}
 )=>{
+  const {data,set_data}=applicationData
+  const {multi_selected_nodes}=elementsSelected
+  const {button_ref,nodes_accordion_ref,accordion_ref}=uiElementsRef
   if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  (event.ctrlKey || event.metaKey)) {
     mode_selection.current='s'
     d3.select(' .opensankey #svg').attr('class','mode_selection')
@@ -503,17 +501,18 @@ export const EventNodeContextMenu : EventNodeContextMenuFType =(
 }
 
 export const EventLinkContextMenu : EventLinkContextMenuFType = (
+  applicationData,
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
   contextualised_link,
   pointer_pos:{current:number[]},
-  data:SankeyData,set_data:(d:SankeyData)=>void,
   multi_selected_links:{current:SankeyLink[]},
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   tags_selected:{[k: string]: string},
   set_tags_selected:(o:{[k: string]: string})=>void,
   set_display_link_opacity:(s:string)=>void
 )=>{
+  const {data,set_data}=applicationData
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
   if(multi_selected_links.current.includes(l)){
@@ -539,7 +538,7 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
     }
     set_tags_selected(new_tags_selected)
     if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as unknown as string)
     }
   }else if(Object.values(data.dataTags).length>0){
     // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -552,11 +551,11 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
       n_t_s[dt]=tmp[i]
     })
     if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,n_t_s).value as unknown as string)
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links, tags_selected:n_t_s} as elementsSelectedType).value as unknown as string)
     }
   }else{
     if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(data,multi_selected_links,new_tags_selected).value as unknown as string)
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links, tags_selected:new_tags_selected} as elementsSelectedType).value as unknown as string)
     }
   }
 
@@ -720,7 +719,7 @@ export const clip : clipFType = (
 }
 
 // Function that add marker at the end of links, those marker are arrow
-export const DrawArrows : drawArrowsType = (
+export const DrawArrows : DrawArrowsType = (
   n: SankeyNode,
   data:SankeyData,
   display_nodes: { [node_id: string]: SankeyNode },
@@ -1577,17 +1576,16 @@ const DrawLinkText = (
 
 // Draw the center handle of each selected links
 const AddCenterHandle=(
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   link:SankeyLink,
-  multi_selected_links:{current: SankeyLink[] },
   selected_tags: TagsCatalog,
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType
 )=>{
+  const {data,display_nodes,display_links}=applicationData
+  const {multi_selected_links}=elementsSelected
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   const ori=ReturnValueLink(data,link,'orientation')
 
@@ -1631,8 +1629,8 @@ const AddCenterHandle=(
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
       .call(
-        dragLinkCenterHandleEvent(
-          multi_selected_links,link,display_links,display_nodes,data,set_data,selected_tags,
+        DragLinkCenterHandleEvent(
+          link,applicationData,elementsSelected,selected_tags,
           GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue
         )
       )
@@ -1687,12 +1685,9 @@ const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
 
 // Draw the shift handle of each selected links
 const AddShiftHandle = (
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   link: SankeyLink,
-  multi_selected_links:{current: SankeyLink[] },
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
   display_style: display_styleType,
   selected_tags: TagsCatalog,
   shift_name: string,
@@ -1702,6 +1697,8 @@ const AddShiftHandle = (
   GetLinkValue:GetLinkValueFuncType
 
 ) => {
+  const {data}=applicationData
+  const {multi_selected_links}=elementsSelected
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)) {
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
@@ -1711,7 +1708,7 @@ const AddShiftHandle = (
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
       .attr('cursor',(multi_selected_links.current.includes(link)&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'ew-resize':'pointer')
-      .call(dragLinkShiftHandleEvent(multi_selected_links,link,nodes,links,display_style,selected_tags,position,data,set_data,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
+      .call(DragLinkShiftHandleEvent(applicationData,elementsSelected,link,display_style,selected_tags,position,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
       )
   }
 
@@ -1725,12 +1722,9 @@ export const update_scale : update_scaleFType  = (user_scale: number) => {
 
 // Function that call AddShiftHandle for the shift handle of each side of the links
 const add_shift_handles = (
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   link: SankeyLink,
-  multi_selected_links:{current: SankeyLink[] },
-  nodes: { [node_id: string]: SankeyNode },
-  links: { [link_id: string]: SankeyLink },
   display_style: display_styleType,
   selected_tags: TagsCatalog,
   xs: number,
@@ -1743,6 +1737,7 @@ const add_shift_handles = (
 
 
 ) => {
+  const {data,display_links}=applicationData
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   d3.select('.opensankey #g_link_handles').append('g').attr('class','gg_link_handles').attr('id','gg_link_handle_'+link.idLink)
   let shift_handles
@@ -1761,8 +1756,7 @@ const add_shift_handles = (
   for (let i = 0; i < shift_handles.length; i++) {
     const selection = d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
     if (selection.empty()) { // if the handle do not exist, create it
-      AddShiftHandle(data,set_data,
-        link, multi_selected_links,nodes, links, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
+      AddShiftHandle(applicationData,elementsSelected,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
       )
     }
   }
@@ -1770,7 +1764,7 @@ const add_shift_handles = (
     // Draw handle at the correct position
     d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
       .attr('transform', () => {
-        const handle_pos = HandlesPositions(data,links, link, xs, ys, xt, yt,GetLinkValue)
+        const handle_pos = HandlesPositions(data,display_links, link, xs, ys, xt, yt,GetLinkValue)
         return handle_pos[i] // 0 => vertical handle
       })
   }
@@ -1780,24 +1774,22 @@ const add_shift_handles = (
 
 // DRAW LINK
 const DrawCurve = (
-  data: SankeyData,
-  set_data:(d:SankeyData)=>void,
-  visible_nodes: { [node_id: string]: SankeyNode },
-  visible_links: { [link_id: string]: SankeyLink },
+  applicationData:applicationDataType,
+  elementsSelected:elementsSelectedType,
   display_style: display_styleType,
   nodeTags: TagsCatalog,
   link: SankeyLink,
   error_msg: { text?: string | undefined; } | undefined,
-  multi_selected_links:{current: SankeyLink[] },
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:drawArrowsType
+  DrawArrows:DrawArrowsType
 ): string => {
-  if (!LinkVisible(link, data, visible_nodes,GetLinkValue)) {
+  const {data,display_nodes,display_links}=applicationData
+  if (!LinkVisible(link, data, display_nodes,GetLinkValue)) {
     return ''
   }
-  const link_value = TestLinkValue(data, visible_nodes, link,GetLinkValue)
+  const link_value = TestLinkValue(data, display_nodes, link,GetLinkValue)
   const val=GetLinkValue(data,link.idLink)
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   const curved=ReturnValueLink(data,link,'curved') as boolean
@@ -1807,8 +1799,8 @@ const DrawCurve = (
   const r_h_s=ReturnValueLink(data,link,'right_horiz_shift') as number
   const v_s=ReturnValueLink(data,link,'vert_shift') as number
 
-  const source_node = visible_nodes[link.idSource]
-  const target_node = visible_nodes[link.idTarget]
+  const source_node = display_nodes[link.idSource]
+  const target_node = display_nodes[link.idTarget]
   if (isNaN(source_node.x)) {
     source_node.x = 100
   }
@@ -1828,16 +1820,16 @@ const DrawCurve = (
     return ''
   }
 
-  let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, visible_nodes, visible_links, nodeTags,data,scale,inv_scale,GetLinkValue)
+  let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, display_nodes, display_links, nodeTags,data,scale,inv_scale,GetLinkValue)
   if(ori=='vv' ||ori=='hh'){
-    add_shift_handles(data,set_data,link,multi_selected_links, visible_nodes, visible_links,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
-    add_drag_link_zone(link,data,set_data,multi_selected_links,visible_nodes, visible_links,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
-    AddCenterHandle(data,set_data,visible_nodes,visible_links,link,multi_selected_links,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
+    add_shift_handles(applicationData,elementsSelected,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
+    AddDragLinkZone(link,applicationData,elementsSelected,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
+    AddCenterHandle(applicationData,elementsSelected,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
   }
 
 
   if (+link_value > display_style.filter_label || val.extension?.free_visible) {
-    DrawLinkText(data, link, visible_links, +link_value, display_style, xs, ys, xt, yt,LinkText,GetLinkValue)
+    DrawLinkText(data, link, display_links, +link_value, display_style, xs, ys, xt, yt,LinkText,GetLinkValue)
   }
 
   if (ori === 'vh' && !recy) {
@@ -2274,10 +2266,12 @@ export const NodeLabeLText : NodeLabeLTextFType = (
   return d.name
 }
 
-export const ValueSelectedParameter:ValueSelectedParameterFuncType = (data:SankeyData,
-  multi_selected_links:{current:SankeyLink[]},
-  tags_selected:{[k: string]: string},
+export const ValueSelectedParameter:ValueSelectedParameterFuncType = (
+  applicationData,
+  elementsSelected
 ): SankeyLinkValue => {
+  const {data}=applicationData
+  const {multi_selected_links,tags_selected}=elementsSelected
   if(multi_selected_links.current.length==0){
     return ({} as SankeyLinkValue)
   }else{
@@ -2530,14 +2524,14 @@ export const ZoomFunction:ZoomFunctionFuncType=(evt:d3.D3ZoomEvent<SVGElement,un
   // RepositionneSidebar()
 }
 
-export const SimpleGNodeClick:SimpleGNodeClickFuncType =(event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
-  data:SankeyData, 
-  set_data:(d:SankeyData)=>void,
-  nodes_accordion_ref:{ current: HTMLDivElement } | null,
-  multi_selected_nodes:{current: SankeyNode[] },
+export const SimpleGNodeClick:SimpleGNodeClickFuncType =(
+  applicationData,
+  uiElementsRef,
+  elementsSelected,
+  event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
+ 
   mode_selection:{current:string},
-  accordion_ref:{ current: HTMLDivElement } | null,
-  button_ref:{ current: HTMLLabelElement} | null,
+
   accept_simple_click:{current:boolean},
 
 )=>{
@@ -2546,11 +2540,11 @@ export const SimpleGNodeClick:SimpleGNodeClickFuncType =(event:React.MouseEvent<
   if((event.target as HTMLSpanElement).tagName==='tspan'){
     setTimeout(()=>{
       if(accept_simple_click.current){
-        EventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
+        EventNodeClick(applicationData,uiElementsRef,elementsSelected,event,d,sankeyTooltip,mode_selection)
       }
     },200)
   }else{
-    EventNodeClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_nodes,nodes_accordion_ref,data,set_data,mode_selection)
+    EventNodeClick(applicationData,uiElementsRef,elementsSelected,event,d,sankeyTooltip,mode_selection)
   }
 }
 
