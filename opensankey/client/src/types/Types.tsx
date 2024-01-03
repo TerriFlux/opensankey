@@ -482,8 +482,8 @@ export type SankeyAppBuilderTypes = {
   set_display_link_opacity:(s:string)=>void,
   agregation:agregationType,
   convert_data:ConvertDataFuncType,
-  maximum_flux:number|null|undefined,
-  set_maximum_flux:(n:number)=>void,
+  maximum_flux:{current:number|null|undefined},
+  // set_maximum_flux:(n:number)=>void,
   callback: callbackFuncType,
   legend_clicked : MutableRefObject<boolean>
 }

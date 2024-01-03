@@ -6,8 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, agregationType, applicationContextType, applicationDataType, contextMenuType, elementsSelectedType, uiElementsRefType } from './types/Types'
 
 import SankeyDraw from './lib/SankeyDraw'
-import { LinkStrokeFuncType } from './types/SankeyDrawLinksTypes'
-import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, RepositionneSidebar, EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
+import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
 import { DrawLegend, drag_legend } from './lib/SankeyDrawLegend'
 import { DrawLinks } from './lib/SankeyDrawLinks'
 import { DrawNodes } from './lib/SankeyDrawNodes'
@@ -28,7 +27,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 }) => {
 
   //- AFMSankey
-  const [flux_colormap] = useState('no_colormap')
+  const flux_colormap = useRef('no_colormap')
 
   const [data, pre_set_data] = useState<SankeyData>(initial_sankey_data)
   //- All
@@ -41,13 +40,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const nodes_accordion_ref = useRef<HTMLDivElement>(null) as {current : HTMLDivElement}
 
   const start_point=useRef([0,0])
+  //   const contextNodeRef = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
+  // const contextZDDRef = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
   const pointer_pos=useRef([0,0])
 
   const contextualised_node = useRef<[SankeyNode|undefined, Dispatch<SetStateAction<SankeyNode|undefined>>][]>([])
   const contextualised_link = useRef<[SankeyLink|undefined, Dispatch<SetStateAction<SankeyLink|undefined>>][]>([])
   const legend_clicked = useRef(false)
   //const [show_agregation,set_show_agregation] = useState(false)
-  const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
+  const maximum_flux = useRef(data.maximum_flux)
 
   const tagContext = useRef<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>([])
   const showContextZDDRef= useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([])
@@ -80,7 +81,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
     if(data.maximum_flux && data.minimum_flux && data.minimum_flux>data.maximum_flux){
       data.maximum_flux=data.minimum_flux
-      set_maximum_flux(data.minimum_flux)
+      // set_maximum_flux(data.minimum_flux)
+      maximum_flux.current=data.minimum_flux
     }
 
     pre_set_data({...ndata})
@@ -133,7 +135,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const closeAllMenuContext=()=>{
     contextualised_node.current[0][1](undefined)
     contextualised_link.current[0][1](undefined)
-    tagContext.current[0][1](undefined)
+    tagContext.current.forEach(tag_ref=>tag_ref[1](undefined))
     showContextZDDRef.current[0][1](false)
   } 
 
@@ -235,10 +237,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     )
     OpenSankeyDrawNodesLabel(data,set_data as (d:SankeyData)=>void,multi_selected_nodes,SuiteGetLinkValue)
 
-    const suiteDrawArrows= DrawArrows
+    // const suiteDrawArrows= DrawArrows
     d3.selectAll(' .opensankey #svg #sankey_def').remove()
 
-    const suiteLinkStroke= LinkStroke
+    // const suiteLinkStroke= LinkStroke
     // const suiteDrawArrows= OpenSankeyDrawFunction.DrawArrows
 
     // Call the function that add links to the sankey
@@ -320,7 +322,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           agregation={agregation}
           convert_data={convert_data}
           maximum_flux={maximum_flux}
-          set_maximum_flux={set_maximum_flux}
+          // set_maximum_flux={set_maximum_flux}
           displayedInputLinkValueRef={displayedInputLinkValueRef}
           callback={()=>null}
           legend_clicked={legend_clicked}

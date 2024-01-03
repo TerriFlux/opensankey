@@ -212,7 +212,7 @@ export const DrawLegend : DrawLegendFType= (
           if(!window.SankeyToolsStatic){
             evt.preventDefault()
             pointer_pos.current=[evt.pageX,evt.pageY]
-            tagContext.current![0][1](d[0])  
+            tagContext.current?.forEach(tag_ref=>tag_ref[1](d[0]))  
           }
           
         })
@@ -455,16 +455,18 @@ export const ContextLegendTags : ContextLegendTagsFType=(
   }
   const button_select_element_tagged=tag_contextualised &&['nodeTags','fluxTags','dataTags'].includes(NodeOrLinkTag) ?<Button onClick={()=>{
     if(NodeOrLinkTag=='nodeTags'){
-      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag_contextualised)))
+      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag_contextualised?tag_contextualised:'')))
     }else if(NodeOrLinkTag=='fluxTags'){
       multi_selected_links.current=Object.values(data.links).filter(l=>{
         const tmp=GetLinkValue(data,l.idLink)
-        return tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag_contextualised)
+        return tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes((tag_contextualised)?tag_contextualised:'')
       })
     }
     set_data({...data})
-    set_tag_contextualised(undefined)
-  }} variant='light'>{text_button_select_element_by_tag} {}</Button>:<></>
+    tagContext.current?.forEach(tag_ref=>tag_ref[1](undefined))
+  }}
+  variant='light'>{text_button_select_element_by_tag} {}</Button>:<></>
+
 
 
   // Pop over that serve as context menu 
