@@ -87,7 +87,7 @@ export type dragLinkTextEventFType =(alt_key_pressed:boolean,
  * @param {number} min_thickness
  * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => string}
  */
-export type dragLinkIOPositionFType=(multi_selected_links:{current: SankeyLink[]},
+export type DragLinkIOPositionFType=(multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
