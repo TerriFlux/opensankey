@@ -11,7 +11,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   elementsSelected,
   applicationContext,
   uiElementsRef,
-  set_show_nav: (_:boolean)=>void,
+  showNavRef,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
   sub_nav_item_active:string,
@@ -90,11 +90,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('2')
-                  set_show_nav(true)
+                  showNavRef.current![0][1](true)
                 } else {
                   set_sub_nav_item_active('EtiquetteNoeud')
                   set_nav_item_active('2')
-                  set_show_nav(true)
+                  showNavRef.current![0][1](true)
 
                 }
               }
@@ -115,12 +115,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('2')
-                  set_show_nav(true)
+                  showNavRef.current![0][1](true)
                 } else {
                   set_sub_nav_item_active('editionNoeud')
                   set_nav_item_active('2')
-                  set_show_nav(true)
-
+                  showNavRef.current![0][1](true)
                 }
               }
             }
@@ -165,11 +164,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                 set_sub_nav_item_active('')
                 set_nav_item_active('3')
-                set_show_nav(true)
+                showNavRef.current![0][1](true)
               } else {
                 set_sub_nav_item_active('8')
                 set_nav_item_active('3')
-                set_show_nav(true)
+                showNavRef.current![0][1](true)
               }
             }}
           >
@@ -184,11 +183,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('3')
-                  set_show_nav(true)
+                  showNavRef.current![0][1](true)
                 } else {
                   set_sub_nav_item_active('editionFlux')
                   set_nav_item_active('3')
-                  set_show_nav(true)
+                  showNavRef.current![0][1](true)
                 }
               }
             }>

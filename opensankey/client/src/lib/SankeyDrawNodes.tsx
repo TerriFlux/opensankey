@@ -29,7 +29,7 @@ export const DrawNodes : DrawNodesFType = (
 ) => {
   const {data,set_data,display_nodes,display_links}=applicationData
   const {button_ref,accordion_ref,nodes_accordion_ref,links_accordion_ref} =uiElementsRef
-  const {multi_selected_links,multi_selected_nodes,first_selected_node,set_first_selected_node}=elementsSelected
+  const {multi_selected_links,multi_selected_nodes,first_selected_node}=elementsSelected
 
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
@@ -124,12 +124,12 @@ export const DrawNodes : DrawNodesFType = (
       if (mode_selection.current == 'ln') {
         ggg_nodes.on('mousedown', function (event, d) {
           if (!event.ctrlKey && !event.metaKey) {
-            set_first_selected_node(d)
+            first_selected_node.current = d
           }
         })
           .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(
             event,d,data,set_data,first_selected_node,
-            set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref,displayedInputLinkValueRef
+            multi_selected_links,accordion_ref,button_ref,links_accordion_ref,displayedInputLinkValueRef
           )
           )
       }

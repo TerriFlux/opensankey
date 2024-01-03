@@ -1,4 +1,4 @@
-import React, { RefObject } from 'react'
+import React, { MutableRefObject, RefObject } from 'react'
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, applicationDataType, contextMenuType, display_styleType, elementsSelectedType, uiElementsRefType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
@@ -177,8 +177,7 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   d:SankeyNode,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
+  first_selected_node:{current:SankeyNode|undefined},
   multi_selected_links:{current:SankeyLink[]},
   accordion_ref:{ current:HTMLDivElement}| null,
   button_ref: { current: HTMLLabelElement }| null,
@@ -291,7 +290,7 @@ export  type EventOnZoneMouseUpFuncType = (
   set_show_toast_limit_node: (b: boolean) => void, 
   displayedInputLinkValueRef: RefObject<HTMLInputElement>, 
   evt: MouseEvent, start_point: {current: number[];},
-  set_legend_clicked: (b: boolean) => void
+  legend_clicked: MutableRefObject<boolean>
 ) => void
 
 export type clipFType  = (subjectPolygon: number[][], clipPolygon: number[][]) => void  

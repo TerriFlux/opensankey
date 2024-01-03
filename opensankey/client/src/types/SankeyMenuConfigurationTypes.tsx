@@ -1,12 +1,12 @@
 import { applicationContextType, applicationDataType, elementsSelectedType, uiElementsRefType } from './Types'
-import { RefObject } from 'react'
+import { Dispatch, RefObject, SetStateAction } from 'react'
 
 export type OpenSankeyConfigurationsMenusFType = (
   applicationData:applicationDataType,
   elementsSelected:elementsSelectedType,
   applicationContext:applicationContextType,
   uiElementsRef:uiElementsRefType,
-  set_show_nav: (_:boolean)=>void,
+  showNavRef: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
   sub_nav_item_active:string,
