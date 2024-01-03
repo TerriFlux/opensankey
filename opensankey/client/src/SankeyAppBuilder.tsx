@@ -1,5 +1,5 @@
 // General import
-import React, { useState, FunctionComponent, useRef, useEffect } from 'react'
+import React, { useState, FunctionComponent, useRef } from 'react'
 import { Popover, Form} from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 
@@ -12,7 +12,6 @@ import { OpenSankeyMenuConfigurationLayout } from './lib/SankeyMenuConfiguration
 import { OpenSankeyConfigurationNodesAttributes} from './lib/SankeyMenuConfigurationNodesAttributes'
 import { OpenSankeyMenuConfigurationNodes} from './lib/SankeyMenuConfigurationNodes'
 import { OpenSankeyDiagramSelector} from './lib/SankeyMenuDialogs'
-import { OpenSankeyMenusFType} from './types/SankeyMenuTopTypes'
 
 import {SankeyMenuConfigurationNodesIO} from './lib/SankeyMenuConfigurationNodesIO'
 import {SankeyMenuConfigurationNodesIOFType} from './types/SankeyMenuConfigurationNodesIOTypes'
@@ -42,8 +41,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   uiElementsRef,
   applicationData,
   contextMenu,
-  show_nav,
-  set_show_nav,
+  showNavRef,
   displayedInputLinkValueRef,
   exemple_menu,
   formations_menu,
@@ -53,14 +51,11 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   size_of_draw_zone,
   display_link_opacity,
   set_display_link_opacity,
-  legend_position,
-  set_legend_position,
-  set_agregation_node,
-  set_is_agregation,
+  agregation,
   convert_data,
   maximum_flux,
   set_maximum_flux,
-  set_show_agregation
+  legend_clicked
 } ) => {
 
   const [nav_item_active, set_nav_item_active] = useState<string>('')
@@ -187,7 +182,9 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   // Function to close all menu : menu confugartion, menu context (nodes,links, drawZone), an menu dragggable
   // Called when we press escape
   const closeAllMenu=()=>{
-    set_show_nav(false)
+    //show_nav.current = false
+    showNavRef.current![0][1](false)
+    //showNavRef.current!.hidden = show_nav.current
     showMenuComponents.show_menu_node_apparence[1](false)
     showMenuComponents.show_menu_node_io[1](false)
     showMenuComponents.show_menu_link_data[1](false)
@@ -219,10 +216,12 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   //- 1. Builds Configuration Menus
   //- 1.1 Builds Configuration Menus Layout
 
-  const  menu_configuration_layout= OpenSankeyMenuConfigurationLayout(t,
-    applicationData.data,applicationData.set_data,
+  const  menu_configuration_layout= OpenSankeyMenuConfigurationLayout(
+    applicationContext,
+    applicationData,
+    contextMenu,
     userScaleRef,
-    legend_position, set_legend_position,
+    legend_clicked,
     <></>
   )
 
@@ -308,8 +307,9 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   //- 1.7 Finish builds Configuration Menus
   const configurations_menus =  OpenSankeyConfigurationsMenus(
     t,
-    applicationData.data,applicationData.set_data as (d:SankeyData)=>void,
-    set_show_nav,
+    applicationData.data,
+    applicationData.set_data as (d:SankeyData)=>void,
+    showNavRef,
     nav_item_active, set_nav_item_active,
     sub_nav_item_active, set_sub_nav_item_active,
     uiElementsRef.nodes_accordion_ref,
@@ -347,8 +347,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   const additional_edition_item=[] as JSX.Element[]
   const additional_file_save_item=[] as JSX.Element[]
   const additional_file_item=[] as JSX.Element[]
-
-  const sankey_menus = (OpenSankeyMenus as OpenSankeyMenusFType)(
+  const sankey_menus = OpenSankeyMenus(
     t,
     Reinitialization,
     applicationData.get_default_data,
@@ -361,7 +360,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     additional_file_item,
     additional_file_save_item,
     elementsSelected.set_tags_selected,
-    convert_data,
+    convert_data
   )
 
   // 2.4 Modal linked to menu item
@@ -451,10 +450,11 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   const {filter}=applicationData.data.display_style
   const toolbar = toolbar_builder(
     t,applicationData.data,applicationData.set_data,mode_selection,userScaleRef,filter,func_current_filter,
-    detail_level,'',elementsSelected.first_selected_node,elementsSelected.set_first_selected_node,size_of_draw_zone,
+    detail_level,'',elementsSelected.first_selected_node,size_of_draw_zone,
     setDiagram,
     showMenuComponents.show_modal_welcome[1],set_never_see_again,convert_data,
-    maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux,applicationData.get_default_data
+    maximum_flux,set_maximum_flux,minimum_flux,set_minimum_flux,
+    applicationData.get_default_data
   )
 
   Object.keys(toolbar).forEach(k=>{
@@ -504,23 +504,17 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
   const DiagramSelector = OpenSankeyDiagramSelector
 
-  const context_n = ContextMenuNode(
-    applicationContext,
-    applicationData,
-    elementsSelected,
-    contextMenu,
-    showMenuComponents,
-    set_show_agregation,
-    set_agregation_node,
-    set_is_agregation,
-    set_display_link_opacity,
-    [<></>],
-    [<></>]
-  )
-  useEffect(()=> {
-    contextMenu.contextNodeRef.current!.hidden = true    
-  })
-
+  const context_n = <ContextMenuNode
+    applicationContext = {applicationContext}
+    applicationData = {applicationData}
+    elementsSelected = {elementsSelected}
+    contextMenu = {contextMenu}
+    showMenuComponents = {showMenuComponents}
+    agregation = {agregation}
+    set_display_link_opacity = {set_display_link_opacity}
+    additional_context_element_menu = {[<></>]} 
+    additional_context_element_other = {[<></>]}
+  />
   // MENU DRAGGABLE LINK DATA
   const menu_link_data = SankeyMenuConfigurationLinksData(
     applicationData.data,
@@ -620,8 +614,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
           showMenuComponents={showMenuComponents}
           applicationDraw={applicationDraw}
           nav_item_active={nav_item_active}
-          show_nav={show_nav}
-          set_show_nav={set_show_nav}
+          showNavRef={showNavRef}
           mode_selection={mode_selection}
           example_menu={<></>}
           style_to_apply={style_to_apply}

@@ -1,5 +1,5 @@
 import { GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode } from './Types'
+import { SankeyData, SankeyLink, SankeyNode, agregationType } from './Types'
 
 export type keyHandlerFType = (
     e: KeyboardEvent,data:SankeyData,
@@ -16,11 +16,7 @@ export type SankeyDrawTypes = {
     display_links : { [node_id: string]: SankeyLink },
     animation: boolean,
     mode_selection: {current : string},
-    show_agregation:boolean, 
-    set_show_agregation:(_:boolean)=>void,
-    agregation_node:string,
-    set_agregation_node:(_:string)=>void,
-    is_agregation:boolean,
+    agregation:agregationType, 
     set_alt_key_pressed:(_:boolean)=>void,
     GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
     pointer_pos:{current: number[]},

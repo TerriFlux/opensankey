@@ -24,8 +24,8 @@ export const OpenSankeyDrawLegend : OpenSankeyDrawLegendFType= (
   t:TFunction,
   pointer_pos:{current:number[]},
   set_tag_contextualised:(t:string)=>void,
-  legend_clicked:boolean,
-  set_legend_clicked:(b:boolean)=>void,
+  legend_clicked
+  // set_legend_clicked:(b:boolean)=>void,
 ) => {
   // Function that add legend of tags
   // In the legend it draw the legend (color of the tag and it name) that are visually reprensented on the graph
@@ -52,7 +52,7 @@ export const OpenSankeyDrawLegend : OpenSankeyDrawLegendFType= (
       .attr('height','5px')
       .attr('rx','2px')
       .attr('ry','2px')
-      .attr('stroke-dasharray',()=>legend_clicked?'6,6':'')
+      .attr('stroke-dasharray',()=>'')
       .attr('stroke',data.legend_bg_border?data.legend_bg_color:'none')
       .attr('fill',data.legend_bg_color)
       .attr('fill-opacity',data.legend_bg_opacity)
@@ -66,7 +66,13 @@ export const OpenSankeyDrawLegend : OpenSankeyDrawLegendFType= (
         d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke',data.legend_bg_border?data.legend_bg_color:'none')
 
       })
-      .on('mousedown',()=>set_legend_clicked(true))
+      .on('mousedown',()=>{
+        legend_clicked.current = true
+        d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray',()=>'6,6')
+        let h=document.getElementById('g_legend')?.getBoundingClientRect().height
+        h=h?h:50
+        draw_legend_handles(data,set_data,legend_clicked.current ,h)
+      })
 
 
     let scale_for_legend=1
@@ -355,7 +361,7 @@ export const OpenSankeyDrawLegend : OpenSankeyDrawLegendFType= (
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
   
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
-    draw_legend_handles(data,set_data,legend_clicked,h)
+    draw_legend_handles(data,set_data,legend_clicked.current,h)
   }
   if(!data.mask_legend){
     drawLegend()
@@ -467,7 +473,8 @@ export const context_legend_tags : context_legend_tagsFType=(
     </Popover.Body>
   </Popover>:<></>
 }
-const draw_legend_handles =(
+
+export const draw_legend_handles =(
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   legend_clicked:boolean,

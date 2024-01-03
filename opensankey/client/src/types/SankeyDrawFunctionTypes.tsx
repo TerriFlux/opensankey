@@ -1,4 +1,4 @@
-import React, { RefObject } from 'react'
+import React, { MutableRefObject, RefObject } from 'react'
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, contextMenuType, display_styleType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
@@ -172,8 +172,7 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   d:SankeyNode,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
+  first_selected_node:{current:SankeyNode|undefined},
   multi_selected_links:{current:SankeyLink[]},
   accordion_ref:{ current:HTMLDivElement}| null,
   button_ref: { current: HTMLLabelElement }| null,
@@ -261,17 +260,25 @@ export type DrawLinkStartSabotFType = (data:SankeyData,
 
 export type RepositionneSidebarFuncType = (show_nav: boolean) => void
 
-export type EventOnSankeyZoneMouseDownFuncType =(mode_selection: {
-  current: string;
-}, data: SankeyData, set_data: (d: SankeyData) => void, set_first_selected_node: (_:SankeyNode)=>void, token: boolean, set_show_toast_limit_node: (b: boolean) => void, evt2: unknown, start_point: {
-  current: number[];
-}, closeAllMenuContext: () => void) => void
+export type EventOnSankeyZoneMouseDownFuncType =(
+  mode_selection: {current: string;}, 
+  data: SankeyData, 
+  set_data: (d: SankeyData) => void, 
+  first_selected_node: {current:SankeyNode|undefined}, 
+  token: boolean, 
+  set_show_toast_limit_node: (b: boolean) => void, 
+  evt2: unknown, 
+  start_point: {current: number[];}, 
+  closeAllMenuContext: () => void
+) => void
 
-export type EventOnSankeyZoneMouseMoveFuncType = (mode_selection: {
-  current: string;
-}, data: SankeyData, first_selected_node: SankeyNode, set_first_selected_node: (_:SankeyNode)=>void, evt: MouseEvent, start_point: {
-  current: number[];
-}) => void
+export type EventOnSankeyZoneMouseMoveFuncType = (
+  mode_selection: {current: string;},
+  data: SankeyData, 
+  first_selected_node: {current:SankeyNode|undefined},
+  evt: MouseEvent, 
+  start_point: {current: number[];}
+) => void
 
 export  type EventOnSankeyZoneMouseUpFuncType = (
   mode_selection: {current: string;}, 
@@ -279,16 +286,15 @@ export  type EventOnSankeyZoneMouseUpFuncType = (
   set_data: (d: SankeyData) => void, 
   multi_selected_nodes: {current: SankeyNode[];}, 
   multi_selected_links: {current: SankeyLink[];}, 
-  first_selected_node: SankeyNode, 
-  set_first_selected_node: (_:SankeyNode)=>void, 
+  first_selected_node: {current:SankeyNode|undefined},
   token: boolean, 
   set_show_toast_limit_node: (b: boolean) => void, 
   accordion_ref: {current: HTMLDivElement} | null, 
   button_ref: {current: HTMLLabelElement;} | null, 
   links_accordion_ref: {current: HTMLDivElement} | null, 
   displayedInputLinkValueRef: RefObject<HTMLInputElement>, 
-  evt: MouseEvent, start_point: {
-  current: number[];
-}, set_legend_clicked: (b: boolean) => void) => void
+  evt: MouseEvent, start_point: {current: number[];},
+  legend_clicked: MutableRefObject<boolean>
+) => void
 
 export type clipFType  = (subjectPolygon: number[][], clipPolygon: number[][]) => void  
