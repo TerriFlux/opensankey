@@ -1,24 +1,27 @@
 import React,{useState} from 'react'
 import { FormControl, Form, OverlayTrigger, Tooltip,InputGroup, Button } from 'react-bootstrap'
-import { SankeyData } from '../types/Types'
-import { TFunction } from 'i18next'
 import { FaCheck} from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { Checkbox } from '@chakra-ui/react'
 
-import { SmoothClasses } from './SankeyUtils'
+import { GetLinkValue, SmoothClasses } from './SankeyUtils'
 import { OpenSankeyMenuConfigurationLayoutFType} from '../types/SankeyMenuConfigurationLayoutTypes'
+import { DrawLegend } from './SankeyDrawLegend'
 
 export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
-  t:TFunction,
-  data: SankeyData,
-  set_data:(d:SankeyData)=>void,
-  userScaleRef:{current :number},
-  legend_position:number[],
-  set_legend_position:(n:number[])=>void,
-  extra_background_element:JSX.Element
+  applicationContext,
+  applicationData,
+  contextMenu,
+  userScaleRef,
+  legend_clicked,
+  extra_background_element
 ) => {
+  const { t } = applicationContext
+  const { data, set_data} = applicationData
+  //const { pointer_pos, set_tag_contextualised } = contextMenu
+
+  const [legend_position,set_legend_position] = useState(data.legend_position)
   const [current_legend_bg_opacity,set_current_legend_bg_opacity]=useState(data.legend_bg_opacity)
   const [,set_user_scale]=useState(data.user_scale)
   return [
@@ -157,7 +160,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
           onBlur={() => {
             data.legend_position = legend_position
-            set_data({ ...data })
+            DrawLegend(applicationData,applicationContext,contextMenu,GetLinkValue,legend_clicked)
           }}/>
       </OverlayTrigger>
       
@@ -180,7 +183,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
           onBlur={() => {
             data.legend_position = legend_position
-            set_data({ ...data })
+            DrawLegend(applicationData,applicationContext,contextMenu,GetLinkValue,legend_clicked)
           }}/>
       </OverlayTrigger>  
     </InputGroup>,

@@ -28,11 +28,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   display_links,
   animation,
   mode_selection,
-  show_agregation, 
-  set_show_agregation,
-  agregation_node,
-  set_agregation_node,
-  is_agregation,
+  agregation,
   set_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
@@ -175,18 +171,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           </div>
         </div>
       </div>
-      { agregation_node !== '' && data.nodes[agregation_node] ?
-        <AgregationModal
-          show_agregation={show_agregation}
-          data={data}
-          set_data={set_data}
-          display_nodes={display_nodes}
-          display_links={display_links}
-          agregation_node={agregation_node}
-          set_agregation_node={set_agregation_node}
-          set_show_agregation={set_show_agregation}
-          is_agregation={is_agregation}
-        /> : <></>}
+      <AgregationModal
+        agregationRef={agregation}
+        data={data}
+        set_data={set_data}
+        display_nodes={display_nodes}
+        display_links={display_links}
+      />
     </>
   )
 }

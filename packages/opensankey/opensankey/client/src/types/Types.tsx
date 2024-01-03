@@ -4,7 +4,7 @@ import { drawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, RetrieveExcelResultsFuncType, updateLayoutFuncType  } from './SankeyUtilsTypes'
 import { OpenSankeyDiagramSelectorFType } from './SankeyMenuDialogsTypes'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
-import { RefObject } from 'react'
+import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -338,7 +338,7 @@ export interface showMenuComponentsType {
   ShowPreference : [boolean,(_:boolean)=>void],
   show_modalTemplate : [boolean,(_:boolean)=>void],
   show_welcome : [boolean,(_:boolean)=>void],
-  show_load : [boolean,(_:boolean)=>void]
+  show_load : [boolean,(_:boolean)=>void],
 }
 
 export type applicationContextType = {
@@ -383,20 +383,16 @@ export type elementsSelectedType = {
   set_selected_style_node : (_:string)=>void,
   selected_style_link : string,
   set_selected_style_link : (_:string)=>void,
-  first_selected_node : SankeyNode,
-  set_first_selected_node : (_:SankeyNode)=>void    
+  first_selected_node :  {current:SankeyNode|undefined}    
 }
 
 export type contextMenuType = {
-  contextNodeRef : RefObject<HTMLDivElement>,
-  contextZDDRef : RefObject<HTMLDivElement>,
-  contextualised_node : { current : SankeyNode | undefined },
-  contextualised_link : { current : SankeyLink | undefined },
-  tag_contextualised : string | undefined,
-  set_tag_contextualised : (_:string | undefined) => void,
+  contextualised_node : RefObject<[SankeyNode|undefined, Dispatch<SetStateAction<SankeyNode|undefined>>][]>,
+  contextualised_link : RefObject<[SankeyLink|undefined, Dispatch<SetStateAction<SankeyLink|undefined>>][]>,
+  tagContext : RefObject<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>,
   closeAllMenuContext : () => void,
   pointer_pos : { current : number[] }, 
-  show_context_zdd : {current:boolean},
+  show_context_zdd : RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>
 }
 
 export type processFunctionsType = {
@@ -425,6 +421,12 @@ export type applicationDrawType = {
   set_node_vspace:(n:number)=>void
 }
 
+export type agregationType = {
+  showAgregationRef : RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
+  isAgregationRef : MutableRefObject<boolean>,
+  agregationNode : MutableRefObject<SankeyNode|undefined>
+}
+
 export type MenuTypes = {
   applicationContext : applicationContextType,
   applicationData : applicationDataType,
@@ -434,9 +436,7 @@ export type MenuTypes = {
   processFunctions : processFunctionsType,
   showMenuComponents: showMenuComponentsType,
   applicationDraw: applicationDrawType,
-
-  show_nav: boolean,
-  set_show_nav: (_:boolean)=>void,
+  showNavRef: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
   nav_item_active: string,
 
   mode_selection: { current : string },
@@ -473,8 +473,7 @@ export type SankeyAppBuilderTypes = {
   uiElementsRef : uiElementsRefType,
   elementsSelected : elementsSelectedType,
   contextMenu:contextMenuType,
-  show_nav: boolean,
-  set_show_nav:(_:boolean)=>void,
+  showNavRef: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   exemple_menu        : object,
   formations_menu      : object,
@@ -484,13 +483,10 @@ export type SankeyAppBuilderTypes = {
   size_of_draw_zone:(d:SankeyData)=>number[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void,
-  legend_position:number[],
-  set_legend_position:(n:number[])=>void,
-  set_agregation_node:(b:string)=>void,
-  set_is_agregation:(b:boolean)=>void,
+  agregation:agregationType,
   convert_data:ConvertDataFuncType,
   maximum_flux:number|null|undefined,
   set_maximum_flux:(n:number)=>void,
   callback: callbackFuncType,
-  set_show_agregation : (_:boolean)=>void
+  legend_clicked : MutableRefObject<boolean>
 }

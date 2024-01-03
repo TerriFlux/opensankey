@@ -1,3 +1,4 @@
+import { MutableRefObject } from 'react'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 import { SankeyData, applicationContextType, applicationDataType, contextMenuType, elementsSelectedType } from './Types'
 
@@ -6,8 +7,7 @@ export type DrawLegendFType = (
   applicationContext:applicationContextType,
   contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
-  legend_clicked:boolean,
-  set_legend_clicked:(b:boolean)=>void,
+  legend_clicked:MutableRefObject<boolean>
 ) => JSX.Element
 
 export type drag_legendFType=(

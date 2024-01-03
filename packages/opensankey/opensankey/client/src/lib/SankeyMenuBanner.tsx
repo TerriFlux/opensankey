@@ -11,7 +11,7 @@ import { Row,
   Popover,
   FormControl,
   Overlay } from 'react-bootstrap'
-import {  SankeyData, SankeyNode, TagsGroup} from '../types/Types'
+import {  SankeyData, TagsGroup} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FindMaxLinkValue,AdjustSankeyZone } from './SankeyUtils'
 import * as d3 from 'd3'
@@ -401,8 +401,7 @@ export const toolbar_builder : toolbar_builderFType = (
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,
   url_prefix: string,
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(o:SankeyNode)=>void,
+  first_selected_node,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   setDiagram: setDiagramFuncType,
   set_show_modal_welcome:(b:boolean)=>void,
@@ -432,9 +431,9 @@ export const toolbar_builder : toolbar_builderFType = (
     set_current_filter(filter+1)
     set_current_filter(tutu)
     d3.selectAll(' .opensankey #svg #path-flux').remove()
-    if(val=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
+    if(val=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || first_selected_node.current)){
       data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
-      set_first_selected_node({} as SankeyNode)
+      first_selected_node.current = undefined
     }
   }
   let sous_filieres = undefined

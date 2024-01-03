@@ -185,7 +185,7 @@ export const DrawLinks : DrawLinksFType = (
     display_links:{ [link_id: string]: SankeyLink },
     LinkStroke:LinkStrokeFuncType,
     DrawArrows:drawArrowsType,
-    contextualised_link:{current:SankeyLink|undefined},
+    contextualised_link:SankeyLink,
     pointer_pos:{current:number[]},
     LinkSabotColor:LinkColorFuncType
   ) => {
@@ -516,9 +516,9 @@ export const DrawLinks : DrawLinksFType = (
     link.local.label_position = 'frozen'
   }
 
-  add_links(display_nodes,display_links,LinkStroke,DrawArrows,contextualised_link,pointer_pos,LinkSabotColor)
+  add_links(display_nodes,display_links,LinkStroke,DrawArrows,contextualised_link.current![0][0],pointer_pos,LinkSabotColor)
   
-  return (<>
+  return (<>[]
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
   </>
   )
