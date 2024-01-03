@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, callbackFuncType } from './Types'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, agregationType, callbackFuncType } from './Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 
 export type CutNameFType = (t: string, n: number) => string
@@ -147,13 +147,17 @@ export type AssignLinkStyleAttributeFuncType = (n:SankeyLinkStyle,k:keyof Sankey
 
 export type NodeContextHasAggregateFuncType = (n:SankeyNode,data:SankeyData)=>boolean
 
-export type AggregateFuncType = (n: SankeyNode, data: SankeyData, set_agregation_node: (s: string) => void, set_is_agregation: (b: boolean) => void, set_show_agregation: (b: boolean) => void) => void
+export type AggregateFuncType = (
+    n: SankeyNode, data: SankeyData, agregation :agregationType
+) => void
 
-export type DesaggregateFuncType = (n: SankeyNode, data: SankeyData, display_nodes: {
-    [id: string]: SankeyNode;
-}, display_links: {
-    [id: string]: SankeyLink;
-}, set_agregation_node: (s: string) => void, set_is_agregation: (b: boolean) => void, set_show_agregation: (b: boolean) => void) => void
+export type DesaggregateFuncType = (
+    n: SankeyNode, 
+    data: SankeyData, 
+    display_nodes: {[id: string]: SankeyNode;}, 
+    display_links: {[id: string]: SankeyLink;}, 
+    agregation :agregationType
+) => void
 
 export type  NodeContextHasDesaggregateFuncType = (n: SankeyNode, data: SankeyData) => boolean
 

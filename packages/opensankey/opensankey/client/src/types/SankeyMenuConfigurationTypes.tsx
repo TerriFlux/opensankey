@@ -1,12 +1,12 @@
 import { TFunction } from 'i18next'
 import { SankeyData, SankeyLink, SankeyNode } from './Types'
-import { RefObject } from 'react'
+import { Dispatch, RefObject, SetStateAction } from 'react'
 
 export type OpenSankeyConfigurationsMenusFType = (
   t:TFunction,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  set_show_nav: (_:boolean)=>void,
+  showNavRef: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
   sub_nav_item_active:string,

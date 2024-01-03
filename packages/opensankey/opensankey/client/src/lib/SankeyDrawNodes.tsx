@@ -25,8 +25,7 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
   multi_selected_nodes:{current: SankeyNode[] },
   multi_selected_links:{current: SankeyLink[] },
   mode_selection:{current:string},
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
+  first_selected_node,
   accordion_ref:{current:HTMLDivElement } | null,
   button_ref:{current:HTMLLabelElement} | null,
   alt_key_pressed:boolean,
@@ -131,12 +130,12 @@ export const OpenSankeyDrawNodes : OpenSankeyDrawNodesFType = (
       if (mode_selection.current == 'ln') {
         ggg_nodes.on('mousedown', function (event, d) {
           if (!event.ctrlKey && !event.metaKey) {
-            set_first_selected_node(d)
+            first_selected_node.current = d
           }
         })
           .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(
             event,d,data,set_data,first_selected_node,
-            set_first_selected_node,multi_selected_links,accordion_ref,button_ref,links_accordion_ref,displayedInputLinkValueRef
+            multi_selected_links,accordion_ref,button_ref,links_accordion_ref,displayedInputLinkValueRef
           )
           )
       }
