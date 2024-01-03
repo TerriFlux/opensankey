@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve, display_styleType } from '../types/Types'
 import {RemoveAnimate,ComputeEndPoints, GetSankeyMinWidthAndHeight,drawCurveFunction, DrawArrows,LinkStrokeWidth} from './SankeyDrawFunction'
 import {   LinkVisible,TestLinkValue,ReturnValueNode,AssignNodeLocalAttribute,ReturnValueLink,AssignLinkLocalAttribute} from './SankeyUtils'
-import { add_drag_link_zoneFType, dragGNodeEventFType, DragLinkEventFType, dragLinkIOPositionFType, dragLinkTextEventFType, dragNodeTextEventWidthBoxEventFType, drag_elementsFuncType,drag_node_textFuncType, drag_nodesFType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from '../types/SankeyDragTypes'
+import { add_drag_link_zoneFType, dragGNodeEventFType, DragLinkEventFType, DragLinkIOPositionFType, dragLinkTextEventFType, dragNodeTextEventWidthBoxEventFType, drag_elementsFuncType,drag_node_textFuncType, drag_nodesFType, opposing_drag_elementsFuncType, return_out_of_bound_elementFuncType } from '../types/SankeyDragTypes'
 import { drawArrowsType } from '../types/SankeyDrawFunctionTypes'
 import {
   GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,
@@ -366,7 +366,7 @@ export const dragLinkTextEvent : dragLinkTextEventFType =(alt_key_pressed:boolea
  * @param {number} min_thickness
  * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => string}
  */
-export const dragLinkIOPosition : dragLinkIOPositionFType =(
+export const DragLinkIOPosition : DragLinkIOPositionFType =(
   multi_selected_links:{current: SankeyLink[]},
   link:SankeyLink,
   data:SankeyData,
@@ -1179,7 +1179,7 @@ export const add_drag_link_zone : add_drag_link_zoneFType =(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link))?'ns-resize':'pointer')
-      .call(dragLinkIOPosition(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
+      .call(DragLinkIOPosition(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
       )  
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
@@ -1194,7 +1194,7 @@ export const add_drag_link_zone : add_drag_link_zoneFType =(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[1])
       .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-      .call(dragLinkIOPosition(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows))  
+      .call(DragLinkIOPosition(multi_selected_links,link,data,set_data,display_nodes,display_links,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows))  
   }
 }
 /**
