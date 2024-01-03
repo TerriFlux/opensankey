@@ -4,6 +4,7 @@ import {ValueSelectedParameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
 import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar } from './SankeyUtils'
 import { MenuConfigurationLinksDataFType } from '../types/SankeyMenuConfigurationLinksDataTypes'
+import { elementsSelectedType } from '../types/Types'
 
 export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   applicationData,
@@ -24,7 +25,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   const [displayed_input_link_value,set_displayed_input_link_value]=useState('')
   let is_link_data_invalid=false
   if(multi_selected_links.current.length>0){
-    const curr_val=ValueSelectedParameter(data,multi_selected_links,tags_selected).value
+    const curr_val=ValueSelectedParameter(applicationData,elementsSelected).value
     if(curr_val==='' && displayed_input_link_value===''){
       is_link_data_invalid=false
     }else{
@@ -162,7 +163,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                     tmp= ({...tags_selected,[name]: value})
                     //   return ({...prevState,[name]: value}) 
                     // } )
-                    set_displayed_input_link_value(ValueSelectedParameter(data,multi_selected_links,tmp).value as string)
+                    set_displayed_input_link_value(ValueSelectedParameter(applicationData,{tags_selected:tmp} as elementsSelectedType).value as string)
                   }}>
                 {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                   return (
@@ -208,7 +209,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
           onBlur={evt=>{
             const formatedValue=evt.target.value.replace(',','.')
             if(formatedValue!=='' && !isNaN(+formatedValue )){
-              const was_empty=ValueSelectedParameter(data,multi_selected_links,tags_selected).value===''
+              const was_empty=ValueSelectedParameter(applicationData,elementsSelected).value===''
               let val = Object(multi_selected_links.current[0].value)
               multi_selected_links.current.map(d => {
                 const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
@@ -265,7 +266,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
         <Form.Control
           style={{width:'60%'}}
           type='text'
-          value={ValueSelectedParameter(data,multi_selected_links,tags_selected).display_value}
+          value={ValueSelectedParameter(applicationData,elementsSelected).display_value}
           onChange={
             evt => {
               let val = Object(multi_selected_links.current[0].value)

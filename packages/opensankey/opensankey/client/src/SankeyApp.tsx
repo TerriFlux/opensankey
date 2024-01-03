@@ -239,7 +239,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     d3.selectAll(' .opensankey #svg #sankey_def').remove()
 
     const suiteLinkStroke= LinkStroke
-    // const suiteDrawArrows= OpenSankeyDrawFunction.drawArrows
+    // const suiteDrawArrows= OpenSankeyDrawFunction.DrawArrows
 
     // Call the function that add links to the sankey
     d3.select(' .opensankey #svg #sankey_def').remove()

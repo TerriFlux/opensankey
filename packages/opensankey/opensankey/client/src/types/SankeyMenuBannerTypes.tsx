@@ -29,7 +29,7 @@ export type addAllDropDownNodeFType = (
   level:boolean
 ) => JSX.Element
 
-export type toolbar_builderFType = (
+export type ToolbarBuilderFType = (
   t:TFunction,
   data: SankeyData,
   set_data: (d:SankeyData)=>void,
