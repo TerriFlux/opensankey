@@ -1361,7 +1361,11 @@ export const GetVerticalMarginForSankeyZone:GetVerticalMarginForSankeyZoneFuncTy
   const footer_size=document.getElementsByClassName('sankeyFooter')[0]?.getBoundingClientRect().height
   return shift_top+footer_size
 }
-export const AdjustSankeyZone:AdjustSankeyZoneFuncType =(data:SankeyData,GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],show_nav=false,vertical=false): void=>{
+export const AdjustSankeyZone:AdjustSankeyZoneFuncType =(
+  data:SankeyData,
+  GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
+  show_nav=false,vertical=false
+): void=>{
   [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
   let size_menu=0
   if(show_nav){
@@ -1830,9 +1834,7 @@ export const NodeContextHasAggregate:NodeContextHasAggregateFuncType = (n:Sankey
 }
 export const Aggregate:AggregateFuncType =(
   n:SankeyNode,data:SankeyData,
-  set_agregation_node:(s:string)=>void,
-  set_is_agregation:(b:boolean)=>void,
-  set_show_agregation:(b:boolean)=>void
+  agregationRef
 )=>{
   const parent_names: string[] = []
   const dim_names: string[] = []
@@ -1853,9 +1855,9 @@ export const Aggregate:AggregateFuncType =(
     return
   }
   if (parent_names.length > 1) {
-    set_agregation_node(n.idNode)
-    set_is_agregation(true)
-    set_show_agregation(true)
+    agregationRef.agregationNode.current = n
+    agregationRef.isAgregationRef.current = true
+    agregationRef.showAgregationRef.current![0][1](true)
   } else {
     agregation(data, n.idNode, dim_names[0])
   }
@@ -1867,9 +1869,7 @@ export const Desaggregate:DesaggregateFuncType=(
   data:SankeyData,
   display_nodes: {[id:string]:SankeyNode},
   display_links: {[id:string]:SankeyLink},
-  set_agregation_node:(s:string)=>void,
-  set_is_agregation:(b:boolean)=>void,
-  set_show_agregation:(b:boolean)=>void
+  agregationRef
 )=>{
   const child_names: string[] = []
   const dim_names: string[] = []
@@ -1893,9 +1893,9 @@ export const Desaggregate:DesaggregateFuncType=(
     return
   }
   if (child_names.length > 1) {
-    set_agregation_node(n.idNode)
-    set_is_agregation(false)
-    set_show_agregation(true)
+    agregationRef.agregationNode.current = n
+    agregationRef.isAgregationRef.current = false
+    agregationRef.showAgregationRef.current![0][1](true)
   } else {
     desagregation(data, display_nodes,display_links, n.idNode, dim_names[0],false)
   }

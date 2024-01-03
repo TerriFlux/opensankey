@@ -45,6 +45,7 @@ import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
 import {AddAllDropDownFluxFType, LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from '../types/SankeyMenuTopTypes'
 import { RecursionDataTag, DefaultNode, DefaultLink, ClickSaveExcel, FindMaxLinkValue, UploadExemple, ClickSaveDiagram, UploadExcelImpl, DownloadExamples } from './SankeyUtils'
+import { RepositionneSidebar } from './SankeyDrawFunction'
 
 declare const window: Window &
   typeof globalThis & {
@@ -347,7 +348,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   external_file_item:JSX.Element[],
   externale_save_item:JSX.Element[],
   set_tags_selected:(o:{[x:string]:string})=>void,
-  convert_data:(d:SankeyData,get_default_data: ()=>SankeyData)=>void
+  convert_data:(d:SankeyData,
+  get_default_data: ()=>SankeyData)=>void
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
@@ -806,8 +808,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     processFunctions,
     showMenuComponents,
     applicationDraw,
-    show_nav,
-    set_show_nav,
+    showNavRef,
     nav_item_active,
     configurations_menus,
     menus,
@@ -821,9 +822,15 @@ export const Menu: FunctionComponent<MenuTypes> = (
     DiagramSelector
   }
 ) => {
+  const [show_nav,set_show_nav] = useState(false)
+  if (showNavRef.current!.length == 0) {
+    showNavRef.current!.push([show_nav,set_show_nav])
+  }
+  RepositionneSidebar(show_nav)
 
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
+  const [update,setUpdate] = useState(false)
   let max_link_value = 0
   Object.values(applicationData.data.links).forEach(link => {
     const new_max_link_value = FindMaxLinkValue(
@@ -869,7 +876,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
-
     if(!show_nav){
       [applicationData.data.width, applicationData.data.height] = applicationDraw.GetSankeyMinWidthAndHeight(applicationData.data)
       const transform=d3.select('.opensankey #svg').attr('transform')
@@ -881,7 +887,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
-
+    setUpdate(!update)
   }
   const setChecked = useState(false)[1]
 
@@ -1060,12 +1066,14 @@ export const Menu: FunctionComponent<MenuTypes> = (
     DDDT=DataTagsDDNavBar(applicationData.data,applicationData.set_data,elementsSelected.set_tags_selected)
   }
 
+
+
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
       {/* Top Navbar with navigation and edition elements */}
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
-        contextMenu.contextualised_node.current =undefined
+        contextMenu.contextualised_node.current![0][1](undefined)
         contextMenu.contextualised_link.current = undefined
         contextMenu.set_show_context_zdd(false)
         contextMenu.set_tag_contextualised(undefined)

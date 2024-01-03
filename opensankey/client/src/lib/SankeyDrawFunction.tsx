@@ -58,6 +58,7 @@ import {
 import {
   GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType
 } from '../types/SankeyUtilsTypes'
+import { draw_legend_handles } from './SankeyDrawLegend'
 // Function that create the dashed pattern on links
 
 const default_handle_size = 10
@@ -484,21 +485,22 @@ export const EventNodeContextMenu : EventNodeContextMenuFType =(
   contextMenu,
   multi_selected_nodes,              
 )=>{
-  const {pointer_pos,contextualised_node,contextNodeRef} = contextMenu
+  const {pointer_pos,contextualised_node} = contextMenu
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
   if(multi_selected_nodes.current.includes(n)){
-    contextualised_node.current = n
+    contextualised_node.current![0][1](n)
   }else{
     multi_selected_nodes.current.forEach(nn=>DeselectVisualyNodes(nn))
     multi_selected_nodes.current=[]
     SelectVisualyNodes(n)
     multi_selected_nodes.current.push(n)
-    contextualised_node.current = n
+    contextualised_node.current![0][1](n)
   }
-  const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
-  contextNodeRef.current!.attributes[4].value = 'max-width: 100%; position: absolute; inset: '+style_c_n
-  contextNodeRef.current!.hidden = false
+  //const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+  //ontextNodeRef.current!.attributes[4].value = 'max-width: 100%; position: absolute; inset: '+style_c_n
+  //contextNodeRef.current!.hidden = false
+  //updateStatecontextNode.current![0][1](!updateStatecontextNode.current![0][0])
 }
 
 export const EventLinkContextMenu : EventLinkContextMenuFType = (
@@ -874,15 +876,15 @@ export const DrawArrows : drawArrowsType = (
 
 
 export const EventOnSankeyZoneMouseDown : EventOnSankeyZoneMouseDownFuncType = (
-  mode_selection:{current:string},
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  set_first_selected_node:(d:SankeyNode)=>void,
-  token:boolean,
-  set_show_toast_limit_node:(b:boolean)=>void,
-  evt2:unknown,
-  start_point:{current:number[]},
-  closeAllMenuContext:()=>void
+  mode_selection,
+  data,
+  set_data_for_selection,
+  first_selected_node,
+  token,
+  set_show_toast_limit_node,
+  evt2,
+  start_point,
+  closeAllMenuContext
 )=>{
   closeAllMenuContext()
   const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
@@ -918,8 +920,8 @@ export const EventOnSankeyZoneMouseDown : EventOnSankeyZoneMouseDownFuncType = (
           new_node1.x = pos[0]-(ReturnValueNode(data,new_node1,'node_width') as number/2)
           new_node1.y = pos[1]-(ReturnValueNode(data,new_node1,'node_height') as number/2)
           start_point.current=pos
-          set_first_selected_node(new_node1)
-          set_data({ ...data })
+          first_selected_node.current = new_node1
+          set_data_for_selection({ ...data })
         }
       }
     }else if(mode_selection.current=='s' && !evt.ctrlKey){
@@ -933,13 +935,11 @@ export const EventOnSankeyZoneMouseDown : EventOnSankeyZoneMouseDownFuncType = (
 
 }
 export const EventOnSankeyZoneMouseMove : EventOnSankeyZoneMouseMoveFuncType = (
-  mode_selection:{current:string},
+  mode_selection,
   data:SankeyData,
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
+  first_selected_node,
   evt:MouseEvent,
   start_point:{current:number[]}
-  
 )=>{
   //Empêche lors du drag de la souris d'avoir
   // l'effet sélection de texte sur les labels des éléments de diagramme
@@ -949,9 +949,9 @@ export const EventOnSankeyZoneMouseMove : EventOnSankeyZoneMouseMoveFuncType = (
   window.event?.stopPropagation()
   window.event?.preventDefault()
 
-  if(mode_selection.current=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || Object.keys(first_selected_node).length != 0)){
+  if(mode_selection.current=='s' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || first_selected_node.current)){
     data.nodes=Object.fromEntries(Object.entries(data.nodes).filter(n=>n[1].name!='node_tmp'))
-    set_first_selected_node({} as SankeyNode)
+    first_selected_node.current = undefined
   }
   if(evt.buttons ==0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length>0){
     d3.selectAll(' .opensankey #svg #path-flux').remove()
@@ -973,7 +973,7 @@ export const EventOnSankeyZoneMouseMove : EventOnSankeyZoneMouseMoveFuncType = (
     if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons ==0){
       // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris
       // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison
-      set_first_selected_node({} as SankeyNode)
+      first_selected_node.current = undefined
       Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].name=Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0].idNode
     }else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
       const pos = d3.pointer(evt)
@@ -996,9 +996,9 @@ export const EventOnSankeyZoneMouseMove : EventOnSankeyZoneMouseMoveFuncType = (
     }
   }
   
-  if (Object.keys(first_selected_node).length != 0) {
+  if (first_selected_node.current) {
     const pos = d3.pointer(event)
-    const fsn = (first_selected_node as SankeyNode)
+    const fsn = first_selected_node.current!
     if (d3.selectAll(' .opensankey #svg #path-flux').nodes().length == 0) {
       // Lors du drag de la souris, dessine une ligne entre le noeud de départ et la souris
       d3.select(' .opensankey #svg').append('line').attr('id', 'path-flux')
@@ -1021,8 +1021,7 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_links:{current:SankeyLink[]},
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
+  first_selected_node,
   token:boolean,
   set_show_toast_limit_node:(b:boolean)=>void,
   accordion_ref:{ current: HTMLDivElement; }| null,
@@ -1031,10 +1030,14 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   evt:MouseEvent,
   start_point:{current:number[]},
-  set_legend_clicked:(b:boolean)=>void
+  legend_clicked
 )=>{
 
-  set_legend_clicked(false)
+  legend_clicked.current = false
+  d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray',()=>'')
+  let h=document.getElementById('g_legend')?.getBoundingClientRect().height
+  h=h?h:50
+  draw_legend_handles(data,set_data,legend_clicked.current,h)
 
   const open_links_menu=()=>{
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
@@ -1103,7 +1106,7 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
     if(!token && Object.keys(data.nodes).length>15 ){
       Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
       d3.selectAll(' .opensankey #svg #path-flux').remove()
-      set_first_selected_node({} as SankeyNode)
+      first_selected_node.current = undefined
       set_show_toast_limit_node(true)
       setTimeout(function () {
         set_show_toast_limit_node(false)
@@ -1156,9 +1159,9 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
         displayedInputLinkValueRef.current.value = ''
       }
       open_links_menu()
-      set_first_selected_node({} as SankeyNode)
+      first_selected_node.current = undefined
       set_data({...data})
-    }else if((!evt.ctrlKey && !evt.metaKey) && Object.keys(first_selected_node).length > 0 && d3.select(evt_recast).attr('class')!='node node_shape'){
+    }else if((!evt.ctrlKey && !evt.metaKey) && first_selected_node.current && d3.select(evt_recast).attr('class')!='node node_shape'){
 
       const n_link = DefaultLink(data)
       const n_node = DefaultNode(data)
@@ -1174,7 +1177,7 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
       n_node.y = pos[1]-(ReturnValueNode(data,n_node,'node_height') as number/2)
 
       const { links } = data
-      const fsn = (first_selected_node as SankeyNode)
+      const fsn = first_selected_node.current!
       let idLink = Object.keys(data.links).length
       while (data.links['link'+idLink]) {
         idLink = idLink+1
@@ -1196,7 +1199,7 @@ export const EventOnSankeyZoneMouseUp : EventOnSankeyZoneMouseUpFuncType = (
       multi_selected_links.current=[n_link]
       open_links_menu()
 
-      set_first_selected_node({} as SankeyNode)
+      first_selected_node.current = undefined
       set_data({ ...data })
 
     }
@@ -1218,15 +1221,14 @@ export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType =
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,data:SankeyData,
   set_data:(d:SankeyData)=>void,
-  first_selected_node:SankeyNode,
-  set_first_selected_node:(_:SankeyNode)=>void,
+  first_selected_node,
   multi_selected_links:{current:SankeyLink[]},
   accordion_ref:{ current: HTMLDivElement; }| null,
   button_ref: { current: HTMLLabelElement; }| null,
   links_accordion_ref:{ current: HTMLDivElement; }| null,
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
 )=>{
-  if ((!event.ctrlKey && !event.metaKey)&& Object.keys(first_selected_node).length != 0) {
+  if ((!event.ctrlKey && !event.metaKey)&& first_selected_node.current) {
 
     if(d.name.includes('_tmp')){
       d3.selectAll(' .opensankey #svg #path-flux').remove()
@@ -1236,7 +1238,7 @@ export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType =
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       const n_link = DefaultLink(data)
       const { links } = data
-      const fsn = (first_selected_node as SankeyNode)
+      const fsn = first_selected_node.current!
       let idLink = Object.keys(data.links).length
       while (data.links['link'+idLink]) {
         idLink = idLink+1
@@ -1278,7 +1280,7 @@ export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType =
       }
     }
 
-    set_first_selected_node({} as SankeyNode)
+    first_selected_node.current = undefined
     set_data({ ...data })
   }else if(Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0){
 
@@ -1302,7 +1304,7 @@ export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType =
     d.inputLinksId.push(new_link.idLink)
     d3.selectAll(' .opensankey #svg #path-flux').remove()
     data.linkZIndex.push(new_link.idLink)
-    set_first_selected_node({} as SankeyNode)
+    first_selected_node.current = undefined
     set_data({...data})
   }
 }

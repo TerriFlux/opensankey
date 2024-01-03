@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { SankeyData, SankeyLink, SankeyNode, SankeyNodeAttrLocal} from '../types/Types'
+import { SankeyData, SankeyLink, SankeyNode, SankeyNodeAttrLocal, agregationType} from '../types/Types'
 import {
   AssignLinkLocalAttribute,
   AssignNodeLocalAttribute,
@@ -865,21 +865,25 @@ export type AgregationModalTypes = {
   set_data : (_:SankeyData)=>void
   display_nodes : { [node_id: string]: SankeyNode },
   display_links : { [link_id: string]: SankeyLink },
-  agregation_node : string,
-  set_agregation_node : (_:string)=>void,
-  set_show_agregation : (_:boolean)=>void,
-  show_agregation : boolean,
-  is_agregation: boolean
+  agregationRef : agregationType
 }
 
 export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
-  {data, set_data, display_nodes, display_links, agregation_node,set_agregation_node, set_show_agregation,show_agregation,is_agregation}
+  {data, set_data, display_nodes, display_links, agregationRef}
 ) => {
-  const n = data.nodes[agregation_node]
+  const [show_agregation,set_show_agregation] = useState(false)
   const [dim_name,set_dim_name] = useState('')
   const [child_names,set_child_names] = useState<string[]>([])
+
+  if ( agregationRef.showAgregationRef.current!.length == 0) {
+    agregationRef.showAgregationRef.current!.push([show_agregation,set_show_agregation])
+  }
+  const n = agregationRef.agregationNode.current as SankeyNode
+  if (!n) {
+    return <></>
+  }
   const dim_names: string[] = []
-  if ( is_agregation ) {
+  if ( agregationRef.isAgregationRef.current ) {
     Object.keys(n.dimensions).forEach(
       dim => {
         if (Object.keys(n.dimensions).length > 1 && dim === 'Primaire') {
@@ -929,7 +933,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Button
             variant="secondary"
             onClick={()=> {
-              agregation(data,agregation_node,dim_name)
+              agregation(data,n.idNode,dim_name)
               set_data({...data})
               set_show_agregation(false)
               set_dim_name('')
@@ -972,7 +976,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
         show={show_agregation}
         onHide={ () => {
           set_show_agregation(false)
-          set_agregation_node('')
+          agregationRef.agregationNode.current = undefined
           set_dim_name('')
         }} >
         <Modal.Header closeButton>
@@ -1011,7 +1015,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Button
             variant="secondary"
             onClick={()=> {
-              desagregation(data,display_nodes,display_links,agregation_node,dim_name,false)
+              desagregation(data,display_nodes,display_links,n.idNode,dim_name,false)
               set_data({...data})
               set_show_agregation(false)
               set_dim_name('')

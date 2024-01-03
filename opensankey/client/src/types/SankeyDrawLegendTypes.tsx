@@ -1,6 +1,7 @@
 import { TFunction } from 'i18next'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode } from './Types'
+import { MutableRefObject } from 'react'
 
 export type OpenSankeyDrawLegendFType = (
   data:SankeyData,
@@ -10,8 +11,8 @@ export type OpenSankeyDrawLegendFType = (
   t:TFunction,
   pointer_pos:{current:number[]},
   set_tag_contextualised:(t:string)=>void,
-  legend_clicked:boolean,
-  set_legend_clicked:(b:boolean)=>void,
+  legend_clicked:MutableRefObject<boolean>
+  // set_legend_clicked:(b:boolean)=>void,
 ) => JSX.Element
 
 export type drag_legendFType=(
