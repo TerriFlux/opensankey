@@ -3,6 +3,8 @@ import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from 
 import { drawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
+import { Dispatch, RefObject, SetStateAction } from 'react'
+import { SankeyNode } from 'open-sankey/src/types/Types'
 
 export type SankeyPlusNodeIconFType = (
   t:TFunction,
@@ -56,7 +58,7 @@ export type SankeyPlusDrawNodesIconFType = (
 ) => void
 
 export type context_node_iconFType = (
-  contextualised_node:{ current : SankeyPlusNode | undefined },
+  contextualised_node : RefObject<[SankeyNode|undefined, Dispatch<SetStateAction<SankeyNode|undefined>>][]>,
   set_show_menu_node_icon:(_:boolean)=>void,
   t:TFunction
 )=> JSX.Element
