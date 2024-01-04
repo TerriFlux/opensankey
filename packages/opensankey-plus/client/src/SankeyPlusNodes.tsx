@@ -825,7 +825,7 @@ export const ContextNodeIcon : ContextNodeIconFType = (
   const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
   return <Button onClick={()=>{
     set_show_menu_node_icon(true)
-    contextualised_node.current = undefined
+    contextualised_node.current![0][1](undefined)
   }} variant='light'>{t('Noeud.icon.icon')} {icon_open_modal}</Button>
 
 }
