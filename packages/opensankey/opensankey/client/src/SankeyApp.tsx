@@ -6,8 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, agregationType, applicationContextType, applicationDataType, contextMenuType, elementsSelectedType, uiElementsRefType } from './types/Types'
 
 import SankeyDraw from './lib/SankeyDraw'
-import { LinkStrokeFuncType } from './types/SankeyDrawLinksTypes'
-import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, RepositionneSidebar, EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
+import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
 import { DrawLegend, drag_legend } from './lib/SankeyDrawLegend'
 import { DrawLinks } from './lib/SankeyDrawLinks'
 import { DrawNodes } from './lib/SankeyDrawNodes'
@@ -143,7 +142,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     tagContext : tagContext,
     closeAllMenuContext : closeAllMenuContext,
     pointer_pos : pointer_pos,
-    show_context_zdd : showContextZDDRef
+    showContextZDDRef : showContextZDDRef
   }
 
   const agregation : agregationType = {
@@ -235,10 +234,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     )
     OpenSankeyDrawNodesLabel(data,set_data as (d:SankeyData)=>void,multi_selected_nodes,SuiteGetLinkValue)
 
-    const suiteDrawArrows= DrawArrows
+    //const suiteDrawArrows= DrawArrows
     d3.selectAll(' .opensankey #svg #sankey_def').remove()
 
-    const suiteLinkStroke= LinkStroke
+    //const suiteLinkStroke= LinkStroke
     // const suiteDrawArrows= OpenSankeyDrawFunction.DrawArrows
 
     // Call the function that add links to the sankey
