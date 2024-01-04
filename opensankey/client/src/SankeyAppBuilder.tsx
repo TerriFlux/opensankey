@@ -447,7 +447,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     detail_level,'',elementsSelected.first_selected_node,size_of_draw_zone,
     setDiagram,
     showMenuComponents.show_modal_welcome[1],set_never_see_again,convert_data,
-    maximum_flux,/*set_maximum_flux,*/minimum_flux,set_minimum_flux,applicationData.get_default_data
+    maximum_flux, minimum_flux,set_minimum_flux,applicationData.get_default_data
   )
 
   Object.keys(toolbar).forEach(k=>{

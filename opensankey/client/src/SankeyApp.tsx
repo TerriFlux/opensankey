@@ -174,6 +174,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     contextualised_node.current[0][1](undefined)
     contextualised_link.current[0][1](undefined)
     tagContext.current[0][1](undefined)
+    showContextZDDRef.current[0][1](false)
     set_data(new_data)
     sessionStorage.setItem('dismiss_warning_sankey_plus','0')
     sessionStorage.setItem('dismiss_warning_sankey_mfa','0')
