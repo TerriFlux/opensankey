@@ -18,7 +18,7 @@
     "test_regenerate": "react-scripts test -u",
     "jest-html": "jest-html -c **/main.css,**/bootstrap.css",
     "eject": "react-scripts eject",
-    "lint": "eslint --fix --ext .js,.jsx,.tsx ./src/lib ./src/types",
+    "lint": "eslint --fix --ext .js,.jsx,.tsx ./src/lib ./src/types ./src/*.tsx",
     "build_zip": "cross-conf-env shx rm -rf $npm_config_datapath/artefacts/open-sankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artefacts"
   },
   "jest": {
