@@ -27,7 +27,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 }) => {
 
   //- AFMSankey
-  const [flux_colormap] = useState('no_colormap')
+  const flux_colormap = useRef('no_colormap')
 
   const [data, pre_set_data] = useState<SankeyData>(initial_sankey_data)
   //- All
@@ -40,13 +40,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const nodes_accordion_ref = useRef<HTMLDivElement>(null) as {current : HTMLDivElement}
 
   const start_point=useRef([0,0])
+  //   const contextNodeRef = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
+  // const contextZDDRef = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
   const pointer_pos=useRef([0,0])
 
   const contextualised_node = useRef<[SankeyNode|undefined, Dispatch<SetStateAction<SankeyNode|undefined>>][]>([])
   const contextualised_link = useRef<[SankeyLink|undefined, Dispatch<SetStateAction<SankeyLink|undefined>>][]>([])
   const legend_clicked = useRef(false)
   //const [show_agregation,set_show_agregation] = useState(false)
-  const [maximum_flux, set_maximum_flux] = useState(data.maximum_flux)
+  const maximum_flux = useRef(data.maximum_flux)
 
   const tagContext = useRef<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>([])
   const showContextZDDRef= useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([])
@@ -79,7 +81,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
     if(data.maximum_flux && data.minimum_flux && data.minimum_flux>data.maximum_flux){
       data.maximum_flux=data.minimum_flux
-      set_maximum_flux(data.minimum_flux)
+      // set_maximum_flux(data.minimum_flux)
+      maximum_flux.current=data.minimum_flux
     }
 
     pre_set_data({...ndata})
@@ -234,10 +237,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     )
     OpenSankeyDrawNodesLabel(data,set_data as (d:SankeyData)=>void,multi_selected_nodes,SuiteGetLinkValue)
 
-    //const suiteDrawArrows= DrawArrows
+    // const suiteDrawArrows= DrawArrows
     d3.selectAll(' .opensankey #svg #sankey_def').remove()
 
-    //const suiteLinkStroke= LinkStroke
+    // const suiteLinkStroke= LinkStroke
     // const suiteDrawArrows= OpenSankeyDrawFunction.DrawArrows
 
     // Call the function that add links to the sankey
@@ -319,7 +322,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           agregation={agregation}
           convert_data={convert_data}
           maximum_flux={maximum_flux}
-          set_maximum_flux={set_maximum_flux}
+          // set_maximum_flux={set_maximum_flux}
           displayedInputLinkValueRef={displayedInputLinkValueRef}
           callback={()=>null}
           legend_clicked={legend_clicked}
