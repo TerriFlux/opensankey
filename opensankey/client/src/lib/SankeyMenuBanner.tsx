@@ -407,8 +407,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   set_show_modal_welcome:(b:boolean)=>void,
   set_never_see_again:(b:boolean)=>void,
   convert_data:ConvertDataFuncType,
-  maximum_flux:number | null | undefined,
-  set_maximum_flux:(n:number)=>void,
+  maximum_flux:{current:number | null | undefined},
+  // set_maximum_flux:(n:number)=>void,
   minimum_flux:number | null | undefined,
   set_minimum_flux:(n:number)=>void,
   DefaultSankeyData: DefaultSankeyDataFuncType,
@@ -528,12 +528,13 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
               overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
               <FormControl
                 type="text"
-                value={maximum_flux == null ? undefined : maximum_flux}
+                value={maximum_flux.current == null ? undefined : maximum_flux.current}
                 onChange={evt => {
-                  set_maximum_flux(+evt.target.value)
+                  // set_maximum_flux(+evt.target.value)
+                  maximum_flux.current=+evt.target.value
                 }}
                 onBlur={() => {
-                  data.maximum_flux = isNaN(Number(maximum_flux))?undefined:maximum_flux
+                  data.maximum_flux = isNaN(Number(maximum_flux.current))?undefined:maximum_flux.current
                   set_data({ ...data })
                 }}/>
             </OverlayTrigger>
