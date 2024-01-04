@@ -574,7 +574,7 @@ export const EventZDDContextMenu : EventZDDContextMenuFType =(
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
 
-  contextMenu.show_context_zdd.current![0][1](true)
+  contextMenu.showContextZDDRef.current![0][1](true)
   //contextZDDRef.current!.hidden = false
 
   //const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'

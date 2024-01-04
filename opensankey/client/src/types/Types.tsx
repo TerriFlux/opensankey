@@ -389,7 +389,7 @@ export type contextMenuType = {
   tagContext : RefObject<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>,
   closeAllMenuContext : () => void,
   pointer_pos : { current : number[] }, 
-  show_context_zdd : RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>
+  showContextZDDRef : RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>
 }
 
 export type processFunctionsType = {
