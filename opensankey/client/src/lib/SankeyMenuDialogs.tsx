@@ -20,12 +20,11 @@ import { OpenSankeyDiagramSelectorFType } from '../types/SankeyMenuDialogsTypes'
 /**
  * Define ApplyLayoutDialog
  *
- * @type {{ show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
+ * @type {{ ref_setter_show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
  */
 export type ApplyLayoutDialogTypes = {
   t:TFunction,
-  show_apply_layout : boolean,
-  set_show_apply_layout:(_:boolean)=>void,
+  showMenuComponents:showMenuComponentsType,
   sankey_data : SankeyData,
   set_sankey_data : (_:SankeyData)=>void,
   updateLayout:updateLayoutFuncType,
@@ -42,11 +41,11 @@ export type ApplyLayoutDialogTypes = {
 
 /**
  *
- * @param {ApplyLayoutDialogTypes} { show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
+ * @param {ApplyLayoutDialogTypes} { ref_setter_show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
 export const ApplyLayoutDialog = ({ 
-  t,show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data,
+  t,showMenuComponents, sankey_data, set_sankey_data,
   updateLayout,convert_data,node_hspace,set_node_hspace,node_vspace,set_node_vspace,
   diagramSelector,
   elementToDispose,
@@ -59,7 +58,8 @@ export const ApplyLayoutDialog = ({
   const [stretchFactorV,set_stretchFactorV]=useState(1)
   const [mode_trans,set_mode_trans]=useState('simple')
   const node_visible=NodeVisibleOnsSvg()
-
+  const [show_modal_apply_layout,set_show_modal_apply_layout]=useState(false)
+  showMenuComponents.ref_setter_show_apply_layout.current=set_show_modal_apply_layout
   const all_element_to_transform = [
     'addNode', 'addFlux', 'removeNode', 'removeFlux',
     'posNode', 'posFlux', 
@@ -566,7 +566,7 @@ export const ApplyLayoutDialog = ({
     </Tab>
     <Tab key='trans_topo' eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
   </Tabs>
-  const dragLayout=show_apply_layout?MenuDraggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.Transformation.title'),set_show_apply_layout,60):<></>
+  const dragLayout=show_modal_apply_layout?MenuDraggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.Transformation.title'),set_show_modal_apply_layout,60):<></>
   return dragLayout
 
 }

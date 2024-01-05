@@ -711,7 +711,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-edition_layout'}>{t('Menu.tooltips.amp')} </Tooltip>}>
-        <Button size='sm' variant='light' onClick={() => showMenuComponents.show_apply_layout[1](true)}>
+        <Button size='sm' variant='light' onClick={() => showMenuComponents.ref_setter_show_apply_layout.current!(true)}>
           <><Col><FontAwesomeIcon icon={faFileInvoice} /></Col>
             <Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></>
         </Button>
@@ -1165,8 +1165,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       />
       <ApplyLayoutDialog
         t={applicationContext.t}
-        show_apply_layout={showMenuComponents.show_apply_layout[0]}
-        set_show_apply_layout={showMenuComponents.show_apply_layout[1]}
+        showMenuComponents={showMenuComponents}
         sankey_data={applicationData.data}
         set_sankey_data={applicationData.set_data}
         updateLayout={applicationDraw.updateLayout}
