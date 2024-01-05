@@ -69,7 +69,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const ref_setter_show_modal_preference = useRef<Dispatch<SetStateAction<boolean>>>()
   const ref_setter_show_modal_template= useRef<Dispatch<SetStateAction<boolean>>>()
   // const show_welcome=useState(false)
-  const show_load=useState(false)
+  const show_load=useRef<Dispatch<SetStateAction<boolean>>>()
   //- Styles
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [selected_style_node, set_selected_style_node] = useState('default')

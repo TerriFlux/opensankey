@@ -335,7 +335,7 @@ export interface showMenuComponentsType {
   ref_setter_show_apply_layout : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_modal_preference : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_modal_template : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
-  show_load : [boolean,(_:boolean)=>void],
+  show_load : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>
 }
 

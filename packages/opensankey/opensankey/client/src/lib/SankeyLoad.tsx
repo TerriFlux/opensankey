@@ -2,56 +2,27 @@ import { TFunction } from 'i18next'
 import React,{ useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 import Spinner  from 'react-bootstrap/Spinner'
+import { processFunctionsType, showMenuComponentsType } from '../types/Types'
 interface SankeyLoadProdTypes {
   t:TFunction
   url_prefix: string,
   successAction: () => void,
-  show_dialog : boolean,
-  /**
-   * Function to change show_dialog value
-   *
-   * @type {(b:boolean)=>void}
-   */
-  set_show_dialog : (b:boolean)=>void,
-  processing : boolean,
-  /**
-   * Function to change processing value
-   *
-   * @type {(b:boolean)=>void}
-   */
-  setProcessing : (b:boolean)=>void
-  failure : boolean,
-  /**
-   *    * Function to change failure value
-   *
-   * @type {(b:boolean)=>void}
-   */
-  setFailure : (b:boolean)=>void
-  /**
-   * Function to change notStarted value
-   *
-   * @type {(b:boolean)=>void}
-   */
-  setNotStarted : (b:boolean)=>void
-  result : string;
-  setResult: (s:string)=>void,
-  is_computing:boolean,
-  setIsComputing:(b:boolean)=>void,
+  showMenuComponents:showMenuComponentsType,
+  processFunctions:processFunctionsType
 }
 
 const SankeyLoad = ({
   t,
   url_prefix,
   successAction,
-  show_dialog,set_show_dialog,
-  processing,setProcessing,
-  failure,setFailure,
-  setNotStarted,
-  result,setResult,
-  is_computing,setIsComputing
+  processFunctions,
+  showMenuComponents,
 } : SankeyLoadProdTypes) => {
-  const [value,setValue] = useState([1,2])
+  const {processing,setProcessing,failure,setFailure,setNotStarted,result,setResult,is_computing,setIsComputing}=processFunctions
 
+  const [value,setValue] = useState([1,2])
+  const [show_load_dialog,set_show_load_dialog] = useState(false)
+  showMenuComponents.show_load.current=set_show_load_dialog
   const reset = () => {
     setProcessing(false)
     setFailure(false)
@@ -75,8 +46,8 @@ const SankeyLoad = ({
   return (
     <Modal
       bsSize="large"
-      show={show_dialog}
-      onHide={ () => set_show_dialog(false) }
+      show={show_load_dialog}
+      onHide={ () => set_show_load_dialog(false) }
       style={{
         display: 'flex',
         justifyContent: 'center',
@@ -109,7 +80,7 @@ const SankeyLoad = ({
                             variant="success"
                             onClick={()=>{
                               successAction()
-                              set_show_dialog(false)
+                              set_show_load_dialog(false)
                             }}>{success_status}</Button>)
                       }</>
                   )

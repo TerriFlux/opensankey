@@ -96,7 +96,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
 
   const launch = (path:string) => {
     setPath(path)
-    showMenuComponents.show_load[1](true)
+    showMenuComponents.show_load.current!(true)
     setProcessing(true)
     setFailure(true)
     setNotStarted(false)
