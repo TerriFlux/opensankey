@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 
 import { Form,  Modal, Button, ButtonGroup, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
 import { SankeyData } from '../types/Types'
@@ -165,9 +165,11 @@ export const preferenceCheck : preferenceCheckFType  = (str: string,data:SankeyD
 }
 
 export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
-  {showPreference,setShowPreference,ui,t
+  {showMenuComponents,ui,t
   })=>{
-  return (<Modal show={showPreference} onHide={() => { setShowPreference(false) }}>
+  const [show_pref,set_show_pref]=useState(false)
+  showMenuComponents.ref_setter_show_modal_preference.current=set_show_pref
+  return (<Modal show={show_pref} onHide={() => { set_show_pref(false) }}>
     <Modal.Header closeButton>
       <Modal.Title>{t('Menu.title_pref')}</Modal.Title>
     </Modal.Header>

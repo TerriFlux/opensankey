@@ -333,7 +333,7 @@ export interface showMenuComponentsType {
   ref_setter_show_save_json : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_getter_show_save_json : MutableRefObject<boolean>,
   ref_setter_show_apply_layout : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
-  ShowPreference : [boolean,(_:boolean)=>void],
+  ref_setter_show_modal_preference : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   show_modalTemplate : [boolean,(_:boolean)=>void],
   show_load : [boolean,(_:boolean)=>void],
   ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>

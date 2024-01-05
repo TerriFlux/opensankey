@@ -375,8 +375,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   })
 
   const modale_preference=<React.Fragment key={'modale_preference'}><ModalPreference
-    showPreference={showMenuComponents.ShowPreference[0]}
-    setShowPreference={showMenuComponents.ShowPreference[1]}
+    showMenuComponents={showMenuComponents}
     ui={elments_of_modale_preference}
     t={t}
   /></React.Fragment>

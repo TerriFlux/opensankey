@@ -701,7 +701,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-file_setting'}>{t('Menu.tooltips.preference')} </Tooltip>}>
-        <Button size='sm' variant='light' onClick={() => { showMenuComponents.ShowPreference[1](true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
+        <Button size='sm' variant='light' onClick={() => { showMenuComponents.ref_setter_show_modal_preference.current!(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
       </OverlayTrigger>
     ]
 
