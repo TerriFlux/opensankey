@@ -11,7 +11,8 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   elementsSelected,
   applicationContext,
   uiElementsRef,
-  showNavRef,
+  // ref_setter_show_menu_config,
+  showMenuComponents,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
   sub_nav_item_active:string,
@@ -38,7 +39,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   const {t}=applicationContext
   const {links_accordion_ref,nodes_accordion_ref}=uiElementsRef
   const {multi_selected_nodes}=elementsSelected
-
+  const {ref_setter_show_menu_config}=showMenuComponents
   return [
     <Accordion.Item
       key='1'
@@ -90,11 +91,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('2')
-                  showNavRef.current![0][1](true)
+                  ref_setter_show_menu_config.current!(true)
+
                 } else {
                   set_sub_nav_item_active('EtiquetteNoeud')
                   set_nav_item_active('2')
-                  showNavRef.current![0][1](true)
+                  ref_setter_show_menu_config.current!(true)
+
 
                 }
               }
@@ -115,11 +118,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('2')
-                  showNavRef.current![0][1](true)
+                  ref_setter_show_menu_config.current!(true)
+
                 } else {
                   set_sub_nav_item_active('editionNoeud')
                   set_nav_item_active('2')
-                  showNavRef.current![0][1](true)
+                  ref_setter_show_menu_config.current!(true)
+
                 }
               }
             }
@@ -164,11 +169,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                 set_sub_nav_item_active('')
                 set_nav_item_active('3')
-                showNavRef.current![0][1](true)
+                ref_setter_show_menu_config.current!(true)
+
               } else {
                 set_sub_nav_item_active('8')
                 set_nav_item_active('3')
-                showNavRef.current![0][1](true)
+                ref_setter_show_menu_config.current!(true)
+
               }
             }}
           >
@@ -183,11 +190,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   set_sub_nav_item_active('')
                   set_nav_item_active('3')
-                  showNavRef.current![0][1](true)
+                  ref_setter_show_menu_config.current!(true)
+
                 } else {
                   set_sub_nav_item_active('editionFlux')
                   set_nav_item_active('3')
-                  showNavRef.current![0][1](true)
+                  ref_setter_show_menu_config.current!(true)
+
                 }
               }
             }>

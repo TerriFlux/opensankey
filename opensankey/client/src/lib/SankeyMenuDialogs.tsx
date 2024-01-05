@@ -2,7 +2,7 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
-import { SankeyData, SankeyLink, } from '../types/Types'
+import { SankeyData, SankeyLink, showMenuComponentsType, } from '../types/Types'
 import { complete_sankey_data } from './SankeyConvert'
 import { DefaultLink, DefaultNode, SmoothClasses } from './SankeyUtils'
 import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from './SankeyDrawFunction'
@@ -690,11 +690,9 @@ export const ApplySaveJSONDialog = (
 export type ExcelModalTypes = {
   t : TFunction,
   UploadExcelImpl: UploadExcelImplFuncType,
-  handleCloseDialog: () => void,
-  show_excel_dialog: boolean,
-  set_show_excel_dialog: (_:boolean)=>void,
   url_prefix: string,
-  launch: (path: string) => void
+  launch: (path: string) => void,
+  showMenuComponents:showMenuComponentsType
 }
 
 /**
@@ -703,13 +701,14 @@ export type ExcelModalTypes = {
  * @param {{ UploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { UploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, handleCloseDialog, show_excel_dialog, set_show_excel_dialog,url_prefix,launch }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,showMenuComponents }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
-
+  const [show_excel_dialog,set_show_excel_dialog]=useState(false)
+  showMenuComponents.ref_setter_show_excel_dialog.current=set_show_excel_dialog
   return (
     <Modal
       show={show_excel_dialog}
-      onHide={handleCloseDialog}
+      onHide={()=>set_show_excel_dialog(false)}
     >
       <Modal.Header closeButton>
         <Modal.Title>Ouvrir Fichier Excel</Modal.Title>
@@ -741,7 +740,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
         >Ouvrir</Button>
         <Button
           variant="secondary"
-          onClick={handleCloseDialog}
+          onClick={()=>set_show_excel_dialog(false)}
         >{t('Menu.ca')}</Button>
       </Modal.Footer>
     </Modal>)

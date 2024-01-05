@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, FunctionComponent, RefObject, Dispa
 import * as d3 from 'd3'
 import { useTranslation } from 'react-i18next'
 
-import { SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, agregationType, applicationContextType, applicationDataType, contextMenuType, elementsSelectedType, uiElementsRefType } from './types/Types'
+import { SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, agregationType, applicationContextType, applicationDataType, contextMenuType, elementsSelectedType, showMenuComponentsType, uiElementsRefType } from './types/Types'
 
 import SankeyDraw from './lib/SankeyDraw'
 import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
@@ -44,7 +44,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   // const contextZDDRef = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
   const pointer_pos=useRef([0,0])
 
-  const contextualised_node = useRef<[SankeyNode|undefined, Dispatch<SetStateAction<SankeyNode|undefined>>][]>([])
+  const ref_setter_contextualised_node = useRef<Dispatch<SetStateAction<SankeyNode|undefined>>>()
+  const ref_getter_contextualised_node = useRef<SankeyNode>()
   const contextualised_link = useRef<[SankeyLink|undefined, Dispatch<SetStateAction<SankeyLink|undefined>>][]>([])
   const legend_clicked = useRef(false)
   //const [show_agregation,set_show_agregation] = useState(false)
@@ -52,8 +53,22 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const tagContext = useRef<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>([])
   const showContextZDDRef= useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([])
-  const showNavRef = useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([])
-
+  const ref_setter_show_menu_config = useRef<Dispatch<SetStateAction<boolean>>>() 
+  const show_menu_node_apparence=useState(false)
+  const show_menu_node_io=useState(false)
+  const show_menu_link_data=useState(false)
+  const show_menu_link_appearence=useState(false)
+  const show_menu_layout=useState(false)
+  const ref_setter_show_modal_welcome=useRef<Dispatch<SetStateAction<boolean>>>() 
+  const ref_setter_show_modale_tuto=useRef<Dispatch<SetStateAction<boolean>>>() 
+  const ref_setter_show_modale_support=useRef<Dispatch<SetStateAction<boolean>>>() 
+  const ref_setter_show_excel_dialog=useRef<Dispatch<SetStateAction<boolean>>>()
+  const show_save_json=useState(false)
+  const show_apply_layout= useState(false)
+  const ShowPreference = useState(false)
+  const show_modalTemplate= useState(false)
+  // const show_welcome=useState(false)
+  const show_load=useState(false)
   //- Styles
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [selected_style_node, set_selected_style_node] = useState('default')
@@ -133,14 +148,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
 
   const closeAllMenuContext=()=>{
-    contextualised_node.current[0][1](undefined)
+    ref_setter_contextualised_node.current!(undefined)
     contextualised_link.current[0][1](undefined)
     tagContext.current[0][1](undefined)
     showContextZDDRef.current[0][1](false)
   } 
 
   const contextMenu : contextMenuType = {
-    contextualised_node : contextualised_node,
+    ref_setter_contextualised_node : ref_setter_contextualised_node,
+    ref_getter_contextualised_node : ref_getter_contextualised_node,
     contextualised_link : contextualised_link,
     tagContext : tagContext,
     closeAllMenuContext : closeAllMenuContext,
@@ -171,7 +187,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     localStorage.removeItem('icon_imported')
     set_selected_style_node('default')
     set_selected_style_link('default')
-    contextualised_node.current[0][1](undefined)
+    ref_setter_contextualised_node.current!(undefined)
     contextualised_link.current[0][1](undefined)
     tagContext.current[0][1](undefined)
     showContextZDDRef.current[0][1](false)
@@ -219,6 +235,25 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     get_default_data : DefaultSankeyData,
     display_nodes : display_nodes,
     display_links : display_links
+  }
+
+  const showMenuComponents : showMenuComponentsType = {
+    show_menu_node_apparence,
+    show_menu_node_io,
+    show_menu_link_data,
+    show_menu_link_appearence,
+    show_menu_layout,
+    ref_setter_show_modal_welcome,
+    ref_setter_show_modale_tuto,
+    ref_setter_show_modale_support,
+    ref_setter_show_excel_dialog,
+    show_save_json,
+    show_apply_layout,
+    ShowPreference,
+    show_modalTemplate,
+    // show_welcome,
+    show_load,
+    ref_setter_show_menu_config
   }
 
   useEffect(() => {
@@ -311,7 +346,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           uiElementsRef = {uiElementsRef}
           applicationData = {applicationData}
           contextMenu = {contextMenu}
-          showNavRef = {showNavRef}
+          // ref_setter_show_menu_config = {ref_setter_show_menu_config}
+          showMenuComponents={showMenuComponents}
           formations_menu={formations_menu}
           exemple_menu={exemple_menu}
           mode_selection={mode_selection}

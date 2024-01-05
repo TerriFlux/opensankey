@@ -484,17 +484,17 @@ export const EventNodeContextMenu : EventNodeContextMenuFType =(
   contextMenu,
   multi_selected_nodes,              
 )=>{
-  const {pointer_pos,contextualised_node} = contextMenu
+  const {pointer_pos,ref_setter_contextualised_node} = contextMenu
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
   if(multi_selected_nodes.current.includes(n)){
-    contextualised_node.current![0][1](n)
+    ref_setter_contextualised_node.current!(n)
   }else{
     multi_selected_nodes.current.forEach(nn=>DeselectVisualyNodes(nn))
     multi_selected_nodes.current=[]
     SelectVisualyNodes(n)
     multi_selected_nodes.current.push(n)
-    contextualised_node.current![0][1](n)
+    ref_setter_contextualised_node.current!(n)
   }
   //const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   //ontextNodeRef.current!.attributes[4].value = 'max-width: 100%; position: absolute; inset: '+style_c_n

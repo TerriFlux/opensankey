@@ -26,16 +26,16 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   additional_context_element_menu,
   additional_context_element_other
 }) => {
-  const [ contextualised_node, set_contextualised_node] = useState<SankeyNode>()
+  const [ ref_setter_contextualised_node, set_contextualised_node] = useState<SankeyNode>()
   const { pointer_pos } = contextMenu
   const { multi_selected_nodes,multi_selected_links } = elementsSelected
   const { data, set_data, display_nodes, display_links } = applicationData
   const { t } = applicationContext
-  if (contextMenu.contextualised_node.current!.length == 0) {
-    contextMenu.contextualised_node.current!.push([contextualised_node,set_contextualised_node])
-  }
+  // if (contextMenu.ref_setter_contextualised_node.current!.length == 0) {
+  contextMenu.ref_setter_contextualised_node.current=set_contextualised_node
+  // }
   let style_c_n='0px 0px auto auto'
-  if(contextualised_node){
+  if(ref_setter_contextualised_node){
     style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
 
@@ -73,7 +73,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 
   // Dropdown to change some pararmeter concerning the appearence of the node
   const has_node_tags=Object.values(data.nodeTags).filter(nt=>nt.group_name!=='Type de noeud').length>0
-  const dropdown_c_n_tag=contextualised_node && has_node_tags ? <Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
+  const dropdown_c_n_tag=ref_setter_contextualised_node && has_node_tags ? <Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Menu.Transformation.tagNode_assign')}
     </Dropdown.Toggle>
@@ -87,16 +87,16 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
             {Object.keys(nt[1].tags).map(t=>{
               return <Dropdown.Item as={Button} variant='light' onClick={()=>{
                 // Contextualised node
-                if(!Object.keys(contextualised_node.tags).includes(nt[0])){
-                  contextualised_node.tags[nt[0]]=[]
+                if(!Object.keys(ref_setter_contextualised_node.tags).includes(nt[0])){
+                  ref_setter_contextualised_node.tags[nt[0]]=[]
                 }
-                if(!contextualised_node.tags[nt[0]].includes(t)){
-                  contextualised_node.tags[nt[0]].push(t)
+                if(!ref_setter_contextualised_node.tags[nt[0]].includes(t)){
+                  ref_setter_contextualised_node.tags[nt[0]].push(t)
                 }else{
-                  contextualised_node.tags[nt[0]].splice(contextualised_node.tags[nt[0]].indexOf(t))
+                  ref_setter_contextualised_node.tags[nt[0]].splice(ref_setter_contextualised_node.tags[nt[0]].indexOf(t))
                 }
                 //Selected nodes
-                multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
+                multi_selected_nodes.current.filter(n=>n!=ref_setter_contextualised_node).forEach(n=>{
                   if(!Object.keys(n.tags).includes(nt[0])){
                     n.tags[nt[0]]=[]
                   }
@@ -109,7 +109,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 
                 set_data({...data})
               }}>
-                {nt[1].tags[t].name}{checked(contextualised_node.tags[nt[0]] &&contextualised_node.tags[nt[0]].includes(t))}
+                {nt[1].tags[t].name}{checked(ref_setter_contextualised_node.tags[nt[0]] &&ref_setter_contextualised_node.tags[nt[0]].includes(t))}
               </Dropdown.Item>
             })}
           </Dropdown.Menu>
@@ -133,8 +133,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       {
         Object.values(data.style_node).map(sn=>{
           return <Dropdown.Item onClick={()=>{
-            contextualised_node!.style=sn.idNode
-            multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>n.style=sn.idNode)
+            ref_setter_contextualised_node!.style=sn.idNode
+            multi_selected_nodes.current.filter(n=>n!=ref_setter_contextualised_node).forEach(n=>n.style=sn.idNode)
 
             set_data({...data})
           }}>{sn.name}</Dropdown.Item>
@@ -149,8 +149,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
       <Dropdown.Item  as={Button} variant='light' onClick={()=>{
-        delete contextualised_node!.local
-        multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>delete n.local)
+        delete ref_setter_contextualised_node!.local
+        multi_selected_nodes.current.filter(n=>n!=ref_setter_contextualised_node).forEach(n=>delete n.local)
         set_data({...data})
       }}>{t('Noeud.AS')}</Dropdown.Item>
       {dropdown_c_n_style_select}
@@ -277,15 +277,15 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 
   const button_edit_label_node=<Button variant='light'
     onClick={()=>{
-      const label_x=document.getElementById('text_'+contextualised_node!.idNode)?.getBoundingClientRect().x??0
-      const label_y=document.getElementById('text_'+contextualised_node!.idNode)?.getBoundingClientRect().y??0
-      const node_x=document.getElementById('shape_'+contextualised_node!.idNode)?.getBoundingClientRect().x??0
-      const node_y=document.getElementById('shape_'+contextualised_node!.idNode)?.getBoundingClientRect().y??0
+      const label_x=document.getElementById('text_'+ref_setter_contextualised_node!.idNode)?.getBoundingClientRect().x??0
+      const label_y=document.getElementById('text_'+ref_setter_contextualised_node!.idNode)?.getBoundingClientRect().y??0
+      const node_x=document.getElementById('shape_'+ref_setter_contextualised_node!.idNode)?.getBoundingClientRect().x??0
+      const node_y=document.getElementById('shape_'+ref_setter_contextualised_node!.idNode)?.getBoundingClientRect().y??0
 
-      d3.select('#fo_input_label_'+contextualised_node!.idNode).style('display','inline-block')
-      d3.select('#fo_input_label_'+contextualised_node!.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
-      d3.select('#text_'+contextualised_node!.idNode).style('display','none')
-      document.getElementById('input_label_'+contextualised_node!.idNode)?.focus()
+      d3.select('#fo_input_label_'+ref_setter_contextualised_node!.idNode).style('display','inline-block')
+      d3.select('#fo_input_label_'+ref_setter_contextualised_node!.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
+      d3.select('#text_'+ref_setter_contextualised_node!.idNode).style('display','none')
+      document.getElementById('input_label_'+ref_setter_contextualised_node!.idNode)?.focus()
 
       set_contextualised_node(undefined)
 
@@ -296,17 +296,17 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 
 
   // Pop over that serve as context menu
-  return contextualised_node!==undefined?<Popover id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
+  return ref_setter_contextualised_node!==undefined?<Popover id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
     <Popover.Body>
       <ButtonGroup vertical>
-        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node && NodeContextHasAggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          Aggregate(contextualised_node,data,agregation)
+        {multi_selected_nodes.current.filter(n=>n!=ref_setter_contextualised_node).length==0 && ref_setter_contextualised_node && NodeContextHasAggregate(ref_setter_contextualised_node,data)?<Button variant='light' onClick={()=>{
+          Aggregate(ref_setter_contextualised_node,data,agregation)
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
         }}>Agrégation</Button>:<></>}
-        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node &&NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          Desaggregate(contextualised_node,data,display_nodes,display_links,agregation)
+        {multi_selected_nodes.current.filter(n=>n!=ref_setter_contextualised_node).length==0 && ref_setter_contextualised_node &&NodeContextHasDesaggregate(ref_setter_contextualised_node,data)?<Button variant='light' onClick={()=>{
+          Desaggregate(ref_setter_contextualised_node,data,display_nodes,display_links,agregation)
           multi_selected_nodes.current =[]
           set_data({...data})
           set_contextualised_node(undefined)
@@ -353,9 +353,9 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         <Button
           variant='light'
           onClick={() => {
-            reorganize_node_inputLinksId(data,contextualised_node!, data.nodes, data.links)
-            reorganize_node_outputLinksId(data,contextualised_node!, data.nodes, data.links)
-            multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
+            reorganize_node_inputLinksId(data,ref_setter_contextualised_node!, data.nodes, data.links)
+            reorganize_node_outputLinksId(data,ref_setter_contextualised_node!, data.nodes, data.links)
+            multi_selected_nodes.current.filter(n=>n!=ref_setter_contextualised_node).forEach(n=>{
               reorganize_node_inputLinksId(data,n, data.nodes, data.links)
               reorganize_node_outputLinksId(data,n, data.nodes, data.links)
             })

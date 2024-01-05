@@ -326,16 +326,16 @@ export interface showMenuComponentsType {
   show_menu_link_data : [boolean,(_:boolean)=>void],
   show_menu_link_appearence : [boolean,(_:boolean)=>void],
   show_menu_layout : [boolean,(_:boolean)=>void],
-  show_modal_welcome : [boolean,(_:boolean)=>void],
-  show_modale_tuto : [boolean,(_:boolean)=>void],
-  show_modale_support : [boolean,(_:boolean)=>void],
-  show_excel_dialog : [boolean,(_:boolean)=>void],
+  ref_setter_show_modal_welcome : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
+  ref_setter_show_modale_tuto : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
+  ref_setter_show_modale_support : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
+  ref_setter_show_excel_dialog : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   show_save_json : [boolean,(_:boolean)=>void],
   show_apply_layout : [boolean,(_:boolean)=>void],
   ShowPreference : [boolean,(_:boolean)=>void],
   show_modalTemplate : [boolean,(_:boolean)=>void],
-  show_welcome : [boolean,(_:boolean)=>void],
   show_load : [boolean,(_:boolean)=>void],
+  ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>
 }
 
 export type applicationContextType = {
@@ -384,7 +384,8 @@ export type elementsSelectedType = {
 }
 
 export type contextMenuType = {
-  contextualised_node : RefObject<[SankeyNode|undefined, Dispatch<SetStateAction<SankeyNode|undefined>>][]>,
+  ref_setter_contextualised_node : MutableRefObject<Dispatch<SetStateAction<SankeyNode|undefined>>|undefined>,
+  ref_getter_contextualised_node : MutableRefObject<SankeyNode|undefined>,
   contextualised_link : RefObject<[SankeyLink|undefined, Dispatch<SetStateAction<SankeyLink|undefined>>][]>,
   tagContext : RefObject<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>,
   closeAllMenuContext : () => void,
@@ -433,7 +434,7 @@ export type MenuTypes = {
   processFunctions : processFunctionsType,
   showMenuComponents: showMenuComponentsType,
   applicationDraw: applicationDrawType,
-  showNavRef: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
+  // ref_setter_show_menu_config: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
   nav_item_active: string,
 
   mode_selection: { current : string },
@@ -470,7 +471,7 @@ export type SankeyAppBuilderTypes = {
   uiElementsRef : uiElementsRefType,
   elementsSelected : elementsSelectedType,
   contextMenu:contextMenuType,
-  showNavRef: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
+  showMenuComponents:showMenuComponentsType,
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   exemple_menu        : object,
   formations_menu      : object,
