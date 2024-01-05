@@ -573,12 +573,13 @@ export const ApplyLayoutDialog = ({
 
 /**
  *
- * @type {{ show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
+ * @type {{ ref_setter_show_save_json: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
  */
 export type ApplySaveJSONTypes = {
   t : TFunction
-  show_save_json : boolean,
-  set_show_save_json: (_:boolean)=>void,
+  // ref_setter_show_save_json : boolean,
+  // set_show_save_json: (_:boolean)=>void,
+  showMenuComponents:showMenuComponentsType,
   sankey_data : SankeyData,
   additionnal_button_option_save_json:JSX.Element[],
   ClickSaveDiagram:ClickSaveDiagramFuncType
@@ -586,20 +587,21 @@ export type ApplySaveJSONTypes = {
 
 /**
  *
- * @param {ApplySaveJSONTypes} { show_save_json, set_show_save_json,sankey_data,set_sankey_data,ClickSaveDiagram }
+ * @param {ApplySaveJSONTypes} { ref_setter_show_save_json, set_show_save_json,sankey_data,set_sankey_data,ClickSaveDiagram }
  * @returns {*}
  */
 export const ApplySaveJSONDialog = (
-  { t,show_save_json, set_show_save_json,sankey_data,additionnal_button_option_save_json,ClickSaveDiagram }: ApplySaveJSONTypes
+  { t,showMenuComponents,sankey_data,additionnal_button_option_save_json,ClickSaveDiagram }: ApplySaveJSONTypes
 ) => {
   const [mode_save,set_mode_save]=useState(true)
   const [mode_visible_element,set_mode_visible_element]=useState(false)
-
+  const [show_save_json_modal,set_show_save_json_modal]=useState(false)
+  showMenuComponents.ref_setter_show_save_json.current=set_show_save_json_modal
   return (
     <Modal
       bsSize="large"
-      show={show_save_json}
-      onHide={() => set_show_save_json(false)}
+      show={show_save_json_modal}
+      onHide={() => set_show_save_json_modal(false)}
       style={{
         display: 'flex',
         justifyContent: 'center',
@@ -638,7 +640,7 @@ export const ApplySaveJSONDialog = (
           variant='danger'
           onClick={
             () => {
-              set_show_save_json(false)
+              set_show_save_json_modal(false)
             }
           }>{t('Menu.close')}
         </Button>

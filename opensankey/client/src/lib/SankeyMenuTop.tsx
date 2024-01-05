@@ -689,7 +689,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
           <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faDownload} /></Col><Col className='textIcon'>{t('Menu.enregistrer')}</Col></></Dropdown.Toggle>
           <Dropdown.Menu>
             <Dropdown.Item onClick={()=>{
-              showMenuComponents.show_save_json[1](true)
+              showMenuComponents.ref_setter_show_save_json.current!(true)
             }} >{t('Menu.open_json')}</Dropdown.Item>
             <Dropdown.Item onClick={()=>ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</Dropdown.Item>
             {externale_save_item}
@@ -1158,8 +1158,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       }
       <ApplySaveJSONDialog
         t={applicationContext.t}
-        show_save_json={showMenuComponents.show_save_json[0]}
-        set_show_save_json={showMenuComponents.show_save_json[1]}
+        showMenuComponents={showMenuComponents}
         sankey_data={applicationData.data}
         additionnal_button_option_save_json={[]}
         ClickSaveDiagram={ClickSaveDiagram}
