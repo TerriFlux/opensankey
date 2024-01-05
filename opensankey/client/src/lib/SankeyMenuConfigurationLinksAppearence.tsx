@@ -64,8 +64,8 @@ const svg_label_center=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 2
 
 
 export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearenceFType = (
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   applicationContext,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,
@@ -75,8 +75,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   menu_for_modal=false
 )=>{
   const {t}=applicationContext
-  const {data,set_data}=applicationData
-  const {selected_style_link,multi_selected_links}=elementsSelected
+  const {data,set_data}=dict_variable_application_data
+  const {selected_style_link,multi_selected_links}=dict_variable_elements_selected
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')

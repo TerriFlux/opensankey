@@ -1,15 +1,15 @@
 import { RefObject } from 'react'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkColorFuncType, LinkTextFuncType } from './SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, applicationDataType, contextMenuType, elementsSelectedType, uiElementsRefType } from './Types'
+import { SankeyData, SankeyLink, SankeyNode, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType } from './Types'
 
 export type LinkStrokeFuncType = (l: SankeyLink, data: SankeyData, GetLinkValue: GetLinkValueFuncType) => string
 
 export type DrawLinksFType = (
   contextMenu:contextMenuType,
-  applicationData:applicationDataType,
+  dict_variable_application_data:dict_variable_application_dataType,
   uiElementsRef:uiElementsRefType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   position:'absolute' | 'relative',

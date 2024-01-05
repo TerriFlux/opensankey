@@ -13,16 +13,16 @@ const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuZdd : ContextMenuZddFType =(
   applicationContext,
-  applicationData,
+  dict_variable_application_data,
   contextMenu,
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   applicationDrawVar
 )=>{
   const [ show_context_zdd, set_show_context_zdd ] = useState(false)
   if ( contextMenu.showContextZDDRef.current!.length === 0 ) {
     contextMenu.showContextZDDRef.current!.push([ show_context_zdd, set_show_context_zdd ])
   }
-  const { data, set_data } = applicationData
+  const { data, set_data } = dict_variable_application_data
   const { t } = applicationContext
   const { pointer_pos } = contextMenu
   const {node_hspace,set_node_hspace,node_vspace,set_node_vspace } =applicationDrawVar
@@ -205,7 +205,7 @@ export const ContextMenuZdd : ContextMenuZddFType =(
   </Button>
 
   const button_open_layout=<Button onClick={()=>{
-    showMenuComponents.show_menu_layout[1](true)
+    dict_hook_ref_setter_show_dialog_components.show_menu_layout[1](true)
     set_show_context_zdd(false)
 
   }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>

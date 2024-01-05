@@ -16,9 +16,9 @@ typeof globalThis & {
 
 export const DrawNodes : DrawNodesFType = (
   contextMenu,
-  applicationData,
+  dict_variable_application_data,
   uiElementsRef,
-  elementsSelected,
+  dict_variable_elements_selected,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   NodeTooltipsContent:NodeTooltipsContentFType,
@@ -27,9 +27,9 @@ export const DrawNodes : DrawNodesFType = (
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   accept_simple_click:{current:boolean}
 ) => {
-  const {data,set_data,display_nodes,display_links}=applicationData
+  const {data,set_data,display_nodes,display_links}=dict_variable_application_data
   const {button_ref,accordion_ref,links_accordion_ref} =uiElementsRef
-  const {multi_selected_links,multi_selected_nodes,first_selected_node}=elementsSelected
+  const {multi_selected_links,multi_selected_nodes,first_selected_node}=dict_variable_elements_selected
 
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
@@ -118,7 +118,7 @@ export const DrawNodes : DrawNodesFType = (
       }
 
       ggg_nodes
-        .on('click', (event, d) => SimpleGNodeClick(applicationData,uiElementsRef,elementsSelected,event,d,mode_selection,accept_simple_click))
+        .on('click', (event, d) => SimpleGNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,mode_selection,accept_simple_click))
         .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
 
       if (mode_selection.current == 'ln') {
@@ -135,7 +135,7 @@ export const DrawNodes : DrawNodesFType = (
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s' && window.SankeyToolsStatic!==true){
-        ggg_nodes.call(DragGNodeEvent(applicationData,elementsSelected,mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale))
+        ggg_nodes.call(DragGNodeEvent(dict_variable_application_data,dict_variable_elements_selected,mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale))
       }
     }
     // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )

@@ -1,4 +1,4 @@
-import { SankeyLink, SankeyData, SankeyNode,SankeyLinkAttrLocal, elementsSelectedType} from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode,SankeyLinkAttrLocal, dict_variable_elements_selectedType} from '../types/Types'
 import React, { Dispatch, RefObject, SetStateAction } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
@@ -24,9 +24,9 @@ typeof globalThis & {
 
 export const DrawLinks : DrawLinksFType = (
   contextMenu,
-  applicationData,
+  dict_variable_application_data,
   uiElementsRef,
-  elementsSelected,
+  dict_variable_elements_selected,
   mode_selection,
   alt_key_pressed,
   position,
@@ -43,8 +43,8 @@ export const DrawLinks : DrawLinksFType = (
 ) => {
   const{pointer_pos,contextualised_link} =contextMenu
   const{button_ref,accordion_ref,links_accordion_ref} =uiElementsRef
-  const{data,set_data,display_nodes,display_links} =applicationData
-  const {tags_selected,set_tags_selected,multi_selected_links}=elementsSelected
+  const{data,set_data,display_nodes,display_links} =dict_variable_application_data
+  const {tags_selected,set_tags_selected,multi_selected_links}=dict_variable_elements_selected
   const default_handle_size = 10
   const default_horiz_shift = 50
 
@@ -113,7 +113,7 @@ export const DrawLinks : DrawLinksFType = (
           }
           set_tags_selected(new_tags_selected)
           if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as unknown as string)
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as unknown as string)
           }
         }else if(Object.values(data.dataTags).length>0){
           // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -126,11 +126,11 @@ export const DrawLinks : DrawLinksFType = (
             n_t_s[dt]=tmp[i]
           })
           if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:n_t_s} as elementsSelectedType).value as unknown as string)
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:n_t_s} as dict_variable_elements_selectedType).value as unknown as string)
           }
         }else{
           if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as unknown as string)
+            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as unknown as string)
           }
         }
       }else{
@@ -248,7 +248,7 @@ export const DrawLinks : DrawLinksFType = (
       })
     gg_links.on('contextmenu', (ev, l) => {
       if(!window.SankeyToolsStatic){
-        return EventLinkContextMenu(applicationData,ev,l,contextualised_link,pointer_pos,
+        return EventLinkContextMenu(dict_variable_application_data,ev,l,contextualised_link,pointer_pos,
           multi_selected_links,displayedInputLinkValueRef,tags_selected,set_tags_selected,set_display_link_opacity
         )}}
     )
@@ -256,7 +256,7 @@ export const DrawLinks : DrawLinksFType = (
     const paths = gg_links.append('path')
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
       let error_msg: { text: string | undefined } | undefined
-      paths.call(DragLinkEvent(applicationData,elementsSelected,error_msg,display_style,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
+      paths.call(DragLinkEvent(dict_variable_application_data,dict_variable_elements_selected,error_msg,display_style,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
       )
 
     }
@@ -403,7 +403,7 @@ export const DrawLinks : DrawLinksFType = (
     paths.attr('d', d => {
       SetNodesHeight(data,display_nodes,display_links, d, GetLinkValue)
       return drawCurveFunction.curve(
-        applicationData,elementsSelected,
+        dict_variable_application_data,dict_variable_elements_selected,
         display_style,
         data.nodeTags, d, error_msg,
         LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
@@ -417,7 +417,7 @@ export const DrawLinks : DrawLinksFType = (
       })
       .each(function (l) {
         if(ReturnValueLink(data,(l as SankeyLink),'orientation')=='vv' ||ReturnValueLink(data,(l as SankeyLink),'orientation')=='hh'){
-          AddDragLinkZone((l as SankeyLink),applicationData,elementsSelected,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
+          AddDragLinkZone((l as SankeyLink),dict_variable_application_data,dict_variable_elements_selected,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
         }
       })
     if (error_msg && error_msg.text) {

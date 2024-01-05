@@ -2,7 +2,7 @@ import { faArrowPointer, faShareNodes, faFolderTree, faSliders, faArrowsUpDown, 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Accordion, Pagination, Col, Card, ButtonGroup, Button, Carousel, FormCheck, Modal } from 'react-bootstrap'
 import { FaUser, FaAngleDoubleLeft, FaHome, FaCaretSquareLeft, FaCaretSquareRight } from 'react-icons/fa'
-import { SankeyData, applicationContextType, applicationDataType, elementsSelectedType, showMenuComponentsType } from '../types/Types'
+import { SankeyData, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
 import parse from 'html-react-parser'
 import { TFunction, t } from 'i18next'
 import { ConvertDataFuncType } from 'open-sankey/src/types/SankeyConvertTypes'
@@ -14,7 +14,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   t:TFunction,
   active_page:string,
   set_active_page:(s:string)=>void,
-  showMenuComponents : showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again:boolean,
   set_never_see_again:(b:boolean)=>void,
   additional_shortcut_item:JSX.Element[],
@@ -29,7 +29,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   exemple_menu: object
 )=>{
   const [show_wecome,set_show_welcome]=useState(false)
-  showMenuComponents.ref_setter_show_modal_welcome.current=set_show_welcome
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current=set_show_welcome
   const content_rc_static=<>
     <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
@@ -126,8 +126,8 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
 
 export const CardsTemplateBuilder = (
   exemple_menu : object,
-  elementsSelected : elementsSelectedType,
-  applicationData : applicationDataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
+  dict_variable_application_data : dict_variable_application_dataType,
   applicationContext : applicationContextType,
   Reinitialization: ()=>void,
   convert_data: ConvertDataFuncType
@@ -159,23 +159,23 @@ export const CardsTemplateBuilder = (
               <ButtonGroup>
                 <Button variant='primary'
                   onClick={() => {
-                    elementsSelected.multi_selected_nodes.current = []
-                    elementsSelected.multi_selected_links.current = []
-                    //elementsSelected.multi_selected_label.current = [] TODO
+                    dict_variable_elements_selected.multi_selected_nodes.current = []
+                    dict_variable_elements_selected.multi_selected_links.current = []
+                    //dict_variable_elements_selected.multi_selected_label.current = [] TODO
                     const difficulty_file=(tmp['OpenSankey']['easy_template'].includes(list_template_data[idx]))?'easy_template':'expert_template'
                     UploadExemple(
                       'OpenSankey/'+difficulty_file+'/'+list_template_data[idx], applicationContext.url_prefix, 
-                      applicationData.data,applicationData.set_data as (d:SankeyData)=>void,
-                      Reinitialization,convert_data ,applicationData.get_default_data
+                      dict_variable_application_data.data,dict_variable_application_data.set_data as (d:SankeyData)=>void,
+                      Reinitialization,convert_data ,dict_variable_application_data.get_default_data
                     )
-                    applicationData.set_data({...applicationData.data})
+                    dict_variable_application_data.set_data({...dict_variable_application_data.data})
                   }}>{t('useTemplate')}</Button>
 
                 <Button variant='info'
                   onClick={() => {
-                    elementsSelected.multi_selected_nodes.current = []
-                    elementsSelected.multi_selected_links.current = []
-                    //elementsSelected.multi_selected_label.current = [] TODO
+                    dict_variable_elements_selected.multi_selected_nodes.current = []
+                    dict_variable_elements_selected.multi_selected_links.current = []
+                    //dict_variable_elements_selected.multi_selected_label.current = [] TODO
                     const difficulty_file=(tmp['OpenSankey']['easy_template'].includes(list_template_data[idx]))?'easy_template':'expert_template'
                     DownloadExempleExcel(
                       'OpenSankey/'+difficulty_file+'/'+list_template_data[idx]
@@ -192,7 +192,7 @@ export const CardsTemplateBuilder = (
 
 export const welcomeModalBuilder = (
   exemple_menu : object,
-  showMenuComponents : showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again : boolean,
   set_never_see_again : (_:boolean)=>void,
   active_page : string,
@@ -454,7 +454,7 @@ export const welcomeModalBuilder = (
     t,
     active_page,
     set_active_page,
-    showMenuComponents,
+    dict_hook_ref_setter_show_dialog_components,
     never_see_again,
     set_never_see_again,
     additional_shortcut_item,

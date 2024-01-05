@@ -1,9 +1,9 @@
-import { SankeyData, applicationContextType, applicationDataType, elementsSelectedType } from './Types'
+import { SankeyData, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 export type MenuConfigurationLinksAppearenceFType = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,
