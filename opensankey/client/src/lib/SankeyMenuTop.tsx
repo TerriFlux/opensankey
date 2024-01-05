@@ -1193,17 +1193,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
         t={applicationContext.t}
         url_prefix={applicationContext.url_prefix}
         successAction={()=>DownloadExamples(processFunctions.path, applicationContext.url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
-        show_dialog={showMenuComponents.show_load[0]}
-        set_show_dialog={showMenuComponents.show_load[1]}
-        processing={processFunctions.processing}
-        setProcessing={processFunctions.setProcessing}
-        failure={processFunctions.failure}
-        setFailure={processFunctions.setFailure}
-        setNotStarted={processFunctions.setNotStarted}
-        result={processFunctions.result}
-        setResult={processFunctions.setResult}
-        is_computing={processFunctions.is_computing}
-        setIsComputing={processFunctions.setIsComputing}
+        showMenuComponents={showMenuComponents}
+        processFunctions={processFunctions}
       />
 
       {
