@@ -2,7 +2,7 @@ import React from 'react'
 import * as d3 from 'd3'
 
 import { SankeyData } from 'open-sankey/src/types/Types'
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink, PlusElementsSelectedType, SankeyPlusApplicationDataType} from '../types/Types'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import {
   PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
@@ -23,10 +23,10 @@ typeof globalThis & {
 
 export const PlusDrawLabels : PlusDrawLabelsFType = (
   applicaTionData,
-  elementsSelected,
+  dict_variable_elements_selected,
   uiElementsRef,
   contextMenu,
-
+  set_editor_content_fo_zdt,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -34,10 +34,9 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
-  set_show_context_zdt:(b:boolean)=>void
 ) => {
   const {data,set_data}=applicaTionData
-  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=elementsSelected
+  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=dict_variable_elements_selected
   const {button_ref,accordion_ref}=uiElementsRef
   const {pointer_pos}=contextMenu
   const inv_scale = d3.scaleLinear()
@@ -80,9 +79,11 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
             multi_selected_label.current.forEach(nn=>deselect_visualy_zdt(nn))
             select_visualy_zdt(d)
             multi_selected_label.current=[d]
+            set_editor_content_fo_zdt(d.content);
+
+            (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
             
           }
-          set_show_context_zdt(true)
         }
         
         
@@ -113,7 +114,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
 
       gg_label.call(
         dragLabelEvent(
-          applicaTionData,elementsSelected,
+          applicaTionData,dict_variable_elements_selected,
           d,
           GetSankeyMinWidthAndHeight,DrawGrid,
           LinkText,GetLinkValue,DrawArrows,scale,inv_scale,mode_selection,start_point
@@ -197,8 +198,8 @@ export const eventLabelClick : eventLabelClickFType =(
 // To be dragged you need to select the free label
 
 const dragLabelEvent = (
-  applicationData:SankeyPlusApplicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   d:SankeyPlusLabel,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   DrawGrid:(d:SankeyPlusData)=>void,
@@ -210,8 +211,8 @@ const dragLabelEvent = (
   mode_selection:{current:string},
   start_point:{current:number[]}
 )=>{
-  const {data,set_data}=applicationData
-  const {multi_selected_links,multi_selected_label,multi_selected_nodes}=elementsSelected
+  const {data,set_data}=dict_variable_application_data
+  const {multi_selected_links,multi_selected_label,multi_selected_nodes}=dict_variable_elements_selected
   const node_visible=[] as string[]
   const data_plus = data as SankeyPlusData
   return (d3.drag<SVGGElement, unknown>()
@@ -254,8 +255,8 @@ const dragLabelEvent = (
           OpposingDragElementsPlus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
         }
         PlusDragElements(
-          applicationData,
-          elementsSelected,
+          dict_variable_application_data,
+          dict_variable_elements_selected,
           d,event,LinkText,
           GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
         )

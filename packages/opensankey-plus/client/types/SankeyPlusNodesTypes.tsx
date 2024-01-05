@@ -1,11 +1,10 @@
 import { TFunction } from 'i18next'
-import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode } from './Types'
+import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
-import { applicationDataType, uiElementsRefType } from 'open-sankey/src/types/Types'
-import { Dispatch, RefObject, SetStateAction } from 'react'
-import { SankeyNode } from 'open-sankey/src/types/Types'
+import { dict_variable_application_dataType, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
+
 
 export type SankeyPlusNodeIconFType = (
   t:TFunction,
@@ -15,7 +14,7 @@ export type SankeyPlusNodeIconFType = (
   radio_selected:string,
   is_activated:boolean,
   menu_for_modal:boolean,
-  set_show_modal_import_icons:(b:boolean)=>void
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
 )=> JSX.Element
 
 export type SankeyPlusHyperLinkFType=( 
@@ -27,7 +26,7 @@ export type SankeyPlusHyperLinkFType=(
 
 export type PlusNodeClickEventFType=(
   applicaTionData:SankeyPlusApplicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
   set_animating:(b:boolean)=>void,
   mode_selection:{current:string},
@@ -54,8 +53,8 @@ export type SankeyPlusDrawNodesIconFType = (
 ) => void
 
 export type ContextNodeIconFType = (
-  contextualised_node : RefObject<[SankeyNode|undefined, Dispatch<SetStateAction<SankeyNode|undefined>>][]>,
-  set_show_menu_node_icon:(_:boolean)=>void,
+  contextMenu:contextMenuType,
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   t:TFunction
 )=> JSX.Element
 
@@ -70,7 +69,7 @@ export type OpposingDragElementsPlusFType = (
 
 export type PlusNodeDragEventFType = (
   applicaTionData:SankeyPlusApplicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
@@ -79,8 +78,8 @@ export type PlusNodeDragEventFType = (
 )=> void
 
 export type PlusDragElementsFType = (
-  applicationData:applicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   dragged:SankeyPlusNode|SankeyPlusLabel,
   event:{ dx: number; dy: number,x:number,y:number },
   LinkText:LinkTextFuncType,
