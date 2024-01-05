@@ -6,7 +6,7 @@ import { SankeyData, applicationContextType, applicationDataType, elementsSelect
 import parse from 'html-react-parser'
 import { TFunction, t } from 'i18next'
 import { ConvertDataFuncType } from 'open-sankey/src/types/SankeyConvertTypes'
-import React from 'react'
+import React, { useState } from 'react'
 import { UploadExemple, DownloadExempleExcel, windowSankey } from './SankeyUtils'
 import { SankeyModalWelcomeFType } from '../types/SankeyMenuTopTypes'
 
@@ -28,7 +28,8 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
     },
   exemple_menu: object
 )=>{
-
+  const [show_wecome,set_show_welcome]=useState(false)
+  showMenuComponents.ref_setter_show_modal_welcome.current=set_show_welcome
   const content_rc_static=<>
     <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
@@ -94,8 +95,8 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
     }
   }
   
-  return <Modal scrollable size='xl' show={showMenuComponents.show_modal_welcome[0] && !never_see_again} onHide={()=>{
-    showMenuComponents.show_modal_welcome[1](false)
+  return <Modal scrollable size='xl' show={show_wecome && !never_see_again} onHide={()=>{
+    set_show_welcome(false)
   }}>
     <Modal.Header closeButton>
       <Modal.Title>{t('welcome.'+active_page)}</Modal.Title>

@@ -675,7 +675,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
               }}
             />
             <Dropdown.Item
-              onClick={() => showMenuComponents.show_excel_dialog[1](true)}
+              onClick={() => showMenuComponents.ref_setter_show_excel_dialog.current!(true)}
             >{t('Menu.open_excel')}</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
@@ -739,7 +739,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         rootClose
         overlay={<Tooltip id={'tooltip-help_welcome'}>{t('Menu.tooltips.DisplayWelcome')} </Tooltip>}>
         <Button variant='light' onClick={() =>{
-          showMenuComponents.show_welcome[1](true)
+          showMenuComponents.ref_setter_show_modal_welcome.current!(true)
           set_never_see_again(false)
           localStorage.setItem('dontSeeAggainWelcome','0')
         }}>
@@ -752,7 +752,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-tuto'}>{t('Menu.tooltips.tuto')} </Tooltip>}>
-        <Button variant='light' onClick={() => showMenuComponents.show_modale_tuto[1](true)} ><Col>{logo_tuto}</Col>
+        <Button variant='light' onClick={() => showMenuComponents.ref_setter_show_modale_tuto.current!(true)} ><Col>{logo_tuto}</Col>
           <Col className='textIcon'>{t('Menu.formation')}</Col>
         </Button></OverlayTrigger>,
 
@@ -770,7 +770,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-support'}>{t('Menu.tooltips.support')} </Tooltip>}>
-        <Button variant='light' onClick={() => showMenuComponents.show_modale_support[1](true)}><Col>{logo_contact}</Col>
+        <Button variant='light' onClick={() => showMenuComponents.ref_setter_show_modale_support.current!(true)}><Col>{logo_contact}</Col>
           <Col className='textIcon'>{t('Menu.support')}</Col>
         </Button>
       </OverlayTrigger>
@@ -808,7 +808,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     processFunctions,
     showMenuComponents,
     applicationDraw,
-    showNavRef,
+    // ref_setter_show_menu_config,
     nav_item_active,
     configurations_menus,
     menus,
@@ -822,10 +822,15 @@ export const Menu: FunctionComponent<MenuTypes> = (
     DiagramSelector
   }
 ) => {
+  const {ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support}=showMenuComponents
   const [show_nav,set_show_nav] = useState(false)
-  if (showNavRef.current!.length == 0) {
-    showNavRef.current!.push([show_nav,set_show_nav])
-  }
+  const [show_tuto,set_show_tuto]=useState(false)
+  const [show_support,set_show_support]=useState(false)
+
+  ref_setter_show_menu_config.current=set_show_nav
+  ref_setter_show_modale_tuto.current=set_show_tuto
+  ref_setter_show_modale_support.current=set_show_support
+  
   RepositionneSidebar(show_nav)
 
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -960,7 +965,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     ('Formations/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                   )
                   applicationData.set_data({...applicationData.data})
-                  showMenuComponents.show_modale_tuto[1](false)
+                  set_show_tuto(false)
                 }}
               >{applicationContext.t('useTutoJSON')}</Button>
               {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','.xlsx'))?
@@ -973,7 +978,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     UploadExemple(
                       'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                     )
-                    showMenuComponents.show_modale_tuto[1](false)
+                    set_show_tuto(false)
 
                   }
                   }
@@ -989,7 +994,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     UploadExemple(
                       'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                     )
-                    showMenuComponents.show_modale_tuto[1](false)
+                    set_show_tuto(false)
 
                   }
                   }
@@ -1005,7 +1010,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
   })
 
-  modal_tuto=<Modal size={'xl'} fullscreen={true} id='modal_tutoriel' show={showMenuComponents.show_modale_tuto[0]} onHide={() => showMenuComponents.show_modale_tuto[1](false)}>
+  modal_tuto=<Modal size={'xl'} fullscreen={true} id='modal_tutoriel' show={show_tuto} onHide={() => set_show_tuto(false)}>
     <Modal.Header closeButton>{applicationContext.t('Menu.formation')}</Modal.Header>
     <Modal.Body>
       <Row>
@@ -1051,7 +1056,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   </Col> ): <ButtonGroup> {Object.keys(ordered_menu).map(k=><React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
 
 
-  const modal_support= <Modal size={'lg'} show={showMenuComponents.show_modale_support[0]} onHide={() => showMenuComponents.show_modale_support[1](false)}>
+  const modal_support= <Modal size={'lg'} show={show_support} onHide={() =>set_show_support(false)}>
     <Modal.Header closeButton><h2>{applicationContext.t('Menu.c_support')}</h2></Modal.Header>
     <Modal.Body>
       <h3>{applicationContext.t('Menu.rth_support')} :</h3>
@@ -1071,7 +1076,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
       {/* Top Navbar with navigation and edition elements */}
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
-        contextMenu.contextualised_node.current![0][1](undefined)
+        contextMenu.ref_setter_contextualised_node.current!(undefined)
         contextMenu.contextualised_link.current![0][1](undefined)
         contextMenu.showContextZDDRef.current![0][1](false)
         contextMenu.tagContext.current![0][1](undefined)
@@ -1180,11 +1185,10 @@ export const Menu: FunctionComponent<MenuTypes> = (
       <ExcelModal
         t={applicationContext.t}
         launch={processFunctions.launch}
-        handleCloseDialog={() => showMenuComponents.show_excel_dialog[1](false)}
         UploadExcelImpl={UploadExcelImpl}
-        show_excel_dialog={showMenuComponents.show_excel_dialog[0]}
-        set_show_excel_dialog={showMenuComponents.show_excel_dialog[1]}
-        url_prefix={applicationContext.url_prefix} />
+        url_prefix={applicationContext.url_prefix}
+        showMenuComponents={showMenuComponents}
+      />
 
       <SankeyLoad
         t={applicationContext.t}
