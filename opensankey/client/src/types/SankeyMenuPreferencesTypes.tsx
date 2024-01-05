@@ -1,5 +1,5 @@
 import { TFunction, i18n } from 'i18next'
-import { SankeyData, showMenuComponentsType } from './Types'
+import { SankeyData, dict_hook_ref_setter_show_dialog_componentsType } from './Types'
 
 
 export type OpenSankeyDefaultModalePreferenceContentFType=(
@@ -12,7 +12,7 @@ export type OpenSankeyDefaultModalePreferenceContentFType=(
 export type preferenceCheckFType = (str: string,data:SankeyData) => void
 
 export type modalPreferenceTypes = {
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   ui: (JSX.Element[] | JSX.Element)[],
   t:TFunction
 }

@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import React, { RefObject } from 'react'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType, applicationDataType, elementsSelectedType } from '../types/Types'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 import { ComputeTotalOffsets,
   TestLinkValue,
   LinkColor,
@@ -429,13 +429,13 @@ export const nodeTransform : nodeTransformFType = (
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
 export const EventNodeClick : EventNodeClickFType =(
-  applicationData,uiElementsRef,elementsSelected,
+  dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,
   event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
   mode_selection:{current:string}
 )=>{
-  const {data,set_data}=applicationData
-  const {multi_selected_nodes}=elementsSelected
+  const {data,set_data}=dict_variable_application_data
+  const {multi_selected_nodes}=dict_variable_elements_selected
   const {button_ref,nodes_accordion_ref,accordion_ref}=uiElementsRef
   if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  (event.ctrlKey || event.metaKey)) {
     mode_selection.current='s'
@@ -503,7 +503,7 @@ export const EventNodeContextMenu : EventNodeContextMenuFType =(
 }
 
 export const EventLinkContextMenu : EventLinkContextMenuFType = (
-  applicationData,
+  dict_variable_application_data,
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
   contextualised_link,
@@ -514,7 +514,7 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
   set_tags_selected:(o:{[k: string]: string})=>void,
   set_display_link_opacity:(s:string)=>void
 )=>{
-  const {data,set_data}=applicationData
+  const {data,set_data}=dict_variable_application_data
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
   if(multi_selected_links.current.includes(l)){
@@ -540,7 +540,7 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
     }
     set_tags_selected(new_tags_selected)
     if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as unknown as string)
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as unknown as string)
     }
   }else if(Object.values(data.dataTags).length>0){
     // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -553,11 +553,11 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
       n_t_s[dt]=tmp[i]
     })
     if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links, tags_selected:n_t_s} as elementsSelectedType).value as unknown as string)
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links, tags_selected:n_t_s} as dict_variable_elements_selectedType).value as unknown as string)
     }
   }else{
     if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links, tags_selected:new_tags_selected} as elementsSelectedType).value as unknown as string)
+      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links, tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as unknown as string)
     }
   }
 
@@ -892,20 +892,20 @@ export const DrawArrows : DrawArrowsType = (
 
 export const EventOnZoneMouseDown : EventOnZoneMouseDownFuncType = (
   mode_selection:{current:string},
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   token:boolean,
   // set_show_toast_limit_node:(b:boolean)=>void,
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   evt2:unknown,
   start_point:{current:number[]},
   closeAllMenuContext:()=>void
 )=>{
 // Special cast usefull for when the app is used in SankeySuiteManager
-  const setter_limited_application= (showMenuComponents as unknown as {show_toast_limit_node?:React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>})
+  const setter_limited_application= (dict_hook_ref_setter_show_dialog_components as unknown as {ref_setter_show_toast_limit_node?:React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>})
 
-  const {data,set_data}=applicationData
-  const {first_selected_node}=elementsSelected
+  const {data,set_data}=dict_variable_application_data
+  const {first_selected_node}=dict_variable_elements_selected
   closeAllMenuContext()
   const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
@@ -923,10 +923,10 @@ export const EventOnZoneMouseDown : EventOnZoneMouseDownFuncType = (
 
       if ((!evt.ctrlKey && !evt.metaKey) ) {
         if(!token && Object.keys(data.nodes).length>15){
-          if(setter_limited_application?.show_toast_limit_node)setter_limited_application.show_toast_limit_node.current!(true)
+          if(setter_limited_application?.ref_setter_show_toast_limit_node)setter_limited_application.ref_setter_show_toast_limit_node.current!(true)
 
           setTimeout(function () {
-            if(setter_limited_application?.show_toast_limit_node)setter_limited_application.show_toast_limit_node.current!(false)
+            if(setter_limited_application?.ref_setter_show_toast_limit_node)setter_limited_application.ref_setter_show_toast_limit_node.current!(false)
           }, 3000)
         }else{
           const new_node1 = DefaultNode(data)
@@ -957,13 +957,13 @@ export const EventOnZoneMouseDown : EventOnZoneMouseDownFuncType = (
 }
 export const EventOnZoneMouseMove : EventOnZoneMouseMoveFuncType = (
   mode_selection:{current:string},
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   evt:MouseEvent,
   start_point:{current:number[]}
 )=>{
-  const {data}=applicationData
-  const {first_selected_node}=elementsSelected
+  const {data}=dict_variable_application_data
+  const {first_selected_node}=dict_variable_elements_selected
   //Empêche lors du drag de la souris d'avoir
   // l'effet sélection de texte sur les labels des éléments de diagramme
 
@@ -1040,23 +1040,23 @@ export const EventOnZoneMouseMove : EventOnZoneMouseMoveFuncType = (
 }
 export const EventOnZoneMouseUp : EventOnZoneMouseUpFuncType = (
   mode_selection:{current:string},
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   uiElementsRef,
   token:boolean,
   // set_show_toast_limit_node:(b:boolean)=>void,
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   evt:MouseEvent,
   start_point:{current:number[]},
   legend_clicked
 )=>{
-  const {data,set_data} =applicationData
-  const {multi_selected_links,multi_selected_nodes,first_selected_node}= elementsSelected
+  const {data,set_data} =dict_variable_application_data
+  const {multi_selected_links,multi_selected_nodes,first_selected_node}= dict_variable_elements_selected
   const {links_accordion_ref,button_ref,accordion_ref} = uiElementsRef
 
   // Special cast usefull for when the app is used in SankeySuiteManager
-  const setter_limited_application= (showMenuComponents as unknown as {show_toast_limit_node?:React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>})
+  const setter_limited_application= (dict_hook_ref_setter_show_dialog_components as unknown as {ref_setter_show_toast_limit_node?:React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>})
 
   legend_clicked.current = false
   d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray',()=>'')
@@ -1132,9 +1132,9 @@ export const EventOnZoneMouseUp : EventOnZoneMouseUpFuncType = (
       Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       first_selected_node.current = undefined
-      if(setter_limited_application?.show_toast_limit_node)setter_limited_application.show_toast_limit_node.current!(true)
+      if(setter_limited_application?.ref_setter_show_toast_limit_node)setter_limited_application.ref_setter_show_toast_limit_node.current!(true)
       setTimeout(function () {
-        if(setter_limited_application?.show_toast_limit_node)setter_limited_application.show_toast_limit_node.current!(false)
+        if(setter_limited_application?.ref_setter_show_toast_limit_node)setter_limited_application.ref_setter_show_toast_limit_node.current!(false)
       }, 3000)
     }else if((pos[0]===start_point.current[0] && pos[1]===start_point.current[1])){
       // If we release the mouse at the same point of when we pressed it then don't create a second node,
@@ -1590,16 +1590,16 @@ const DrawLinkText = (
 
 // Draw the center handle of each selected links
 const AddCenterHandle=(
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   link:SankeyLink,
   selected_tags: TagsCatalog,
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType
 )=>{
-  const {data,display_nodes,display_links}=applicationData
-  const {multi_selected_links}=elementsSelected
+  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {multi_selected_links}=dict_variable_elements_selected
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   const ori=ReturnValueLink(data,link,'orientation')
 
@@ -1644,7 +1644,7 @@ const AddCenterHandle=(
       .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
       .call(
         DragLinkCenterHandleEvent(
-          link,applicationData,elementsSelected,selected_tags,
+          link,dict_variable_application_data,dict_variable_elements_selected,selected_tags,
           GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue
         )
       )
@@ -1699,8 +1699,8 @@ const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
 
 // Draw the shift handle of each selected links
 const AddShiftHandle = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   link: SankeyLink,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
@@ -1711,8 +1711,8 @@ const AddShiftHandle = (
   GetLinkValue:GetLinkValueFuncType
 
 ) => {
-  const {data}=applicationData
-  const {multi_selected_links}=elementsSelected
+  const {data}=dict_variable_application_data
+  const {multi_selected_links}=dict_variable_elements_selected
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)) {
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
@@ -1722,7 +1722,7 @@ const AddShiftHandle = (
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
       .attr('cursor',(multi_selected_links.current.includes(link)&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'ew-resize':'pointer')
-      .call(DragLinkShiftHandleEvent(applicationData,elementsSelected,link,display_style,selected_tags,position,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
+      .call(DragLinkShiftHandleEvent(dict_variable_application_data,dict_variable_elements_selected,link,display_style,selected_tags,position,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
       )
   }
 
@@ -1736,8 +1736,8 @@ export const update_scale : update_scaleFType  = (user_scale: number) => {
 
 // Function that call AddShiftHandle for the shift handle of each side of the links
 const add_shift_handles = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   link: SankeyLink,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
@@ -1751,7 +1751,7 @@ const add_shift_handles = (
 
 
 ) => {
-  const {data,display_links}=applicationData
+  const {data,display_links}=dict_variable_application_data
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   d3.select('.opensankey #g_link_handles').append('g').attr('class','gg_link_handles').attr('id','gg_link_handle_'+link.idLink)
   let shift_handles
@@ -1770,7 +1770,7 @@ const add_shift_handles = (
   for (let i = 0; i < shift_handles.length; i++) {
     const selection = d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
     if (selection.empty()) { // if the handle do not exist, create it
-      AddShiftHandle(applicationData,elementsSelected,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
+      AddShiftHandle(dict_variable_application_data,dict_variable_elements_selected,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
       )
     }
   }
@@ -1788,8 +1788,8 @@ const add_shift_handles = (
 
 // DRAW LINK
 const DrawCurve = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   display_style: display_styleType,
   nodeTags: TagsCatalog,
   link: SankeyLink,
@@ -1799,7 +1799,7 @@ const DrawCurve = (
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType
 ): string => {
-  const {data,display_nodes,display_links}=applicationData
+  const {data,display_nodes,display_links}=dict_variable_application_data
   if (!LinkVisible(link, data, display_nodes,GetLinkValue)) {
     return ''
   }
@@ -1836,9 +1836,9 @@ const DrawCurve = (
 
   let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, display_nodes, display_links, nodeTags,data,scale,inv_scale,GetLinkValue)
   if(ori=='vv' ||ori=='hh'){
-    add_shift_handles(applicationData,elementsSelected,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
-    AddDragLinkZone(link,applicationData,elementsSelected,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
-    AddCenterHandle(applicationData,elementsSelected,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
+    add_shift_handles(dict_variable_application_data,dict_variable_elements_selected,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
+    AddDragLinkZone(link,dict_variable_application_data,dict_variable_elements_selected,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
+    AddCenterHandle(dict_variable_application_data,dict_variable_elements_selected,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
   }
 
 
@@ -2281,11 +2281,11 @@ export const NodeLabeLText : NodeLabeLTextFType = (
 }
 
 export const ValueSelectedParameter:ValueSelectedParameterFuncType = (
-  applicationData,
-  elementsSelected
+  dict_variable_application_data,
+  dict_variable_elements_selected
 ): SankeyLinkValue => {
-  const {data}=applicationData
-  const {multi_selected_links,tags_selected}=elementsSelected
+  const {data}=dict_variable_application_data
+  const {multi_selected_links,tags_selected}=dict_variable_elements_selected
   if(multi_selected_links.current.length==0){
     return ({} as SankeyLinkValue)
   }else{
@@ -2539,9 +2539,9 @@ export const ZoomFunction:ZoomFunctionFuncType=(evt:d3.D3ZoomEvent<SVGElement,un
 }
 
 export const SimpleGNodeClick:SimpleGNodeClickFuncType =(
-  applicationData,
+  dict_variable_application_data,
   uiElementsRef,
-  elementsSelected,
+  dict_variable_elements_selected,
   event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
  
   mode_selection:{current:string},
@@ -2554,11 +2554,11 @@ export const SimpleGNodeClick:SimpleGNodeClickFuncType =(
   if((event.target as HTMLSpanElement).tagName==='tspan'){
     setTimeout(()=>{
       if(accept_simple_click.current){
-        EventNodeClick(applicationData,uiElementsRef,elementsSelected,event,d,sankeyTooltip,mode_selection)
+        EventNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,sankeyTooltip,mode_selection)
       }
     },200)
   }else{
-    EventNodeClick(applicationData,uiElementsRef,elementsSelected,event,d,sankeyTooltip,mode_selection)
+    EventNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,sankeyTooltip,mode_selection)
   }
 }
 

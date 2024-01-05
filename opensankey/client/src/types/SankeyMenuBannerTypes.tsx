@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyNode, showMenuComponentsType } from './Types'
+import { SankeyData, SankeyNode, dict_hook_ref_setter_show_dialog_componentsType } from './Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 
@@ -42,7 +42,7 @@ export type ToolbarBuilderFType = (
   first_selected_node:{current:SankeyNode|undefined},
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   setDiagram: setDiagramFuncType,
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   set_never_see_again:(b:boolean)=>void,
   convert_data:ConvertDataFuncType,
   maximum_flux:{current:number | null | undefined},

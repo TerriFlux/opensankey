@@ -1,12 +1,12 @@
-import { applicationContextType, applicationDataType, elementsSelectedType } from './Types'
+import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 import { RefObject } from 'react'
 
 
 
 export type MenuConfigurationLinksFType = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   tags_group_key:string,
   set_tags_group_key:(_:string)=>void,

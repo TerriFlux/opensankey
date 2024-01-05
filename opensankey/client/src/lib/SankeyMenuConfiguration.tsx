@@ -7,12 +7,12 @@ import { OpenSankeyConfigurationsMenusFType } from '../types/SankeyMenuConfigura
 
 
 export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType = (
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   applicationContext,
   uiElementsRef,
   // ref_setter_show_menu_config,
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
   sub_nav_item_active:string,
@@ -35,11 +35,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   pre_idSource:string,
   pre_idTarget:string
 ) => {
-  const {data,set_data}=applicationData
+  const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
   const {links_accordion_ref,nodes_accordion_ref}=uiElementsRef
-  const {multi_selected_nodes}=elementsSelected
-  const {ref_setter_show_menu_config}=showMenuComponents
+  const {multi_selected_nodes}=dict_variable_elements_selected
+  const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   return [
     <Accordion.Item
       key='1'
@@ -203,9 +203,9 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             <Accordion.Header className='level2'>{t('Menu.EdF')}</Accordion.Header>
             <Accordion.Body>
               <SankeyMenuConfigurationLinks
-                applicationData={applicationData}
+                dict_variable_application_data={dict_variable_application_data}
                 applicationContext={applicationContext}
-                elementsSelected={elementsSelected}
+                dict_variable_elements_selected={dict_variable_elements_selected}
                 menu_configuration_links={Object.values(menu_configuration_links)}
                 displayedInputLinkValueRef={displayedInputLinkValueRef}
                 set_display_link_opacity={set_display_link_opacity}

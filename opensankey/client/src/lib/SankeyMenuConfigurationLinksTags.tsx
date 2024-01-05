@@ -6,14 +6,14 @@ import { SmoothClasses } from './SankeyUtils'
 import { MenuConfigurationLinksTagsFType } from '../types/SankeyMenuConfigurationLinksTagsTypes'
 
 export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   applicationContext,
   tags_group_key:string,
   set_tags_group_key:(_:string)=>void,
 )=>{
-  const {data,set_data}=applicationData
-  const {multi_selected_links,tags_selected}=elementsSelected
+  const {data,set_data}=dict_variable_application_data
+  const {multi_selected_links,tags_selected}=dict_variable_elements_selected
   const {t}=applicationContext
 
   const {fluxTags}=data

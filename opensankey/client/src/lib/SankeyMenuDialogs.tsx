@@ -2,7 +2,7 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
-import { SankeyData, SankeyLink, showMenuComponentsType, } from '../types/Types'
+import { SankeyData, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, } from '../types/Types'
 import { complete_sankey_data } from './SankeyConvert'
 import { DefaultLink, DefaultNode, SmoothClasses } from './SankeyUtils'
 import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from './SankeyDrawFunction'
@@ -24,7 +24,7 @@ import { OpenSankeyDiagramSelectorFType } from '../types/SankeyMenuDialogsTypes'
  */
 export type ApplyLayoutDialogTypes = {
   t:TFunction,
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   sankey_data : SankeyData,
   set_sankey_data : (_:SankeyData)=>void,
   updateLayout:updateLayoutFuncType,
@@ -45,7 +45,7 @@ export type ApplyLayoutDialogTypes = {
  * @returns {*}
  */
 export const ApplyLayoutDialog = ({ 
-  t,showMenuComponents, sankey_data, set_sankey_data,
+  t,dict_hook_ref_setter_show_dialog_components, sankey_data, set_sankey_data,
   updateLayout,convert_data,node_hspace,set_node_hspace,node_vspace,set_node_vspace,
   diagramSelector,
   elementToDispose,
@@ -59,7 +59,7 @@ export const ApplyLayoutDialog = ({
   const [mode_trans,set_mode_trans]=useState('simple')
   const node_visible=NodeVisibleOnsSvg()
   const [show_modal_apply_layout,set_show_modal_apply_layout]=useState(false)
-  showMenuComponents.ref_setter_show_apply_layout.current=set_show_modal_apply_layout
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current=set_show_modal_apply_layout
   const all_element_to_transform = [
     'addNode', 'addFlux', 'removeNode', 'removeFlux',
     'posNode', 'posFlux', 
@@ -579,7 +579,7 @@ export type ApplySaveJSONTypes = {
   t : TFunction
   // ref_setter_show_save_json : boolean,
   // set_show_save_json: (_:boolean)=>void,
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   sankey_data : SankeyData,
   additionnal_button_option_save_json:JSX.Element[],
   ClickSaveDiagram:ClickSaveDiagramFuncType
@@ -591,12 +591,12 @@ export type ApplySaveJSONTypes = {
  * @returns {*}
  */
 export const ApplySaveJSONDialog = (
-  { t,showMenuComponents,sankey_data,additionnal_button_option_save_json,ClickSaveDiagram }: ApplySaveJSONTypes
+  { t,dict_hook_ref_setter_show_dialog_components,sankey_data,additionnal_button_option_save_json,ClickSaveDiagram }: ApplySaveJSONTypes
 ) => {
   const [mode_save,set_mode_save]=useState(true)
   const [mode_visible_element,set_mode_visible_element]=useState(false)
   const [show_save_json_modal,set_show_save_json_modal]=useState(false)
-  showMenuComponents.ref_setter_show_save_json.current=set_show_save_json_modal
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current=set_show_save_json_modal
   return (
     <Modal
       bsSize="large"
@@ -694,7 +694,7 @@ export type ExcelModalTypes = {
   UploadExcelImpl: UploadExcelImplFuncType,
   url_prefix: string,
   launch: (path: string) => void,
-  showMenuComponents:showMenuComponentsType
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType
 }
 
 /**
@@ -703,10 +703,10 @@ export type ExcelModalTypes = {
  * @param {{ UploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { UploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,showMenuComponents }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,dict_hook_ref_setter_show_dialog_components }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [show_excel_dialog,set_show_excel_dialog]=useState(false)
-  showMenuComponents.ref_setter_show_excel_dialog.current=set_show_excel_dialog
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current=set_show_excel_dialog
   return (
     <Modal
       show={show_excel_dialog}

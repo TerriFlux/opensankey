@@ -301,8 +301,8 @@ export interface SankeyAppState {
 
 export type SankeyDrawCurve={
   curve:(
-    applicationData:applicationDataType,
-    elementsSelected:elementsSelectedType,
+    dict_variable_application_data:dict_variable_application_dataType,
+    dict_variable_elements_selected:dict_variable_elements_selectedType,
     display_style : display_styleType,
     nodeTags : TagsCatalog,
     l : SankeyLink,
@@ -320,7 +320,7 @@ export interface treeFolderType{
   children?:treeFolderType[],
   checked?:1|0.5|0
 }
-export interface showMenuComponentsType {
+export interface dict_hook_ref_setter_show_dialog_componentsType {
   show_menu_node_apparence : [boolean,(_:boolean)=>void],
   show_menu_node_io : [boolean,(_:boolean)=>void],
   show_menu_link_data : [boolean,(_:boolean)=>void],
@@ -335,7 +335,7 @@ export interface showMenuComponentsType {
   ref_setter_show_apply_layout : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_modal_preference : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_modal_template : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
-  show_load : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
+  ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>
 }
 
@@ -348,7 +348,7 @@ export type applicationContextType = {
   url_prefix: string
 }
 
-export type applicationDataType = {
+export type dict_variable_application_dataType = {
   data : SankeyData,
   set_data : (_:SankeyData)=>void,
   get_default_data : ()=>SankeyData,
@@ -371,7 +371,7 @@ export type uiElementsRefType = {
   }
 }
 
-export type elementsSelectedType = {
+export type dict_variable_elements_selectedType = {
   multi_selected_nodes : { current : SankeyNode[] },
   multi_selected_links : { current : SankeyLink[] },
   //multi_selected_label : { current : SankeyLabel[] }
@@ -428,12 +428,12 @@ export type agregationType = {
 
 export type MenuTypes = {
   applicationContext : applicationContextType,
-  applicationData : applicationDataType,
+  dict_variable_application_data : dict_variable_application_dataType,
   uiElementsRef : uiElementsRefType,
-  elementsSelected : elementsSelectedType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType,
   processFunctions : processFunctionsType,
-  showMenuComponents: showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   applicationDraw: applicationDrawType,
   // ref_setter_show_menu_config: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
   nav_item_active: string,
@@ -468,11 +468,11 @@ export type SankeyAppTypes = {
 
 export type SankeyAppBuilderTypes = {
   applicationContext : applicationContextType,
-  applicationData:applicationDataType,
+  dict_variable_application_data:dict_variable_application_dataType,
   uiElementsRef : uiElementsRefType,
-  elementsSelected : elementsSelectedType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu:contextMenuType,
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   exemple_menu        : object,
   formations_menu      : object,

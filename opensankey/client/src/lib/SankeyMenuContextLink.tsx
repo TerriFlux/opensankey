@@ -13,18 +13,18 @@ const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuLink : ContextMenuLinkFType = (
   applicationContext,
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   contextMenu,
-  showMenuComponents
+  dict_hook_ref_setter_show_dialog_components
 )=>{
   const [ contextualised_link, set_contextualised_link] = useState<SankeyLink>()
   if (contextMenu.contextualised_link.current!.length == 0) {
     contextMenu.contextualised_link.current!.push([contextualised_link,set_contextualised_link])
   }
   const { pointer_pos } = contextMenu
-  const { multi_selected_links,tags_selected } = elementsSelected
-  const { data, set_data } = applicationData
+  const { multi_selected_links,tags_selected } = dict_variable_elements_selected
+  const { data, set_data } = dict_variable_application_data
   const { t } = applicationContext
 
   let style_c_l='0px 0px auto auto'
@@ -143,7 +143,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
 
 
   const button_open_link_appearence=contextualised_link!==undefined?<Button onClick={()=>{
-    showMenuComponents.show_menu_link_appearence[1](true)
+    dict_hook_ref_setter_show_dialog_components.show_menu_link_appearence[1](true)
     set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
@@ -237,7 +237,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
   </Dropdown>:<></>
 
   const button_open_link_data=contextualised_link!==undefined?<Button onClick={()=>{
-    showMenuComponents.show_menu_link_data[1](true)
+    dict_hook_ref_setter_show_dialog_components.show_menu_link_data[1](true)
     set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
 

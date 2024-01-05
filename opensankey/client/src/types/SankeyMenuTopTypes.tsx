@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, TagsCatalog, showMenuComponentsType } from './Types'
+import { SankeyData, TagsCatalog, dict_hook_ref_setter_show_dialog_componentsType } from './Types'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -20,7 +20,7 @@ export type OpenSankeyMenusFType = (
   t:TFunction,
   Reinitialization:()=>void,
   DefaultSankeyData:()=>SankeyData,
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   showStyleEdition:()=>void,
   showStyleEditionLink:()=>void,
   set_never_see_again:(b:boolean)=>void,
@@ -37,7 +37,7 @@ export type SankeyModalWelcomeFType = (
   t:TFunction,
   active_page:string,
   set_active_page:(s:string)=>void,
-  showMenuComponents : showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again:boolean,
   set_never_see_again:(b:boolean)=>void,
   additional_shortcut_item:JSX.Element[],

@@ -16,13 +16,13 @@ typeof globalThis & {
 }
 
 export const DrawLegend : DrawLegendFType= (
-  applicationData,
+  dict_variable_application_data,
   applicationContext,
   contextMenu,
   GetLinkValue,
   legend_clicked
 ) => {
-  const {data,set_data,display_nodes}=applicationData
+  const {data,set_data,display_nodes}=dict_variable_application_data
   const {t}=applicationContext
   const {pointer_pos,tagContext}=contextMenu
   // Function that add legend of tags
@@ -417,21 +417,21 @@ export const DragLegendGElement:drag_legend_g_elementFuncType=(data:SankeyData,e
 // const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
 export const ContextLegendTags : ContextLegendTagsFType=(
-  applicationData,
+  dict_variable_application_data,
   applicationContext,
-  elementsSelected,
+  dict_variable_elements_selected,
   contextMenu,
   GetLinkValue:GetLinkValueFuncType,
 
 )=>{
   const [ tag_contextualised, set_tag_contextualised] = useState<string>()
-  const {data,set_data}=applicationData
+  const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
   const {pointer_pos,tagContext}=contextMenu
   if (tagContext.current!.length === 0) {
     tagContext.current!.push([ tag_contextualised, set_tag_contextualised])
   }
-  const {multi_selected_links,multi_selected_nodes}=elementsSelected
+  const {multi_selected_links,multi_selected_nodes}=dict_variable_elements_selected
   let style_c_t='0px 0px auto auto'
   if(tag_contextualised ){
     style_c_t=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'

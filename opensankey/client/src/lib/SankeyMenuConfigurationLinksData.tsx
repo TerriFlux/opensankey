@@ -4,11 +4,11 @@ import {ValueSelectedParameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
 import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar } from './SankeyUtils'
 import { MenuConfigurationLinksDataFType } from '../types/SankeyMenuConfigurationLinksDataTypes'
-import { elementsSelectedType } from '../types/Types'
+import { dict_variable_elements_selectedType } from '../types/Types'
 
 export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   applicationContext,
   additional_data_element,
   displayedInputLinkValueRef,
@@ -18,14 +18,14 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   set_pre_idTarget,
   menu_for_modal
 ) => {
-  const {data,set_data}=applicationData
+  const {data,set_data}=dict_variable_application_data
   const {t} =applicationContext
-  const {multi_selected_links,tags_selected}=elementsSelected
+  const {multi_selected_links,tags_selected}=dict_variable_elements_selected
   //const displayedInputLinkValueRef = useRef<RefObject<HTMLInputElement>>()
   const [displayed_input_link_value,set_displayed_input_link_value]=useState('')
   let is_link_data_invalid=false
   if(multi_selected_links.current.length>0){
-    const curr_val=ValueSelectedParameter(applicationData,elementsSelected).value
+    const curr_val=ValueSelectedParameter(dict_variable_application_data,dict_variable_elements_selected).value
     if(curr_val==='' && displayed_input_link_value===''){
       is_link_data_invalid=false
     }else{
@@ -163,7 +163,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                     tmp= ({...tags_selected,[name]: value})
                     //   return ({...prevState,[name]: value}) 
                     // } )
-                    set_displayed_input_link_value(ValueSelectedParameter(applicationData,{tags_selected:tmp} as elementsSelectedType).value as string)
+                    set_displayed_input_link_value(ValueSelectedParameter(dict_variable_application_data,{tags_selected:tmp} as dict_variable_elements_selectedType).value as string)
                   }}>
                 {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                   return (
@@ -209,7 +209,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
           onBlur={evt=>{
             const formatedValue=evt.target.value.replace(',','.')
             if(formatedValue!=='' && !isNaN(+formatedValue )){
-              const was_empty=ValueSelectedParameter(applicationData,elementsSelected).value===''
+              const was_empty=ValueSelectedParameter(dict_variable_application_data,dict_variable_elements_selected).value===''
               let val = Object(multi_selected_links.current[0].value)
               multi_selected_links.current.map(d => {
                 const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
@@ -266,7 +266,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
         <Form.Control
           style={{width:'60%'}}
           type='text'
-          value={ValueSelectedParameter(applicationData,elementsSelected).display_value}
+          value={ValueSelectedParameter(dict_variable_application_data,dict_variable_elements_selected).display_value}
           onChange={
             evt => {
               let val = Object(multi_selected_links.current[0].value)

@@ -17,10 +17,10 @@ const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   applicationContext,
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   contextMenu,
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   agregation,
   set_display_link_opacity,
   additional_context_element_menu,
@@ -28,8 +28,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 }) => {
   const [ ref_setter_contextualised_node, set_contextualised_node] = useState<SankeyNode>()
   const { pointer_pos } = contextMenu
-  const { multi_selected_nodes,multi_selected_links } = elementsSelected
-  const { data, set_data, display_nodes, display_links } = applicationData
+  const { multi_selected_nodes,multi_selected_links } = dict_variable_elements_selected
+  const { data, set_data, display_nodes, display_links } = dict_variable_application_data
   const { t } = applicationContext
   // if (contextMenu.ref_setter_contextualised_node.current!.length == 0) {
   contextMenu.ref_setter_contextualised_node.current=set_contextualised_node
@@ -120,7 +120,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   </Dropdown>:<></>
 
   const dropdown_c_n_apparence=<Button onClick={()=>{
-    showMenuComponents.show_menu_node_apparence[1](true)
+    dict_hook_ref_setter_show_dialog_components.show_menu_node_apparence[1](true)
     set_contextualised_node(undefined)
   }} variant='light'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>
 
@@ -158,7 +158,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   </Dropdown>
 
   const dropdown_c_n_io=<Button onClick={()=>{
-    showMenuComponents.show_menu_node_io[1](true)
+    dict_hook_ref_setter_show_dialog_components.show_menu_node_io[1](true)
     set_contextualised_node(undefined)
   }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>
   const dropdown_c_n_align_h_min_ori=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>

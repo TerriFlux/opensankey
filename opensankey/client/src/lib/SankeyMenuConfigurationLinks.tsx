@@ -1,6 +1,6 @@
 import React, { FunctionComponent, RefObject, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyLink, applicationContextType, applicationDataType, elementsSelectedType } from '../types/Types'
+import { SankeyLink, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 
 import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
@@ -17,8 +17,8 @@ import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
 import { MenuConfigurationLinksFType } from '../types/SankeyMenuConfigurationLinksTypes'
 
 export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   tags_group_key:string,
   set_tags_group_key:(_:string)=>void,
@@ -34,13 +34,13 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   GetLinkValue:GetLinkValueFuncType,
 
 ) => {
-  const {data,set_data}=applicationData
-  const {multi_selected_links}=elementsSelected
+  const {data,set_data}=dict_variable_application_data
+  const {multi_selected_links}=dict_variable_elements_selected
 
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
     'data'      : MenuConfigurationLinksData(
-      applicationData,elementsSelected,
+      dict_variable_application_data,dict_variable_elements_selected,
       applicationContext,
       additional_data_element,
       displayedInputLinkValueRef,
@@ -49,8 +49,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       false
     ),
     'appearence': MenuConfigurationLinksAppearence(
-      applicationData,
-      elementsSelected,
+      dict_variable_application_data,
+      dict_variable_elements_selected,
       applicationContext,
       additional_link_appearence_items,
       false,display_link_opacity,set_display_link_opacity,GetLinkValue
@@ -60,8 +60,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
 
   if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')){
     ui['tags']=MenuConfigurationLinksTags(
-      applicationData,
-      elementsSelected,
+      dict_variable_application_data,
+      dict_variable_elements_selected,
       applicationContext,
       tags_group_key,set_tags_group_key
     )
@@ -71,8 +71,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
 }
 
 type SankeyMenuConfigurationLinksTypes = {
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   menu_configuration_links : JSX.Element[]
   displayedInputLinkValueRef: RefObject<HTMLInputElement>,
@@ -82,8 +82,8 @@ type SankeyMenuConfigurationLinksTypes = {
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { applicationData,
-    elementsSelected,
+  { dict_variable_application_data,
+    dict_variable_elements_selected,
     applicationContext,
     menu_configuration_links,
     displayedInputLinkValueRef,
@@ -93,9 +93,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   }
 ) => {
 
-  const {data,set_data}=applicationData
+  const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
-  const {tags_selected,set_tags_selected,multi_selected_links,multi_selected_nodes}=elementsSelected
+  const {tags_selected,set_tags_selected,multi_selected_links,multi_selected_nodes}=dict_variable_elements_selected
   const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
 
@@ -166,7 +166,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
                 set_tags_selected(new_tags_selected)
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as string)
 
               }else if(Object.values(data.dataTags).length>0){
                 // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -179,9 +179,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   n_t_s[dt]=tmp[i]
                 })
                 set_tags_selected(n_t_s)
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:n_t_s} as elementsSelectedType).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:n_t_s} as dict_variable_elements_selectedType).value as string)
               }else{
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(applicationData,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as elementsSelectedType).value as string)
+                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as string)
               }
             }
 

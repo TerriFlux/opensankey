@@ -1,9 +1,9 @@
-import { applicationContextType, applicationDataType, elementsSelectedType } from './Types'
+import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from './Types'
 import { RefObject } from 'react'
 
 export type MenuConfigurationLinksDataFType = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   additional_data_element:JSX.Element[],
   displayedInputLinkValueRef : RefObject<HTMLInputElement>,

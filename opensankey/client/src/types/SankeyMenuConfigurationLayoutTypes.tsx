@@ -1,9 +1,9 @@
 import { MutableRefObject } from 'react'
-import { applicationContextType, applicationDataType, contextMenuType } from './Types'
+import { applicationContextType, dict_variable_application_dataType, contextMenuType } from './Types'
 
 export type OpenSankeyMenuConfigurationLayoutFType = (
   applicationContext : applicationContextType,
-  applicationData: applicationDataType,
+  dict_variable_application_data: dict_variable_application_dataType,
   contextMenu : contextMenuType,
   userScaleRef : {current:number},
   legend_clicked : MutableRefObject<boolean>,

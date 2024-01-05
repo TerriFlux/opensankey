@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, FunctionComponent, RefObject, Dispa
 import * as d3 from 'd3'
 import { useTranslation } from 'react-i18next'
 
-import { SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, agregationType, applicationContextType, applicationDataType, contextMenuType, elementsSelectedType, showMenuComponentsType, uiElementsRefType } from './types/Types'
+import { SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, agregationType, applicationContextType, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType } from './types/Types'
 
 import SankeyDraw from './lib/SankeyDraw'
 import { GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows } from './lib/SankeyDrawFunction'
@@ -69,7 +69,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const ref_setter_show_modal_preference = useRef<Dispatch<SetStateAction<boolean>>>()
   const ref_setter_show_modal_template= useRef<Dispatch<SetStateAction<boolean>>>()
   // const show_welcome=useState(false)
-  const show_load=useRef<Dispatch<SetStateAction<boolean>>>()
+  const ref_setter_show_load=useRef<Dispatch<SetStateAction<boolean>>>()
   //- Styles
   const [selected_style_link, set_selected_style_link] = useState('default')
   const [selected_style_node, set_selected_style_node] = useState('default')
@@ -136,7 +136,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     nodes_accordion_ref : nodes_accordion_ref
   }
 
-  const elementsSelected : elementsSelectedType = {
+  const dict_variable_elements_selected : dict_variable_elements_selectedType = {
     multi_selected_nodes : multi_selected_nodes,
     multi_selected_links : multi_selected_links,
     tags_selected : tags_selected,
@@ -230,7 +230,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>display_links[lk]=pre_display_links[lk])
 
 
-  const applicationData : applicationDataType = {
+  const dict_variable_application_data : dict_variable_application_dataType = {
     data : data,
     set_data : set_data,
     get_default_data : DefaultSankeyData,
@@ -238,7 +238,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     display_links : display_links
   }
 
-  const showMenuComponents : showMenuComponentsType = {
+  const dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType = {
     show_menu_node_apparence,
     show_menu_node_io,
     show_menu_link_data,
@@ -254,7 +254,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_modal_preference,
     ref_setter_show_modal_template,
     // show_welcome,
-    show_load,
+    ref_setter_show_load,
     ref_setter_show_menu_config
   }
 
@@ -262,9 +262,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     // Call the function that add nodes to the sankey
     DrawNodes(
       contextMenu,
-      applicationData,
+      dict_variable_application_data,
       uiElementsRef,
-      elementsSelected,
+      dict_variable_elements_selected,
       mode_selection,
       alt_key_pressed,
       NodeTooltipsContent,
@@ -286,9 +286,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
     DrawLinks(
       contextMenu,
-      applicationData,
+      dict_variable_application_data,
       uiElementsRef,
-      elementsSelected,
+      dict_variable_elements_selected,
       mode_selection,
       alt_key_pressed,
       position,
@@ -304,7 +304,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     )
     // Create traduction function
     DrawLegend(
-      applicationData,
+      dict_variable_application_data,
       applicationContext,
       contextMenu,
       GetLinkValue,
@@ -344,12 +344,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       <>
         <SankeyAppBuilder
           applicationContext={applicationContext}
-          elementsSelected = {elementsSelected}
+          dict_variable_elements_selected = {dict_variable_elements_selected}
           uiElementsRef = {uiElementsRef}
-          applicationData = {applicationData}
+          dict_variable_application_data = {dict_variable_application_data}
           contextMenu = {contextMenu}
           // ref_setter_show_menu_config = {ref_setter_show_menu_config}
-          showMenuComponents={showMenuComponents}
+          dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
           formations_menu={formations_menu}
           exemple_menu={exemple_menu}
           mode_selection={mode_selection}
@@ -403,27 +403,27 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       svgSankey.on('mousedown',evt=>{
         EventOnZoneMouseDown(
           mode_selection,
-          applicationData,
-          elementsSelected,
-          false,showMenuComponents,evt,start_point,
+          dict_variable_application_data,
+          dict_variable_elements_selected,
+          false,dict_hook_ref_setter_show_dialog_components,evt,start_point,
           closeAllMenuContext
         )
       })
       svgSankey.on('mousemove',evt=>{
         EventOnZoneMouseMove(
           mode_selection,
-          applicationData,
-          elementsSelected,
+          dict_variable_application_data,
+          dict_variable_elements_selected,
           evt,start_point)
       })
       svgSankey.on('mouseup',evt=>{
         EventOnZoneMouseUp(
           mode_selection,
-          applicationData,
-          elementsSelected,
+          dict_variable_application_data,
+          dict_variable_elements_selected,
           uiElementsRef,
           false,
-          showMenuComponents,
+          dict_hook_ref_setter_show_dialog_components,
           displayedInputLinkValueRef,
           evt,
           start_point,

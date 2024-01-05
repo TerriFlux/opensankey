@@ -27,7 +27,7 @@ import {
   SankeyLink,
   TagsCatalog,
   TagsGroup,
-  showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_componentsType,
   MenuTypes
 } from '../types/Types'
 
@@ -338,7 +338,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   t:TFunction,
   Reinitialization:()=>void,
   get_default_data:()=>SankeyData,
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   showStyleEdition:()=>void,
   showStyleEditionLink:()=>void,
   set_never_see_again:(b:boolean)=>void,
@@ -620,7 +620,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
               onClick={Reinitialization} ><FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')} </Dropdown.Item>
 
             <Dropdown.Item
-              onClick={() => { showMenuComponents.ref_setter_show_modal_template.current!(true) }}
+              onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_template.current!(true) }}
             >{logo_tempalte} {t('Menu.from_model')} </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
@@ -675,7 +675,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
               }}
             />
             <Dropdown.Item
-              onClick={() => showMenuComponents.ref_setter_show_excel_dialog.current!(true)}
+              onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current!(true)}
             >{t('Menu.open_excel')}</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
@@ -689,7 +689,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
           <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faDownload} /></Col><Col className='textIcon'>{t('Menu.enregistrer')}</Col></></Dropdown.Toggle>
           <Dropdown.Menu>
             <Dropdown.Item onClick={()=>{
-              showMenuComponents.ref_setter_show_save_json.current!(true)
+              dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current!(true)
             }} >{t('Menu.open_json')}</Dropdown.Item>
             <Dropdown.Item onClick={()=>ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</Dropdown.Item>
             {externale_save_item}
@@ -701,7 +701,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-file_setting'}>{t('Menu.tooltips.preference')} </Tooltip>}>
-        <Button size='sm' variant='light' onClick={() => { showMenuComponents.ref_setter_show_modal_preference.current!(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
+        <Button size='sm' variant='light' onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_preference.current!(true) }}>{<><Col><FontAwesomeIcon icon={faGears} /></Col><Col className='textIcon'>{t('Menu.preference')}</Col></>}</Button>
       </OverlayTrigger>
     ]
 
@@ -711,7 +711,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-edition_layout'}>{t('Menu.tooltips.amp')} </Tooltip>}>
-        <Button size='sm' variant='light' onClick={() => showMenuComponents.ref_setter_show_apply_layout.current!(true)}>
+        <Button size='sm' variant='light' onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current!(true)}>
           <><Col><FontAwesomeIcon icon={faFileInvoice} /></Col>
             <Col className='textIcon'>{t('Menu.Transformation.amp_short')}</Col></>
         </Button>
@@ -739,7 +739,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         rootClose
         overlay={<Tooltip id={'tooltip-help_welcome'}>{t('Menu.tooltips.DisplayWelcome')} </Tooltip>}>
         <Button variant='light' onClick={() =>{
-          showMenuComponents.ref_setter_show_modal_welcome.current!(true)
+          dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true)
           set_never_see_again(false)
           localStorage.setItem('dontSeeAggainWelcome','0')
         }}>
@@ -752,7 +752,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-tuto'}>{t('Menu.tooltips.tuto')} </Tooltip>}>
-        <Button variant='light' onClick={() => showMenuComponents.ref_setter_show_modale_tuto.current!(true)} ><Col>{logo_tuto}</Col>
+        <Button variant='light' onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_tuto.current!(true)} ><Col>{logo_tuto}</Col>
           <Col className='textIcon'>{t('Menu.formation')}</Col>
         </Button></OverlayTrigger>,
 
@@ -770,7 +770,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-support'}>{t('Menu.tooltips.support')} </Tooltip>}>
-        <Button variant='light' onClick={() => showMenuComponents.ref_setter_show_modale_support.current!(true)}><Col>{logo_contact}</Col>
+        <Button variant='light' onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_support.current!(true)}><Col>{logo_contact}</Col>
           <Col className='textIcon'>{t('Menu.support')}</Col>
         </Button>
       </OverlayTrigger>
@@ -801,12 +801,12 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 export const Menu: FunctionComponent<MenuTypes> = (
   {
     applicationContext,
-    applicationData,
+    dict_variable_application_data,
     uiElementsRef,
-    elementsSelected,
+    dict_variable_elements_selected,
     contextMenu,
     processFunctions,
-    showMenuComponents,
+    dict_hook_ref_setter_show_dialog_components,
     applicationDraw,
     // ref_setter_show_menu_config,
     nav_item_active,
@@ -822,7 +822,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     DiagramSelector
   }
 ) => {
-  const {ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=showMenuComponents
+  const {ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
   const [show_nav,set_show_nav] = useState(false)
   const [show_tuto,set_show_tuto]=useState(false)
   const [show_support,set_show_support]=useState(false)
@@ -838,7 +838,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
   const [update,setUpdate] = useState(false)
   let max_link_value = 0
-  Object.values(applicationData.data.links).forEach(link => {
+  Object.values(dict_variable_application_data.data.links).forEach(link => {
     const new_max_link_value = FindMaxLinkValue(
       max_link_value,
       link.value
@@ -860,12 +860,12 @@ export const Menu: FunctionComponent<MenuTypes> = (
         try {
           processFunctions.RetrieveExcelResults(
             text,
-            applicationData.set_data,
+            dict_variable_application_data.set_data,
             applicationDraw.updateLayout,
             ()=>null,
             applicationDraw.GetSankeyMinWidthAndHeight,
             convert_data,
-            applicationData.get_default_data
+            dict_variable_application_data.get_default_data
           )
         } catch(err) {
           alert(err)
@@ -883,13 +883,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const toggleShow = () => {
     set_show_nav(!show_nav)
     if(!show_nav){
-      [applicationData.data.width, applicationData.data.height] = applicationDraw.GetSankeyMinWidthAndHeight(applicationData.data)
+      [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = applicationDraw.GetSankeyMinWidthAndHeight(dict_variable_application_data.data)
       const transform=d3.select('.opensankey #svg').attr('transform')
       let scale_svg=1
       if(transform!==undefined && transform!==null){
         scale_svg=Number(transform.split('scale(')[1].replace(')',''))
       }
-      d3.select('.scroll_zone').style('width',((applicationData.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
+      d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
@@ -963,9 +963,9 @@ export const Menu: FunctionComponent<MenuTypes> = (
               <Button variant='primary'
                 onClick={() => {
                   UploadExemple(
-                    ('Formations/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                    ('Formations/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
                   )
-                  applicationData.set_data({...applicationData.data})
+                  dict_variable_application_data.set_data({...dict_variable_application_data.data})
                   set_show_tuto(false)
                 }}
               >{applicationContext.t('useTutoJSON')}</Button>
@@ -977,7 +977,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
 
                     UploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
                     )
                     set_show_tuto(false)
 
@@ -993,7 +993,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
 
                     UploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
                     )
                     set_show_tuto(false)
 
@@ -1065,11 +1065,11 @@ export const Menu: FunctionComponent<MenuTypes> = (
     </Modal.Body>
   </Modal>
 
-  const data_tags = Object.assign({},applicationData.data.dataTags)
+  const data_tags = Object.assign({},dict_variable_application_data.data.dataTags)
   const show_data=Object.values(data_tags).length>0
   let DDDT=[] as (JSX.Element|undefined)[]
   if(show_data){
-    DDDT=DataTagsDDNavBar(applicationData.data,applicationData.set_data,elementsSelected.set_tags_selected)
+    DDDT=DataTagsDDNavBar(dict_variable_application_data.data,dict_variable_application_data.set_data,dict_variable_elements_selected.set_tags_selected)
   }
 
   return (
@@ -1159,16 +1159,16 @@ export const Menu: FunctionComponent<MenuTypes> = (
       }
       <ApplySaveJSONDialog
         t={applicationContext.t}
-        showMenuComponents={showMenuComponents}
-        sankey_data={applicationData.data}
+        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+        sankey_data={dict_variable_application_data.data}
         additionnal_button_option_save_json={[]}
         ClickSaveDiagram={ClickSaveDiagram}
       />
       <ApplyLayoutDialog
         t={applicationContext.t}
-        showMenuComponents={showMenuComponents}
-        sankey_data={applicationData.data}
-        set_sankey_data={applicationData.set_data}
+        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+        sankey_data={dict_variable_application_data.data}
+        set_sankey_data={dict_variable_application_data.set_data}
         updateLayout={applicationDraw.updateLayout}
         convert_data={convert_data}
         node_hspace={applicationDraw.node_hspace}
@@ -1178,7 +1178,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
-        DefaultSankeyData={applicationData.get_default_data}
+        DefaultSankeyData={dict_variable_application_data.get_default_data}
       />
 
       <ExcelModal
@@ -1186,14 +1186,14 @@ export const Menu: FunctionComponent<MenuTypes> = (
         launch={processFunctions.launch}
         UploadExcelImpl={UploadExcelImpl}
         url_prefix={applicationContext.url_prefix}
-        showMenuComponents={showMenuComponents}
+        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
       />
 
       <SankeyLoad
         t={applicationContext.t}
         url_prefix={applicationContext.url_prefix}
         successAction={()=>DownloadExamples(processFunctions.path, applicationContext.url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
-        showMenuComponents={showMenuComponents}
+        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         processFunctions={processFunctions}
       />
 
