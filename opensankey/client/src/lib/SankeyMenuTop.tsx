@@ -620,7 +620,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
               onClick={Reinitialization} ><FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')} </Dropdown.Item>
 
             <Dropdown.Item
-              onClick={() => { showMenuComponents.show_modalTemplate[1](true) }}
+              onClick={() => { showMenuComponents.ref_setter_show_modal_template.current!(true) }}
             >{logo_tempalte} {t('Menu.from_model')} </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
@@ -822,15 +822,16 @@ export const Menu: FunctionComponent<MenuTypes> = (
     DiagramSelector
   }
 ) => {
-  const {ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support}=showMenuComponents
+  const {ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=showMenuComponents
   const [show_nav,set_show_nav] = useState(false)
   const [show_tuto,set_show_tuto]=useState(false)
   const [show_support,set_show_support]=useState(false)
+  const [show_template,set_show_template]=useState(false)
 
   ref_setter_show_menu_config.current=set_show_nav
   ref_setter_show_modale_tuto.current=set_show_tuto
   ref_setter_show_modale_support.current=set_show_support
-  
+  ref_setter_show_modal_template.current=set_show_template
   RepositionneSidebar(show_nav)
 
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -1206,7 +1207,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       />
 
       {
-        <Modal size={'xl'}  show={showMenuComponents.show_modalTemplate[0]} onHide={() => showMenuComponents.show_modalTemplate[1](false)}>
+        <Modal size={'xl'}  show={show_template} onHide={() =>set_show_template(false)}>
           <Modal.Header closeButton>{applicationContext.t('Banner.sdr')}</Modal.Header>
           <Modal.Body>
             <Row md={4}>
