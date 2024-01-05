@@ -405,7 +405,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           mode_selection,
           applicationData,
           elementsSelected,
-          false,()=>null,evt,start_point,
+          false,showMenuComponents,evt,start_point,
           closeAllMenuContext
         )
       })
@@ -423,7 +423,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           elementsSelected,
           uiElementsRef,
           false,
-          ()=>null,
+          showMenuComponents,
           displayedInputLinkValueRef,
           evt,
           start_point,

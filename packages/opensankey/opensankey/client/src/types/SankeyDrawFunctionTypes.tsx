@@ -1,5 +1,5 @@
 import React, { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, applicationDataType, contextMenuType, display_styleType, elementsSelectedType, uiElementsRefType } from './Types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, applicationDataType, contextMenuType, display_styleType, elementsSelectedType, showMenuComponentsType, uiElementsRefType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 import * as d3 from 'd3'
@@ -265,7 +265,8 @@ export type EventOnZoneMouseDownFuncType =(
    applicationData:applicationDataType,
    elementsSelected:elementsSelectedType,
    token: boolean, 
-   set_show_toast_limit_node: (b: boolean) => void,
+  //  set_show_toast_limit_node: (b: boolean) => void,
+    showMenuComponents:showMenuComponentsType,
     evt2: unknown, 
     start_point: {current: number[];},
     closeAllMenuContext: () => void) => void
@@ -282,7 +283,9 @@ export  type EventOnZoneMouseUpFuncType = (
   elementsSelected:elementsSelectedType,
   uiElementsRef:uiElementsRefType,
   token: boolean, 
-  set_show_toast_limit_node: (b: boolean) => void, 
+  // set_show_toast_limit_node: (b: boolean) => void,
+  showMenuComponents:showMenuComponentsType,
+
   displayedInputLinkValueRef: RefObject<HTMLInputElement>, 
   evt: MouseEvent, start_point: {current: number[];},
   legend_clicked: MutableRefObject<boolean>
