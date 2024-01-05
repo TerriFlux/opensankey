@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import i18next from './traduction'
 
-import { SankeyAppBuilderTypes, SankeyData, applicationDrawType, processFunctionsType, showMenuComponentsType } from './types/Types'
+import { SankeyAppBuilderTypes, SankeyData, applicationDrawType, processFunctionsType } from './types/Types'
 import { Menu, OpenSankeyMenus, MenuDraggable,OpenSankeySaveButton,LastCheckpointTime } from './lib/SankeyMenuTop'
 import { SankeySettingsEditionElementTags } from './lib/SankeyMenuConfigurationTags'
 import { OpenSankeyMenuConfigurationLayout } from './lib/SankeyMenuConfigurationLayout'
@@ -41,7 +41,8 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   uiElementsRef,
   applicationData,
   contextMenu,
-  showNavRef,
+  // ref_setter_show_menu_config,
+  showMenuComponents,
   displayedInputLinkValueRef,
   exemple_menu,
   formations_menu,
@@ -89,39 +90,9 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   const userScaleRef = useRef(applicationData.data.user_scale)
   userScaleRef.current = applicationData.data.user_scale
 
-  const show_menu_node_apparence=useState(false)
-  const show_menu_node_io=useState(false)
-  const show_menu_link_data=useState(false)
-  const show_menu_link_appearence=useState(false)
-  const show_menu_layout=useState(false)
-  const show_modal_welcome=useState(true)
-  const show_modale_tuto=useState(false)
-  const show_modale_support=useState(false)
-  const show_excel_dialog=useState(false)
-  const show_save_json=useState(false)
-  const show_apply_layout= useState(false)
-  const ShowPreference = useState(false)
-  const show_modalTemplate= useState(false)
-  const show_welcome=useState(false)
-  const show_load=useState(false)
+ 
   
-  const showMenuComponents : showMenuComponentsType = {
-    show_menu_node_apparence : show_menu_node_apparence,
-    show_menu_node_io : show_menu_node_io,
-    show_menu_link_data : show_menu_link_data,
-    show_menu_link_appearence : show_menu_link_appearence,
-    show_menu_layout : show_menu_layout,
-    show_modal_welcome : show_modal_welcome,
-    show_modale_tuto : show_modale_tuto,
-    show_modale_support : show_modale_support,
-    show_excel_dialog : show_excel_dialog,
-    show_save_json : show_save_json,
-    show_apply_layout :  show_apply_layout,
-    ShowPreference  : ShowPreference,
-    show_modalTemplate : show_modalTemplate,
-    show_welcome : show_welcome,
-    show_load : show_load
-  }
+  
 
   const launch = (path:string) => {
     setPath(path)
@@ -183,8 +154,8 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
   // Called when we press escape
   const closeAllMenu=()=>{
     //show_nav.current = false
-    showNavRef.current![0][1](false)
-    //showNavRef.current!.hidden = show_nav.current
+    if(showMenuComponents.ref_setter_show_menu_config?.current )showMenuComponents.ref_setter_show_menu_config.current(false)
+    //ref_setter_show_menu_config.current!.hidden = show_nav.current
     showMenuComponents.show_menu_node_apparence[1](false)
     showMenuComponents.show_menu_node_io[1](false)
     showMenuComponents.show_menu_link_data[1](false)
@@ -308,7 +279,8 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     elementsSelected,
     applicationContext,
     uiElementsRef,
-    showNavRef,
+    // ref_setter_show_menu_config,
+    showMenuComponents,
     nav_item_active, set_nav_item_active,
     sub_nav_item_active, set_sub_nav_item_active,
     set_style_to_apply,
@@ -446,7 +418,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     t,applicationData.data,applicationData.set_data,mode_selection,userScaleRef,filter,func_current_filter,
     detail_level,'',elementsSelected.first_selected_node,size_of_draw_zone,
     setDiagram,
-    showMenuComponents.show_modal_welcome[1],set_never_see_again,convert_data,
+    showMenuComponents,set_never_see_again,convert_data,
     maximum_flux, minimum_flux,set_minimum_flux,applicationData.get_default_data
   )
 
@@ -597,7 +569,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
           showMenuComponents={showMenuComponents}
           applicationDraw={applicationDraw}
           nav_item_active={nav_item_active}
-          showNavRef={showNavRef}
+          // ref_setter_show_menu_config={ref_setter_show_menu_config}
           mode_selection={mode_selection}
           example_menu={<></>}
           style_to_apply={style_to_apply}
