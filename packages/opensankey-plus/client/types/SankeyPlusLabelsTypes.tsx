@@ -7,7 +7,7 @@ import * as d3 from 'd3'
 
 export type PlusDrawLabelsFType = (
   applicaTionData:SankeyPlusApplicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
   contextMenu:contextMenuType,
   set_editor_content_fo_zdt:(s:string)=>void,
@@ -18,8 +18,8 @@ export type PlusDrawLabelsFType = (
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
-  // set_show_context_zdt:(b:boolean)=>void
-) => void
+
+  ) => void
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
 export type eventLabelClickFType=(

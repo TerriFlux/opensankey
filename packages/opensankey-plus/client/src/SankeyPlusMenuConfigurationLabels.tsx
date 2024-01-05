@@ -636,7 +636,7 @@ export const context_zdt : context_zdtFType =(
   t:TFunction,
   set_show_menu_zdt:(b:boolean)=>void
 )=>{
-  // const {data,set_data}=applicationData
+  // const {data,set_data}=dict_variable_application_data
   const {pointer_pos,contextualised_zdt}=(contextMenu as SankeyPlusContextMenuType)
   const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<SankeyPlusLabel>()
   contextualised_zdt.current=set_zdt_to_contextualise

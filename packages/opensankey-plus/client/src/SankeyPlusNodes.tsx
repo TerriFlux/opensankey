@@ -51,8 +51,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   radio_selected:string,
   is_activated:boolean,
   menu_for_modal=false,
-  // set_show_modal_import_icons:(b:boolean)=>void,
-  showMenuComponents
+  // set_ref_setter_show_modal_import_icons:(b:boolean)=>void,
+  dict_hook_ref_setter_show_dialog_components
 )=> {
 
   const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
@@ -122,7 +122,7 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
             className='btn_menu_config'
             disabled={!is_activated}
             variant={'outline-primary'}
-            onClick={() => { showMenuComponents.show_modal_import_icons.current!(true) }}>{<FontAwesomeIcon icon={faIcons} />}</Button>
+            onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_import_icons.current!(true) }}>{<FontAwesomeIcon icon={faIcons} />}</Button>
         </InputGroup>
       </OverlayTrigger>
       <OverlayTrigger
@@ -474,8 +474,8 @@ const calcPath = (
 }
 
 const node_mouse_click=(
-  applicationData:SankeyPlusApplicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
   set_animating:(b:boolean)=>void,
   event:React.MouseEvent<HTMLButtonElement>,
@@ -484,7 +484,7 @@ const node_mouse_click=(
   accept_simple_click:{current:boolean},
   GetLinkValue:GetLinkValueFuncType
 )=>{
-  const {data,display_links,display_nodes}=applicationData
+  const {data,display_links,display_nodes}=dict_variable_application_data
 
   const sankeyTooltip=d3.select('.sankey-tooltip')
   const data_plus =data as SankeyPlusData
@@ -528,7 +528,7 @@ const node_mouse_click=(
       window.open(n.hyperlink)
     }
   }else{
-    SimpleGNodeClick(applicationData,uiElementsRef,elementsSelected,event,d,mode_selection,accept_simple_click)
+    SimpleGNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,mode_selection,accept_simple_click)
 
   }
 }
@@ -634,8 +634,8 @@ const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyN
 }
 
 export const PlusNodeClickEvent : PlusNodeClickEventFType =(
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   uiElementsRef,
   set_animating:(_:boolean)=>void,
   mode_selection:{current:string},
@@ -646,7 +646,7 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
       node_mouse_click(
-        applicationData,elementsSelected,uiElementsRef,
+        dict_variable_application_data,dict_variable_elements_selected,uiElementsRef,
         set_animating,
         event,
         (d as SankeyPlusNode),
@@ -821,10 +821,10 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
 
 export const ContextNodeIcon : ContextNodeIconFType = (
   contextMenu,
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   t:TFunction
 )=>{
-  const {show_menu_node_icon}=showMenuComponents
+  const {show_menu_node_icon}=dict_hook_ref_setter_show_dialog_components
   const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
   return <Button onClick={()=>{
     show_menu_node_icon[1](true)
@@ -875,7 +875,7 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
 
 export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   applicaTionData,
-  elementsSelected,
+  dict_variable_elements_selected,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
@@ -893,7 +893,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
 
   if(mode_selection.current==='s' && window.SankeyToolsStatic!==true){
     (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(
-      SankeyPlusDragGNodeEvent(applicaTionData,elementsSelected,
+      SankeyPlusDragGNodeEvent(applicaTionData,dict_variable_elements_selected,
         mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight
       )
     )
@@ -924,8 +924,8 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
 }
 
 const SankeyPlusDragGNodeEvent = (
-  applicationData:SankeyPlusApplicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   LinkText:LinkTextFuncType,
@@ -934,7 +934,7 @@ const SankeyPlusDragGNodeEvent = (
   inv_scale:(t:number)=>number,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=>{
-  const {data,set_data}=applicationData
+  const {data,set_data}=dict_variable_application_data
   const node_visible=[] as string[]
   return d3.drag<SVGGElement, SankeyPlusNode>()
     .subject(Object)
@@ -948,7 +948,7 @@ const SankeyPlusDragGNodeEvent = (
         if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else {
-          PlusDragNodes(applicationData,elementsSelected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
+          PlusDragNodes(dict_variable_application_data,dict_variable_elements_selected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
           )
         }
       }
@@ -960,8 +960,8 @@ const SankeyPlusDragGNodeEvent = (
 }
 
 const PlusDragNodes = (
-  applicationData:SankeyPlusApplicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   node:SankeyPlusNode,
   event: { dx: number; dy: number,x:number,y:number },
   LinkText:LinkTextFuncType,
@@ -973,8 +973,8 @@ const PlusDragNodes = (
   node_visible:string[]
 ) => {
   RemoveAnimate()
-  const {data,}=applicationData
-  const {multi_selected_nodes,multi_selected_label}=elementsSelected
+  const {data,}=dict_variable_application_data
+  const {multi_selected_nodes,multi_selected_label}=dict_variable_elements_selected
   // Cherche si des element seront hors zone si on les drag
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
   const out_of_zone_item=PlusReturnOutOfBoundElements(node,data,event,multi_selected_nodes,node_visible)
@@ -984,14 +984,14 @@ const PlusDragNodes = (
   }
 
   PlusDragElements(
-    applicationData,elementsSelected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
+    dict_variable_application_data,dict_variable_elements_selected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
   )
 
 }
 
 export const PlusDragElements : PlusDragElementsFType = (
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   dragged:SankeyPlusNode|SankeyPlusLabel,
   event:{ dx: number; dy: number,x:number,y:number },
   LinkText:LinkTextFuncType,
@@ -1001,11 +1001,11 @@ export const PlusDragElements : PlusDragElementsFType = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number
 )=>{
-  const {multi_selected_label}=elementsSelected
+  const {multi_selected_label}=dict_variable_elements_selected
   // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
   // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
   DragElements(
-    dragged as SankeyNode,applicationData,elementsSelected,event,LinkText,GetSankeyMinWidthAndHeight,
+    dragged as SankeyNode,dict_variable_application_data,dict_variable_elements_selected,event,LinkText,GetSankeyMinWidthAndHeight,
     GetLinkValue,DrawArrows,scale,inv_scale
   )
 

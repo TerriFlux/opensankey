@@ -82,17 +82,17 @@ export const getSetDiagramFunc : getSetDiagramFType = (
   }
 }
 
-export const view_toast : view_toastFType =(showMenuComponents)=> {
+export const view_toast : view_toastFType =(dict_hook_ref_setter_show_dialog_components)=> {
   const show_toast=useState(false)
-  showMenuComponents.show_toast_new_view.current=show_toast[1]
+  dict_hook_ref_setter_show_dialog_components.show_toast_new_view.current=show_toast[1]
   return (<Toast show={show_toast[0]} bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
     <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Enregistrement</small> </Toast.Header>
     <Toast.Body>Vue sauvegardée</Toast.Body>
   </Toast>)}
 
-export const view_toast_update_view : view_toast_update_viewFType = (showMenuComponents)=> {
+export const view_toast_update_view : view_toast_update_viewFType = (dict_hook_ref_setter_show_dialog_components)=> {
   const show_toast=useState(false)
-  showMenuComponents.show_toast_update_view.current=show_toast[1]
+  dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current=show_toast[1]
 
   return(<Toast show={show_toast[0]} bg='info' className='toastView' style={{ 'position': 'absolute', 'marginTop': window.innerHeight/4,'marginLeft': window.innerWidth/2, 'zIndex': 100 }}>
     <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Mise à jour</small> </Toast.Header>
@@ -217,12 +217,12 @@ export const keyHandler : keyHandlerFType = (
   view:string,
   set_view:(_:string)=>void,
   multi_selected_labels:{current:SankeyPlusLabel[]},
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   // set_show_toast_updated_view:(_:boolean)=>void,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
 ) => {
-  const {show_toast_new_view}=showMenuComponents
+  const {show_toast_new_view}=dict_hook_ref_setter_show_dialog_components
   // Applique le control de touche issu de opensankey (pour eviter de copier/coller et avoir de potentiel différence)
   // Apply keyHandling from opensankey (to avoid copy/paste that can generate error)
   // OpenSankey_keyHandler(
@@ -320,9 +320,9 @@ export const keyHandler : keyHandlerFType = (
       localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
 
       // set_data({...data})
-      showMenuComponents.show_toast_update_view.current!(true)
+      dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(true)
       setTimeout(function () {
-        showMenuComponents.show_toast_update_view.current!(false)
+        dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(false)
       }, 3000)
     }else{
       // Save current data (wich is master_data)
@@ -905,23 +905,23 @@ declare const window: Window &
 export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   view:string,
   set_view:(s:string)=>void,
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
   _load_json_catalog:{current:HTMLInputElement},
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   value_editor_name_view:string,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
   set_select_or_edit:(s:'select'|'edit')=>void,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
 )=>{
-  const {data,set_data,master_data,set_master_data,get_default_data}=applicationData as SankeyPlusApplicationDataType
-  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=elementsSelected
-  const {show_modal_transparent_view_attr}=showMenuComponents
+  const {data,set_data,master_data,set_master_data,get_default_data}=dict_variable_application_data as SankeyPlusApplicationDataType
+  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=dict_variable_elements_selected
+  const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const m_d=master_data?master_data:data
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
   const target_popover_modify_view_name=useRef(null)
@@ -992,7 +992,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         disabled={!connected}
         onClick={
           () => {
-            show_modal_transparent_view_attr.current![1](true)
+            ref_setter_show_modal_transparent_view_attr.current![1](true)
           }
         }
       >
@@ -1602,7 +1602,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //   _load_json:{current:HTMLInputElement},
 //   _load_json_catalog:{current:HTMLInputElement},
 
-//   set_show_modal_transparent_view_attr:(b:boolean)=>void,
+//   set_ref_setter_show_modal_transparent_view_attr:(b:boolean)=>void,
 //   show_modal_selection_link_ref_in_unitary_sankey:boolean,
 //   set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
 //   value_editor_name_view:string,
@@ -1617,7 +1617,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //     master_data,set_master_data,
 //     t,
 //     connected,set_view_not_saved,
-//     _load_json,_load_json_catalog,set_show_modal_transparent_view_attr,
+//     _load_json,_load_json_catalog,set_ref_setter_show_modal_transparent_view_attr,
 //     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,value_editor_name_view,set_value_editor_name_view,
 //     select_or_edit,set_select_or_edit,convert_data
 //   )
@@ -1629,18 +1629,18 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 // }
 
 export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
-  showMenuComponents,
-  applicationData,
+  dict_hook_ref_setter_show_dialog_components,
+  dict_variable_application_data,
   current_view:ViewType,
   t:TFunction
 )=>{
-  const {data,set_data,master_data,set_master_data}=applicationData as SankeyPlusApplicationDataType
-  const {show_modal_transparent_view_attr}=showMenuComponents
+  const {data,set_data,master_data,set_master_data}=dict_variable_application_data as SankeyPlusApplicationDataType
+  const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const [show_modal,set_show_modal]=useState(false)
-  // if (show_modal_transparent_view_attr.current!.length == 0) {
-  show_modal_transparent_view_attr.current=[show_modal,set_show_modal]
+  // if (ref_setter_show_modal_transparent_view_attr.current!.length == 0) {
+  ref_setter_show_modal_transparent_view_attr.current=[show_modal,set_show_modal]
   // }
-  return master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && applicationData.data!==undefined ? <Modal size='xl' show={show_modal} onHide={()=>{
+  return master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && dict_variable_application_data.data!==undefined ? <Modal size='xl' show={show_modal} onHide={()=>{
     RecomputeViews(data,data,set_data as (d: SankeyPlusData | undefined) => void)
     set_show_modal(false)}}>
     <Modal.Header closeButton>{t('view.setTransparentAttr')}</Modal.Header>

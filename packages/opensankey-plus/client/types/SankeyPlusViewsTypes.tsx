@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import { PlusElementsSelectedType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
-import { SankeyLinkValueDict, TagsGroup, applicationDataType } from 'open-sankey/src/types/Types'
+import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { setDiagramFuncType } from 'open-sankey/src/types/SankeyMenuBannerTypes'
 
 export type getSetDiagramFType = (
@@ -9,9 +9,9 @@ export type getSetDiagramFType = (
   DefaultSankeyData: ()=>SankeyPlusData
 ) => setDiagramFuncType
 
-export type view_toastFType = (showMenuComponents:SankeyPlusShowMenuComponentsType)=>JSX.Element
+export type view_toastFType = (dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType)=>JSX.Element
 
-export type view_toast_update_viewFType = (showMenuComponents:SankeyPlusShowMenuComponentsType)=>JSX.Element
+export type view_toast_update_viewFType = (dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType)=>JSX.Element
 
 export type setValueFType = (
   dataTags: TagsGroup[],
@@ -46,7 +46,7 @@ export type keyHandlerFType = (
   view:string,
   set_view:(_:string)=>void,
   multi_selected_labels:{current:SankeyPlusLabel[]},
-  showMenuComponents:SankeyPlusShowMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   // set_show_toast_updated_view:(_:boolean)=>void,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
@@ -116,14 +116,14 @@ export type CheckCurrentViewSavedFType = (
 export type SankeyPlusBannerViewFType = (
   view:string,
   set_view:(s:string)=>void,
-  applicationData:applicationDataType,
-  elementsSelected:PlusElementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
   _load_json_catalog:{current:HTMLInputElement},
-  showMenuComponents:SankeyPlusShowMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   value_editor_name_view:string,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
@@ -149,8 +149,8 @@ export type modal_view_not_savedFType = (view_not_saved:string,set_view_not_save
 )=> JSX.Element
 
 export type modal_transparent_view_attrFType = (
-  showMenuComponents:SankeyPlusShowMenuComponentsType,
-  applicationData:applicationDataType,
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
+  dict_variable_application_data:dict_variable_application_dataType,
   current_view:ViewType,
   t:TFunction
 )=> JSX.Element

@@ -1,9 +1,9 @@
 import {
   SankeyData, SankeyLink, SankeyNode, 
   SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,
-  showMenuComponentsType,
-  applicationDataType,
-  elementsSelectedType,
+  dict_hook_ref_setter_show_dialog_componentsType,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType,
   contextMenuType
 } from 'open-sankey/src/types/Types'
 import { Dispatch, SetStateAction, MutableRefObject } from 'react'
@@ -95,16 +95,16 @@ export interface differenceType{
     item:{kind:string,lhs?:object}
   } 
 
-export interface SankeyPlusShowMenuComponentsType extends showMenuComponentsType {
+export interface SankeyPlusShowMenuComponentsType extends dict_hook_ref_setter_show_dialog_componentsType {
   show_menu_node_icon : [boolean,(_:boolean)=>void],
-  show_modal_import_icons : MutableRefObject<Dispatch<SetStateAction<boolean>>|undefined>,
+  ref_setter_show_modal_import_icons : MutableRefObject<Dispatch<SetStateAction<boolean>>|undefined>,
   show_menu_zdt : [boolean,(_:boolean)=>void],
-  show_modal_transparent_view_attr : MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]| undefined>
+  ref_setter_show_modal_transparent_view_attr : MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]| undefined>
   show_toast_new_view:MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   show_toast_update_view:MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
 }
 
-export interface SankeyPlusApplicationDataType extends applicationDataType {
+export interface SankeyPlusApplicationDataType extends dict_variable_application_dataType {
   data : SankeyPlusData,
   display_nodes : { [idNode: string]: SankeyPlusNode; }
   display_links : { [idLink: string]: SankeyPlusLink; }
@@ -115,7 +115,7 @@ export interface SankeyPlusApplicationDataType extends applicationDataType {
   get_default_data : () => SankeyPlusData
 }
 
-export interface PlusElementsSelectedType extends elementsSelectedType{
+export interface PlusElementsSelectedType extends dict_variable_elements_selectedType{
   multi_selected_nodes:{current:SankeyPlusNode[]}
   multi_selected_links:{current:SankeyPlusLink[]}
   multi_selected_label:{current:SankeyPlusLabel[]}
