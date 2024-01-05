@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
-import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, ViewType } from './Types'
-import { SankeyLinkValueDict, TagsGroup } from 'open-sankey/src/types/Types'
+import { PlusElementsSelectedType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
+import { SankeyLinkValueDict, TagsGroup, applicationDataType } from 'open-sankey/src/types/Types'
 import { setDiagramFuncType } from 'open-sankey/src/types/SankeyMenuBannerTypes'
 
 export type getSetDiagramFType = (
@@ -114,26 +114,21 @@ export type CheckCurrentViewSavedFType = (
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export type SankeyPlusBannerViewFType = (
-  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData | undefined,
-  set_master_data:(d:SankeyPlusData|undefined)=>void,
+  applicationData:applicationDataType,
+  elementsSelected:PlusElementsSelectedType,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
   _load_json_catalog:{current:HTMLInputElement},
-  set_show_modal_transparent_view_attr:(b:boolean)=>void,
+  showMenuComponents:SankeyPlusShowMenuComponentsType,
   value_editor_name_view:string,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
   set_select_or_edit:(s:'select'|'edit')=>void,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
-  DefaultSankeyData: ()=>SankeyPlusData,
 )=> JSX.Element
 
 export type SankeyPlusMenuPreferenceViewFType = (
@@ -153,12 +148,9 @@ export type modal_view_not_savedFType = (view_not_saved:string,set_view_not_save
   view:string
 )=> JSX.Element
 
-export type modal_transparent_view_attrFType = (show_modal_transparent_view_attr:boolean,
-  set_show_modal_transparent_view_attr:(b:boolean)=>void,
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  master_data:SankeyPlusData| undefined,
-  set_master_data:(d:SankeyPlusData| undefined)=>void,
+export type modal_transparent_view_attrFType = (
+  showMenuComponents:SankeyPlusShowMenuComponentsType,
+  applicationData:applicationDataType,
   current_view:ViewType,
   t:TFunction
 )=> JSX.Element

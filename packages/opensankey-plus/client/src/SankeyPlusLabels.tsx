@@ -2,7 +2,7 @@ import React from 'react'
 import * as d3 from 'd3'
 
 import { SankeyData } from 'open-sankey/src/types/Types'
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink, PlusElementsSelectedType, SankeyPlusApplicationDataType} from '../types/Types'
+import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import {
   PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
@@ -26,7 +26,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   elementsSelected,
   uiElementsRef,
   contextMenu,
-
+  set_editor_content_fo_zdt,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -34,7 +34,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
-  set_show_context_zdt:(b:boolean)=>void
+  // set_show_context_zdt:(b:boolean)=>void
 ) => {
   const {data,set_data}=applicaTionData
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}=elementsSelected
@@ -80,9 +80,11 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
             multi_selected_label.current.forEach(nn=>deselect_visualy_zdt(nn))
             select_visualy_zdt(d)
             multi_selected_label.current=[d]
+            set_editor_content_fo_zdt(d.content);
+
+            (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
             
           }
-          set_show_context_zdt(true)
         }
         
         

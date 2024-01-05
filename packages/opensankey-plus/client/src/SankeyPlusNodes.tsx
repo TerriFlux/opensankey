@@ -8,7 +8,7 @@ import * as d3 from 'd3'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
-import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType,} from '../types/Types'
+import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType} from '../types/Types'
 import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import {RemoveAnimate,
   DrawArrows,
@@ -51,8 +51,10 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   radio_selected:string,
   is_activated:boolean,
   menu_for_modal=false,
-  set_show_modal_import_icons:(b:boolean)=>void
+  // set_show_modal_import_icons:(b:boolean)=>void,
+  showMenuComponents
 )=> {
+
   const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
   const data_plus=data as SankeyPlusData
   data_plus.icon_catalog=(data_plus.icon_catalog)?data_plus.icon_catalog:{}
@@ -120,7 +122,7 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
             className='btn_menu_config'
             disabled={!is_activated}
             variant={'outline-primary'}
-            onClick={() => { set_show_modal_import_icons(true) }}>{<FontAwesomeIcon icon={faIcons} />}</Button>
+            onClick={() => { showMenuComponents.show_modal_import_icons.current!(true) }}>{<FontAwesomeIcon icon={faIcons} />}</Button>
         </InputGroup>
       </OverlayTrigger>
       <OverlayTrigger
@@ -818,14 +820,15 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
 
 
 export const ContextNodeIcon : ContextNodeIconFType = (
-  contextualised_node,
-  set_show_menu_node_icon:(_:boolean)=>void,
+  contextMenu,
+  showMenuComponents,
   t:TFunction
 )=>{
+  const {show_menu_node_icon}=showMenuComponents
   const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
   return <Button onClick={()=>{
-    set_show_menu_node_icon(true)
-    contextualised_node.current![0][1](undefined)
+    show_menu_node_icon[1](true)
+    contextMenu.ref_setter_contextualised_node.current!(undefined)
   }} variant='light'>{t('Noeud.icon.icon')} {icon_open_modal}</Button>
 
 }

@@ -9,7 +9,7 @@ import { Row,
   Popover,
   ButtonGroup,
   Badge} from 'react-bootstrap'
-import {  SankeyPlusData,SankeyPlusLabel} from '../types/Types'
+import {  SankeyPlusContextMenuType, SankeyPlusData,SankeyPlusLabel} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
@@ -631,23 +631,26 @@ export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfiguration
 }
 
 
-export const context_zdt : context_zdtFType =(show_context_zdt:boolean,set_show_context_zdt:(b:boolean)=>void,
-  pointer_pos:{current:number[]},
+export const context_zdt : context_zdtFType =(
+  contextMenu,
   t:TFunction,
   set_show_menu_zdt:(b:boolean)=>void
 )=>{
-
+  // const {data,set_data}=applicationData
+  const {pointer_pos,contextualised_zdt}=(contextMenu as SankeyPlusContextMenuType)
+  const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<SankeyPlusLabel>()
+  contextualised_zdt.current=set_zdt_to_contextualise
   let style_c_zdd='0px 0px auto auto'
-  if(show_context_zdt){
+  if(zdt_to_contextualise){
     style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
 
   const button_open_layout=<Button onClick={()=>{
     set_show_menu_zdt(true)
-    set_show_context_zdt(false)
+    set_zdt_to_contextualise(undefined)
 
   }} variant='light'>{t('Menu.LL')} {icon_open_modal}</Button>
-  return show_context_zdt?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
+  return zdt_to_contextualise?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
         {button_open_layout}

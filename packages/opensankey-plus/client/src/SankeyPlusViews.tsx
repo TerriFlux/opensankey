@@ -38,7 +38,8 @@ import { SankeyPlusData,
   SankeyPlusLabel,
   differenceType,
   DiffType,
-  ViewType } from '../types/Types'
+  ViewType, 
+  SankeyPlusApplicationDataType} from '../types/Types'
 import {
   updateLayoutOSTyped,
   AdjustSankeyZone } from './import/OpenSankey'
@@ -894,28 +895,25 @@ declare const window: Window &
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
-  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   view:string,
   set_view:(s:string)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData| undefined,
-  set_master_data:(d:SankeyPlusData| undefined)=>void,
+  applicationData,
+  elementsSelected,
   t:TFunction,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
   _load_json_catalog:{current:HTMLInputElement},
-  set_show_modal_transparent_view_attr:(b:boolean)=>void,
+  showMenuComponents,
   value_editor_name_view:string,
   set_value_editor_name_view:(s:string)=>void,
   select_or_edit:'select'|'edit',
   set_select_or_edit:(s:'select'|'edit')=>void,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
-  DefaultSankeyData: ()=>SankeyPlusData,
 )=>{
-
+  const {data,set_data,master_data,set_master_data,get_default_data}=applicationData as SankeyPlusApplicationDataType
+  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=elementsSelected
+  const {show_modal_transparent_view_attr}=showMenuComponents
   const m_d=master_data?master_data:data
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
   const target_popover_modify_view_name=useRef(null)
@@ -986,7 +984,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         disabled={!connected}
         onClick={
           () => {
-            set_show_modal_transparent_view_attr(true)
+            show_modal_transparent_view_attr.current![1](true)
           }
         }
       >
@@ -1269,15 +1267,15 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
-      master_data=(master_data)?master_data:JSON.parse(JSON.stringify(data))
-      master_data!.is_catalog=true
-      master_data!.nodeTags={}
-      master_data!.fluxTags={}
-      master_data!.dataTags={}
-      master_data!.nodes={}
-      master_data!.links={}
-      master_data!.labels={}
-      master_data!.linkZIndex=[]
+      const cpy_master_data=(master_data)?master_data:JSON.parse(JSON.stringify(data))
+      cpy_master_data!.is_catalog=true
+      cpy_master_data!.nodeTags={}
+      cpy_master_data!.fluxTags={}
+      cpy_master_data!.dataTags={}
+      cpy_master_data!.nodes={}
+      cpy_master_data!.links={}
+      cpy_master_data!.labels={}
+      cpy_master_data!.linkZIndex=[]
 
       // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
       for(const i in files){
@@ -1287,20 +1285,20 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             const result = String((e.target as FileReader).result)
             const result_data = JSON.parse(result)
             const imported_data=JSON.parse(JSON.stringify(result_data)) as SankeyPlusData
-            convert_data(imported_data,DefaultSankeyData)
+            convert_data(imported_data,get_default_data)
             let new_ind = 'view_' + String(new Date().getTime())
             let first_data={} as SankeyPlusData
             if(imported_data.view && imported_data.view.length>0){
               // Import all view from the coming file
               imported_data.view.forEach((v,i2)=>{
                 const view_from_imported_data=GetDataFromView(imported_data,v.id) as SankeyPlusData
-                convert_data(view_from_imported_data,DefaultSankeyData)
+                convert_data(view_from_imported_data,get_default_data)
 
                 if(i2===0 && i==='0'){
                   new_ind=v.id
                   first_data=view_from_imported_data
                 }
-                master_data!.view.push({
+                cpy_master_data!.view.push({
                   id: v.id,
                   view_data: view_from_imported_data,
                   nom: (files[i].name).replace('.json','')+' '+v.nom,
@@ -1312,7 +1310,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
               // Import only master data  when it doesn't have view
               imported_data.view=[]
               first_data=imported_data
-              master_data!.view.push({
+              cpy_master_data!.view.push({
                 id: new_ind,
                 view_data: imported_data,
                 nom: (files[i].name).replace('.json',''),
@@ -1323,10 +1321,10 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             if(i==='0'){
 
               set_view(new_ind)
-              master_data!.current_view=new_ind
+              cpy_master_data!.current_view=new_ind
               set_data({...first_data})
             }
-            set_master_data({...master_data!})
+            set_master_data({...cpy_master_data!})
 
           }
         })()
@@ -1622,18 +1620,21 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 
 // }
 
-export const modal_transparent_view_attr : modal_transparent_view_attrFType =(show_modal_transparent_view_attr:boolean,
-  set_show_modal_transparent_view_attr:(b:boolean)=>void,
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  master_data:SankeyPlusData|undefined,
-  set_master_data:(d:SankeyPlusData|undefined)=>void,
+export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
+  showMenuComponents,
+  applicationData,
   current_view:ViewType,
   t:TFunction
 )=>{
-  return <Modal size='xl' show={show_modal_transparent_view_attr} onHide={()=>{
+  const {data,set_data,master_data,set_master_data}=applicationData as SankeyPlusApplicationDataType
+  const {show_modal_transparent_view_attr}=showMenuComponents
+  const [show_modal,set_show_modal]=useState(false)
+  // if (show_modal_transparent_view_attr.current!.length == 0) {
+  show_modal_transparent_view_attr.current=[show_modal,set_show_modal]
+  // }
+  return master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && applicationData.data!==undefined ? <Modal size='xl' show={show_modal} onHide={()=>{
     RecomputeViews(data,data,set_data as (d: SankeyPlusData | undefined) => void)
-    set_show_modal_transparent_view_attr(false)}}>
+    set_show_modal(false)}}>
     <Modal.Header closeButton>{t('view.setTransparentAttr')}</Modal.Header>
     <Modal.Body>
       <InputGroup>
@@ -1914,7 +1915,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(sh
       // updateLayout(data,master_data,current_view.heredited_attr_from_master)
       set_data({...data})
     }}>{t('view.updateViewWithMasterVar')}</Button></Modal.Footer>
-  </Modal>
+  </Modal> : <></>
 }
 
 export const MenuEnregistrerView : MenuEnregistrerViewFType = (

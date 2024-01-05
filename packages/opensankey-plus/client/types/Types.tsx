@@ -3,8 +3,10 @@ import {
   SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,
   showMenuComponentsType,
   applicationDataType,
-  elementsSelectedType
+  elementsSelectedType,
+  contextMenuType
 } from 'open-sankey/src/types/Types'
+import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 
 export type DiffType={
     diff:{
@@ -95,9 +97,9 @@ export interface differenceType{
 
 export interface SankeyPlusShowMenuComponentsType extends showMenuComponentsType {
   show_menu_node_icon : [boolean,(_:boolean)=>void],
-  show_modal_import_icons : [boolean,(_:boolean)=>void],
+  show_modal_import_icons : MutableRefObject<Dispatch<SetStateAction<boolean>>|undefined>,
   show_menu_zdt : [boolean,(_:boolean)=>void],
-  show_modal_transparent_view_attr : [boolean,(_:boolean)=>void]
+  show_modal_transparent_view_attr : MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]| undefined>
 }
 
 export interface SankeyPlusApplicationDataType extends applicationDataType {
@@ -115,4 +117,10 @@ export interface PlusElementsSelectedType extends elementsSelectedType{
   multi_selected_nodes:{current:SankeyPlusNode[]}
   multi_selected_links:{current:SankeyPlusLink[]}
   multi_selected_label:{current:SankeyPlusLabel[]}
+}
+
+export interface SankeyPlusContextMenuType extends contextMenuType {
+  contextualised_zdt : React.MutableRefObject<React.Dispatch<React.SetStateAction<SankeyPlusLabel|undefined>>|undefined>
+  show_toast_limit_node : boolean,
+  set_show_toast_limit_node : (_:boolean)=>void 
 }

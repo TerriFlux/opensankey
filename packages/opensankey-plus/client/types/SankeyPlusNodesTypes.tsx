@@ -1,11 +1,10 @@
 import { TFunction } from 'i18next'
-import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode } from './Types'
+import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
-import { applicationDataType, uiElementsRefType } from 'open-sankey/src/types/Types'
-import { Dispatch, RefObject, SetStateAction } from 'react'
-import { SankeyNode } from 'open-sankey/src/types/Types'
+import { applicationDataType, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
+
 
 export type SankeyPlusNodeIconFType = (
   t:TFunction,
@@ -15,7 +14,7 @@ export type SankeyPlusNodeIconFType = (
   radio_selected:string,
   is_activated:boolean,
   menu_for_modal:boolean,
-  set_show_modal_import_icons:(b:boolean)=>void
+  showMenuComponents:SankeyPlusShowMenuComponentsType
 )=> JSX.Element
 
 export type SankeyPlusHyperLinkFType=( 
@@ -54,8 +53,8 @@ export type SankeyPlusDrawNodesIconFType = (
 ) => void
 
 export type ContextNodeIconFType = (
-  contextualised_node : RefObject<[SankeyNode|undefined, Dispatch<SetStateAction<SankeyNode|undefined>>][]>,
-  set_show_menu_node_icon:(_:boolean)=>void,
+  contextMenu:contextMenuType,
+  showMenuComponents:SankeyPlusShowMenuComponentsType,
   t:TFunction
 )=> JSX.Element
 

@@ -10,6 +10,7 @@ export type PlusDrawLabelsFType = (
   elementsSelected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
   contextMenu:contextMenuType,
+  set_editor_content_fo_zdt:(s:string)=>void,
   GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -17,7 +18,7 @@ export type PlusDrawLabelsFType = (
   mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
-  set_show_context_zdt:(b:boolean)=>void
+  // set_show_context_zdt:(b:boolean)=>void
 ) => void
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events

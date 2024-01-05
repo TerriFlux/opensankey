@@ -1,6 +1,7 @@
 import { TFunction } from 'i18next'
-import { SankeyPlusData, SankeyPlusLabel } from './Types'
+import {  SankeyPlusData, SankeyPlusLabel } from './Types'
 import ReactQuill from 'react-quill'
+import { contextMenuType } from 'open-sankey/src/types/Types'
 
 export type SankeyPlusMenuPreferenceLabelsFType=(
   t:TFunction,
@@ -28,9 +29,7 @@ export type SankeyPlusMenuConfigurationFreeLabelsFType = (
 
 
 export type context_zdtFType=(
-  show_context_zdt:boolean,
-  set_show_context_zdt:(b:boolean)=>void,
-  pointer_pos:{current:number[]},
+  contextMenu:contextMenuType,
   t:TFunction,
   set_show_menu_zdt:(b:boolean)=>void
 ) => JSX.Element
