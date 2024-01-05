@@ -82,15 +82,22 @@ export const getSetDiagramFunc : getSetDiagramFType = (
   }
 }
 
-export const view_toast : view_toastFType = (<Toast bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
-  <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Enregistrement</small> </Toast.Header>
-  <Toast.Body>Vue sauvegardée</Toast.Body>
-</Toast>)
+export const view_toast : view_toastFType =(showMenuComponents)=> {
+  const show_toast=useState(false)
+  showMenuComponents.show_toast_new_view.current=show_toast[1]
+  return (<Toast show={show_toast[0]} bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
+    <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Enregistrement</small> </Toast.Header>
+    <Toast.Body>Vue sauvegardée</Toast.Body>
+  </Toast>)}
 
-export const view_toast_update_view : view_toast_update_viewFType = (<Toast bg='info' className='toastView' style={{ 'position': 'absolute', 'marginTop': window.innerHeight/4,'marginLeft': window.innerWidth/2, 'zIndex': 100 }}>
-  <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Mise à jour</small> </Toast.Header>
-  <Toast.Body>Vue mise à jour</Toast.Body>
-</Toast>)
+export const view_toast_update_view : view_toast_update_viewFType = (showMenuComponents)=> {
+  const show_toast=useState(false)
+  showMenuComponents.show_toast_update_view.current=show_toast[1]
+
+  return(<Toast show={show_toast[0]} bg='info' className='toastView' style={{ 'position': 'absolute', 'marginTop': window.innerHeight/4,'marginLeft': window.innerWidth/2, 'zIndex': 100 }}>
+    <Toast.Header closeButton={false}><FaSave /> <small className='me-auto'>Mise à jour</small> </Toast.Header>
+    <Toast.Body>Vue mise à jour</Toast.Body>
+  </Toast>)}
 
 export const setValue : setValueFType = (
   dataTags: TagsGroup[],
@@ -210,11 +217,12 @@ export const keyHandler : keyHandlerFType = (
   view:string,
   set_view:(_:string)=>void,
   multi_selected_labels:{current:SankeyPlusLabel[]},
-  set_show_toast_new_view:(_:boolean)=>void,
-  set_show_toast_updated_view:(_:boolean)=>void,
+  showMenuComponents,
+  // set_show_toast_updated_view:(_:boolean)=>void,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
 ) => {
+  const {show_toast_new_view}=showMenuComponents
   // Applique le control de touche issu de opensankey (pour eviter de copier/coller et avoir de potentiel différence)
   // Apply keyHandling from opensankey (to avoid copy/paste that can generate error)
   // OpenSankey_keyHandler(
@@ -253,9 +261,9 @@ export const keyHandler : keyHandlerFType = (
       RecomputeViews(new_master_data,master_data,set_master_data)
       // master data is now set
       // at this stage data is a view and is equal with master data
-      set_show_toast_new_view(true)
+      show_toast_new_view.current!(true)
       setTimeout(function () {
-        set_show_toast_new_view(false)
+        show_toast_new_view.current!(false)
       }, 3000)
       set_view(new_ind)
       new_master_data.current_view=new_ind
@@ -312,9 +320,9 @@ export const keyHandler : keyHandlerFType = (
       localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
 
       // set_data({...data})
-      set_show_toast_updated_view(true)
+      showMenuComponents.show_toast_update_view.current!(true)
       setTimeout(function () {
-        set_show_toast_updated_view(false)
+        showMenuComponents.show_toast_update_view.current!(false)
       }, 3000)
     }else{
       // Save current data (wich is master_data)

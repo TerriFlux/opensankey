@@ -9,9 +9,9 @@ export type getSetDiagramFType = (
   DefaultSankeyData: ()=>SankeyPlusData
 ) => setDiagramFuncType
 
-export type view_toastFType = JSX.Element
+export type view_toastFType = (showMenuComponents:SankeyPlusShowMenuComponentsType)=>JSX.Element
 
-export type view_toast_update_viewFType = JSX.Element
+export type view_toast_update_viewFType = (showMenuComponents:SankeyPlusShowMenuComponentsType)=>JSX.Element
 
 export type setValueFType = (
   dataTags: TagsGroup[],
@@ -46,8 +46,8 @@ export type keyHandlerFType = (
   view:string,
   set_view:(_:string)=>void,
   multi_selected_labels:{current:SankeyPlusLabel[]},
-  set_show_toast_new_view:(_:boolean)=>void,
-  set_show_toast_updated_view:(_:boolean)=>void,
+  showMenuComponents:SankeyPlusShowMenuComponentsType,
+  // set_show_toast_updated_view:(_:boolean)=>void,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
 ) => void

@@ -100,6 +100,8 @@ export interface SankeyPlusShowMenuComponentsType extends showMenuComponentsType
   show_modal_import_icons : MutableRefObject<Dispatch<SetStateAction<boolean>>|undefined>,
   show_menu_zdt : [boolean,(_:boolean)=>void],
   show_modal_transparent_view_attr : MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]| undefined>
+  show_toast_new_view:MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
+  show_toast_update_view:MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
 }
 
 export interface SankeyPlusApplicationDataType extends applicationDataType {
