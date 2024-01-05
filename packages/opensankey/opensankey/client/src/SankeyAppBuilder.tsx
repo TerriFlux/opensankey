@@ -161,7 +161,7 @@ export const SankeyAppBuilder : FunctionComponent<SankeyAppBuilderTypes> = ({
     showMenuComponents.show_menu_link_data[1](false)
     showMenuComponents.show_menu_link_appearence[1](false)
     showMenuComponents.show_menu_layout[1](false)
-    showMenuComponents.show_apply_layout[1](false)
+    showMenuComponents.ref_setter_show_apply_layout.current!(false)
     contextMenu.closeAllMenuContext()
   }
 
