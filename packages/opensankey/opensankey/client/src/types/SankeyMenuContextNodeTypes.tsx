@@ -1,14 +1,14 @@
 import { 
-  agregationType, applicationContextType, applicationDataType, 
-  contextMenuType, elementsSelectedType, showMenuComponentsType 
+  agregationType, applicationContextType, dict_variable_application_dataType, 
+  contextMenuType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType 
 } from './Types'
 
 export type ContextMenuNodeFType = {
   applicationContext : applicationContextType,
-  applicationData : applicationDataType,
-  elementsSelected : elementsSelectedType,
+  dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType,
-  showMenuComponents : showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   agregation: agregationType,
   set_display_link_opacity:(_:string)=>void,
   additional_context_element_menu:JSX.Element[],

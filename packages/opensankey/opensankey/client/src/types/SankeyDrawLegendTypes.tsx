@@ -1,9 +1,9 @@
 import { MutableRefObject } from 'react'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
-import { SankeyData, applicationContextType, applicationDataType, contextMenuType, elementsSelectedType } from './Types'
+import { SankeyData, applicationContextType, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType } from './Types'
 
 export type DrawLegendFType = (
-  applicationData:applicationDataType,
+  dict_variable_application_data:dict_variable_application_dataType,
   applicationContext:applicationContextType,
   contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
@@ -16,9 +16,9 @@ export type drag_legendFType=(
 )=> (selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, ...args: unknown[]) => void
 
 export type ContextLegendTagsFType=(
-  applicationData:applicationDataType,
+  dict_variable_application_data:dict_variable_application_dataType,
   applicationContext:applicationContextType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
 )=> JSX.Element

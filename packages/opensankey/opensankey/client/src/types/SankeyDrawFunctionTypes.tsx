@@ -1,13 +1,13 @@
 import React, { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, applicationDataType, contextMenuType, display_styleType, elementsSelectedType, showMenuComponentsType, uiElementsRefType } from './Types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, dict_variable_application_dataType, contextMenuType, display_styleType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 import * as d3 from 'd3'
 
 export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => void
 
-export type ValueSelectedParameterFuncType = (applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType
+export type ValueSelectedParameterFuncType = (dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType
   ) => SankeyLinkValue
 
 export type SetNodeHeightFuncType = (
@@ -43,9 +43,9 @@ export type SvgDragMiddleMouseStartFuncType = () => void
 export type SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unknown, unknown>, data: SankeyData) => void
 
 export type SimpleGNodeClickFuncType = (
-  applicationData:applicationDataType,
+  dict_variable_application_data:dict_variable_application_dataType,
   uiElementsRef:uiElementsRefType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   event: React.MouseEvent<HTMLButtonElement>,
    d: SankeyNode,
 
@@ -106,9 +106,9 @@ export type nodeTransformFType = (
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
 export type EventNodeClickFType = (
-  applicationData:applicationDataType,
+  dict_variable_application_data:dict_variable_application_dataType,
   uiElementsRef:uiElementsRefType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
@@ -124,7 +124,7 @@ export type EventNodeContextMenuFType = (
 )=> void
 
 export type EventLinkContextMenuFType = (
-  applicationData:applicationDataType,
+  dict_variable_application_data:dict_variable_application_dataType,
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
   contextualised_link:RefObject<[SankeyLink | undefined, Dispatch<SetStateAction<SankeyLink | undefined>>][]>,
@@ -262,29 +262,29 @@ export type RepositionneSidebarFuncType = (show_nav: boolean) => void
 
 export type EventOnZoneMouseDownFuncType =(
   mode_selection: {current: string;},
-   applicationData:applicationDataType,
-   elementsSelected:elementsSelectedType,
+   dict_variable_application_data:dict_variable_application_dataType,
+   dict_variable_elements_selected:dict_variable_elements_selectedType,
    token: boolean, 
   //  set_show_toast_limit_node: (b: boolean) => void,
-    showMenuComponents:showMenuComponentsType,
+    dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
     evt2: unknown, 
     start_point: {current: number[];},
     closeAllMenuContext: () => void) => void
 
 export type EventOnZoneMouseMoveFuncType = (
   mode_selection: {current: string;},
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
    evt: MouseEvent, start_point: {current: number[];}) => void
 
 export  type EventOnZoneMouseUpFuncType = (
   mode_selection: {current: string;}, 
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   uiElementsRef:uiElementsRefType,
   token: boolean, 
   // set_show_toast_limit_node: (b: boolean) => void,
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
 
   displayedInputLinkValueRef: RefObject<HTMLInputElement>, 
   evt: MouseEvent, start_point: {current: number[];},

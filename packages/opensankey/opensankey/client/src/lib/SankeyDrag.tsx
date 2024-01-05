@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve, display_styleType, applicationDataType, elementsSelectedType } from '../types/Types'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 import {RemoveAnimate,ComputeEndPoints, GetSankeyMinWidthAndHeight,drawCurveFunction, DrawArrows,LinkStrokeWidth} from './SankeyDrawFunction'
 import {   LinkVisible,TestLinkValue,ReturnValueNode,AssignNodeLocalAttribute,ReturnValueLink,AssignLinkLocalAttribute} from './SankeyUtils'
 import { AddDragLinkZoneFType, DragGNodeEventFType, DragLinkEventFType, DragLinkIOPositionFType, dragLinkTextEventFType, dragNodeTextEventWidthBoxEventFType, DragElementsFuncType,drag_node_textFuncType, DragNodesFType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from '../types/SankeyDragTypes'
@@ -45,8 +45,8 @@ typeof globalThis & {
  * @returns
  */
 export const DragLinkEvent : DragLinkEventFType =(
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   error_msg: { text: string | undefined } | undefined,
   display_style: display_styleType,
   drawCurveFunction : SankeyDrawCurve,
@@ -58,8 +58,8 @@ export const DragLinkEvent : DragLinkEventFType =(
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType
 )=>{
-  const {data,display_nodes,display_links}=applicationData
-  const {multi_selected_links}=elementsSelected
+  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {multi_selected_links}=dict_variable_elements_selected
   return d3.drag<SVGPathElement, SankeyLink>()
     .subject(Object)
     .on('drag', function (event,l) {
@@ -70,8 +70,8 @@ export const DragLinkEvent : DragLinkEventFType =(
             d3.select(' .opensankey #path_' + link.idLink).attr('d',
               () => {
                 return drawCurveFunction.curve(
-                  applicationData,
-                  elementsSelected,
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
                   display_style,
                   data.nodeTags, link,
                   error_msg,
@@ -368,8 +368,8 @@ export const dragLinkTextEvent : dragLinkTextEventFType =(alt_key_pressed:boolea
  */
 export const DragLinkIOPosition : DragLinkIOPositionFType =(
   link:SankeyLink,
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   error_msg: { text: string | undefined } | undefined,
   drawCurveFunction : SankeyDrawCurve,
   scale:(t:number)=>number,
@@ -380,8 +380,8 @@ export const DragLinkIOPosition : DragLinkIOPositionFType =(
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType
 )=>{
-  const {data,display_nodes,display_links}=applicationData
-  const {multi_selected_links}=elementsSelected
+  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {multi_selected_links}=dict_variable_elements_selected
   return d3.drag<SVGRectElement, unknown>()
     .subject(Object)
     .on('drag', function (event) {
@@ -393,8 +393,8 @@ export const DragLinkIOPosition : DragLinkIOPositionFType =(
           (link: SankeyLink) => {
             d3.select(' .opensankey #path_' + link.idLink).attr('d',        () => {
               return drawCurveFunction.curve(
-                applicationData,
-                elementsSelected,
+                dict_variable_application_data,
+                dict_variable_elements_selected,
                 data.display_style,data.nodeTags, link,
                 error_msg,LinkText,
                 GetSankeyMinWidthAndHeight,GetLinkValue,
@@ -426,8 +426,8 @@ export const DragLinkIOPosition : DragLinkIOPositionFType =(
  */
 export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
   link:SankeyLink,
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   selected_tags,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   default_horiz_shift:number,
@@ -439,16 +439,16 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
   GetLinkValue:GetLinkValueFuncType
 
 )=>{
-  const {data,set_data}= applicationData
-  const {multi_selected_links}= elementsSelected
+  const {data,set_data}= dict_variable_application_data
+  const {multi_selected_links}= dict_variable_elements_selected
   const l_ori=ReturnValueLink(data,link,'orientation')
   return d3.drag<SVGCircleElement, unknown>()
     .subject(Object)
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && (l_ori=='hh' || l_ori=='vv')){
         const shift_handle=d3.selectAll(' .opensankey #gg_link_handle_'+link.idLink+' .handle').nodes()
-        DragHandle(link, applicationData,elementsSelected,data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
-        DragHandle(link, applicationData,elementsSelected,data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
+        DragHandle(link, dict_variable_application_data,dict_variable_elements_selected,data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
+        DragHandle(link, dict_variable_application_data,dict_variable_elements_selected,data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
       }            
     }).on('end',()=>set_data({...data}))
 }
@@ -473,8 +473,8 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
  * @returns {...}
  */
 export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   link:SankeyLink,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
@@ -489,13 +489,13 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
   GetLinkValue:GetLinkValueFuncType
 
 )=>{
-  const {data,set_data}=applicationData
-  const {multi_selected_links}=elementsSelected
+  const {data,set_data}=dict_variable_application_data
+  const {multi_selected_links}=dict_variable_elements_selected
   return d3.drag<SVGRectElement, unknown>()
     .subject(Object).on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
         DragHandle(
-          link, applicationData,elementsSelected, display_style,    selected_tags,    this, position, event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction, LinkText,GetLinkValue
+          link, dict_variable_application_data,dict_variable_elements_selected, display_style,    selected_tags,    this, position, event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction, LinkText,GetLinkValue
         )
       }
         
@@ -526,8 +526,8 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
  * @returns {{}, DrawGrid: () => void, scale: (t: number) => number, inv_scale: ...}
  */
 export const DragGNodeEvent : DragGNodeEventFType = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   mode_selection:{current:string},
   alt_key_pressed:boolean,
   LinkText:LinkTextFuncType,
@@ -535,7 +535,7 @@ export const DragGNodeEvent : DragGNodeEventFType = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
 )=>{
-  const {data,set_data}=applicationData
+  const {data,set_data}=dict_variable_application_data
   const node_visible=[] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object)
@@ -550,11 +550,11 @@ export const DragGNodeEvent : DragGNodeEventFType = (
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
-          DragNodes(node,event,applicationData,elementsSelected,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
+          DragNodes(node,event,dict_variable_application_data,dict_variable_elements_selected,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
           )
         }
         if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
-          DragNodes(node,event,applicationData, elementsSelected,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
+          DragNodes(node,event,dict_variable_application_data, dict_variable_elements_selected,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
           )
         }
       }
@@ -624,8 +624,8 @@ export const dragNodeTextEventWidthBoxEvent : dragNodeTextEventWidthBoxEventFTyp
 export  const DragNodes : DragNodesFType = (
   node:SankeyNode,
   event: { dx: number; dy: number,x:number,y:number },
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -634,8 +634,8 @@ export  const DragNodes : DragNodesFType = (
   inv_scale:(t:number)=>number,
   node_visible:string[]
 ) => {
-  const {data}=applicationData
-  const {multi_selected_nodes}=elementsSelected
+  const {data}=dict_variable_application_data
+  const {multi_selected_nodes}=dict_variable_elements_selected
   // Cherche si des element seront hors zone si on les drag 
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
   const out_of_zone_item=ReturnOutOfBoundElement(node,data,event,multi_selected_nodes,node_visible)
@@ -644,7 +644,7 @@ export  const DragNodes : DragNodesFType = (
     OpposingDragElements(out_of_zone_item,event,node,data,multi_selected_nodes)
   }
 
-  DragElements(node,applicationData,elementsSelected,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale)
+  DragElements(node,dict_variable_application_data,dict_variable_elements_selected,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale)
     
 }
 
@@ -863,8 +863,8 @@ const drag_link = (
  */
 export const DragHandle : DragHandleFType = (
   link: SankeyLink,
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
   dragged: Element,
@@ -881,7 +881,7 @@ export const DragHandle : DragHandleFType = (
 
 
 ) => {
-  const {data,display_nodes,display_links}=applicationData
+  const {data,display_nodes,display_links}=dict_variable_application_data
   const old_x = +d3.select(dragged).attr('transform').split(',')[0].substring(10)
   const old_y_str = d3.select(dragged).attr('transform').split(',')[1]
   const old_y = +old_y_str.substring(0, old_y_str.length - 1)
@@ -983,8 +983,8 @@ export const DragHandle : DragHandleFType = (
   d3.select(' .opensankey #path_' + d.idLink).attr('d', () => {
     let error_msg
     return drawCurveFunction.curve(
-      applicationData,
-      elementsSelected,
+      dict_variable_application_data,
+      dict_variable_elements_selected,
       display_style,
       data.nodeTags, d, error_msg,LinkText,
       GetSankeyMinWidthAndHeight,
@@ -1117,8 +1117,8 @@ const drag_zone_position=(link:SankeyLink,
  */
 export const AddDragLinkZone : AddDragLinkZoneFType =(
   link: SankeyLink,
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   default_handle_size:number,
   default_horiz_shift:number,
   scale:(t:number)=>number,
@@ -1130,8 +1130,8 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
   DrawArrows:DrawArrowsType
 
 )=>{
-  const {data,display_nodes,display_links}=applicationData
-  const {multi_selected_links}=elementsSelected
+  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {multi_selected_links}=dict_variable_elements_selected
   d3.selectAll(' .opensankey #drag_zone_s_' + link.idLink).remove()
   d3.selectAll(' .opensankey #drag_zone_t_' + link.idLink).remove()
   if (Object.values(data.links).map(d => d.idLink).includes(link.idLink) ) {  
@@ -1166,7 +1166,7 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link))?'ns-resize':'pointer')
-      .call(DragLinkIOPosition(link,applicationData,elementsSelected,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
+      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
       )  
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
@@ -1181,7 +1181,7 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[1])
       .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-      .call(DragLinkIOPosition(link,applicationData,elementsSelected,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows))  
+      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows))  
   }
 }
 /**
@@ -1281,8 +1281,8 @@ export const OpposingDragElements:opposing_DragElementsFuncType=(out_of_zone_ite
 }
 export const DragElements:DragElementsFuncType=(
   dragged:SankeyNode,
-  applicationData,
-  elementsSelected,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   event:{ dx: number; dy: number,x:number,y:number },
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
@@ -1291,8 +1291,8 @@ export const DragElements:DragElementsFuncType=(
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
 )=>{
-  const {data,display_nodes,display_links}=applicationData
-  const {multi_selected_nodes}=elementsSelected
+  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {multi_selected_nodes}=dict_variable_elements_selected
   let error_msg: { text: string | undefined } | undefined
   const node=Object.keys(dragged).includes('idNode')?dragged as SankeyNode:{} as SankeyNode
   d3.selectAll('.ggg_nodes').filter((d)=>{
@@ -1330,8 +1330,8 @@ export const DragElements:DragElementsFuncType=(
       Object.values(data.links).filter(l=>n.outputLinksId.includes(l.idLink)||n.inputLinksId.includes(l.idLink)).forEach(l=>{
         d3.select(' .opensankey #path_' + l.idLink).attr('d',
           drawCurveFunction.curve(
-            applicationData,
-            elementsSelected,
+            dict_variable_application_data,
+            dict_variable_elements_selected,
             data.display_style,
             data.nodeTags, l, error_msg,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
             DrawArrows
@@ -1345,8 +1345,8 @@ export const DragElements:DragElementsFuncType=(
     Object.values(data.links).filter(l=>node.outputLinksId.includes(l.idLink)||node.inputLinksId.includes(l.idLink)).forEach(l=>{
       d3.select(' .opensankey #path_' + l.idLink).attr('d',
         drawCurveFunction.curve(
-          applicationData,
-          elementsSelected,
+          dict_variable_application_data,
+          dict_variable_elements_selected,
           data.display_style,
           data.nodeTags, l, error_msg,LinkText,
           GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows

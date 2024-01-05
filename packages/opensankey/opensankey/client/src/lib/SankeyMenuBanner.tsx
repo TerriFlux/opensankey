@@ -404,7 +404,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   first_selected_node,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   setDiagram: setDiagramFuncType,
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
   set_never_see_again:(b:boolean)=>void,
   convert_data:ConvertDataFuncType,
   maximum_flux:{current:number | null | undefined},
@@ -850,7 +850,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
         overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
         }
       >
-        <Button variant='info' onClick={() => { set_never_see_again(false);localStorage.removeItem('dontSeeAggainWelcome'),showMenuComponents.ref_setter_show_modal_welcome.current!(true) }} >
+        <Button variant='info' onClick={() => { set_never_see_again(false);localStorage.removeItem('dontSeeAggainWelcome'),dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true) }} >
           <Col> ? </Col>
         </Button>
       </OverlayTrigger> : <></>}

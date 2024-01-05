@@ -1,9 +1,9 @@
-import { applicationContextType, applicationDataType, contextMenuType, elementsSelectedType, showMenuComponentsType } from './Types'
+import { applicationContextType, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType } from './Types'
 
 export type ContextMenuLinkFType = (
   applicationContext : applicationContextType,
-  applicationData : applicationDataType,
-  elementsSelected : elementsSelectedType,
+  dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType,
-  showMenuComponents : showMenuComponentsType
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType
 ) => JSX.Element

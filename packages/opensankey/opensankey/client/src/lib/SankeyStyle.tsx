@@ -6,7 +6,7 @@ import { FaPlus, FaMinus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {MenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
-import { SankeyData, applicationContextType, applicationDataType, elementsSelectedType } from '../types/Types'
+import { SankeyData, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 
 
 export const SankeyModalStyleNode  = (
@@ -99,18 +99,18 @@ export const SankeyModalStyleNode  = (
 
 //Modal et fonctions pour l'edition et affectation des style de flux
 export const SankeyModalStyleLink = (
-  applicationData:applicationDataType,
+  dict_variable_application_data:dict_variable_application_dataType,
   applicationContext:applicationContextType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   showStyleLink:boolean,
   setShowStyleLink:(_:boolean)=>void,
   additional_link_appearence_items:JSX.Element[],
   display_link_opacity:string,
   set_display_link_opacity:(s:string)=>void
 ) => {
-  const {data,set_data}=applicationData
+  const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
-  const {selected_style_link,set_selected_style_link}=elementsSelected
+  const {selected_style_link,set_selected_style_link}=dict_variable_elements_selected
 
   if(selected_style_link !== 'default'){
     set_selected_style_link('default')
@@ -180,7 +180,7 @@ export const SankeyModalStyleLink = (
         <Row>
           <Col md={12}>
 
-            {MenuConfigurationLinksAppearence(applicationData,elementsSelected,applicationContext,additional_link_appearence_items,true,display_link_opacity,set_display_link_opacity,GetLinkValue,true)}
+            {MenuConfigurationLinksAppearence(dict_variable_application_data,dict_variable_elements_selected,applicationContext,additional_link_appearence_items,true,display_link_opacity,set_display_link_opacity,GetLinkValue,true)}
           </Col>
         </Row>
 

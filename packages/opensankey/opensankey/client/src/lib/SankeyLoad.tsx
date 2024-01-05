@@ -2,12 +2,12 @@ import { TFunction } from 'i18next'
 import React,{ useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 import Spinner  from 'react-bootstrap/Spinner'
-import { processFunctionsType, showMenuComponentsType } from '../types/Types'
+import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
 interface SankeyLoadProdTypes {
   t:TFunction
   url_prefix: string,
   successAction: () => void,
-  showMenuComponents:showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   processFunctions:processFunctionsType
 }
 
@@ -16,13 +16,13 @@ const SankeyLoad = ({
   url_prefix,
   successAction,
   processFunctions,
-  showMenuComponents,
+  dict_hook_ref_setter_show_dialog_components,
 } : SankeyLoadProdTypes) => {
   const {processing,setProcessing,failure,setFailure,setNotStarted,result,setResult,is_computing,setIsComputing}=processFunctions
 
   const [value,setValue] = useState([1,2])
   const [show_load_dialog,set_show_load_dialog] = useState(false)
-  showMenuComponents.show_load.current=set_show_load_dialog
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_load.current=set_show_load_dialog
   const reset = () => {
     setProcessing(false)
     setFailure(false)

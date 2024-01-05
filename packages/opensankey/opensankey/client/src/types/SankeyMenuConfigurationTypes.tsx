@@ -1,12 +1,12 @@
-import { applicationContextType, applicationDataType, elementsSelectedType, showMenuComponentsType, uiElementsRefType } from './Types'
+import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType } from './Types'
 import { RefObject } from 'react'
 
 export type OpenSankeyConfigurationsMenusFType = (
-  applicationData:applicationDataType,
-  elementsSelected:elementsSelectedType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   uiElementsRef:uiElementsRefType,
-  showMenuComponents: showMenuComponentsType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   nav_item_active:string,
   set_nav_item_active:(d:string)=>void,
   sub_nav_item_active:string,

@@ -11,14 +11,14 @@ import { DrawLegend } from './SankeyDrawLegend'
 
 export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
   applicationContext,
-  applicationData,
+  dict_variable_application_data,
   contextMenu,
   userScaleRef,
   legend_clicked,
   extra_background_element
 ) => {
   const { t } = applicationContext
-  const { data, set_data} = applicationData
+  const { data, set_data} = dict_variable_application_data
   //const { pointer_pos, set_tag_contextualised } = contextMenu
 
   const [legend_position,set_legend_position] = useState(data.legend_position)
@@ -160,7 +160,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
           onBlur={() => {
             data.legend_position = legend_position
-            DrawLegend(applicationData,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+            DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
           }}/>
       </OverlayTrigger>
       
@@ -183,7 +183,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
           onBlur={() => {
             data.legend_position = legend_position
-            DrawLegend(applicationData,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+            DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
           }}/>
       </OverlayTrigger>  
     </InputGroup>,
