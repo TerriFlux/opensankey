@@ -332,7 +332,7 @@ export interface showMenuComponentsType {
   ref_setter_show_excel_dialog : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_save_json : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_getter_show_save_json : MutableRefObject<boolean>,
-  show_apply_layout : [boolean,(_:boolean)=>void],
+  ref_setter_show_apply_layout : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ShowPreference : [boolean,(_:boolean)=>void],
   show_modalTemplate : [boolean,(_:boolean)=>void],
   show_load : [boolean,(_:boolean)=>void],
