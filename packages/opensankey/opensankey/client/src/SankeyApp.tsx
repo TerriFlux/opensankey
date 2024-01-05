@@ -66,7 +66,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const ref_setter_show_save_json=useRef<Dispatch<SetStateAction<boolean>>>()
   const ref_getter_show_save_json=useRef(false)
   const ref_setter_show_apply_layout= useRef<Dispatch<SetStateAction<boolean>>>()
-  const ShowPreference = useState(false)
+  const ref_setter_show_modal_preference = useRef<Dispatch<SetStateAction<boolean>>>()
   const show_modalTemplate= useState(false)
   // const show_welcome=useState(false)
   const show_load=useState(false)
@@ -251,7 +251,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_save_json,
     ref_getter_show_save_json,
     ref_setter_show_apply_layout,
-    ShowPreference,
+    ref_setter_show_modal_preference,
     show_modalTemplate,
     // show_welcome,
     show_load,
