@@ -123,6 +123,4 @@ export interface PlusElementsSelectedType extends elementsSelectedType{
 
 export interface SankeyPlusContextMenuType extends contextMenuType {
   contextualised_zdt : React.MutableRefObject<React.Dispatch<React.SetStateAction<SankeyPlusLabel|undefined>>|undefined>
-  show_toast_limit_node : boolean,
-  set_show_toast_limit_node : (_:boolean)=>void 
 }
