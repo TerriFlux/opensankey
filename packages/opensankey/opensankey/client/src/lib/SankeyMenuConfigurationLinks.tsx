@@ -47,13 +47,13 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
     ),
     'tooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t)
   }
-
+  const pre_tag_menu=MenuConfigurationLinksTags(
+    dict_variable_application_data,
+    dict_variable_elements_selected,
+    applicationContext
+  )
   if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')){
-    ui['tags']=MenuConfigurationLinksTags(
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      applicationContext
-    )
+    ui['tags']=pre_tag_menu
   }
 
   return ui
