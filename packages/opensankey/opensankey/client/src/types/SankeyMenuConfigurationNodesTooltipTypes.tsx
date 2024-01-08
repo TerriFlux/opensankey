@@ -1,9 +1,7 @@
-import { TFunction } from 'i18next'
-import { SankeyData, SankeyNode } from './Types'
+import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from './Types'
 
 export type SankeyMenuConfigurationNodesTooltipFType = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]}
+  applicationContext : applicationContextType,
+  dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType
 ) => JSX.Element

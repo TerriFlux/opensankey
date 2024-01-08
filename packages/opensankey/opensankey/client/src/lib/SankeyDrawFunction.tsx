@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
-import React, { RefObject } from 'react'
+import React from 'react'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 import { ComputeTotalOffsets,
   TestLinkValue,
@@ -429,13 +429,14 @@ export const nodeTransform : nodeTransformFType = (
 // Function triggerd on click on nodes
 // Add or delete visual element to show that the node is selected like a thickker border
 export const EventNodeClick : EventNodeClickFType =(
-  dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,
+  dict_variable_application_data,
+  uiElementsRef,
+  dict_variable_elements_selected,
   event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
-  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-  mode_selection:{current:string}
+  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>
 )=>{
   const {data,set_data}=dict_variable_application_data
-  const {multi_selected_nodes}=dict_variable_elements_selected
+  const {mode_selection, multi_selected_nodes}=dict_variable_elements_selected
   const {button_ref,nodes_accordion_ref,accordion_ref}=uiElementsRef
   if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) &&  (event.ctrlKey || event.metaKey)) {
     mode_selection.current='s'
@@ -484,17 +485,19 @@ export const EventNodeContextMenu : EventNodeContextMenuFType =(
   contextMenu,
   multi_selected_nodes,              
 )=>{
-  const {pointer_pos,ref_setter_contextualised_node} = contextMenu
+  const {pointer_pos,ref_setter_contextualised_node, ref_contextualised_node} = contextMenu
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
   if(multi_selected_nodes.current.includes(n)){
     ref_setter_contextualised_node.current!(n)
+    ref_contextualised_node.current = n
   }else{
     multi_selected_nodes.current.forEach(nn=>DeselectVisualyNodes(nn))
     multi_selected_nodes.current=[]
     SelectVisualyNodes(n)
     multi_selected_nodes.current.push(n)
     ref_setter_contextualised_node.current!(n)
+    ref_contextualised_node.current = n
   }
   //const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   //ontextNodeRef.current!.attributes[4].value = 'max-width: 100%; position: absolute; inset: '+style_c_n
@@ -504,27 +507,26 @@ export const EventNodeContextMenu : EventNodeContextMenuFType =(
 
 export const EventLinkContextMenu : EventLinkContextMenuFType = (
   dict_variable_application_data,
-  ev:React.MouseEvent<HTMLButtonElement>,
+  ev,
   l:SankeyLink,
-  contextualised_link,
-  pointer_pos:{current:number[]},
-  multi_selected_links:{current:SankeyLink[]},
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
-  tags_selected:{[k: string]: string},
-  set_tags_selected:(o:{[k: string]: string})=>void,
-  set_display_link_opacity:(s:string)=>void
+  ref_setter_contextualised_link,
+  pointer_pos,
+  multi_selected_links,
+  displayedInputLinkValueRef,
+  tags_selected,
+  ref_display_link_opacity
 )=>{
   const {data,set_data}=dict_variable_application_data
   ev.preventDefault()
   pointer_pos.current=[ev.pageX,ev.pageY]
   if(multi_selected_links.current.includes(l)){
-    contextualised_link.current![0][1](l)
+    ref_setter_contextualised_link.current!(l)
   }else{
     multi_selected_links.current.forEach(ll=>DeselectVisualyLinks(ll))
     multi_selected_links.current=[]
     SelectVisualyLinks(l)
     multi_selected_links.current.push(l)
-    contextualised_link.current![0][1](l)
+    ref_setter_contextualised_link.current!(l)
   }
   const link_data_ref=l.idLink
   let new_tags_selected=tags_selected
@@ -538,10 +540,14 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
       const key=Object.keys(data.dataTags)[Number(i)]
       new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
     }
-    set_tags_selected(new_tags_selected)
-    if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as unknown as string)
-    }
+    //set_tags_selected(new_tags_selected)
+    displayedInputLinkValueRef.current.forEach(setter=>setter(
+      ValueSelectedParameter(
+        dict_variable_application_data,
+        multi_selected_links,
+        tags_selected
+      ).value as unknown as string
+    ))
   }else if(Object.values(data.dataTags).length>0){
     // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
     const tmp=[] as string[]
@@ -552,17 +558,24 @@ export const EventLinkContextMenu : EventLinkContextMenuFType = (
     Object.keys(data.dataTags).forEach((dt,i)=>{
       n_t_s[dt]=tmp[i]
     })
-    if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links, tags_selected:n_t_s} as dict_variable_elements_selectedType).value as unknown as string)
-    }
+    displayedInputLinkValueRef.current.forEach(setter=>setter(
+      ValueSelectedParameter(
+        dict_variable_application_data,
+        multi_selected_links, 
+        n_t_s
+      ).value as unknown as string
+    ))
   }else{
-    if (displayedInputLinkValueRef.current) {
-      displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links, tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as unknown as string)
-    }
+    displayedInputLinkValueRef.current.forEach(setter=>setter(
+        ValueSelectedParameter(
+          dict_variable_application_data,
+          multi_selected_links, 
+          new_tags_selected
+        ).value as unknown as string
+    ))
   }
 
-
-  set_display_link_opacity(ReturnValueLink(data,l,'opacity') as string)
+  ref_display_link_opacity.current.forEach(setter=>setter(ReturnValueLink(data,l,'opacity') as string))
   set_data({...data})
 }
 
@@ -891,7 +904,6 @@ export const DrawArrows : DrawArrowsType = (
 
 
 export const EventOnZoneMouseDown : EventOnZoneMouseDownFuncType = (
-  mode_selection:{current:string},
   dict_variable_application_data,
   dict_variable_elements_selected,
   token:boolean,
@@ -905,7 +917,7 @@ export const EventOnZoneMouseDown : EventOnZoneMouseDownFuncType = (
   const setter_limited_application= (dict_hook_ref_setter_show_dialog_components as unknown as {ref_setter_show_toast_limit_node?:React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>})
 
   const {data,set_data}=dict_variable_application_data
-  const {first_selected_node}=dict_variable_elements_selected
+  const { mode_selection, first_selected_node}=dict_variable_elements_selected
   closeAllMenuContext()
   const evt=evt2 as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
@@ -956,14 +968,13 @@ export const EventOnZoneMouseDown : EventOnZoneMouseDownFuncType = (
 
 }
 export const EventOnZoneMouseMove : EventOnZoneMouseMoveFuncType = (
-  mode_selection:{current:string},
   dict_variable_application_data,
   dict_variable_elements_selected,
   evt:MouseEvent,
   start_point:{current:number[]}
 )=>{
   const {data}=dict_variable_application_data
-  const {first_selected_node}=dict_variable_elements_selected
+  const { mode_selection, first_selected_node}=dict_variable_elements_selected
   //Empêche lors du drag de la souris d'avoir
   // l'effet sélection de texte sur les labels des éléments de diagramme
 
@@ -1039,21 +1050,18 @@ export const EventOnZoneMouseMove : EventOnZoneMouseMoveFuncType = (
   }
 }
 export const EventOnZoneMouseUp : EventOnZoneMouseUpFuncType = (
-  mode_selection:{current:string},
   dict_variable_application_data,
   dict_variable_elements_selected,
   uiElementsRef,
   token:boolean,
-  // set_show_toast_limit_node:(b:boolean)=>void,
   dict_hook_ref_setter_show_dialog_components,
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   evt:MouseEvent,
   start_point:{current:number[]},
   legend_clicked
 )=>{
-  const {data,set_data} =dict_variable_application_data
-  const {multi_selected_links,multi_selected_nodes,first_selected_node}= dict_variable_elements_selected
-  const {links_accordion_ref,button_ref,accordion_ref} = uiElementsRef
+  const { data, set_data } = dict_variable_application_data
+  const { mode_selection, multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueRef } = dict_variable_elements_selected
+  const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
 
   // Special cast usefull for when the app is used in SankeySuiteManager
   const setter_limited_application= (dict_hook_ref_setter_show_dialog_components as unknown as {ref_setter_show_toast_limit_node?:React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>})
@@ -1180,9 +1188,7 @@ export const EventOnZoneMouseUp : EventOnZoneMouseUpFuncType = (
       data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
       multi_selected_links.current=[new_link]
       data.linkZIndex.push(new_link.idLink)
-      if (displayedInputLinkValueRef.current) {
-        displayedInputLinkValueRef.current.value = ''
-      }
+      displayedInputLinkValueRef.current.forEach(setter=>setter(''))
       OpenLinksMenu()
       first_selected_node.current = undefined
       set_data({...data})
@@ -1218,9 +1224,7 @@ export const EventOnZoneMouseUp : EventOnZoneMouseUpFuncType = (
       fsn.outputLinksId=SortOutputLinksIdByYPos(data,fsn)
       n_node.inputLinksId.push(n_link.idLink)
       data.linkZIndex.push(n_link.idLink)
-      if (displayedInputLinkValueRef.current) {
-        displayedInputLinkValueRef.current.value = ''
-      }
+      displayedInputLinkValueRef.current.forEach(setter=>setter(''))
       multi_selected_links.current=[n_link]
       OpenLinksMenu()
 
@@ -1244,15 +1248,14 @@ export const SortOutputLinksIdByYPos : SortOutputLinksIdByYPosFType = (
 // or creating a nodes at first click then linking it to a already existing one or the opposite
 export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType = (
   event:React.MouseEvent<HTMLButtonElement>,
-  d:SankeyNode,data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  first_selected_node,
-  multi_selected_links:{current:SankeyLink[]},
-  accordion_ref:{ current: HTMLDivElement; }| null,
-  button_ref: { current: HTMLLabelElement; }| null,
-  links_accordion_ref:{ current: HTMLDivElement; }| null,
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
+  d:SankeyNode,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  uiElementsRef
 )=>{
+  const { data, set_data} = dict_variable_application_data
+  const { first_selected_node, multi_selected_links, displayedInputLinkValueRef} = dict_variable_elements_selected
+  const { button_ref,accordion_ref, links_accordion_ref} = uiElementsRef
   if ((!event.ctrlKey && !event.metaKey)&& first_selected_node.current) {
 
     if(d.name.includes('_tmp')){
@@ -1279,9 +1282,7 @@ export const EventOnMouseUpAddNodesAndLink :EventOnMouseUpAddNodesAndLinkFType =
       fsn.outputLinksId.push(n_link.idLink)
       d.inputLinksId.push(n_link.idLink)
       data.linkZIndex.push(n_link.idLink)
-      if (displayedInputLinkValueRef.current) {
-        displayedInputLinkValueRef.current.value = ''
-      }
+      displayedInputLinkValueRef.current.forEach(setter=>setter(''))
       multi_selected_links.current=[n_link]
 
       if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
@@ -2282,10 +2283,10 @@ export const NodeLabeLText : NodeLabeLTextFType = (
 
 export const ValueSelectedParameter:ValueSelectedParameterFuncType = (
   dict_variable_application_data,
-  dict_variable_elements_selected
+  multi_selected_links,
+  tags_selected
 ): SankeyLinkValue => {
   const {data}=dict_variable_application_data
-  const {multi_selected_links,tags_selected}=dict_variable_elements_selected
   if(multi_selected_links.current.length==0){
     return ({} as SankeyLinkValue)
   }else{
@@ -2538,27 +2539,24 @@ export const ZoomFunction:ZoomFunctionFuncType=(evt:d3.D3ZoomEvent<SVGElement,un
   // RepositionneSidebar()
 }
 
-export const SimpleGNodeClick:SimpleGNodeClickFuncType =(
+export const SimpleGNodeClick : SimpleGNodeClickFuncType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
-  event:React.MouseEvent<HTMLButtonElement>,d:SankeyNode,
- 
-  mode_selection:{current:string},
-
-  accept_simple_click:{current:boolean},
-
+  event,
+  d,
+  accept_simple_click
 )=>{
   const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
   if((event.target as HTMLSpanElement).tagName==='tspan'){
     setTimeout(()=>{
       if(accept_simple_click.current){
-        EventNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,sankeyTooltip,mode_selection)
+        EventNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,sankeyTooltip)
       }
     },200)
   }else{
-    EventNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,sankeyTooltip,mode_selection)
+    EventNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,sankeyTooltip)
   }
 }
 

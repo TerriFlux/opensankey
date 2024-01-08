@@ -4,32 +4,26 @@ import { Accordion, Pagination, Col, Card, ButtonGroup, Button, Carousel, FormCh
 import { FaUser, FaAngleDoubleLeft, FaHome, FaCaretSquareLeft, FaCaretSquareRight } from 'react-icons/fa'
 import { SankeyData, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
 import parse from 'html-react-parser'
-import { TFunction, t } from 'i18next'
 import { ConvertDataFuncType } from 'open-sankey/src/types/SankeyConvertTypes'
-import React, { useState } from 'react'
+import React, { Dispatch, MutableRefObject, SetStateAction, useState } from 'react'
 import { UploadExemple, DownloadExempleExcel, windowSankey } from './SankeyUtils'
 import { SankeyModalWelcomeFType } from '../types/SankeyMenuTopTypes'
+import { TFunction } from 'i18next'
 
 export const SankeyModalWelcome : SankeyModalWelcomeFType = (
-  t:TFunction,
-  active_page:string,
-  set_active_page:(s:string)=>void,
-  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
-  never_see_again:boolean,
-  set_never_see_again:(b:boolean)=>void,
-  additional_shortcut_item:JSX.Element[],
-  external_pagination:JSX.Element[],
-  external_content:{
-      read_me: string | JSX.Element | JSX.Element[];
-      intro: JSX.Element;
-      rc: JSX.Element;
-      licence?: JSX.Element;
-      news: JSX.Element;
-    },
+  t,
+  active_page,
+  set_active_page,
+  dict_hook_ref_setter_show_dialog_components,
+  never_see_again,
+  additional_shortcut_item,
+  external_pagination,
+  external_content,
   exemple_menu: object
 )=>{
   const [show_wecome,set_show_welcome]=useState(false)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current=set_show_welcome
+
   const content_rc_static=<>
     <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
@@ -116,8 +110,8 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
         </Pagination.Item>
   
       </Pagination>
-      <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again} onChange={evt=>{
-        set_never_see_again(evt.target.checked)
+      <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again.current} onChange={evt=>{
+        never_see_again.current = evt.target.checked
         localStorage.setItem('dontSeeAggainWelcome','1')
       }}/>
     </Modal.Footer>
@@ -132,6 +126,7 @@ export const CardsTemplateBuilder = (
   Reinitialization: ()=>void,
   convert_data: ConvertDataFuncType
 ) => {
+  const { t } = applicationContext
   const tmp=JSON.parse(JSON.stringify(exemple_menu))
   let list_template_data=[] as string[]
   // Si exemple_menu contient OpenSankey et que ce sous dossier contient les templates simple alors remple la liste des templates avec les modèle simples
@@ -191,13 +186,15 @@ export const CardsTemplateBuilder = (
 }
 
 export const welcomeModalBuilder = (
+  t:TFunction,
   exemple_menu : object,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
-  never_see_again : boolean,
-  set_never_see_again : (_:boolean)=>void,
-  active_page : string,
-  set_active_page : (_:string)=>void
+  never_see_again : MutableRefObject<boolean>,
+  ref_setter_active_page : MutableRefObject<Dispatch<SetStateAction<string>>>
 )=>{
+  const [active_page,set_active_page] = useState((windowSankey.sankey && windowSankey.sankey.welcome_text)?'read_me':'intro')
+  ref_setter_active_page.current = set_active_page
+
   const tmp=JSON.parse(JSON.stringify(exemple_menu))
   const additional_shortcut_item=[] as JSX.Element[]
   //additional_shortcut_item.push(SankeyPlusShortcut(t)) TODO
@@ -456,7 +453,6 @@ export const welcomeModalBuilder = (
     set_active_page,
     dict_hook_ref_setter_show_dialog_components,
     never_see_again,
-    set_never_see_again,
     additional_shortcut_item,
     external_pagination,
     external_content,

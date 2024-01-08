@@ -1,14 +1,13 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyNode } from './Types'
+import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from './Types'
+import { MutableRefObject } from 'react'
 
 export type OpenSankeyConfigurationNodesAttributesFType = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
+  applicationContext : applicationContextType,
+  dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   menu_for_style:boolean,
-  selected_style_node:string,
-  set_style_to_apply:(s:string)=>void,
+  ref_selected_style_node:MutableRefObject<string>,
   advanced_appearence_content:JSX.Element[],
   advanced_label_content:JSX.Element[],
   advanced_label_value_content:JSX.Element[],

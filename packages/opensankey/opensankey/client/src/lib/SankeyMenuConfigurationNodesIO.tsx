@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyData, SankeyNode,SankeyLink } from '../types/Types'
+import { SankeyData, SankeyNode } from '../types/Types'
 import { LinkVisible,LinkColor,ReturnValueLink,reorganize_node_inputLinksId,reorganize_node_outputLinksId} from './SankeyUtils'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
@@ -15,9 +15,7 @@ const getIOLink=(
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,
   io:string,
-  GetLinkValue:GetLinkValueFuncType,
-
-
+  GetLinkValue:GetLinkValueFuncType
 )=>{
   const n=multi_selected_nodes.current[0]
 
@@ -437,22 +435,19 @@ const tab_pos_link=(
 }
 
 export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFType = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes: { [node_id: string]: SankeyNode },
-  multi_selected_nodes:{current:SankeyNode[]},
-  link_io:string,
-  set_link_io:(_:string)=>void,
-  link_pos:string,
-  set_link_pos:(_:string)=>void,
-  tab_colored:boolean,
-  set_tab_colored:(_:boolean)=>void,
+  applicationContext,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   GetLinkValue:GetLinkValueFuncType,
-  multi_selected_links: {current:SankeyLink[]},
-  set_display_link_opacity:(s:string)=>void,
   menu_for_modal=false
 ) => {
+  const { t } = applicationContext
+  const { data, set_data, display_nodes } = dict_variable_application_data
+  const { multi_selected_nodes, multi_selected_links } = dict_variable_elements_selected
+
+  const [link_io,set_link_io] = useState('output')
+  const [link_pos,set_link_pos] = useState('right')
+  const [tab_colored,set_tab_colored] = useState(false)
 
   const logo_enter=<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512 512" width="15" height="15">
     <g>
@@ -652,7 +647,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
               multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
               const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-              set_display_link_opacity(opacity)
+              dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
             })
             multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
           }}>
@@ -673,7 +668,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
               multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
               const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-              set_display_link_opacity(opacity)
+              dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
             })
             multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
           }}>

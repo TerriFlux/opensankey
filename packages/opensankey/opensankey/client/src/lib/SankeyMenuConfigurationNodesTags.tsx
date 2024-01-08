@@ -1,7 +1,6 @@
-import { TFunction } from 'i18next'
 import React from 'react'
 import { Row, Form, Tab, InputGroup } from 'react-bootstrap'
-import { SankeyData,SankeyNode } from '../types/Types'
+import { SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
 import { SankeyMenuConfigurationNodesTagsFType } from '../types/SankeyMenuConfigurationNodesTagsTypes'
@@ -13,13 +12,16 @@ import { SankeyMenuConfigurationNodesTagsFType } from '../types/SankeyMenuConfig
    * @type {*}
    */
 export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTagsFType = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
+  applicationContext : applicationContextType,
+  dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   tags_group_key:string,
   set_tags_group_key:(_:string)=>void
 )=> {
+  const { t } = applicationContext
+  const { data, set_data } = dict_variable_application_data
+  const { multi_selected_nodes } = dict_variable_elements_selected
+
   const tags_visible = Object.keys(data.nodeTags).length > 0
   if ((tags_group_key == '' && Object.keys(data.nodeTags).length > 0) || (!Object.keys(data.nodeTags).includes(tags_group_key) && Object.keys(data.nodeTags).length > 0)) {
     set_tags_group_key(Object.keys(data.nodeTags)[0])

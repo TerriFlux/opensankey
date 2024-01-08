@@ -8,6 +8,7 @@ import {
   GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,
 } from '../types/SankeyUtilsTypes'
 import { DragLinkCenterHandleEventFType, DragLinkShiftHandleEventFType, DragHandleFType} from '../types/SankeyDragTypes'
+import { MutableRefObject } from 'react'
 
 declare const window: Window &
 typeof globalThis & {
@@ -342,11 +343,12 @@ const swap = (array: string[], x: number, y: number) => {
  * @param {boolean} alt_key_pressed
  * @returns {*}
  */
-export const dragLinkTextEvent : dragLinkTextEventFType =(alt_key_pressed:boolean,
+export const dragLinkTextEvent : dragLinkTextEventFType =(
+  alt_key_pressed:MutableRefObject<boolean>,
 )=>{
   return d3.drag<SVGTextElement, SankeyLink>()
     .subject(Object).on('drag', function (event, link) {
-      if (alt_key_pressed) {
+      if (alt_key_pressed.current) {
         drag_link_text(link, event)
       }
     })
@@ -529,7 +531,7 @@ export const DragGNodeEvent : DragGNodeEventFType = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   mode_selection:{current:string},
-  alt_key_pressed:boolean,
+  alt_key_pressed:MutableRefObject<boolean>,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,
@@ -547,9 +549,9 @@ export const DragGNodeEvent : DragGNodeEventFType = (
     })
     .on('drag', function (event,node) {
       if(mode_selection.current=='s'){
-        if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
+        if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
-        }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed){
+        }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed.current){
           DragNodes(node,event,dict_variable_application_data,dict_variable_elements_selected,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
           )
         }

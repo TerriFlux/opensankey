@@ -1,3 +1,4 @@
+import { MutableRefObject } from 'react'
 import { GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode, agregationType, contextMenuType } from './Types'
 
@@ -18,6 +19,6 @@ export type SankeyDrawTypes = {
     animation: boolean,
     mode_selection: {current : string},
     agregation:agregationType, 
-    set_alt_key_pressed:(_:boolean)=>void,
+    ref_alt_key_pressed:MutableRefObject<boolean>,
     GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   }

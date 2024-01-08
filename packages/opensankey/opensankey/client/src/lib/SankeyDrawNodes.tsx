@@ -1,14 +1,17 @@
-import { SankeyData, SankeyNode} from '../types/Types'
-import React, { RefObject } from 'react'
+import React from 'react'
 import * as d3 from 'd3'
 
-import {NodeColor,ReturnValueNode} from './SankeyUtils'
-import { scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
-  EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape } from './SankeyDrawFunction'
-import {  DragGNodeEvent } from './SankeyDrag'
-import { GetLinkValueFuncType, LinkTextFuncType } from '../types/SankeyUtilsTypes'
+import { SankeyData, SankeyNode} from '../types/Types'
+import { LinkTextFuncType } from '../types/SankeyUtilsTypes'
 import { DrawNodesFType } from '../types/SankeyDrawNodesTypes'
-import { NodeTooltipsContentFType } from '../types/SankeyTooltipTypes'
+
+import {NodeColor,ReturnValueNode} from './SankeyUtils'
+import { 
+  scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
+  EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape 
+} from './SankeyDrawFunction'
+import {  DragGNodeEvent } from './SankeyDrag'
+
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -19,17 +22,14 @@ export const DrawNodes : DrawNodesFType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
-  mode_selection:{current:string},
-  alt_key_pressed:boolean,
-  NodeTooltipsContent:NodeTooltipsContentFType,
+  alt_key_pressed,
+  NodeTooltipsContent,
   LinkText:LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
-  accept_simple_click:{current:boolean}
+  GetLinkValue,
+  accept_simple_click
 ) => {
-  const {data,set_data,display_nodes,display_links}=dict_variable_application_data
-  const {button_ref,accordion_ref,links_accordion_ref} =uiElementsRef
-  const {multi_selected_links,multi_selected_nodes,first_selected_node}=dict_variable_elements_selected
+  const { data, display_nodes, display_links } = dict_variable_application_data
+  const { mode_selection, multi_selected_nodes, first_selected_node } = dict_variable_elements_selected
 
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
@@ -118,7 +118,10 @@ export const DrawNodes : DrawNodesFType = (
       }
 
       ggg_nodes
-        .on('click', (event, d) => SimpleGNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,mode_selection,accept_simple_click))
+        .on('click', (event, d) => SimpleGNodeClick(
+          dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click
+        )
+        )
         .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
 
       if (mode_selection.current == 'ln') {
@@ -128,14 +131,18 @@ export const DrawNodes : DrawNodesFType = (
           }
         })
           .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(
-            event,d,data,set_data,first_selected_node,
-            multi_selected_links,accordion_ref,button_ref,links_accordion_ref,displayedInputLinkValueRef
+            event,d,dict_variable_application_data,dict_variable_elements_selected,uiElementsRef
           )
           )
       }
       // When the mouse is in mode selection, it allow nodes to be dragged
       if(mode_selection.current=='s' && window.SankeyToolsStatic!==true){
-        ggg_nodes.call(DragGNodeEvent(dict_variable_application_data,dict_variable_elements_selected,mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale))
+        ggg_nodes.call(
+          DragGNodeEvent(
+            dict_variable_application_data,dict_variable_elements_selected,
+            mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale
+          )
+        )
       }
     }
     // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )

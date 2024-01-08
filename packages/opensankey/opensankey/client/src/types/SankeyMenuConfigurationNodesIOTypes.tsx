@@ -1,22 +1,12 @@
-import { TFunction } from 'i18next'
-import { SankeyData, SankeyLink, SankeyNode } from './Types'
+
+import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 export type SankeyMenuConfigurationNodesIOFType = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes: { [node_id: string]: SankeyNode },
-  multi_selected_nodes:{current:SankeyNode[]},
-  link_io:string,
-  set_link_io:(_:string)=>void,
-  link_pos:string,
-  set_link_pos:(_:string)=>void,
-  tab_colored:boolean,
-  set_tab_colored:(_:boolean)=>void,
+  applicationContext : applicationContextType,
+  dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   GetLinkValue:GetLinkValueFuncType,
-  multi_selected_links: {current:SankeyLink[]},
-  set_display_link_opacity:(s:string)=>void,
   menu_for_modal ? : boolean
 ) => JSX.Element
 

@@ -1,31 +1,43 @@
 import React, { useState } from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import {ValueSelectedParameter} from './SankeyDrawFunction'
 import * as d3 from 'd3'
-import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar } from './SankeyUtils'
+
 import { MenuConfigurationLinksDataFType } from '../types/SankeyMenuConfigurationLinksDataTypes'
-import { dict_variable_elements_selectedType } from '../types/Types'
+
+import {ValueSelectedParameter} from './SankeyDrawFunction'
+import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar } from './SankeyUtils'
+/*************************************************************************************************/
 
 export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   dict_variable_application_data,
   dict_variable_elements_selected,
   applicationContext,
   additional_data_element,
-  displayedInputLinkValueRef,
-  pre_idSource,
-  set_pre_idSource,
-  pre_idTarget,
-  set_pre_idTarget,
   menu_for_modal
 ) => {
-  const {data,set_data}=dict_variable_application_data
-  const {t} =applicationContext
-  const {multi_selected_links,tags_selected}=dict_variable_elements_selected
-  //const displayedInputLinkValueRef = useRef<RefObject<HTMLInputElement>>()
-  const [displayed_input_link_value,set_displayed_input_link_value]=useState('')
+  const { t } = applicationContext
+  const { data, set_data } = dict_variable_application_data
+  const { multi_selected_links,displayedInputLinkValueRef  } = dict_variable_elements_selected
+  const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
+  if (displayedInputLinkValueRef.current.length < 2) {
+    displayedInputLinkValueRef.current.push(set_displayed_input_link_value)
+  }
+
+  const [pre_idSource,set_pre_idSource]=useState('none')
+  const [pre_idTarget,set_pre_idTarget]=useState('none')
+  dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
+  dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget  
+
+  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+    return (Object.keys(dataTag.tags).length > 0) ? [
+      dataTagKey,
+      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+  }))
+  const tags_selected = Object.fromEntries(newEntries)
+
   let is_link_data_invalid=false
   if(multi_selected_links.current.length>0){
-    const curr_val=ValueSelectedParameter(dict_variable_application_data,dict_variable_elements_selected).value
+    const curr_val=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value
     if(curr_val==='' && displayed_input_link_value===''){
       is_link_data_invalid=false
     }else{
@@ -163,7 +175,13 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                     tmp= ({...tags_selected,[name]: value})
                     //   return ({...prevState,[name]: value}) 
                     // } )
-                    set_displayed_input_link_value(ValueSelectedParameter(dict_variable_application_data,{tags_selected:tmp} as dict_variable_elements_selectedType).value as string)
+                    displayedInputLinkValueRef.current.forEach(setter=>setter(
+                      ValueSelectedParameter(
+                        dict_variable_application_data,
+                        multi_selected_links,
+                        tmp
+                      ).value as string
+                    ))
                   }}>
                 {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                   return (
@@ -192,12 +210,11 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
           className='inputValueLink'
           style={{width:'60%'}}
           type='text'
-          ref={displayedInputLinkValueRef}
           value={displayed_input_link_value}
           isInvalid={is_link_data_invalid}
           onChange={
             evt => {
-              set_displayed_input_link_value(evt.target.value)
+              displayedInputLinkValueRef.current.forEach(setter=>setter(evt.target.value))
               const formatedValue=evt.target.value.replace(',','.')
               if(formatedValue!='' && isNaN(+formatedValue)){
                 d3.select('.inputValueLink').style('border','red 1px solid')
@@ -209,7 +226,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
           onBlur={evt=>{
             const formatedValue=evt.target.value.replace(',','.')
             if(formatedValue!=='' && !isNaN(+formatedValue )){
-              const was_empty=ValueSelectedParameter(dict_variable_application_data,dict_variable_elements_selected).value===''
+              const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
               let val = Object(multi_selected_links.current[0].value)
               multi_selected_links.current.map(d => {
                 const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
@@ -266,7 +283,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
         <Form.Control
           style={{width:'60%'}}
           type='text'
-          value={ValueSelectedParameter(dict_variable_application_data,dict_variable_elements_selected).display_value}
+          value={ ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).display_value}
           onChange={
             evt => {
               let val = Object(multi_selected_links.current[0].value)

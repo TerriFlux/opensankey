@@ -1,21 +1,16 @@
-import { SankeyLink, SankeyData, SankeyNode,SankeyLinkAttrLocal, dict_variable_elements_selectedType} from '../types/Types'
-import React, { Dispatch, RefObject, SetStateAction } from 'react'
+import { SankeyLink, SankeyData, SankeyNode,SankeyLinkAttrLocal } from '../types/Types'
+import React, { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from './SankeyUtils'
-import { drawCurveFunction,
-  scale,
-  inv_scale,
-  SetNodesHeight,
-  StrokeDasharray,
-  GetSankeyMinWidthAndHeight,
-  DeselectVisualyLinks,
-  EventLinkContextMenu} from './SankeyDrawFunction'
+import { 
+  drawCurveFunction, scale, inv_scale, SetNodesHeight, StrokeDasharray,
+  GetSankeyMinWidthAndHeight, DeselectVisualyLinks, EventLinkContextMenu
+} from './SankeyDrawFunction'
 import {DragLinkEvent, AddDragLinkZone} from './SankeyDrag'
 import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg,DrawLinkStartSabot} from './SankeyDrawFunction'
 import { DrawArrowsType } from '../types/SankeyDrawFunctionTypes'
 import { LinkStrokeFuncType, DrawLinksFType  } from '../types/SankeyDrawLinksTypes'
-import { LinkColorFuncType
-} from '../types/SankeyUtilsTypes'
+import { LinkColorFuncType } from '../types/SankeyUtilsTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -27,37 +22,43 @@ export const DrawLinks : DrawLinksFType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
-  mode_selection,
   alt_key_pressed,
   position,
   node_arrow_visible,
   LinkTooltipsContent,
   LinkText,
   GetLinkValue,
-  displayedInputLinkValueRef,
   LinkStroke,
   DrawArrows,
-  set_display_link_opacity,
   LinkSabotColor
 
 ) => {
-  const{pointer_pos,contextualised_link} =contextMenu
-  const{button_ref,accordion_ref,links_accordion_ref} =uiElementsRef
-  const{data,set_data,display_nodes,display_links} =dict_variable_application_data
-  const {tags_selected,set_tags_selected,multi_selected_links}=dict_variable_elements_selected
+  const{ pointer_pos, ref_setter_contextualised_link} = contextMenu
+  const{ button_ref, accordion_ref, links_accordion_ref} = uiElementsRef
+  const{ data, set_data, display_nodes, display_links} = dict_variable_application_data
+  const { multi_selected_links,mode_selection, displayedInputLinkValueRef} = dict_variable_elements_selected
   const default_handle_size = 10
   const default_horiz_shift = 50
 
   const min_thickness=2
 
+  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+    return (Object.keys(dataTag.tags).length > 0) ? [
+      dataTagKey,
+      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+  }))
+  const tags_selected = Object.fromEntries(newEntries)
 
-  // Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear (center handle,shift handles,drag zone) and add pointer event to those element
-  const eventLinkClick=(event:React.MouseEvent<HTMLButtonElement>,d:SankeyLink,
+  // Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear 
+  //(center handle,shift handles,drag zone) and add pointer event to those element
+  const eventLinkClick=(
+    event:React.MouseEvent<HTMLButtonElement>,
+    d:SankeyLink,
     sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
-    accordion_ref:{ current: HTMLDivElement; }| null,
-    button_ref:{ current: HTMLLabelElement; }| null,
+    accordion_ref:MutableRefObject<HTMLDivElement|null>,
+    button_ref:MutableRefObject<HTMLLabelElement|null>,
     multi_selected_links:{current: SankeyLink[] },
-    links_accordion_ref:{ current: HTMLDivElement; }| null,
+    links_accordion_ref:MutableRefObject<HTMLDivElement|null>,
     set_data:(d:SankeyData)=>void
   )=>{
     mode_selection.current='s'
@@ -74,7 +75,9 @@ export const DrawLinks : DrawLinksFType = (
           DeselectVisualyLinks(d)
         } else {
           multi_selected_links.current.push(d)
-          set_display_link_opacity(ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string)
+          dict_variable_elements_selected.ref_display_link_opacity.current.forEach(
+            setter=>setter(ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string)
+          )
         }
 
       }
@@ -111,10 +114,14 @@ export const DrawLinks : DrawLinksFType = (
             const key=Object.keys(data.dataTags)[Number(i)]
             new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
           }
-          set_tags_selected(new_tags_selected)
-          if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as unknown as string)
-          }
+          //set_tags_selected(new_tags_selected)
+          displayedInputLinkValueRef.current.forEach(setter=>setter(
+            ValueSelectedParameter(
+              dict_variable_application_data,
+              multi_selected_links,
+              new_tags_selected
+            ).value as unknown as string
+          ))
         }else if(Object.values(data.dataTags).length>0){
           // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
           const tmp=[] as string[]
@@ -125,18 +132,22 @@ export const DrawLinks : DrawLinksFType = (
           Object.keys(data.dataTags).forEach((dt,i)=>{
             n_t_s[dt]=tmp[i]
           })
-          if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:n_t_s} as dict_variable_elements_selectedType).value as unknown as string)
-          }
+          displayedInputLinkValueRef.current.forEach(setter=>setter(
+            ValueSelectedParameter(
+              dict_variable_application_data,
+              multi_selected_links,
+              n_t_s
+            ).value as unknown as string))
         }else{
-          if (displayedInputLinkValueRef.current) {
-            displayedInputLinkValueRef.current.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as unknown as string)
-          }
+          displayedInputLinkValueRef.current.forEach(setter=>setter(
+            ValueSelectedParameter(
+              dict_variable_application_data,
+              multi_selected_links,
+              new_tags_selected
+            ).value as unknown as string))
         }
       }else{
-        if (displayedInputLinkValueRef.current) {
-          displayedInputLinkValueRef.current.value = ''
-        }
+        displayedInputLinkValueRef.current.forEach(setter=>setter(''))
       }
       set_data({...data})
     }
@@ -185,7 +196,7 @@ export const DrawLinks : DrawLinksFType = (
     display_links:{ [link_id: string]: SankeyLink },
     LinkStroke:LinkStrokeFuncType,
     DrawArrows:DrawArrowsType,
-    contextualised_link:RefObject<[SankeyLink | undefined, Dispatch<SetStateAction<SankeyLink | undefined>>][]>,
+    ref_setter_contextualised_link:MutableRefObject<Dispatch<SetStateAction<SankeyLink|undefined>>|undefined>,
     pointer_pos:{current:number[]},
     LinkSabotColor:LinkColorFuncType
   ) => {
@@ -248,8 +259,10 @@ export const DrawLinks : DrawLinksFType = (
       })
     gg_links.on('contextmenu', (ev, l) => {
       if(!window.SankeyToolsStatic){
-        return EventLinkContextMenu(dict_variable_application_data,ev,l,contextualised_link,pointer_pos,
-          multi_selected_links,displayedInputLinkValueRef,tags_selected,set_tags_selected,set_display_link_opacity
+        return EventLinkContextMenu(
+          dict_variable_application_data,ev,l,ref_setter_contextualised_link,pointer_pos,
+          multi_selected_links,displayedInputLinkValueRef,tags_selected,
+          dict_variable_elements_selected.ref_display_link_opacity
         )}}
     )
 
@@ -383,7 +396,12 @@ export const DrawLinks : DrawLinksFType = (
         }
       })
 
-    paths.on('click', (event, d) =>eventLinkClick(event,d,sankeyTooltip,accordion_ref,button_ref,multi_selected_links,links_accordion_ref,set_data))
+    paths.on('click', (event, d) =>eventLinkClick(
+      event,d,sankeyTooltip,
+      accordion_ref,button_ref,
+      multi_selected_links,links_accordion_ref,set_data
+    )
+    )
     //Creation des Arrows associés au link
     d3.selectAll(' .opensankey .ggg_nodes')
       .filter((n) => (n as SankeyNode).inputLinksId.length>0?node_arrow_visible(data,(n as SankeyNode)):false)
@@ -485,11 +503,11 @@ export const DrawLinks : DrawLinksFType = (
  * @returns {*}
  */
   const dragLinkTextEvent=(
-    alt_key_pressed:boolean,
+    alt_key_pressed:MutableRefObject<boolean>,
   )=>{
     return d3.drag<SVGTextElement, SankeyLink>()
       .subject(Object).on('drag', function (event, link) {
-        if (alt_key_pressed) {
+        if (alt_key_pressed.current) {
           drag_link_text(link, event)
         }
       })
@@ -516,7 +534,7 @@ export const DrawLinks : DrawLinksFType = (
     link.local.label_position = 'frozen'
   }
 
-  add_links(display_nodes,display_links,LinkStroke,DrawArrows,contextualised_link,pointer_pos,LinkSabotColor)
+  add_links(display_nodes,display_links,LinkStroke,DrawArrows,ref_setter_contextualised_link,pointer_pos,LinkSabotColor)
   
   return (<>[]
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
