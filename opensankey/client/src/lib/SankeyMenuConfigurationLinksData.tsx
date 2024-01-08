@@ -16,6 +16,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   menu_for_modal
 ) => {
   const { t } = applicationContext
+
   const { data, set_data } = dict_variable_application_data
   const { multi_selected_links,displayedInputLinkValueRef  } = dict_variable_elements_selected
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
@@ -33,7 +34,11 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
       dataTagKey,
       Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
   }))
-  const tags_selected = Object.fromEntries(newEntries)
+  const dataTagsSelected = Object.fromEntries(newEntries)
+  const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
+  if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
+    set_tags_selected(dataTagsSelected)
+  }
 
   let is_link_data_invalid=false
   if(multi_selected_links.current.length>0){
@@ -173,6 +178,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                     let tmp={}
                     // set_tags_selected( prevState => {
                     tmp= ({...tags_selected,[name]: value})
+                    set_tags_selected(tmp)
                     //   return ({...prevState,[name]: value}) 
                     // } )
                     displayedInputLinkValueRef.current.forEach(setter=>setter(
