@@ -1092,7 +1092,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' {...props} style={{ 'width': menu_config_width+'px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
-            ref_nav_item_active={ref_nav_item_active}
+            uiElementsRef={uiElementsRef}
             accordion_ref={uiElementsRef.accordion_ref}
             configuration_menus={configurations_menus} />
         </Offcanvas.Body>
