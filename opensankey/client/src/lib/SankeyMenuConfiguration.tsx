@@ -4,7 +4,6 @@ import React, { FunctionComponent, MutableRefObject, Ref, useState } from 'react
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { OpenSankeyConfigurationsMenusFType } from '../types/SankeyMenuConfigurationTypes'
-import { uiElementsRefType } from '../types/Types'
 
 
 export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType = (
@@ -22,12 +21,18 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   menu_configuration_free_labels,
   token
 ) => {
+  const [navitemactive, setnavitemactive] = useState('')
+  const [subnavitemactive, setsubnavitemactive] = useState('')
+  const { ref_setter_nav_item_active, ref_setter_sub_nav_item_active, ref_nav_item_active} = uiElementsRef
+  ref_setter_nav_item_active.current = setnavitemactive
+  ref_setter_sub_nav_item_active.current = setsubnavitemactive
+  ref_nav_item_active.current = navitemactive
+
   const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
   const {links_accordion_ref,nodes_accordion_ref}=uiElementsRef
   const {multi_selected_nodes}=dict_variable_elements_selected
   const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
-  const { ref_setter_nav_item_active, ref_nav_item_active, ref_setter_sub_nav_item_active, ref_sub_nav_item_active } = uiElementsRef
   return [
     <Accordion.Item
       key='1'
@@ -36,10 +41,10 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       eventKey="1"
       onClick={
         evt => {
-          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === '1') {
-            ref_setter_nav_item_active.current('')
+          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === '1') {
+            setnavitemactive('')
           } else {
-            ref_setter_nav_item_active.current('1')
+            setnavitemactive('1')
           }
         }
       }>
@@ -59,17 +64,17 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       id="Nodes"
       onClick={
         evt => {
-          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === t('Menu.Noeuds') && ref_nav_item_active.current === '2') {
-            ref_setter_nav_item_active.current('')
+          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === t('Menu.Noeuds') && navitemactive === '2') {
+            setnavitemactive('')
           } else {
-            ref_setter_nav_item_active.current('2')
+            setnavitemactive('2')
           }
         }
       }
     >
       <Accordion.Header>{t('Menu.Noeuds')}</Accordion.Header>
       <Accordion.Body style={{ padding: '0px' }}>
-        <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={ref_sub_nav_item_active.current} >
+        <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={subnavitemactive} >
           <Accordion.Item
             key='3'
             style={{ 'display': (data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
@@ -77,13 +82,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             onClick={
               evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                  ref_setter_sub_nav_item_active.current('')
-                  ref_setter_nav_item_active.current('2')
+                  setsubnavitemactive('')
+                  setnavitemactive('2')
                   ref_setter_show_menu_config.current!(true)
 
                 } else {
-                  ref_setter_sub_nav_item_active.current('EtiquetteNoeud')
-                  ref_setter_nav_item_active.current('2')
+                  setsubnavitemactive('EtiquetteNoeud')
+                  setnavitemactive('2')
                   ref_setter_show_menu_config.current!(true)
 
 
@@ -104,13 +109,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             onClick={
               evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                  ref_setter_sub_nav_item_active.current('')
-                  ref_setter_nav_item_active.current('2')
+                  setsubnavitemactive('')
+                  setnavitemactive('2')
                   ref_setter_show_menu_config.current!(true)
 
                 } else {
-                  ref_setter_sub_nav_item_active.current('editionNoeud')
-                  ref_setter_nav_item_active.current('2')
+                  setsubnavitemactive('editionNoeud')
+                  setnavitemactive('2')
                   ref_setter_show_menu_config.current!(true)
 
                 }
@@ -138,29 +143,29 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       id='Flux'
       eventKey="3"
       onClick={evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === '3') {
-          ref_setter_nav_item_active.current('')
+        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === '3') {
+          setnavitemactive('')
         } else {
-          ref_setter_nav_item_active.current('3')
+          setnavitemactive('3')
         }
       }}
     >
       <Accordion.Header >{t('Menu.flux')}</Accordion.Header>
       <Accordion.Body  style={{ padding: '0px' }}>
-        <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={ref_sub_nav_item_active.current}>
+        <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={subnavitemactive}>
           <Accordion.Item
             key='6'
             eventKey="8"
             style={{ 'display': (data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
             onClick={evt => {
               if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                ref_setter_sub_nav_item_active.current('')
-                ref_setter_nav_item_active.current('3')
+                setsubnavitemactive('')
+                setnavitemactive('3')
                 ref_setter_show_menu_config.current!(true)
 
               } else {
-                ref_setter_sub_nav_item_active.current('8')
-                ref_setter_nav_item_active.current('3')
+                setsubnavitemactive('8')
+                setnavitemactive('3')
                 ref_setter_show_menu_config.current!(true)
 
               }
@@ -175,13 +180,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             onClick={
               evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                  ref_setter_sub_nav_item_active.current('')
-                  ref_setter_nav_item_active.current('3')
+                  setsubnavitemactive('')
+                  setnavitemactive('3')
                   ref_setter_show_menu_config.current!(true)
 
                 } else {
-                  ref_setter_sub_nav_item_active.current('editionFlux')
-                  ref_setter_nav_item_active.current('3')
+                  setsubnavitemactive('editionFlux')
+                  setnavitemactive('3')
                   ref_setter_show_menu_config.current!(true)
 
                 }
@@ -206,10 +211,10 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       eventKey="dimension"
       style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
       onClick={evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === 'dimension') {
-          ref_setter_nav_item_active.current('')
+        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === 'dimension') {
+          setnavitemactive('')
         } else {
-          ref_setter_nav_item_active.current('dimension')
+          setnavitemactive('dimension')
         }
       }}
     >
@@ -227,25 +232,18 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
  * @type {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
 export type ConfigurationMenuTypes = {
-  uiElementsRef: uiElementsRefType,
   accordion_ref: MutableRefObject<HTMLDivElement|null>,
+  ref_nav_item_active: MutableRefObject<string>,
   configuration_menus: JSX.Element[],
 }
 
 export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> = (
   {
-    uiElementsRef,
+    ref_nav_item_active,
     accordion_ref,
     configuration_menus
   }
 ) => {
-  const [navitemactive, setnavitemactive] = useState('')
-  const [subnavitemactive, setsubnavitemactive] = useState('')
-  const { ref_setter_nav_item_active, ref_setter_sub_nav_item_active, ref_nav_item_active, ref_sub_nav_item_active} = uiElementsRef
-  ref_setter_nav_item_active.current = setnavitemactive
-  ref_setter_sub_nav_item_active.current = setsubnavitemactive
-  ref_nav_item_active.current = navitemactive
-  ref_sub_nav_item_active.current = subnavitemactive
   return (
     <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={ref_nav_item_active.current} >
       {configuration_menus.map((c:ReactElementLike, i:number)=>{
