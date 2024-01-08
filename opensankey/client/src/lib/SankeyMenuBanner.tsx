@@ -32,7 +32,7 @@ import {
   addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType, 
   setDiagramFuncType, stretchButtonsFType, ToolbarBuilderFType 
 } from '../types/SankeyMenuBannerTypes'
-import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from '../types/SankeyUtilsTypes'
+import { GetSankeyMinWidthAndHeightFuncType } from '../types/SankeyUtilsTypes'
 
 // Delete all local node variable : local_aggregation when we switch general aggregation 
 const delete_local_aggregation=(data:SankeyData)=>{
@@ -393,25 +393,20 @@ export const setDiagram:setDiagramFuncType = (
 
 export const ToolbarBuilder : ToolbarBuilderFType = (
   t:TFunction,
-  data: SankeyData,
-  set_data: (d:SankeyData)=>void,
-  mode_selection:{current:string},
-  userScaleRef:{current:number},
-  filter:number,
-  set_current_filter:(n:number)=>void,
-  detail_level: React.ReactElement,
-  url_prefix: string,
+  data,
+  set_data,
+  dict_variable_elements_selected,
+  filter,
+  set_current_filter,
+  detail_level,
+  url_prefix,
   first_selected_node,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  setDiagram: setDiagramFuncType,
+  GetSankeyMinWidthAndHeight,
+  setDiagram,
   dict_hook_ref_setter_show_dialog_components,
-  set_never_see_again:(b:boolean)=>void,
-  convert_data:ConvertDataFuncType,
-  maximum_flux:{current:number | null | undefined},
-  // set_maximum_flux:(n:number)=>void,
-  minimum_flux:number | null | undefined,
-  set_minimum_flux:(n:number)=>void,
-  DefaultSankeyData: DefaultSankeyDataFuncType,
+  never_see_again,
+  convert_data,
+  DefaultSankeyData,
 ) => {
   const level_filter = Object.entries(data.levelTags).length > 0
   const [show_link_threshold,set_show_link_threshold]=useState(false)
@@ -419,6 +414,15 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   const [show_detail_level,set_show_detail_level]=useState(false)
   const target_detail_level=useRef(null)
   const [,set_user_scale]=useState(data.user_scale)
+  const [minimum_flux,set_minimum_flux] = useState(data.minimum_flux)
+  const [maximum_flux,set_maximum_flux] = useState(data.maximum_flux)
+
+  const { mode_selection, userScaleRef } = dict_variable_elements_selected
+
+  if(data.maximum_flux && data.minimum_flux && data.minimum_flux>data.maximum_flux){
+    data.maximum_flux=data.minimum_flux
+    set_maximum_flux(data.minimum_flux)
+  }
   /**
    * Change the mouse behavior
    *
@@ -528,13 +532,12 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
               overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
               <FormControl
                 type="text"
-                value={maximum_flux.current == null ? undefined : maximum_flux.current}
+                value={maximum_flux!}
                 onChange={evt => {
-                  // set_maximum_flux(+evt.target.value)
-                  maximum_flux.current=+evt.target.value
+                  set_maximum_flux(+evt.target.value)
                 }}
                 onBlur={() => {
-                  data.maximum_flux = isNaN(Number(maximum_flux.current))?undefined:maximum_flux.current
+                  data.maximum_flux = maximum_flux
                   set_data({ ...data })
                 }}/>
             </OverlayTrigger>
@@ -555,7 +558,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
               overlay={<Tooltip id={'MEP.tooltips.MinFlux'}>{t('MEP.tooltips.MinFlux')} </Tooltip>}>
               <FormControl
                 type="text"
-                value={minimum_flux == null ? undefined : minimum_flux}
+                value={minimum_flux!}
                 onChange={evt => {
                   set_minimum_flux(+evt.target.value)
                 }}
@@ -850,7 +853,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
         overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
         }
       >
-        <Button variant='info' onClick={() => { set_never_see_again(false);localStorage.removeItem('dontSeeAggainWelcome'),dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true) }} >
+        <Button variant='info' onClick={() => { never_see_again.current = false;localStorage.removeItem('dontSeeAggainWelcome'),dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true) }} >
           <Col> ? </Col>
         </Button>
       </OverlayTrigger> : <></>}

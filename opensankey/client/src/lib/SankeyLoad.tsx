@@ -1,33 +1,45 @@
-import { TFunction } from 'i18next'
 import React,{ useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 import Spinner  from 'react-bootstrap/Spinner'
-import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
+import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType } from '../types/Types'
+import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
 interface SankeyLoadProdTypes {
-  t:TFunction
-  url_prefix: string,
+  applicationContext: applicationContextType,
+  applicationDraw: applicationDrawType,
+  dict_variable_application_data: dict_variable_application_dataType,
   successAction: () => void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  processFunctions:processFunctionsType
+  processFunctions:processFunctionsType,
+  convert_data:ConvertDataFuncType
 }
 
 const SankeyLoad = ({
-  t,
-  url_prefix,
+  applicationContext,
+  applicationDraw,
+  dict_variable_application_data,
   successAction,
   processFunctions,
   dict_hook_ref_setter_show_dialog_components,
+  convert_data
 } : SankeyLoadProdTypes) => {
-  const {processing,setProcessing,failure,setFailure,setNotStarted,result,setResult,is_computing,setIsComputing}=processFunctions
+  const { t,url_prefix } = applicationContext
+  const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults}=processFunctions
 
   const [value,setValue] = useState([1,2])
   const [show_load_dialog,set_show_load_dialog] = useState(false)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_load.current=set_show_load_dialog
+  const [result,set_result] = useState('')
+  const [processing,set_processing] = useState(false)
+  ref_result.current = set_result
+  ref_setter_processing.current = set_processing
+  const [is_computing,set_is_computing] = useState(false)
+
   const reset = () => {
-    setProcessing(false)
-    setFailure(false)
-    setIsComputing(false)
-    setNotStarted(true)
+    set_processing(false)
+    ref_processing.current = false
+    failure.current = false
+    set_is_computing(false)
+    not_started.current = true
   }
 
   const handleChange = (evt:MouseEvent) => {
@@ -41,8 +53,42 @@ const SankeyLoad = ({
 
   const infos = result !== undefined ? result.split('\n') : []
   const success_status = t('Menu.loaded_file')
-  const failure_status = t('Menu.failur_file')
+  const failure_status = t('Menu.failure_file')
   const spinner=(processing || is_computing)? <Spinner animation="border" />:<></>
+
+  if (!not_started.current && !processing) {
+    const path = window.location.href
+    const url = path + applicationContext.url_prefix + 'loads_retrieves_result'
+    const form_data = new FormData()
+    const fetchData = {
+      method: 'POST',
+      body: form_data
+    }
+    fetch(url, fetchData).then(response => {
+      response.text().then(text => {
+        try {
+          RetrieveExcelResults(
+            text,
+            dict_variable_application_data.set_data,
+            applicationDraw.updateLayout,
+            ()=>null,
+            applicationDraw.GetSankeyMinWidthAndHeight,
+            convert_data,
+            dict_variable_application_data.get_default_data
+          )
+        } catch(err) {
+          alert(err)
+        }
+      }).then(()=>{
+        set_is_computing(false)
+      })
+    })
+    set_processing(false)
+    ref_processing.current = false
+    failure.current = false
+    not_started.current = true
+  }
+
   return (
     <Modal
       bsSize="large"
@@ -68,10 +114,10 @@ const SankeyLoad = ({
                       <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
                       {t('Menu.load_file')}
                     </Button>):(
-                    failure ? (
+                    failure.current ? (
                       <Button variant="danger" onClick={reset}>{failure_status}</Button>) : <>
                       {
-                        is_computing? (
+                        is_computing ? (
                           <Button
                             variant='info'>
                             {t('Menu.compute_file')}
@@ -101,13 +147,14 @@ const SankeyLoad = ({
               <Counter
                 url_prefix={url_prefix}
                 finishReconciliation={()=>{
-                  setProcessing(false)
-                  setIsComputing(true)
-                  setFailure(false)
+                  set_processing(false)
+                  ref_processing.current = false
+                  set_is_computing(true)
+                  failure.current = false
                 }}
                 value={value}
                 result={result}
-                setResult={setResult}
+                set_result={set_result}
               />
             ) : (<>
               <Row >
@@ -141,7 +188,11 @@ const SankeyLoad = ({
  * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
-export const Counter = ({url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}) => {
+export const Counter = ({
+  url_prefix,
+  finishReconciliation,
+  value,result,set_result
+}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,set_result:(_:string)=>void}) => {
   useEffect(() =>{
     const interval = setInterval(() => {
       const root = window.location.href
@@ -155,7 +206,7 @@ export const Counter = ({url_prefix,finishReconciliation,value,result,setResult}
           if(response.ok) {
             response.json().then(
               function (data) {
-                setResult(data.output)
+                set_result(data.output)
               }
             )
           }
@@ -163,16 +214,13 @@ export const Counter = ({url_prefix,finishReconciliation,value,result,setResult}
     }, 5000)
     return () => clearInterval(interval)
   })
-  const infos = (result !== undefined) ? result.split('\n') : []
+  const infos = result.split('\n')
   if ( infos.length > 2) {
     if (result.includes('FINISHED')) {
-      //console.log('finished')
       finishReconciliation(false)
     } else if (result.includes('FAILED')) {
       finishReconciliation(true)
     }
-  } else {
-    //console.log('else')
   }
   return (
     <Row >

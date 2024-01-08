@@ -1,4 +1,4 @@
-import React, { FunctionComponent, RefObject, useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
 import { SankeyLink, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 
@@ -20,17 +20,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
-  tags_group_key:string,
-  set_tags_group_key:(_:string)=>void,
   additional_data_element:JSX.Element[],
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   additional_link_appearence_items:JSX.Element[],
-  display_link_opacity:string,
-  set_display_link_opacity:(s:string)=>void,
-  pre_idSource:string,
-  set_pre_idSource:(s:string)=>void,
-  pre_idTarget:string,
-  set_pre_idTarget:(s:string)=>void,
   GetLinkValue:GetLinkValueFuncType,
 
 ) => {
@@ -40,12 +31,10 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
     'data'      : MenuConfigurationLinksData(
-      dict_variable_application_data,dict_variable_elements_selected,
+      dict_variable_application_data,
+      dict_variable_elements_selected,
       applicationContext,
       additional_data_element,
-      displayedInputLinkValueRef,
-      pre_idSource,set_pre_idSource,
-      pre_idTarget,set_pre_idTarget,
       false
     ),
     'appearence': MenuConfigurationLinksAppearence(
@@ -53,7 +42,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       dict_variable_elements_selected,
       applicationContext,
       additional_link_appearence_items,
-      false,display_link_opacity,set_display_link_opacity,GetLinkValue
+      false,
+      GetLinkValue
     ),
     'tooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t)
   }
@@ -62,8 +52,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
     ui['tags']=MenuConfigurationLinksTags(
       dict_variable_application_data,
       dict_variable_elements_selected,
-      applicationContext,
-      tags_group_key,set_tags_group_key
+      applicationContext
     )
   }
 
@@ -75,29 +64,22 @@ type SankeyMenuConfigurationLinksTypes = {
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   menu_configuration_links : JSX.Element[]
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
-  set_display_link_opacity:(s:string)=>void,
-  pre_idSource:string,
-  pre_idTarget:string
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
   { dict_variable_application_data,
     dict_variable_elements_selected,
     applicationContext,
-    menu_configuration_links,
-    displayedInputLinkValueRef,
-    set_display_link_opacity,
-    pre_idSource,
-    pre_idTarget
+    menu_configuration_links
   }
 ) => {
-
-  const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
-  const {tags_selected,set_tags_selected,multi_selected_links,multi_selected_nodes}=dict_variable_elements_selected
+  const {data,set_data}=dict_variable_application_data
+  const { multi_selected_links,multi_selected_nodes, displayedInputLinkValueRef}=dict_variable_elements_selected
   const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
+
+  const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
 
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
@@ -113,14 +95,14 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   }))
 
   //Créer un objet contenant la clé de chaque dataTag avec pour valeur la première tag de ces groupe
-  const dataTagsSelected = Object.fromEntries(newEntries)
+  let tags_selected = Object.fromEntries(newEntries)
 
   //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
-  delete dataTagsSelected['n']
+  delete tags_selected['n']
 
-  if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
-    set_tags_selected(dataTagsSelected)
-  }
+  // if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
+  //   set_tags_selected(dataTagsSelected)
+  // }
 
   const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_visible.includes(l.idSource) && node_visible.includes(l.idTarget) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
   const selected_links = multi_selected_links.current.map((d) => {
@@ -149,7 +131,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
             multi_selected_links.current = m_s
             if(m_s.length>0){
-              set_display_link_opacity(ReturnValueLink(data,m_s[0],'opacity') as string)
+              dict_variable_elements_selected.ref_display_link_opacity.current.forEach(
+                setter=>setter(ReturnValueLink(data,m_s[0],'opacity') as string)
+              )
             }
 
             if(multi_selected_links.current.length>0){
@@ -165,8 +149,14 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   const key=Object.keys(data.dataTags)[Number(i)]
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
-                set_tags_selected(new_tags_selected)
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as string)
+                tags_selected = new_tags_selected
+                displayedInputLinkValueRef.current.forEach(setter=>setter(
+                  ValueSelectedParameter(
+                    dict_variable_application_data,
+                    multi_selected_links,
+                    new_tags_selected
+                  ).value as string
+                ))
 
               }else if(Object.values(data.dataTags).length>0){
                 // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -178,13 +168,23 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 Object.keys(data.dataTags).forEach((dt,i)=>{
                   n_t_s[dt]=tmp[i]
                 })
-                set_tags_selected(n_t_s)
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:n_t_s} as dict_variable_elements_selectedType).value as string)
+                tags_selected = (n_t_s)
+                displayedInputLinkValueRef.current.forEach(setter=>setter(
+                  ValueSelectedParameter(
+                    dict_variable_application_data,
+                    multi_selected_links,
+                    n_t_s
+                  ).value as string
+                ))
               }else{
-                displayedInputLinkValueRef.current!.value = (ValueSelectedParameter(dict_variable_application_data,{multi_selected_links:multi_selected_links,tags_selected:new_tags_selected} as dict_variable_elements_selectedType).value as string)
+                displayedInputLinkValueRef.current.forEach(setter=>setter(
+                  ValueSelectedParameter(
+                    dict_variable_application_data,
+                    multi_selected_links,
+                    new_tags_selected
+                  ).value as string))
               }
             }
-
             set_data({...data})
           }}
           labelledBy={'hello'}
@@ -215,11 +215,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     let ids=node_keys[0]
     let idt=node_keys[1]
 
-    if(pre_idSource!=='none'){
-      ids=pre_idSource
+    if ( ref_pre_idSource.current!=='none' ){
+      ids=ref_pre_idSource.current
     }
-    if(pre_idTarget!=='none'){
-      idt=pre_idTarget
+    if ( ref_pre_idTarget.current !== 'none' ){
+      idt = ref_pre_idTarget.current
     }
     
     link.idSource = nodes[ids].idNode
@@ -233,7 +233,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     nodes[idt].inputLinksId.push(link.idLink)
 
     multi_selected_links.current = [link]
-    set_display_link_opacity(ReturnCorrectLinkAttributeValue(data,link,'opacity',false) as string)
+    dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(
+      ReturnCorrectLinkAttributeValue(data,link,'opacity',false) as string)
+    )
     data.linkZIndex.push(
       link.idLink)
     set_data({ ...data })

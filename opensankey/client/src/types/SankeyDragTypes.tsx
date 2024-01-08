@@ -2,6 +2,7 @@ import { DragBehavior, SubjectPosition } from 'd3'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType } from './Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from './SankeyUtilsTypes'
+import { MutableRefObject } from 'react'
 
 export type ReturnOutOfBoundElementFuncType = (dragged: SankeyNode,
   data: SankeyData,
@@ -67,7 +68,8 @@ export type DragLinkEventFType=(
  * @param {boolean} alt_key_pressed
  * @returns {*}
  */
-export type dragLinkTextEventFType =(alt_key_pressed:boolean,
+export type dragLinkTextEventFType =(
+  alt_key_pressed:MutableRefObject<boolean>,
 )=> DragBehavior<SVGTextElement, SankeyLink, SankeyLink | SubjectPosition>
 
 /**
@@ -194,7 +196,7 @@ export type DragGNodeEventFType=(
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   mode_selection:{current:string},
-  alt_key_pressed:boolean,
+  alt_key_pressed:MutableRefObject<boolean>,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,

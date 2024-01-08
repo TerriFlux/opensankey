@@ -29,10 +29,6 @@ export type ApplyLayoutDialogTypes = {
   set_sankey_data : (_:SankeyData)=>void,
   updateLayout:updateLayoutFuncType,
   convert_data:ConvertDataFuncType,
-  node_hspace:number,
-  set_node_hspace:(_:number)=>void,
-  node_vspace:number,
-  set_node_vspace:(_:number)=>void,
   diagramSelector: OpenSankeyDiagramSelectorFType,
   elementToDispose:string[],
   apply_transformation_additional_elements: JSX.Element[],
@@ -46,7 +42,7 @@ export type ApplyLayoutDialogTypes = {
  */
 export const ApplyLayoutDialog = ({ 
   t,dict_hook_ref_setter_show_dialog_components, sankey_data, set_sankey_data,
-  updateLayout,convert_data,node_hspace,set_node_hspace,node_vspace,set_node_vspace,
+  updateLayout,convert_data,
   diagramSelector,
   elementToDispose,
   apply_transformation_additional_elements,
@@ -57,9 +53,17 @@ export const ApplyLayoutDialog = ({
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
   const [mode_trans,set_mode_trans]=useState('simple')
+  const [node_hspace,set_node_hspace] = useState(sankey_data.h_space)
+  const [node_vspace,set_node_vspace] = useState(sankey_data.v_space)
+  if ( node_hspace !== sankey_data.h_space) {
+    set_node_hspace(sankey_data.h_space)
+  }
+  if ( node_vspace !== sankey_data.v_space) {
+    set_node_vspace(sankey_data.v_space)
+  }
   const node_visible=NodeVisibleOnsSvg()
-  const [show_modal_apply_layout,set_show_modal_apply_layout]=useState(false)
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current=set_show_modal_apply_layout
+  //const [show_modal_apply_layout,set_show_modal_apply_layout]=useState(false)
+  //dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current=set_show_modal_apply_layout
   const all_element_to_transform = [
     'addNode', 'addFlux', 'removeNode', 'removeFlux',
     'posNode', 'posFlux', 
@@ -566,7 +570,14 @@ export const ApplyLayoutDialog = ({
     </Tab>
     <Tab key='trans_topo' eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
   </Tabs>
-  const dragLayout=show_modal_apply_layout?MenuDraggable(content_modal_layout,{current:[window.innerWidth/4,window.innerHeight/4]},t('Menu.Transformation.title'),set_show_modal_apply_layout,60):<></>
+  const dragLayout= MenuDraggable(
+    dict_hook_ref_setter_show_dialog_components,
+    'ref_setter_show_apply_layout',
+    content_modal_layout,
+    {current:[window.innerWidth/4,window.innerHeight/4]},
+    t('Menu.Transformation.title'),
+    60
+  )
   return dragLayout
 
 }
@@ -733,7 +744,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
           variant="secondary"
           onClick={
             () => {
-              launch('')
+              launch((input_file_name as unknown as {[name:string]:string}).name)
               UploadExcelImpl(
                 set_show_excel_dialog,input_file_name as Blob,url_prefix
               )

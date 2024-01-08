@@ -1,7 +1,8 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyNode, dict_hook_ref_setter_show_dialog_componentsType } from './Types'
+import { SankeyData, SankeyNode, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_elements_selectedType } from './Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
+import { MutableRefObject } from 'react'
 
 export type setDiagramFuncType = (
   the_diagram: string, 
@@ -33,8 +34,7 @@ export type ToolbarBuilderFType = (
   t:TFunction,
   data: SankeyData,
   set_data: (d:SankeyData)=>void,
-  mode_selection:{current:string},
-  userScaleRef : {current:number},
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   filter:number,
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,
@@ -43,12 +43,8 @@ export type ToolbarBuilderFType = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   setDiagram: setDiagramFuncType,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  set_never_see_again:(b:boolean)=>void,
+  never_see_again: MutableRefObject<boolean>,
   convert_data:ConvertDataFuncType,
-  maximum_flux:{current:number | null | undefined},
-  // set_maximum_flux:(n:number)=>void,
-  minimum_flux:number | null | undefined,
-  set_minimum_flux:(n:number)=>void,
   DefaultSankeyData: DefaultSankeyDataFuncType,
 ) => {[s:string] :JSX.Element}
 
