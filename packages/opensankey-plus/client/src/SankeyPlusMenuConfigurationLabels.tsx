@@ -1,4 +1,4 @@
-import React,{useState,ChangeEvent} from 'react'
+import React,{useState,ChangeEvent, FunctionComponent} from 'react'
 import { Row,
   Form,
   FormControl,
@@ -56,7 +56,7 @@ export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFTyp
  */
 export interface selected_type  {'label':string;'value':string}
 
-export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfigurationFreeLabelsFType = (
+export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlusMenuConfigurationFreeLabelsFType> = ({
   data,
   set_data,
   multi_selected_label,
@@ -67,7 +67,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfiguration
   editor_content_fo_zdt,
   set_editor_content_fo_zdt,
   refWysiwygZDT
-) => {
+}) => {
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.title, 'value': d.idLabel } })
