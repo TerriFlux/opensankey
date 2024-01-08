@@ -29,7 +29,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   animation,
   mode_selection,
   agregation,
-  set_alt_key_pressed,
+  ref_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
   // Il faut détruire les tooltips à chaque passage dans le draw
@@ -43,13 +43,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   window.focus()
   d3.select(window).on('keydown', (event) => {
     if (event.keyCode === 18) {
-      set_alt_key_pressed(true)
+      ref_alt_key_pressed.current = true
       window.focus()
     }
   })
   d3.select(window).on('keyup', (event) => {
     if (event.keyCode === 18) {
-      set_alt_key_pressed(false)
+      ref_alt_key_pressed.current = false
       window.focus()
     }
   })

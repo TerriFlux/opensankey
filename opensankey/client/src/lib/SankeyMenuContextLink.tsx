@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { Dropdown, ButtonGroup, Button, Popover } from 'react-bootstrap'
 import { ContextMenuLinkFType } from '../types/SankeyMenuContextLinkTypes'
 import { SankeyLink, SankeyNode,  SankeyLinkValue } from '../types/Types'
@@ -11,21 +11,27 @@ const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFr
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
-export const ContextMenuLink : ContextMenuLinkFType = (
+export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   applicationContext,
   dict_variable_application_data,
   dict_variable_elements_selected,
   contextMenu,
   dict_hook_ref_setter_show_dialog_components
-)=>{
+})=>{
   const [ contextualised_link, set_contextualised_link] = useState<SankeyLink>()
-  if (contextMenu.contextualised_link.current!.length == 0) {
-    contextMenu.contextualised_link.current!.push([contextualised_link,set_contextualised_link])
-  }
+  contextMenu.ref_setter_contextualised_link.current = set_contextualised_link
+
   const { pointer_pos } = contextMenu
-  const { multi_selected_links,tags_selected } = dict_variable_elements_selected
+  const { multi_selected_links } = dict_variable_elements_selected
   const { data, set_data } = dict_variable_application_data
   const { t } = applicationContext
+
+  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+    return (Object.keys(dataTag.tags).length > 0) ? [
+      dataTagKey,
+      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+  }))
+  const tags_selected = Object.fromEntries(newEntries)
 
   let style_c_l='0px 0px auto auto'
   if(contextualised_link){
@@ -143,7 +149,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
 
 
   const button_open_link_appearence=contextualised_link!==undefined?<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.show_menu_link_appearence[1](true)
+    dict_hook_ref_setter_show_dialog_components.show_menu_link_appearence.current(true)
     set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
@@ -237,7 +243,7 @@ export const ContextMenuLink : ContextMenuLinkFType = (
   </Dropdown>:<></>
 
   const button_open_link_data=contextualised_link!==undefined?<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.show_menu_link_data[1](true)
+    dict_hook_ref_setter_show_dialog_components.show_menu_link_data.current(true)
     set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
 

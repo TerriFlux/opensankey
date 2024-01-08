@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import React, { useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { Dropdown, ButtonGroup, Button, Popover, Form } from 'react-bootstrap'
 import { ContextMenuZddFType } from '../types/SankeyMenuContextZDDTypes'
 import { ComputeAutoSankey, arrangeNodes } from './SankeyLayout'
@@ -11,13 +11,13 @@ const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFr
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
-export const ContextMenuZdd : ContextMenuZddFType =(
+export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   applicationContext,
   dict_variable_application_data,
   contextMenu,
-  dict_hook_ref_setter_show_dialog_components,
-  applicationDrawVar
-)=>{
+  dict_hook_ref_setter_show_dialog_components
+}) => {
+
   const [ show_context_zdd, set_show_context_zdd ] = useState(false)
   if ( contextMenu.showContextZDDRef.current!.length === 0 ) {
     contextMenu.showContextZDDRef.current!.push([ show_context_zdd, set_show_context_zdd ])
@@ -25,8 +25,10 @@ export const ContextMenuZdd : ContextMenuZddFType =(
   const { data, set_data } = dict_variable_application_data
   const { t } = applicationContext
   const { pointer_pos } = contextMenu
-  const {node_hspace,set_node_hspace,node_vspace,set_node_vspace } =applicationDrawVar
-  
+
+  const [node_hspace,set_node_hspace] = useState(data.h_space)
+  const [node_vspace,set_node_vspace] = useState(data.v_space) 
+
   const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
     d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
     d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
@@ -205,7 +207,7 @@ export const ContextMenuZdd : ContextMenuZddFType =(
   </Button>
 
   const button_open_layout=<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.show_menu_layout[1](true)
+    dict_hook_ref_setter_show_dialog_components.show_menu_layout.current(true)
     set_show_context_zdd(false)
 
   }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>

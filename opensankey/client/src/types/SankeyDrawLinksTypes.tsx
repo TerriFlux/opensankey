@@ -1,4 +1,4 @@
-import { RefObject } from 'react'
+import { MutableRefObject } from 'react'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkColorFuncType, LinkTextFuncType } from './SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType } from './Types'
@@ -10,17 +10,14 @@ export type DrawLinksFType = (
   dict_variable_application_data:dict_variable_application_dataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
-  mode_selection:{current:string},
-  alt_key_pressed:boolean,
+  alt_key_pressed:MutableRefObject<boolean>,
   position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
   LinkTooltipsContent:(data: SankeyData, l: SankeyLink, GetLinkValue:GetLinkValueFuncType) => string,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
   LinkStroke:LinkStrokeFuncType,
   DrawArrows:DrawArrowsType,
-  set_display_link_opacity:(s:string)=>void,
   LinkSabotColor:LinkColorFuncType
 ) => JSX.Element
 

@@ -15,12 +15,12 @@ export type drag_legendFType=(
   set_data:(d:SankeyData)=>void
 )=> (selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, ...args: unknown[]) => void
 
-export type ContextLegendTagsFType=(
-  dict_variable_application_data:dict_variable_application_dataType,
+export type ContextLegendTagsFType = {
   applicationContext:applicationContextType,
+  dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
-)=> JSX.Element
+}
 
 export type drag_legend_g_elementFuncType = (data: SankeyData, event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void

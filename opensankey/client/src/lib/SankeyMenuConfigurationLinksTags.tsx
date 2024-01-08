@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Row, Form,  Tab, InputGroup } from 'react-bootstrap'
 import {SankeyLinkValue } from '../types/Types'
 import { Checkbox } from '@chakra-ui/react'
@@ -8,13 +8,20 @@ import { MenuConfigurationLinksTagsFType } from '../types/SankeyMenuConfiguratio
 export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
   dict_variable_application_data,
   dict_variable_elements_selected,
-  applicationContext,
-  tags_group_key:string,
-  set_tags_group_key:(_:string)=>void,
+  applicationContext
 )=>{
   const {data,set_data}=dict_variable_application_data
-  const {multi_selected_links,tags_selected}=dict_variable_elements_selected
+  const {multi_selected_links}=dict_variable_elements_selected
   const {t}=applicationContext
+
+  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+    return (Object.keys(dataTag.tags).length > 0) ? [
+      dataTagKey,
+      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+  }))
+  const tags_selected = Object.fromEntries(newEntries)
+
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.fluxTags).length > 0 ? Object.keys(data.fluxTags)[0] : '')
 
   const {fluxTags}=data
   const tags_visible = Object.keys(fluxTags).length > 0

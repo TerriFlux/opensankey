@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import React from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip,FormControl, Button, ButtonGroup, InputGroup,Dropdown } from 'react-bootstrap'
-import { SankeyData, SankeyNode, SankeyNodeAttrLocal } from '../types/Types'
+import { SankeyNodeAttrLocal } from '../types/Types'
 import { ReturnCorrectNodeAttributeValue,
   AssignNodeValueToCorrectVar,
   IsNodeDisplayingValueLocal,
@@ -14,19 +14,21 @@ import { Checkbox } from '@chakra-ui/react'
 import { OpenSankeyConfigurationNodesAttributesFType } from '../types/SankeyMenuConfigurationNodesAttributesTypes'
 
 export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNodesAttributesFType = (
-  t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  multi_selected_nodes:{current:SankeyNode[]},
-  menu_for_style:boolean,
-  selected_style_node:string,
-  set_style_to_apply:(s:string)=>void,
-  advanced_appearence_content:JSX.Element[],
-  advanced_label_content:JSX.Element[],
-  advanced_label_value_content:JSX.Element[],
+  applicationContext,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  menu_for_style,
+  ref_selected_style_node,
+  advanced_appearence_content,
+  advanced_label_content,
+  advanced_label_value_content,
 ) => {
+  const { t } = applicationContext
+  const { data, set_data } = dict_variable_application_data
+  const { multi_selected_nodes } = dict_variable_elements_selected
+
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
-  const selected_parameter=(menu_for_style)?[data.style_node[selected_style_node]]:multi_selected_nodes.current
+  const selected_parameter=(menu_for_style)?[data.style_node[ref_selected_style_node.current]]:multi_selected_nodes.current
 
   const getBrowserName = () => {
     const browserInfo = navigator.userAgent
@@ -837,7 +839,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           return (<Dropdown.Item
             key={i}
             onClick={() => {
-              set_style_to_apply(d)
+              ref_selected_style_node.current = d
               multi_selected_nodes.current.map(n => {
                 n.style = d
               })

@@ -10,7 +10,6 @@ export type ContextMenuNodeFType = {
   contextMenu : contextMenuType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   agregation: agregationType,
-  set_display_link_opacity:(_:string)=>void,
   additional_context_element_menu:JSX.Element[],
   additional_context_element_other:JSX.Element[],
  }

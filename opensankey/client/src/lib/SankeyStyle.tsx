@@ -1,37 +1,49 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import React from 'react'
+import React, { Dispatch, MutableRefObject, SetStateAction, useState } from 'react'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
 import {  CutName,DefaultNodeStyle,DefaultLinkStyle, GetLinkValue } from './SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
-import { TFunction } from 'i18next'
 import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
 import {MenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
-import { SankeyData, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
+import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
+import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from '../types/SankeyStyleTypes'
 
 
-export const SankeyModalStyleNode  = (
-  t:TFunction,data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  showStyle:boolean,
-  setShowStyle:(_:boolean)=>void,
-  selected_style_node:string,
-  set_selected_style_node:(_:string)=>void,
-  additional_node_attribute:JSX.Element[],
-  set_style_to_apply:(s:string)=>void
+export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
+  applicationContext,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  ref_show_style_node,
+  ref_selected_style_node,
+  additional_node_attribute
 ) => {
-
-  if(!Object.keys(data.style_node).includes(selected_style_node)){
+  const { t } = applicationContext
+  const { data, set_data } = dict_variable_application_data
+  const [ selected_style_node,set_selected_style_node] = useState('default')
+  ref_selected_style_node.current = selected_style_node
+  const [ show_style_node, set_show_style_node ] = useState(false)
+  ref_show_style_node.current = set_show_style_node
+  if(data.style_node && !Object.keys(data.style_node).includes(selected_style_node)){
     set_selected_style_node('default')
   }
 
   const closeStyleEdition = () => {
-    setShowStyle(false)
+    set_show_style_node(false)
   }
-  const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(t,data,set_data,{current:[]},true,selected_style_node,set_style_to_apply,[],[],[])
+  const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(
+    applicationContext,
+    dict_variable_application_data,
+    dict_variable_elements_selected,
+    true,
+    ref_selected_style_node,
+    [],
+    [],
+    []
+  )
   additional_node_attribute.forEach(el=>tab_node_style_attribute.push(el))
 
   return(
-    <Modal show={showStyle} onHide={closeStyleEdition} size={'lg'}  >
+    <Modal show={show_style_node} onHide={closeStyleEdition} size={'lg'}  >
       <Modal.Header closeButton>
         <Modal.Title>{t('Menu.esn')}</Modal.Title>
       </Modal.Header>
@@ -98,29 +110,30 @@ export const SankeyModalStyleNode  = (
 
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export const SankeyModalStyleLink = (
-  dict_variable_application_data:dict_variable_application_dataType,
+export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
   applicationContext:applicationContextType,
+  dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
-  showStyleLink:boolean,
-  setShowStyleLink:(_:boolean)=>void,
-  additional_link_appearence_items:JSX.Element[],
-  display_link_opacity:string,
-  set_display_link_opacity:(s:string)=>void
+  ref_show_style_link: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  additional_link_appearence_items:JSX.Element[]
 ) => {
   const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
-  const {selected_style_link,set_selected_style_link}=dict_variable_elements_selected
+  const {ref_selected_style_link}=dict_variable_elements_selected
+  const [selected_style_link,set_selected_style_link] = useState('default')
+  ref_selected_style_link.current = selected_style_link
+  const [show_style_link, set_show_style_link] = useState(false)
+  ref_show_style_link.current = set_show_style_link
 
   if(selected_style_link !== 'default'){
     set_selected_style_link('default')
   }
   const closeStyleEditionLink = () => {
-    setShowStyleLink(false)
+    set_show_style_link(false)
   }
 
   return (
-    <Modal show={showStyleLink} onHide={closeStyleEditionLink} size={'lg'} >
+    <Modal show={show_style_link} onHide={closeStyleEditionLink} size={'lg'} >
       <Modal.Header closeButton>
         <Modal.Title>{t('Menu.esf')}</Modal.Title>
       </Modal.Header>
@@ -161,31 +174,27 @@ export const SankeyModalStyleLink = (
             <FormLabel >{t('Menu.ns')}</FormLabel>
           </Col>
           <Col xs={10} >
-
             <FormControl
               value={
                 (selected_style_link !== '') ? data.style_link[selected_style_link].name : ''
               }
-
               onChange={evt => {
                 data.style_link[selected_style_link].name = evt.target.value
                 set_data({ ...data })
               }}
             />
           </Col>
-
         </Form.Group>
-
-
         <Row>
           <Col md={12}>
-
-            {MenuConfigurationLinksAppearence(dict_variable_application_data,dict_variable_elements_selected,applicationContext,additional_link_appearence_items,true,display_link_opacity,set_display_link_opacity,GetLinkValue,true)}
+            {MenuConfigurationLinksAppearence(
+              dict_variable_application_data,dict_variable_elements_selected,applicationContext,additional_link_appearence_items,
+              true,GetLinkValue,true
+            )
+            }
           </Col>
         </Row>
-
       </Modal.Body>
     </Modal>
   )
-
 }

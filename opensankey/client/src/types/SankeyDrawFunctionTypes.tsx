@@ -1,4 +1,4 @@
-import React, { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
+import React, { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, TagsCatalog, dict_variable_application_dataType, contextMenuType, display_styleType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType } from './Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
@@ -6,8 +6,10 @@ import * as d3 from 'd3'
 
 export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => void
 
-export type ValueSelectedParameterFuncType = (dict_variable_application_data:dict_variable_application_dataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType
+export type ValueSelectedParameterFuncType = (
+  dict_variable_application_data:dict_variable_application_dataType,
+  multi_selected_links:{current: SankeyLink[] },
+  tags_selected:{[k: string]: string}
   ) => SankeyLinkValue
 
 export type SetNodeHeightFuncType = (
@@ -47,13 +49,9 @@ export type SimpleGNodeClickFuncType = (
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   event: React.MouseEvent<HTMLButtonElement>,
-   d: SankeyNode,
-
- mode_selection: {
-    current: string;
-},accept_simple_click: {
-    current: boolean;
-}) => void
+  d: SankeyNode,
+  accept_simple_click: {current: boolean;}
+) => void
 
 export type StrokeDasharrayFType =(
   d:SankeyLink,
@@ -111,9 +109,7 @@ export type EventNodeClickFType = (
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
-  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
- 
-  mode_selection:{current:string}
+  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>
 )=> void
 
 export type EventNodeContextMenuFType = (
@@ -127,13 +123,12 @@ export type EventLinkContextMenuFType = (
   dict_variable_application_data:dict_variable_application_dataType,
   ev:React.MouseEvent<HTMLButtonElement>,
   l:SankeyLink,
-  contextualised_link:RefObject<[SankeyLink | undefined, Dispatch<SetStateAction<SankeyLink | undefined>>][]>,
+  ref_setter_contextualised_link:MutableRefObject<Dispatch<SetStateAction<SankeyLink|undefined>>|undefined>,
   pointer_pos:{current:number[]},
   multi_selected_links:{current:SankeyLink[]},
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
+  displayedInputLinkValueRef: MutableRefObject<Dispatch<SetStateAction<string>>[]>,
   tags_selected:{[k: string]: string},
-  set_tags_selected:(o:{[k: string]: string})=>void,
-  set_display_link_opacity:(s:string)=>void,
+  ref_display_link_opacity : MutableRefObject<Dispatch<SetStateAction<string>>[]>
 )=> void
 
 export type EventZDDContextMenuFType = (
@@ -170,14 +165,9 @@ export type SortOutputLinksIdByYPosFType = (
 export type EventOnMouseUpAddNodesAndLinkFType = (
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  first_selected_node:{current:SankeyNode|undefined},
-  multi_selected_links:{current:SankeyLink[]},
-  accordion_ref:{ current:HTMLDivElement}| null,
-  button_ref: { current: HTMLLabelElement }| null,
-  links_accordion_ref:{ current:HTMLDivElement}| null,
-    displayedInputLinkValueRef: RefObject<HTMLInputElement>,
+  dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
+  uiElementsRef : uiElementsRefType
 )=> void
 
 export type SetNodesHeightFType = (
@@ -261,33 +251,30 @@ export type DrawLinkStartSabotFType = (data:SankeyData,
 export type RepositionneSidebarFuncType = (show_nav: boolean) => void
 
 export type EventOnZoneMouseDownFuncType =(
-  mode_selection: {current: string;},
-   dict_variable_application_data:dict_variable_application_dataType,
-   dict_variable_elements_selected:dict_variable_elements_selectedType,
-   token: boolean, 
-  //  set_show_toast_limit_node: (b: boolean) => void,
-    dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-    evt2: unknown, 
-    start_point: {current: number[];},
-    closeAllMenuContext: () => void) => void
-
-export type EventOnZoneMouseMoveFuncType = (
-  mode_selection: {current: string;},
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
-   evt: MouseEvent, start_point: {current: number[];}) => void
+  token: boolean, 
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
+  evt2: unknown, 
+  start_point: {current: number[];},
+  closeAllMenuContext: () => void
+) => void
+
+export type EventOnZoneMouseMoveFuncType = (
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  evt: MouseEvent, 
+  start_point: {current: number[];}
+) => void
 
 export  type EventOnZoneMouseUpFuncType = (
-  mode_selection: {current: string;}, 
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   uiElementsRef:uiElementsRefType,
   token: boolean, 
-  // set_show_toast_limit_node: (b: boolean) => void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>, 
-  evt: MouseEvent, start_point: {current: number[];},
+  evt: MouseEvent, 
+  start_point: {current: number[];},
   legend_clicked: MutableRefObject<boolean>
 ) => void
 

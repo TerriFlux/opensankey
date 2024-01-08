@@ -1,67 +1,92 @@
-import React, { FunctionComponent, useState,useRef} from 'react'
-import { Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, InputGroup,Overlay,Popover, ButtonGroup } from 'react-bootstrap'
-import { ReactElementLike } from 'prop-types'
-import { SankeyData, SankeyNode,SankeyLink,treeFolderType} from '../types/Types'
-import { DeleteNode,ReturnValueNode,ApplyStyleToNodes,AddNewNode,CutName,FolderIcon,FolderOpenIcon,FileIcon} from './SankeyUtils'
-import * as d3 from 'd3'
-import { FaPlus, FaMinus, FaEye,} from 'react-icons/fa'
-// import { MultiSelect } from 'react-multi-select-component'
-// import { selected_type } from './SankeyMenu'
-import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
-import {SankeyMenuConfigurationNodesAttributes} from './SankeyMenuConfigurationNodesAttributes'
-import {SankeyMenuConfigurationNodesTags} from './SankeyMenuConfigurationNodesTags'
-import {SankeyMenuConfigurationNodesTooltip} from './SankeyMenuConfigurationNodesTooltip'
-import { textwrap } from 'd3-textwrap'
-import { TFunction } from 'i18next'
-import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
+import React, { FunctionComponent, useState, useRef } from 'react'
+import { 
+  Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, 
+  InputGroup,Overlay,Popover, ButtonGroup 
+} from 'react-bootstrap'
 import FolderTree from 'react-folder-tree'
 import 'react-folder-tree/dist/style.css'
+import { ReactElementLike } from 'prop-types'
+import { FaPlus, FaMinus, FaEye,} from 'react-icons/fa'
+
+import * as d3 from 'd3'
+import { textwrap } from 'd3-textwrap'
+import { TFunction } from 'i18next'
+
+/*************************************************************************************************/
+import { SankeyData, SankeyNode, treeFolderType } from '../types/Types'
 import { GetLinkValueFuncType } from '../types/SankeyUtilsTypes'
-import { OpenSankeyMenuConfigurationNodesFType, add_childrenFType, check_node_has_node_typeFType, getNodeFromTreeFType, tree_data_nodesFType } from '../types/SankeyMenuConfigurationNodesTypes'
+import { 
+  OpenSankeyMenuConfigurationNodesFType, add_childrenFType, 
+  check_node_has_node_typeFType, getNodeFromTreeFType, tree_data_nodesFType 
+} from '../types/SankeyMenuConfigurationNodesTypes'
+/*************************************************************************************************/
+import { 
+  DeleteNode,ReturnValueNode,ApplyStyleToNodes,AddNewNode,
+  CutName,FolderIcon,FolderOpenIcon,FileIcon
+} from './SankeyUtils'
+import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
+import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
+import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
+import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
+import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
+/*************************************************************************************************/
+
 
 type SankeyEditionTypes = {
   t : TFunction,
   data : SankeyData,
   set_data : (_:SankeyData)=>void,
   multi_selected_nodes:{current:SankeyNode[]},
-  set_style_to_apply:(s:string)=>void,
   menu_configuration_nodes : JSX.Element[],
   token : boolean
 }
 
 export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
-  t:TFunction<'translation', undefined>,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  display_nodes: { [node_id: string]: SankeyNode },
-  multi_selected_nodes:{current:SankeyNode[]},
-  menu_configuration_nodes_attributes:JSX.Element[],
-  link_io:string,set_link_io:(_:string)=>void,
-  link_pos:string,set_link_pos:(_:string)=>void,
-  tab_colored:boolean,set_tab_colored:(_:boolean)=>void,
-  GetLinkValue:GetLinkValueFuncType,
-  multi_selected_links: {current:SankeyLink[]},
-  set_display_link_opacity:(_:string)=>void
+  applicationContext,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  contextMenu,
+  menu_configuration_nodes_attributes,
+  GetLinkValue:GetLinkValueFuncType
 ) => {
+  const { data } = dict_variable_application_data
+
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
+
   const ui : {[s:string] : JSX.Element}= {
-    'Attributes'      : SankeyMenuConfigurationNodesAttributes(t,menu_configuration_nodes_attributes),
-    'Tooltip'         : SankeyMenuConfigurationNodesTooltip(t,data,set_data,multi_selected_nodes),
+    'Attributes'      : SankeyMenuConfigurationNodesAttributes(
+      applicationContext.t,
+      menu_configuration_nodes_attributes
+    ),
+    'Tooltip'         : SankeyMenuConfigurationNodesTooltip(
+      applicationContext,
+      dict_variable_application_data,
+      dict_variable_elements_selected
+    )
   }
 
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
-    ui['Tags'] = SankeyMenuConfigurationNodesTags(t,data,set_data,multi_selected_nodes,tags_group_key,set_tags_group_key)
+    ui['Tags'] = SankeyMenuConfigurationNodesTags(
+      applicationContext,
+      dict_variable_application_data,
+      dict_variable_elements_selected,
+      tags_group_key,
+      set_tags_group_key
+    )
   }
   
   ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(
-    t,data,set_data,display_nodes,multi_selected_nodes,link_io,set_link_io,link_pos,set_link_pos,tab_colored,set_tab_colored,GetLinkValue,multi_selected_links,set_display_link_opacity
+    applicationContext,
+    dict_variable_application_data,
+    dict_variable_elements_selected,
+    GetLinkValue
   )
   
   return ui
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,data, set_data, multi_selected_nodes,set_style_to_apply, menu_configuration_nodes,token }
+  {t,data, set_data, multi_selected_nodes, menu_configuration_nodes,token }
 ) => {
   const [forceUpdate, setForceUpdate] = useState(false)
   // const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
@@ -227,16 +252,12 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           className='btn_menu_config'
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
-            set_style_to_apply('default')
             AddNewNode(data,set_data,multi_selected_nodes)
             ApplyStyleToNodes(data,set_data,multi_selected_nodes)
           }}>
           <FaPlus/>
         </Button>
       </OverlayTrigger>
-
-      
-          
 
       {/* Liste déroulante pour selectionner un noeud */}
       <OverlayTrigger

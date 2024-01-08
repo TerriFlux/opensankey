@@ -1,5 +1,6 @@
 import { TFunction } from 'i18next'
 import { SankeyData, TagsCatalog, dict_hook_ref_setter_show_dialog_componentsType } from './Types'
+import { MutableRefObject } from 'react'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -21,25 +22,22 @@ export type OpenSankeyMenusFType = (
   Reinitialization:()=>void,
   DefaultSankeyData:()=>SankeyData,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  showStyleEdition:()=>void,
-  showStyleEditionLink:()=>void,
-  set_never_see_again:(b:boolean)=>void,
+  never_see_again:MutableRefObject<boolean>,
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   external_edition_item:JSX.Element[],
   external_file_item:JSX.Element[],
   externale_save_item:JSX.Element[],
-  set_tags_selected:(o:{[x:string]:string})=>void,
+  // set_tags_selected:(o:{[x:string]:string})=>void,
   convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void
 ) => {[s:string]:JSX.Element | JSX.Element[]}
 
 export type SankeyModalWelcomeFType = (
   t:TFunction,
-  active_page:string,
-  set_active_page:(s:string)=>void,
+  active_page : string,
+  set_active_page : (_:string)=>void,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
-  never_see_again:boolean,
-  set_never_see_again:(b:boolean)=>void,
+  never_see_again : MutableRefObject<boolean>,
   additional_shortcut_item:JSX.Element[],
   external_pagination:JSX.Element[],
   external_content:{
@@ -53,10 +51,14 @@ export type SankeyModalWelcomeFType = (
 )=> JSX.Element
 
 export type MenuDraggableFType = (
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
+  dialog_name: 'show_menu_node_apparence' | 'show_menu_node_io' | 'show_menu_link_data' | 'show_menu_link_appearence' | 'show_menu_layout' |
+    'ref_setter_show_modal_welcome' | 'ref_setter_show_modale_tuto' | 'ref_setter_show_modale_support' | 'ref_setter_show_excel_dialog' |
+    'ref_setter_show_save_json' | 'ref_getter_show_save_json' | 'ref_setter_show_apply_layout' |'ref_setter_show_modal_preference' |
+    'ref_setter_show_modal_template' |'ref_setter_show_load' |'ref_setter_show_menu_config' ,
   content:JSX.Element|JSX.Element[],
   pointer_pos:{current:number[]},
   title:string,
-  set_display_menu:(b:boolean)=>void,
   width_menu?:number
 )=> JSX.Element
 

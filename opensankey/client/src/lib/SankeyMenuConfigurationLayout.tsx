@@ -13,12 +13,13 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
   applicationContext,
   dict_variable_application_data,
   contextMenu,
-  userScaleRef,
+  dict_variable_elements_selected,
   legend_clicked,
   extra_background_element
 ) => {
   const { t } = applicationContext
   const { data, set_data} = dict_variable_application_data
+  const { userScaleRef } = dict_variable_elements_selected
   //const { pointer_pos, set_tag_contextualised } = contextMenu
 
   const [legend_position,set_legend_position] = useState(data.legend_position)

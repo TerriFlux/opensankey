@@ -27,7 +27,6 @@ import {
   SankeyLink,
   TagsCatalog,
   TagsGroup,
-  dict_hook_ref_setter_show_dialog_componentsType,
   MenuTypes
 } from '../types/Types'
 
@@ -336,26 +335,24 @@ const logo_contact=<svg
 
 export const OpenSankeyMenus : OpenSankeyMenusFType = (
   t:TFunction,
-  Reinitialization:()=>void,
-  get_default_data:()=>SankeyData,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  showStyleEdition:()=>void,
-  showStyleEditionLink:()=>void,
-  set_never_see_again:(b:boolean)=>void,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  external_edition_item:JSX.Element[],
-  external_file_item:JSX.Element[],
-  externale_save_item:JSX.Element[],
-  set_tags_selected:(o:{[x:string]:string})=>void,
-  convert_data:(d:SankeyData,
-  get_default_data: ()=>SankeyData)=>void
+  Reinitialization,
+  get_default_data,
+  dict_hook_ref_setter_show_dialog_components,
+  never_see_again,
+  data,
+  set_data,
+  external_edition_item,
+  external_file_item,
+  externale_save_item,
+  convert_data
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
   const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
   const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
   const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
   const DT_length=Object.keys(data.dataTags).length
+
+  const {ref_show_style_node,ref_show_style_link} = dict_hook_ref_setter_show_dialog_components
 
   // Function that return a simple or multiple dropdown of groupTag of data and links
   // This allow us to choose wich grouptag to select and wich tag of these group to display
@@ -397,13 +394,13 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
                   const pureLinks=Object.fromEntries(pl)
                   data.links=pureLinks
                   handleSimpleDropdown(evt, tags_group,data,set_data)
-                  const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
-                    return (Object.keys(dataTag.tags).length > 0) ? [
-                      dataTagKey,
-                      Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
-                  }))
-                  const dataTagsSelected = Object.fromEntries(newEntries)
-                  set_tags_selected(dataTagsSelected)
+                  // const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+                  //   return (Object.keys(dataTag.tags).length > 0) ? [
+                  //     dataTagKey,
+                  //     Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+                  // }))
+                  // const dataTagsSelected = Object.fromEntries(newEntries)
+                  // set_tags_selected(dataTagsSelected)
                 }}>
                   {
                     Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -725,8 +722,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         <Dropdown className='buttonSubNav' drop='end' id='exporter' >
           <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPenToSquare} /></Col><Col className='textIcon'>{t('Menu.style')}</Col></></Dropdown.Toggle>
           <Dropdown.Menu>
-            <Dropdown.Item onClick={showStyleEdition}>{t('Menu.esn')}</Dropdown.Item>
-            <Dropdown.Item onClick={showStyleEditionLink}>{t('Menu.esf')}</Dropdown.Item>
+            <Dropdown.Item onClick={()=>{ref_show_style_node.current(true)}}>{t('Menu.esn')}</Dropdown.Item>
+            <Dropdown.Item onClick={()=>{ref_show_style_link.current(true)}}>{t('Menu.esf')}</Dropdown.Item>
           </Dropdown.Menu></Dropdown></OverlayTrigger>,
       
       <>{external_edition_item}</>
@@ -740,7 +737,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         overlay={<Tooltip id={'tooltip-help_welcome'}>{t('Menu.tooltips.DisplayWelcome')} </Tooltip>}>
         <Button variant='light' onClick={() =>{
           dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true)
-          set_never_see_again(false)
+          never_see_again.current = false
           localStorage.setItem('dontSeeAggainWelcome','0')
         }}>
           <Col>{logo_home}</Col>
@@ -803,13 +800,11 @@ export const Menu: FunctionComponent<MenuTypes> = (
     applicationContext,
     dict_variable_application_data,
     uiElementsRef,
-    dict_variable_elements_selected,
     contextMenu,
     processFunctions,
     dict_hook_ref_setter_show_dialog_components,
     applicationDraw,
-    // ref_setter_show_menu_config,
-    nav_item_active,
+    ref_nav_item_active,
     configurations_menus,
     menus,
     cardsTemplate,
@@ -847,37 +842,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  if (processFunctions.not_started == false && processFunctions.processing == false) {
-    const path = window.location.href
-    const url = path + applicationContext.url_prefix + 'loads_retrieves_result'
-    const form_data = new FormData()
-    const fetchData = {
-      method: 'POST',
-      body: form_data
-    }
-    fetch(url, fetchData).then(response => {
-      response.text().then(text => {
-        try {
-          processFunctions.RetrieveExcelResults(
-            text,
-            dict_variable_application_data.set_data,
-            applicationDraw.updateLayout,
-            ()=>null,
-            applicationDraw.GetSankeyMinWidthAndHeight,
-            convert_data,
-            dict_variable_application_data.get_default_data
-          )
-        } catch(err) {
-          alert(err)
-        }
-      }).then(()=>{
-        processFunctions.setIsComputing(false)
-      })
-    })
-    processFunctions.setProcessing(false)
-    processFunctions.setFailure(false)
-    processFunctions.setNotStarted(true)
-  }
+
 
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
@@ -1069,7 +1034,11 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const show_data=Object.values(data_tags).length>0
   let DDDT=[] as (JSX.Element|undefined)[]
   if(show_data){
-    DDDT=DataTagsDDNavBar(dict_variable_application_data.data,dict_variable_application_data.set_data,dict_variable_elements_selected.set_tags_selected)
+    DDDT=DataTagsDDNavBar(
+      dict_variable_application_data.data,
+      dict_variable_application_data.set_data,
+      // dict_variable_elements_selected.set_tags_selected
+    )
   }
 
   return (
@@ -1078,7 +1047,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
       {/* Top Navbar with navigation and edition elements */}
       <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
         contextMenu.ref_setter_contextualised_node.current!(undefined)
-        contextMenu.contextualised_link.current![0][1](undefined)
+        contextMenu.ref_contextualised_node.current = undefined
+        contextMenu.ref_setter_contextualised_link.current!(undefined)
         contextMenu.showContextZDDRef.current![0][1](false)
         contextMenu.tagContext.current![0][1](undefined)
       }} >
@@ -1122,7 +1092,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' {...props} style={{ 'width': menu_config_width+'px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
         <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
           <SankeyConfigurationMenu
-            nav_item_active={nav_item_active}
+            ref_nav_item_active={ref_nav_item_active}
             accordion_ref={uiElementsRef.accordion_ref}
             configuration_menus={configurations_menus} />
         </Offcanvas.Body>
@@ -1151,7 +1121,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
 
       {
-        processFunctions.processing ? (
+        processFunctions.ref_processing.current ? (
           <Modal.Dialog >
             <Button className="btn btn-sm btn-warning col-md-12">
               <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
@@ -1171,10 +1141,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
         set_sankey_data={dict_variable_application_data.set_data}
         updateLayout={applicationDraw.updateLayout}
         convert_data={convert_data}
-        node_hspace={applicationDraw.node_hspace}
-        set_node_hspace={applicationDraw.set_node_hspace}
-        node_vspace={applicationDraw.node_vspace}
-        set_node_vspace={applicationDraw.set_node_vspace}
         elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
@@ -1190,11 +1156,17 @@ export const Menu: FunctionComponent<MenuTypes> = (
       />
 
       <SankeyLoad
-        t={applicationContext.t}
-        url_prefix={applicationContext.url_prefix}
-        successAction={()=>DownloadExamples(processFunctions.path, applicationContext.url_prefix, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+        applicationContext={applicationContext}
+        applicationDraw={applicationDraw}
+        dict_variable_application_data={dict_variable_application_data}
+        successAction={()=>DownloadExamples(
+          processFunctions.path.current, 
+          applicationContext.url_prefix, 
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         processFunctions={processFunctions}
+        convert_data={convert_data}
       />
 
       {
@@ -1227,12 +1199,16 @@ const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem
 } as CSSProperties
 
 export const MenuDraggable : MenuDraggableFType=(
+  dict_hook_ref_setter_show_dialog_components,
+  dialog_name,
   content:JSX.Element|JSX.Element[],
   pointer_pos:{current:number[]},
   title:string,
-  set_display_menu:(b:boolean)=>void,
   width_menu=25
 )=>{
+  const [display_menu,set_display_menu] = useState(false)
+  dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu
+
   const class_name=title.replaceAll('/','').replaceAll('.','').split(' ').join('_')
   const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
   n_style_menu_draggable.width=width_menu+'%'
@@ -1243,7 +1219,7 @@ export const MenuDraggable : MenuDraggableFType=(
       d3.select('.menu_conf.'+class_name).style('z-index','1031')
     }}
   >
-    <div className={'menu_conf '+class_name}
+    <div hidden={!display_menu} className={'menu_conf '+class_name}
       style={n_style_menu_draggable}
     >
       <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'3','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
@@ -1257,7 +1233,11 @@ export const MenuDraggable : MenuDraggableFType=(
   </Draggable>
 }
 
-const  DataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tags_selected:(o:{[x:string]:string})=>void) => {
+const  DataTagsDDNavBar = (
+  data:SankeyData,
+  set_data:(d:SankeyData)=>void
+  // set_tags_selected:(o:{[x:string]:string})=>void
+) => {
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     if (tags_group.banner == 'one') {
@@ -1305,13 +1285,13 @@ const  DataTagsDDNavBar = (data:SankeyData,set_data:(d:SankeyData)=>void,set_tag
 
                 data.links=pureLinks
                 handleSimpleDropdown(evt, tags_group,data,set_data)
-                const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
-                  return (Object.keys(dataTag.tags).length > 0) ? [
-                    dataTagKey,
-                    Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
-                }))
-                const dataTagsSelected = Object.fromEntries(newEntries)
-                set_tags_selected(dataTagsSelected)
+                // const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+                //   return (Object.keys(dataTag.tags).length > 0) ? [
+                //     dataTagKey,
+                //     Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
+                // }))
+                // const dataTagsSelected = Object.fromEntries(newEntries)
+                // set_tags_selected(dataTagsSelected)
               }}>
               {
                 Object.entries(tags_group.tags).map(([tag_key, tag],i) => {

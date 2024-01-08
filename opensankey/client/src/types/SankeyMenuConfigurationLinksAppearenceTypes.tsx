@@ -7,8 +7,6 @@ export type MenuConfigurationLinksAppearenceFType = (
   applicationContext:applicationContextType,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,
-  display_link_opacity:string,
-  set_display_link_opacity:(s:string)=>void,
   GetLinkValue:GetLinkValueFuncType,
   menu_for_modal? : boolean
 ) => JSX.Element

@@ -69,17 +69,19 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   applicationContext,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,
-  display_link_opacity:string,
-  set_display_link_opacity:(s:string)=>void,
   GetLinkValue:GetLinkValueFuncType,
   menu_for_modal=false
 )=>{
   const {t}=applicationContext
   const {data,set_data}=dict_variable_application_data
-  const {selected_style_link,multi_selected_links}=dict_variable_elements_selected
+  const {ref_selected_style_link,multi_selected_links}=dict_variable_elements_selected
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
-  const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
+  const selected_parameter=(menu_for_style)?[data.style_link[ref_selected_style_link.current]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
+  const [display_link_opacity, set_display_link_opacity] = useState('0')
+  if (!menu_for_style && dict_variable_elements_selected.ref_display_link_opacity.current.length < 2) {
+    dict_variable_elements_selected.ref_display_link_opacity.current.push(set_display_link_opacity)
+  }
 
   const list_key=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible',
     'label_visible','font_family','recycling','arrow','curved','nb_digit','scientific_precision',
@@ -263,10 +265,12 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             isInvalid={selected_parameter.length>0?+display_link_opacity!=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'opacity',menu_for_style):false}
             onChange={
               evt => {
-                set_display_link_opacity(evt.target.value)
+                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(evt.target.value))
               }}
             onBlur={(evt)=>{
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => AssignLinkValueToCorrectVar(d,'opacity',+evt.target.value,menu_for_style))
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(
+                d => AssignLinkValueToCorrectVar(d,'opacity',+evt.target.value,menu_for_style)
+              )
               set_data({...data})
             }}
           />

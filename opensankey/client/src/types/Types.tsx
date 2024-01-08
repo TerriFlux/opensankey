@@ -3,7 +3,6 @@ import { TFunction } from 'i18next'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, RetrieveExcelResultsFuncType, updateLayoutFuncType  } from './SankeyUtilsTypes'
 import { OpenSankeyDiagramSelectorFType } from './SankeyMenuDialogsTypes'
-import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
 
 export type SankeyNodeAttrLocal ={
@@ -321,11 +320,11 @@ export interface treeFolderType{
   checked?:1|0.5|0
 }
 export interface dict_hook_ref_setter_show_dialog_componentsType {
-  show_menu_node_apparence : [boolean,(_:boolean)=>void],
-  show_menu_node_io : [boolean,(_:boolean)=>void],
-  show_menu_link_data : [boolean,(_:boolean)=>void],
-  show_menu_link_appearence : [boolean,(_:boolean)=>void],
-  show_menu_layout : [boolean,(_:boolean)=>void],
+  show_menu_node_apparence : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  show_menu_node_io : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  show_menu_link_data : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  show_menu_link_appearence : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  show_menu_layout : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_modal_welcome : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_modale_tuto : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_modale_support : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
@@ -336,7 +335,9 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_modal_preference : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_modal_template : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
-  ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>
+  ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
+  ref_show_style_node : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>
 }
 
 export type applicationContextType = {
@@ -357,37 +358,34 @@ export type dict_variable_application_dataType = {
 }
 
 export type uiElementsRefType = {
-  button_ref : {
-    current: HTMLLabelElement;
-  },
-  accordion_ref : {
-    current: HTMLDivElement;
-  },
-  links_accordion_ref : {
-    current: HTMLDivElement;
-  },
-  nodes_accordion_ref : {
-    current: HTMLDivElement;
-  }
+  button_ref : MutableRefObject<HTMLLabelElement|null>,
+  accordion_ref : MutableRefObject<HTMLDivElement|null>,
+  links_accordion_ref : MutableRefObject<HTMLDivElement|null>,
+  nodes_accordion_ref : MutableRefObject<HTMLDivElement|null>
+  ref_setter_nav_item_active : MutableRefObject<Dispatch<SetStateAction<string>>>,
+  ref_nav_item_active : MutableRefObject<string>,
+  ref_setter_sub_nav_item_active : MutableRefObject<Dispatch<SetStateAction<string>>>
 }
 
 export type dict_variable_elements_selectedType = {
+  mode_selection: MutableRefObject<string> 
   multi_selected_nodes : { current : SankeyNode[] },
   multi_selected_links : { current : SankeyLink[] },
-  //multi_selected_label : { current : SankeyLabel[] }
-  tags_selected : {[k: string]: string }
-  set_tags_selected : (_:{[k: string]: string})=>void
-  selected_style_node : string,
-  set_selected_style_node : (_:string)=>void,
-  selected_style_link : string,
-  set_selected_style_link : (_:string)=>void,
-  first_selected_node :  {current:SankeyNode|undefined}    
+  ref_selected_style_node : MutableRefObject<string>,
+  ref_selected_style_link : MutableRefObject<string>,
+  first_selected_node :  {current:SankeyNode|undefined},
+    
+  ref_pre_idSource : MutableRefObject<string>,
+  ref_pre_idTarget : MutableRefObject<string>,
+  ref_display_link_opacity : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
+  displayedInputLinkValueRef : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
+  userScaleRef : MutableRefObject<number>,
 }
 
 export type contextMenuType = {
   ref_setter_contextualised_node : MutableRefObject<Dispatch<SetStateAction<SankeyNode|undefined>>|undefined>,
-  ref_getter_contextualised_node : MutableRefObject<SankeyNode|undefined>,
-  contextualised_link : RefObject<[SankeyLink|undefined, Dispatch<SetStateAction<SankeyLink|undefined>>][]>,
+  ref_contextualised_node: MutableRefObject<SankeyNode|undefined>
+  ref_setter_contextualised_link : MutableRefObject<Dispatch<SetStateAction<SankeyLink|undefined>>|undefined>,
   tagContext : RefObject<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>,
   closeAllMenuContext : () => void,
   pointer_pos : { current : number[] }, 
@@ -395,29 +393,20 @@ export type contextMenuType = {
 }
 
 export type processFunctionsType = {
-  processing : boolean,
-  setProcessing : (_:boolean)=>void,
-  failure : boolean,
-  setFailure : (_:boolean)=>void,
-  not_started : boolean,
-  setNotStarted : (_:boolean)=>void,
-  result : string,
-  setResult : (_:string)=>void,
-  path: string,
-  setPath : (_:string) => void,
+  ref_processing : MutableRefObject<boolean>,
+  ref_setter_processing : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  failure : MutableRefObject<boolean>,
+  not_started : MutableRefObject<boolean>,
+  ref_result : MutableRefObject<Dispatch<SetStateAction<string>>>,
+  path: MutableRefObject<string>,
   launch: (path:string) => void,
-  is_computing:boolean,
-  setIsComputing:(_:boolean)=>void,
+  // is_computing:MutableRefObject<boolean>,
   RetrieveExcelResults:RetrieveExcelResultsFuncType
 }
 
 export type applicationDrawType = {
   GetSankeyMinWidthAndHeight :GetSankeyMinWidthAndHeightFuncType,
-  updateLayout:updateLayoutFuncType,
-  node_hspace:number,
-  set_node_hspace:(n:number)=>void,
-  node_vspace:number,
-  set_node_vspace:(n:number)=>void
+  updateLayout:updateLayoutFuncType
 }
 
 export type agregationType = {
@@ -430,22 +419,15 @@ export type MenuTypes = {
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
   uiElementsRef : uiElementsRefType,
-  dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType,
   processFunctions : processFunctionsType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   applicationDraw: applicationDrawType,
-  // ref_setter_show_menu_config: RefObject<[boolean, Dispatch<SetStateAction<boolean>>][]>,
-  nav_item_active: string,
-
-  mode_selection: { current : string },
-  style_to_apply: string,
-  set_style_to_apply: (_:string)=>void,
+  ref_nav_item_active: MutableRefObject<string>,
   Reinitialization:() => void,
   convert_data:(data: SankeyData, DefaultSankeyData: () => SankeyData)=>void
   elementToDispose:string[]
   DiagramSelector: OpenSankeyDiagramSelectorFType,
-
   configurations_menus: JSX.Element[],
   menus: {[s: string]: JSX.Element[] | JSX.Element},
   cardsTemplate:JSX.Element,
@@ -464,28 +446,4 @@ export type SankeyAppTypes = {
   formations_menu      : object
   logo: string,
   logo_terriflux: string,
-}
-
-export type SankeyAppBuilderTypes = {
-  applicationContext : applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
-  uiElementsRef : uiElementsRefType,
-  dict_variable_elements_selected : dict_variable_elements_selectedType,
-  contextMenu:contextMenuType,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  displayedInputLinkValueRef: RefObject<HTMLInputElement>,
-  exemple_menu        : object,
-  formations_menu      : object,
-  mode_selection: {current:string},
-  GetLinkValue:(data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue,
-  Reinitialization:()=>void,
-  size_of_draw_zone:(d:SankeyData)=>number[],
-  display_link_opacity:string,
-  set_display_link_opacity:(s:string)=>void,
-  agregation:agregationType,
-  convert_data:ConvertDataFuncType,
-  maximum_flux:{current:number|null|undefined},
-  // set_maximum_flux:(n:number)=>void,
-  callback: callbackFuncType,
-  legend_clicked : MutableRefObject<boolean>
 }
