@@ -62,8 +62,6 @@ export const ApplyLayoutDialog = ({
     set_node_vspace(sankey_data.v_space)
   }
   const node_visible=NodeVisibleOnsSvg()
-  //const [show_modal_apply_layout,set_show_modal_apply_layout]=useState(false)
-  //dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current=set_show_modal_apply_layout
   const all_element_to_transform = [
     'addNode', 'addFlux', 'removeNode', 'removeFlux',
     'posNode', 'posFlux', 
