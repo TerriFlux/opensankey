@@ -1,15 +1,15 @@
-import React, { useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { Row, Form,  Tab, InputGroup } from 'react-bootstrap'
 import {SankeyLinkValue } from '../types/Types'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from './SankeyUtils'
 import { MenuConfigurationLinksTagsFType } from '../types/SankeyMenuConfigurationLinksTagsTypes'
 
-export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
+export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
   dict_variable_application_data,
   dict_variable_elements_selected,
   applicationContext
-)=>{
+})=>{
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const {t}=applicationContext
