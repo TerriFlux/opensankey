@@ -364,7 +364,8 @@ export type uiElementsRefType = {
   nodes_accordion_ref : MutableRefObject<HTMLDivElement|null>
   ref_setter_nav_item_active : MutableRefObject<Dispatch<SetStateAction<string>>>,
   ref_nav_item_active : MutableRefObject<string>,
-  ref_setter_sub_nav_item_active : MutableRefObject<Dispatch<SetStateAction<string>>>
+  ref_setter_sub_nav_item_active : MutableRefObject<Dispatch<SetStateAction<string>>>,
+  ref_sub_nav_item_active : MutableRefObject<string>
 }
 
 export type dict_variable_elements_selectedType = {

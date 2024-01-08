@@ -115,7 +115,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     nodes_accordion_ref : useRef<HTMLDivElement>(null),
     ref_setter_nav_item_active : useRef<Dispatch<SetStateAction<string>>>(()=>null),
     ref_nav_item_active : useRef<string>(''),
-    ref_setter_sub_nav_item_active : useRef<Dispatch<SetStateAction<string>>>(()=>null)
+    ref_setter_sub_nav_item_active : useRef<Dispatch<SetStateAction<string>>>(()=>null),
+    ref_sub_nav_item_active : useRef<string>('')
   }
   /*************************************************************************************************/
   const dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType = {
