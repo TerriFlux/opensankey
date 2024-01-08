@@ -59,13 +59,8 @@ export type SelecteurViewFType = (
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
-  // value_editor_name_view:string,
-  // set_value_editor_name_view:(s:string)=>void,
   d_setter_input_value:DictSetterInputValueType,
 
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void
-  // fullscreen=false
 ) => JSX.Element
 
 export type viewsAccordionFType = (

@@ -534,12 +534,10 @@ export const SelecteurView : SelecteurViewFType =(
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
   d_setter_input_value,
-
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void
 )=>{
   const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}= dict_variable_elements_selected
+
   let vname = ''
   if ((master_data && master_data.current_view && master_data.current_view!=='none' &&master_data.view.length>0)) {
     if (master_data.view.filter(v=>v.id===master_data.current_view).length > 0) {
@@ -549,11 +547,11 @@ export const SelecteurView : SelecteurViewFType =(
     }
   }
   const [s_value_editor_name_view,sValueEditorNameView]=useState(vname)
-
+  const [s_select_or_edit,sSelectOrEdit]=useState('select')
   d_setter_input_value.r_setter_value_editor_name_view.current=sValueEditorNameView
 
   const selecteur=<Form.Select id="selectionNode"
-    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?set_select_or_edit('edit'):<></>}
+    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
@@ -623,11 +621,11 @@ export const SelecteurView : SelecteurViewFType =(
     onBlur={()=>{
       master_data!.view.filter(v=>v.id===view)[0].nom=s_value_editor_name_view
       set_master_data({...master_data!})
-      set_select_or_edit('select')
+      sSelectOrEdit('select')
     }}
   />
 
-  return connected && select_or_edit==='edit'?editeur_name:selecteur
+  return connected && s_select_or_edit==='edit'?editeur_name:selecteur
 }
 export const viewsAccordion : viewsAccordionFType = (
   dict_variable_application_data,
@@ -1448,7 +1446,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //   s_value_editor_name_view:string,
 //   sValueEditorNameView:(s:string)=>void,
 //   select_or_edit:'select'|'edit',
-//   set_select_or_edit:(s:'select'|'edit')=>void,
+//   sSelectOrEdit:(s:'select'|'edit')=>void,
 //   convert_data:(d:SankeyPlusData)=>void
 // )=>{
 //   const buttons_view= SankeyPlusBannerView(data,set_data,
@@ -1459,7 +1457,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //     connected,set_view_not_saved,
 //     _load_json,_load_json_catalog,set_ref_setter_show_modal_transparent_view_attr,
 //     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,s_value_editor_name_view,sValueEditorNameView,
-//     select_or_edit,set_select_or_edit,convert_data
+//     select_or_edit,sSelectOrEdit,convert_data
 //   )
 //   const group_btn=<ButtonGroup>
 //     {buttons_view}
