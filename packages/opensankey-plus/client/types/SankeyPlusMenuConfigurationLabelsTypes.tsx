@@ -11,7 +11,7 @@ export type SankeyPlusMenuPreferenceLabelsFType=(
 
 export interface selected_type  {'label':string;'value':string}
 
-export type SankeyPlusMenuConfigurationFreeLabelsFType = (
+export type SankeyPlusMenuConfigurationFreeLabelsFType = {
   data:SankeyPlusData,
   set_data:(_:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]},
@@ -19,7 +19,7 @@ export type SankeyPlusMenuConfigurationFreeLabelsFType = (
   is_activated:boolean,
   d_setter_input_value:DictSetterInputValueType,
   refWysiwygZDT:{current:ReactQuill}
-) => JSX.Element
+}
 
 
 export type context_zdtFType=(
