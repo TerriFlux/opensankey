@@ -4,7 +4,7 @@ import { Accordion, Pagination, Col, Card, ButtonGroup, Button, Carousel, FormCh
 import { FaUser, FaAngleDoubleLeft, FaHome, FaCaretSquareLeft, FaCaretSquareRight } from 'react-icons/fa'
 import { SankeyData, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
 import parse from 'html-react-parser'
-import { ConvertDataFuncType } from 'open-sankey/src/types/SankeyConvertTypes'
+import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
 import React, { Dispatch, MutableRefObject, SetStateAction, useState } from 'react'
 import { UploadExemple, DownloadExempleExcel, windowSankey } from './SankeyUtils'
 import { SankeyModalWelcomeFType } from '../types/SankeyMenuTopTypes'
