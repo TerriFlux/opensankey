@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyPlusData, SankeyPlusNode } from './Types'
+import { DictSetterInputValueType, SankeyPlusData, SankeyPlusNode } from './Types'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
 import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
@@ -9,8 +9,7 @@ export type SankeyPlusNodeFOFType = (
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
-  editor_content_fo_node:string,
-  set_editor_content_fo_node:(s:string)=>void
+  d_setter_input_value:DictSetterInputValueType,
 ) => JSX.Element
 
 export type PlusDrawNodesFOFType = (

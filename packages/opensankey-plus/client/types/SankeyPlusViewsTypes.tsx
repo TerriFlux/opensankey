@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { PlusElementsSelectedType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
+import { DictSetterInputValueType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
 import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { setDiagramFuncType } from 'open-sankey/src/types/SankeyMenuBannerTypes'
 import { MutableRefObject } from 'react'
@@ -54,46 +54,25 @@ export type keyHandlerFType = (
 ) => void
 
 export type SelecteurViewFType = (
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  view:string,
-  set_view:(s:string)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData|undefined,
-  set_master_data:(d:SankeyPlusData|undefined)=>void,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
-  value_editor_name_view:string,
-  set_value_editor_name_view:(s:string)=>void,
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void
-  // fullscreen=false
+  d_setter_input_value:DictSetterInputValueType,
+
 ) => JSX.Element
 
 export type viewsAccordionFType = (
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
   ref_nav_item_active: MutableRefObject<string>,
-  view:string,
-  set_view:(s:string)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData|undefined,
-  set_master_data:(d:SankeyPlusData|undefined)=>void,
   _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
-  set_view_not_saved:(s:string)=>void,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
-  value_editor_name_view:string,
-  set_value_editor_name_view:(s:string)=>void,
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void,
-  DefaultSankeyData: ()=>SankeyPlusData
+  DefaultSankeyData: ()=>SankeyPlusData,
+  view_selector:JSX.Element
+
 ) => JSX.Element
 
 // Function to check if the current data of the view is unsaved
@@ -114,21 +93,15 @@ export type CheckCurrentViewSavedFType = (
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export type SankeyPlusBannerViewFType = (
-  view:string,
-  set_view:(s:string)=>void,
-  dict_variable_application_data:dict_variable_application_dataType,
-  dict_variable_elements_selected:PlusElementsSelectedType,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
   t:TFunction,
   connected:boolean,
-  set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
   _load_json_catalog:{current:HTMLInputElement},
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
-  value_editor_name_view:string,
-  set_value_editor_name_view:(s:string)=>void,
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void,
+
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
+  view_selector:JSX.Element
 )=> JSX.Element
 
 export type SankeyPlusMenuPreferenceViewFType = (

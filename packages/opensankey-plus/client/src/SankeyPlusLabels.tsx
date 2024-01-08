@@ -25,7 +25,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   dict_variable_elements_selected,
   uiElementsRef,
   contextMenu,
-  set_editor_content_fo_zdt,
+  d_setter_input_value,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -36,7 +36,6 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
 ) => {
   const {data,set_data}=applicaTionData
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}=dict_variable_elements_selected
-  const {button_ref,accordion_ref}=uiElementsRef
   const {pointer_pos}=contextMenu
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -68,9 +67,10 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
 
       draw_text_zone_handles(data_plus,d,multi_selected_label,set_data)
 
-      gg_label.on('click', (event) => eventLabelClick(event,d,data_plus,accordion_ref,button_ref,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
+      gg_label.on('click', (event) => eventLabelClick(event,d,data_plus,uiElementsRef,d_setter_input_value,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
       gg_label.on('mousedown',()=>closeAllMenuContext())
       gg_label.on('contextmenu',evt=>{
+
         if(!window.SankeyToolsStatic){
           evt.preventDefault()
           pointer_pos.current=[evt.pageX,evt.pageY]
@@ -78,14 +78,10 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
             multi_selected_label.current.forEach(nn=>deselect_visualy_zdt(nn))
             select_visualy_zdt(d)
             multi_selected_label.current=[d]
-            set_editor_content_fo_zdt(d.content);
-
+            d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content);
             (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
-            
           }
         }
-        
-        
       })
       // Traite les labels qui sont des zone de texte
       gg_label
@@ -146,13 +142,15 @@ export const eventLabelClick : eventLabelClickFType =(
   event,
   d,
   data,
-  accordion_ref,
-  button_ref,
+  uiElementsRef,
+  d_setter_input_value,
   multi_selected_label,
   set_data,
   multi_selected_nodes,
   multi_selected_links,
 )=>{
+
+  const {button_ref,accordion_ref,ref_setter_nav_item_active} =uiElementsRef
   if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     const sankeyTooltip=d3.select('.sankey-tooltip')
 
@@ -163,10 +161,15 @@ export const eventLabelClick : eventLabelClickFType =(
     d3.select('#'+d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
     if (multi_selected_label.current.includes(d)) {
       multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
+
+      // If we deselect a zdt use the last one selected as displayed in config
+      if(multi_selected_label.current.length>0)d_setter_input_value.r_setter_editor_content_fo_zdt.current!(multi_selected_label.current[multi_selected_label.current.length-1].content)
     } else {
       multi_selected_label.current.push(d)
+      // Display the content of the last zdt selected in the menu config
+      d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content)
     }
-
+    ref_setter_nav_item_active.current('7')
 
     multi_selected_label.current.forEach(zdt=>{
       d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display',null)

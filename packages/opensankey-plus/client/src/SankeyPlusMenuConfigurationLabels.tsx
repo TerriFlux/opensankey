@@ -25,7 +25,7 @@ import {  preferenceCheck } from 'open-sankey/dist/lib/SankeyMenuPreferences'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
 import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
-import { SankeyPlusMenuConfigurationFreeLabelsFType, SankeyPlusMenuPreferenceLabelsFType, blur_ZDT_wysiwygFType, context_zdtFType } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
+import { SankeyPlusMenuConfigurationFreeLabelsFType, SankeyPlusMenuPreferenceLabelsFType, blur_ZDT_wysiwygFType, context_zdtFType, zdtMenuAsAccordeonItemType } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
 
 
 
@@ -61,11 +61,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   set_data,
   multi_selected_label,
   t,
-  ref_nav_item_active,
   is_activated,
-  menu_for_modal,
-  editor_content_fo_zdt,
-  set_editor_content_fo_zdt,
+  d_setter_input_value,
   refWysiwygZDT
 }) => {
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
@@ -73,7 +70,10 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.title, 'value': d.idLabel } })
   const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.title, 'value': d.idLabel } })
   const [button_icon_or_image,set_button_icon_or_image]=useState<'zdt'|'image'>(zdt_or_image)
+  const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
 
+  d_setter_input_value.r_setter_editor_content_fo_zdt.current=sEditorContentFOZdt
+  
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
@@ -210,21 +210,21 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   ]
 
   const disable_options = is_activated? (multi_selected_label.current.length === 0):true
-  const isQuill_invalid=multi_selected_label.current.length>0?multi_selected_label.current[0].content!==editor_content_fo_zdt:false
+  const isQuill_invalid=multi_selected_label.current.length>0?multi_selected_label.current[0].content!==s_editor_content_fo_zdt:false
 
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<ReactQuill
     className='quill_editor'
-    value={editor_content_fo_zdt}
+    value={s_editor_content_fo_zdt}
     ref={refWysiwygZDT}
     onChange={(evt) => {
-      set_editor_content_fo_zdt(evt)
+      sEditorContentFOZdt(evt)
     }}
     onBlur={()=>{
       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-        d.content = editor_content_fo_zdt
+        d.content = s_editor_content_fo_zdt
       })
       set_data({...data})
     }}
@@ -246,7 +246,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       {/* <Button
         onClick={()=>{
           Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-            d.content = editor_content_fo_zdt
+            d.content = s_editor_content_fo_zdt
           })
           set_data({...data})
         }}
@@ -589,61 +589,27 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     </InputGroup>
   </>
 
-  return menu_for_modal?content_menu_zdt:<Accordion.Item
-    key='9'
-    id="LL"
-    eventKey="7"
-    style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
-    onClick={evt => {
-      if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === '7') {
-        ref_nav_item_active.current = ''
-      } else {
-        ref_nav_item_active.current = '7'
-      }
-    }}
-  >
-    <Accordion.Header>
-      {t('Menu.LL')}
-      {(!is_activated)?
-        <OverlayTrigger
-          key={'textZoneDisabled'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
-        >
-          <Badge pill
-            bg="white"
-            style={{marginLeft:'5px', fontSize:'1.3em'}}>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Badge>
-        </OverlayTrigger>:<></>}
-    </Accordion.Header>
-    <Accordion.Body>
-      {content_menu_zdt}
-    </Accordion.Body>
-  </Accordion.Item>
+  return content_menu_zdt
 }
 
 
 export const context_zdt : context_zdtFType =(
   contextMenu,
   t:TFunction,
-  set_show_menu_zdt:(b:boolean)=>void
+  dict_hook_ref_setter_show_dialog_components
 )=>{
   // const {data,set_data}=dict_variable_application_data
   const {pointer_pos,contextualised_zdt}=(contextMenu as SankeyPlusContextMenuType)
   const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<SankeyPlusLabel>()
   contextualised_zdt.current=set_zdt_to_contextualise
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
   let style_c_zdd='0px 0px auto auto'
   if(zdt_to_contextualise){
     style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
 
   const button_open_layout=<Button onClick={()=>{
-    set_show_menu_zdt(true)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current!(true)
     set_zdt_to_contextualise(undefined)
 
   }} variant='light'>{t('Menu.LL')} {icon_open_modal}</Button>
@@ -665,4 +631,60 @@ export const blur_ZDT_wysiwyg : blur_ZDT_wysiwygFType = (
     refWysiwygZDT.current.getEditor().focus()
     refWysiwygZDT.current.getEditor().blur()
   }
+}
+
+/**
+ *  Function that return content_menu_zdt with JSX to imbricate it in the config menu
+ *
+ * @param {SankeyPlusData} data
+ * @param {uiElementsRefType} uiElementsRef
+ * @param {boolean} is_activated
+ * @param {TFunction} t
+ * @param {JSX.Element} content_menu_zdt
+ * @return {*} 
+ */
+export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
+  data,
+  uiElementsRef,
+  applicationContext,
+  content_menu_zdt
+)=>{
+  const {ref_nav_item_active,ref_setter_nav_item_active}=uiElementsRef
+  const {t,has_open_sankey_plus} = applicationContext
+  return <Accordion.Item
+    key='9'
+    id="LL"
+    eventKey="7"
+    style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
+    onClick={evt => {
+      if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === '7') {
+        ref_setter_nav_item_active.current!('')
+      } else {
+        ref_setter_nav_item_active.current!('7')
+      }
+    }}
+  >
+    <Accordion.Header>
+      {t('Menu.LL')}
+      {(!has_open_sankey_plus)?
+        <OverlayTrigger
+          key={'textZoneDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+        >
+          <Badge pill
+            bg="white"
+            style={{marginLeft:'5px', fontSize:'1.3em'}}>
+            <FontAwesomeIcon
+              icon={faLock}
+              style={{
+                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+          </Badge>
+        </OverlayTrigger>:<></>}
+    </Accordion.Header>
+    <Accordion.Body>
+      {content_menu_zdt}
+    </Accordion.Body>
+  </Accordion.Item>
 }

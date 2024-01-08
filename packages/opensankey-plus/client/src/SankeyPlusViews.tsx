@@ -33,8 +33,6 @@ import {
 } from '../types/SankeyPlusViewsTypes'
 
 import { SankeyPlusData,
-  SankeyPlusNode,
-  SankeyPlusLink,
   SankeyPlusLabel,
   differenceType,
   DiffType,
@@ -529,27 +527,31 @@ export const keyHandler : keyHandlerFType = (
   }
 }
 
-export const SelecteurView : SelecteurViewFType =(data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  view:string,
-  set_view:(s:string)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  master_data:SankeyPlusData|undefined,
-  set_master_data:(d:SankeyPlusData|undefined)=>void,
+export const SelecteurView : SelecteurViewFType =(
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
-  value_editor_name_view:string,
-  set_value_editor_name_view:(s:string)=>void,
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void
-  // fullscreen=false
+  d_setter_input_value,
 )=>{
+  const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
+  const {multi_selected_nodes,multi_selected_links,multi_selected_label}= dict_variable_elements_selected
+
+  let vname = ''
+  if ((master_data && master_data.current_view && master_data.current_view!=='none' &&master_data.view.length>0)) {
+    if (master_data.view.filter(v=>v.id===master_data.current_view).length > 0) {
+      vname = master_data.view.filter(v=>v.id===master_data.current_view)[0].nom
+    } else {
+      vname = ''
+    }
+  }
+  const [s_value_editor_name_view,sValueEditorNameView]=useState(vname)
+  const [s_select_or_edit,sSelectOrEdit]=useState('select')
+  d_setter_input_value.r_setter_value_editor_name_view.current=sValueEditorNameView
 
   const selecteur=<Form.Select id="selectionNode"
-    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?set_select_or_edit('edit'):<></>}
+    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
@@ -612,51 +614,33 @@ export const SelecteurView : SelecteurViewFType =(data:SankeyPlusData,
   </Form.Select>
 
   const editeur_name=<Form.Control type='text'
-    value={value_editor_name_view}
+    value={s_value_editor_name_view}
     onChange={(evt)=>{
-      set_value_editor_name_view(evt.target.value)
+      sValueEditorNameView(evt.target.value)
     }}
     onBlur={()=>{
-      master_data!.view.filter(v=>v.id===view)[0].nom=value_editor_name_view
+      master_data!.view.filter(v=>v.id===view)[0].nom=s_value_editor_name_view
       set_master_data({...master_data!})
-      set_select_or_edit('select')
+      sSelectOrEdit('select')
     }}
   />
 
-  return connected && select_or_edit==='edit'?editeur_name:selecteur
+  return connected && s_select_or_edit==='edit'?editeur_name:selecteur
 }
 export const viewsAccordion : viewsAccordionFType = (
-  data,
-  set_data,
+  dict_variable_application_data,
   ref_nav_item_active,
-  view,
-  set_view,
-  multi_selected_nodes,
-  multi_selected_links,
-  multi_selected_label,
-  master_data:SankeyPlusData|undefined,
-  set_master_data:(d:SankeyPlusData|undefined)=>void,
   _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
-  set_view_not_saved:(s:string)=>void,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
-  value_editor_name_view:string,
-  set_value_editor_name_view:(s:string)=>void,
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void,
-  DefaultSankeyData: ()=>SankeyPlusData
+  DefaultSankeyData: ()=>SankeyPlusData,
+  view_selector
 ) => {
+  const {data,set_data,master_data,set_master_data,view,set_view}= dict_variable_application_data
 
-  // const _load_multiple_json = useRef<HTMLInputElement>(null)
-
-  const selector=SelecteurView(
-    data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,
-    master_data,set_master_data,t,set_view_not_saved,false,value_editor_name_view,set_value_editor_name_view,
-    select_or_edit,set_select_or_edit
-  )
+  
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
-
 
   return <><Accordion.Item
     id='Visualisation'
@@ -701,7 +685,7 @@ export const viewsAccordion : viewsAccordionFType = (
             width:'50%'}}>
           {t('view.select')}
         </InputGroup.Text>
-        <>{selector}</>
+        <>{view_selector}</>
           
       </InputGroup>
 
@@ -902,24 +886,16 @@ declare const window: Window &
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
-  view:string,
-  set_view:(s:string)=>void,
   dict_variable_application_data,
-  dict_variable_elements_selected,
   t:TFunction,
   connected:boolean,
-  set_view_not_saved:(s:string)=>void,
   _load_json:{current:HTMLInputElement},
   _load_json_catalog:{current:HTMLInputElement},
   dict_hook_ref_setter_show_dialog_components,
-  value_editor_name_view:string,
-  set_value_editor_name_view:(s:string)=>void,
-  select_or_edit:'select'|'edit',
-  set_select_or_edit:(s:'select'|'edit')=>void,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
+  view_selector
 )=>{
-  const {data,set_data,master_data,set_master_data,get_default_data}=dict_variable_application_data as SankeyPlusApplicationDataType
-  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=dict_variable_elements_selected
+  const {data,set_data,master_data,set_master_data,get_default_data,view,set_view}=dict_variable_application_data
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const m_d=master_data?master_data:data
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
@@ -1015,61 +991,6 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     </span>
   </OverlayTrigger>
 
-
-  // const button_clone_view=<OverlayTrigger
-  //   key={'buttonCloneViewDisabled'}
-  //   placement={'bottom'}
-  //   delay={500}
-  //   overlay={(!connected)?(
-  //     <Tooltip id={'buttonCloneViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-  //     <Tooltip id={'buttonCloneView'}>{t('Menu.tooltips.buttonCloneView')} </Tooltip>}
-  // >
-  //   <span>
-  //     <Button
-  //       size='sm'
-  //       variant='light'
-  //       disabled={!connected}
-  //       onClick={
-  //         () => {
-  //           // Create a copy of the view
-  //           const copy_view_data = JSON.parse(JSON.stringify(current_view.view_data))
-  //           const new_ind = 'view_' + String(new Date().getTime())
-
-  //           copy_view_data.view = []
-  //           master_data.view.push({
-  //             id: new_ind,
-  //             view_data: copy_view_data,
-  //             nom: 'copy of ' + current_view.nom,
-  //             details: '',
-  //             heredited_attr_from_master:[]
-
-  //           })
-  //           set_view(new_ind)
-  //           set_master_data({...master_data})
-  //           set_data(GetDataFromView(master_data,new_ind))
-  //         }
-  //       }
-  //     >
-  //       <Col><FaCopy
-  //         style={{opacity:(!connected)?'0.6':'1'}}/>
-  //       </Col>
-  //       {!connected?
-  //         <Col>
-  //           <FontAwesomeIcon
-  //             icon={faLock}
-  //             style={{
-  //               fontSize:'1em',
-  //               position: 'absolute',
-  //               right: '0.1em',
-  //               bottom: '0em',
-  //               color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-  //         </Col>
-  //         :<></>}
-  //       <Col style={{'fontSize':'9px'}}>{t('view.copy')}</Col>
-  //     </Button>
-  //   </span>
-  // </OverlayTrigger>
-
   const create_data_catalog=<OverlayTrigger
     key={'buttonCloneViewDisabled'}
     placement={'bottom'}
@@ -1163,90 +1084,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.delete')}</Col></Button></span>
   </OverlayTrigger>
 
-  // -- NOT REALLY USEFULL ANYMORE WITH THE IMPORT LAYOUT 
-  // const button_import_view=<OverlayTrigger
-  //   key={'buttonImportViewDisabled'}
-  //   placement={'bottom'}
-  //   delay={500}
-  //   overlay={(!connected)?(
-  //     <Tooltip id={'buttonImportViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-  //     <Tooltip id={'buttonImportView'}>{t('Menu.tooltips.buttonImportView')} </Tooltip>}
-  // >
-  //   <span>
-  //     <Button
-  //       size='sm'
-  //       variant='light'
-  //       disabled={!connected}
-  //       onClick={
-  //         () => {
-  //           // Allow us to import a view by loading a sankey then updating the view like if we did a Ctrl+S
-  //           if (_load_json.current) {
-  //             _load_json.current.name = ''
-  //             _load_json.current.click()
-  //             _load_json.current.id = master_data.current_view
-  //           }
-  //         }
-  //       }
-  //     >
-  //       <Col><FaFileImport
-  //         style={{opacity:(!connected)?'0.6':'1'}}/>
-  //       </Col>
-  //       {!connected?
-  //         <Col>
-  //           <FontAwesomeIcon
-  //             icon={faLock}
-  //             style={{
-  //               fontSize:'1em',
-  //               position: 'absolute',
-  //               right: '0.1em',
-  //               bottom: '0em',
-  //               color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-  //         </Col>
-  //         :<></>}
-  //       <Col style={{'fontSize':'9px'}}>{t('view.import')}</Col>
-  //     </Button>
-  //   </span>
-  // </OverlayTrigger>
-
-  // -- ADDED AS OPTION IN SAVE JSON
-  // const button_export_view=<OverlayTrigger
-  //   key={'buttonExportViewDisabled'}
-  //   placement={'bottom'}
-  //   delay={500}
-  //   overlay={(!connected)?(
-  //     <Tooltip id={'buttonExportViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-  //     <Tooltip id={'buttonExportView'}>{t('Menu.tooltips.buttonExportView')} </Tooltip>}
-  // >
-  //   <span>
-  //     <Button
-  //       size='sm'
-  //       variant='light'
-  //       disabled={!connected}
-  //       onClick={()=>{
-  //         const to_download=GetDataFromView(master_data,current_view.id)
-  //         to_download.view=[]
-  //         ClickSaveDiagram(to_download,current_view.nom)
-  //       }}
-  //     >
-  //       <Col><FaFileExport
-  //         style={{opacity:(!connected)?'0.6':'1'}}/>
-  //       </Col>
-  //       {!connected?
-  //         <Col>
-  //           <FontAwesomeIcon
-  //             icon={faLock}
-  //             style={{
-  //               fontSize:'1em',
-  //               position: 'absolute',
-  //               right: '0.1em',
-  //               bottom: '0em',
-  //               color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-  //         </Col>
-  //         :<></>}
-  //       <Col style={{'fontSize':'9px'}}>{t('view.import')}</Col>
-  //     </Button>
-  //   </span>
-  // </OverlayTrigger>
+  
 
   const popover_modify_view_name=
   <Popover id="popover-link-filter" style={{maxWidth:'100%','overflowY':'auto'}}>
@@ -1477,7 +1315,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
       </Button>
     </span>
   </OverlayTrigger>
-  {(master_data?master_data:{view:[] as string[]}).view.length>0?<>{SelecteurView(data,set_data,view,set_view,multi_selected_nodes,multi_selected_links,multi_selected_label,master_data,set_master_data,t,set_view_not_saved,connected,value_editor_name_view,set_value_editor_name_view,select_or_edit,set_select_or_edit)}</>:<></>}
+  {view_selector}
+
   {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data!.current_view!=='none' && !window.SankeyToolsStatic?<>
     {button_delete_actual_view}
     {master_data && !master_data.is_catalog?button_heredited_attr_from_master:<></>}
@@ -1604,10 +1443,10 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //   set_ref_setter_show_modal_transparent_view_attr:(b:boolean)=>void,
 //   show_modal_selection_link_ref_in_unitary_sankey:boolean,
 //   set_show_modal_selection_link_ref_in_unitary_sankey:(b:boolean)=>void,
-//   value_editor_name_view:string,
-//   set_value_editor_name_view:(s:string)=>void,
+//   s_value_editor_name_view:string,
+//   sValueEditorNameView:(s:string)=>void,
 //   select_or_edit:'select'|'edit',
-//   set_select_or_edit:(s:'select'|'edit')=>void,
+//   sSelectOrEdit:(s:'select'|'edit')=>void,
 //   convert_data:(d:SankeyPlusData)=>void
 // )=>{
 //   const buttons_view= SankeyPlusBannerView(data,set_data,
@@ -1617,8 +1456,8 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //     t,
 //     connected,set_view_not_saved,
 //     _load_json,_load_json_catalog,set_ref_setter_show_modal_transparent_view_attr,
-//     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,value_editor_name_view,set_value_editor_name_view,
-//     select_or_edit,set_select_or_edit,convert_data
+//     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,s_value_editor_name_view,sValueEditorNameView,
+//     select_or_edit,sSelectOrEdit,convert_data
 //   )
 //   const group_btn=<ButtonGroup>
 //     {buttons_view}
