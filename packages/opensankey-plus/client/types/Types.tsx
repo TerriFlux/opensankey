@@ -4,7 +4,8 @@ import {
   dict_hook_ref_setter_show_dialog_componentsType,
   dict_variable_application_dataType,
   dict_variable_elements_selectedType,
-  contextMenuType
+  contextMenuType,
+  applicationContextType
 } from 'open-sankey/src/types/Types'
 import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 
@@ -98,7 +99,7 @@ export interface differenceType{
 export interface SankeyPlusShowMenuComponentsType extends dict_hook_ref_setter_show_dialog_componentsType {
   show_menu_node_icon : [boolean,(_:boolean)=>void],
   ref_setter_show_modal_import_icons : MutableRefObject<Dispatch<SetStateAction<boolean>>|undefined>,
-  show_menu_zdt : [boolean,(_:boolean)=>void],
+  ref_setter_show_menu_zdt : MutableRefObject<Dispatch<SetStateAction<boolean>>|undefined>,
   ref_setter_show_modal_transparent_view_attr : MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]| undefined>
   show_toast_new_view:MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
   show_toast_update_view:MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
@@ -126,6 +127,9 @@ export interface SankeyPlusContextMenuType extends contextMenuType {
 }
 
 export interface DictSetterInputValueType {
-  // set_editor_content_fo_node:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
+  r_setter_editor_content_fo_node:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
   r_setter_editor_content_fo_zdt:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
+}
+export interface PlusApplicationContextType extends applicationContextType{
+  has_open_sankey_plus:boolean
 }

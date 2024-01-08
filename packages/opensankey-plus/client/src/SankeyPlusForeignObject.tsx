@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip, Badge, InputGroup } from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -29,12 +29,12 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
-  editor_content_fo_node:string,
-  set_editor_content_fo_node:(s:string)=>void,
+  d_setter_input_value
 
 )=> {
-  // const [value, setValue] = useState('')
+  const [s_editor_content_fo_node,sEditorContentFoNode]= useState('')
 
+  d_setter_input_value.r_setter_editor_content_fo_node.current=sEditorContentFoNode
   // Create a custom size list of font-size
   const list_size=[]
   for(let i=6;i<=50;i++){
@@ -62,7 +62,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
     'bold', 'italic', 'underline', 'strike','color','background',
     'list', 'bullet','align'
   ]
-  const isQuill_invalid=multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content!==editor_content_fo_node:false
+  const isQuill_invalid=multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content!==s_editor_content_fo_node:false
   const value_of_key=OSPIsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
 
   
@@ -71,15 +71,15 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<Form className='FO_zdt_editeur'>
     <Form.Group><ReactQuill
-      value={editor_content_fo_node}
+      value={s_editor_content_fo_node}
       onChange={(evt,_,s) => {
         if(s==='user'){
-          set_editor_content_fo_node(evt)
+          sEditorContentFoNode(evt)
         }
       }}
       onBlur={()=>{
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-          d.FO_content = editor_content_fo_node
+          d.FO_content = s_editor_content_fo_node
         })
         set_data({...data})
       }}
@@ -201,7 +201,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
             onClick={()=>{
 
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.FO_content = editor_content_fo_node
+                d.FO_content = s_editor_content_fo_node
               })
               set_data({...data})
             }}

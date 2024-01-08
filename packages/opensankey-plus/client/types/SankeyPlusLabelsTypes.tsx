@@ -1,16 +1,15 @@
-import { SankeyData, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
-import { DictSetterInputValueType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
+import { SankeyData, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { DictSetterInputValueType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
-import { MutableRefObject } from 'react'
 
 export type PlusDrawLabelsFType = (
   applicaTionData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
-  contextMenu:contextMenuType,
+  contextMenu:SankeyPlusContextMenuType,
   d_setter_input_value:DictSetterInputValueType,
   GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
   LinkText: LinkTextFuncType,
@@ -27,8 +26,10 @@ export type eventLabelClickFType=(
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyPlusLabel,
   data:SankeyPlusData,
-  accordion_ref:MutableRefObject<HTMLDivElement|null>,
-  button_ref: MutableRefObject<HTMLLabelElement|null>,
+  // accordion_ref:MutableRefObject<HTMLDivElement|null>,
+  // button_ref: MutableRefObject<HTMLLabelElement|null>,
+  uiElementsRef:uiElementsRefType,
+  d_setter_input_value:DictSetterInputValueType,
   multi_selected_label:{current:SankeyPlusLabel[]},
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},

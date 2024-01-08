@@ -1,8 +1,7 @@
 import { TFunction } from 'i18next'
-import {  DictSetterInputValueType, SankeyPlusData, SankeyPlusLabel } from './Types'
+import {  DictSetterInputValueType, PlusApplicationContextType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType } from './Types'
 import ReactQuill from 'react-quill'
-import { contextMenuType } from 'open-sankey/src/types/Types'
-import { MutableRefObject } from 'react'
+import { contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
 
 export type SankeyPlusMenuPreferenceLabelsFType=(
   t:TFunction,
@@ -17,10 +16,7 @@ export type SankeyPlusMenuConfigurationFreeLabelsFType = (
   set_data:(_:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]},
   t: TFunction,
-  ref_nav_item_active:MutableRefObject<string>,
   is_activated:boolean,
-  menu_for_modal:boolean,
-  // editor_content_fo_zdt:string,
   d_setter_input_value:DictSetterInputValueType,
   refWysiwygZDT:{current:ReactQuill}
 ) => JSX.Element
@@ -29,9 +25,15 @@ export type SankeyPlusMenuConfigurationFreeLabelsFType = (
 export type context_zdtFType=(
   contextMenu:contextMenuType,
   t:TFunction,
-  set_show_menu_zdt:(b:boolean)=>void
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
 ) => JSX.Element
 
 export type blur_ZDT_wysiwygFType=(
   refWysiwygZDT:{current:ReactQuill}
 ) =>void
+
+export type zdtMenuAsAccordeonItemType=(
+  data:SankeyPlusData,
+  uiElementsRef:uiElementsRefType,
+  applicationContext:PlusApplicationContextType,
+  content_menu_zdt:JSX.Element)=>JSX.Element
