@@ -1,5 +1,5 @@
 import { SankeyData, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
-import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
+import { DictSetterInputValueType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
@@ -11,7 +11,7 @@ export type PlusDrawLabelsFType = (
   dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
   contextMenu:contextMenuType,
-  set_editor_content_fo_zdt:(s:string)=>void,
+  d_setter_input_value:DictSetterInputValueType,
   GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,

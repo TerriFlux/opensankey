@@ -122,5 +122,10 @@ export interface PlusElementsSelectedType extends dict_variable_elements_selecte
 }
 
 export interface SankeyPlusContextMenuType extends contextMenuType {
-  contextualised_zdt : React.MutableRefObject<React.Dispatch<React.SetStateAction<SankeyPlusLabel|undefined>>|undefined>
+  contextualised_zdt : MutableRefObject<Dispatch<SetStateAction<SankeyPlusLabel|undefined>>|undefined>
+}
+
+export interface DictSetterInputValueType {
+  // set_editor_content_fo_node:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
+  r_setter_editor_content_fo_zdt:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
 }

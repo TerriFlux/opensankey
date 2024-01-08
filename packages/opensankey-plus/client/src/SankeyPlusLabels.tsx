@@ -25,7 +25,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   dict_variable_elements_selected,
   uiElementsRef,
   contextMenu,
-  set_editor_content_fo_zdt,
+  d_setter_input_value,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -78,7 +78,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
             multi_selected_label.current.forEach(nn=>deselect_visualy_zdt(nn))
             select_visualy_zdt(d)
             multi_selected_label.current=[d]
-            set_editor_content_fo_zdt(d.content);
+            d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content);
 
             (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
             

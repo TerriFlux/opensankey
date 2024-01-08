@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import {  SankeyPlusData, SankeyPlusLabel } from './Types'
+import {  DictSetterInputValueType, SankeyPlusData, SankeyPlusLabel } from './Types'
 import ReactQuill from 'react-quill'
 import { contextMenuType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
@@ -20,8 +20,8 @@ export type SankeyPlusMenuConfigurationFreeLabelsFType = (
   ref_nav_item_active:MutableRefObject<string>,
   is_activated:boolean,
   menu_for_modal:boolean,
-  editor_content_fo_zdt:string,
-  set_editor_content_fo_zdt:(s:string)=>void,
+  // editor_content_fo_zdt:string,
+  d_setter_input_value:DictSetterInputValueType,
   refWysiwygZDT:{current:ReactQuill}
 ) => JSX.Element
 

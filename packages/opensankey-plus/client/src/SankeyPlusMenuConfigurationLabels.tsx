@@ -64,8 +64,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfiguration
   ref_nav_item_active,
   is_activated,
   menu_for_modal,
-  editor_content_fo_zdt,
-  set_editor_content_fo_zdt,
+  d_setter_input_value,
   refWysiwygZDT
 ) => {
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
@@ -73,7 +72,10 @@ export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfiguration
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.title, 'value': d.idLabel } })
   const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.title, 'value': d.idLabel } })
   const [button_icon_or_image,set_button_icon_or_image]=useState<'zdt'|'image'>(zdt_or_image)
+  const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
 
+  d_setter_input_value.r_setter_editor_content_fo_zdt.current=sEditorContentFOZdt
+  
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
@@ -210,21 +212,21 @@ export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfiguration
   ]
 
   const disable_options = is_activated? (multi_selected_label.current.length === 0):true
-  const isQuill_invalid=multi_selected_label.current.length>0?multi_selected_label.current[0].content!==editor_content_fo_zdt:false
+  const isQuill_invalid=multi_selected_label.current.length>0?multi_selected_label.current[0].content!==s_editor_content_fo_zdt:false
 
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<ReactQuill
     className='quill_editor'
-    value={editor_content_fo_zdt}
+    value={s_editor_content_fo_zdt}
     ref={refWysiwygZDT}
     onChange={(evt) => {
-      set_editor_content_fo_zdt(evt)
+      sEditorContentFOZdt(evt)
     }}
     onBlur={()=>{
       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-        d.content = editor_content_fo_zdt
+        d.content = s_editor_content_fo_zdt
       })
       set_data({...data})
     }}
@@ -246,7 +248,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfiguration
       {/* <Button
         onClick={()=>{
           Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-            d.content = editor_content_fo_zdt
+            d.content = s_editor_content_fo_zdt
           })
           set_data({...data})
         }}
