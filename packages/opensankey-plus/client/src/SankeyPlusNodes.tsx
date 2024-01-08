@@ -528,7 +528,7 @@ const node_mouse_click=(
       window.open(n.hyperlink)
     }
   }else{
-    SimpleGNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,mode_selection,accept_simple_click)
+    SimpleGNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click)
 
   }
 }

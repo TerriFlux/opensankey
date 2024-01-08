@@ -2,6 +2,7 @@ import { TFunction } from 'i18next'
 import { PlusElementsSelectedType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
 import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { setDiagramFuncType } from 'open-sankey/src/types/SankeyMenuBannerTypes'
+import { MutableRefObject } from 'react'
 
 export type getSetDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
@@ -75,8 +76,7 @@ export type SelecteurViewFType = (
 export type viewsAccordionFType = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
-  nav_item_active: string,
-  set_nav_item_active: (s:string)=>void,
+  ref_nav_item_active: MutableRefObject<string>,
   view:string,
   set_view:(s:string)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},

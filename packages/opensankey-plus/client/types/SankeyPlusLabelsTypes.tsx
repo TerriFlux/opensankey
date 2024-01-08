@@ -4,6 +4,7 @@ import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
+import { MutableRefObject } from 'react'
 
 export type PlusDrawLabelsFType = (
   applicaTionData:SankeyPlusApplicationDataType,
@@ -26,8 +27,8 @@ export type eventLabelClickFType=(
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyPlusLabel,
   data:SankeyPlusData,
-  accordion_ref:{ current: HTMLDivElement }| null,
-  button_ref: { current: HTMLLabelElement }| null,
+  accordion_ref:MutableRefObject<HTMLDivElement|null>,
+  button_ref: MutableRefObject<HTMLLabelElement|null>,
   multi_selected_label:{current:SankeyPlusLabel[]},
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},

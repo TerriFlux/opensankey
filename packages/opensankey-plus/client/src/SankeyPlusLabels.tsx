@@ -1,8 +1,7 @@
-import React from 'react'
 import * as d3 from 'd3'
 
 import { SankeyData } from 'open-sankey/src/types/Types'
-import {  SankeyPlusData, SankeyPlusLabel,SankeyPlusNode,SankeyPlusLink, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType} from '../types/Types'
+import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import {
   PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
@@ -144,14 +143,15 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
 export const eventLabelClick : eventLabelClickFType =(
-  event:React.MouseEvent<HTMLButtonElement>,
-  d:SankeyPlusLabel,data:SankeyPlusData,
-  accordion_ref:{ current: HTMLDivElement } | null,
-  button_ref: { current: HTMLLabelElement }| null,
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
+  event,
+  d,
+  data,
+  accordion_ref,
+  button_ref,
+  multi_selected_label,
+  set_data,
+  multi_selected_nodes,
+  multi_selected_links,
 )=>{
   if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     const sankeyTooltip=d3.select('.sankey-tooltip')

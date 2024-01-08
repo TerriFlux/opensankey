@@ -626,15 +626,14 @@ export const SelecteurView : SelecteurViewFType =(data:SankeyPlusData,
   return connected && select_or_edit==='edit'?editeur_name:selecteur
 }
 export const viewsAccordion : viewsAccordionFType = (
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  nav_item_active: string,
-  set_nav_item_active: (s:string)=>void,
-  view:string,
-  set_view:(s:string)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  multi_selected_label:{current:SankeyPlusLabel[]},
+  data,
+  set_data,
+  ref_nav_item_active,
+  view,
+  set_view,
+  multi_selected_nodes,
+  multi_selected_links,
+  multi_selected_label,
   master_data:SankeyPlusData|undefined,
   set_master_data:(d:SankeyPlusData|undefined)=>void,
   _load_json:{current:HTMLInputElement},
@@ -665,10 +664,10 @@ export const viewsAccordion : viewsAccordionFType = (
     eventKey="Visualisation"
     onClick={
       evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === 'Visualisation') {
-          set_nav_item_active('')
+        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === 'Visualisation') {
+          ref_nav_item_active.current = ''
         } else {
-          set_nav_item_active('Visualisation')
+          ref_nav_item_active.current = 'Visualisation'
         }
       }
     }>

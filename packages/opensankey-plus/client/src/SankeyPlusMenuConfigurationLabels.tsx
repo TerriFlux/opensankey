@@ -57,19 +57,16 @@ export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFTyp
 export interface selected_type  {'label':string;'value':string}
 
 export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfigurationFreeLabelsFType = (
-  data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void,
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  t: TFunction,
-  forceUpdate:boolean,
-  setForceUpdate:(_:boolean)=>void,
-  nav_item_active:string,
-  set_nav_item_active:(_:string)=>void,
-  is_activated:boolean,
-  menu_for_modal:boolean,
-  editor_content_fo_zdt:string,
-  set_editor_content_fo_zdt:(s:string)=>void,
-  refWysiwygZDT:{current:ReactQuill}
+  data,
+  set_data,
+  multi_selected_label,
+  t,
+  ref_nav_item_active,
+  is_activated,
+  menu_for_modal,
+  editor_content_fo_zdt,
+  set_editor_content_fo_zdt,
+  refWysiwygZDT
 ) => {
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
@@ -598,10 +595,10 @@ export const SankeyPlusMenuConfigurationFreeLabels : SankeyPlusMenuConfiguration
     eventKey="7"
     style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
     onClick={evt => {
-      if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && nav_item_active === '7') {
-        set_nav_item_active('')
+      if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === '7') {
+        ref_nav_item_active.current = ''
       } else {
-        set_nav_item_active('7')
+        ref_nav_item_active.current = '7'
       }
     }}
   >
