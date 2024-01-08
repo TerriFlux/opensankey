@@ -129,6 +129,7 @@ export interface SankeyPlusContextMenuType extends contextMenuType {
 export interface DictSetterInputValueType {
   r_setter_editor_content_fo_node:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
   r_setter_editor_content_fo_zdt:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
+  r_setter_value_editor_name_view:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
 }
 export interface PlusApplicationContextType extends applicationContextType{
   has_open_sankey_plus:boolean
