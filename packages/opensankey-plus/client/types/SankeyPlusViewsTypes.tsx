@@ -1,0 +1,145 @@
+import { TFunction } from 'i18next'
+import { DictSetterInputValueType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
+import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
+import { setDiagramFuncType } from 'open-sankey/src/types/SankeyMenuBannerTypes'
+import { MutableRefObject } from 'react'
+
+export type getSetDiagramFType = (
+  set_master_data: (d:SankeyPlusData | undefined)=>void,
+  set_view: (s:string)=>void,
+  DefaultSankeyData: ()=>SankeyPlusData
+) => setDiagramFuncType
+
+export type view_toastFType = (dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType)=>JSX.Element
+
+export type view_toast_update_viewFType = (dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType)=>JSX.Element
+
+export type setValueFType = (
+  dataTags: TagsGroup[],
+  v_target: SankeyLinkValueDict,
+  v_source: SankeyLinkValueDict,
+  depth: number
+) => void
+
+export type GetDataFromViewFType =(
+  master_data:SankeyPlusData| undefined,
+  id_view_to_see:string
+)=> SankeyPlusData | undefined
+
+export type FilterViewFType = (
+  pre_diff:{path:string[],kind:string,item:{kind:string}}[]
+) => {path:string[],kind:string,item:{kind:string}}
+
+export type RecomputeViewsFType = (
+  new_master_data: SankeyPlusData | undefined,
+  prev_master_data: SankeyPlusData | undefined,
+  set_master_data: (d:SankeyPlusData | undefined)=>void
+) => void
+
+export type keyHandlerFType = (
+  t:TFunction,
+  e: KeyboardEvent,
+  master:boolean,
+  master_data:SankeyPlusData| undefined,
+  set_master_data:(d:SankeyPlusData| undefined)=>void,
+  data:SankeyPlusData,
+  set_data:(_:SankeyPlusData)=>void,
+  view:string,
+  set_view:(_:string)=>void,
+  multi_selected_labels:{current:SankeyPlusLabel[]},
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
+  // set_show_toast_updated_view:(_:boolean)=>void,
+  connected:boolean,
+  set_view_not_saved:(s:string)=>void,
+) => void
+
+export type SelecteurViewFType = (
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
+  t:TFunction,
+  set_view_not_saved:(s:string)=>void,
+  connected:boolean,
+  d_setter_input_value:DictSetterInputValueType,
+
+) => JSX.Element
+
+export type viewsAccordionFType = (
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  ref_nav_item_active: MutableRefObject<string>,
+  _load_json:{current:HTMLInputElement},
+  t:TFunction,
+  is_activated:boolean,
+  convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
+  DefaultSankeyData: ()=>SankeyPlusData,
+  view_selector:JSX.Element
+
+) => JSX.Element
+
+// Function to check if the current data of the view is unsaved
+// We compare the differences saved in the master_data with the current changement of the view
+export type CheckCurrentViewSavedFType = (
+  master_data:SankeyPlusData | undefined,
+  data:SankeyPlusData,
+  view:string
+)=> string[]
+
+// Function that return a toolbar to navigate,create or modify view, it contain :
+// - a button to return to master data
+// - a button to create a view if we are currently on master data
+// - 2 button to navigate in the list of view
+// - a dropdown to directly select the view we want to display (or select master data)
+// Then if we are in a view there is additionnal button
+// - a button to choose variable of the view that get their value from master
+// - a button to clone the actual view
+// a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
+export type SankeyPlusBannerViewFType = (
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  t:TFunction,
+  connected:boolean,
+  _load_json:{current:HTMLInputElement},
+  _load_json_catalog:{current:HTMLInputElement},
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
+
+  convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
+  view_selector:JSX.Element
+)=> JSX.Element
+
+export type SankeyPlusMenuPreferenceViewFType = (
+  t:TFunction,
+  data:SankeyPlusData,
+  set_data:(_:SankeyPlusData)=>void,
+  preferenceCheck:(str: string, data: SankeyPlusData) => void
+) => JSX.Element
+
+// Modal used when we want to switch to master or a view without saving some changements we made on the current view
+// It give the option save or not the changements made
+export type modal_view_not_savedFType = (view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
+  master_data:SankeyPlusData | undefined,
+  set_master_data:(d:SankeyPlusData | undefined)=>void,
+  data:SankeyPlusData,
+  set_data:(d:SankeyPlusData)=>void,
+  view:string
+)=> JSX.Element
+
+export type modal_transparent_view_attrFType = (
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  current_view:ViewType,
+  t:TFunction
+)=> JSX.Element
+
+export type MenuEnregistrerViewFType = (
+  master_data:SankeyPlusData| undefined,
+  t:TFunction,
+  save_only_view:boolean,
+  set_save_only_view:(b:boolean)=>void
+)=> JSX.Element
+
+export type OpenSankeyPlusCheckpointButtonFType = (
+  master_data:SankeyPlusData| undefined,
+  data:SankeyPlusData,
+  view:string, 
+  view_not_saved:string,
+  connected:boolean,
+  t:TFunction
+)=> JSX.Element

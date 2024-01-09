@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@babel/cli": "^7.13.16",
+    "@babel/preset-typescript": "^7.16.7",
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.1",
@@ -38,6 +40,7 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/deep-diff": "^1.0.2",
     "eslint": "^8.6.0",
     "eslint-plugin-mocha": "^8.1.0",

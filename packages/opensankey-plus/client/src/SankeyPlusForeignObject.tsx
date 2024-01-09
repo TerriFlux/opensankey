@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Form, Tab, OverlayTrigger, Tooltip, Badge, InputGroup } from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,10 +8,14 @@ import { Checkbox } from '@chakra-ui/react'
 import * as d3 from 'd3'
 import ReactQuill from 'react-quill'
 
-import { SankeyPlusData, SankeyPlusNode } from './types'
+import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
 
-import { NodeDisplayed,SmoothClasses,IsAllNodeNotLocalAttrSameValue} from 'open-sankey/dist/SankeyUtils'
-
+import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
+import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
+import { NodeDisplayed } from './import/OpenSankey'
+import {PlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 
 
 declare const window: Window &
@@ -19,18 +23,18 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const SankeyPlusNodeFO = (
+export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   t:TFunction,
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
-  editor_content_fo_node:string,
-  set_editor_content_fo_node:(s:string)=>void,
+  d_setter_input_value
 
 )=> {
-  // const [value, setValue] = useState('')
+  const [s_editor_content_fo_node,sEditorContentFoNode]= useState('')
 
+  d_setter_input_value.r_setter_editor_content_fo_node.current=sEditorContentFoNode
   // Create a custom size list of font-size
   const list_size=[]
   for(let i=6;i<=50;i++){
@@ -58,25 +62,24 @@ export const SankeyPlusNodeFO = (
     'bold', 'italic', 'underline', 'strike','color','background',
     'list', 'bullet','align'
   ]
-  const isQuill_invalid=multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content!==editor_content_fo_node:false
+  const isQuill_invalid=multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content!==s_editor_content_fo_node:false
+  const value_of_key=OSPIsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
 
-  const value_of_key=IsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
-
-
+  
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<Form className='FO_zdt_editeur'>
     <Form.Group><ReactQuill
-      value={editor_content_fo_node}
+      value={s_editor_content_fo_node}
       onChange={(evt,_,s) => {
         if(s==='user'){
-          set_editor_content_fo_node(evt)
+          sEditorContentFoNode(evt)
         }
       }}
       onBlur={()=>{
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-          d.FO_content = editor_content_fo_node
+          d.FO_content = s_editor_content_fo_node
         })
         set_data({...data})
       }}
@@ -144,7 +147,7 @@ export const SankeyPlusNodeFO = (
           iconColor={value_of_key['has_FO'][1]?'#78C2AD':'white'}
           isDisabled={!is_activated}
           isIndeterminate={value_of_key['has_FO'][1]}
-          isChecked={value_of_key['has_FO'][0]}
+          isChecked={value_of_key['has_FO'][0] as boolean}
           onChange={(evt) => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
               .forEach(d => {
@@ -170,7 +173,7 @@ export const SankeyPlusNodeFO = (
           iconColor={value_of_key['is_FO_raw'][1]?'#78C2AD':'white'}
           isDisabled={!is_activated}
           isIndeterminate={value_of_key['is_FO_raw'][1]}
-          isChecked={value_of_key['is_FO_raw'][0]}
+          isChecked={value_of_key['is_FO_raw'][0] as boolean}
           onChange={(evt) => {
             Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
               .forEach(d => {
@@ -198,7 +201,7 @@ export const SankeyPlusNodeFO = (
             onClick={()=>{
 
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.FO_content = editor_content_fo_node
+                d.FO_content = s_editor_content_fo_node
               })
               set_data({...data})
             }}
@@ -210,21 +213,22 @@ export const SankeyPlusNodeFO = (
 }
 
 
-export const SankeyPlusDrawNodesFO = (
-  data:SankeyPlusData,
-  mode_selection:string,
-  NodeTooltipsContent: (data: SankeyPlusData, d: SankeyPlusNode) => string,
-
+export const PlusDrawNodesFO : PlusDrawNodesFOFType = (
+  data : SankeyPlusData,
+  display_nodes : { [node_id: string]: SankeyPlusNode },
+  mode_selection:{current:string},
+  NodeTooltipsContent: NodeTooltipsContentFType,
+  GetLinkValue:GetLinkValueFuncType
 ) => {
 
-  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:string,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    d3.select(t).attr('cursor', (mode_selection === 's')? 'pointer' : 'unset')
+  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:{current :string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+    d3.select(t).attr('cursor', (mode_selection.current === 's')? 'pointer' : 'unset')
     if (NodeDisplayed(data,(d as SankeyPlusNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data, d as SankeyPlusNode))
+        .html(NodeTooltipsContent(data,display_nodes, d as SankeyPlusNode,GetLinkValue))
     }
   }
 
