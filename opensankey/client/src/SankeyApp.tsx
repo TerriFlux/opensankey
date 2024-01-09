@@ -119,22 +119,22 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   /*************************************************************************************************/
   const dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType = {
-    show_menu_node_apparence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    show_menu_node_io : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    show_menu_link_data : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    show_menu_link_appearence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    show_menu_layout : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_node_apparence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_node_io : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_link_data : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_link_appearence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_layout : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_modal_welcome : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_modale_tuto : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_modale_support : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_excel_dialog : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_save_json : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    ref_getter_show_save_json : useRef(false),
+    ref_getter_show_save_json : useRef(false), // TODO why not a set function
     ref_setter_show_apply_layout : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    ref_setter_show_modal_preference : useRef<Dispatch<SetStateAction<boolean>>>(),
-    ref_setter_show_modal_template : useRef<Dispatch<SetStateAction<boolean>>>(),
-    ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(),
-    ref_setter_show_menu_config : useRef<Dispatch<SetStateAction<boolean>>>(),
+    ref_setter_show_modal_preference : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_modal_template : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_config : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_show_style_node : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_show_style_link : useRef<Dispatch<SetStateAction<boolean>>>(()=>null)
   }
@@ -218,12 +218,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
 
   const closeAllMenu=()=>{
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_config.current!(false)
-    dict_hook_ref_setter_show_dialog_components.show_menu_node_apparence.current(false)
-    dict_hook_ref_setter_show_dialog_components.show_menu_node_io.current(false)
-    dict_hook_ref_setter_show_dialog_components.show_menu_link_data.current(false)
-    dict_hook_ref_setter_show_dialog_components.show_menu_link_appearence.current(false)
-    dict_hook_ref_setter_show_dialog_components.show_menu_layout.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_config.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_data.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_appearence.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_layout.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current!(false)
     contextMenu.closeAllMenuContext()
   }
@@ -438,7 +438,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
       { MenuDraggable(
         dict_hook_ref_setter_show_dialog_components,
-        'show_menu_node_apparence',
+        'ref_setter_show_menu_node_apparence',
         menu_configuration_nodes_attributes,
         contextMenu.pointer_pos,
         applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.apparence.apparence'),
@@ -446,7 +446,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       }
       { MenuDraggable(
         dict_hook_ref_setter_show_dialog_components,
-        'show_menu_node_io',
+        'ref_setter_show_menu_node_io',
         SankeyMenuConfigurationNodesIO(
           applicationContext,
           dict_variable_application_data,
@@ -460,7 +460,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       }
       { MenuDraggable(
         dict_hook_ref_setter_show_dialog_components,
-        'show_menu_link_data',
+        'ref_setter_show_menu_link_data',
         MenuConfigurationLinksData(
           dict_variable_application_data,
           dict_variable_elements_selected,
@@ -474,7 +474,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       }
       { MenuDraggable(
         dict_hook_ref_setter_show_dialog_components,
-        'show_menu_link_appearence',
+        'ref_setter_show_menu_link_appearence',
         MenuConfigurationLinksAppearence(
           dict_variable_application_data,
           dict_variable_elements_selected,
@@ -490,7 +490,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       }
       { MenuDraggable(
         dict_hook_ref_setter_show_dialog_components,
-        'show_menu_layout',
+        'ref_setter_show_menu_layout',
         menu_configuration_layout,
         contextMenu.pointer_pos,
         applicationContext.t('Menu.MEP')

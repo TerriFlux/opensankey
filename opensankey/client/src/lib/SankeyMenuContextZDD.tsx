@@ -207,7 +207,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   </Button>
 
   const button_open_layout=<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.show_menu_layout.current(true)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_layout.current(true)
     set_show_context_zdd(false)
 
   }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>

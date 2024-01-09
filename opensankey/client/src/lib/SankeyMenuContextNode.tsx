@@ -119,7 +119,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   </Dropdown>:<></>
 
   const dropdown_c_n_apparence=<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.show_menu_node_apparence.current(true)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(true)
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
   }} variant='light'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>
@@ -158,7 +158,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   </Dropdown>
 
   const dropdown_c_n_io=<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.show_menu_node_io.current(true)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(true)
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
   }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>
