@@ -52,7 +52,7 @@ export type SankeyModalWelcomeFType = (
 
 export type MenuDraggableFType = (
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
-  dialog_name: 'show_menu_node_apparence' | 'show_menu_node_io' | 'show_menu_link_data' | 'show_menu_link_appearence' | 'show_menu_layout' |
+  dialog_name: 'ref_setter_show_menu_node_apparence' | 'ref_setter_show_menu_node_io' | 'ref_setter_show_menu_link_data' | 'ref_setter_show_menu_link_appearence' | 'ref_setter_show_menu_layout' |
     'ref_setter_show_modal_welcome' | 'ref_setter_show_modale_tuto' | 'ref_setter_show_modale_support' | 'ref_setter_show_excel_dialog' |
     'ref_setter_show_save_json' | 'ref_getter_show_save_json' | 'ref_setter_show_apply_layout' |'ref_setter_show_modal_preference' |
     'ref_setter_show_modal_template' |'ref_setter_show_load' |'ref_setter_show_menu_config' ,

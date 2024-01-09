@@ -149,7 +149,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
 
 
   const button_open_link_appearence=contextualised_link!==undefined?<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.show_menu_link_appearence.current(true)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_appearence.current(true)
     set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.apparence.apparence')} {icon_open_modal}</Button>:<></>
 
@@ -243,7 +243,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   </Dropdown>:<></>
 
   const button_open_link_data=contextualised_link!==undefined?<Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.show_menu_link_data.current(true)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_data.current(true)
     set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
 
