@@ -13,8 +13,6 @@ export type SankeyPlusDiagramSelectorFType = (
   view : string,
   view_selected:string,
   set_view_selected:(s:string)=>void,
-  diagramType:string,
-  setDiagramName:(s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
 ) => OpenSankeyDiagramSelectorFType
 

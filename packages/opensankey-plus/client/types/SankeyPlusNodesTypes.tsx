@@ -11,7 +11,6 @@ export type SankeyPlusNodeIconFType = (
   data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  radio_selected:string,
   is_activated:boolean,
   menu_for_modal:boolean,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType

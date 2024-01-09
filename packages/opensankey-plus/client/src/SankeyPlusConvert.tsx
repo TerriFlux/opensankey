@@ -158,10 +158,9 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
   view : string,
   view_selected:string,
   set_view_selected:(s:string)=>void,
-  diagramType:string,
-  setDiagramName:(s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
 ) => {
+  const [s_diagram_type, sDiagramType] = useState('File')
   const SankeyPlusDiagramSelectorInner = (
     t: TFunction, 
     convert_data: (s:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
@@ -180,25 +179,23 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
       <Button 
         className='btn_menu_config' 
         style={{width:'10%'}}
-        variant={diagramType==='File'?'primary':'outline-primary'}
+        variant={s_diagram_type==='File'?'primary':'outline-primary'}
         onClick={
           () => {
-            setDiagramName('File')
+            sDiagramType('File')
           }}>{t('Menu.other_file')}</Button>
       <Button 
         className='btn_menu_config'
         style={{width:'10%'}}
-        variant={diagramType==='View'?'primary':'outline-primary'}
+        variant={s_diagram_type==='View'?'primary':'outline-primary'}
         onClick={
           () => {
-            setDiagramName('View')
+            sDiagramType('View')
           }}>{t('Menu.view_actual_file')}</Button>
       
-      {diagramType==='File' ? <>
-        <Form.Control
-          type="file"
-          onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} />
-      </> : 
+      {s_diagram_type==='File' ? <Form.Control
+        type="file"
+        onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} /> : 
         
         <Form.Select 
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
@@ -215,7 +212,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
         className='btn_menu_config'
         style={{width:'15%'}}
         onClick={() => {
-          if (diagramType === 'View') {
+          if (s_diagram_type === 'View') {
             if (view_selected === 'none') {
               // View selected is master data
               if (view === 'none' ) {

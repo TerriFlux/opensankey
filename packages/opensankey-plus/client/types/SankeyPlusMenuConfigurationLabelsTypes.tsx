@@ -18,7 +18,7 @@ export type SankeyPlusMenuConfigurationFreeLabelsFType = {
   t: TFunction,
   is_activated:boolean,
   d_setter_input_value:DictSetterInputValueType,
-  refWysiwygZDT:{current:ReactQuill}
+  r_editor_ZDT:{current:ReactQuill}
 }
 
 
@@ -29,7 +29,7 @@ export type context_zdtFType=(
 ) => JSX.Element
 
 export type blur_ZDT_wysiwygFType=(
-  refWysiwygZDT:{current:ReactQuill}
+  r_editor_ZDT:{current:ReactQuill}
 ) =>void
 
 export type zdtMenuAsAccordeonItemType=(

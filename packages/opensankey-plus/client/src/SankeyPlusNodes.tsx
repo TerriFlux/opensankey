@@ -48,7 +48,6 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   data:SankeyPlusData,
   set_data:(_:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  radio_selected:string,
   is_activated:boolean,
   menu_for_modal=false,
   // set_ref_setter_show_modal_import_icons:(b:boolean)=>void,
@@ -153,7 +152,6 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
             type='color'
             id='form_color_icon'
             name='form_color_icon'
-            disabled={!is_activated?true:(radio_selected !== 'local')}
             value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes_plus.current[0].iconColor : '#ffffff'}
             onChange={evt => {
               const color = evt.target.value
