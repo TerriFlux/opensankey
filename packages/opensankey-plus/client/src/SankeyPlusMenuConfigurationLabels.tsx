@@ -63,7 +63,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   t,
   is_activated,
   d_setter_input_value,
-  refWysiwygZDT
+  r_editor_ZDT
 }) => {
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
@@ -218,7 +218,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   const editor_fo=<ReactQuill
     className='quill_editor'
     value={s_editor_content_fo_zdt}
-    ref={refWysiwygZDT}
+    ref={r_editor_ZDT}
     onChange={(evt) => {
       sEditorContentFOZdt(evt)
     }}
@@ -625,11 +625,11 @@ export const context_zdt : context_zdtFType =(
 const icon_open_modal =<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 
 export const blur_ZDT_wysiwyg : blur_ZDT_wysiwygFType = (
-  refWysiwygZDT:{current:ReactQuill}
+  r_editor_ZDT:{current:ReactQuill}
 )=>{
-  if(refWysiwygZDT && refWysiwygZDT.current && (d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??false)){
-    refWysiwygZDT.current.getEditor().focus()
-    refWysiwygZDT.current.getEditor().blur()
+  if(r_editor_ZDT && r_editor_ZDT.current && (d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??false)){
+    r_editor_ZDT.current.getEditor().focus()
+    r_editor_ZDT.current.getEditor().blur()
   }
 }
 
