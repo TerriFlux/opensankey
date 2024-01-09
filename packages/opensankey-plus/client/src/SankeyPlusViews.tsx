@@ -231,7 +231,7 @@ export const keyHandler : keyHandlerFType = (
   //   accordion_ref,
   //   button_ref,
   //   set_show_nav,
-  //   mode_selection,set_show_menu_node_apparence,set_show_menu_node_label,set_show_menu_node_io,set_show_menu_link_data,set_show_menu_link_appearence,set_show_menu_link_label,set_contextualised_node,set_contextualised_link,set_show_context_zdd)
+  //   mode_selection,set_ref_setter_show_menu_node_apparence,set_show_menu_node_label,set_ref_setter_show_menu_node_io,set_ref_setter_show_menu_link_data,set_ref_setter_show_menu_link_appearence,set_show_menu_link_label,set_contextualised_node,set_contextualised_link,set_show_context_zdd)
   if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
     multi_selected_labels.current=Object.values(data.labels)
@@ -901,9 +901,6 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
   const target_popover_modify_view_name=useRef(null)
 
-
-
-
   const has_views = master_data?master_data.view.length>0:false
   const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
   const prev_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')
@@ -967,7 +964,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         disabled={!connected}
         onClick={
           () => {
-            ref_setter_show_modal_transparent_view_attr.current![1](true)
+            ref_setter_show_modal_transparent_view_attr.current(true)
           }
         }
       >
@@ -1475,9 +1472,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   const {data,set_data,master_data,set_master_data}=dict_variable_application_data as SankeyPlusApplicationDataType
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const [show_modal,set_show_modal]=useState(false)
-  // if (ref_setter_show_modal_transparent_view_attr.current!.length == 0) {
-  ref_setter_show_modal_transparent_view_attr.current=[show_modal,set_show_modal]
-  // }
+  ref_setter_show_modal_transparent_view_attr.current=set_show_modal
   return master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && dict_variable_application_data.data!==undefined ? <Modal size='xl' show={show_modal} onHide={()=>{
     RecomputeViews(data,data,set_data as (d: SankeyPlusData | undefined) => void)
     set_show_modal(false)}}>

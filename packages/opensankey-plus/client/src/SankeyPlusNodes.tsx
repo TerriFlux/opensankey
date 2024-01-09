@@ -54,6 +54,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   // set_ref_setter_show_modal_import_icons:(b:boolean)=>void,
   dict_hook_ref_setter_show_dialog_components
 )=> {
+  const [show_menu_node_icon,set_show_menu_node_icon] = useState(false)
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
 
   const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
   const data_plus=data as SankeyPlusData
@@ -326,9 +328,14 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
     {button_icon_or_image==='icon'?content_icon:content_image}
   </>
 
+  if (menu_for_modal && !show_menu_node_icon) {
+    return <></>
+  }
+  if (menu_for_modal && show_menu_node_icon) {
+    return content_tab
+  }
 
-
-  return menu_for_modal?content_tab:<Tab
+  return <Tab
     key="node_icon"
     eventKey="node_icon"
     title={<>
@@ -824,10 +831,9 @@ export const ContextNodeIcon : ContextNodeIconFType = (
   dict_hook_ref_setter_show_dialog_components,
   t:TFunction
 )=>{
-  const {show_menu_node_icon}=dict_hook_ref_setter_show_dialog_components
   const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
   return <Button onClick={()=>{
-    show_menu_node_icon[1](true)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_icon.current!(true)
     contextMenu.ref_setter_contextualised_node.current!(undefined)
   }} variant='light'>{t('Noeud.icon.icon')} {icon_open_modal}</Button>
 

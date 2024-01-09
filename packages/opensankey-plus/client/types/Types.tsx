@@ -97,12 +97,12 @@ export interface differenceType{
   } 
 
 export interface SankeyPlusShowMenuComponentsType extends dict_hook_ref_setter_show_dialog_componentsType {
-  show_menu_node_icon : [boolean,(_:boolean)=>void],
-  ref_setter_show_modal_import_icons : MutableRefObject<Dispatch<SetStateAction<boolean>>|undefined>,
-  ref_setter_show_menu_zdt : MutableRefObject<Dispatch<SetStateAction<boolean>>|undefined>,
-  ref_setter_show_modal_transparent_view_attr : MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]| undefined>
-  show_toast_new_view:MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
-  show_toast_update_view:MutableRefObject<Dispatch<SetStateAction<boolean>> | undefined>,
+  ref_setter_show_menu_node_icon : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_modal_import_icons : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_menu_zdt : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_modal_transparent_view_attr : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  show_toast_new_view:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  show_toast_update_view:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
 export interface SankeyPlusApplicationDataType extends dict_variable_application_dataType {
