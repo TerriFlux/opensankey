@@ -160,6 +160,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
   set_view_selected:(s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
 ) => {
+  const [s_diagram_type, sDiagramType] = useState('File')
   const SankeyPlusDiagramSelectorInner = (
     t: TFunction, 
     convert_data: (s:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
@@ -171,7 +172,6 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
     elementToDispose : string[]
   ) => {
     const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
-    const [s_diagram_type, sDiagramType] = useState('File')
 
     return <InputGroup>
       
