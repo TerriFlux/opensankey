@@ -1331,9 +1331,9 @@ export const SankeyPlusBannerView=(
   >
     {popover_modify_view_name}
   </Overlay>
-  {file_reder_for_catalog}
-  {create_data_catalog}
-  <OverlayTrigger
+  {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
+  {window.SankeyToolsStatic ? <></> : create_data_catalog}
+  {window.SankeyToolsStatic ? <></> : <OverlayTrigger
     key={'buttonHomeViewDisabled'}
     placement={'bottom'}
     delay={500}
@@ -1371,9 +1371,9 @@ export const SankeyPlusBannerView=(
         <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
       </Button>
     </span>
-  </OverlayTrigger>
+  </OverlayTrigger>}
 
-  {buttonCreateView}
+  {window.SankeyToolsStatic ? <></> : buttonCreateView}
 
 
   <OverlayTrigger
