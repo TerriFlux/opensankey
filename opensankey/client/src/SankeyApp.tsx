@@ -605,7 +605,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             OpenSankeySaveButton(applicationContext.t)
           ]}
           convert_data={convert_data}
-          elementToDispose={elementToDispose.current}
+          elementToDispose={elementToDispose}
           apply_transformation_additional_elements={[]}
           DiagramSelector={OpenSankeyDiagramSelector}
         />
@@ -648,7 +648,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       set_data={set_data}
       display_nodes={display_nodes}
       display_links={display_links}
-      animation={false}
+      animation={useRef(false)}
       mode_selection={dict_variable_elements_selected.mode_selection}
       agregation={agregation}
       ref_alt_key_pressed={ref_alt_key_pressed}
