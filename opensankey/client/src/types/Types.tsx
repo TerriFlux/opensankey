@@ -426,7 +426,7 @@ export type MenuTypes = {
   ref_nav_item_active: MutableRefObject<string>,
   Reinitialization:() => void,
   convert_data:(data: SankeyData, DefaultSankeyData: () => SankeyData)=>void
-  elementToDispose:string[]
+  elementToDispose:MutableRefObject<string[]>,
   DiagramSelector: OpenSankeyDiagramSelectorFType,
   configurations_menus: JSX.Element[],
   menus: {[s: string]: JSX.Element[] | JSX.Element},
