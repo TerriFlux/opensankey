@@ -28,7 +28,6 @@ export type OpenSankeyMenusFType = (
   external_edition_item:JSX.Element[],
   external_file_item:JSX.Element[],
   externale_save_item:JSX.Element[],
-  // set_tags_selected:(o:{[x:string]:string})=>void,
   convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void
 ) => {[s:string]:JSX.Element | JSX.Element[]}
 

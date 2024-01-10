@@ -16,7 +16,7 @@ export type SankeyDrawTypes = {
     set_data: (_:SankeyData) => void,
     display_nodes : { [node_id: string]: SankeyNode },
     display_links : { [node_id: string]: SankeyLink },
-    animation: boolean,
+    animation: MutableRefObject<boolean>,
     mode_selection: {current : string},
     agregation:agregationType, 
     ref_alt_key_pressed:MutableRefObject<boolean>,

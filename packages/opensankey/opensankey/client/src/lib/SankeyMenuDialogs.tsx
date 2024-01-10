@@ -13,27 +13,10 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
-import { ConvertDataFuncType } from '../types/SankeyConvertTypes'
-import { ClickSaveDiagramFuncType, DefaultSankeyDataFuncType, UploadExcelImplFuncType, updateLayoutFuncType } from '../types/SankeyUtilsTypes'
-import { OpenSankeyDiagramSelectorFType } from '../types/SankeyMenuDialogsTypes'
+import { ClickSaveDiagramFuncType, UploadExcelImplFuncType } from '../types/SankeyUtilsTypes'
+import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from '../types/SankeyMenuDialogsTypes'
 
-/**
- * Define ApplyLayoutDialog
- *
- * @type {{ ref_setter_show_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
- */
-export type ApplyLayoutDialogTypes = {
-  t:TFunction,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  sankey_data : SankeyData,
-  set_sankey_data : (_:SankeyData)=>void,
-  updateLayout:updateLayoutFuncType,
-  convert_data:ConvertDataFuncType,
-  diagramSelector: OpenSankeyDiagramSelectorFType,
-  elementToDispose:string[],
-  apply_transformation_additional_elements: JSX.Element[],
-  DefaultSankeyData: DefaultSankeyDataFuncType,
-}
+
 
 /**
  *
@@ -118,7 +101,9 @@ export const ApplyLayoutDialog = ({
       
 
       {diagramSelector(
-        t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, updateLayout, elementToDispose,DefaultSankeyData)}
+        t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, 
+        updateLayout, elementToDispose,DefaultSankeyData
+      )}
       <OverlayTrigger
         key={'TransforShortCut'}
         placement={'bottom'}
@@ -131,7 +116,7 @@ export const ApplyLayoutDialog = ({
             style={{width:'20%'}}
             variant='outline-primary' 
             onClick={() => {
-              elementToDispose.length = 0
+              elementToDispose.current.length = 0
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.unSelectAll')}</Button>
@@ -140,13 +125,13 @@ export const ApplyLayoutDialog = ({
             style={{width:'20%'}}
             variant='outline-primary' 
             onClick={() => {
-              elementToDispose.length = 0
+              elementToDispose.current.length = 0
               if(mode_trans==='simple'){
-                simple_element_to_transform.forEach(el=>elementToDispose.push(el))
+                simple_element_to_transform.forEach(el=>elementToDispose.current.push(el))
               }else if(mode_trans==='avancé'){
-                advanced_element_to_transform.forEach(el=>elementToDispose.push(el))
+                advanced_element_to_transform.forEach(el=>elementToDispose.current.push(el))
               }else{
-                all_element_to_transform.forEach(el=>elementToDispose.push(el))
+                all_element_to_transform.forEach(el=>elementToDispose.current.push(el))
               }
               setForceUpdate(!forceUpdate)
             }}
@@ -156,8 +141,8 @@ export const ApplyLayoutDialog = ({
             style={{width:'20%'}}
             variant='outline-primary' 
             onClick={() => {
-              elementToDispose.length = 0
-              default_element_to_transform.forEach(el=>elementToDispose.push(el))
+              elementToDispose.current.length = 0
+              default_element_to_transform.forEach(el=>elementToDispose.current.push(el))
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.selectDefault')}</Button>
@@ -175,13 +160,13 @@ export const ApplyLayoutDialog = ({
             <Button 
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.includes('addNode')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('addNode')?'primary':'outline-primary'} 
               onClick={() => {
-                if(!elementToDispose.includes('addNode')){
-                  elementToDispose.push('addNode')
+                if(!elementToDispose.current.includes('addNode')){
+                  elementToDispose.current.push('addNode')
                   setForceUpdate(!forceUpdate)
                 }else{
-                  elementToDispose.splice(elementToDispose.indexOf('addNode'),1)
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('addNode'),1)
                   setForceUpdate(!forceUpdate)
                 }}
               }
@@ -189,13 +174,13 @@ export const ApplyLayoutDialog = ({
             <Button 
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.includes('removeNode')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('removeNode')?'primary':'outline-primary'} 
               onClick={() => {
-                if(!elementToDispose.includes('removeNode')){
-                  elementToDispose.push('removeNode')
+                if(!elementToDispose.current.includes('removeNode')){
+                  elementToDispose.current.push('removeNode')
                   setForceUpdate(!forceUpdate)
                 }else{
-                  elementToDispose.splice(elementToDispose.indexOf('removeNode'),1)
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('removeNode'),1)
                   setForceUpdate(!forceUpdate)
                 }}
               }
@@ -203,26 +188,26 @@ export const ApplyLayoutDialog = ({
             <Button 
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.includes('addFlux')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('addFlux')?'primary':'outline-primary'} 
               onClick={() => {
-                if(!elementToDispose.includes('addFlux')){
-                  elementToDispose.push('addFlux')
+                if(!elementToDispose.current.includes('addFlux')){
+                  elementToDispose.current.push('addFlux')
                   setForceUpdate(!forceUpdate)
                 }else{
-                  elementToDispose.splice(elementToDispose.indexOf('addFlux'),1)
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('addFlux'),1)
                   setForceUpdate(!forceUpdate)
                 }}
               }>{t('Menu.Transformation.addFlux')}</Button>
             <Button 
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.includes('removeFlux')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('removeFlux')?'primary':'outline-primary'} 
               onClick={() => {
-                if(!elementToDispose.includes('removeFlux')){
-                  elementToDispose.push('removeFlux')
+                if(!elementToDispose.current.includes('removeFlux')){
+                  elementToDispose.current.push('removeFlux')
                   setForceUpdate(!forceUpdate)
                 }else{
-                  elementToDispose.splice(elementToDispose.indexOf('removeFlux'),1)
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('removeFlux'),1)
                   setForceUpdate(!forceUpdate)
                 }}
               }>{t('Menu.Transformation.removeFlux')}</Button>
@@ -240,26 +225,26 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={ elementToDispose.includes('posNode')?'primary':'outline-primary'} 
+            variant={ elementToDispose.current.includes('posNode')?'primary':'outline-primary'} 
             onClick={() => {
-              if(!elementToDispose.includes('posNode')){
-                elementToDispose.push('posNode')
+              if(!elementToDispose.current.includes('posNode')){
+                elementToDispose.current.push('posNode')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('posNode'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('posNode'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }>{t('Menu.Transformation.PosNoeud')}</Button>
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={ elementToDispose.includes('posFlux')?'primary':'outline-primary'} 
+            variant={ elementToDispose.current.includes('posFlux')?'primary':'outline-primary'} 
             onClick={() => {
-              if(!elementToDispose.includes('posFlux')){
-                elementToDispose.push('posFlux')
+              if(!elementToDispose.current.includes('posFlux')){
+                elementToDispose.current.push('posFlux')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('posFlux'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('posFlux'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }> {t('Menu.Transformation.posFlux')}</Button>
@@ -276,17 +261,17 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config' 
             style={{width:'20%'}}
-            variant={ elementToDispose.includes('Values')?'primary':'outline-primary'} 
+            variant={ elementToDispose.current.includes('Values')?'primary':'outline-primary'} 
             onClick={() => {
-              if(!elementToDispose.includes('Values')){
-                elementToDispose.push('Values')
+              if(!elementToDispose.current.includes('Values')){
+                elementToDispose.current.push('Values')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('Values'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('Values'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
-          >{elementToDispose.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          >{elementToDispose.current.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
         
         </InputGroup></OverlayTrigger>:<></>}
       
@@ -299,14 +284,14 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.includes('attrNode')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('attrNode')?'primary':'outline-primary'} 
             onClick={() => {
-              if(!elementToDispose.includes('attrNode')){
-                elementToDispose.push('attrNode')
+              if(!elementToDispose.current.includes('attrNode')){
+                elementToDispose.current.push('attrNode')
                 setForceUpdate(!forceUpdate)
 
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('attrNode'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('attrNode'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
@@ -314,13 +299,13 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.includes('attrFlux')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('attrFlux')?'primary':'outline-primary'} 
             onClick={() =>{
-              if(!elementToDispose.includes('attrFlux')){
-                elementToDispose.push('attrFlux')
+              if(!elementToDispose.current.includes('attrFlux')){
+                elementToDispose.current.push('attrFlux')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('attrFlux'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('attrFlux'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
@@ -338,13 +323,13 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.includes('tagNode')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('tagNode')?'primary':'outline-primary'} 
             onClick={() =>{
-              if(!elementToDispose.includes('tagNode')){
-                elementToDispose.push('tagNode')
+              if(!elementToDispose.current.includes('tagNode')){
+                elementToDispose.current.push('tagNode')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('tagNode'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('tagNode'),1)
                 setForceUpdate(!forceUpdate)
 
               }}
@@ -353,13 +338,13 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.includes('tagFlux')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('tagFlux')?'primary':'outline-primary'} 
             onClick={() => {
-              if(!elementToDispose.includes('tagFlux')){
-                elementToDispose.push('tagFlux')
+              if(!elementToDispose.current.includes('tagFlux')){
+                elementToDispose.current.push('tagFlux')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('tagFlux'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('tagFlux'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
@@ -367,13 +352,13 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.includes('tagData')?'primary':'outline-primary'}
+            variant={elementToDispose.current.includes('tagData')?'primary':'outline-primary'}
             onClick={() => {
-              if(!elementToDispose.includes('tagData')){
-                elementToDispose.push('tagData')
+              if(!elementToDispose.current.includes('tagData')){
+                elementToDispose.current.push('tagData')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('tagData'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('tagData'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
@@ -391,17 +376,17 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.includes('tagLevel')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('tagLevel')?'primary':'outline-primary'} 
             onClick={() => {
-              if(!elementToDispose.includes('tagLevel')){
-                elementToDispose.push('tagLevel')
+              if(!elementToDispose.current.includes('tagLevel')){
+                elementToDispose.current.push('tagLevel')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('tagLevel'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('tagLevel'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
-          >{elementToDispose.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          >{elementToDispose.current.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
         </InputGroup></OverlayTrigger>:<></>}
       
       <OverlayTrigger
@@ -413,17 +398,17 @@ export const ApplyLayoutDialog = ({
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.includes('attrGeneral')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('attrGeneral')?'primary':'outline-primary'} 
             onClick={() =>{
-              if(!elementToDispose.includes('attrGeneral')){
-                elementToDispose.push('attrGeneral')
+              if(!elementToDispose.current.includes('attrGeneral')){
+                elementToDispose.current.push('attrGeneral')
                 setForceUpdate(!forceUpdate)
               }else{
-                elementToDispose.splice(elementToDispose.indexOf('attrGeneral'),1)
+                elementToDispose.current.splice(elementToDispose.current.indexOf('attrGeneral'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
-          >{elementToDispose.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          >{elementToDispose.current.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
         </InputGroup></OverlayTrigger>
       {apply_transformation_additional_elements.map((c:JSX.Element,i:number)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>
@@ -758,15 +743,15 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
 }
 
 export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
-  t: TFunction, 
-  convert_data: ConvertDataFuncType,
-  sankey_data: SankeyData,
-  set_sankey_data: (s:SankeyData)=>void,
-  prev_sankey_data: SankeyData,
-  set_prev_sankey_data: (s:SankeyData)=>void, 
-  updateLayout: updateLayoutFuncType, 
-  elementToDispose : string[],
-  defaultData: ()=>SankeyData
+  t, 
+  convert_data,
+  sankey_data,
+  set_sankey_data,
+  prev_sankey_data,
+  set_prev_sankey_data, 
+  updateLayout, 
+  elementToDispose,
+  defaultData
 ) => {
   const [file_layout,set_file_layout] = useState<Blob[] | undefined>(undefined)
   return <Form>
@@ -797,7 +782,7 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
                     convert_data(new_layout,defaultData)
                     complete_sankey_data(new_layout, defaultData, DefaultNode, DefaultLink)
                     set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
-                    updateLayout(sankey_data, new_layout, elementToDispose, true)
+                    updateLayout(sankey_data, new_layout, elementToDispose.current, true)
                     set_sankey_data({ ...sankey_data })
                   }
                 }

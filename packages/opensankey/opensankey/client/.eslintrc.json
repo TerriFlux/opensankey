@@ -40,7 +40,7 @@
         "semi": [
             "error",
             "never"
-        ],
-        "max-len":["warn",{"code":100}]
+        ]
+        // "max-len":["warn",{"code":100}]
     }
 }

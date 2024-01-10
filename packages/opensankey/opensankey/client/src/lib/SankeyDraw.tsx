@@ -58,7 +58,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   const position = (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute'
  
   useEffect(() => {
-    if (animation) {
+    if (animation.current) {
       return
     }
     [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
