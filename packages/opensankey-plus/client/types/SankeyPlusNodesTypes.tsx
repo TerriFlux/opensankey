@@ -4,6 +4,7 @@ import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
 import { dict_variable_application_dataType, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { MutableRefObject } from 'react'
 
 
 export type SankeyPlusNodeIconFType = (
@@ -27,7 +28,7 @@ export type PlusNodeClickEventFType=(
   applicaTionData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
-  set_animating:(b:boolean)=>void,
+  animating:MutableRefObject<boolean>,
   mode_selection:{current:string},
   accept_simple_click:{current:boolean},
   GetLinkValue:GetLinkValueFuncType

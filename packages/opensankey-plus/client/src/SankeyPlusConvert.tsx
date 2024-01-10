@@ -16,7 +16,7 @@ import {SankeyPlusDiagramSelectorFType, apply_transformation_opensankey_plus_ele
 // Opensankey files
 import { updateLayoutFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
-import React, { useState } from 'react'
+import React, { MutableRefObject, useState } from 'react'
 import { TFunction } from 'i18next'
 import { FaCheck } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -169,7 +169,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
     prev_sankey_data: SankeyData,
     set_prev_sankey_data: (s:SankeyData)=>void, 
     updateLayout: updateLayoutFuncType, 
-    elementToDispose : string[]
+    elementToDispose : MutableRefObject<string[]>
   ) => {
     const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
 
@@ -220,7 +220,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
                 return
               }
               //- current view is updated by master data
-              updateLayout(sankey_data,master_data!,elementToDispose)
+              updateLayout(sankey_data,master_data!,elementToDispose.current)
               set_sankey_data({ ...JSON.parse(JSON.stringify(sankey_data)) })
             } else {
               // A view is selected to update either another view or the master data
@@ -229,7 +229,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
                 return
               }                
               const data_view=GetDataFromView(master_data,view_selected) as SankeyPlusData
-              updateLayout(sankey_data,data_view,elementToDispose)
+              updateLayout(sankey_data,data_view,elementToDispose.current)
               const copy_data = JSON.parse(JSON.stringify(sankey_data))
               set_sankey_data(copy_data)
               if (view === 'none' ) {
@@ -252,7 +252,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
                   convert_data(new_layout,DefaultSankeyData)
                   complete_sankey_data(new_layout, DefaultSankeyData, DefaultNode, DefaultLink)
                   set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
-                  updateLayout(sankey_data, new_layout, elementToDispose)
+                  updateLayout(sankey_data, new_layout, elementToDispose.current)
                   const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
                   set_sankey_data(copy_data)
                   if (view === 'none' ) {
@@ -289,9 +289,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
 export const apply_transformation_opensankey_plus_elements : apply_transformation_opensankey_plus_elementsFType = (
   data:SankeyPlusData,
   t:TFunction,
-  forceUpdate: boolean,
-  setForceUpdate: (b:boolean)=>void,
-  elementToDispose: string[]
+  elementToDispose
 ) => {
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
   const is_current_data_master=data.current_view==='none'
@@ -301,17 +299,17 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
       <Button
         className='btn_menu_config'
         style={{width:'20%'}}
-        variant={elementToDispose.includes('freeLabels')?'primary':'outline-primary'} 
+        variant={elementToDispose.current.includes('freeLabels')?'primary':'outline-primary'} 
         onClick={() => {
-          if(!elementToDispose.includes('freeLabels')){
-            elementToDispose.push('freeLabels')
-            setForceUpdate(!forceUpdate)
+          if(!elementToDispose.current.includes('freeLabels')){
+            elementToDispose.current.push('freeLabels')
+            //setForceUpdate(!forceUpdate)
           }else{
-            elementToDispose.splice(elementToDispose.indexOf('freeLabels'),1)
-            setForceUpdate(!forceUpdate)
+            elementToDispose.current.splice(elementToDispose.current.indexOf('freeLabels'),1)
+            //setForceUpdate(!forceUpdate)
           }}
         }
-      >{elementToDispose.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      >{elementToDispose.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
     
     </InputGroup>,
     <OverlayTrigger
@@ -331,17 +329,17 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           className='btn_menu_config'
           style={{width:'20%'}}
           disabled={!is_current_data_master}
-          variant={elementToDispose.includes('Views')?'primary':'outline-primary'} 
+          variant={elementToDispose.current.includes('Views')?'primary':'outline-primary'} 
           onClick={() => {
-            if(!elementToDispose.includes('Views')){
-              elementToDispose.push('Views')
-              setForceUpdate(!forceUpdate)
+            if(!elementToDispose.current.includes('Views')){
+              elementToDispose.current.push('Views')
+              //setForceUpdate(!forceUpdate)
             }else{
-              elementToDispose.splice(elementToDispose.indexOf('Views'),1)
-              setForceUpdate(!forceUpdate)
+              elementToDispose.current.splice(elementToDispose.current.indexOf('Views'),1)
+              //setForceUpdate(!forceUpdate)
             }}
           }
-        >{elementToDispose.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        >{elementToDispose.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
       </InputGroup>
     </OverlayTrigger>
   ]}

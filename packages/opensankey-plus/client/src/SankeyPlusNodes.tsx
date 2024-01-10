@@ -1,4 +1,4 @@
-import React,{ChangeEvent, useState, useRef} from 'react'
+import React,{ChangeEvent, useState, useRef, MutableRefObject} from 'react'
 import { FaFileImport} from 'react-icons/fa'
 import { faIcons} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -482,7 +482,7 @@ const node_mouse_click=(
   dict_variable_application_data:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
-  set_animating:(b:boolean)=>void,
+  animating:MutableRefObject<boolean>,
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   mode_selection:{current:string},
@@ -495,7 +495,7 @@ const node_mouse_click=(
   const data_plus =data as SankeyPlusData
   if (event.shiftKey) {
     event.preventDefault()
-    set_animating(true)
+    animating.current = true
     // Animation des flux du Sankey
     sankeyTooltip.style('opacity', 0)
     // on donne ici un style temporaire, les parametres initiaux restent dans le attr que l'on pourra récupérer plus tard pour la remise en état du sankey
@@ -520,7 +520,7 @@ const node_mouse_click=(
       time_to_animate += nb_animation * 2000
     }
     setTimeout(function () {
-      set_animating(false)
+      animating.current = false
     }, time_to_animate)
   }else if(window.SankeyToolsStatic===true){
     const n=d as SankeyPlusNode
@@ -642,17 +642,17 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
   dict_variable_application_data,
   dict_variable_elements_selected,
   uiElementsRef,
-  set_animating:(_:boolean)=>void,
-  mode_selection:{current:string},
-  accept_simple_click:{current:boolean},
-  GetLinkValue:GetLinkValueFuncType
+  animating,
+  mode_selection,
+  accept_simple_click,
+  GetLinkValue
 )=>{
   d3.selectAll(' .opensankey .ggg_nodes')
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
       node_mouse_click(
         dict_variable_application_data,dict_variable_elements_selected,uiElementsRef,
-        set_animating,
+        animating,
         event,
         (d as SankeyPlusNode),
         mode_selection,
