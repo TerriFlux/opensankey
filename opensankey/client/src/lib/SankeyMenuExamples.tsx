@@ -11,7 +11,10 @@ import {  DefaultSankeyDataFuncType } from '../types/SankeyUtilsTypes'
  *
  * @type {*}
  */
-export type ExempleMenuTypes = {[_:string]:string[]}
+export type ExempleMenuTypes = {[_:string]:ExempleMenuTypes|string[]}
+
+type subtypeFileList={[_:string]:string[]}
+type subtypeObjectList={[_:string]:ExempleMenuTypes}
 
 /**
  * Description placeholder
@@ -44,7 +47,7 @@ export const ExempleItem = (
   return (
     <>
       { ('Files' in exemple_menu) 
-        ? exemple_menu['Files'].map( (item,index)=> {
+        ? (exemple_menu as subtypeFileList)['Files'].map( (item,index)=> {
           let path = current_path+'/sankey/'+item
           if (!item.includes('.xlsx') && !item.includes('.json')) {
             let url = window.location.origin + '/fm/userfiles/' + current_path + '/' + item
@@ -102,7 +105,7 @@ export const ExempleItem = (
               <>
                 <NavDropdown drop='end' key={index} title={title} id={key} >
                   <ExempleItem
-                    exemple_menu={exemple_menu}
+                    exemple_menu={(exemple_menu as subtypeObjectList)[key]}
                     url_prefix={url_prefix}
                     data={data}
                     set_data={set_data}
