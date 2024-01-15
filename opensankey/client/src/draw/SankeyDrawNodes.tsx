@@ -13,7 +13,7 @@ import {
 import { SimpleGNodeClick } from './SankeyDrawEventFunction'
 import { EventOnMouseUpAddNodesAndLink } from './SankeyDrawEventFunction'
 import { EventNodeContextMenu } from './SankeyDrawEventFunction'
-import {  DragGNodeEvent } from './SankeyDrag'
+import { DragGNodeEvent } from './SankeyDragNodes'
 
 declare const window: Window &
 typeof globalThis & {

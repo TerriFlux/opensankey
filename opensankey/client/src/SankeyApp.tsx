@@ -21,7 +21,7 @@ import {
   EventOnZoneMouseMove, EventOnZoneMouseUp
 } from './draw/SankeyDrawEventFunction'
 import { ContextLegendTags, DrawLegend, drag_legend } from './draw/SankeyDrawLegend'
-import { DrawLinks } from './draw/SankeyDrawLinks'
+import { DrawLinks } from './draw/SankeyDragLinks'
 import { DrawNodes } from './draw/SankeyDrawNodes'
 import { OpenSankeyDrawNodesLabel } from './draw/SankeyDrawNodesLabel'
 import { NodeTooltipsContent, LinkTooltipsContent } from './draw/SankeyTooltip'

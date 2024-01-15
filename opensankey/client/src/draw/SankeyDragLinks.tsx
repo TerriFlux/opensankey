@@ -1,9 +1,9 @@
 import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
-import {RemoveAnimate,GetSankeyMinWidthAndHeight,drawCurveFunction, DrawArrows,LinkStrokeWidth} from './SankeyDrawFunction'
+import {GetSankeyMinWidthAndHeight,DrawArrows} from './SankeyDrawFunction'
 import { ComputeEndPoints } from './SankeyDrawShapes'
-import {   LinkVisible,TestLinkValue,ReturnValueNode,AssignNodeLocalAttribute,ReturnValueLink,AssignLinkLocalAttribute} from '../configmenus/SankeyUtils'
-import { AddDragLinkZoneFType, DragGNodeEventFType, DragLinkEventFType, DragLinkIOPositionFType, dragLinkTextEventFType, dragNodeTextEventWidthBoxEventFType, DragElementsFuncType,drag_node_textFuncType, DragNodesFType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from './types/SankeyDragTypes'
+import {   LinkVisible,TestLinkValue,ReturnValueNode,ReturnValueLink,AssignLinkLocalAttribute} from '../configmenus/SankeyUtils'
+import { AddDragLinkZoneFType, DragLinkEventFType, DragLinkIOPositionFType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
 import {
   GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,
@@ -86,187 +86,6 @@ export const DragLinkEvent : DragLinkEventFType =(
       }
     })
 }
-// const drag_link = (
-//   display_nodes: { [node_id: string]: SankeyNode },
-//   display_links: { [link_id: string]: SankeyLink },
-//   display_style: display_styleType,
-//   dragged: SVGPathElement | null,
-//   event: d3.D3DragEvent<Element, SankeyLink, unknown>,
-//   data:SankeyData,
-//   scale:(t:number)=>number,
-//   inv_scale:(t:number)=>number,
-//   GetLinkValue:GetLinkValueFuncType,
-
-// ) => {
-//   //Peut etre appelé sur un drag de path qui a directement l'id du link
-//   //ou bien peut etre appelé par le rect de drag qui a l'id du link après un prefix
-//   // const idLink = d3.select(dragged).attr('id').replace('path_','')
-//   const idLink = d3.select(dragged).attr('id').replace('drag_zone_s_','').replace('drag_zone_t_','')
-
-//   const p2 = d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))
-//   console.log(idLink)
-
-
-//   const linked_node = identify_node(data,display_nodes, display_links, display_links[idLink], p2)
-//   if (linked_node === undefined) {
-//     return
-//   }
-//   const node = display_nodes[linked_node.node_id]
-//   let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && LinkVisible(data.links[id],data,display_nodes,GetLinkValue) })
-//   let id_output_filtered=node.outputLinksId.filter(id=>LinkVisible(data.links[id],data,display_nodes,GetLinkValue))
-//   const link_dragged=data.links[idLink]
-//   let io=''
-//   const link_dragged_orientation=ReturnValueLink(data,link_dragged,'orientation')
-//   const link_dragged_recycling=ReturnValueLink(data,link_dragged,'recycling')
-
-//   if (linked_node.type === 'source') {
-
-//     if(link_dragged_orientation=='hh' ||link_dragged_orientation=='hv' ){
-//       if((!link_dragged_recycling && data.nodes[link_dragged.idTarget].x>data.nodes[linked_node.node_id].x) ||(link_dragged_recycling && data.nodes[link_dragged.idTarget].x<data.nodes[linked_node.node_id].x) ){
-//         io='right'
-//       }else{
-//         io='left'
-//       }
-//     }else if(link_dragged_orientation=='vv' ||link_dragged_orientation=='vh'){
-//       if(data.nodes[link_dragged.idTarget].y<data.nodes[linked_node.node_id].y){
-//         io='top'
-//       }else{
-//         io='bottom'
-//       }
-//     }
-//     //Filtre les flux qui arrivent du même coté que le flux dragged
-//     id_output_filtered=id_output_filtered.filter(id=>{
-//       let good_orientation=false
-//       const link_recycling=(ReturnValueLink(data,data.links[id],'recycling') as boolean)
-//       const link_orientation=ReturnValueLink(data,data.links[id],'orientation')
-
-//       if(io=='right'){
-//         good_orientation=((!link_recycling && data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x) || (link_recycling && data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x)) && (link_orientation=='hh' || link_orientation=='hv')
-//       }else if(io=='left'){
-//         good_orientation=((!link_recycling && data.nodes[data.links[id].idTarget].x<=data.nodes[linked_node.node_id].x)|| (link_recycling && data.nodes[data.links[id].idTarget].x>data.nodes[linked_node.node_id].x)) && (link_orientation=='hh' || link_orientation=='hv')
-//       }else if (io=='top'){
-//         good_orientation=data.nodes[data.links[id].idTarget].y<data.nodes[linked_node.node_id].y && (link_orientation=='vv' || link_orientation=='vh')
-//       }else if(io=='bottom'){
-//         good_orientation=data.nodes[data.links[id].idTarget].y>=data.nodes[linked_node.node_id].y && (link_orientation=='vv' || link_orientation=='vh')
-//       }
-//       return good_orientation
-//     })
-//     const true_source_order = node.outputLinksId.indexOf(idLink)
-//     const source_order = id_output_filtered.indexOf(idLink)
-//     let output_offset = 0
-//     for (let i = 1; i < id_output_filtered.length; i++) {
-//       const link = display_links[id_output_filtered[i - 1]]
-//       if (i > source_order) {
-//         break
-//       }
-//       let tmp=GetLinkValue(data, link.idLink).value as number
-//       tmp=(tmp)?tmp:0
-//       output_offset += tmp
-//     }
-//     const number_of_links = id_output_filtered.length
-//     const value = GetLinkValue(data, idLink).value as number
-//     let next_link_index=-1
-//     let prec_link_index=-1
-//     if(source_order>0){
-//       prec_link_index=node.outputLinksId.indexOf(id_output_filtered[source_order-1])
-//     }
-//     if(source_order<number_of_links-1){
-//       next_link_index=node.outputLinksId.indexOf(id_output_filtered[source_order+1])
-//     }
-    
-//     if(value){
-//       if (link_dragged_orientation === 'hh' || link_dragged_orientation === 'hv') {
-//         if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(output_offset + value)) {
-//           swap(node.outputLinksId, true_source_order, next_link_index)
-//         }
-//         if (source_order > 0 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(output_offset)) {
-//           swap(node.outputLinksId, true_source_order, prec_link_index)
-//         }
-//       } else if (link_dragged_orientation === 'vv') {
-//         if (source_order < number_of_links - 1 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(output_offset + value)) {
-//           swap(node.outputLinksId, true_source_order, next_link_index)
-//         }
-//         if (source_order > 0 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(output_offset)) {
-//           swap(node.outputLinksId, true_source_order, prec_link_index)
-//         }
-//       }
-//     }
-
-//   }
-//   if (linked_node.type === 'target') {
-//     if(link_dragged_orientation=='hh' ||link_dragged_orientation=='hv' ){
-//       if((!link_dragged_recycling && data.nodes[link_dragged.idSource].x>data.nodes[linked_node.node_id].x) ||(link_dragged_recycling && data.nodes[link_dragged.idSource].x<data.nodes[linked_node.node_id].x)){
-//         io='right'
-//       }else{
-//         io='left'
-//       }
-//     }else if(link_dragged_orientation=='vv' ||link_dragged_orientation=='vh'){
-//       if(data.nodes[link_dragged.idSource].y<data.nodes[linked_node.node_id].y){
-//         io='top'
-//       }else{
-//         io='bottom'
-//       }
-//     }
-//     //Filtre les flux qui arrivent du même coté que le flux dragged
-
-//     id_input_filtered=id_input_filtered.filter(id=>{
-//       const link_recycling=(ReturnValueLink(data,data.links[id],'recycling') as boolean)
-//       const link_orientation=ReturnValueLink(data,data.links[id],'orientation')
-
-//       let good_orientation=false
-//       if(io=='right'){
-//         good_orientation=((!link_recycling && data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x) || (link_recycling && data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x)) && (link_orientation=='hh' || link_orientation=='hv')
-//       }else if(io=='left'){
-//         good_orientation=((!link_recycling && data.nodes[data.links[id].idSource].x<=data.nodes[linked_node.node_id].x)|| (link_recycling && data.nodes[data.links[id].idSource].x>data.nodes[linked_node.node_id].x)) && (link_orientation=='hh' || link_orientation=='hv')
-//       }else if (io=='top'){
-//         good_orientation=data.nodes[data.links[id].idSource].y<data.nodes[linked_node.node_id].y && (link_orientation=='vv' || link_orientation=='vh')
-//       }else if(io=='bottom'){
-//         good_orientation=data.nodes[data.links[id].idSource].y>=data.nodes[linked_node.node_id].y && (link_orientation=='vv' || link_orientation=='vh')
-//       }
-//       return good_orientation
-//     })
-//     const true_target_order = node.inputLinksId.indexOf(idLink)
-//     const target_order = id_input_filtered.indexOf(idLink)
-//     let input_offset = 0
-//     for (let i = 1; i < node.inputLinksId.length; i++) {
-//       if (i > target_order) {
-//         break
-//       }
-//       let tmp=GetLinkValue(data,node.inputLinksId[i - 1]).value as number
-//       tmp=(tmp)?tmp:0
-//       input_offset +=tmp
-//     }
-//     const number_of_links = id_input_filtered.length
-//     const value = GetLinkValue(data, idLink).value as number
-//     //Recheche la les flux suivant et précédent qui sont du même coté pour pour ensuite les swap
-//     let next_link_index=-1
-//     let prec_link_index=-1
-//     if(target_order>0){
-//       prec_link_index=node.inputLinksId.indexOf(id_input_filtered[target_order-1])
-//     }
-//     if(target_order<number_of_links-1){
-//       next_link_index=node.inputLinksId.indexOf(id_input_filtered[target_order+1])
-//     }
-//     if(value){
-//       if (link_dragged_orientation === 'hh') {
-//         if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[1] + event.dy >= linked_node.origin + scale(input_offset + value)) {
-//           swap(node.inputLinksId, true_target_order, next_link_index)
-//         }
-//         if (target_order > 0 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[1] + event.dy <= linked_node.origin + scale(input_offset)) {
-//           swap(node.inputLinksId, true_target_order, prec_link_index)
-//         }
-//       } else if (link_dragged_orientation === 'vv') {
-//         if (target_order < number_of_links - 1 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[0] + event.dx >= linked_node.origin + scale(input_offset + value)) {
-//           swap(node.inputLinksId, true_target_order, next_link_index)
-//         }
-//         if (target_order > 0 && d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))[0] + event.dx <= linked_node.origin + scale(input_offset)) {
-//           swap(node.inputLinksId, true_target_order, prec_link_index)
-//         }
-//       }
-//     }
-//     DrawArrows(node as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
-//   }
-// }
 
 /**
  * Function triggerd when a link is dragged, it identify if the mouse is closer of the target or the source and return the closest node of the two
@@ -322,53 +141,8 @@ const swap = (array: string[], x: number, y: number) => {
   array[x] = array[y]
   array[y] = temp
 }
-/**
- * Function that change link position in target's inputLinksId or source's outputLinksId
- *
- * @param {{ [node_id: string]: SankeyNode }} nodes
- * @param {{ [link_id: string]: SankeyLink }} links
- * @param {{ node_font_size: number;  filter: number; filter_label: number }} display_style
- * @param {TagsCatalog} nodeTags
- * @param {(SVGPathElement | null)} dragged
- * @param {d3.D3DragEvent<Element, SankeyLink, unknown>} event
- * @param {SankeyData} data
- * @param {(t:number)=>number} scale
- * @param {(t:number)=>number} inv_scale
- * @param {number} min_thickness
- * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => void}
- */
 
-/**
- *  Function to freely move the link label if the alt key is pressed
- *
- * @param {boolean} alt_key_pressed
- * @returns {*}
- */
-export const dragLinkTextEvent : dragLinkTextEventFType =(
-  alt_key_pressed:MutableRefObject<boolean>,
-)=>{
-  return d3.drag<SVGTextElement, SankeyLink>()
-    .subject(Object).on('drag', function (event, link) {
-      if (alt_key_pressed.current) {
-        drag_link_text(link, event)
-      }
-    })
-}
 
-/**
- *
- * @param {{current: SankeyLink[]}} multi_selected_links
- * @param {SankeyLink} link
- * @param {SankeyData} data
- * @param {{ [node_id: string]: SankeyNode }} display_nodes
- * @param {{ [link_id: string]: SankeyLink }} display_links
- * @param {({ text: string | undefined } | undefined)} error_msg
- * @param {SankeyDrawCurve} drawCurveFunction
- * @param {(t:number)=>number} scale
- * @param {(t:number)=>number} inv_scale
- * @param {number} min_thickness
- * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => string}
- */
 export const DragLinkIOPosition : DragLinkIOPositionFType =(
   link:SankeyLink,
   dict_variable_application_data,
@@ -505,169 +279,6 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
     }).on('end',()=>set_data({...data}))
 }
 
-
-/**
- * Function to drag GNode element
- * It have different behavior :
- * -it drag the shape and the text if the 'alt' key isn't pressed
- * - drag the node label if the mouse is on the node label element and the 'alt' key is pressed
- *
- * @param {SankeyData} data
- * @param {{ [node_id: string]: SankeyNode }} display_nodes
- * @param {{ [link_id: string]: SankeyLink }} display_links
- * @param {{ node_font_size: number;  filter: number; filter_label: number }} display_style
- * @param {{current: SankeyNode[] }} multi_selected_nodes
- * @param {()=>number[]} GetSankeyMinWidthAndHeight
- * @param {()=>void} DrawGrid
- * @param {(t:number)=>number} scale
- * @param {(t:number)=>number} inv_scale
- * @param {d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>} sankeyTooltip
- * @param {number} min_thickness
- * @param {SankeyDrawCurve} drawCurveFunction
- * @param {string} mode_selection
- * @param {boolean} alt_key_pressed
- * @returns {{}, DrawGrid: () => void, scale: (t: number) => number, inv_scale: ...}
- */
-export const DragGNodeEvent : DragGNodeEventFType = (
-  dict_variable_application_data:dict_variable_application_dataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
-  mode_selection:{current:string},
-  alt_key_pressed:MutableRefObject<boolean>,
-  LinkText:LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-)=>{
-  const {data,set_data}=dict_variable_application_data
-  const node_visible=[] as string[]
-  return d3.drag<SVGGElement, SankeyNode>()
-    .subject(Object)
-    .on('start',()=>{
-      RemoveAnimate()
-      d3.selectAll('.node_shape').nodes().forEach(element => {
-        node_visible.push(d3.select(element).attr('id')) 
-      })
-    })
-    .on('drag', function (event,node) {
-      if(mode_selection.current=='s'){
-        if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
-          drag_node_text(node, event)
-        }else if(d3.select(event.subject.sourceEvent.target).node().tagName=='tspan' && !alt_key_pressed.current){
-          DragNodes(node,event,dict_variable_application_data,dict_variable_elements_selected,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
-          )
-        }
-        if(d3.select(event.subject.sourceEvent.target).node().tagName=='rect' || d3.select(event.subject.sourceEvent.target).node().tagName=='ellipse'){
-          DragNodes(node,event,dict_variable_application_data, dict_variable_elements_selected,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
-          )
-        }
-      }
-    }).on('end',()=>{
-      if(d3.select(document.activeElement).attr('class')!=='input_label'){
-        set_data(data)
-      }
-    })
-}
-/**
- *  Function to modify the label length threshold
- *The label length threshold is the max width a node label can have, if the label is wider then a line break
- * To change the label threshold on the sankey draw zone, select a node and a rectangle should appear around the label then drag the left or right face of this rectangle
- *
- * @param {SankeyData} data
- * @param {React.Dispatch<React.SetStateAction<SankeyData>>} set_data
- * @returns {*}
- */
-export const dragNodeTextEventWidthBoxEvent : dragNodeTextEventWidthBoxEventFType = (
-  data:SankeyData,set_data:(d:SankeyData)=>void
-)=>{
-  return d3.drag<SVGRectElement, SankeyNode>()
-    .subject(Object).on('drag', function (event, node) {
-      if(event.dx<100){
-        // let pos_node=d3.select(' .opensankey #ggg_' + node.idNode).attr('transform').replace('translate(','')
-        const pos_node=Number(d3.select(' .opensankey #shape_' + node.idNode).attr('width'))/2
-        d3.select(' .opensankey #ggg_' + node.idNode)
-        // pos_node=pos_node.split(',')[0]
-        const tmp=ReturnValueNode(data,data.nodes[node.idNode],'label_box_width') as number
-        const old_x=Number(d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('x'))
-        if(event.x<pos_node){
-          d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('x',old_x+event.dx/2)
-          d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('width',tmp+event.dx/2)
-          AssignNodeLocalAttribute(data.nodes[node.idNode],'label_box_width',tmp-event.dx)
-        }else{
-          d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('x',old_x-event.dx/2)
-          d3.select(' .opensankey #ggg_' + node.idNode+' .box_width_threshold').attr('width',tmp-event.dx/2)
-          AssignNodeLocalAttribute(data.nodes[node.idNode],'label_box_width',tmp+event.dx)
-        }
-      }
-    }).on('end',()=>{
-      set_data({...data})
-    })
-}
-
-
-/**
- * Function that shift the node when dragged (function called by dragGnodeEvent)
- *
- * @param {{ [node_id: string]: SankeyNode }} nodes
- * @param {{ [link_id: string]: SankeyLink }} links
- * @param {{ italic?: boolean; bold?: boolean; node_font_size: number;  uppercase?: boolean; trade_close?: boolean; filter: number; filter_label: number }} display_style
- * @param {TagsCatalog} nodeTags
- * @param {Element} dragged
- * @param {{ dx: number; dy: number }} event
- * @param {SankeyData} data
- * @param {{current: SankeyNode[] }} multi_selected_nodes
- * @param {()=>number[]} GetSankeyMinWidthAndHeight
- * @param {()=>void} DrawGrid
- * @param {(t:number)=>number} scale
- * @param {(t:number)=>number} inv_scale
- * @param {d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>} sankeyTooltip
- * @param {number} min_thickness
- * @param {SankeyDrawCurve} drawCurveFunction
- * @returns
- */
-export  const DragNodes : DragNodesFType = (
-  node:SankeyNode,
-  event: { dx: number; dy: number,x:number,y:number },
-  dict_variable_application_data:dict_variable_application_dataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
-  LinkText:LinkTextFuncType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-  node_visible:string[]
-) => {
-  const {data}=dict_variable_application_data
-  const {multi_selected_nodes}=dict_variable_elements_selected
-  // Cherche si des element seront hors zone si on les drag 
-  // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-  const out_of_zone_item=ReturnOutOfBoundElement(node,data,event,multi_selected_nodes,node_visible)
-  // Pousse les element non sélectionnés dans la direction opposé
-  if(out_of_zone_item.length>0){
-    OpposingDragElements(out_of_zone_item,event,node,data,multi_selected_nodes)
-  }
-
-  DragElements(node,dict_variable_application_data,dict_variable_elements_selected,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale)
-    
-}
-
-
-
-/**
- * Function that change link position in target's inputLinksId or source's outputLinksId
- *
- * @param {{ [node_id: string]: SankeyNode }} nodes
- * @param {{ [link_id: string]: SankeyLink }} links
- * @param {{ node_font_size: number;  filter: number; filter_label: number }} display_style
- * @param {TagsCatalog} nodeTags
- * @param {(SVGPathElement | null)} dragged
- * @param {d3.D3DragEvent<Element, SankeyLink, unknown>} event
- * @param {SankeyData} data
- * @param {(t:number)=>number} scale
- * @param {(t:number)=>number} inv_scale
- * @param {number} min_thickness
- * @returns {number, inv_scale: (t: number) => number, min_thickness: number) => void}
- */
 const drag_link = (
   display_nodes: { [node_id: string]: SankeyNode },
   display_links: { [link_id: string]: SankeyLink },
@@ -997,25 +608,7 @@ export const DragHandle : DragHandleFType = (
   })
 }
 
-/**
- *
- * @param {SankeyLink} link
- * @param {d3.D3DragEvent<Element, unknown, unknown>} event
- */
-const  drag_link_text = (
-  link: SankeyLink,
-  event: d3.D3DragEvent<Element, unknown, unknown>
-) => {
-  const old_x = +d3.select(' .opensankey #text_' + link.idLink).attr('x'),
-    old_y = +d3.select(' .opensankey #text_' + link.idLink).attr('y'),
-    new_x = old_x + event.dx,
-    new_y = old_y + event.dy
-  d3.select(' .opensankey #text_' + link.idLink).attr('x', new_x)
-  d3.select(' .opensankey #text_' + link.idLink).attr('y', new_y)
-  link.x_label = new_x
-  link.y_label = new_y
-  AssignLinkLocalAttribute(link,'label_position','frozen')
-}
+
 /**
  * Function that return the position of rectangle element on selected links that represent the zone to drag to trigger dragLink
  *
@@ -1187,181 +780,29 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
       .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows))  
   }
 }
-/**
- * Function that shift node text when triggered
- *
- * @param {SankeyNode} node
- * @param {d3.D3DragEvent<Element, unknown, unknown>} event
- */
-export const drag_node_text:drag_node_textFuncType = (
-  node: SankeyNode,
-  event: d3.D3DragEvent<Element, unknown, unknown>
-) => {
-  const old_x = +d3.select(' .opensankey #text_' + node.idNode ).attr('x'),
-    old_y = +d3.select(' .opensankey #text_' + node.idNode ).attr('y'),
-    new_x = old_x + event.dx,
-    new_y = old_y + event.dy
-  d3.select(' .opensankey #text_' + node.idNode ).attr('x', new_x)
-  d3.select(' .opensankey #text_' + node.idNode ).attr('y', new_y)  
-  node.x_label = new_x
-  node.y_label = new_y
-  d3.select(' .opensankey #text_' + node.idNode ).selectAll('tspan').attr('x', new_x)
-}
 
-export const ReturnOutOfBoundElement:ReturnOutOfBoundElementFuncType=(
-  dragged:SankeyNode,data:SankeyData,event:{ dx: number; dy: number,x:number,y:number },
-  multi_selected_nodes:{current:SankeyNode[]},node_visible:string[]
+export const dragLinkTextEvent=(
+  alt_key_pressed:MutableRefObject<boolean>,
 )=>{
-
-  
-  // Cherche si des noeuds seront hors zone si on les drag 
-  // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-
-  const node=Object.keys(dragged).includes('idNode')?dragged as SankeyNode:{} as SankeyNode
-  
-  const out_of_zone_item:(SankeyNode)[]=Object.values(data.nodes).filter(d=>{
-    const n=d as SankeyNode
-    // Don't take into account node with relative position because they aren't reliable  
-    if(n.position=='relative' || !node_visible.includes('shape_'+n.idNode)){
-      return false
-    }
-    if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
-      return (n.x<=0 && event.dx<0) || (n.y<=0 && event.dy<0) || (n.x<=0 && event.x<0) || (n.y<=0 && event.y<0) 
-    }else if( Object.keys(node).length>0 && node.position!=='relative'){
-      return node==n && (n.x<=0 && event.dx<0) || (n.y<=0 && event.dy<0) || (n.x<=0 && event.x<0) || (n.y<=0 && event.y<0) 
-    }else{
-      return false
-    }
-  })
-
-  return out_of_zone_item
-
-}
-export const OpposingDragElements:opposing_DragElementsFuncType=(out_of_zone_item:(SankeyNode)[],
-  event:{ dx: number; dy: number,x:number,y:number },
-  dragged:SankeyNode,
-  data:SankeyData,
-  multi_selected_nodes:{current:SankeyNode[]},
-)=>{
-  const node=Object.keys(dragged).includes('idNode')?dragged as SankeyNode:{} as SankeyNode
-
-  if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
-    // Shift not selected nodes to opposing direction
-    Object.values(data.nodes).filter(nf=>(multi_selected_nodes.current.length>0?!multi_selected_nodes.current.includes(nf):(Object.keys(node).length==0 || nf!==node)) && nf.position!=='relative').forEach(n_shift=>{
-      n_shift.x+=5
-      d3.selectAll('#ggg_'+n_shift.idNode).attr('transform','translate('+n_shift.x+','+n_shift.y+')')
-    })
-
-    
-
-    // Shift legend x 
-    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-    const scale_for_legend=(scale_svg<1?(1/scale_svg):1)
-    data.legend_position[0]+=5
-    d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
-    
-  }
-
-
-  if((out_of_zone_item[0].y<=0 && event.y<0) || (out_of_zone_item[0].y<=0 && event.dy<0)){
-    // Shift not selected nodes to opposing direction
-    Object.values(data.nodes).filter(nf=>(multi_selected_nodes.current.length>0?!multi_selected_nodes.current.includes(nf):( Object.keys(node).length==0 || nf!==node)) && nf.position!=='relative').forEach(n_shift=>{
-      n_shift.y+=5
-      d3.selectAll('#ggg_'+n_shift.idNode).attr('transform','translate('+n_shift.x+','+n_shift.y+')')
-    })
-
-    // Shift legend y 
-    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-    const scale_for_legend=(scale_svg<1?(1/scale_svg):1)
-    data.legend_position[1]+=5
-    d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale('+scale_for_legend+')')
-    
-
-
-  }
-}
-export const DragElements:DragElementsFuncType=(
-  dragged:SankeyNode,
-  dict_variable_application_data,
-  dict_variable_elements_selected,
-  event:{ dx: number; dy: number,x:number,y:number },
-  LinkText:LinkTextFuncType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType,
-  scale:(t:number)=>number,
-  inv_scale:(t:number)=>number,
-)=>{
-  const {data,display_nodes,display_links}=dict_variable_application_data
-  const {multi_selected_nodes}=dict_variable_elements_selected
-  let error_msg: { text: string | undefined } | undefined
-  const node=Object.keys(dragged).includes('idNode')?dragged as SankeyNode:{} as SankeyNode
-  d3.selectAll('.ggg_nodes').filter((d)=>{
-    const n=d as SankeyNode
-    // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
-    // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changement au noeud draggé
-    if(multi_selected_nodes.current.filter(n=>n.position!=='relative').length>0){
-      return multi_selected_nodes.current.filter(n=>n.position!=='relative').includes(n)
-    }else if(Object.keys(node).length>0 && node.position!=='relative'){
-      return node==n
-    }else{
-      return false
-    }
-  }).attr('transform',(d)=>{
-    const n=d as SankeyNode
-    n.x+=event.dx
-    n.y+=event.dy
-    if(n.x<0){
-      n.x=0
-    }
-    if(n.y<0){
-      n.y=0
-    }
-    return 'translate('+n.x+','+n.y+')'
-  })
-
-
-  if(multi_selected_nodes.current.length>0){
-    // We redraw each arrows linked to a selected nodes after shifting it
-    multi_selected_nodes.current.filter(n=>n.position!=='relative').forEach(n=>[
-      DrawArrows(n as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,data.display_style)
-    ])
-    // we redraw link linked to dragged nodes
-    multi_selected_nodes.current.forEach(n=>{
-      Object.values(data.links).filter(l=>n.outputLinksId.includes(l.idLink)||n.inputLinksId.includes(l.idLink)).forEach(l=>{
-        d3.select(' .opensankey #path_' + l.idLink).attr('d',
-          drawCurveFunction.curve(
-            dict_variable_application_data,
-            dict_variable_elements_selected,
-            data.display_style,
-            data.nodeTags, l, error_msg,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
-            DrawArrows
-          )
-        )
-      })
-    })
-  }else if(Object.keys(node).length>0){
-    
-    DrawArrows(node as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,data.display_style)
-    Object.values(data.links).filter(l=>node.outputLinksId.includes(l.idLink)||node.inputLinksId.includes(l.idLink)).forEach(l=>{
-      d3.select(' .opensankey #path_' + l.idLink).attr('d',
-        drawCurveFunction.curve(
-          dict_variable_application_data,
-          dict_variable_elements_selected,
-          data.display_style,
-          data.nodeTags, l, error_msg,LinkText,
-          GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows
-        )
-      )
-      d3.select(' .opensankey #path_' + l.idLink).attr('stroke-width',LinkStrokeWidth(l,data,scale,inv_scale,2,data.nodes,GetLinkValue))
-      // if the target is an export node and it has trad_close variable at true then we redraw this node arrow too
-      const node_t=(data.nodes[l.idTarget] as unknown as {trade_close:boolean})
-      if(node_t!==undefined && node_t.trade_close){
-        DrawArrows(node_t as unknown as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,data.display_style)
-
+  return d3.drag<SVGTextElement, SankeyLink>()
+    .subject(Object).on('drag', function (event, link) {
+      if (alt_key_pressed.current) {
+        drag_link_text(link, event)
       }
     })
-  } 
+}
+
+export const  drag_link_text = (
+  link: SankeyLink,
+  event: d3.D3DragEvent<Element, unknown, unknown>
+) => {
+  const old_x = +d3.select(' .opensankey #text_' + link.idLink).attr('x'),
+    old_y = +d3.select(' .opensankey #text_' + link.idLink).attr('y'),
+    new_x = old_x + event.dx,
+    new_y = old_y + event.dy
+  d3.select(' .opensankey #text_' + link.idLink).attr('x', new_x)
+  d3.select(' .opensankey #text_' + link.idLink).attr('y', new_y)
+  link.x_label = new_x
+  link.y_label = new_y
+  AssignLinkLocalAttribute(link,'label_position','frozen')
 }
