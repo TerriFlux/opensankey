@@ -1,7 +1,7 @@
 import { SankeyData, SankeyNode } from '../types/Types'
 import * as d3 from 'd3'
 
-import { dragNodeTextEventWidthBoxEvent} from './SankeyDrag'
+import { dragNodeTextEventWidthBoxEvent } from './SankeyDragNodes'
 import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelValuePosY,NodeLabeLText,TextNodeWrap} from './SankeyDrawFunction'
 import { ReturnValueNode } from '../configmenus/SankeyUtils'
 import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'

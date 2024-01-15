@@ -1,4 +1,4 @@
-import { SankeyLink, SankeyData, SankeyNode,SankeyLinkAttrLocal } from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode } from '../types/Types'
 import React, { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from '../configmenus/SankeyUtils'
@@ -6,7 +6,7 @@ import {
   drawCurveFunction, scale, inv_scale, SetNodesHeight, StrokeDasharray,
   GetSankeyMinWidthAndHeight, DeselectVisualyLinks} from './SankeyDrawFunction'
 import { EventLinkContextMenu } from './SankeyDrawEventFunction'
-import {DragLinkEvent, AddDragLinkZone} from './SankeyDrag'
+import {DragLinkEvent, AddDragLinkZone, dragLinkTextEvent} from './SankeyDragLinks'
 import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg} from './SankeyDrawFunction'
 import { DrawLinkStartSabot } from './SankeyDrawShapes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
@@ -192,7 +192,7 @@ export const DrawLinks : DrawLinksFType = (
 
 
 
-  const add_links = (
+  const AddLinks = (
     display_nodes:{ [node_id: string]: SankeyNode },
     display_links:{ [link_id: string]: SankeyLink },
     LinkStroke:LinkStrokeFuncType,
@@ -442,100 +442,9 @@ export const DrawLinks : DrawLinksFType = (
     if (error_msg && error_msg.text) {
       alert(error_msg.text)
     }
-  }
+  } 
 
-  /**
-   *  Function that allow us to change link position in target or source nodes
-   *
-   * @param {{current: SankeyLink[]}} multi_selected_links
-   * @param {SankeyData} data
-   * @param {{ [node_id: string]: SankeyNode }} display_nodes
-   * @param {{ [link_id: string]: SankeyLink }} display_links
-   * @param {({ text: string | undefined } | undefined)} error_msg
-   * @param {{node_font_size: number,sector_uppercase: boolean,sector_bold: boolean,sector_italic: boolean,product_uppercase: boolean,product_bold: boolean,product_italic: boolean,unit: boolean,filter: number,filter_label: number,global_curvature: number,null_flux: boolean,font_family: string[],link_font_family_selected: string}} display_style
-   * @param {SankeyDrawCurve} drawCurveFunction
-   * @param {(t:number)=>number} scale
-   * @param {(t:number)=>number} inv_scale
-   * @param {number} min_thickness
-   * @returns
-   */
-  // const DragLinkEvent=(multi_selected_links:{current: SankeyLink[]},
-  //   data:SankeyData,
-  //   display_nodes:{ [node_id: string]: SankeyNode },
-  //   display_links:{ [link_id: string]: SankeyLink },
-  //   error_msg: { text: string | undefined } | undefined,
-  //   display_style: display_styleType,
-  //   drawCurveFunction : SankeyDrawCurve,
-  //   scale:(t:number)=>number,
-  //   inv_scale:(t:number)=>number
-  // )=>{
-  //   return d3.drag<SVGPathElement, SankeyLink>()
-  //     .subject(Object)
-  //     .on('drag', function (event,l) {
-  //       if(multi_selected_links.current.includes(l)){
-  //         drag_link(display_nodes, display_links, display_style, this, event,data,scale,inv_scale)
-  //         Object.values(display_links).forEach(
-  //           (link: SankeyLink) => {
-  //             d3.select(' .opensankey #path_' + link.idLink).attr('d',
-  //               () => {
-  //                 return drawCurveFunction.curve(
-  //                   data,set_data,
-  //                   display_nodes, display_links, display_style,
-  //                   data.nodeTags, link,
-  //                   error_msg,
-  //                   multi_selected_links,
-  //                   LinkText,GetSankeyMinWidthAndHeight,GetLinkValue, DrawArrows
-  //                 )
-  //               }
-  //             )
-  //           }
-  //         )
-  //       }
-  //     })
-  // }
-
- 
-
-
-  /**
- *  Function to freely move the link label if the alt key is pressed
- *
- * @param {boolean} alt_key_pressed
- * @returns {*}
- */
-  const dragLinkTextEvent=(
-    alt_key_pressed:MutableRefObject<boolean>,
-  )=>{
-    return d3.drag<SVGTextElement, SankeyLink>()
-      .subject(Object).on('drag', function (event, link) {
-        if (alt_key_pressed.current) {
-          drag_link_text(link, event)
-        }
-      })
-  }
-
-  /**
-  *
-  * @param {SankeyLink} link
-  * @param {d3.D3DragEvent<Element, unknown, unknown>} event
-  */
-  const  drag_link_text = (
-    link: SankeyLink,
-    event: d3.D3DragEvent<Element, unknown, unknown>
-  ) => {
-    const old_x = +d3.select(' .opensankey #text_' + link.idLink).attr('x'),
-      old_y = +d3.select(' .opensankey #text_' + link.idLink).attr('y'),
-      new_x = old_x + event.dx,
-      new_y = old_y + event.dy
-    d3.select(' .opensankey #text_' + link.idLink).attr('x', new_x)
-    d3.select(' .opensankey #text_' + link.idLink).attr('y', new_y)
-    link.x_label = new_x
-    link.y_label = new_y
-    link.local=(link.local!==undefined && link.local!==null)?link.local:{} as SankeyLinkAttrLocal
-    link.local.label_position = 'frozen'
-  }
-
-  add_links(display_nodes,display_links,LinkStroke,DrawArrows,ref_setter_contextualised_link,pointer_pos,LinkSabotColor)
+  AddLinks(display_nodes,display_links,LinkStroke,DrawArrows,ref_setter_contextualised_link,pointer_pos,LinkSabotColor)
   
   return (<>[]
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
