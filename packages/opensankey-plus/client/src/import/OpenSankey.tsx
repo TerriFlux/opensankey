@@ -1,5 +1,6 @@
 import * as OpensankeyUtils from 'open-sankey/dist/configmenus/SankeyUtils'
 import * as OpenSankeyDrawFunc from 'open-sankey/dist/draw/SankeyDrawFunction'
+import * as OpenSankeyDrawEventFunc from 'open-sankey/dist/draw/SankeyDrawEventFunction'
 import * as OpensankeyDragFunc from 'open-sankey/dist/lib/SankeyDrag'
 import * as OpensankeyConvert from 'open-sankey/dist/configmenus/SankeyConvert'
 import * as OpenSankeyLayout from 'open-sankey/dist/draw/SankeyDrawLayout'
@@ -15,12 +16,14 @@ import { complete_sankey_dataFunctType, ConvertDataFuncType, convert_nodesFuncTy
 import { 
   DrawArrowsType, NodeVisibleOnsSvgFuncType, 
   LinkVisibleOnsSvgFuncType, DeselectVisualyNodesFuncType, RemoveAnimateFuncType, 
-  SvgDragMiddleMouseStartFuncType, SvgDragMiddleMouseMoveFuncType, SimpleGNodeClickFuncType, DrawGridFType 
+  DrawGridFType 
 } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { LinkStrokeFuncType } from 'open-sankey/src/draw/types/SankeyDrawLinksTypes'
 import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
 import { drag_legend_g_elementFuncType } from 'open-sankey/src/draw/types/SankeyDrawLegendTypes'
 import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType, synchronizeNodesandLinksIdFuncType, updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
+import {SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
+
 export const ReturnValueLink=OpensankeyUtils.ReturnValueLink as ReturnValueLinkFuncType
 
 export const ReturnValueNode=OpensankeyUtils.ReturnValueNode as ReturnValueNodeFuncType
@@ -47,11 +50,11 @@ export const DeselectVisualyNodes = OpenSankeyDrawFunc.DeselectVisualyNodes as D
 
 export const RemoveAnimate = OpenSankeyDrawFunc.RemoveAnimate as RemoveAnimateFuncType
 
-export const SvgDragMiddleMouseStart = OpenSankeyDrawFunc.SvgDragMiddleMouseStart as SvgDragMiddleMouseStartFuncType
+export const SvgDragMiddleMouseStart = OpenSankeyDrawEventFunc.SvgDragMiddleMouseStart as SvgDragMiddleMouseStartFuncType
 
-export const SvgDragMiddleMouseMove = OpenSankeyDrawFunc.SvgDragMiddleMouseMove as SvgDragMiddleMouseMoveFuncType
+export const SvgDragMiddleMouseMove = OpenSankeyDrawEventFunc.SvgDragMiddleMouseMove as SvgDragMiddleMouseMoveFuncType
 
-export const SimpleGNodeClick = OpenSankeyDrawFunc.SimpleGNodeClick as SimpleGNodeClickFuncType
+export const SimpleGNodeClick = OpenSankeyDrawEventFunc.SimpleGNodeClick as SimpleGNodeClickFuncType
 
 export const IsNodeDisplayingValueLocal = OpensankeyUtils.IsNodeDisplayingValueLocal as IsNodeDisplayingValueLocalFuncType
 
