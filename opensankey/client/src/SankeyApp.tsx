@@ -10,43 +10,43 @@ import {
   dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType, applicationDrawType, processFunctionsType 
 } from './types/Types'
 /*************************************************************************************************/
-import SankeyDraw, { keyHandler } from './lib/SankeyDraw'
+import SankeyDraw, { keyHandler } from './draw/SankeyDraw'
 import { 
   GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, EventOnZoneMouseDown, 
   EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows 
-} from './lib/SankeyDrawFunction'
-import { ContextLegendTags, DrawLegend, drag_legend } from './lib/SankeyDrawLegend'
-import { DrawLinks } from './lib/SankeyDrawLinks'
-import { DrawNodes } from './lib/SankeyDrawNodes'
-import { OpenSankeyDrawNodesLabel } from './lib/SankeyDrawNodesLabel'
-import { NodeTooltipsContent, LinkTooltipsContent } from './lib/SankeyTooltip'
+} from './draw/SankeyDrawFunction'
+import { ContextLegendTags, DrawLegend, drag_legend } from './draw/SankeyDrawLegend'
+import { DrawLinks } from './draw/SankeyDrawLinks'
+import { DrawNodes } from './draw/SankeyDrawNodes'
+import { OpenSankeyDrawNodesLabel } from './draw/SankeyDrawNodesLabel'
+import { NodeTooltipsContent, LinkTooltipsContent } from './draw/SankeyTooltip'
 import { 
   GetLinkValue, NodeDisplayed, ReturnValueLink, LinkText, LinkVisible, AdjustSankeyZone, 
-  DefaultSankeyData, windowSankey, LinkColor, RetrieveExcelResults, updateLayout 
-} from './lib/SankeyUtils'
-import { convert_data } from './lib/SankeyConvert'
-import { ToolbarBuilder, addSimpleLevelDropDown, setDiagram } from './lib/SankeyMenuBanner'
-import { OpenSankeyConfigurationsMenus } from './lib/SankeyMenuConfiguration'
-import { OpenSankeyMenuConfigurationLayout } from './lib/SankeyMenuConfigurationLayout'
-import { MenuConfigurationLinks } from './lib/SankeyMenuConfigurationLinks'
-import { MenuConfigurationLinksAppearence } from './lib/SankeyMenuConfigurationLinksAppearence'
-import { MenuConfigurationLinksData } from './lib/SankeyMenuConfigurationLinksData'
-import { OpenSankeyMenuConfigurationNodes } from './lib/SankeyMenuConfigurationNodes'
-import { OpenSankeyConfigurationNodesAttributes } from './lib/SankeyMenuConfigurationNodesAttributes'
-import { SankeyMenuConfigurationNodesIO } from './lib/SankeyMenuConfigurationNodesIO'
-import { SankeySettingsEditionElementTags } from './lib/SankeyMenuConfigurationTags'
-import { ContextMenuLink } from './lib/SankeyMenuContextLink'
-import { ContextMenuNode } from './lib/SankeyMenuContextNode'
-import { ContextMenuZdd } from './lib/SankeyMenuContextZDD'
-import { OpenSankeyDiagramSelector } from './lib/SankeyMenuDialogs'
+  DefaultSankeyData, windowSankey, LinkColor, RetrieveExcelResults} from './configmenus/SankeyUtils'
+import { updateLayout } from './draw/SankeyDrawLayout'
+import { convert_data } from './configmenus/SankeyConvert'
+import { ToolbarBuilder, addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
+import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
+import { OpenSankeyMenuConfigurationLayout } from './configmenus/SankeyMenuConfigurationLayout'
+import { MenuConfigurationLinks } from './configmenus/SankeyMenuConfigurationLinks'
+import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
+import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
+import { OpenSankeyMenuConfigurationNodes } from './configmenus/SankeyMenuConfigurationNodes'
+import { OpenSankeyConfigurationNodesAttributes } from './configmenus/SankeyMenuConfigurationNodesAttributes'
+import { SankeyMenuConfigurationNodesIO } from './configmenus/SankeyMenuConfigurationNodesIO'
+import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
+import { ContextMenuLink } from './dialogs/SankeyMenuContextLink'
+import { ContextMenuNode } from './dialogs/SankeyMenuContextNode'
+import { ContextMenuZdd } from './dialogs/SankeyMenuContextZDD'
+import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 import { 
   ModalPreference, OpenSankeyDefaultModalePreferenceContent 
-} from './lib/SankeyMenuPreferences'
+} from './dialogs/SankeyMenuPreferences'
 import { 
   OpenSankeyMenus, MenuDraggable, LastCheckpointTime, OpenSankeySaveButton, Menu 
-} from './lib/SankeyMenuTop'
-import { CardsTemplateBuilder, welcomeModalBuilder } from './lib/SankeyModalWelcome'
-import { SankeyModalStyleLink, SankeyModalStyleNode } from './lib/SankeyStyle'
+} from './topmenus/SankeyMenuTop'
+import { CardsTemplateBuilder, welcomeModalBuilder } from './dialogs/SankeyModalWelcome'
+import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
