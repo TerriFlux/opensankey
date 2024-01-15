@@ -12,7 +12,7 @@ import { ComputeTotalOffsets,
   ReturnValueLink,
   AssignLinkLocalAttribute,
   ToPrecision} from '../configmenus/SankeyUtils'
-import {DragLinkCenterHandleEvent,DragLinkShiftHandleEvent,AddDragLinkZone} from './SankeyDrag'
+import {DragLinkCenterHandleEvent,DragLinkShiftHandleEvent,AddDragLinkZone} from './SankeyDragLinks'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
 import * as SankeyShapes from './SankeyDrawShapes'
 import { 

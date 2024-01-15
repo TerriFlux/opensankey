@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
 import { LinkVisible} from '../configmenus/SankeyUtils'
-import { OpposingDragElements } from './SankeyDrag'
+import { OpposingDragElements } from './SankeyDragNodes'
 import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 import { DrawLegendFType, ContextLegendTagsFType, drag_legendFType, drag_legend_g_elementFuncType} from './types/SankeyDrawLegendTypes'
