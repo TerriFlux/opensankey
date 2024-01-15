@@ -1,7 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, callbackFuncType } from '../../types/Types'
-import { ConvertDataFuncType } from './SankeyConvertTypes'
-import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup } from '../../types/Types'
 
 export type CutNameFType = (t: string, n: number) => string
 
@@ -66,27 +64,9 @@ export type DeleteLinkFuncType = (data: SankeyData,link: SankeyLink)=> void
 
 export type DeleteNodeFuncType = (data: SankeyData,node: SankeyNode)=> void
 
-export type DownloadExamplesFuncType = (file_name: string,the_url_prefix: string,filetype: string)=> void
-
-export type ProcessExampleFuncType = (
-    data: SankeyData,
-    updateLayout:updateLayoutFuncType,
-    convert_data:ConvertDataFuncType,
-    callback: (server_data: SankeyData) => void,
-    DefaultSankeyData: DefaultSankeyDataFuncType
-)=> SankeyData
-
 export type SetNodeStyleToTypeNode = (data:SankeyData)=> void
 
 export type SetNodeStyleToTypeNodeFuncType = (data:SankeyData)=>void
-
-export type UploadExcelImplFuncType = (set_show_excel_dialog: (b: boolean) => void,input_file: Blob,the_url_prefix: string)=>void
-
-export type UploadExempleFuncType = (file_name: string,the_url_prefix: string,data: SankeyData,set_data: (data: SankeyData) => void,Reinitialization: ()=>void,convert_data:ConvertDataFuncType,DefaultSankeyData:DefaultSankeyDataFuncType)=>void
-
-export type DownloadExempleExcelFuncType = (file_name: string)=>void 
-
-export type ClickSaveExcelFuncType = (url_prefix:string,data:SankeyData)=> void
 
 export type NodeColorFuncType = (n: SankeyNode,data:SankeyData)=> string
 
@@ -99,8 +79,6 @@ export type GetSankeyMinWidthAndHeightFuncType = (data:SankeyData)=>number[]
 export type ToPrecisionFuncType = (v: number,nb_scientific?:number)=> string | number
 
 export type LinkTextFuncType = (data: SankeyData,d: SankeyLink,GetLinkValue:GetLinkValueFuncType)=>string
-
-export type ClickSaveDiagramFuncType = (data:SankeyData,name?:string)=>void
 
 export type AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string)=> void
 
@@ -154,12 +132,3 @@ export type AddNewNodeFuncType = (data: SankeyData, set_data: (d: SankeyData) =>
 
 export type RecursionDataTagFuncType = (data: SankeyData, DT: TagsCatalog, ind: number, suffix: string, link_to_copy: SankeyLink, new_links: {[link_id: string]: SankeyLink;}) => void
 
-export type RetrieveExcelResultsFuncType = (
-    text: string,
-    set_data: (d: SankeyData) => void,
-    updateLayout: updateLayoutFuncType,
-    callback:callbackFuncType,
-    GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
-    convert_data: ConvertDataFuncType,
-    defaultData: () => SankeyData
-    ) => void

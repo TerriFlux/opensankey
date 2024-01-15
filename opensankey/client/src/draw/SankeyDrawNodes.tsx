@@ -7,9 +7,12 @@ import { DrawNodesFType } from './types/SankeyDrawNodesTypes'
 
 import {NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
-  scale,inv_scale,SetNodeHeight,EventOnMouseUpAddNodesAndLink,
-  EventNodeContextMenu,nodeTransform,NodeStrokeWidth,SimpleGNodeClick,PathNodeArrowShape 
+  scale,inv_scale,SetNodeHeight,
+  nodeTransform,NodeStrokeWidth,PathNodeArrowShape 
 } from './SankeyDrawFunction'
+import { SimpleGNodeClick } from './SankeyDrawEventFunction'
+import { EventOnMouseUpAddNodesAndLink } from './SankeyDrawEventFunction'
+import { EventNodeContextMenu } from './SankeyDrawEventFunction'
 import {  DragGNodeEvent } from './SankeyDrag'
 
 declare const window: Window &

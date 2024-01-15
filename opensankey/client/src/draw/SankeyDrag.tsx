@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
-import {RemoveAnimate,ComputeEndPoints, GetSankeyMinWidthAndHeight,drawCurveFunction, DrawArrows,LinkStrokeWidth} from './SankeyDrawFunction'
+import {RemoveAnimate,GetSankeyMinWidthAndHeight,drawCurveFunction, DrawArrows,LinkStrokeWidth} from './SankeyDrawFunction'
+import { ComputeEndPoints } from './SankeyDrawShapes'
 import {   LinkVisible,TestLinkValue,ReturnValueNode,AssignNodeLocalAttribute,ReturnValueLink,AssignLinkLocalAttribute} from '../configmenus/SankeyUtils'
 import { AddDragLinkZoneFType, DragGNodeEventFType, DragLinkEventFType, DragLinkIOPositionFType, dragLinkTextEventFType, dragNodeTextEventWidthBoxEventFType, DragElementsFuncType,drag_node_textFuncType, DragNodesFType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
