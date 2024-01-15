@@ -1,10 +1,11 @@
 import * as OpensankeyUtils from 'open-sankey/dist/configmenus/SankeyUtils'
 import * as OpenSankeyDrawFunc from 'open-sankey/dist/draw/SankeyDrawFunction'
 import * as OpenSankeyDrawEventFunc from 'open-sankey/dist/draw/SankeyDrawEventFunction'
-import * as OpensankeyDragFunc from 'open-sankey/dist/lib/SankeyDrag'
+// import * as OpensankeyDragLinksFunc from 'open-sankey/dist/lib/SankeyDragLinks'
+import * as OpensankeyDragNodeFunc from 'open-sankey/dist/draw/SankeyDragNodes'
 import * as OpensankeyConvert from 'open-sankey/dist/configmenus/SankeyConvert'
 import * as OpenSankeyLayout from 'open-sankey/dist/draw/SankeyDrawLayout'
-import { DragLegendGElement} from 'open-sankey/dist/lib/SankeyDrawLegend'
+import { DragLegendGElement} from 'open-sankey/dist/draw/SankeyDrawLegend'
 
 import { 
   ReturnValueLinkFuncType, ReturnValueNodeFuncType, IsAllLinkAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, 
@@ -62,13 +63,13 @@ export const IsAllNodeAttrSameValue = OpensankeyUtils.IsAllNodeAttrSameValue as 
 
 export const AssignNodeValueToCorrectVar:AssignNodeValueToCorrectVarFuncType = OpensankeyUtils.AssignNodeValueToCorrectVar
 
-export const OpposingDragElements:opposing_DragElementsFuncType = OpensankeyDragFunc.OpposingDragElements
+export const OpposingDragElements:opposing_DragElementsFuncType = OpensankeyDragNodeFunc.OpposingDragElements
 
-export const DragElements:DragElementsFuncType = OpensankeyDragFunc.DragElements
+export const DragElements:DragElementsFuncType = OpensankeyDragNodeFunc.DragElements
 
-export const drag_node_text:drag_node_textFuncType = OpensankeyDragFunc.drag_node_text
+export const drag_node_text:drag_node_textFuncType = OpensankeyDragNodeFunc.drag_node_text
 
-export const ReturnOutOfBoundElement:ReturnOutOfBoundElementFuncType =OpensankeyDragFunc.ReturnOutOfBoundElement
+export const ReturnOutOfBoundElement:ReturnOutOfBoundElementFuncType =OpensankeyDragNodeFunc.ReturnOutOfBoundElement
 
 export const DragLegendGElementOSTyped:drag_legend_g_elementFuncType = DragLegendGElement
 
