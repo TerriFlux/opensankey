@@ -1,25 +1,26 @@
-import * as OpensankeyUtils from 'open-sankey/dist/lib/SankeyUtils'
-import * as OpenSankeyDrawFunc from 'open-sankey/dist/lib/SankeyDrawFunction'
+import * as OpensankeyUtils from 'open-sankey/dist/configmenus/SankeyUtils'
+import * as OpenSankeyDrawFunc from 'open-sankey/dist/draw/SankeyDrawFunction'
 import * as OpensankeyDragFunc from 'open-sankey/dist/lib/SankeyDrag'
-import * as OpensankeyConvert from 'open-sankey/dist/lib/SankeyConvert'
+import * as OpensankeyConvert from 'open-sankey/dist/configmenus/SankeyConvert'
+import * as OpenSankeyLayout from 'open-sankey/dist/draw/SankeyDrawLayout'
 import { DragLegendGElement} from 'open-sankey/dist/lib/SankeyDrawLegend'
 
 import { 
   ReturnValueLinkFuncType, ReturnValueNodeFuncType, IsAllLinkAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, 
   NodeColorFuncType, GetSankeyMinWidthAndHeightFuncType, IsNodeDisplayingValueLocalFuncType, IsAllNodeAttrSameValueFuncType, 
   AssignNodeValueToCorrectVarFuncType, LinkColorFuncType, AssignLinkValueToCorrectVarFuncType, DefaultLinkStyleFuncType, 
-  DefaultLinkFuncType, DefaultNodeFuncType, updateLayoutFuncType, AdjustSankeyZoneFuncType, NodeDisplayedFuncType, reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType, synchronizeNodesandLinksIdFuncType 
-} from 'open-sankey/src/types/SankeyUtilsTypes'
-import { complete_sankey_dataFunctType, ConvertDataFuncType, convert_nodesFuncType, convert_linksFuncType, convert_tagsFuncType } from 'open-sankey/src/types/SankeyConvertTypes'
+  DefaultLinkFuncType, DefaultNodeFuncType, AdjustSankeyZoneFuncType, NodeDisplayedFuncType 
+} from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+import { complete_sankey_dataFunctType, ConvertDataFuncType, convert_nodesFuncType, convert_linksFuncType, convert_tagsFuncType } from 'open-sankey/src/configmenus/types/SankeyConvertTypes'
 import { 
   DrawArrowsType, NodeVisibleOnsSvgFuncType, 
   LinkVisibleOnsSvgFuncType, DeselectVisualyNodesFuncType, RemoveAnimateFuncType, 
   SvgDragMiddleMouseStartFuncType, SvgDragMiddleMouseMoveFuncType, SimpleGNodeClickFuncType, DrawGridFType 
-} from 'open-sankey/src/types/SankeyDrawFunctionTypes'
-import { LinkStrokeFuncType } from 'open-sankey/src/types/SankeyDrawLinksTypes'
-import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from 'open-sankey/src/types/SankeyDragTypes'
-import { drag_legend_g_elementFuncType } from 'open-sankey/src/types/SankeyDrawLegendTypes'
-
+} from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+import { LinkStrokeFuncType } from 'open-sankey/src/draw/types/SankeyDrawLinksTypes'
+import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
+import { drag_legend_g_elementFuncType } from 'open-sankey/src/draw/types/SankeyDrawLegendTypes'
+import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType, synchronizeNodesandLinksIdFuncType, updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
 export const ReturnValueLink=OpensankeyUtils.ReturnValueLink as ReturnValueLinkFuncType
 
 export const ReturnValueNode=OpensankeyUtils.ReturnValueNode as ReturnValueNodeFuncType
@@ -78,11 +79,11 @@ export const DefaultLink:DefaultLinkFuncType = OpensankeyUtils.DefaultLink
 
 export const DefaultNode:DefaultNodeFuncType = OpensankeyUtils.DefaultNode
 
-export const updateLayoutOSTyped:updateLayoutFuncType = OpensankeyUtils.updateLayout
+export const updateLayoutOSTyped:updateLayoutFuncType = OpenSankeyLayout.updateLayout
 
 export const AdjustSankeyZone:AdjustSankeyZoneFuncType= OpensankeyUtils.AdjustSankeyZone
 
-export const synchronizeNodesandLinksIdOSTyped:synchronizeNodesandLinksIdFuncType = OpensankeyUtils.synchronizeNodesandLinksId
+export const synchronizeNodesandLinksIdOSTyped:synchronizeNodesandLinksIdFuncType = OpenSankeyLayout.synchronizeNodesandLinksId
 
 export const complete_sankey_data:complete_sankey_dataFunctType = OpensankeyConvert.complete_sankey_data
 
@@ -96,6 +97,6 @@ export const convert_tags:convert_tagsFuncType = OpensankeyConvert.convert_tags
 
 export const NodeDisplayed:NodeDisplayedFuncType = OpensankeyUtils.NodeDisplayed
 
-export const reorganize_node_outputLinksIdOSTyped:reorganize_node_outputLinksIdFuncType = OpensankeyUtils.reorganize_node_outputLinksId
+export const reorganize_node_outputLinksIdOSTyped:reorganize_node_outputLinksIdFuncType = OpenSankeyLayout.reorganize_node_outputLinksId
 
-export const reorganize_node_inputLinksIdOSTyped:reorganize_node_inputLinksIdFuncType = OpensankeyUtils.reorganize_node_inputLinksId
+export const reorganize_node_inputLinksIdOSTyped:reorganize_node_inputLinksIdFuncType = OpenSankeyLayout.reorganize_node_inputLinksId

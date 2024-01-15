@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import { DictSetterInputValueType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
 import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
-import { setDiagramFuncType } from 'open-sankey/src/types/SankeyMenuBannerTypes'
+import { setDiagramFuncType } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
 import { MutableRefObject } from 'react'
 
 export type getSetDiagramFType = (

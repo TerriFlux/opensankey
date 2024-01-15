@@ -27,16 +27,16 @@ import {RemoveAnimate,
   ReturnOutOfBoundElement
 } from './import/OpenSankey'
 
-import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/lib/SankeyUtils'
+import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { 
   SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, PlusNodeDragEventFType, 
   SankeyPlusNodeIconFType, ContextNodeIconFType, PlusDragElementsFType, node_icon_fill_colorFType, 
   node_icon_pathFType, OpposingDragElementsPlusFType, PlusReturnOutOfBoundElementsFType
 } from '../types/SankeyPlusNodesTypes'
-import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
-import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
+import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {

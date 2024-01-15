@@ -1,8 +1,8 @@
 import { TFunction } from 'i18next'
 import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
-import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
-import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
+import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { dict_variable_application_dataType, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
 

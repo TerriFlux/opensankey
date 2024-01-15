@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import { DictSetterInputValueType, SankeyPlusData, SankeyPlusNode } from './Types'
-import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
-import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 export type SankeyPlusNodeFOFType = (
   t:TFunction,

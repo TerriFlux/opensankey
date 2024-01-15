@@ -2,12 +2,12 @@ import * as d3 from 'd3'
 
 import { SankeyData } from 'open-sankey/src/types/Types'
 import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType} from '../types/Types'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {
   PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
   sankey_plus_zoom_text_zoneFType, zone_selection_labelFType
 } from '../types/SankeyPlusLabelsTypes'
-import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
+import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
 import { DrawGrid,GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes} from './import/OpenSankey'
 

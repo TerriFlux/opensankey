@@ -23,7 +23,7 @@ import * as d3 from 'd3'
 
 import {  preferenceCheck } from 'open-sankey/dist/lib/SankeyMenuPreferences'
 import { Checkbox } from '@chakra-ui/react'
-import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
+import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
 import { SankeyPlusMenuConfigurationFreeLabelsFType, SankeyPlusMenuPreferenceLabelsFType, blur_ZDT_wysiwygFType, context_zdtFType, zdtMenuAsAccordeonItemType } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
 

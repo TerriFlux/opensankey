@@ -14,7 +14,6 @@ import { DefaultLink,
 import {SankeyPlusDiagramSelectorFType, apply_transformation_opensankey_plus_elementsFType, plus_convert_dataFType, plus_sankey_layoutFType } from '../types/SankeyPlusConvertTypes'
 
 // Opensankey files
-import { updateLayoutFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
 import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import React, { MutableRefObject, useState } from 'react'
 import { TFunction } from 'i18next'
@@ -22,6 +21,7 @@ import { FaCheck } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { SankeyData } from 'open-sankey/src/types/Types'
+import { updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
 
 interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
   transparent?:boolean,

@@ -10,12 +10,12 @@ import ReactQuill from 'react-quill'
 
 import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
 
-import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
+import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
 import { NodeDisplayed } from './import/OpenSankey'
 import {PlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
-import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
-import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 
 declare const window: Window &
