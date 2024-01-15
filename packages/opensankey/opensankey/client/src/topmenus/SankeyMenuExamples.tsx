@@ -2,7 +2,7 @@
 import React from 'react'
 import { NavDropdown, Dropdown, } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyLink } from '../types/Types'
-import { UploadExemple,  } from '../configmenus/SankeyUtils'
+import { UploadExemple } from '../dialogs/SankeyPersistence'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import {  DefaultSankeyDataFuncType } from '../configmenus/types/SankeyUtilsTypes'
 

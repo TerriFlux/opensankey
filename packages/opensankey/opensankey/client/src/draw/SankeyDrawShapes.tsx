@@ -1,4 +1,11 @@
-import { DrawLinkSabotFType, bezier_link_classic_vvFType, draw_arrowFType } from './types/SankeyShapesTypes'
+import * as d3 from 'd3'
+import { ReturnValueNode, ComputeTotalOffsets, TestLinkValue, ReturnValueLink, LinkVisible } from '../configmenus/SankeyUtils'
+import { GetLinkValueFuncType, LinkColorFuncType } from '../configmenus/types/SankeyUtilsTypes'
+import { SankeyData, SankeyNode, SankeyLink, TagsCatalog, SankeyLinkValue } from '../types/Types'
+import { SetNodeHeight } from './SankeyDrawFunction'
+import { ComputeEndPointsFType,DrawLinkStartSabotFType } from './types/SankeyShapesTypes'
+import { draw_arrowFType, DrawLinkSabotFType, bezier_link_classic_vvFType } from './types/SankeyShapesTypes'
+
 const default_horiz_shift = 50
 
 /**
@@ -481,3 +488,397 @@ export const bezier_link_classic_recycling = (
     return line1 + ' L ' + x4 + ',' + y4 + line2 + ' L ' + x8 + ',' + y8 + line3 + ' L ' + x12 + ',' + y12 + ' L ' + x16 + ',' + y16 + line5
   }
 }
+export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
+  data: SankeyData,
+  n: SankeyNode,
+  display_nodes: { [node_id: string]: SankeyNode} ,
+  display_links: { [link_id: string]: SankeyLink} ,
+  scale: (t: number) => number,
+  inv_scale: (t: number) => number,
+  GetLinkValue: GetLinkValueFuncType,
+  LinkSabotColor: LinkColorFuncType
+) => {
+  let cum_v_left = 0
+  let cum_h_top = 0
+  let cum_v_right = 0
+  let cum_h_bottom = 0
+  let is_v = true
+  let node_arrow_shift = 0
+
+  const is_exportation_node = n.tags && n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('echange')
+  const node_shape = ReturnValueNode(data, n, 'shape')
+  let node_angle_direction = 'right'
+
+  let node_angle = 0
+  if (node_shape === 'arrow') {
+    node_angle = ReturnValueNode(data, n, 'node_arrow_angle_factor') as number
+    node_angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
+  }
+  const res = ComputeTotalOffsets(inv_scale, n, data, display_nodes, display_links, TestLinkValue, undefined, GetLinkValue)
+  const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
+
+  for (let i = 0; i < n.outputLinksId.length; i++) {
+    const l = data.links[n.outputLinksId[i]]
+    const node_target = data.nodes[l.idTarget]
+    const ori = ReturnValueLink(data, l, 'orientation')
+    const recy = ReturnValueLink(data, l, 'recycling')
+    const link_output_to_right = (n.x < node_target.x) && node_angle_direction === 'right' && (ori === 'hh' || ori === 'hv')
+    const link_output_to_left = (n.x > node_target.x) && node_angle_direction === 'left' && (ori === 'hh' || ori === 'hv')
+    const link_output_to_top = (n.y > node_target.y) && node_angle_direction === 'top' && (ori === 'vv' || ori === 'vh')
+    const link_output_to_bottom = (n.y < node_target.y) && node_angle_direction === 'bottom' && (ori === 'vv' || ori === 'vh')
+
+    const link_direction_same_as_node_arrow = link_output_to_right || link_output_to_left || link_output_to_top || link_output_to_bottom
+    // If the link don't exit by the node arrow direction, then don't draw the sabot
+    if (!link_direction_same_as_node_arrow) {
+      continue
+    }
+
+    if (!LinkVisible(l, data, display_nodes, GetLinkValue)) {
+      continue
+    }
+
+    let link_value = TestLinkValue(data, data.nodes, l, GetLinkValue)
+    if (link_value === undefined) {
+      continue
+    }
+    link_value = (+link_value == 0 || (+link_value >= inv_scale(2))) ? +link_value : inv_scale(2)
+    const extension = GetLinkValue(data, n.outputLinksId[i]).extension
+    if (extension) {
+      const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
+      if (display_free_as_dashed) {
+        // Generale settings: free link value are displayed dashed without text without witdh
+        const link_value_is_free = extension?.free_mini !== undefined ?? false
+        if (link_value_is_free) {
+          // Link value is free should be displayed dashed without text
+          if (extension?.free_visible) {
+            //treated as not free
+          } else {
+            link_value = inv_scale(5)
+          }
+        }
+      }
+      if (extension.display_thin) {
+        link_value = inv_scale(5)
+      }
+    }
+
+    const target_node = data.nodes[l.idTarget]
+    if (ori === 'hh' || ori === 'vh') {
+      is_v = true
+    } else {
+      is_v = false
+    }
+
+    if (node_shape === 'arrow') {
+      // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
+      let node_face_size = total_height_right
+      switch (node_angle_direction) {
+      case 'left':
+        node_face_size = total_height_left
+        break
+      case 'top':
+        node_face_size = total_width_top
+        break
+      case 'bottom':
+        node_face_size = total_width_bottom
+        break
+      }
+
+      if (link_direction_same_as_node_arrow) {
+        node_arrow_shift = scale(Math.tan(node_angle * Math.PI / 180) * (node_face_size / 2))
+      }
+    }
+
+    if (!data.display_style.filter || link_value >= data.display_style.filter) {
+      //selection
+      d3.select('#gg_' + l.idLink + ' .start_corner').remove() // supression dans le cas du drag notamment
+      SetNodeHeight(n, display_nodes, display_links, data, scale, inv_scale, GetLinkValue)
+      d3.select('#gg_' + l.idLink)
+        .append('path')
+        .attr('class', 'start_corner')
+        .attr('id', 'path_' + l.idLink + '_start_corner')
+        .attr('d', () => {
+          let xt
+          let yt
+          let p5
+
+          if (ori === 'hh' || ori === 'vh') {
+            if (n.x <= target_node.x && recy || n.x > target_node.x && !recy) {
+              xt = +n.x - 2
+              yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
+              p5 = [xt, yt]
+              is_v = true
+              return DrawLinkSabot(scale(total_height_left) / 2, p5, scale(+link_value), scale(cum_v_left), true, false, node_arrow_shift)
+            } else {
+              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') + 0.1
+              yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height') / 2
+              p5 = [xt, yt]
+              is_v = true
+              return DrawLinkSabot(scale(total_height_right) / 2, p5, scale(+link_value), scale(cum_v_right), true, true, node_arrow_shift)
+            }
+          } else if (ori === 'vv' || ori === 'hv') {
+            if (n.y > target_node.y || is_exportation_node) {
+              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2 + ((is_exportation_node) ? +target_node.x + +d3.select('#shape_' + target_node.idNode).attr('width') : 0)
+              yt = +n.y + ((is_exportation_node) ? +target_node.y + +d3.select('#shape_' + target_node.idNode).attr('height') : 0)
+              p5 = [xt, yt]
+              is_v = false
+              return DrawLinkSabot(scale(total_width_top) / 2, p5, scale(+link_value), scale(cum_h_top), false, false, node_arrow_shift)
+            } else {
+              xt = +n.x + +d3.select('#shape_' + n.idNode).attr('width') / 2
+              yt = +n.y + +d3.select('#shape_' + n.idNode).attr('height')
+              p5 = [xt, yt]
+              is_v = false
+              return DrawLinkSabot(scale(total_width_bottom) / 2, p5, scale(+link_value), scale(cum_h_bottom), false, true, node_arrow_shift)
+            }
+          }
+          return ''
+        })
+        .attr('fill', () => LinkSabotColor(l, data, GetLinkValue))
+        .attr('fill-opacity', ReturnValueLink(data, l, 'opacity'))
+        .attr('stroke', LinkSabotColor(l, data, GetLinkValue))
+        .attr('stroke-width', 0.1)
+    }
+    if ((is_v && !recy && n.x > target_node.x) || (is_v && recy && n.x < target_node.x)) {
+      cum_v_left += link_value
+    } else if ((is_v && !recy && n.x < target_node.x) || (is_v && recy && n.x > target_node.x)) {
+      cum_v_right += link_value
+    } else if ((!is_v && !recy && n.y > target_node.y) || (!is_v && recy && n.y < target_node.y)) {
+      cum_h_top += link_value
+    } else if ((!is_v && !recy && n.y < target_node.y) || (!is_v && recy && n.y > target_node.y)) {
+      cum_h_bottom += link_value
+    }
+  }
+}// Function that compute th position of the begining of the link and the position of where it end
+export const ComputeEndPoints: ComputeEndPointsFType = (
+  source_node: SankeyNode,
+  target_node: SankeyNode,
+  link: SankeyLink,
+  display_nodes: { [node_id: string]: SankeyNode} ,
+  display_links: { [link_id: string]: SankeyLink} ,
+  selected_tags: TagsCatalog,
+  data: SankeyData,
+  scale: (t: number) => number,
+  inv_scale: (t: number) => number,
+  GetLinkValue: GetLinkValueFuncType
+
+) => {
+  if (!display_links) {
+    return [0, 0, 0, 0]
+  }
+  let link_value = TestLinkValue(data, display_nodes, link, GetLinkValue)
+  if (link_value === undefined) {
+    return [0, 0, 0, 0]
+  }
+  //inv_scale(2) = epaisseur minimum d'un flux
+  link_value = (link_value == 0 || (+link_value >= inv_scale(2))) ? +link_value : inv_scale(2)
+
+  const theLinkValue = GetLinkValue(data, link.idLink)
+  let is_structure = false
+  if (source_node.position !== 'relative' && target_node.position !== 'relative') {
+    if (data.show_structure === 'data') {
+      if (!(theLinkValue as SankeyLinkValue & { extension: { data_value: string} } ).extension.data_value) {
+        is_structure = true
+      }
+    } else if (data.show_structure === 'reconciled') {
+      is_structure = theLinkValue.extension?.free_mini !== undefined
+    }
+    if (theLinkValue.extension?.display_thin) {
+      is_structure = true
+    }
+  }
+  if (is_structure) {
+    link_value = inv_scale(5)
+  }
+
+  let res = ComputeTotalOffsets(inv_scale, source_node, data, display_nodes, display_links, TestLinkValue, undefined, GetLinkValue)
+  const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
+  res = ComputeTotalOffsets(inv_scale, target_node, data, display_nodes, display_links, TestLinkValue, undefined, GetLinkValue)
+  const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
+  let node_size_s_width = inv_scale((ReturnValueNode(data, source_node, 'node_width') as number))
+  let node_size_t_width = inv_scale(ReturnValueNode(data, target_node, 'node_width') as number)
+  if (data.show_structure !== 'structure') {
+    node_size_s_width = Math.max(
+      inv_scale((ReturnValueNode(data, source_node, 'node_width') as number)), s_total_offset_width_bottom, s_total_offset_width_top
+    )
+    node_size_t_width = Math.max(
+      inv_scale(ReturnValueNode(data, target_node, 'node_width') as number), t_total_offset_width_bottom, t_total_offset_width_top
+    )
+  }
+  let node_size_s_height = inv_scale((ReturnValueNode(data, source_node, 'node_height') as number))
+  let node_size_t_height = inv_scale((ReturnValueNode(data, target_node, 'node_height') as number))
+  if (data.show_structure !== 'structure') {
+    node_size_s_height = Math.max(
+      inv_scale((ReturnValueNode(data, source_node, 'node_height') as number)), s_total_offset_height_left, s_total_offset_height_right
+    )
+    node_size_t_height = Math.max(
+      inv_scale((ReturnValueNode(data, target_node, 'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
+    )
+  }
+  res = ComputeTotalOffsets(inv_scale, source_node, data, display_nodes, display_links, TestLinkValue, link, GetLinkValue)
+  const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
+  res = ComputeTotalOffsets(inv_scale, target_node, data, display_nodes, display_links, TestLinkValue, link, GetLinkValue)
+  const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
+  const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
+  const delta_s_width_top = Math.max(0, (node_size_s_width - s_total_offset_width_top) / 2)
+  const delta_s_height_right = Math.max(0, (node_size_s_height - s_total_offset_height_right) / 2)
+  const delta_s_height_left = Math.max(0, (node_size_s_height - s_total_offset_height_left) / 2)
+  const delta_t_width_bottom = Math.max(0, (node_size_t_width - t_total_offset_width_bottom) / 2)
+  const delta_t_width_top = Math.max(0, (node_size_t_width - t_total_offset_width_top) / 2)
+  const delta_t_height_right = Math.max(0, (node_size_t_height - t_total_offset_height_right) / 2)
+  const delta_t_height_left = Math.max(0, (node_size_t_height - t_total_offset_height_left) / 2)
+  const source_node_x = source_node.position === 'absolute' ? +source_node.x : +target_node.x + +source_node.x - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
+  const source_node_y = source_node.position === 'absolute' ? +source_node.y : +target_node.y + +source_node.y - +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
+  const target_node_x = target_node.position === 'absolute' ? +target_node.x : +source_node.x + +target_node.x + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('width')
+  const target_node_y = target_node.position === 'absolute' ? +target_node.y : +source_node.y + +target_node.y + +d3.select(' .opensankey #shape_' + source_node.idNode).attr('height')
+  let xs = source_node_x
+  let ys = source_node_y
+  let xt = target_node_x
+  let yt = target_node_y
+  const tmp = GetLinkValue(data, link.idLink).value
+  const ori = ReturnValueLink(data, link, 'orientation')
+  const recy = ReturnValueLink(data, link, 'recycling')
+  const target_shape = ReturnValueNode(data, target_node, 'shape')
+  let l_arrow = ReturnValueLink(data, link, 'arrow')
+  const l_arrow_size = ReturnValueLink(data, link, 'arrow_size') as number
+
+  if (target_shape === 'arrow') {
+    // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
+    const node_angle_direction = ReturnValueNode(data, target_node, 'node_arrow_angle_direction') as string
+
+    const link_input_from_right = (source_node.x > target_node.x) && node_angle_direction === 'left' && (ori === 'hh' || ori === 'vh')
+    const link_input_from_left = (source_node.x < target_node.x) && node_angle_direction === 'right' && (ori === 'hh' || ori === 'vh')
+    const link_input_from_top = (source_node.y < target_node.y) && node_angle_direction === 'bottom' && (ori === 'vv' || ori === 'hv')
+    const link_input_from_from_bottom = (source_node.y < target_node.y) && node_angle_direction === 'top' && (ori === 'vv' || ori === 'hv')
+
+    // If target node is shaped as an arrow and the link arrow can be 'imbricated' then we don't shift the end of the link
+    if (link_input_from_right || link_input_from_left || link_input_from_top || link_input_from_from_bottom) {
+      l_arrow = false
+    }
+  }
+
+  if (ori === 'hh') {
+    //side to side
+    if (source_node_x > target_node_x && !recy || source_node_x < target_node_x && recy) {
+      // source is after target arrow point leftward. Start is on the left of side of source
+      // source -> left
+      ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
+      // target -> right
+      xt += scale(node_size_t_width)
+      yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
+      if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        xt = xt + l_arrow_size
+      }
+    } else {
+      // source is before target arrow point rightward. Start is on the right of side of source
+      const delta_s_height_right = Math.max(0, (node_size_s_height - s_total_offset_height_right) / 2)
+      xs += scale(node_size_s_width)
+      ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
+      yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
+      if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        xt = xt - l_arrow_size
+      }
+    }
+  }
+  if (ori === 'vv') {
+    //side to side
+    if (source_node_y > target_node_y) {
+      // source is bottom target. Flux goes up
+      xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
+      xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
+      yt += scale(node_size_t_height)
+      if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        yt = yt + l_arrow_size
+      }
+    } else {
+      // source is top target. Flux goes down
+      xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
+      ys += scale(node_size_s_height)
+      xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
+      if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+        yt = yt - l_arrow_size
+      }
+    }
+  }
+  if (ori === 'hv') {
+    //vertical to horizontal
+    if (source_node_x > target_node_x) {
+      if (source_node_y > target_node_y) {
+        //source is bottom right target. left and up
+        ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
+        xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
+        yt += scale(node_size_t_height)
+        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+          yt = yt + l_arrow_size
+        }
+      } else {
+        //source is top right target. left and down
+        ys += scale(delta_s_height_left + s_offset_height_left + link_value / 2)
+        xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
+        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+          yt = yt - 30
+        }
+      }
+    } else {
+      if (source_node_y > target_node_y) {
+        //source is bottom left target. right and up
+        xs += scale(node_size_s_width)
+        ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
+        xt += scale(delta_t_width_bottom + t_offset_width_bottom + link_value / 2)
+        yt += scale(node_size_t_height)
+        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+          yt = yt + l_arrow_size
+        }
+      } else {
+        //source is top left target. right and down
+        xs += scale(node_size_s_width)
+        ys += scale(delta_s_height_right + s_offset_height_right + link_value / 2)
+        xt += scale(delta_t_width_top + t_offset_width_top + link_value / 2)
+        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+          yt = yt - l_arrow_size
+        }
+      }
+    }
+  }
+  if (ori === 'vh') {
+    //vertical to horizontal
+    if (source_node_x > target_node_x) {
+      if (source_node_y > target_node_y) {
+        //source is bottom right target. up and left
+        xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
+        xt += scale(node_size_t_width)
+        yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
+        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+          xt += l_arrow_size
+        }
+      } else {
+        //source is top right target. down and left
+        xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
+        ys += scale(node_size_s_height)
+        xt += scale(node_size_t_width)
+        yt += scale(delta_t_height_right + t_offset_height_right + link_value / 2)
+        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+          xt += l_arrow_size
+        }
+      }
+    } else {
+      if (source_node_y > target_node_y) {
+        //source is bottom left target. Arrow goes left and go down to the top side
+        xs += scale(delta_s_width_top + s_offset_width_top + link_value / 2)
+        yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
+        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+          xt = xt - l_arrow_size
+        }
+      } else {
+        //source is top left target. Arrow goes left and go down to the top side
+        xs += scale(delta_s_width_bottom + s_offset_width_bottom + link_value / 2)
+        ys += scale(node_size_s_height)
+        yt += scale(delta_t_height_left + t_offset_height_left + link_value / 2)
+        if (l_arrow && tmp as unknown as string !== '' && tmp != 0) {
+          xt = xt - l_arrow_size
+        }
+      }
+    }
+  }
+  return [xs, ys, xt, yt]
+}
+

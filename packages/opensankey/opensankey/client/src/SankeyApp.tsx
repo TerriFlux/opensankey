@@ -12,9 +12,14 @@ import {
 /*************************************************************************************************/
 import SankeyDraw, { keyHandler } from './draw/SankeyDraw'
 import { 
-  GetSankeyMinWidthAndHeight, LinkStroke, ZoomFunction, EventOnZoneMouseDown, 
-  EventOnZoneMouseMove, EventOnZoneMouseUp, DrawArrows 
+  GetSankeyMinWidthAndHeight, LinkStroke, 
+  DrawArrows 
 } from './draw/SankeyDrawFunction'
+import { ZoomFunction } from './draw/SankeyDrawEventFunction'
+import {
+  EventOnZoneMouseDown,
+  EventOnZoneMouseMove, EventOnZoneMouseUp
+} from './draw/SankeyDrawEventFunction'
 import { ContextLegendTags, DrawLegend, drag_legend } from './draw/SankeyDrawLegend'
 import { DrawLinks } from './draw/SankeyDrawLinks'
 import { DrawNodes } from './draw/SankeyDrawNodes'
@@ -22,7 +27,8 @@ import { OpenSankeyDrawNodesLabel } from './draw/SankeyDrawNodesLabel'
 import { NodeTooltipsContent, LinkTooltipsContent } from './draw/SankeyTooltip'
 import { 
   GetLinkValue, NodeDisplayed, ReturnValueLink, LinkText, LinkVisible, AdjustSankeyZone, 
-  DefaultSankeyData, windowSankey, LinkColor, RetrieveExcelResults} from './configmenus/SankeyUtils'
+  DefaultSankeyData, windowSankey, LinkColor} from './configmenus/SankeyUtils'
+import { RetrieveExcelResults } from './dialogs/SankeyPersistence'
 import { updateLayout } from './draw/SankeyDrawLayout'
 import { convert_data } from './configmenus/SankeyConvert'
 import { ToolbarBuilder, addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
