@@ -1,3 +1,6 @@
+import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
+import { SankeyData, SankeyNode, SankeyLink, TagsCatalog } from '../../types/Types'
+
 /**
  * Function that return the path used t draw arrow with d3
  *
@@ -153,4 +156,31 @@ export type bezier_link_classic_recyclingFType = (
   error_msg: { text?: string } | undefined,
   scale: (arg0: number) => number
 ) => void
+export type DrawLinkStartSabotFType = (data: SankeyData,
+  n: SankeyNode,
+  display_nodes: { [node_id: string]: SankeyNode; },
+  display_links: { [link_id: string]: SankeyLink; },
+  scale: (t: number) => number,
+  inv_scale: (t: number) => number,
+  GetLinkValue: GetLinkValueFuncType,
+  LinkSabotColor: (
+    l: SankeyLink,
+    data: SankeyData,
+    GetLinkValue: GetLinkValueFuncType) => string
+) => void;
+// Function that compute th position of the begining of the link and the position of where it end
+
+export type ComputeEndPointsFType = (
+  source_node: SankeyNode,
+  target_node: SankeyNode,
+  link: SankeyLink,
+  display_nodes: { [node_id: string]: SankeyNode; },
+  display_links: { [link_id: string]: SankeyLink; },
+  selected_tags: TagsCatalog,
+  data: SankeyData,
+  scale: (t: number) => number,
+  inv_scale: (t: number) => number,
+  GetLinkValue: GetLinkValueFuncType
+
+) => [number, number, number, number];
 

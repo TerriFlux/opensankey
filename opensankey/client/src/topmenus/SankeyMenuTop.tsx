@@ -32,7 +32,7 @@ import {
 
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
-import SankeyLoad from '../dialogs/SankeyLoad'
+import SankeyLoad from '../dialogs/SankeyPersistence'
 import { SankeyConfigurationMenu } from '../configmenus/SankeyMenuConfiguration'
 import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from '../dialogs/SankeyMenuDialogs'
 import { TFunction } from 'i18next'
@@ -43,7 +43,12 @@ import { addAllDropDownNode } from '../configmenus/SankeyMenuBanner'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
 import {AddAllDropDownFluxFType, LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from './types/SankeyMenuTopTypes'
-import { RecursionDataTag, DefaultNode, DefaultLink, ClickSaveExcel, FindMaxLinkValue, UploadExemple, ClickSaveDiagram, UploadExcelImpl, DownloadExamples } from '../configmenus/SankeyUtils'
+import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue } from '../configmenus/SankeyUtils'
+import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
+import { UploadExemple } from '../dialogs/SankeyPersistence'
+import { UploadExcelImpl } from '../dialogs/SankeyPersistence'
+import { DownloadExamples } from '../dialogs/SankeyPersistence'
+import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { RepositionneSidebar } from '../draw/SankeyDrawFunction'
 
 declare const window: Window &

@@ -1,7 +1,8 @@
 import { TFunction } from 'i18next'
 
 import { DrawArrowsType } from '../draw/types/SankeyDrawFunctionTypes'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, RetrieveExcelResultsFuncType  } from '../configmenus/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
+import { RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistenceTypes'
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { OpenSankeyDiagramSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'

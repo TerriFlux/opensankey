@@ -4,10 +4,11 @@ import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
   drawCurveFunction, scale, inv_scale, SetNodesHeight, StrokeDasharray,
-  GetSankeyMinWidthAndHeight, DeselectVisualyLinks, EventLinkContextMenu
-} from './SankeyDrawFunction'
+  GetSankeyMinWidthAndHeight, DeselectVisualyLinks} from './SankeyDrawFunction'
+import { EventLinkContextMenu } from './SankeyDrawEventFunction'
 import {DragLinkEvent, AddDragLinkZone} from './SankeyDrag'
-import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg,DrawLinkStartSabot} from './SankeyDrawFunction'
+import {ValueSelectedParameter,LinkStrokeWidth,NodeVisibleOnsSvg} from './SankeyDrawFunction'
+import { DrawLinkStartSabot } from './SankeyDrawShapes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
 import { LinkStrokeFuncType, DrawLinksFType  } from './types/SankeyDrawLinksTypes'
 import { LinkColorFuncType } from '../configmenus/types/SankeyUtilsTypes'

@@ -9,9 +9,6 @@ import { SankeyData,
   SankeyLinkAttrLocal,
   SankeyLinkStyle,
   TagsCatalog } from '../types/Types'
-import FileSaver from 'file-saver'
-import { complete_sankey_data } from './SankeyConvert'
-import {  ComputeAutoSankey,compute_default_input_outputLinksId} from '../draw/SankeyDrawLayout'
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from '../topmenus/SankeyMenuTop' 
@@ -22,25 +19,22 @@ import { TFunction } from 'i18next'
 import { faCircleInfo} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-import { ConvertDataFuncType } from './types/SankeyConvertTypes'
 import {  
   AddDataTagsFuncType, AddGroupTagFuncType, AddNewNodeFuncType, AddTagFuncType, AdjustSankeyZoneFuncType, 
   ApplyStyleToNodesFuncType, AssignLinkLocalAttributeFuncType, AssignLinkStyleAttributeFuncType, 
   AssignLinkValueToCorrectVarFuncType, AssignNodeLocalAttributeFuncType, AssignNodeStyleAttributeFuncType, 
-  AssignNodeValueToCorrectVarFuncType, ClickSaveDiagramFuncType, ClickSaveExcelFuncType, ComputeTotalOffsetsFuncType, 
+  AssignNodeValueToCorrectVarFuncType, ComputeTotalOffsetsFuncType, 
   CreateObjectFuncType, DefaultLinkFuncType, DefaultLinkStyleFuncType, DefaultNodeFuncType, DefaultNodeProductStyleFuncStyle, 
   DefaultNodeSectorStyleFuncStyle, DefaultNodeStyleFuncType, DefaultSankeyDataFuncType, DeleteLinkFuncType, 
-  DeleteNodeFuncType, DownloadExamplesFuncType, DownloadExempleExcelFuncType, 
+  DeleteNodeFuncType, 
   FindMaxLinkValueFuncType, GetLinkAttributeValueFromStyleFuncType, GetLinkValueFuncType, 
   GetNodeAttributeValueFromStyleFuncType, GetVerticalMarginForSankeyZoneFuncType, IsAllLinkAttrSameValueFuncType, 
   IsAllNodeAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, IsNodeDisplayingValueLocalFuncType, 
   LinkColorFuncType, LinkTextFuncType, LinkVisibleFunctType, NodeColorFuncType, NodeContextHasAggregateFuncType, 
-  NodeContextHasDesaggregateFuncType, NodeDisplayedFuncType, ProcessExampleFuncType, RecursionDataTagFuncType, 
-  RetrieveExcelResultsFuncType, 
+  NodeContextHasDesaggregateFuncType, NodeDisplayedFuncType, RecursionDataTagFuncType, 
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType, 
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType, 
-  TestLinkValueFuncType, ToPrecisionFuncType, UploadExcelImplFuncType, UploadExempleFuncType} from './types/SankeyUtilsTypes'
-import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
+  TestLinkValueFuncType, ToPrecisionFuncType} from './types/SankeyUtilsTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1116,73 +1110,8 @@ export const DeleteNode:DeleteNodeFuncType = (
  *
  * @typedef {layout_type}
  */
-type layout_type = {
+export type layout_type = {
   layout: SankeyData
-}
-
-/**
- * Download examples from server
- *
- * @param {string} file_name
- * @param {string} the_url_prefix
- * @param {string} filetype
- */
-export const DownloadExamples:DownloadExamplesFuncType = (
-  file_name: string,
-  the_url_prefix: string,
-  filetype: string
-): void => {
-  const root = window.location.href
-  const url = root + '/opensankey/sankey/download_examples'
-  const fetchData = {
-    method: 'POST',
-    body: file_name
-  }
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: filetype })
-    FileSaver.saveAs(newBlob, file_name)
-  }
-  fetch(url, fetchData).then(
-    response => {
-      if (response.ok) {
-        response.blob().then(showFile)
-      }
-    })
-}
-
-/**
- *
- * @param {SankeyData} server_data
- * @returns {*}
- */
-export const ProcessExample:ProcessExampleFuncType = (
-  data: SankeyData,
-  updateLayout:updateLayoutFuncType,
-  convert_data:ConvertDataFuncType,
-  callback: (server_data: SankeyData) => void,
-  DefaultSankeyData: ()=>SankeyData,
-
-): SankeyData => {
-  complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
-  convert_data(data,DefaultSankeyData)
-  if ( (data as SankeyData & layout_type).layout === undefined) {
-    ComputeAutoSankey(data, data.h_space ? data.h_space : 200)
-    callback(data)
-    compute_default_input_outputLinksId(data.nodes, data.links)
-    // Set sector/product style to node only when it come from an excel file and without a layout 
-    SetNodeStyleToTypeNode(data)
-  } else {
-    convert_data((data as SankeyData & layout_type).layout,DefaultSankeyData)
-    complete_sankey_data((data as SankeyData & layout_type).layout,DefaultSankeyData,DefaultNode,DefaultLink)
-    compute_default_input_outputLinksId(data.nodes, data.links)
-    const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData }).layout)) as SankeyData
-    delete (data as SankeyData & { layout?: SankeyData }).layout
-    updateLayout(data, data_layout,['posNode','posFlux','attrNode','attrFlux','attrGeneral','freeLabels','Views'],true)
-    callback(data)
-  }
-  d3.select('.loading_auto_compute').remove()
-
-  return data
 }
 
 export const SetNodeStyleToTypeNode:SetNodeStyleToTypeNodeFuncType=(data:SankeyData): void=>{
@@ -1197,131 +1126,6 @@ export const SetNodeStyleToTypeNode:SetNodeStyleToTypeNodeFuncType=(data:SankeyD
       }
     })
   }
-}
-
-
-export const UploadExcelImpl:UploadExcelImplFuncType = (
-  set_show_excel_dialog: (b: boolean) => void,
-  input_file: Blob,
-  the_url_prefix: string
-): void => {
-  const root = window.location.href
-  const url = root + the_url_prefix + 'sankey/upload_excel'
-  const form_data = new FormData()
-  form_data.append(
-    'file', input_file
-  )
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-  fetch(url, fetchData)
-  set_show_excel_dialog(false)
-}
-
-/**
- *
- * @param {string} file_name
- * @param {string} the_url_prefix
- * @param {SankeyData} data
- * @param {(data: SankeyData) => void} set_data
- * @returns {void) => void}
- */
-export const UploadExemple:UploadExempleFuncType = (
-  file_name: string,
-  the_url_prefix: string,
-  data: SankeyData,
-  set_data: (data: SankeyData) => void,
-  Reinitialization: ()=>void,
-  convert_data:ConvertDataFuncType,
-  DefaultSankeyData:DefaultSankeyDataFuncType
-): void => {
-  let root = window.location.href
-  if (root.includes('dashboard')) {
-    root = root.replace('dashboard', '')
-  }
-
-  const url = root + the_url_prefix + '/sankey/upload_examples'
-  const fetchData = {
-    method: 'POST',
-    body: file_name
-  }
-
-  fetch(url, fetchData).then((response) => {
-    response.text().then((text) => {
-      const server_data = JSON.parse(text)
-      const error = server_data['error']
-      if (error && error.length != 0) {
-        alert(error)
-        return
-      }
-
-      if (!file_name.includes('.xlsx')) {
-        Reinitialization()
-        complete_sankey_data(server_data,DefaultSankeyData,DefaultNode,DefaultLink)
-        convert_data(server_data,DefaultSankeyData)
-        set_data({ ...server_data})
-      }
-    })
-  })
-}
-
-export const DownloadExempleExcel:DownloadExempleExcelFuncType = (
-  file_name: string,
-): void => {
-  let root = window.location.href
-  if (root.includes('dashboard')) {
-    root = root.replace('dashboard', '')
-  }
-
-  const url = root + '/opensankey/sankey/upload_examples'
-  const fetchData = {
-    method: 'POST',
-    body: file_name
-  }
-  fetch(url, fetchData).then((response) => {
-    response.text().then((text) => {
-      const server_data = JSON.parse(text)
-      const error = server_data['error']
-      if (error && error.length != 0) {
-        alert(error)
-        return
-      }
-      ClickSaveExcel('/opensankey/',server_data)
-
-    })
-  })
-}
-
-export const ClickSaveExcel:ClickSaveExcelFuncType = (url_prefix:string,data:SankeyData) => {
-  let root = window.location.href
-  if (root.includes('dashboard')) {
-    root = root.replace('dashboard', '')
-  }
-  let url = root + url_prefix + 'sankey/save_excel'
-
-  const fetchData = {
-    method: 'POST',
-    body: JSON.stringify(data)
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    FileSaver.saveAs(newBlob, 'sankey.xlsx')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = root + url_prefix + 'sankey/clean_excel'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
 }
 
 
@@ -1396,26 +1200,10 @@ export const AdjustSankeyZone:AdjustSankeyZoneFuncType =(
   zoom.scaleTo(d3.select(' .opensankey #svg'),scale)
   document.getElementsByTagName ('html')[0]?.scrollTo(0,0)
 }
-interface DataSuiteType{
+export interface DataSuiteType{
   is_catalog?:boolean,
   view?:{id: string,view_data: object,nom:string,details:string}[],
 } 
-
-export const ClickSaveDiagram:ClickSaveDiagramFuncType = (data:SankeyData,name='sankey_diagram'): void => {
-  const data_to_save = { ...data }
-  const str_data = JSON.stringify(data_to_save)
-
-  const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
-  const dataAsSuite=(data as DataSuiteType)
-  if(dataAsSuite.view && dataAsSuite.view.length>0 && !dataAsSuite.is_catalog){
-    name='Diagramme de Sankey avec vues'
-  }else if(dataAsSuite.is_catalog===true){
-    name='Catalogue de vues de diagrammes de Sankey'
-  }else{
-    name='Diagramme de Sankey'
-  }
-  FileSaver.saveAs(blob, name+'.json')
-}
 
 export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string): void=>{
   const elementTagName = type_tag_name
@@ -1952,58 +1740,6 @@ export const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.inter
 
 export const GetRandomInt=(max:number) =>{
   return Math.floor(Math.random() * max)
-}
-
-export const RetrieveExcelResults : RetrieveExcelResultsFuncType =(
-  text:string,
-  set_data:(d:SankeyData)=>void,
-  updateLayout:updateLayoutFuncType,
-  callback: (server_data: SankeyData) => void,
-  GetSankeyMinWidthAndHeight:(data: SankeyData) => number[],
-  convert_data:ConvertDataFuncType,
-  defaultData: ()=>SankeyData
-)=>{
-  const default_data = defaultData()
-  const server_data = JSON.parse(text)
-  let default_nstyle = default_data.style_node['default']
-  let default_lstyle = default_data.style_link['default']
-  server_data.h_space = default_data.h_space
-  server_data.v_space = default_data.v_space
-  if ((default_data as SankeyData & { layout?: SankeyData }).layout ) {
-    server_data.layout = (default_data as SankeyData & { layout?: SankeyData }).layout
-  } else {
-    default_nstyle = JSON.parse(JSON.stringify(default_data.style_node['default']))
-    default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
-  }
-  const new_data=Object.assign(default_data,server_data) as SankeyData
-  ProcessExample(new_data,updateLayout,convert_data,callback,DefaultSankeyData)
-  new_data.style_node['default'] = default_nstyle
-  new_data.style_link['default'] = default_lstyle
-  delete (new_data as SankeyData & { layout?: SankeyData }).layout
-  if (Object.values(new_data.nodeTags).filter(tagg=>tagg.show_legend).length>0) {
-    new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg=>tagg[1].show_legend)[0][0]
-    Object.values(new_data.nodes).forEach(el => {
-      el.colorParameter = 'groupTag'
-      el.colorTag = new_data.colorMap
-    })
-  }
-  if (Object.keys(new_data.nodeTags).filter(t=>new_data.nodeTags[t].show_legend).length == 0 &&
-      Object.keys(new_data.fluxTags).filter(tag=>tag === 'flux_type').length == 0 &&
-      Object.values(new_data.nodes).filter(n=>n.local && n.local.color).length == 0 &&
-      Object.values(new_data.links).filter(l=>l.local && l.local.color).length == 0
-  ) {
-    const color_selected=list_palette_color[GetRandomInt(list_palette_color.length)]
-    const n_keys=Object.keys(new_data.nodes)
-    const size_color=n_keys.length
-
-    for(const i in d3.range(size_color)){
-      AssignNodeLocalAttribute(new_data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
-    }
-  }
-  set_data({ ...new_data })
-  setTimeout(()=>{
-    AdjustSankeyZone(new_data,GetSankeyMinWidthAndHeight)
-  },100)
 }
 
 // Function that return style for checkbox

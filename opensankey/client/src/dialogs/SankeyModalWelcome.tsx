@@ -6,7 +6,9 @@ import { SankeyData, applicationContextType, dict_variable_application_dataType,
 import parse from 'html-react-parser'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import React, { Dispatch, MutableRefObject, SetStateAction, useState } from 'react'
-import { UploadExemple, DownloadExempleExcel, windowSankey } from '../configmenus/SankeyUtils'
+import { windowSankey } from '../configmenus/SankeyUtils'
+import { DownloadExempleExcel } from './SankeyPersistence'
+import { UploadExemple } from './SankeyPersistence'
 import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
 import { TFunction } from 'i18next'
 

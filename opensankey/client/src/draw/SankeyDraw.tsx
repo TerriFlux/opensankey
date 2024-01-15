@@ -2,7 +2,8 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyNode, SankeyLink,  SankeyData } from '../types/Types'
-import {  DeleteLink,DeleteNode,ClickSaveDiagram, windowSankey} from '../configmenus/SankeyUtils'
+import {  DeleteLink,DeleteNode,windowSankey} from '../configmenus/SankeyUtils'
+import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
 import { RemoveAnimate,
   DrawGrid,
@@ -10,12 +11,10 @@ import { RemoveAnimate,
   SelectVisualyLinks,
   DeselectVisualyLinks,
   DeselectVisualyNodes,
-  SvgDragMiddleMouseStart,
-  SvgDragMiddleMouseMove,
-  SelectVisualyNodes,
-  EventZDDContextMenu} from './SankeyDrawFunction'
+  SelectVisualyNodes} from './SankeyDrawFunction'
 import LZString from 'lz-string'
 import { SankeyDrawTypes, keyHandlerFType } from './types/SankeyDrawTypes'
+import { SvgDragMiddleMouseStart, SvgDragMiddleMouseMove, EventZDDContextMenu } from './SankeyDrawEventFunction'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
