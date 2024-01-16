@@ -39,9 +39,11 @@ export const plus_convert_data : plus_convert_dataFType = (
   data:SankeyPlusData,
   DefaultSankeyData: ()=>SankeyPlusData
 )=>{
-  if(data.background_image===undefined){
-    data.background_image=''
-  }
+    
+  data.background_image=(data.background_image===undefined)?'':data.background_image
+
+  data.show_background_image=(data.show_background_image===undefined)?false:data.show_background_image
+  
   if (!data.labels) {
     data.labels = {}
   }
