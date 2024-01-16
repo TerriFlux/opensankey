@@ -268,6 +268,7 @@ export type SankeyData = {
   legend_bg_color:string,
   legend_bg_opacity:number,
   legend_bg_border:boolean,
+  legend_show_dataTags:boolean,
 
   nodes: {[_:string]:SankeyNode},
   links: {[_:string]:SankeyLink},

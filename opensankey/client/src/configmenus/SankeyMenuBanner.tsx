@@ -413,19 +413,13 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   const target_link_threshold=useRef(null)
   const [show_detail_level,set_show_detail_level]=useState(false)
   const target_detail_level=useRef(null)
-  const [,set_user_scale]=useState(data.user_scale)
-  const [minimum_flux,set_minimum_flux] = useState(data.minimum_flux)
-  const [maximum_flux,set_maximum_flux] = useState(data.maximum_flux)
 
-  const { ref_getter_mode_selection,ref_setter_mode_selection, userScaleRef } = dict_variable_elements_selected
+  const { ref_getter_mode_selection,ref_setter_mode_selection } = dict_variable_elements_selected
   const [mode_selection,sModeSelection]=useState('ln')
   ref_getter_mode_selection.current=mode_selection
   ref_setter_mode_selection.current=sModeSelection
 
-  if(data.maximum_flux && data.minimum_flux && data.minimum_flux>data.maximum_flux){
-    data.maximum_flux=data.minimum_flux
-    set_maximum_flux(data.minimum_flux)
-  }
+
   /**
    * Change the mouse behavior
    *
@@ -497,81 +491,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     <Popover.Body >
       <Form>
         <h5>{t('Banner.p_aff_aff_links')}</h5>
-        <Form.Group as={Row} >
-          <Col xs={7}>
-            <FormLabel >{t('MEP.Echelle')}</FormLabel>
-          </Col>
-          <Col xs={5}>
-            <FormControl
-              type="text"
-              value={  userScaleRef.current }
-              isInvalid={userScaleRef.current!=data.user_scale}
 
-              onChange={evt => {
-                userScaleRef.current =+evt.target.value
-                set_user_scale(+evt.target.value)
-              }}
-              onBlur={() => {
-                data.user_scale = userScaleRef.current
-                set_data({ ...data })
-              }}
-            />
-            <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
-            <Form.Text>    ({t('MEP.vp100')})</Form.Text>
-          </Col>
-        </Form.Group>
-
-        {/* Taille maximale du flux */}
-        <Form.Group as={Row} >
-          <Col xs={7}>
-            <FormLabel >{t('MEP.MaxFlux')}</FormLabel>
-          </Col>
-          <Col xs={5}>
-            <OverlayTrigger
-              key={'MEP.tooltips.MaxFlux'}
-              placement={'top'}
-              delay={500}
-              rootClose
-              overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
-              <FormControl
-                type="text"
-                value={maximum_flux!}
-                onChange={evt => {
-                  set_maximum_flux(+evt.target.value)
-                }}
-                onBlur={() => {
-                  data.maximum_flux = maximum_flux
-                  set_data({ ...data })
-                }}/>
-            </OverlayTrigger>
-          </Col>
-        </Form.Group>
-
-        {/* Taille maximale du flux */}
-        <Form.Group as={Row} >
-          <Col xs={7}>
-            <FormLabel >{t('MEP.MinFlux')}</FormLabel>
-          </Col>
-          <Col xs={5}>
-            <OverlayTrigger
-              key={'MEP.tooltips.MinFlux'}
-              placement={'top'}
-              delay={500}
-              rootClose
-              overlay={<Tooltip id={'MEP.tooltips.MinFlux'}>{t('MEP.tooltips.MinFlux')} </Tooltip>}>
-              <FormControl
-                type="text"
-                value={minimum_flux!}
-                onChange={evt => {
-                  set_minimum_flux(+evt.target.value)
-                }}
-                onBlur={() => {
-                  data.minimum_flux = isNaN(Number(minimum_flux))?undefined:minimum_flux
-                  set_data({ ...data })
-                }}/>
-            </OverlayTrigger>
-          </Col>
-        </Form.Group>
 
 
         <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
