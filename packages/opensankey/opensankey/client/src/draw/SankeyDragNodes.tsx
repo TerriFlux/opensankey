@@ -30,7 +30,6 @@ typeof globalThis & {
 export const DragGNodeEvent: DragGNodeEventFType = (
   dict_variable_application_data: dict_variable_application_dataType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
-  mode_selection: { current: string} ,
   alt_key_pressed: MutableRefObject<boolean>,
   LinkText: LinkTextFuncType,
   GetLinkValue: GetLinkValueFuncType,
@@ -38,6 +37,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   inv_scale: (t: number) => number
 ) => {
   const { data, set_data } = dict_variable_application_data
+  const {ref_getter_mode_selection}=dict_variable_elements_selected
   const node_visible = [] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object)
@@ -48,7 +48,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
       })
     })
     .on('drag', function (event, node) {
-      if (mode_selection.current == 's') {
+      if (ref_getter_mode_selection.current == 's') {
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
           drag_node_text(node, event)
         } else if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && !alt_key_pressed.current) {

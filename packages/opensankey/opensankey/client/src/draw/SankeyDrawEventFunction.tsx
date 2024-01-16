@@ -23,10 +23,10 @@ export const EventNodeClick: EventNodeClickFType = (
   sankeyTooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>
 ) => {
   const { data, set_data } = dict_variable_application_data
-  const { mode_selection, multi_selected_nodes } = dict_variable_elements_selected
+  const { ref_setter_mode_selection, multi_selected_nodes } = dict_variable_elements_selected
   const { button_ref, nodes_accordion_ref, accordion_ref } = uiElementsRef
   if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && (event.ctrlKey || event.metaKey)) {
-    mode_selection.current = 's'
+    ref_setter_mode_selection.current('s')
     d3.select(' .opensankey #svg').attr('class', 'mode_selection')
     sankeyTooltip.style('opacity', 0)
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
@@ -192,7 +192,7 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
   const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
 
   const { data, set_data } = dict_variable_application_data
-  const { mode_selection, first_selected_node } = dict_variable_elements_selected
+  const { ref_getter_mode_selection, first_selected_node } = dict_variable_elements_selected
   closeAllMenuContext()
   const evt = evt2 as { target: string; ctrlKey: boolean; metaKey: boolean; which: number} 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
@@ -206,8 +206,8 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
       }
     }
 
-    if (d3.select(evt.target).attr('class') != 'node node_shape' && mode_selection.current == 'ln') {
-
+    if (d3.select(evt.target).attr('class') != 'node node_shape' && ref_getter_mode_selection.current == 'ln') {
+      
       if ((!evt.ctrlKey && !evt.metaKey)) {
         if (!token && Object.keys(data.nodes).length > 15) {
           if (setter_limited_application?.ref_setter_show_toast_limit_node) setter_limited_application.ref_setter_show_toast_limit_node.current!(true)
@@ -232,7 +232,7 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
           set_data({ ...data })
         }
       }
-    } else if (mode_selection.current == 's' && !evt.ctrlKey) {
+    } else if (ref_getter_mode_selection.current == 's' && !evt.ctrlKey) {
       const pos = d3.pointer(evt)
       start_point.current = pos
       d3.select('#svg').append('g').attr('class', 'selection_zone')
@@ -249,7 +249,7 @@ export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
   start_point: { current: number[]} 
 ) => {
   const { data } = dict_variable_application_data
-  const { mode_selection, first_selected_node } = dict_variable_elements_selected
+  const { ref_getter_mode_selection,first_selected_node } = dict_variable_elements_selected
   //Empêche lors du drag de la souris d'avoir
   // l'effet sélection de texte sur les labels des éléments de diagramme
   //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
@@ -257,14 +257,14 @@ export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
   evt.stopPropagation()
   evt.preventDefault()
 
-  if (mode_selection.current == 's' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || first_selected_node.current)) {
+  if (ref_getter_mode_selection.current == 's' && (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 || first_selected_node.current)) {
     data.nodes = Object.fromEntries(Object.entries(data.nodes).filter(n => n[1].name != 'node_tmp'))
     first_selected_node.current = undefined
   }
   if (evt.buttons == 0 && d3.selectAll(' .opensankey #svg #path-flux').nodes().length > 0) {
     d3.selectAll(' .opensankey #svg #path-flux').remove()
   }
-  if (mode_selection.current == 's' && d3.selectAll('.selection_zone').nodes().length > 0) {
+  if (ref_getter_mode_selection.current == 's' && d3.selectAll('.selection_zone').nodes().length > 0) {
     // Create change the size of the selection zone according to the mouse
     const pos = d3.pointer(evt)
     const new_x = (pos[0] > start_point.current[0]) ? start_point.current[0] : pos[0]
@@ -277,7 +277,7 @@ export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
     d3.select('.selection_zone rect').attr('y', new_y)
     d3.select('.selection_zone rect').attr('width', Math.abs(new_w))
     d3.select('.selection_zone rect').attr('height', Math.abs(new_h))
-  } else if (mode_selection.current == 'ln') {
+  } else if (ref_getter_mode_selection.current == 'ln') {
     if (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && evt.buttons == 0) {
       // Si par erreur on un noeud temporaire est crée mais que l'on est plus en train de presser le bouton de la souris
       // alors corrige en nommant le noeud temporaire et supprimant le ligne de liaison
@@ -334,7 +334,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   legend_clicked
 ) => {
   const { data, set_data } = dict_variable_application_data
-  const { mode_selection, multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueRef } = dict_variable_elements_selected
+  const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueRef } = dict_variable_elements_selected
   const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
 
   // Special cast usefull for when the app is used in SankeySuiteManager
@@ -366,7 +366,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 
   const evt_recast = ((evt as unknown) as { target: string} ).target
 
-  if (mode_selection.current == 's' && d3.selectAll('.selection_zone').nodes().length > 0) {
+  if (ref_getter_mode_selection.current == 's' && d3.selectAll('.selection_zone').nodes().length > 0) {
     NodeVisibleOnsSvg().forEach(k => DeselectVisualyNodes(data.nodes[k]))
     const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
     const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
@@ -409,7 +409,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   //si le mode de souris est noeud+flux alors crée un second noeud au relachement
   //et crée un lien entre le premier noeud crée lors du click et ce dernier
   const pos = d3.pointer(evt)
-  if (mode_selection.current == 'ln') {
+  if (ref_getter_mode_selection.current == 'ln') {
     if (!token && Object.keys(data.nodes).length > 15) {
       Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
       d3.selectAll(' .opensankey #svg #path-flux').remove()
