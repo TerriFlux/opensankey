@@ -656,6 +656,7 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     legend_bg_border:false,
     legend_bg_color:'grey',
     legend_bg_opacity:0,
+    legend_show_dataTags:false,
     node_label_separator:''
 
   }
