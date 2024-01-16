@@ -37,7 +37,7 @@ export const DrawLinks : DrawLinksFType = (
   const{ pointer_pos, ref_setter_contextualised_link} = contextMenu
   const{ button_ref, accordion_ref, links_accordion_ref} = uiElementsRef
   const{ data, set_data, display_nodes, display_links} = dict_variable_application_data
-  const { multi_selected_links,mode_selection, displayedInputLinkValueRef} = dict_variable_elements_selected
+  const { multi_selected_links,ref_getter_mode_selection,ref_setter_mode_selection, displayedInputLinkValueRef} = dict_variable_elements_selected
   const default_handle_size = 10
   const default_horiz_shift = 50
 
@@ -62,7 +62,7 @@ export const DrawLinks : DrawLinksFType = (
     links_accordion_ref:MutableRefObject<HTMLDivElement|null>,
     set_data:(d:SankeyData)=>void
   )=>{
-    mode_selection.current='s'
+    ref_setter_mode_selection.current('s')
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
       sankeyTooltip.style('opacity', 0)
       multi_selected_links.current = multi_selected_links.current.filter(d => (d != null && d.idLink != ''))
@@ -254,7 +254,7 @@ export const DrawLinks : DrawLinksFType = (
         return display
       })
       .attr('pointer-events', 'auto')
-      .attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
+      .attr('cursor', (ref_getter_mode_selection.current == 's')? 'pointer' : 'unset')
       .attr('stroke-dasharray', d => {
         return StrokeDasharray(d,data,GetLinkValue)
       })

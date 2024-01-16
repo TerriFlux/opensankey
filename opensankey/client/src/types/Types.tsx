@@ -370,7 +370,8 @@ export type uiElementsRefType = {
 }
 
 export type dict_variable_elements_selectedType = {
-  mode_selection: MutableRefObject<string> 
+  ref_getter_mode_selection: MutableRefObject<string|undefined> 
+  ref_setter_mode_selection: MutableRefObject<Dispatch<SetStateAction<string>>>
   multi_selected_nodes : { current : SankeyNode[] },
   multi_selected_links : { current : SankeyLink[] },
   ref_selected_style_node : MutableRefObject<string>,

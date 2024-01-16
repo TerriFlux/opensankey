@@ -1,12 +1,11 @@
 import { MutableRefObject } from 'react'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, agregationType, contextMenuType } from '../../types/Types'
+import { SankeyData, SankeyLink, SankeyNode, agregationType, contextMenuType, dict_variable_elements_selectedType } from '../../types/Types'
 
 export type keyHandlerFType = (
     e: KeyboardEvent,data:SankeyData,
-    multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
+    dict_variable_elements_selected:dict_variable_elements_selectedType,
     set_data:(d:SankeyData)=>void,
-    mode_selection:{current : string},
     closeAllMenu:()=>void
 ) => void
 
@@ -17,7 +16,7 @@ export type SankeyDrawTypes = {
     display_nodes : { [node_id: string]: SankeyNode },
     display_links : { [node_id: string]: SankeyLink },
     animation: MutableRefObject<boolean>,
-    mode_selection: {current : string},
+    dict_variable_elements_selected:dict_variable_elements_selectedType,
     agregation:agregationType, 
     ref_alt_key_pressed:MutableRefObject<boolean>,
     GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
