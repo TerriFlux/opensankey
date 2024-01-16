@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
-import { SankeyNode, SankeyLink,  SankeyData } from '../types/Types'
+import { SankeyData } from '../types/Types'
 import {  DeleteLink,DeleteNode,windowSankey} from '../configmenus/SankeyUtils'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
@@ -26,11 +26,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   display_nodes,
   display_links,
   animation,
-  mode_selection,
+  dict_variable_elements_selected,
   agregation,
   ref_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
+
+  const {ref_getter_mode_selection,ref_setter_mode_selection}=dict_variable_elements_selected
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
 
@@ -64,11 +66,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     RemoveAnimate()
     d3.select('body').style('background-color',data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
-    if (mode_selection.current=='s') {
+    if (ref_getter_mode_selection.current=='s') {
       d3.select(' .opensankey #svg').attr('class','mode_selection')
     }
 
-    if (mode_selection.current=='ln') {
+    if (ref_getter_mode_selection.current=='ln') {
       d3.select(' .opensankey #svg').attr('class','mode_add_flux')
     }
     // Disable zoom outside of the sankey draw zone
@@ -133,16 +135,14 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     d3.select(' .opensankey #svg').selectAll('.defsArrow').remove()
     d3.select(' .opensankey #svg').append('defs').attr('class', 'defsArrow')
 
-    d3.select('.div-Menu').on('mouseup',()=>{
-      if(mode_selection.current=='ln'){
-        mode_selection.current='s'
-        set_data({...data})
+    d3.selectAll('.navbar').on('mouseup',()=>{
+      if(ref_getter_mode_selection.current=='ln'){
+        ref_setter_mode_selection.current('s')
       }
     })
     d3.select('.sankey-menu').on('click',e=>{
-      if(mode_selection.current=='ln' && d3.select(e.target).attr('class')!=='accordion-item'){
-        mode_selection.current='s'
-        set_data({...data})
+      if(ref_getter_mode_selection.current=='ln' && d3.select(e.target).attr('class')!=='accordion-item'){
+        ref_setter_mode_selection.current('s')
       }
     })
 
@@ -189,12 +189,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // Delete key allow us to delete selected elments (nodes,links, free label)
 export const keyHandler : keyHandlerFType = (
   e: KeyboardEvent,data:SankeyData,
-  multi_selected_nodes:{current:SankeyNode[]},multi_selected_links:{current:SankeyLink[]},
+  dict_variable_elements_selected,
   set_data:(d:SankeyData)=>void,
-  mode_selection:{current : string},
   closeAllMenu:()=>void
 
 ) => {
+  const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true && (!document.activeElement?.className.includes('ql-editor')))) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
@@ -273,7 +273,7 @@ export const keyHandler : keyHandlerFType = (
     }
     set_data({ ...data })
   } else if (e.key == 'Escape') {
-    mode_selection.current = 's'
+    ref_setter_mode_selection.current('s')
     d3.select(' .opensankey #svg').attr('class','mode_selection')
 
     // Visualy deselect nodes then deselect in the app data

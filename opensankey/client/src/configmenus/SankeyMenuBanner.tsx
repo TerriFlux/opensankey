@@ -417,7 +417,10 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   const [minimum_flux,set_minimum_flux] = useState(data.minimum_flux)
   const [maximum_flux,set_maximum_flux] = useState(data.maximum_flux)
 
-  const { mode_selection, userScaleRef } = dict_variable_elements_selected
+  const { ref_getter_mode_selection,ref_setter_mode_selection, userScaleRef } = dict_variable_elements_selected
+  const [mode_selection,sModeSelection]=useState('ln')
+  ref_getter_mode_selection.current=mode_selection
+  ref_setter_mode_selection.current=sModeSelection
 
   if(data.maximum_flux && data.minimum_flux && data.minimum_flux>data.maximum_flux){
     data.maximum_flux=data.minimum_flux
@@ -429,7 +432,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
    * @param {string} val
    */
   const setSelectionMode = (val: string) => {
-    mode_selection.current = val
+    sModeSelection(val)
     //- trigger update
     const tutu = filter
     set_current_filter(filter+1)
@@ -746,15 +749,15 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
         key={'tooltip-liaison'}
         placement={'left'}
         delay={500}
-        overlay={<Tooltip id={'tooltip-liason'}>{(mode_selection.current == 'ln')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')} </Tooltip>}>
-        <Button variant={(!(mode_selection.current == 'ln')) ? 'secondary' : 'secondary'} onClick={() => {
-          if(mode_selection.current=='ln'){
+        overlay={<Tooltip id={'tooltip-liason'}>{(mode_selection == 'ln')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')} </Tooltip>}>
+        <Button variant={(!(mode_selection == 'ln')) ? 'secondary' : 'secondary'} onClick={() => {
+          if(mode_selection=='ln'){
             setSelectionMode('s') 
           }else{
             setSelectionMode('ln') 
           }
         }} >
-          <Col><FontAwesomeIcon icon={(mode_selection.current == 'ln')?faShareNodes:faArrowPointer}/></Col>
+          <Col><FontAwesomeIcon icon={(mode_selection == 'ln')?faShareNodes:faArrowPointer}/></Col>
         </Button>
       </OverlayTrigger>
     </>

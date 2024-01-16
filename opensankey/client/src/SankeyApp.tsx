@@ -100,7 +100,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   /*************************************************************************************************/
   const dict_variable_elements_selected : dict_variable_elements_selectedType = {
-    mode_selection : useRef('ln'),
+    ref_setter_mode_selection : useRef<Dispatch<SetStateAction<string>>>(()=>null),
+    ref_getter_mode_selection : useRef<string>(),
     multi_selected_nodes : useRef([]),
     multi_selected_links : useRef([] as SankeyLink[]),
     ref_selected_style_node : useRef('default'),
@@ -311,8 +312,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
     keyHandler(
-      e,dict_variable_application_data.data,dict_variable_elements_selected.multi_selected_nodes,dict_variable_elements_selected.multi_selected_links,
-      dict_variable_application_data.set_data,dict_variable_elements_selected.mode_selection,closeAllMenu
+      e,dict_variable_application_data.data,dict_variable_elements_selected,
+      dict_variable_application_data.set_data,closeAllMenu
     )
   }
   document.onkeydown = formatKeyHandler
@@ -655,7 +656,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       display_nodes={display_nodes}
       display_links={display_links}
       animation={useRef(false)}
-      mode_selection={dict_variable_elements_selected.mode_selection}
+      dict_variable_elements_selected={dict_variable_elements_selected}
       agregation={agregation}
       ref_alt_key_pressed={ref_alt_key_pressed}
       GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}

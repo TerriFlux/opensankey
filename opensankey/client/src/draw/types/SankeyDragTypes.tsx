@@ -195,7 +195,6 @@ export type DragLinkShiftHandleEventFType=(
 export type DragGNodeEventFType=(
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
-  mode_selection:{current:string},
   alt_key_pressed:MutableRefObject<boolean>,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,

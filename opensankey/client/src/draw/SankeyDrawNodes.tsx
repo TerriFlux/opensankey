@@ -32,10 +32,10 @@ export const DrawNodes : DrawNodesFType = (
   accept_simple_click
 ) => {
   const { data, display_nodes, display_links } = dict_variable_application_data
-  const { mode_selection, multi_selected_nodes, first_selected_node } = dict_variable_elements_selected
+  const { ref_getter_mode_selection, multi_selected_nodes, first_selected_node } = dict_variable_elements_selected
 
-  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    d3.select(t).attr('cursor', (mode_selection.current == 's')? 'pointer' : 'unset')
+  const node_mouse_over=(data:SankeyData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+    d3.select(t).attr('cursor', (ref_getter_mode_selection.current == 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic ||event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
       sankeyTooltip
@@ -127,23 +127,26 @@ export const DrawNodes : DrawNodesFType = (
         )
         .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
 
-      if (mode_selection.current == 'ln') {
-        ggg_nodes.on('mousedown', function (event, d) {
-          if (!event.ctrlKey && !event.metaKey) {
-            first_selected_node.current = d
+      ggg_nodes.on('mousedown', function (event, d) {
+        if (!event.ctrlKey && !event.metaKey && ref_getter_mode_selection.current == 'ln') {
+          first_selected_node.current = d
+        }
+      })
+        .on('mouseup',  (event, d) =>{
+          if(ref_getter_mode_selection.current=='ln'){
+            EventOnMouseUpAddNodesAndLink(
+              event,d,dict_variable_application_data,dict_variable_elements_selected,uiElementsRef
+            )
           }
-        })
-          .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(
-            event,d,dict_variable_application_data,dict_variable_elements_selected,uiElementsRef
-          )
-          )
-      }
+        }
+        )
+      
       // When the mouse is in mode selection, it allow nodes to be dragged
-      if(mode_selection.current=='s' && window.SankeyToolsStatic!==true){
+      if(ref_getter_mode_selection.current=='s' && window.SankeyToolsStatic!==true){
         ggg_nodes.call(
           DragGNodeEvent(
             dict_variable_application_data,dict_variable_elements_selected,
-            mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale
+            alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale
           )
         )
       }
@@ -204,7 +207,7 @@ export const DrawNodes : DrawNodesFType = (
     d3.selectAll(' .opensankey .gg_nodes')
       // Gestion de la tooltip
       .on('mouseover', function (event, d) {
-        node_mouse_over(data,this,mode_selection,event,d)
+        node_mouse_over(data,this,event,d)
       })
       .on('mousemove', function (event) {
         // Triggered when the mouse move over the node
