@@ -237,68 +237,72 @@ export const DrawLegend : DrawLegendFType= (
       dx = dx + pas
 
     })
+    console.log(data.legend_show_dataTags)
 
-    // dy+=(dy==0)?-30:30
+    if(data.legend_show_dataTags){
+      console.log('draw dataTags')
+      dy+=(dy==0)?-30:30
     
-    // const data_tags = Object.assign({},data.dataTags)
-    // const show_data=Object.values(data_tags).filter(d=>d.show_legend).length>0
-    // Object.entries(data_tags).forEach(tag_group => {
-    //   const intro_group_data_tags=((!show_data)?(' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')):'')
-    //   // Ajout du tagGroup.name  
-    //   legend.append('text')
-    //     .attr('transform', function () {
-    //       dy+=30
-    //       return 'translate(' + 0 + ', '+dy+' )'
-    //     })
-    //     .attr('x', 0)
-    //     .attr('y', 20)
-    //     .text((tag_group[1].group_name+intro_group_data_tags))
-    //     .attr('style', ('font-size:'+data.legend_police+'px;'+((show_data)?'font-weight:bold;':'')))
-    //     .call(wrap)
+      const data_tags = Object.assign({},data.dataTags)
+      const show_data=Object.values(data_tags).filter(d=>d.show_legend).length>0
+      Object.entries(data_tags).forEach(tag_group => {
+        const intro_group_data_tags=((!show_data)?(' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')):'')
+        // Ajout du tagGroup.name  
+        legend.append('text')
+          .attr('transform', function () {
+            dy+=30
+            return 'translate(' + 0 + ', '+dy+' )'
+          })
+          .attr('x', 0)
+          .attr('y', 20)
+          .text((tag_group[1].group_name+intro_group_data_tags))
+          .attr('style', ('font-size:'+data.legend_police+'px;'+((show_data)?'font-weight:bold;':'')))
+          .call(wrap)
       
-    //   if(show_data){
-    //     const legendElements = legend.append('g')
-    //       .selectAll('g')
-    //       // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
-    //       .data(Object.entries(tag_group[1].tags)
-    //         .filter(tag=>{
-    //           return tag[1].selected
-    //         }))
-    //       .enter()
-    //       .append('svg:g')
-    //       // on filtre les tags avec selected à true (Visible)
-    //       .attr('id',d=>{
-    //         return 'tag_'+d[1].name.replaceAll(' ','__')
-    //       })
-    //       .attr('transform', function (d, i) {
-    //         dy+=(i * 30 + 30)
-    //         return 'translate(' + 0 + ',' +dy + ')'
-    //       })
+        if(show_data){
+          const legendElements = legend.append('g')
+            .selectAll('g')
+          // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
+            .data(Object.entries(tag_group[1].tags)
+              .filter(tag=>{
+                return tag[1].selected
+              }))
+            .enter()
+            .append('svg:g')
+          // on filtre les tags avec selected à true (Visible)
+            .attr('id',d=>{
+              return 'tag_'+d[1].name.replaceAll(' ','__')
+            })
+            .attr('transform', function (d, i) {
+              dy+=(i * 30 + 30)
+              return 'translate(' + 0 + ',' +dy + ')'
+            })
 
 
-    //     // Ajout du shape  
-    //     legendElements.append('rect')
-    //       .attr('width', 20)
-    //       .attr('height', 20)
-    //       .attr('x', 0)
-    //       .attr('y', 10)
-    //       .attr('rx', 3)
-    //       .attr('ry', 3)
-    //       .style('fill', (d) => { return (d as [string, { color: string }])[1].color })
-    //       .style('fill-opacity', 1)
+          // Ajout du shape  
+          legendElements.append('rect')
+            .attr('width', 20)
+            .attr('height', 20)
+            .attr('x', 0)
+            .attr('y', 10)
+            .attr('rx', 3)
+            .attr('ry', 3)
+            .style('fill', (d) => { return (d as [string, { color: string }])[1].color })
+            .style('fill-opacity', 1)
           
-    //     // Ajout du label
-    //     legendElements.append('text')
-    //       .attr('x', show_data?35:0)
-    //       .attr('y', 26)
-    //       .attr('font-size',data.legend_police+'px')
-    //       .text((d)=>d[1].name)
-    //       .call(wrap)
-    //   } 
+          // Ajout du label
+          legendElements.append('text')
+            .attr('x', show_data?35:0)
+            .attr('y', 26)
+            .attr('font-size',data.legend_police+'px')
+            .text((d)=>d[1].name)
+            .call(wrap)
+        } 
 
-    //   dx = dx + pas
+        dx = dx + pas
 
-    // })
+      })
+    }
 
   
   
@@ -360,7 +364,7 @@ export const DrawLegend : DrawLegendFType= (
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
     draw_legend_handles(data,set_data,legend_clicked.current,h)
   }
-  if(!data.mask_legend){
+  if(data.mask_legend){
     drawLegend()
   }else{
     d3.select(' .opensankey #g_legend').selectAll('*').remove()
