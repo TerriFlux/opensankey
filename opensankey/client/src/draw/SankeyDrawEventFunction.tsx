@@ -7,7 +7,7 @@ import { draw_legend_handles } from './SankeyDrawLegend'
 import { EventNodeClickFType, EventNodeContextMenuFType, EventLinkContextMenuFType, EventOnZoneMouseDownFuncType, EventOnZoneMouseMoveFuncType, EventOnZoneMouseUpFuncType, EventOnMouseUpAddNodesAndLinkFType, SimpleGNodeClickFuncType, SvgDragMiddleMouseStartFuncType, SvgDragMiddleMouseMoveFuncType, EventZDDContextMenuFType, ZoomFunctionFuncType } from './types/SankeyDrawEventFunctionTypes'
 
 
-export declare const window: Window &
+declare const window: Window &
    typeof globalThis & {
     SankeyToolsStatic: boolean
   }
