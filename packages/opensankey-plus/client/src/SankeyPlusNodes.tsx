@@ -485,7 +485,6 @@ const node_mouse_click=(
   animating:MutableRefObject<boolean>,
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
-  mode_selection:{current:string},
   accept_simple_click:{current:boolean},
   GetLinkValue:GetLinkValueFuncType
 )=>{
@@ -643,7 +642,6 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
   dict_variable_elements_selected,
   uiElementsRef,
   animating,
-  mode_selection,
   accept_simple_click,
   GetLinkValue
 )=>{
@@ -655,7 +653,6 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
         animating,
         event,
         (d as SankeyPlusNode),
-        mode_selection,
         accept_simple_click,
         GetLinkValue
       )
@@ -691,12 +688,13 @@ export const node_icon_path : node_icon_pathFType =(
 export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
   data:SankeyPlusData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
-  mode_selection: {current:string},
+  dict_variable_elements_selected,
   NodeTooltipsContent: NodeTooltipsContentFType,
   GetLinkValue:GetLinkValueFuncType
 ) => {
-  const node_mouse_over=(data:SankeyData,t:d3.BaseType,mode_selection:{current:string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    d3.select(t).attr('cursor', (mode_selection.current === 's')? 'pointer' : 'unset')
+  const {ref_getter_mode_selection}=dict_variable_elements_selected
+  const node_mouse_over=(data:SankeyData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+    d3.select(t).attr('cursor', (ref_getter_mode_selection.current === 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
@@ -775,7 +773,7 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
       .append('g')
       .append('path')
       .on('mouseover', function (event, d) {
-        node_mouse_over(data,this,mode_selection,event,d)
+        node_mouse_over(data,this,event,d)
       })
       .on('mousemove', function (event) {
         node_mouse_move(event)
@@ -806,7 +804,7 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
       .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height') )
       .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width') )
       .on('mouseover', function (event, d) {
-        node_mouse_over(data,this,mode_selection,event,d)
+        node_mouse_over(data,this,event,d)
       })
       .on('mousemove', function (event) {
         node_mouse_move(event)
@@ -880,13 +878,13 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
 export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   applicaTionData,
   dict_variable_elements_selected,
-  mode_selection:{current:string},
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=>{
   const {data,set_data}=applicaTionData
+  const {ref_getter_mode_selection}=dict_variable_elements_selected
   
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -895,10 +893,10 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
     .range([0, 100])
     .domain([0, data.user_scale])
 
-  if(mode_selection.current==='s' && window.SankeyToolsStatic!==true){
+  if(ref_getter_mode_selection.current==='s' && window.SankeyToolsStatic!==true){
     (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(
       SankeyPlusDragGNodeEvent(applicaTionData,dict_variable_elements_selected,
-        mode_selection,alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight
+        alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight
       )
     )
   }
@@ -930,7 +928,6 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
 const SankeyPlusDragGNodeEvent = (
   dict_variable_application_data:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
-  mode_selection:{current:string},
   alt_key_pressed:boolean,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -939,6 +936,7 @@ const SankeyPlusDragGNodeEvent = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=>{
   const {data,set_data}=dict_variable_application_data
+  const {ref_getter_mode_selection}=dict_variable_elements_selected
   const node_visible=[] as string[]
   return d3.drag<SVGGElement, SankeyPlusNode>()
     .subject(Object)
@@ -948,7 +946,7 @@ const SankeyPlusDragGNodeEvent = (
       })
     })
     .on('drag', function (event,node) {
-      if(mode_selection.current==='s'){
+      if(ref_getter_mode_selection.current==='s'){
         if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else {

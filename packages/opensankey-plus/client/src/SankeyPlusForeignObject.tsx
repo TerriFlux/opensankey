@@ -216,13 +216,13 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
 export const PlusDrawNodesFO : PlusDrawNodesFOFType = (
   data : SankeyPlusData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
-  mode_selection:{current:string},
+  dict_variable_elements_selected,
   NodeTooltipsContent: NodeTooltipsContentFType,
   GetLinkValue:GetLinkValueFuncType
 ) => {
-
-  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,mode_selection:{current :string},event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    d3.select(t).attr('cursor', (mode_selection.current === 's')? 'pointer' : 'unset')
+  const {ref_getter_mode_selection} =dict_variable_elements_selected
+  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+    d3.select(t).attr('cursor', (ref_getter_mode_selection.current === 's')? 'pointer' : 'unset')
     if (NodeDisplayed(data,(d as SankeyPlusNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
@@ -269,7 +269,7 @@ export const PlusDrawNodesFO : PlusDrawNodesFOFType = (
       .attr('height',(n)=>+d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
       .attr('id',(d)=> d.idNode + '_fo')
       .on('mouseover', function (event, d) {
-        node_mouse_over(data,this,mode_selection,event,d)
+        node_mouse_over(data,this,event,d)
       })
       .on('mousemove', function (event,d) {
         node_mouse_move(event,d)

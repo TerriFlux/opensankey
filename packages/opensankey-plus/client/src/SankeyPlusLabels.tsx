@@ -30,7 +30,6 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
-  mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
 ) => {
@@ -112,7 +111,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
           applicaTionData,dict_variable_elements_selected,
           d,
           GetSankeyMinWidthAndHeight,DrawGrid,
-          LinkText,GetLinkValue,DrawArrows,scale,inv_scale,mode_selection,start_point
+          LinkText,GetLinkValue,DrawArrows,scale,inv_scale,start_point
         )
       )
       gg_label.append('rect')
@@ -211,11 +210,10 @@ const dragLabelEvent = (
   DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  mode_selection:{current:string},
   start_point:{current:number[]}
 )=>{
   const {data,set_data}=dict_variable_application_data
-  const {multi_selected_links,multi_selected_label,multi_selected_nodes}=dict_variable_elements_selected
+  const {multi_selected_links,multi_selected_label,multi_selected_nodes,ref_getter_mode_selection}=dict_variable_elements_selected
   const node_visible=[] as string[]
   const data_plus = data as SankeyPlusData
   return (d3.drag<SVGGElement, unknown>()
@@ -225,7 +223,7 @@ const dragLabelEvent = (
         d3.selectAll('.node_shape').nodes().forEach(element => {
           node_visible.push(d3.select(element).attr('id')) 
         })
-      }else if(mode_selection.current==='s' && !evt.ctrlKey){
+      }else if(ref_getter_mode_selection.current==='s' && !evt.ctrlKey){
         // const pos = d3.pointer(evt)
         const pos =[evt.x,evt.y]
         start_point.current=pos
@@ -235,7 +233,7 @@ const dragLabelEvent = (
       
     })
     .subject(Object).on('drag', function (event) {
-      if(mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
+      if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
         // Create change the size of the selection zone according to the mouse
         const pos = [event.x,event.y]
         const new_x=(pos[0]>start_point.current[0])?start_point.current[0]:pos[0]
@@ -266,7 +264,7 @@ const dragLabelEvent = (
       }
     })
     .on('end',(evt)=>{
-      if(mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
+      if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
         zone_selection_label(data_plus,multi_selected_label,evt)
 
         NodeVisibleOnsSvg().forEach((k : string)=>DeselectVisualyNodes(data.nodes[k]))

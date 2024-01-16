@@ -15,7 +15,6 @@ export type PlusDrawLabelsFType = (
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
-  mode_selection:{current:string},
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
 
