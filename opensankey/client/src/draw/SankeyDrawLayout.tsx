@@ -13,7 +13,7 @@ import {
 import React, { FunctionComponent, useState } from 'react'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { AggregateFuncType, DesaggregateFuncType, synchronizeNodesandLinksIdFuncType, updateLayoutFuncType } from './types/SankeyDrawLayoutTypes'
+import { AggregateFuncType, DesaggregateFuncType, computeHorizontalIndexFuncType, synchronizeNodesandLinksIdFuncType, updateLayoutFuncType } from './types/SankeyDrawLayoutTypes'
 import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType } from './types/SankeyDrawLayoutTypes'
 import {ComputeAutoSankeyFuncType, agregationFType, apply_input_outputLinksIdFType, arrangeNodesFType, compute_default_input_outputLinksIdFType, desagregationFType, nodeHeightFType, reorganize_all_input_outputLinksIdFType, reorganize_inputLinksIdFType} from './types/SankeyDrawLayoutTypes'
 import { ReturnValueLink } from '../configmenus/SankeyUtils'
@@ -109,7 +109,7 @@ export const apply_input_outputLinksId : apply_input_outputLinksIdFType  = (
  * @param {object} links
  * @param {object} nodes
  */
-const compute_horizontal_index = (
+export const computeHorizontalIndex:computeHorizontalIndexFuncType = (
   node: SankeyNode,
   starting_index: number,
   visible_nodes_ids: string[],
@@ -143,7 +143,7 @@ const compute_horizontal_index = (
       // But first we check if next node has not been already visited
       if (!visited_nodes_ids.includes(next_node.idNode)) {
         // Recursive calling
-        compute_horizontal_index(
+        computeHorizontalIndex(
           next_node,
           starting_index + 1,
           visible_nodes_ids,
@@ -250,7 +250,7 @@ const compute_recycling_horizontal_index = (
       if (!indexes_before_source_node.includes(index)) {
         horizontal_indexes_per_nodes_ids[source_node_id] = index
         // TODO faut un forçage des indexs à suivre.
-        compute_horizontal_index(
+        computeHorizontalIndex(
           nodes[source_node_id],
           index,
           visible_nodes_ids,
@@ -398,7 +398,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
       {
         // get current node horizontal index (eg longest branch length)
         const starting_index = 0
-        compute_horizontal_index(
+        computeHorizontalIndex(
           node,
           starting_index,
           visible_nodes_ids,

@@ -42,7 +42,7 @@ export type apply_input_outputLinksIdFType = (
  * @param {object} links
  * @param {object} nodes
  */
-export type compute_horizontal_indexFType = (
+export type computeHorizontalIndexFType = (
   node: SankeyNode,
   starting_index: number,
   visible_nodes_ids: string[],
@@ -187,3 +187,13 @@ export type DesaggregateFuncType = (
 ) => void
 
 
+export type computeHorizontalIndexFuncType= ( 
+  node: SankeyNode,
+  starting_index: number,
+  visible_nodes_ids: string[],
+  visited_nodes_ids: string[],
+  recycling_links_ids: string[],
+  horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
+  links: { [link_id: string]: SankeyLink},
+  nodes: { [node_id: string]: SankeyNode},
+) => void
