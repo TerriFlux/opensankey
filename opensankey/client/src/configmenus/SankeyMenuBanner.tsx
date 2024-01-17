@@ -90,7 +90,7 @@ export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
       <>
         <tr>
           <td >
-            {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected} placeholder='all' onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
+            {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected}  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
             
               delete_local_aggregation(data)
               handleSimpleDropdown(evt, levelTags['Primaire'], data, set_data) 
@@ -167,7 +167,6 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                 {<Form.Select
                   style={{ width: '200px', color: 'black' }}
                   key={tags_group.group_name}
-                  placeholder='all'
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                     handleSimpleDropdown(evt, tags_group, data, set_data) }}>{
                     Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -234,7 +233,6 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                 style={{color: 'black' }}
                 key={tags_group.group_name}
                 value={selected}
-                placeholder='all'
                 onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                   delete_local_aggregation(data)
                   handleSimpleDropdown(evt, tags_group, data, set_data) 
@@ -962,7 +960,6 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
               <Col xs={10}>
                 {<Form.Select
                   key={the_tags_group.group_name}
-                  placeholder='all'
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                     handleSimpleDropdown(evt, the_tags_group, data, set_data) }}>{
                     Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
@@ -1119,7 +1116,7 @@ const addAllDropDownLinks = (dict_variable_application_data:dict_variable_applic
           <FormLabel>{tags_group.group_name}</FormLabel>
           <FormGroup as={Row}>
             <Col xs={10}>
-              {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              {<Form.Select key={tags_group.group_name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 const pl=Object.entries(data.links).map(l=>{
                   const suffixeStart= l[0].indexOf('_')
                   if(suffixeStart>=0){

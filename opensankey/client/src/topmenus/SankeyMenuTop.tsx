@@ -894,7 +894,7 @@ const  DataTagsDDNavBar = (
           <Col>
             {<Form.Select key={tags_group.group_name} 
               style={{ color:'black' }}
-              placeholder='all' value={selected} 
+              value={selected} 
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 let has_suffix=false
                 const pl=Object.entries(data.links).map(l=>{

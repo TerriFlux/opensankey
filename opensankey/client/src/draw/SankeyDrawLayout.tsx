@@ -23,7 +23,7 @@ import {
 import { 
   reorganize_node_inputLinksIdFuncType, 
   reorganize_node_outputLinksIdFuncType 
-  } from './types/SankeyDrawLayoutTypes'
+} from './types/SankeyDrawLayoutTypes'
 import {
   ComputeAutoSankeyFuncType, 
   agregationFType, 
