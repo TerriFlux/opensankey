@@ -28,7 +28,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation : SankeyPlusMenuConfigur
     <Form >
       <Form.Group as={Row} >
         <FormLabel column>{t('Noeud.agre.DC')}</FormLabel>
-        <Col><Form.Select placeholder='all' value={cube_dimension} onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_cube_dimension(evt.target.value)} >
+        <Col><Form.Select value={cube_dimension} onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>set_cube_dimension(evt.target.value)} >
           {Object.entries(data.levelTags).map((tag,i) => {
             return (<option key={i} value={tag[0]}>{tag[1].group_name}</option>)
           })}
