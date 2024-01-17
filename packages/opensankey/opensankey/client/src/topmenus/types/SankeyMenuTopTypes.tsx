@@ -1,6 +1,7 @@
 import { TFunction } from 'i18next'
 import { SankeyData, TagsCatalog, dict_hook_ref_setter_show_dialog_componentsType } from '../../types/Types'
 import { MutableRefObject } from 'react'
+import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -28,7 +29,9 @@ export type OpenSankeyMenusFType = (
   external_edition_item:JSX.Element[],
   external_file_item:JSX.Element[],
   externale_save_item:JSX.Element[],
-  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void
+  convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
+  setDiagram: setDiagramFuncType,
+
 ) => {[s:string]:JSX.Element | JSX.Element[]}
 
 export type SankeyModalWelcomeFType = (
