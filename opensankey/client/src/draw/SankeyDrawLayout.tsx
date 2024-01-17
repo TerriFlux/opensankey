@@ -13,9 +13,28 @@ import {
 import React, { FunctionComponent, useState } from 'react'
 import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
 import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { AggregateFuncType, DesaggregateFuncType, computeHorizontalIndexFuncType, synchronizeNodesandLinksIdFuncType, updateLayoutFuncType } from './types/SankeyDrawLayoutTypes'
-import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType } from './types/SankeyDrawLayoutTypes'
-import {ComputeAutoSankeyFuncType, agregationFType, apply_input_outputLinksIdFType, arrangeNodesFType, compute_default_input_outputLinksIdFType, desagregationFType, nodeHeightFType, reorganize_all_input_outputLinksIdFType, reorganize_inputLinksIdFType} from './types/SankeyDrawLayoutTypes'
+import { 
+  AggregateFuncType, 
+  DesaggregateFuncType, 
+  computeHorizontalIndexFuncType, 
+  synchronizeNodesandLinksIdFuncType, 
+  updateLayoutFuncType 
+} from './types/SankeyDrawLayoutTypes'
+import { 
+  reorganize_node_inputLinksIdFuncType, 
+  reorganize_node_outputLinksIdFuncType 
+  } from './types/SankeyDrawLayoutTypes'
+import {
+  ComputeAutoSankeyFuncType, 
+  agregationFType, 
+  apply_input_outputLinksIdFType, 
+  arrangeNodesFType, 
+  compute_default_input_outputLinksIdFType, 
+  desagregationFType, 
+  nodeHeightFType, 
+  reorganize_all_input_outputLinksIdFType, 
+  reorganize_inputLinksIdFType
+} from './types/SankeyDrawLayoutTypes'
 import { ReturnValueLink } from '../configmenus/SankeyUtils'
 import { DeleteNode, DeleteLink } from '../configmenus/SankeyUtils'
 
