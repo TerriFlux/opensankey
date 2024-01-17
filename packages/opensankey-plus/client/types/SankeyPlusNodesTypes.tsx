@@ -1,8 +1,8 @@
 import { TFunction } from 'i18next'
 import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
-import { DrawArrowsType } from 'open-sankey/src/types/SankeyDrawFunctionTypes'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
-import { NodeTooltipsContentFType } from 'open-sankey/src/types/SankeyTooltipTypes'
+import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { dict_variable_application_dataType, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
 
@@ -29,7 +29,6 @@ export type PlusNodeClickEventFType=(
   dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
   animating:MutableRefObject<boolean>,
-  mode_selection:{current:string},
   accept_simple_click:{current:boolean},
   GetLinkValue:GetLinkValueFuncType
 )=> void
@@ -47,7 +46,7 @@ export type node_icon_pathFType=(
 export type SankeyPlusDrawNodesIconFType = (
   data:SankeyPlusData,
   display_nodes : { [node_id: string]: SankeyPlusNode },
-  mode_selection: {current:string},
+  dict_variable_elements_selected:PlusElementsSelectedType,
   NodeTooltipsContent: NodeTooltipsContentFType,
   GetLinkValue:GetLinkValueFuncType
 ) => void
@@ -70,7 +69,6 @@ export type OpposingDragElementsPlusFType = (
 export type PlusNodeDragEventFType = (
   applicaTionData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
-  mode_selection:{current:string},
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,

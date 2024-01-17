@@ -23,7 +23,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
-import { SmoothClasses} from 'open-sankey/dist/lib/SankeyUtils'
+import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { 
   MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, 
   SankeyPlusMenuPreferenceViewFType, CheckCurrentViewSavedFType, FilterViewFType, 
@@ -43,7 +43,6 @@ import {
   AdjustSankeyZone } from './import/OpenSankey'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 import { Checkbox } from '@chakra-ui/react'
-// import{  updateLayout} from 'open-sankey/dist/lib/SankeyLayout'
 
 /* eslint-disable */
 // @ts-ignore

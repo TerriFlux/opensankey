@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import { SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from './Types'
-import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode, display_styleType } from 'open-sankey/src/types/Types'
 
 export type menu_conf_link_apparence_gradientFType=(

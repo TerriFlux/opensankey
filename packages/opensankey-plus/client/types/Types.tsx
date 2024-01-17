@@ -63,7 +63,8 @@ export interface SankeyPlusData extends SankeyData {
   labels:{[x: string]:SankeyPlusLabel}
   style_node:{[x: string]:SankeyPlusNodeStyle},
   style_link:{[x: string]:SankeyPlusLinkStyle},
-  background_image:string
+  background_image:string,
+  show_background_image:boolean,
   is_catalog:boolean,
 }
 

@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import { SankeyPlusData } from './Types'
-import { OpenSankeyDiagramSelectorFType } from 'open-sankey/src/types/SankeyMenuDialogsTypes'
+import { OpenSankeyDiagramSelectorFType } from 'open-sankey/src/dialogs/types/SankeyMenuDialogsTypes'
 import { MutableRefObject } from 'react'
 
 export type plus_convert_dataFType = (

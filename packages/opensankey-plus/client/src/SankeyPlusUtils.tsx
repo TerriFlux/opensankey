@@ -3,9 +3,7 @@ import React,{ChangeEvent,useRef} from 'react'
 import { OverlayTrigger,Tooltip,Form, InputGroup, Button} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FaFileImport} from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import * as d3 from 'd3'
-import {faDeleteLeft} from '@fortawesome/free-solid-svg-icons'
 
 import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from '../types/Types'
 import {OSPIsAllNodeNotLocalAttrSameValueFType, PlusAssignLinkValueToCorrectVarFType, PlusLinkSabotColorFType, PlusReturnValueLinkFType, ValueOf, DefaultSankeyPlusStyleLinkFType, DragLegendPlusFType, ImportImageAsSvgBgFType, IsAllZdtAttrSameValueFType, SetSvgBgFType} from '../types/SankeyPlusUtilsTypes'
@@ -13,7 +11,9 @@ import { OpposingDragElementsPlus } from './SankeyPlusNodes'
 import { DragLegendGElementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './import/OpenSankey'
 
 import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/src/types/Types'
-import { GetLinkValueFuncType } from 'open-sankey/src/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+import { Checkbox } from '@chakra-ui/react'
+import {SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 
 
 export const DefaultSankeyPlusStyleLink : DefaultSankeyPlusStyleLinkFType = () => {
@@ -45,6 +45,19 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
 
 
   const content_image=<>
+    <Checkbox 
+      sx={SmoothClasses({})}
+      iconColor='white'
+      maxW={'50%'}
+      isChecked={data.show_background_image}
+      onChange={(evt) => {
+        data.show_background_image = evt.target.checked
+        set_data({ ...data })
+      }}
+    >
+      {t('MEP.show_image')}
+    </Checkbox>
+
     {/* Import image */}
     <OverlayTrigger
       key={'imageDisabled2'}
@@ -72,16 +85,6 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
             }
           }}
         ><FaFileImport/></Button>
-
-        <Button
-          variant='outline-primary'
-          style={{width:'30%'}}
-          className='btn_menu_config'
-          onClick={()=>{
-            data.background_image=''
-            set_data({...data})
-          }}
-        ><FontAwesomeIcon icon={faDeleteLeft}/></Button>
 
         <Form.Control
           ref={_load_image}
@@ -112,14 +115,15 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
 }
 
 export const SetSvgBg : SetSvgBgFType =(data:SankeyPlusData)=>{
+
   d3.select('#svg')
-    .filter(()=>data.background_image===undefined || data.background_image==='')
+    .filter(()=> !data.show_background_image ||data.background_image===undefined || data.background_image==='')
     .style('background-image',null)
     .style('background-size','contain')
     .style('background-repeat','no-repeat')
 
   d3.select('#svg')
-    .filter(()=>data.background_image!==undefined && data.background_image!=='')
+    .filter(()=> data.show_background_image && data.background_image!==undefined && data.background_image!=='')
     .style('background-image','url('+data.background_image+')')
     .style('background-size','contain')
     .style('background-repeat','no-repeat')
