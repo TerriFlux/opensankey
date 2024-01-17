@@ -266,7 +266,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     [],
     [],
     //dict_variable_elements_selected.set_tags_selected,
-    convert_data
+    convert_data,
+    setDiagram,
   )
 
   Object.values(dict_variable_application_data.data.levelTags).forEach(tag_group=>tag_group.activated = false)
@@ -277,8 +278,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const {filter}=dict_variable_application_data.data.display_style
   const toolbar = ToolbarBuilder(
     applicationContext.t,
-    data,
-    set_data,
+    dict_variable_application_data,
     dict_variable_elements_selected,
     filter,
     ( new_current_filter: number ) => {
@@ -299,16 +299,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     '',
     dict_variable_elements_selected.first_selected_node,
     GetSankeyMinWidthAndHeight,
-    setDiagram,
     dict_hook_ref_setter_show_dialog_components,
     never_see_again,
     convert_data,
-    DefaultSankeyData
   )
 
-  Object.keys(toolbar).forEach(k=>{
-    sankey_menus[k]=toolbar[k]
-  })
+  sankey_menus['toolbar']=toolbar
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
     keyHandler(

@@ -5,7 +5,8 @@ import * as d3 from 'd3'
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
 
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
-import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar } from './SankeyUtils'
+import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar, SmoothClasses } from './SankeyUtils'
+import { Checkbox } from '@chakra-ui/react'
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
@@ -308,6 +309,16 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
       </OverlayTrigger>
     </InputGroup>
 
+    <Checkbox 
+      sx={SmoothClasses({})}
+      maxW={'70%'}
+      isChecked={data.display_style.null_flux}
+      onChange={(evt) => {
+        data.display_style.null_flux=evt.target.checked
+        set_data({ ...data })
+      }}>
+      {t('Banner.fn')}
+    </Checkbox>
     {additional_data_element}
 
   </Form>

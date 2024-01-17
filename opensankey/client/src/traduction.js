@@ -572,17 +572,23 @@ export const open_resources = {
         ndd:'Levels of detail',
         ndd_lst:'Tags groups',
         ndd_chk:'Apply the groups\' colors',
-        sdr:'Diagram type',
+        sdr:'Data type',
         sdd:'Data selection',
         tl:'Download',
         rslt:'Download results',
         p_aff:'Display settings',
         p_aff_aff_links:'Links display settings',
         p_aff_filtre_links:'Links display filter',
-
+        type_value:'Links value type',
+        t_v_s:'Structur',
+        t_v_c:'Collected data',
+        t_v_r:'Reconciled data',
+        t_v_i:'Interaval',
+        t_v_pv:'Possible values',
+        indetermined_value:'Links indetermined value type',
         filtre:'Threshold value for links dislay',
         fl:'Threshold value for labels display',
-        fn:'Null Link',
+        fn:'Null Link Visible',
         visible:'Visible',
         hlp_1:'Sankey diagram',
         hlp_1_txt_1:'The thickness of an arrow is proportional to the value of the flux it represents.',
@@ -600,7 +606,8 @@ export const open_resources = {
         tooltipHelp:'Show the help dialog',
         tooltipAjoutNode:'Adds a node to the mouse click',
         tooltipLiason:'Create node(s) or link(s)',
-        select_sibling:'Select siblings'
+        select_sibling:'Select siblings',
+        fullscreen:'Put the window in fullscreen',
       },
       welcome:{
         welcome:'Welcome to OpenSankey web application',
@@ -632,6 +639,7 @@ export const open_resources = {
       fullscreen:'Activate fullscreen',
       exitFullscreen:'Exit fullscreen',
       Avancé:'Advanced',
+      
 
     }
   },
@@ -1210,9 +1218,16 @@ export const open_resources = {
         p_aff:'Paramètres d\'affichage',
         p_aff_aff_links:'Paramètres d\'affichage des flux',
         p_aff_filtre_links:'Paramètres de filtrage visuel des flux',
+        type_value:'Type de valeur des flux',
+        t_v_s:'Structure',
+        t_v_c:'Données collectées',
+        t_v_r:'Données réconciliées',
+        t_v_i:'Interavalle',
+        t_v_pv:'Valeur possible',
+        indetermined_value:'Type de valeur des flux indeterminés',
         filtre:'Valeur seuil pour l\'affichage des flux',
         fl:'Valeur seuil pour l\'affichage des labels',
-        fn:'Flux nuls',
+        fn:'Flux nuls visibles',
         visible:'Visible',
         hlp_1:'Les diagrammes de Sankey',
         hlp_1_txt_1:'L\'épaisseur d\'une flèche est proportionnelle à la valeur du flux qu\'elle représente.',
@@ -1229,7 +1244,9 @@ export const open_resources = {
         tooltipSelection:'Sélectionner ou de déplacer les noeuds',
         tooltipHelp:'Affiche le dialogue d\'aide',
         tooltipLiason:'Créer un noeud ou un flux',
-        select_sibling:'Selectionner ses frères '
+        select_sibling:'Selectionner ses frères ',
+        fullscreen:'Active le mode pleine écran',
+
 
       },
       welcome:{

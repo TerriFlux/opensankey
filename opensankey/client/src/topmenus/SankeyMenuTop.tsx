@@ -9,15 +9,12 @@ import {
   Container,
   Dropdown,
   Form,
-  FormCheck,
-  FormGroup,
   FormLabel,
   Modal,
   Nav,
   Navbar,
   Offcanvas,
   OverlayTrigger,
-  Popover,
   Row,
   ToggleButton,
   Tooltip
@@ -25,7 +22,6 @@ import {
 import {
   SankeyData,
   SankeyLink,
-  TagsCatalog,
   TagsGroup,
   MenuTypes
 } from '../types/Types'
@@ -39,10 +35,9 @@ import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
 import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,faPlus} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { addAllDropDownNode } from '../configmenus/SankeyMenuBanner'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import {AddAllDropDownFluxFType, LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from './types/SankeyMenuTopTypes'
+import {LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from './types/SankeyMenuTopTypes'
 import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue } from '../configmenus/SankeyUtils'
 import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
@@ -55,9 +50,13 @@ declare const window: Window &
   typeof globalThis & {
     SankeyToolsStatic: boolean
     sankey: {
-      header?: string
-      welcome_text: string
-    }
+      header?:string
+      sous_filieres: { [key: string]: string }
+      help: { [key: string]: string }
+      excel: string
+      structure: boolean,
+      advanced: boolean
+    } & { [key: string]: SankeyData }
   }
 /**
  * Description placeholder
@@ -124,182 +123,7 @@ const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_
   set_data({ ...data })
 }
 
-/**
- * Function that generate dropdown for each groupTag of linkTags
- *
- * @param {TagsCatalog} fluxTags
- * @param {SankeyData} data
- * @param {(data: SankeyData) => void} set_data
- * @returns {(void) => any}
- */
-export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
-  t:TFunction,
-  fluxTags: TagsCatalog,
-  data: SankeyData,
-  set_data: (data: SankeyData) => void) =>
-{
-  const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
-  const allDD = banner_grouptag.map(tags_group => {
-    const the_tags_group = tags_group as TagsGroup
-    const tags_selected=Object.entries(data['fluxTags']).filter((k)=>{return k[1]==the_tags_group})[0]
 
-    if (the_tags_group.banner == 'one') {
-      return (
-        <FormGroup as={Row}>
-          <Row>
-            <Col xs={10}>
-              <FormLabel>{the_tags_group.group_name}</FormLabel>
-            </Col>
-          </Row>
-          <Row>
-            <OverlayTrigger
-              key={'Banner.ndd_lst.1'}
-              placement={'bottom'}
-              delay={500}
-              overlay={<Tooltip id={'Banner.ndd_lst.1'}>{t('Banner.ndd_lst')} </Tooltip>}>
-              <Col xs={10}>
-                {<Form.Select
-                  key={the_tags_group.group_name}
-                  placeholder='all'
-                  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    handleSimpleDropdown(evt, the_tags_group, data, set_data) }}>{
-                    Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
-                      return (<option key={i} value={tag_key}>{tag.name}</option>)
-                    })}
-                </Form.Select>}
-              </Col>
-            </OverlayTrigger>
-            <Col xs={2} >
-              <OverlayTrigger
-                key={'Banner.ndd_chk.1'}
-                placement={'bottom'}
-                delay={500}
-                overlay={<Tooltip id={'Banner.ndd_chk.1'}>{t('Banner.ndd_chk')} </Tooltip>}>
-                <FormCheck
-                  inline
-                  type='switch'
-                  checked={data.colorMap==tags_selected[0]}
-                  onChange={evt => {
-                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-                    Object.values(data.nodes).forEach(el => {
-                      el.colorParameter = 'local'
-                      el.colorTag = 'no_colormap'
-                    })
-
-                    Object.values(data.links).forEach(el => {
-                      el.colorTag = 'no_colormap'
-                    })
-                    data.colorMap = 'no_colormap'
-
-                    if(evt.target.checked){
-                      Object.values(data.nodes).forEach(el => {
-                        el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
-                      })
-                      Object.values(data.links).forEach(el => {
-                        el.colorTag = tags_selected[0]
-                      })
-                      data.colorMap = tags_selected[0]
-                      data.fluxTags[tags_selected[0]].show_legend = true
-                    }
-
-                    set_data({ ...data })
-                  }}
-                />
-              </OverlayTrigger>
-            </Col>
-          </Row>
-        </FormGroup>)
-    }
-    else if (the_tags_group.banner == 'multi') {
-      const options = Object.entries(the_tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      const selected = Object.entries(the_tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-      return (
-        <FormGroup as={Row}>
-
-          <Row>
-            <Col xs={10}>
-              <FormLabel>{the_tags_group.group_name}</FormLabel>
-            </Col>
-          </Row>
-
-          {/* Liste déroulante des groupe de filtre  */}
-          <Row>
-            <OverlayTrigger
-              key={'Banner.ndd_lst.2'}
-              placement={'bottom'}
-              delay={500}
-              overlay={<Tooltip id={'Banner.ndd_lst.2'}>{t('Banner.ndd_lst')} </Tooltip>}>
-              <Col xs={10}>
-                <MultiSelect
-                  className={'multidropdown_filter_node_link'}
-                  style={{ color: 'black',width:'200px' }}
-                  valueRenderer={(selected: selected_type[]) => {
-                    return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
-                  }}
-                  labelledBy={'dropdown_node_filter'}
-                  overrideStrings={{
-                    'selectAll': 'Tout sélectionner',
-                  }}
-                  value={selected}
-                  options={options}
-                  onChange={(selected: [{ label: string, value: string }]) => {
-                    HandleMultiDropdown(selected, the_tags_group, data, set_data)
-                  }}
-                />
-              </Col>
-            </OverlayTrigger>
-
-            {/* Appliquer le filtrage  */}
-            <Col xs={2}>
-              <OverlayTrigger
-                key={'Banner.ndd_chk.2'}
-                placement={'bottom'}
-                delay={500}
-                overlay={<Tooltip id={'Banner.ndd_chk.2'}>{t('Banner.ndd_chk')} </Tooltip>}>
-                <FormCheck
-                  inline
-                  type='switch'
-                  checked={data.colorMap==tags_selected[0]}
-                  onChange={evt => {
-                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-                    Object.values(data.nodes).forEach(el => {
-                      el.colorParameter = 'local'
-                      el.colorTag = 'no_colormap'
-                    })
-
-                    Object.values(data.links).forEach(el => {
-                      el.colorTag = 'no_colormap'
-                    })
-                    data.colorMap = 'no_colormap'
-                    if(evt.target.checked){
-                      Object.values(data.nodes).forEach(el => {
-                        el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
-                      })
-                      Object.values(data['links']).forEach(el => {
-                        el.colorTag = tags_selected[0]
-                      })
-                      data.colorMap = tags_selected[0]
-                      data['fluxTags'][tags_selected[0]].show_legend = true
-                    }
-                    set_data({ ...data })
-                  }}
-                />
-              </OverlayTrigger>
-            </Col>
-          </Row>
-        </FormGroup>)
-    }
-  })
-  return (<>{allDD.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}</>)
-}
 
 // Logo for sub-nav 'aide'
 const logo_home=<svg
@@ -349,264 +173,88 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   external_edition_item,
   external_file_item,
   externale_save_item,
-  convert_data
+  convert_data,
+  setDiagram
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
-  const node_filter = Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none' && v.banner !== 'level').length > 0
-  const flux_filter = Object.entries(data.fluxTags).filter(([, v]) => v.banner !== 'none').length > 0
-  const opacity_advanced =  !window.SankeyToolsStatic ? '0.3' : '0'
-  const DT_length=Object.keys(data.dataTags).length
 
   const {ref_show_style_node,ref_show_style_link} = dict_hook_ref_setter_show_dialog_components
 
-  // Function that return a simple or multiple dropdown of groupTag of data and links
-  // This allow us to choose wich grouptag to select and wich tag of these group to display
-  const addAllDropDownLinks = () => {
-    const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
-    const allDD = banner_grouptag.map(([, tags_group]) => {
-      if (tags_group.banner == 'one') {
-        let selected = ''
-        if ( Object.entries(tags_group.tags).filter(([,v])=>v.selected).length>0 ) {
-          selected = Object.entries(tags_group.tags).filter(([,v])=>v.selected)[0][0]
-        }
-        return (
-          <>
-            <FormLabel>{tags_group.group_name}</FormLabel>
-            <FormGroup as={Row}>
-              <Col xs={10}>
-                {<Form.Select key={tags_group.group_name} placeholder='all' value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  const pl=Object.entries(data.links).map(l=>{
-                    const suffixeStart= l[0].indexOf('_')
-                    if(suffixeStart>=0){
-                      l[0]=l[0].slice(0,suffixeStart)
-                      l[1].idLink=l[0]
-                      data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
-                      data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
-
-                      //Ajoute dans les noeuds source/target les id de flux
-                      const ind_in_src=data.nodes[l[1].idSource].outputLinksId.indexOf(l[1].idLink)
-                      if(ind_in_src==-1){
-                        data.nodes[l[1].idSource].outputLinksId.push(l[0])
-                      }
-                      const ind_in_trgt=data.nodes[l[1].idTarget].inputLinksId.indexOf(l[1].idLink)
-                      if(ind_in_trgt==-1){
-                        data.nodes[l[1].idTarget].inputLinksId.push(l[0])
-                      }
-                    }
-                    return l
-                  })
-                  // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-                  const pureLinks=Object.fromEntries(pl)
-                  data.links=pureLinks
-                  handleSimpleDropdown(evt, tags_group,data,set_data)
-                  // const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
-                  //   return (Object.keys(dataTag.tags).length > 0) ? [
-                  //     dataTagKey,
-                  //     Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
-                  // }))
-                  // const dataTagsSelected = Object.fromEntries(newEntries)
-                  // set_tags_selected(dataTagsSelected)
-                }}>
-                  {
-                    Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
-                      return (<option key={i} value={tag_key} >{tag.name}</option>)
-                    })}
-                </Form.Select>}
-              </Col>
-            </FormGroup>
-          </>)
-      }
-      else if (tags_group.banner == 'multi') {
-        const selected = Object.entries(tags_group.tags).filter(d => d[1].selected).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name } })
-        const options = Object.entries(tags_group.tags).map((tag) => { return { 'label': tag[1].name, 'value': tag[1].name ,'disabled':((selected.length<2 && tag[1].name==selected[0].label))} })
-        return (
-          <>
-            <FormLabel>{tags_group.group_name}</FormLabel>
-            <MultiSelect
-              className={'multidropdown_filter_node_link'}
-              style={{ color: 'black',width:'200px' }}
-              labelledBy={'dropdown_link_filter'}
-              overrideStrings={{
-                'selectAll': 'Tout sélectionner',
-              }}
-              value={selected}
-              options={options}
-              onChange={(selected: [{ label: string, value: string }]) => {
-                HandleMultiDropdown(selected, tags_group, data, set_data)
-
-                //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
-                if(Object.keys(data.dataTags).length>0){
-
-                  const pl=Object.entries(data.links).map(l=>{
-                    const suffixeStart= l[0].indexOf('_')
-                    if(suffixeStart>=0){
-                      l[0]=l[0].slice(0,suffixeStart)
-                      l[1].idLink=l[0]
-                      data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
-                      data.nodes[l[1].idTarget].inputLinksId=data.nodes[l[1].idTarget].inputLinksId.filter(nl=>nl.indexOf('_')==-1)
-                    }
-                    return l
-                  })
-                  // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
-                  const pureLinks=Object.fromEntries(pl)
-
-                  const new_links={} as { [link_id: string]: SankeyLink }
-
-                  Object.values(pureLinks).forEach(l=>{
-                    const suffix=''
-                    RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
-                  })
-                  data.links=new_links
-                  set_data({...data})
-                }
-              }} />
-          </>)
-      }
-    })
-    return allDD
-  }
-
-  const legend_filter=<FormGroup as={Row}>
-    <Col xs={9}>
-      {t('Menu.group')}
-    </Col>
-    <Col xs={3}>
-      {t('Menu.color')}
-    </Col>
-  </FormGroup>
-
-  //Popover element to handle node tags
-  // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
-  const filter_color_node=
-  <Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
-    <Popover.Body style={{  marginLeft: '5px', width: menu_config_width+'px' }}>
-      {legend_filter}
-      <>{ (Object.entries(data.nodeTags).filter(([, v]) => v.banner !== 'none').length > 0) ? (<>
-        {addAllDropDownNode(t,data,set_data,false)}</>
-      ) : (<>
-        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)
-      }</>
-    </Popover.Body>
-  </Popover>
-
-  //Popover element to handle the display of link tags
-  const filter_color_link=
-  <Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
-    <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
-    <Popover.Body style={{  marginLeft: '5px', width: menu_config_width+'px' }}>
-      {legend_filter}
-      {AddAllDropDownFlux(t, data.fluxTags, data, set_data)}
-    </Popover.Body>
-  </Popover>
-
-  //Popover element to handle the display of data tags
-  const filter_data=
-  <Popover id='tooltip-data-color-filter' style={{minWidth:'450px'}}>
-    <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
-    <Popover.Body>
-      {legend_filter}
-      <FormGroup as={Row}>
-        <Col xs={10}>
-          {addAllDropDownLinks()}
-        </Col>
-        <Col xs={2}>
-          <FormCheck
-            type='switch'
-            style={{marginLeft: '-2em'}}
-            checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
-            onChange={evt=> {
-              //Déselecitonne tous les type de tag
-              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-              Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
-              Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-              Object.values(data.nodes).forEach(el => {
-                el.colorParameter = 'local'
-                el.colorTag = 'no_colormap'
-              })
-
-              Object.values(data.links).forEach(el => {
-                el.colorTag = 'no_colormap'
-              })
-
-              data.colorMap = 'no_colormap'
-
-              //Met le dernier dataTag en tant que couleur a suivre pour les flux
-              if(evt.target.checked){
-                Object.values(data.nodes).forEach(el => {
-                  el.colorParameter = 'groupTag'
-                  el.colorTag = 'no_colormap'
-                })
-                Object.values(data.links).forEach(el => {
-                  el.colorTag = 'no_colormap'
-                })
-                data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
-                Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend=evt.target.checked
-              }
-
-              set_data({...data})
-            }}
-          />
-        </Col>
-      </FormGroup>
-    </Popover.Body>
-  </Popover>
-
-
-  const item_dropdown_filter=<>
-    {(node_filter)?
-      <OverlayTrigger
-        key={'tooltip-link-color-filter'}
-        placement={'bottom'}
-        trigger={'click'}
-        rootClose
-        overlay={filter_color_node}>
-        <Button size='sm' variant='light' >
-          {t('Menu.Noeuds')}
-        </Button>
-      </OverlayTrigger>
-      :
-      <></>
-    }
-
-    {(flux_filter)?
-      <OverlayTrigger
-        key={'tooltip-node-color-filter'}
-        placement={'bottom'}
-        trigger={'click'}
-        rootClose
-        overlay={filter_color_link}>
-        <Button size='sm' variant='light' >{t('Menu.flux')}</Button>
-      </OverlayTrigger>
-
-      :
-      <></>
-    }
-    {(Object.values(data.dataTags).length>0)?
-      <OverlayTrigger
-        key={'tooltip-data-filter'}
-        placement={'bottom'}
-        trigger={'click'}
-        rootClose
-        overlay={filter_data}>
-        <Button size='sm' variant='light'>
-          <>{t('Banner.data')}</>
-        </Button>
-      </OverlayTrigger>
-
-      :
-      <></>
-    }
-  </>
-
-
   const logo_tempalte=<svg xmlns="http://www.w3.org/2000/svg" aria-hidden='false' data-prefix='fas' className='svg-inline--fa' viewBox="0 0 24 24"><path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z"/></svg>
+  
+  const sous_filieres = window.sankey && window.sankey.sous_filieres ? window.sankey.sous_filieres : undefined
 
+  let is_split = false
+  const diagrams : { [keys :string] : string[] } = {}
 
+  if ( sous_filieres ) {
+    is_split = Object.keys(sous_filieres)[0].includes('/')
+    if (is_split ) {
+      Object.keys(sous_filieres).forEach(s=> {
+        const path = s.split('/')
+        if ( !(path[0] in diagrams)) {
+          diagrams[path[0]] = [path[1]]
+        } else {
+          diagrams[path[0]].push(path[1])
+        }
+      })
+    } else {
+      Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
+    }
+  }
+  const [s_diagram, sDiagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  const [s_diagram_2, sDiagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui :{[s:string] : JSX.Element[]}=  {}
+
+  let diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
+    <Form.Select style={{ width: '200px', color:'black' }}
+      onChange={evt=> {
+        sDiagram(evt.target.value)
+        setDiagram(evt.target.value, set_data, convert_data,get_default_data)
+      }}
+      value={s_diagram}>
+      {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+    </Form.Select>
+  </Form.Group> : <React.Fragment key={'1'} />
+
+
+  if (window.SankeyToolsStatic && sous_filieres && is_split) {
+    
+    diagrams_element =
+      <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
+        <Form.Select style={{ width: '200px', color:'black' }}
+          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+            sDiagram(evt.target.value)
+            const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+            setDiagram(diagram_path, set_data,convert_data,get_default_data)
+          }}
+          value={s_diagram}>
+          {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+        </Form.Select>
+        {is_split ?
+          (<Form.Select style={{ width: '200px', color:'black' }}
+            onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+              sDiagram2(evt.target.value)
+              const diagram_path = s_diagram+'/'+evt.target.value
+              setDiagram(diagram_path, set_data,convert_data,get_default_data)
+            }}
+            value={s_diagram_2}>
+            {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
+          </Form.Select>) :(<React.Fragment />)
+        }
+      </Form.Group>
+  }
+
+  const excel_element = window.sankey && window.sankey.excel ? (
+    <Form.Group key={'3'} as={Col} lg="auto" style={{marginRight:'10px'}} >
+      <Button variant='link' href={window.sankey.excel}>{t('Banner.tl')}</Button>
+    </Form.Group>) : (<React.Fragment key={'3'}></React.Fragment>)
+
+
+  if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
+  if (window.sankey && window.sankey.excel) ui['excel']=[(excel_element)]
 
   if(!window.SankeyToolsStatic){
     ui['file']=[
@@ -780,16 +428,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 
   }
 
-  if(node_filter || flux_filter || (Object.values(data.dataTags).length>0)){
-    ui['filter']=[
-      <OverlayTrigger
-        key={'tooltip-filter'}
-        placement={'bottom'}
-        overlay={<Tooltip id={'tooltip-filter'}>{t('Banner.hlp_1_txt_9')} </Tooltip>}>
-
-        {item_dropdown_filter}
-      </OverlayTrigger>]
-  }
+  
   return ui
 }
 
