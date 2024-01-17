@@ -1764,7 +1764,7 @@ export const MenuEnregistrerView : MenuEnregistrerViewFType = (
   save_only_view:boolean,
   set_save_only_view:(b:boolean)=>void
 )=>{
-  return <InputGroup>
+  return <Form.Group>
     <OverlayTrigger
       key={'buttonExportViewDisabled'}
       placement={'bottom'}
@@ -1779,7 +1779,7 @@ export const MenuEnregistrerView : MenuEnregistrerViewFType = (
         {t('view.export')}
       </Checkbox>
     </OverlayTrigger>
-  </InputGroup>
+  </Form.Group>
 }
 
 
