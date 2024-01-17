@@ -2,6 +2,7 @@
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
 import {
+  Badge,
   Button,
   ButtonGroup,
   Card,
@@ -646,12 +647,10 @@ export const Menu: FunctionComponent<MenuTypes> = (
       <Nav variant="tabs" className='sub_nav' activeKey={menu_acivated}>
         {Object.keys(ordered_menu).map(m=>{
 
-          
-
           // Nav item that open a subnav when clicked
           return <Nav.Item>
             <Nav.Link eventKey={m} onClick={()=>set_menu_activated(m)}>
-              {applicationContext.t('Menu.'+m)}
+              {applicationContext.t('Menu.'+m) }{(['demo','unit'].includes(m)?<Badge pill bg="info" style={{marginLeft:'auto'}}>Dev</Badge>:<></>)}
             </Nav.Link>
           </Nav.Item>
           

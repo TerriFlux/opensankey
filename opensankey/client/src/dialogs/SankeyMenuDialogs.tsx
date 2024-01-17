@@ -607,7 +607,7 @@ export const ApplySaveJSONDialog = (
       </Modal.Header>
       <Modal.Body>
         <Form >
-          <InputGroup>
+          <Form.Label>
             <Checkbox 
               sx={SmoothClasses({})}
               maxW={'40%'}
@@ -615,8 +615,8 @@ export const ApplySaveJSONDialog = (
               onChange={() => set_mode_save(!mode_save)}>
               {t('Menu.SaveValue')}
             </Checkbox>
-          </InputGroup>
-          <InputGroup>
+          </Form.Label>
+          <Form.Label>
             <Checkbox 
               sx={SmoothClasses({})}
               maxW={'40%'}
@@ -624,7 +624,7 @@ export const ApplySaveJSONDialog = (
               onChange={() => set_mode_visible_element(!mode_visible_element)}>
               {t('Menu.VisibleElement')}
             </Checkbox>
-          </InputGroup>
+          </Form.Label>
           {additionnal_button_option_save_json}
         </Form>
       </Modal.Body>
