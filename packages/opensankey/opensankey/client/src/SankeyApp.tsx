@@ -555,7 +555,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               [<></>],
               GetLinkValue
             ),
-            <></>,
+            [<></>],
             false, //TODO
           )}
           menus={sankey_menus}
