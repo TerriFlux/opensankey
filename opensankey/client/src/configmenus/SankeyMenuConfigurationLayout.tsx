@@ -86,7 +86,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
     </OverlayTrigger></InputGroup>,
     <InputGroup style={{display:(data.grid_visible?'':'none')}}>
       
-      <InputGroup.Text style={{width:'60%'}} >{t('MEP.TCG')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'60%'}} >{t('MEP.TCG_shift')}</InputGroup.Text>
       
       {/* Taille de la grille */}
       <OverlayTrigger
@@ -162,36 +162,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
     
     </Row>,
 
-    /* Taille maximale du flux */
     <Row >
       <Col><Form.Label>{t('MEP.link_size_limit')}</Form.Label></Col>
-      <Col>
-        <Row>
-          <FormLabel >{t('MEP.MaxFlux')}</FormLabel>
-        </Row>
-    
-        <Row>
-          <OverlayTrigger
-            key={'MEP.tooltips.MaxFlux'}
-            placement={'top'}
-            delay={500}
-            rootClose
-            overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
-            <FormControl
-              type="text"
-              value={maximum_flux!}
-              onChange={evt => {
-                set_maximum_flux(+evt.target.value)
-              }}
-              onBlur={() => {
-                data.maximum_flux = maximum_flux
-                set_data({ ...data })
-              }}/>
-          </OverlayTrigger>
-        </Row>
-      </Col>
-
-      {/* Taille maximale du flux */}
+      {/* Taille minimale du flux */}
       <Col>
         <Row>
           <FormLabel >{t('MEP.MinFlux')}</FormLabel>
@@ -217,6 +190,32 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           </OverlayTrigger>
         </Row>
       </Col>
+      {/* Taille maximale du flux */}
+      <Col>
+        <Row>
+          <FormLabel >{t('MEP.MaxFlux')}</FormLabel>
+        </Row>
+    
+        <Row>
+          <OverlayTrigger
+            key={'MEP.tooltips.MaxFlux'}
+            placement={'top'}
+            delay={500}
+            rootClose
+            overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
+            <FormControl
+              type="text"
+              value={maximum_flux!}
+              onChange={evt => {
+                set_maximum_flux(+evt.target.value)
+              }}
+              onBlur={() => {
+                data.maximum_flux = maximum_flux
+                set_data({ ...data })
+              }}/>
+          </OverlayTrigger>
+        </Row>
+      </Col>      
     </Row>,
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />,
