@@ -18,7 +18,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   menu_configuration_data_tags,
   menu_configuration_nodes,
   menu_configuration_links,
-  menu_configuration_free_labels,
+  additional_accordion_edition_elements,
   token
 ) => {
   const [navitemactive, setnavitemactive] = useState('')
@@ -46,8 +46,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
           } else {
             setnavitemactive('1')
           }
-        }
-      }>
+        }}>
       {
         //MENU PARAMETRE GENERAUX
       }
@@ -61,64 +60,30 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       key='2'
       style={{ 'display': 'block'  }}
       eventKey="2"
-      id="Nodes"
+      id="SubAccordionElements"
       onClick={
         evt => {
-          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === t('Menu.Noeuds') && navitemactive === '2') {
+          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === t('Menu.Elements') && navitemactive === '2') {
             setnavitemactive('')
           } else {
             setnavitemactive('2')
           }
-        }
-      }
+        }}
     >
-      <Accordion.Header>{t('Menu.Noeuds')}</Accordion.Header>
+      <Accordion.Header>{t('Menu.Elements')}</Accordion.Header>
       <Accordion.Body style={{ padding: '0px' }}>
         <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={subnavitemactive} >
-          <Accordion.Item
-            key='3'
-            style={{ 'display': (data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
-            eventKey="EtiquetteNoeud"
-            onClick={
-              evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                  setsubnavitemactive('')
-                  setnavitemactive('2')
-                  ref_setter_show_menu_config.current(true)
-
-                } else {
-                  setsubnavitemactive('EtiquetteNoeud')
-                  setnavitemactive('2')
-                  ref_setter_show_menu_config.current(true)
-
-
-                }
-              }
-            }
-          >
-            <Accordion.Header className='level2' >
-              {t('Menu.EN')}
-            </Accordion.Header>
-            <Accordion.Body>
-              {menu_configuration_node_tags}
-            </Accordion.Body>
-          </Accordion.Item>
-
           <Accordion.Item
             key='4' eventKey='editionNoeud'
             onClick={
               evt => {
                 if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
                   setsubnavitemactive('')
-                  setnavitemactive('2')
-                  ref_setter_show_menu_config.current(true)
-
                 } else {
                   setsubnavitemactive('editionNoeud')
-                  setnavitemactive('2')
-                  ref_setter_show_menu_config.current(true)
-
                 }
+                setnavitemactive('2')
+                ref_setter_show_menu_config.current(true)
               }
             }
           >
@@ -134,47 +99,9 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               />
             </Accordion.Body>
           </Accordion.Item>
-        </Accordion>
-      </Accordion.Body>
-    </Accordion.Item>,
-    <Accordion.Item
-      key='5'
-      style={{ 'display': 'block' }}
-      id='Flux'
-      eventKey="3"
-      onClick={evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === '3') {
-          setnavitemactive('')
-        } else {
-          setnavitemactive('3')
-        }
-      }}
-    >
-      <Accordion.Header >{t('Menu.flux')}</Accordion.Header>
-      <Accordion.Body  style={{ padding: '0px' }}>
-        <Accordion ref={links_accordion_ref as Ref<HTMLDivElement>} activeKey={subnavitemactive}>
-          <Accordion.Item
-            key='6'
-            eventKey="8"
-            style={{ 'display': (data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
-            onClick={evt => {
-              if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                setsubnavitemactive('')
-                setnavitemactive('3')
-                ref_setter_show_menu_config.current(true)
 
-              } else {
-                setsubnavitemactive('8')
-                setnavitemactive('3')
-                ref_setter_show_menu_config.current(true)
-
-              }
-            }}
-          >
-            <Accordion.Header className='level2' >{t('Menu.EF')}</Accordion.Header>
-            <Accordion.Body>{menu_configuration_link_tags}</Accordion.Body>
-          </Accordion.Item>
           <Accordion.Item
+            ref={links_accordion_ref as Ref<HTMLDivElement>}
             key='7'
             eventKey='editionFlux'
             onClick={
@@ -202,27 +129,88 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               />
             </Accordion.Body>
           </Accordion.Item>
+          {additional_accordion_edition_elements}
         </Accordion>
       </Accordion.Body>
     </Accordion.Item>,
+
     <Accordion.Item
-      key='8'
-      id="dataTags"
-      eventKey="dimension"
-      style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
+      key='5'
+      style={{ 'display': 'block' }}
+      id='SubAccordionEtiquette'
+      eventKey="3"
       onClick={evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === 'dimension') {
+        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === '3') {
           setnavitemactive('')
         } else {
-          setnavitemactive('dimension')
+          setnavitemactive('3')
         }
       }}
     >
-      <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
-      <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
+      <Accordion.Header >{t('Menu.Etiquettes')}</Accordion.Header>
+      <Accordion.Body  style={{ padding: '0px' }}>
+        <Accordion activeKey={subnavitemactive}>
+          <Accordion.Item
+            key='3'
+            style={{ 'display': (data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
+            eventKey="EtiquetteNoeud"
+            onClick={
+              evt => {
+                if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
+                  setsubnavitemactive('')
+                } else {
+                  setsubnavitemactive('EtiquetteNoeud')
+                }
+                setnavitemactive('2')
+                ref_setter_show_menu_config.current(true)
+              }}
+          >
+            <Accordion.Header className='level2' >
+              {t('Menu.EN')}
+            </Accordion.Header>
+            <Accordion.Body>
+              {menu_configuration_node_tags}
+            </Accordion.Body>
+          </Accordion.Item>
+
+          <Accordion.Item
+            key='6'
+            eventKey="8"
+            style={{ 'display': (data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
+            onClick={evt => {
+              if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
+                setsubnavitemactive('')
+              } else {
+                setsubnavitemactive('8')
+              }
+              setnavitemactive('3')
+              ref_setter_show_menu_config.current(true)
+            }}
+          >
+            <Accordion.Header className='level2' >{t('Menu.EF')}</Accordion.Header>
+            <Accordion.Body>{menu_configuration_link_tags}</Accordion.Body>
+          </Accordion.Item>
+
+          <Accordion.Item
+            key='dt'
+            id="dataTags"
+            eventKey="dimension"
+            style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
+            onClick={evt => {
+              if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === 'dimension') {
+                setnavitemactive('')
+              } else {
+                setnavitemactive('dimension')
+              }
+            }}
+          >
+            <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
+            <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+      </Accordion.Body>
     </Accordion.Item>,
 
-    <>{menu_configuration_free_labels}</>,
   ]
 }
 

@@ -78,7 +78,8 @@ export const open_resources = {
         last_save:'Last save',
         style:'Styles',
         close:'Close',
-
+        Elements:'Edition elements',
+        Etiquettes:'Édition tags',
         reinit:'Reset',
         amp_short:'Layout',
 
@@ -678,6 +679,8 @@ export const open_resources = {
         exporter_to:'En',
         preference:'Réglages',
         reinit:'Réinit.',
+        Elements:'Édition des éléments',
+        Etiquettes:'Édition des étiquettes',
         amp_import:'Depuis autre diagramme',
         amp_short:'Trans.',
         ajustH:'Ajust. H',

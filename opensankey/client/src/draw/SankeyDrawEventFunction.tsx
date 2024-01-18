@@ -42,16 +42,10 @@ export const EventNodeClick: EventNodeClickFType = (
       }
     }
     if (accordion_ref && accordion_ref.current) {
-      for (const child in accordion_ref.current.children) {
-        if (accordion_ref.current.children[child].id === 'Nodes') {
-          (accordion_ref.current.children[0] as HTMLLabelElement).click();
-          (accordion_ref.current.children[child] as HTMLLabelElement).click()
-        }
-      }
+      accordion_ref.current.click()
     }
     if (nodes_accordion_ref && nodes_accordion_ref.current) {
-      (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click();
-      (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
+      nodes_accordion_ref.current.click()
     }
     set_data({ ...data })
   } else if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && !event.ctrlKey) {

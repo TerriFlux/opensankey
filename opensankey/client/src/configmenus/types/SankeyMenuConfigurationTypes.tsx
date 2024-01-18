@@ -20,7 +20,7 @@ export type OpenSankeyConfigurationsMenusFType = (
   menu_configuration_links:{
     [s: string]: JSX.Element;
   },
-  menu_configuration_free_labels:JSX.Element,
+  additional_accordion_edition_elements:JSX.Element[],
   token:boolean
 ) => JSX.Element[]
 

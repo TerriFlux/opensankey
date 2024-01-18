@@ -87,16 +87,10 @@ export const DrawLinks : DrawLinksFType = (
           button_ref.current.click()
         }
         if ( accordion_ref && accordion_ref.current) {
-          for ( const child in accordion_ref.current.children) {
-            if (accordion_ref.current.children[child].id === 'Flux') {
-              (accordion_ref.current.children[0] as HTMLLabelElement).click();
-              (accordion_ref.current.children[child] as HTMLLabelElement).click()
-            }
-          }
+          accordion_ref.current.click()
         }
         if ( links_accordion_ref && links_accordion_ref.current) {
-          (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
-          (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+          links_accordion_ref.current.click()
         }
       }
       if(multi_selected_links.current.length>0){
