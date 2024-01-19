@@ -465,6 +465,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
 
   // Content to reorganize the i/o of only 1 node at the time
   const content_for_one_node=multi_selected_nodes.current.length===1?<>
+    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Noeud.Reorg_title')}</h4>
 
     {/* Choisir un lien entrant / sortant */}
     <InputGroup>
@@ -612,72 +613,75 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
 
   </>:<></>
 
-  const content_always_present=<InputGroup>
-    {/* Boutons de rérrangement / selection des flux  */}
-    <ButtonGroup>
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.7'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'33.3%'}}
-          variant='primary'
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              reorganize_node_inputLinksId(data,d, data.nodes, data.links)
-              reorganize_node_outputLinksId(data,d, data.nodes, data.links)
-            })
-            set_data({ ...data })
-          }}>
-          {t('Noeud.Reorg')}
-        </Button>
-      </OverlayTrigger>
+  const content_always_present=<>
+    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Noeud.Slct')}</h4>
+    <InputGroup>
+      {/* Boutons de rérrangement / selection des flux  */}
+      <ButtonGroup>
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.7'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.7'}>{t('Noeud.tooltips.Reorg')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'33.3%'}}
+            variant='primary'
+            onClick={() => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                reorganize_node_inputLinksId(data,d, data.nodes, data.links)
+                reorganize_node_outputLinksId(data,d, data.nodes, data.links)
+              })
+              set_data({ ...data })
+            }}>
+            {t('Noeud.Reorg')}
+          </Button>
+        </OverlayTrigger>
 
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.8'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'33.3%'}}
-          variant='primary'
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-              const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-              dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
-            })
-            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-          }}>
-          {t('Noeud.SlctOutLink')}
-        </Button>
-      </OverlayTrigger>
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.8'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'33.3%'}}
+            variant='primary'
+            onClick={() => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
+                const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
+                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
+              })
+              multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
+            }}>
+            {t('Noeud.SlctOutLink')}
+          </Button>
+        </OverlayTrigger>
 
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.9'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'33.4%'}}
-          variant='primary'
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-              const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-              dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
-            })
-            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-          }}>
-          {t('Noeud.SlctInLink')}
-        </Button>
-      </OverlayTrigger>
-    </ButtonGroup>
-  </InputGroup>
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.9'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
+          <Button
+            className='btn_menu_config'
+            style={{width:'33.4%'}}
+            variant='primary'
+            onClick={() => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+                multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
+                const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
+                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
+              })
+              multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
+            }}>
+            {t('Noeud.SlctInLink')}
+          </Button>
+        </OverlayTrigger>
+      </ButtonGroup>
+    </InputGroup>
+  </>
 
   const content=<>
     {content_for_one_node}
