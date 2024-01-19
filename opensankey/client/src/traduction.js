@@ -1228,7 +1228,7 @@ export const open_resources = {
         t_v_s:'Structure',
         t_v_c:'Données collectées',
         t_v_r:'Données réconciliées',
-        t_v_i:'Interavalle',
+        t_v_i:'Intervalle',
         t_v_pv:'Valeur possible',
         indetermined_value:'Type de valeur des flux indeterminés',
         filtre:'Valeur seuil pour l\'affichage des flux',
