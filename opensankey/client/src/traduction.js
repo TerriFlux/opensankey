@@ -332,6 +332,8 @@ export const open_resources = {
         TS:'Select all',
         NS:'No node selected',
         Reorg:'Reorganize incoming/outgoing links',
+        Reorg_title:'Reorganization',
+        Slct:'Selection',
         SlctOutLink:'Select outgoing links',
         SlctInLink:'Select incoming links',
         IB:'Tooltip',
@@ -349,6 +351,8 @@ export const open_resources = {
         product:'Product',
         sector:'Sector',
         exchange:'Exchange',
+        size:'Size',
+        text:'Text',
         selector:'Select nodes',
         tooltips:{
           Nom:'Change the name of the selected node. If several nodes are selected, this field is disabled',
@@ -465,6 +469,7 @@ export const open_resources = {
         as:'Apply the style to selected link(s)',
         IB:'ToolTip',
         ajust_label:'Adjust labels position',
+        FS:'Simple Link',
         tooltips: {
           src:'Choice of the departure node for the selected link(s)',
           trgt:'Choice of the arrival node for the selected link(s)',
@@ -479,7 +484,7 @@ export const open_resources = {
         },
         data:{
           données:'Data',
-          vpp:'Associated value',
+          vpp:'Value',
           affichage:'Display',
           tooltips: {
             vpp:'Data associated to the selected link and, if existing, for the selected tag(s)',
@@ -971,6 +976,8 @@ export const open_resources = {
         TS:'Tout sélectionner',
         NS:'Aucun noeud sélectionné',
         Reorg:'Réorganisation automatique flux E/S',
+        Reorg_title:'Réorganisation',
+        Slct:'Sélection',
         SlctOutLink:'Sélectionner flux sortants',
         SlctInLink:'Sélectionner flux entrants',
         IB:'Info-bulle',
@@ -989,6 +996,8 @@ export const open_resources = {
         sector:'Secteur',
         exchange:'Échange',
         selector:'Selectionner des noeuds',
+        size:'Taille',
+        text:'Texte',
         tooltips:{
           Nom:'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
           AS:'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
@@ -999,7 +1008,7 @@ export const open_resources = {
         },
         apparence:{
           apparence:'Apparence',
-          Visibilité:'Visibilité des noeuds',
+          Visibilité:'Noeud simple',
           Couleur:'Couleur',
           CouleurPérenne:'Couleur fixe',
           Forme:'Forme',
@@ -1105,6 +1114,7 @@ export const open_resources = {
         as:'Réinitialiser',
         IB:'Info-bulle',
         ajust_label:'Ajuster la position des labels',
+        FS:'Flux Simple',
         tooltips: {
           src:'Choix du noeud de départ pour le/les flux sélectionné(s)',
           trgt:'Choix du noeud d\'arrivée pour le/les flux sélectionné(s)',
@@ -1119,7 +1129,7 @@ export const open_resources = {
         },
         data:{
           données:'Données',
-          vpp:'Valeur associée',
+          vpp:'Valeur',
           affichage:'Affichage',
           tooltips: {
             vpp:'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
