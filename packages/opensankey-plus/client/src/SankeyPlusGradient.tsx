@@ -1,6 +1,6 @@
 import React from 'react'
 import * as d3 from 'd3'
-import { OverlayTrigger, Tooltip, InputGroup, Badge} from 'react-bootstrap'
+import { OverlayTrigger, Tooltip, InputGroup, Badge, Form, Row, Col} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 
@@ -30,32 +30,35 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   const gradChecked=IsAllLinkAttrSameValue(data,selected_parameter,k_list,menu_for_style)['gradient'] as boolean[]
 
   return <>
-    <OverlayTrigger
-      key={'gradiantDisabled'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
-    >
-      <InputGroup>
-        <Checkbox 
-          sx={SmoothClasses({})}
-          maxW={'60%'}
-          isDisabled={!is_activated}
-          isIndeterminate={gradChecked[1]}
-          isChecked={gradChecked[0]}
-          iconColor={gradChecked[1]?'#78C2AD':'white'}
-          onChange={(evt) => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-              PlusAssignLinkValueToCorrectVar(d,'gradient',evt.target.checked,menu_for_style)
-            })
-            set_data({ ...data })
-          }}>
-          {t('Flux.apparence.grad')}
-          {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
-        </Checkbox>
-      </InputGroup>
-    </OverlayTrigger>
-    {(IsLinkDiplayingValueLocal(multi_selected_links,(('gradient' as unknown) as (keyof SankeyLinkAttrLocal )),menu_for_style)?TooltipValueSurcharge('link_plus_var_',t):<></>)}
+    <Form.Group as={Row}>
+      <Col>
+        <OverlayTrigger
+          key={'gradiantDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
+        >
+          <Checkbox 
+            sx={SmoothClasses({})}
+            maxW={'90%'}
+            isDisabled={!is_activated}
+            isIndeterminate={gradChecked[1]}
+            isChecked={gradChecked[0]}
+            iconColor={gradChecked[1]?'#78C2AD':'white'}
+            onChange={(evt) => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                PlusAssignLinkValueToCorrectVar(d,'gradient',evt.target.checked,menu_for_style)
+              })
+              set_data({ ...data })
+            }}>
+            {t('Flux.apparence.grad')}
+            {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+          </Checkbox>
+        </OverlayTrigger>
+        {(IsLinkDiplayingValueLocal(multi_selected_links,(('gradient' as unknown) as (keyof SankeyLinkAttrLocal )),menu_for_style)?TooltipValueSurcharge('link_plus_var_',t):<></>)}
+      </Col>
+    </Form.Group>
+
   </>
 }
 
