@@ -579,7 +579,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             <React.Fragment key={'modale_style_node'}>{SankeyModalStyleNode(
               applicationContext,
               dict_variable_application_data,
-              dict_variable_elements_selected,
               dict_hook_ref_setter_show_dialog_components.ref_show_style_node,
               dict_variable_elements_selected.ref_selected_style_node,
               []
