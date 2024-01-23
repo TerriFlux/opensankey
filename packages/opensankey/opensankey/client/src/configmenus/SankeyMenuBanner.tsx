@@ -443,7 +443,13 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
 
   const target_link_threshold=useRef(null)
   const target_detail_level=useRef(null)
+  const node_tag_filter=useRef(null)
+  const link_tag_filter=useRef(null)
+  const data_tag_filter=useRef(null)
 
+  const [s_show_node_tag_filter,sShowNodeTagFilter]=useState(false)
+  const [s_show_link_tag_filter,sShowLinkTagFilter]=useState(false)
+  const [s_show_data_tag_filter,sShowDataTagFilter]=useState(false)
   const [s_show_link_threshold,sShowLinkThreshold]=useState(false)
   const [s_show_detail_level,sShowDetailLevel]=useState(false)
   const [s_is_data_type_reconcilied,sIsDataTypeReconcilied]=useState(['reconciled', 'free_value','free_interval'].includes(data.show_structure))
@@ -705,7 +711,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       key={'tooltip-fullscreen'}
       placement={'left'}
       delay={500}
-      overlay={<Tooltip id={'tooltip-fullscreen'}>{t('Banner.fullscreen')} </Tooltip>}
+      overlay={<Tooltip id={'tooltip-fullscreen'}>{s_force_update?t('Banner.quit_fullscreen'):t('Banner.fullscreen')} </Tooltip>}
     >
       <Button variant='light' id='button-fullscreen'
         onClick={()=>{
@@ -786,7 +792,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   </OverlayTrigger>
   {/* Popover to display the link-filter */}
   <Overlay
-    key={'popover-link-filter'}
+    key={'overlay-popover-link-filter'}
     placement={'left'}
     target={target_link_threshold}
     rootClose
@@ -822,44 +828,89 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       </Button>
     </OverlayTrigger>
 
-  const btn_show_node_filter=(node_filter)?
+  const btn_show_node_filter=(node_filter)?<>
     <OverlayTrigger
-      key={'tooltip-link-color-filter'}
+      key={'tooltip-node-tag'}
       placement={'left'}
-      trigger={'click'}
+      overlay={<Tooltip id={'tooltip-node-tag-filter'}>{t('Banner.hlp_node_tag_filter')} </Tooltip>}
       rootClose
-      overlay={filter_color_node}>
-      <Button size='sm' variant='success' >
+    >
+      <Button ref={node_tag_filter} size='sm' variant='success' 
+        onClick={()=>{
+          sShowNodeTagFilter(!s_show_node_tag_filter)
+        }}
+      >
         {logo_btn_node}
       </Button>
     </OverlayTrigger>
+    {/* Popover to display the node tag filter */}
+    <Overlay
+      key={'overlay-popover-node-tag-filter'}
+      placement={'left'}
+      target={target_link_threshold}
+      rootClose
+      show={s_show_node_tag_filter}
+      onHide={()=>{sShowNodeTagFilter(false)}}
+    >
+      {filter_color_node}
+    </Overlay>
+  </>
     :
     <></>
 
-  const btn_show_link_filter=(flux_filter)?
+  const btn_show_link_filter=(flux_filter)?<>
+
     <OverlayTrigger
-      key={'tooltip-node-color-filter'}
+      key={'tooltip-link-tag'}
       placement={'left'}
-      trigger={'click'}
       rootClose
-      overlay={filter_color_link}>
-      <Button size='sm' variant='success' >{logo_btn_filter_link}</Button>
+      overlay={<Tooltip id={'tooltip-link-tag-filter'}>{t('Banner.hlp_link_tag_filter')} </Tooltip>}>
+    
+      <Button ref={link_tag_filter} size='sm' variant='success' 
+        onClick={()=>{
+          sShowLinkTagFilter(!s_show_link_tag_filter)
+        }}
+      >{logo_btn_filter_link}</Button>
+
     </OverlayTrigger>
 
+    <Overlay
+      key={'popover-link-tag-filter'}
+      placement={'left'}
+      target={link_tag_filter}
+      rootClose
+      show={s_show_link_tag_filter}
+      onHide={()=>{sShowLinkTagFilter(false)}}
+    >
+      {filter_color_link}
+    </Overlay></>
     :
     <></>
 
-  const btn_show_data_filter=(Object.values(data.dataTags).length>0)?
+  const btn_show_data_filter=(Object.values(data.dataTags).length>0)?<>
     <OverlayTrigger
       key={'tooltip-data-filter'}
       placement={'left'}
-      trigger={'click'}
       rootClose
-      overlay={filter_data}>
-      <Button size='sm' variant='success'>
+      overlay={<Tooltip id={'tooltip-data-tag-filter'}>{t('Banner.hlp_data_tag_filter')} </Tooltip>}>
+      <Button ref={data_tag_filter} size='sm' variant='success'
+        onClick={()=>{
+          sShowDataTagFilter(!s_show_data_tag_filter)
+        }}
+      >
         <FontAwesomeIcon icon={faDatabase} />
       </Button>
     </OverlayTrigger>
+    <Overlay
+      key={'popover-data-tag-filter'}
+      placement={'left'}
+      target={data_tag_filter}
+      rootClose
+      show={s_show_data_tag_filter}
+      onHide={()=>{sShowDataTagFilter(false)}}
+    >
+      {filter_data}
+    </Overlay></>
     :
     <></>
   const btn_show_help_in_static=window.SankeyToolsStatic ? <OverlayTrigger
@@ -913,7 +964,7 @@ export const stretchButtons : stretchButtonsFType =(
     key={'tooltip-adjust-h'}
     placement={'left'}
     delay={500}
-    overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+    overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjustH')} </Tooltip>}>
     <Button variant='dark' onClick={() => {AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)}} >
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
     </Button>
@@ -922,7 +973,7 @@ export const stretchButtons : stretchButtonsFType =(
     key={'tooltip-adjust-v'}
     placement={'left'}
     delay={500}
-    overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjust')} </Tooltip>}>
+    overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjustV')} </Tooltip>}>
     <Button variant='dark' onClick={() => {AdjustSankeyZone(data,GetSankeyMinWidthAndHeight,false,true)}} >
       <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
     </Button>
