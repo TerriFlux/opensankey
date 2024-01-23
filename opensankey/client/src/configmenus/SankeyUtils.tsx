@@ -1751,7 +1751,7 @@ export const SmoothClasses = ({
   focusColor = '#78C2AD'
 }) => {
   return {
-    h: '40px',
+    h: '24px',
     px: '12px',
     w: '100%',
     borderRadius: '6px',
@@ -1785,6 +1785,23 @@ export const SmoothClasses = ({
       }
     }
   }
+}
+
+/**
+ * Function that return a style for title of subsection in menu configuration
+ * Attributes modified :
+ * - font_size:14px
+ * - font_weight:bold
+ * - text-decoration:underline (possible to not underline it)7
+ * - max-width:'100%'
+ */
+export const StyleTitleSubSectionMenuEditionElements=({
+  v_font_size='14px',
+  v_font_weight='bold', 
+  underline=false,
+  v_max_width='100%'
+})=>{
+  return {fontSize:v_font_size ,fontWeight:v_font_weight,textDecoration:underline?'underline':'',maxWidth:v_max_width}
 }
 
 // Tooltipe added to input in menu when add a local value (for nodes & links local attributes)

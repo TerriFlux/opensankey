@@ -27,12 +27,10 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
     set_tags_group_key(Object.keys(data.nodeTags)[0])
   }
   return <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
+    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.EN')}</h4>
 
     {/* Groupe d'étiquettes  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>
-        {t('Tags.GE')}
-      </InputGroup.Text>
       <Form.Select
         style={{width:'60%'}}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
