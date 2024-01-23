@@ -6,6 +6,7 @@ import { reorganize_inputLinksId} from '../draw/SankeyDrawLayout'
 import { handleDownLink, handleUpLink } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
+import { AssignLinkLocalAttribute, ReturnValueLink } from '../configmenus/SankeyUtils'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -25,6 +26,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   const { multi_selected_links } = dict_variable_elements_selected
   const { data, set_data } = dict_variable_application_data
   const { t } = applicationContext
+
 
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
@@ -82,6 +84,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     }
 
   }
+  const context_link_label_visible=contextualised_link!==undefined?ReturnValueLink(data,contextualised_link,'label_visible') as boolean:false
+
   const has_flux_tags=Object.values(data.fluxTags).length>0
   // Dropdown to change some pararmeter concerning the appearence of the node
   const dropdown_c_l_tag=(contextualised_link!==undefined && has_flux_tags) && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
@@ -190,10 +194,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
       {t('Flux.layout')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
-      <Dropdown.Item onClick={()=>{
-        multi_selected_links.current.forEach(n=>handleDownLink(data,n.idLink))
-        set_data({...data})
-      }}>{t('Flux.layoutUp')}</Dropdown.Item>
+
       <Dropdown.Item onClick={()=>{
         multi_selected_links.current.map(l => {
           const i = l.idLink
@@ -212,7 +213,10 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
         set_data({...data})
       }}>{t('Flux.layoutTop')}</Dropdown.Item>
 
-
+      <Dropdown.Item onClick={()=>{
+        multi_selected_links.current.forEach(n=>handleDownLink(data,n.idLink))
+        set_data({...data})
+      }}>{t('Flux.layoutUp')}</Dropdown.Item>
 
 
 
@@ -247,6 +251,18 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.data.données')} {icon_open_modal}</Button>:<></>
 
+  const button_mask_link_label=contextualised_link!==undefined?<Button onClick={()=>{
+    multi_selected_links.current.forEach(l=>{
+      AssignLinkLocalAttribute(l,'label_visible',!context_link_label_visible)
+    })
+    set_data({...data})
+  }} variant='light'>{context_link_label_visible?t('Flux.apparence.hide_link_lab'):t('Flux.apparence.display_link_lab')}</Button>:<></>
+
+  const button_open_link_tooltip=contextualised_link!==undefined?<Button onClick={()=>{
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tooltip.current(true)
+    set_contextualised_link(undefined)
+  }} variant='light'>{t('Flux.IB')} {icon_open_modal}</Button>:<></>
+
   // Pop over that serve as context menu
   return contextualised_link!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
     <Popover.Body >
@@ -264,15 +280,16 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
         }}>{t('Flux.if')}</Button>
 
         {sep}
+        {dropdown_c_l_style}
+        {sep}
         {dropdown_c_l_layout}
+        {button_mask_link_label}
         {has_flux_tags && sep}
         {dropdown_c_l_tag}
         {sep}
         {button_open_link_data}
         {button_open_link_appearence}
-        {sep}
-        {dropdown_c_l_style}
-
+        {button_open_link_tooltip}
       </ButtonGroup>
     </Popover.Body>
   </Popover>:<></>
