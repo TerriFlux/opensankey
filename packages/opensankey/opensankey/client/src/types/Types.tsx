@@ -327,6 +327,7 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_menu_node_io : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_link_data : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_link_appearence : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_menu_link_tooltip : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_layout : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_modal_welcome : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_modale_tuto : MutableRefObject<Dispatch<SetStateAction<boolean>>>,

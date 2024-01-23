@@ -53,6 +53,7 @@ import {
 } from './topmenus/SankeyMenuTop'
 import { CardsTemplateBuilder, welcomeModalBuilder } from './dialogs/SankeyModalWelcome'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
+import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
@@ -130,6 +131,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_menu_node_io : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_link_data : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_link_appearence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_link_tooltip : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_layout : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_modal_welcome : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_modale_tuto : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
@@ -230,6 +232,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_data.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_appearence.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tooltip.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_layout.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current!(false)
     contextMenu.closeAllMenuContext()
@@ -269,6 +272,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     convert_data,
     setDiagram,
   )
+
+  // MENU DRAGGABLE LINK Tooltip
+  const menu_link_tooltip = MenuConfigurationLinksTooltip(
+    data,set_data,
+    dict_variable_elements_selected.multi_selected_links,
+    applicationContext.t,true)
+
+
+
 
   Object.values(dict_variable_application_data.data.levelTags).forEach(tag_group=>tag_group.activated = false)
   if ('Primaire' in dict_variable_application_data.data.levelTags) {
@@ -499,6 +511,16 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         applicationContext.t('Menu.MEP')
       )
       }
+
+
+      {
+        MenuDraggable(
+          dict_hook_ref_setter_show_dialog_components,
+          'ref_setter_show_menu_link_tooltip',
+          menu_link_tooltip,
+          contextMenu.pointer_pos,
+          applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.IB'),
+        )}
       <>
         <Menu
           applicationContext={applicationContext}
