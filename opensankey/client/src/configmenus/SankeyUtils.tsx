@@ -1043,6 +1043,10 @@ export const DeleteLink:DeleteLinkFuncType = (
   idx = target_node.inputLinksId.findIndex(idLink => idLink === link.idLink)
   target_node.inputLinksId.splice(idx, 1)
 
+  // Delete link in linkZIndex tab
+  idx = data.linkZIndex.findIndex(idLink => idLink === link.idLink)
+  data.linkZIndex.splice(idx, 1)
+
   delete data.links[link.idLink]
 }
 /**
