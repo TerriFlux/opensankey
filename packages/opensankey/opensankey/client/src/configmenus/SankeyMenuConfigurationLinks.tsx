@@ -45,7 +45,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       false,
       GetLinkValue
     ),
-    'tooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t)
+    'tooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t,false)
   }
   const pre_tag_menu=MenuConfigurationLinksTags(
     dict_variable_application_data,

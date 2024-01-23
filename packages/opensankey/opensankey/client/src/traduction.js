@@ -507,6 +507,8 @@ export const open_resources = {
           recy:'Recycling',
           courbure:'Curvature',
           arrow_size:'Size of arrow',
+          display_link_lab:'Display value',
+          hide_link_lab:'Hide value',
           tooltips: {
             couleur:'Choose the color for the selected link(s)',
             grad:'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
@@ -1157,6 +1159,8 @@ export const open_resources = {
           recy:'Recyclage',
           courbure:'Courbure',
           arrow_size:'Taile de la flêche',
+          display_link_lab:'Afficher la valeur',
+          hide_link_lab:'Masquer la valeur',
           tooltips: {
             couleur:'Choisir la couleur pour le/les flux sélectionné(s)',
             grad:'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
@@ -1217,11 +1221,11 @@ export const open_resources = {
             l_u:'Permet de choisir le nom de l\'unité',
           }
         },
-        layout:'Disposition',
-        layoutUp:'Envoyer vers l \'avant',
-        layoutTop:'Envoyer à l \'avant',
-        layoutDown:'Envoyer vers l \'arrière',
-        layoutBottom:'Envoyer à l \'arrière',
+        layout:'Organisation',
+        layoutUp:'Avancer',
+        layoutTop:'Premier plan',
+        layoutDown:'Reculer',
+        layoutBottom:'Dernier plan',
       },
 
       Banner:{
