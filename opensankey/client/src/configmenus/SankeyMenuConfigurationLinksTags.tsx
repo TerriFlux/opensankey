@@ -25,6 +25,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
 
   const {fluxTags}=data
   const tags_visible = Object.keys(fluxTags).length > 0
+  const has_dataTags=Object.entries(data.dataTags).filter(([, dataTag])=>Object.keys(dataTag.tags).length>0).length>0
 
   const ValueSelectedParameter = (): SankeyLinkValue => {
     if(multi_selected_links.current.length==0){
@@ -58,11 +59,10 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
 
   return <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
 
+    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.EF')}</h4>
+
     {/* Groupe d'étiquettes  */}
     <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>
-        {t('Tags.GE')}
-      </InputGroup.Text>
       <Form.Select
         style={{width:'60%'}}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
@@ -77,6 +77,8 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
             </option>)}
       </Form.Select>
     </InputGroup>
+
+    {has_dataTags?<h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.ED')}</h4>:<></>}
 
     {//Définition des valeurs selon les paramètre dataTags
       Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
