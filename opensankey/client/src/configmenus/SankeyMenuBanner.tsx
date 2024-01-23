@@ -630,7 +630,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
 
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
-  const filter_color_node=<Popover id='tooltip-link-color-filter' style={{maxWidth:'100%'}}>
+  const filter_color_node=<Popover id='tooltip-link-color-filter' style={{minWidth:'350px'}}>
     <Popover.Header as="h3">{t('Banner.fdn')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px'}}>
       {legend_filter}
@@ -643,7 +643,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   </Popover>
 
   //Popover element to handle the display of data tags
-  const filter_data=<Popover id='tooltip-data-color-filter' style={{minWidth:'450px'}}>
+  const filter_data=<Popover id='tooltip-data-color-filter' style={{minWidth:'350px'}}>
     <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
     <Popover.Body>
       {legend_filter}
@@ -695,7 +695,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   </Popover>
 
   //Popover element to handle the display of link tags
-  const filter_color_link=<Popover id='tooltip-node-color-filter' style={{maxWidth:'100%'}}>
+  const filter_color_link=<Popover id='tooltip-node-color-filter' style={{minWidth:'350px'}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px'}}>
       {legend_filter}
@@ -746,7 +746,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
             setSelectionMode('ln') 
           }
         }} >
-          <Col><FontAwesomeIcon icon={(mode_selection == 'ln')?faShareNodes:faArrowPointer}/></Col>
+          <Col><FontAwesomeIcon icon={(mode_selection == 's')?faShareNodes:faArrowPointer}/></Col>
         </Button>
       </OverlayTrigger>
     </>
@@ -835,7 +835,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       overlay={<Tooltip id={'tooltip-node-tag-filter'}>{t('Banner.hlp_node_tag_filter')} </Tooltip>}
       rootClose
     >
-      <Button ref={node_tag_filter} size='sm' variant='success' 
+      <Button ref={node_tag_filter} size='sm' variant='info' 
         onClick={()=>{
           sShowNodeTagFilter(!s_show_node_tag_filter)
         }}
@@ -866,7 +866,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       rootClose
       overlay={<Tooltip id={'tooltip-link-tag-filter'}>{t('Banner.hlp_link_tag_filter')} </Tooltip>}>
     
-      <Button ref={link_tag_filter} size='sm' variant='success' 
+      <Button ref={link_tag_filter} size='sm' variant='info' 
         onClick={()=>{
           sShowLinkTagFilter(!s_show_link_tag_filter)
         }}
@@ -893,7 +893,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       placement={'left'}
       rootClose
       overlay={<Tooltip id={'tooltip-data-tag-filter'}>{t('Banner.hlp_data_tag_filter')} </Tooltip>}>
-      <Button ref={data_tag_filter} size='sm' variant='success'
+      <Button ref={data_tag_filter} size='sm' style={{color:'#fff',background:'#B13F06',borderColor:'#B13F06'}}
         onClick={()=>{
           sShowDataTagFilter(!s_show_data_tag_filter)
         }}
@@ -941,10 +941,10 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     {btn_show_node_filter}
     {btn_show_link_filter}
     {btn_show_data_filter}
+    { btn_show_data_type}
 
     {stretchButtons(data,GetSankeyMinWidthAndHeight,t)}
 
-    { btn_show_data_type}
     {btn_show_help_in_static}
 
     {button_fullscreen}
