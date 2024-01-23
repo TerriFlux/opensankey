@@ -3,7 +3,7 @@ import React, { Dispatch, MutableRefObject, SetStateAction, useState } from 'rea
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
 import {  CutName,DefaultNodeStyle,DefaultLinkStyle, GetLinkValue } from '../configmenus/SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
-import {OpenSankeyConfigurationNodesAttributes,SankeyMenuConfigurationNodesAttributes} from '../configmenus/SankeyMenuConfigurationNodesAttributes'
+import {SankeyMenuConfigurationNodesAttributes} from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import {MenuConfigurationLinksAppearence} from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
@@ -12,10 +12,9 @@ import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/Sa
 export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
   applicationContext,
   dict_variable_application_data,
-  dict_variable_elements_selected,
   ref_show_style_node,
   ref_selected_style_node,
-  additional_node_attribute
+  node_attribute_tab
 ) => {
   const { t } = applicationContext
   const { data, set_data } = dict_variable_application_data
@@ -30,17 +29,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
   const closeStyleEdition = () => {
     set_show_style_node(false)
   }
-  const tab_node_style_attribute=OpenSankeyConfigurationNodesAttributes(
-    applicationContext,
-    dict_variable_application_data,
-    dict_variable_elements_selected,
-    true,
-    ref_selected_style_node,
-    [],
-    [],
-    []
-  )
-  additional_node_attribute.forEach(el=>tab_node_style_attribute.push(el))
+
 
   return(
     <Modal show={show_style_node} onHide={closeStyleEdition} size={'lg'}  >
@@ -68,7 +57,11 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
               <Dropdown.Toggle style={{width:'50%'}} variant="success" id="dropdown-basic">{(selected_style_node !== '') ? CutName(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
               <Dropdown.Menu>
                 {Object.keys(data.style_node).map((d,i) => {
-                  return (<Dropdown.Item key={i} onClick={() => { set_selected_style_node(d) }}>{data.style_node[d].name}</Dropdown.Item>)
+                  return (<Dropdown.Item key={i} onClick={() => { 
+                    ref_selected_style_node.current = d
+                    set_selected_style_node(d) 
+
+                  }}>{data.style_node[d].name}</Dropdown.Item>)
 
                 })}
               </Dropdown.Menu>
@@ -102,7 +95,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
             />
           </InputGroup>
         </Form.Group>
-        {SankeyMenuConfigurationNodesAttributes(t,tab_node_style_attribute,true)}
+        {SankeyMenuConfigurationNodesAttributes(t,node_attribute_tab,true)}
       </Modal.Body>
     </Modal>
   )
