@@ -53,6 +53,7 @@ import {
 } from './topmenus/SankeyMenuTop'
 import { CardsTemplateBuilder, welcomeModalBuilder } from './dialogs/SankeyModalWelcome'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
+import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuConfigurationNodesTooltip'
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
 
 /*************************************************************************************************/
@@ -129,6 +130,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType = {
     ref_setter_show_menu_node_apparence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_node_io : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_node_tooltip : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_link_data : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_link_appearence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_link_tooltip : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
@@ -230,6 +232,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_config.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_data.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_appearence.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tooltip.current(false)
@@ -281,6 +284,16 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
 
 
+  // MENU DRAGGABLE NODE Tooltip editor
+  const menu_node_tooltip = SankeyMenuConfigurationNodesTooltip(applicationContext,dict_variable_application_data,dict_variable_elements_selected,true)
+
+  const menuNodeTooltip= MenuDraggable(
+    dict_hook_ref_setter_show_dialog_components,
+    'ref_setter_show_menu_node_tooltip',
+    menu_node_tooltip,
+    contextMenu.pointer_pos,
+    applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.IB')
+  )
 
   Object.values(dict_variable_application_data.data.levelTags).forEach(tag_group=>tag_group.activated = false)
   if ('Primaire' in dict_variable_application_data.data.levelTags) {
@@ -511,6 +524,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         applicationContext.t('Menu.MEP')
       )
       }
+      {menuNodeTooltip}
 
 
       {
