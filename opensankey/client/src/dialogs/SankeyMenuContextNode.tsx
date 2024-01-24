@@ -6,7 +6,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { 
   NodeContextHasAggregate, NodeContextHasDesaggregate, DeleteNode, 
-  ReturnValueLink} from '../configmenus/SankeyUtils'
+  ReturnValueLink,
+  ReturnValueNode,
+  AssignNodeLocalAttribute} from '../configmenus/SankeyUtils'
 import { Aggregate, Desaggregate } from '../draw/SankeyDrawLayout'
 import { reorganize_node_outputLinksId } from '../draw/SankeyDrawLayout'
 import { reorganize_node_inputLinksId } from '../draw/SankeyDrawLayout'
@@ -39,6 +41,11 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   if(contextualised_node){
     style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
+  
+  const contextualised_node_shape_visible=contextualised_node!==undefined?ReturnValueNode(data,contextualised_node,'shape_visible'):false
+  const contextualised_node_label_visible=contextualised_node!==undefined?ReturnValueNode(data,contextualised_node,'label_visible'):false
+  const contextualised_node_value_visible=contextualised_node!==undefined?ReturnValueNode(data,contextualised_node,'show_value'):false
+
 
   // b:before,m:middle,a:after
   const align_node=(ref:'min'|'max',attr:'x'|'y',pos:'b'|'m'|'a')=>{
@@ -125,6 +132,12 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
   }} variant='light'>{t('Noeud.apparence.apparence')} {icon_open_modal}</Button>
+
+  const dropdown_c_n_tooltip=<Button onClick={()=>{
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(true)
+    set_contextualised_node(undefined)
+    contextMenu.ref_contextualised_node.current = undefined
+  }} variant='light'>{t('Noeud.IB')} {icon_open_modal}</Button>
 
   // Dropdown to change some pararmeter concerning the style of the node
   const dropdown_c_n_style_select=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
@@ -297,28 +310,125 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     {t('Noeud.labels.edit_node_label')}
   </Button>
 
+  // Dropdown to select output or input links of the contextualised node
+  const drp_dwn_slct_link=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.SlctL')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu variant='light'>
+
+      <Dropdown.Item as={Button}
+        variant='light'
+        onClick={() => {
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+            multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>d.outputLinksId.includes(l.idLink)))
+            console.log(multi_selected_links.current[0])
+            const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
+            dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
+          })
+          multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
+          set_contextualised_node(undefined)
+
+        }}>
+        {t('Noeud.SlctOL')}
+      </Dropdown.Item>
+      <Dropdown.Item as={Button}
+        variant='light'
+        onClick={() => {
+          Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
+            multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
+            const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
+            dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
+          })
+          multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
+          set_contextualised_node(undefined)
+        }}>
+        {t('Noeud.SlctIL')}
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>
+
+  const btn_reorganise_link_io=<Button
+    variant='light'
+    onClick={() => {
+      reorganize_node_inputLinksId(data,contextualised_node!, data.nodes, data.links)
+      reorganize_node_outputLinksId(data,contextualised_node!, data.nodes, data.links)
+      multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
+        reorganize_node_inputLinksId(data,n, data.nodes, data.links)
+        reorganize_node_outputLinksId(data,n, data.nodes, data.links)
+      })
+      set_contextualised_node(undefined)
+      contextMenu.ref_contextualised_node.current = undefined
+      set_data({ ...data })
+    }}>
+    {t('Noeud.Reorg')}
+  </Button>
+
+  const btn_aggregate=multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node && NodeContextHasAggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
+    Aggregate(contextualised_node,data,agregation)
+    multi_selected_nodes.current =[]
+    set_data({...data})
+    set_contextualised_node(undefined)
+    contextMenu.ref_contextualised_node.current = undefined
+  }}>Agrégation</Button>:<></>
+
+  const btn_desagregate=multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node &&NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
+    Desaggregate(contextualised_node,data,display_nodes,display_links,agregation)
+    multi_selected_nodes.current =[]
+    set_data({...data})
+    set_contextualised_node(undefined)
+    contextMenu.ref_contextualised_node.current = undefined
+  }}>Désagrégation</Button>:<></>
+
+  const btn_mask_shape=<Button variant='light'
+    onClick={()=>{
+      multi_selected_nodes.current.forEach(n=>{
+        AssignNodeLocalAttribute(n,'shape_visible',!contextualised_node_shape_visible)
+      })
+      set_data({...data})
+    }}
+  >
+    {contextualised_node_shape_visible?t('Noeud.apparence.hide_shape'):t('Noeud.apparence.display_shape')}
+  </Button>
+
+  const btn_mask_label=<Button variant='light'
+    onClick={()=>{
+      multi_selected_nodes.current.forEach(n=>{
+        AssignNodeLocalAttribute(n,'label_visible',!contextualised_node_label_visible)
+      })
+      set_data({...data})
+    }}
+  >
+    {contextualised_node_label_visible?t('Noeud.apparence.hide_label'):t('Noeud.apparence.display_label')}
+  </Button>
+
+  const btn_mask_value=<Button variant='light'
+    onClick={()=>{
+      multi_selected_nodes.current.forEach(n=>{
+        AssignNodeLocalAttribute(n,'show_value',!contextualised_node_value_visible)
+      })
+      set_data({...data})
+    }}
+  >
+    {contextualised_node_value_visible?t('Noeud.apparence.hide_value'):t('Noeud.apparence.display_value')}
+  </Button>
 
   // Pop over that serve as context menu
   return contextualised_node!==undefined?<Popover id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
     <Popover.Body>
       <ButtonGroup vertical>
-        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node && NodeContextHasAggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          Aggregate(contextualised_node,data,agregation)
-          multi_selected_nodes.current =[]
-          set_data({...data})
-          set_contextualised_node(undefined)
-          contextMenu.ref_contextualised_node.current = undefined
-        }}>Agrégation</Button>:<></>}
-        {multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node &&NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-          Desaggregate(contextualised_node,data,display_nodes,display_links,agregation)
-          multi_selected_nodes.current =[]
-          set_data({...data})
-          set_contextualised_node(undefined)
-          contextMenu.ref_contextualised_node.current = undefined
-        }}>Désagrégation</Button>:<></>}
+        {btn_aggregate}
+        {btn_desagregate}
         {sep}
+        
+        {dropdown_c_n_align_h}
+        {dropdown_c_n_align_v}
+        {sep}
+
+        {additional_context_element_other}
+        {sep}
+
         {button_edit_label_node}
-        {sep}
         <Button
           variant='light'
           onClick={() => {
@@ -332,58 +442,24 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
           {t('Menu.suppr')}
         </Button>
         {sep}
-        <Button
-          variant='light'
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
-              const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-              dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
-            })
-            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-          }}>
-          {t('Noeud.SlctOutLink')}
-        </Button>
-        <Button
-          variant='light'
-          onClick={() => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-              multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
-              const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-              dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
-            })
-            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-          }}>
-          {t('Noeud.SlctInLink')}
-        </Button>
-        <Button
-          variant='light'
-          onClick={() => {
-            reorganize_node_inputLinksId(data,contextualised_node!, data.nodes, data.links)
-            reorganize_node_outputLinksId(data,contextualised_node!, data.nodes, data.links)
-            multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
-              reorganize_node_inputLinksId(data,n, data.nodes, data.links)
-              reorganize_node_outputLinksId(data,n, data.nodes, data.links)
-            })
-            set_contextualised_node(undefined)
-            contextMenu.ref_contextualised_node.current = undefined
-            set_data({ ...data })
-          }}>
-          {t('Noeud.Reorg')}
-        </Button>
-        {multi_selected_nodes.current.length==1?dropdown_c_n_io:<></>}
-        {sep}
-        {dropdown_c_n_align_h}
-        {dropdown_c_n_align_v}
+
+        {dropdown_c_n_style}
+        {btn_mask_shape}
+        {btn_mask_label}
+        {btn_mask_value}
         {has_node_tags?sep:<></>}
         {dropdown_c_n_tag}
         {sep}
 
-        {dropdown_c_n_apparence}
-        {additional_context_element_menu}
+        {btn_reorganise_link_io}
+        {drp_dwn_slct_link}
+
         {sep}
-        {dropdown_c_n_style}
-        {additional_context_element_other}
+        {dropdown_c_n_apparence}
+        {multi_selected_nodes.current.length==1?dropdown_c_n_io:<></>}
+        {dropdown_c_n_tooltip}
+        {additional_context_element_menu}
+
 
       </ButtonGroup>
     </Popover.Body>

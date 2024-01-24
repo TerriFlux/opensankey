@@ -61,7 +61,8 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     'Tooltip'         : SankeyMenuConfigurationNodesTooltip(
       applicationContext,
       dict_variable_application_data,
-      dict_variable_elements_selected
+      dict_variable_elements_selected,
+      false
     )
   }
 
