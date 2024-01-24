@@ -72,7 +72,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
     >
       <Accordion.Header>{t('Menu.Elements')}</Accordion.Header>
       <Accordion.Body style={{ padding: '0px' }}>
-        <Accordion ref={nodes_accordion_ref  as Ref<HTMLDivElement>} activeKey={subnavitemactive} >
+        <Accordion  activeKey={subnavitemactive} >
           <Accordion.Item
             key='4' eventKey='editionNoeud'
             onClick={
@@ -86,6 +86,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 ref_setter_show_menu_config.current(true)
               }
             }
+            ref={nodes_accordion_ref  as Ref<HTMLDivElement>}
           >
             <Accordion.Header className='level2' >{t('Menu.EdN')}</Accordion.Header>
             <Accordion.Body>
@@ -198,13 +199,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
             onClick={evt => {
               if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === 'dimension') {
-                setnavitemactive('')
+                setsubnavitemactive('')
               } else {
-                setnavitemactive('dimension')
+                setsubnavitemactive('dimension')
               }
             }}
           >
-            <Accordion.Header>{t('Menu.ED')}</Accordion.Header>
+            <Accordion.Header className='level2'>{t('Menu.ED')}</Accordion.Header>
             <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
           </Accordion.Item>
         </Accordion>
