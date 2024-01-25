@@ -1,6 +1,6 @@
 import React from 'react'
 import * as d3 from 'd3'
-import { OverlayTrigger, Tooltip, Badge} from 'react-bootstrap'
+import { OverlayTrigger, Tooltip, Badge, Form, Row, Col} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 

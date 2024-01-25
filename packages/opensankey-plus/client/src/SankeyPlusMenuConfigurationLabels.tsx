@@ -27,7 +27,7 @@ import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
 import { SankeyPlusMenuConfigurationFreeLabelsFType, SankeyPlusMenuPreferenceLabelsFType, blur_ZDT_wysiwygFType, context_zdtFType, zdtMenuAsAccordeonItemType } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
 
-
+const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
 export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFType = (
   t:TFunction,
@@ -596,10 +596,13 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
 export const context_zdt : context_zdtFType =(
   contextMenu,
   t:TFunction,
-  dict_hook_ref_setter_show_dialog_components
+  dict_variable_application_data,
+  dict_hook_ref_setter_show_dialog_components,
+  dict_variable_elements_selected
 )=>{
-  // const {data,set_data}=dict_variable_application_data
+  const {data,set_data}=dict_variable_application_data
   const {pointer_pos,contextualised_zdt}=(contextMenu as SankeyPlusContextMenuType)
+  const {multi_selected_label}=dict_variable_elements_selected
   const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<SankeyPlusLabel>()
   contextualised_zdt.current=set_zdt_to_contextualise
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
@@ -607,6 +610,36 @@ export const context_zdt : context_zdtFType =(
   if(zdt_to_contextualise){
     style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   }
+
+  const valAllLabelBorderTransparent=IsAllZdtAttrSameValue(data,multi_selected_label.current,'transparent_border') as boolean[]
+
+  const btn_mask_border=<Button onClick={()=>{
+    multi_selected_label.current.forEach(zdt=>zdt.transparent_border=!valAllLabelBorderTransparent[0])
+    set_zdt_to_contextualise(undefined)
+    set_data({...data})
+
+  }} variant='light'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
+
+
+  const btn_change_color=<>
+    <Button variant='light'>
+      <Form.Label  htmlFor="form_color_zdt">
+        {t('LL.cfl')}
+      </Form.Label></Button>
+    <FormControl size='sm'
+      type='color'
+      id='form_color_zdt'
+      name='form_color_zdt'
+      style={{display:'none'}}
+      value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
+      onChange={evt => {
+        const val = evt.target.value
+        multi_selected_label.current.map(d => d.color = val)
+        set_data({ ...data })
+      }}
+    />
+  </>
+
 
   const button_open_layout=<Button onClick={()=>{
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current!(true)
@@ -616,6 +649,9 @@ export const context_zdt : context_zdtFType =(
   return zdt_to_contextualise?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
+        {btn_mask_border}
+        {btn_change_color}
+        {sep}
         {button_open_layout}
       </ButtonGroup>
     </Popover.Body>
@@ -649,22 +685,25 @@ export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
   applicationContext,
   content_menu_zdt
 )=>{
-  const {ref_nav_item_active,ref_setter_nav_item_active}=uiElementsRef
+  const {ref_nav_item_active,ref_setter_sub_nav_item_active,zdt_accordion_ref}=uiElementsRef
   const {t,has_open_sankey_plus} = applicationContext
   return <Accordion.Item
     key='9'
     id="LL"
-    eventKey="7"
+    eventKey="ZDT"
+    ref={zdt_accordion_ref}
     style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
     onClick={evt => {
-      if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === '7') {
-        ref_setter_nav_item_active.current!('')
+      if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === 'ZDT') {
+        ref_setter_sub_nav_item_active.current!('')
+        // ref_setter_show_menu_config.current(true)
       } else {
-        ref_setter_nav_item_active.current!('7')
+        ref_setter_sub_nav_item_active.current!('ZDT')
+        // ref_setter_show_menu_config.current(true)
       }
     }}
   >
-    <Accordion.Header>
+    <Accordion.Header className='level2'>
       {t('Menu.LL')}
       {(!has_open_sankey_plus)?
         <OverlayTrigger
