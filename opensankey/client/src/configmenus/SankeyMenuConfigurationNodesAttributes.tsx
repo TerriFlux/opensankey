@@ -516,8 +516,6 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
       </InputGroup>
 
 
-      <h4 style={{fontSize:'14px' ,}}>{t('MEP.leg_layout_background')}</h4>
-
       {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
       <OverlayTrigger
         key={'noeud.labels.tooltips.l_bg'}
@@ -545,6 +543,35 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
       </OverlayTrigger>
 
       <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('MEP.leg_pos')}</h4>
+      
+      {/* Largeur de la zone de texte du label */}
+      <OverlayTrigger
+        key={'noeud.labels.tooltips.9'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'noeud.labels.tooltips.9'}>{t('Noeud.labels.tooltips.cl')} </Tooltip>}>
+        <InputGroup>
+          <InputGroup.Text style={{width:'40%'}}>{t('Menu.larg')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_box_width',menu_for_style)?'*':'')}</InputGroup.Text>
+          <FormControl
+            value={list_value['label_box_width'][0] as (string | number)}
+            type={'number'}
+            placeholder={'110'}
+            min={0}
+            max={500}
+            onChange={evt => {
+              if (!isNaN(+evt.target.value)) {
+                const val = (+evt.target.value < 0) ? 0 : +evt.target.value
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'label_box_width',val,menu_for_style))
+                set_data({ ...data })
+              }
+            }}/>
+          <InputGroup.Text style={{width:'10%'}}>
+            px
+          </InputGroup.Text>
+        </InputGroup>
+      </OverlayTrigger>
+      
       {/* Position  du label par rapport au noeud */}
       <InputGroup>
         <InputGroup.Text style={{width:'40%'}}>{'Position'}</InputGroup.Text>
@@ -670,33 +697,6 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         </ButtonGroup>
       </InputGroup>
 
-      {/* Largeur de la zone de texte du label */}
-      <OverlayTrigger
-        key={'noeud.labels.tooltips.9'}
-        placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'noeud.labels.tooltips.9'}>{t('Noeud.labels.tooltips.cl')} </Tooltip>}>
-        <InputGroup>
-          <InputGroup.Text style={{width:'40%'}}>{t('Menu.larg')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_box_width',menu_for_style)?'*':'')}</InputGroup.Text>
-          <FormControl
-            value={list_value['label_box_width'][0] as (string | number)}
-            type={'number'}
-            placeholder={'110'}
-            min={0}
-            max={500}
-            onChange={evt => {
-              if (!isNaN(+evt.target.value)) {
-                const val = (+evt.target.value < 0) ? 0 : +evt.target.value
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'label_box_width',val,menu_for_style))
-                set_data({ ...data })
-              }
-            }}/>
-          <InputGroup.Text style={{width:'10%'}}>
-            px
-          </InputGroup.Text>
-        </InputGroup>
-      </OverlayTrigger>
       {advanced_label_content}
     
     </Form.Group>:<></>}</>
@@ -907,7 +907,6 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     <React.Fragment key={'style_node'}>{style_node}</React.Fragment>,
 
     <React.Fragment key={'sep_1'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
-    <h4 style={StyleTitleSubSectionMenuEditionElements({underline:true})}>{t('Noeud.apparence.apparence')}</h4>,
     <React.Fragment key={'app'}>{content_appearence}</React.Fragment>,
 
     <React.Fragment key={'sep_2'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
