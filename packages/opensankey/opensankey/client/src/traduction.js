@@ -275,6 +275,8 @@ export const open_resources = {
         stretchV:'Apply',
         show_legend_free_value:'Value is contained in an interval',
         legend_dashed_links:'Thickness doesn\'t represent link\'s value',
+        hide_leg:'Hide the legend',
+        show_leg:'Show the legend',
         tooltips: {
           Echelle:'Change the scale of the links and nodes',
           MaxFlux:'Change the maximum size (in pixels) for the display of the links',
@@ -936,6 +938,8 @@ export const open_resources = {
         stretchV:'Appliquer',
         show_legend_free_value:'Valeur contenue dans un intervalle',
         legend_dashed_links:'Épaisseur non-représentative de la valeur du flux',
+        hide_leg:'Masquer la légende',
+        show_leg:'Afficher la légende',
         tooltips: {
           Echelle:'Modifier l\'échelle des flux et noeuds',
           MaxFlux:'Modifier la taille maximale (en pixel) pour l\'affichage des flux',
