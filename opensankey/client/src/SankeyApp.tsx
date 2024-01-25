@@ -292,7 +292,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     'ref_setter_show_menu_node_tooltip',
     menu_node_tooltip,
     contextMenu.pointer_pos,
-    applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.IB')
+    applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.IS')
   )
 
   Object.values(dict_variable_application_data.data.levelTags).forEach(tag_group=>tag_group.activated = false)

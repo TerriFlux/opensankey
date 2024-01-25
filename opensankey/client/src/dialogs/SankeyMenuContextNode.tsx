@@ -137,7 +137,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(true)
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }} variant='light'>{t('Noeud.IB')} {icon_open_modal}</Button>
+  }} variant='light'>{t('Noeud.IS')} {icon_open_modal}</Button>
 
   // Dropdown to change some pararmeter concerning the style of the node
   const dropdown_c_n_style_select=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>

@@ -25,7 +25,6 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
 
   const {fluxTags}=data
   const tags_visible = Object.keys(fluxTags).length > 0
-  const has_dataTags=Object.entries(data.dataTags).filter(([, dataTag])=>Object.keys(dataTag.tags).length>0).length>0
 
   const ValueSelectedParameter = (): SankeyLinkValue => {
     if(multi_selected_links.current.length==0){
@@ -77,8 +76,6 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
             </option>)}
       </Form.Select>
     </InputGroup>
-
-    {has_dataTags?<h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.ED')}</h4>:<></>}
 
     {//Définition des valeurs selon les paramètre dataTags
       Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
