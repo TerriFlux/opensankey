@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import {  DictSetterInputValueType, PlusApplicationContextType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType } from './Types'
+import {  DictSetterInputValueType, PlusApplicationContextType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType } from './Types'
 import ReactQuill from 'react-quill'
 import { contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
 
@@ -25,7 +25,9 @@ export type SankeyPlusMenuConfigurationFreeLabelsFType = {
 export type context_zdtFType=(
   contextMenu:contextMenuType,
   t:TFunction,
-  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
+  dict_variable_elements_selected:PlusElementsSelectedType
 ) => JSX.Element
 
 export type blur_ZDT_wysiwygFType=(
@@ -34,6 +36,6 @@ export type blur_ZDT_wysiwygFType=(
 
 export type zdtMenuAsAccordeonItemType=(
   data:SankeyPlusData,
-  uiElementsRef:uiElementsRefType,
+  uiElementsRef:PlusUiElementsRefType,
   applicationContext:PlusApplicationContextType,
   content_menu_zdt:JSX.Element)=>JSX.Element

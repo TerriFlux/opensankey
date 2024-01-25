@@ -73,12 +73,17 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
         if(!window.SankeyToolsStatic){
           evt.preventDefault()
           pointer_pos.current=[evt.pageX,evt.pageY]
-          if(!multi_selected_label.current.includes(d)){
-            multi_selected_label.current.forEach(nn=>deselect_visualy_zdt(nn))
-            select_visualy_zdt(d)
-            multi_selected_label.current=[d]
+          if(multi_selected_label.current.includes(d)){
             d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content);
             (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
+          }else{
+            multi_selected_label.current.forEach(l=>{
+              deselect_visualy_zdt(l)
+            })
+            multi_selected_label.current=[d]
+            select_visualy_zdt(d)
+              d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content);
+              (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
           }
         }
       })
@@ -149,7 +154,7 @@ export const eventLabelClick : eventLabelClickFType =(
   multi_selected_links,
 )=>{
 
-  const {button_ref,accordion_ref,ref_setter_nav_item_active} =uiElementsRef
+  const {button_ref,accordion_ref,zdt_accordion_ref} =uiElementsRef
   if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     const sankeyTooltip=d3.select('.sankey-tooltip')
 
@@ -157,6 +162,12 @@ export const eventLabelClick : eventLabelClickFType =(
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
       button_ref.current.click()
     }
+
+
+    if (zdt_accordion_ref && zdt_accordion_ref.current) {
+      zdt_accordion_ref.current.click()
+    }
+
     d3.select('#'+d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
     if (multi_selected_label.current.includes(d)) {
       multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
@@ -168,11 +179,6 @@ export const eventLabelClick : eventLabelClickFType =(
       // Display the content of the last zdt selected in the menu config
       d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content)
     }
-    ref_setter_nav_item_active.current('7')
-
-    multi_selected_label.current.forEach(zdt=>{
-      d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display',null)
-    })   
 
     set_data({ ...data })
 
@@ -487,10 +493,10 @@ export const sankey_plus_zoom_text_zone : sankey_plus_zoom_text_zoneFType =(evt:
   }
 }
 const select_visualy_zdt=(zdt:SankeyPlusLabel)=>{
-  d3.select('#'+zdt.idLabel)
-    .attr('stroke-width', 3)
+  d3.select('#'+zdt.idLabel+ ' rect').attr('stroke-width',3)
+  d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display','inline')
 }
 const deselect_visualy_zdt=(zdt:SankeyPlusLabel)=>{
-  d3.select('#'+zdt.idLabel)
-    .attr('stroke-width', 3)
+  d3.select('#'+zdt.idLabel+ ' rect').attr('stroke-width',1)
+  d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display','none')
 }

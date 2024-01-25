@@ -5,7 +5,8 @@ import {
   dict_variable_application_dataType,
   dict_variable_elements_selectedType,
   contextMenuType,
-  applicationContextType
+  applicationContextType,
+  uiElementsRefType
 } from 'open-sankey/src/types/Types'
 import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 
@@ -135,4 +136,7 @@ export interface DictSetterInputValueType {
 }
 export interface PlusApplicationContextType extends applicationContextType{
   has_open_sankey_plus:boolean
+}
+export interface PlusUiElementsRefType extends uiElementsRefType{
+  zdt_accordion_ref : MutableRefObject<HTMLDivElement|null>,
 }
