@@ -85,46 +85,6 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
     </Dropdown.Menu>
   </Dropdown>
 
-  const dropdown_c_zdd_max_size_link=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('MEP.MaxFlux')}
-    </Dropdown.Toggle>
-
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item as={Button} variant='light'>
-        <Form.Control
-          type="text"
-          value={data.maximum_flux == null ? undefined :data.maximum_flux}
-          onChange={(evt) => {
-            const maximum_flux =isNaN(+evt.target.value)?null:+evt.target.value
-            data.maximum_flux = maximum_flux
-            set_data({ ...data })
-          }}
-        />
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>
-
-  const dropdown_c_zdd_min_size_link=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('MEP.MinFlux')}
-    </Dropdown.Toggle>
-
-    <Dropdown.Menu variant='light'>
-      <Dropdown.Item as={Button} variant='light'>
-        <Form.Control
-          type="text"
-          value={data.minimum_flux == null ? undefined :data.minimum_flux}
-          onChange={(evt) => {
-            const minimum_flux =isNaN(+evt.target.value)?null:+evt.target.value
-            data.minimum_flux = minimum_flux
-            set_data({ ...data })
-          }}
-        />
-      </Dropdown.Item>
-    </Dropdown.Menu>
-  </Dropdown>
-
   const button_pa=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('MEP.PA')}
@@ -176,6 +136,13 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   </Dropdown>
 
 
+  const button_mask_leg=<Button variant='light'
+    onClick={() => {
+      data.mask_legend=!data.mask_legend
+      set_data({ ...data })
+    }}>
+    {data.mask_legend?t('MEP.hide_leg'):t('MEP.show_leg')}
+  </Button>
 
   const button_an=<Button variant='light'
     onClick={() => {
@@ -184,7 +151,6 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
     }}>
     {t('MEP.AN')}
   </Button>
-
 
   let full=t('fullscreen')
   if (!document.fullscreenElement) {
@@ -214,19 +180,21 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   return show_context_zdd?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
-        {button_fullscreen}
-        {sep}
-        {button_open_layout}
+        {button_pa}
+        {button_an}
         {sep}
         {button_assgn_rand_node_color}
+        {sep}
+
         {button_bg_color}
         {button_bg_grid}
         {dropdown_c_zdd_scale}
-        {dropdown_c_zdd_min_size_link}
-        {dropdown_c_zdd_max_size_link}
+        {button_mask_leg}
         {sep}
-        {button_pa}
-        {button_an}
+        {button_open_layout}
+        {sep}
+        {button_fullscreen}
+        
       </ButtonGroup>
     </Popover.Body>
   </Popover>:<></>
