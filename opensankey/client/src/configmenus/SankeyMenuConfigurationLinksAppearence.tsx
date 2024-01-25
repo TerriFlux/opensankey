@@ -910,6 +910,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
                   })
                   set_data({ ...data })
                 }}><FaAlignLeft/></Button>
@@ -930,6 +932,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position','middle',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
                   })
                   set_data({ ...data })
                 }}><FaAlignCenter/></Button>
@@ -950,6 +954,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position','end',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
                   })
                   set_data({ ...data })
                 }}><FaAlignRight/></Button>
@@ -973,6 +979,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position','below',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
                   })
                   set_data({ ...data })
                 }}>{svg_label_bottom}</Button>
@@ -993,6 +1001,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position','middle',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
                   })
                   set_data({ ...data })
                 }}>{svg_label_center}</Button>
@@ -1013,6 +1023,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position','above',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
                   })
                   set_data({ ...data })
                 }}>{svg_label_top}</Button>
@@ -1042,6 +1054,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     const l_orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position',(l_pos=='frozen')?'middle':l_pos,menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(l_orth_pos=='frozen')?'middle':l_orth_pos,menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
                   }
                 })
                 set_data({ ...data })
