@@ -5,8 +5,7 @@ import * as d3 from 'd3'
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
 
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
-import { ReturnValueLink,AssignLinkLocalAttribute,AssignLinkValueToCorrectVar, SmoothClasses } from './SankeyUtils'
-import { Checkbox } from '@chakra-ui/react'
+import { ReturnValueLink,AssignLinkLocalAttribute } from './SankeyUtils'
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
@@ -25,10 +24,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
     displayedInputLinkValueRef.current.push(set_displayed_input_link_value)
   }
 
-  const [pre_idSource,set_pre_idSource]=useState('none')
-  const [pre_idTarget,set_pre_idTarget]=useState('none')
-  dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
-  dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget  
+
 
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
@@ -51,112 +47,8 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
     }
   }
 
-  //Change the source of selected link
-  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if(multi_selected_links.current.length>0){
-      const link = multi_selected_links.current[0]
-      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
-      const previous_node = data.nodes[link.idSource]
-      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-  
-      const source_node = data.nodes[changeEvent.target.value]
-      link.idSource = source_node.idNode
-      if (link.idSource === link.idTarget) {
-        AssignLinkValueToCorrectVar(link,'recycling',true,false)
-      }
-      source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
-  
-      set_data({ ...data })
-    }else if(Object.keys(data.nodes).length>1){
-      set_pre_idSource(changeEvent.target.value)
-    }
-    
-  }
-
-  const addDropSource = () => {
-    if (Object.keys(data.nodes).length >= 2) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)
-      )
-    }
-  }
-
-  const addDropCible = () => {
-    if (Object.keys(data.nodes).length >= 2) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)
-      )
-    }
-  }
-
-  //Change the target of selected link
-  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
-    if(multi_selected_links.current.length>0){
-      const { nodes } = data
-      const link = multi_selected_links.current[0]
-      const previous_node = nodes[link.idTarget]
-      previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-  
-      const target_node = nodes[changeEvent.target.value]
-      link.idTarget = target_node.idNode
-      if (link.idSource === link.idTarget) {
-        AssignLinkValueToCorrectVar(link,'recycling',true,false)
-  
-      }
-      target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
-      set_data({ ...data })
-    }else if(Object.keys(data.nodes).length>1){
-      set_pre_idTarget(changeEvent.target.value)
-    }
-   
-  }
-
   const content=<Form >
-    {/* Choix du point d'arrivée du flux  */}
-    <OverlayTrigger
-      key={'Menu.tooltips.flux.trgt'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-      <InputGroup>
-        <InputGroup.Text style={{
-          color:(multi_selected_links.current.length != 1)?'#666666':'',
-          backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-          width:'45%'}}>
-          {t('Flux.trgt')}
-        </InputGroup.Text>
-        <Form.Select
-          disabled={Object.keys(data.nodes).length<2}
-          style={{width:'55%'}}
-          onChange={target_change}
-          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
-          {addDropCible()}
-        </Form.Select>
-      </InputGroup>
-    </OverlayTrigger>
-    
-    {/* Choix du point de départ du flux  */}
-    <OverlayTrigger
-      key={'Menu.tooltips.flux.src'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.flux.src'}>{t('Flux.tooltips.src')} </Tooltip>}>
-      <InputGroup>
-        <InputGroup.Text style={{
-          color:(multi_selected_links.current.length != 1)?'#666666':'',
-          backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-          width:'45%'}}>
-          {t('Flux.src')}
-        </InputGroup.Text>
-        <Form.Select
-          disabled={Object.keys(data.nodes).length<2}
-          style={{width:'55%'}}
-          onChange={source_change}
-          value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
-          {addDropSource()}
-        </Form.Select>
-      </InputGroup>
-    </OverlayTrigger>
+
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} />
     
@@ -309,16 +201,6 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
       </OverlayTrigger>
     </InputGroup>
 
-    <Checkbox 
-      sx={SmoothClasses({})}
-      maxW={'70%'}
-      isChecked={data.display_style.null_flux}
-      onChange={(evt) => {
-        data.display_style.null_flux=evt.target.checked
-        set_data({ ...data })
-      }}>
-      {t('Banner.fn')}
-    </Checkbox>
     {additional_data_element}
 
   </Form>
