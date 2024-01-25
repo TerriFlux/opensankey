@@ -1,6 +1,7 @@
 import React from 'react'
 import { Row, Form, Col, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyMenuConfigurationNodesTooltipFType } from './types/SankeyMenuConfigurationNodesTooltipTypes'
+import { StyleTitleSubSectionMenuEditionElements } from './SankeyUtils'
 
 export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesTooltipFType = (
   applicationContext,
@@ -13,6 +14,8 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
   const { multi_selected_nodes } = dict_variable_elements_selected
 
   const content =<Form >
+    <h4 style={StyleTitleSubSectionMenuEditionElements({underline:true})}>{t('Noeud.IB')}</h4>
+
     <Row>
       <Col xs={12}>
         <OverlayTrigger
@@ -33,7 +36,7 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
       </Col>
     </Row>
   </Form>
-  return menu_for_modal?content:<Tab key="node_tooltip" eventKey="node_tooltip" title={t('Noeud.IB')}>
+  return menu_for_modal?content:<Tab key="node_tooltip" eventKey="node_tooltip" title={t('Noeud.IS')}>
     {content}
   </Tab>
 }
