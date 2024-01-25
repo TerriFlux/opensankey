@@ -117,8 +117,8 @@ export const TextLinkSide : TextLinkSideFType = (
   link:SankeyLink,data:SankeyData
 )=>{
   const recy=ReturnValueLink(data,link,'recycling')
-  const ori=ReturnValueLink(data,link,'label_position')
-  const lab_pos=ReturnValueLink(data,link,'orientation')
+  const lab_pos=ReturnValueLink(data,link,'label_position')
+  const ori=ReturnValueLink(data,link,'orientation')
 
   if (recy) {
     if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
@@ -654,9 +654,7 @@ export const PathNodeArrowShape : PathNodeArrowShapeFType = (
 const DrawLinkText = (
   data: SankeyData,
   link: SankeyLink,
-  links: { [link_id: string]: SankeyLink },
   link_value: number,
-  display_style: display_styleType,
   xs: number,
   ys: number,
   xt: number,
@@ -665,77 +663,85 @@ const DrawLinkText = (
   GetLinkValue:GetLinkValueFuncType
 
 ) => {
-  let x_pos = 0
-  let y_pos = 0
-  const lab_pos=ReturnValueLink(data,link,'label_position') as string
-  const orth_lab_pos=ReturnValueLink(data,link,'orthogonal_label_position')
-  const label_on_path=ReturnValueLink(data,link,'label_on_path')
-  const label_visible=ReturnValueLink(data,link,'label_visible')
 
+  const lab_pos=ReturnValueLink(data,link,'label_position') as string
+  const label_on_path=ReturnValueLink(data,link,'label_on_path')
+  const label_text=LinkText(data, link,GetLinkValue )
   // middle : valeur par défault
   // est-ce necessaire car on force l'option middle à la création du flux
   if (!lab_pos) {
     AssignLinkLocalAttribute(link,'label_position','middle')
-
   }
 
-  if (lab_pos === 'beginning') {
-    x_pos = xs + (xt - xs) / 10
-  } else if (lab_pos === 'middle') {
-    const handles = HandlesPositions(data,links, link, xs, ys, xt, yt,GetLinkValue)
-    if (handles.length >= 2) {
-      const left_xpos = +handles[0].split(',')[0].substring(10)
-      const right_xpos = +handles[1].split(',')[0].substring(10)
-      x_pos = (left_xpos + right_xpos) / 2 - 5
-    } else {
-      x_pos = +handles[0].split(',')[0].substring(10)
+  // If the label position is  either by the mouse when we drag it
+  // or when it doesn't follow the link path
+  // It is handled by link attribut that we have to process
+  if (lab_pos === 'frozen' && link.x_label || !label_on_path || label_on_path === undefined) {
+
+    const label_size=ReturnValueLink(data,link,'label_font_size') as number
+    const orth_lab_pos=ReturnValueLink(data,link,'orthogonal_label_position')
+    let x_pos = 0
+    let y_pos = 0
+
+    // Determinate the position in x and y of the label
+    if (lab_pos === 'beginning') { 
+      // pos x
+      x_pos = xs 
+    } else if (lab_pos === 'middle' || lab_pos==='frozen') {
+      const handles = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue)
+      if (handles.length >= 2) {
+        // pos x
+        const left_xpos = +handles[0].split(',')[0].substring(10)
+        const right_xpos = +handles[1].split(',')[0].substring(10)
+        x_pos = (left_xpos + right_xpos) / 2 - 5
+    
+        // pos y
+        const left_y_pos_str = handles[0].split(',')[1]
+        const left_y_pos = +left_y_pos_str.substring(0, left_y_pos_str.length - 1)
+        const right_y_pos_str = handles[1].split(',')[1]
+        const right_y_pos = +right_y_pos_str.substring(0, right_y_pos_str.length - 1)
+        y_pos = (left_y_pos + right_y_pos) / 2
+            
+      } else {
+        // pos x
+        x_pos = +handles[0].split(',')[0].substring(10)
+        // pos y 
+        const y_pos_str = handles[0].split(',')[1]
+        y_pos = +y_pos_str.substring(0, y_pos_str.length - 1)
+      }
+    } else if (lab_pos === 'end') {//end
+      x_pos = xt -(label_size*label_text.length/2) -5
     }
-  } else if (lab_pos === 'end') {//end
-    x_pos = xt - (xt - xs) / 10
-  }
-
-  if (lab_pos === 'beginning') {
-    y_pos = ys - 6
-  } else if (lab_pos === 'middle') {
-    const handles = HandlesPositions(data,links, link, xs, ys, xt, yt,GetLinkValue)
-    if (handles.length >= 2) {
-      const left_y_pos_str = handles[0].split(',')[1]
-      const left_y_pos = +left_y_pos_str.substring(0, left_y_pos_str.length - 1)
-      const right_y_pos_str = handles[1].split(',')[1]
-      const right_y_pos = +right_y_pos_str.substring(0, right_y_pos_str.length - 1)
-      y_pos = (left_y_pos + right_y_pos) / 2
-    } else {
-      const y_pos_str = handles[0].split(',')[1]
-      y_pos = +y_pos_str.substring(0, y_pos_str.length - 1)
+    
+    
+    // Shift sligthly the label so it's well aligned in the link
+    if(orth_lab_pos=='above'){
+      y_pos-=scale(link_value)/2
+    }else if(orth_lab_pos=='below'){
+      y_pos+=scale(link_value)/2
+      y_pos+=label_size
+    }else if(orth_lab_pos=='middle' || lab_pos==='frozen'){
+      y_pos+=label_size/2
     }
-  } else if (lab_pos === 'end') { //end
-    y_pos = yt - 6
-  }
+    
+    if(lab_pos==='middle' || lab_pos==='frozen'){
+      x_pos-=(label_size*label_text.length)/4
+    }
 
-  scale(Math.max(inv_scale(min_thickness), link_value ? link_value : 0))
-  if(orth_lab_pos=='above'){
-    y_pos-=scale(link_value)/2
-  }else if(orth_lab_pos=='below'){
-    y_pos+=scale(link_value)/2
-  }
-
-  if (lab_pos === 'frozen' && link.x_label ||
-      !label_on_path || label_on_path === undefined) {
+    // If the label is draggable & the var are undefined then we place the label at the middle (horizontally and vertically) of the link 
+    if(lab_pos==='frozen' && ((link.x_label && link.x_label<=0)|| !link.x_label) ){
+      link.x_label=x_pos
+      link.y_label=y_pos
+    }
 
     (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('x', () => lab_pos === 'frozen' && link.x_label ? link.x_label : x_pos)
       .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label : y_pos)
-      .text(d => LinkText(data, d,GetLinkValue ))
-      .attr('visibility', label_visible ? 'visible' : 'hidden');
-    (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>).attr('dy',()=>{
-      if(orth_lab_pos=='above'){
-        return '-1em'
-      }else if(orth_lab_pos=='below'){
-        return '0.3em'
-      }
-      return '0em'
-    })
+      .text(()=> label_text)
+
   } else {
+    // If the label follow the link path then it's not handles by absolute attr (x,y)
+    // but by relative attr (startOffset)
     const positions: { [label_position: string]: string[] } = {
       'frozen': ['50%', 'start'],
       'beginning': ['10px', 'start'],
@@ -746,10 +752,10 @@ const DrawLinkText = (
     (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('startOffset', positions[lab_pos][0])
       .attr('text-anchor', positions[lab_pos][1])
-      .text(d => LinkText(data, d,GetLinkValue))
-      .attr('visibility', label_visible ? 'visible' : 'hidden')
+      .text(() => label_text)
   }
 }
+
 
 
 // Draw the center handle of each selected links
@@ -827,7 +833,7 @@ const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
 )=>{
   const center_handle = 1/2
   
-  const handle_pos = HandlesPositions(data,data.links, link, xs, ys, xt, yt,GetLinkValue)
+  const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue)
   const ori=ReturnValueLink(data,link,'orientation')
 
   if((ori=='hh' || ori=='vv')){
@@ -915,7 +921,7 @@ const add_shift_handles = (
 
 
 ) => {
-  const {data,display_links}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   d3.select('.opensankey #g_link_handles').append('g').attr('class','gg_link_handles').attr('id','gg_link_handle_'+link.idLink)
   let shift_handles
@@ -942,7 +948,7 @@ const add_shift_handles = (
     // Draw handle at the correct position
     d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
       .attr('transform', () => {
-        const handle_pos = HandlesPositions(data,display_links, link, xs, ys, xt, yt,GetLinkValue)
+        const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue)
         return handle_pos[i] // 0 => vertical handle
       })
   }
@@ -976,6 +982,7 @@ const DrawCurve = (
   const l_h_s=ReturnValueLink(data,link,'left_horiz_shift') as number
   const r_h_s=ReturnValueLink(data,link,'right_horiz_shift') as number
   const v_s=ReturnValueLink(data,link,'vert_shift') as number
+  const label_visible=ReturnValueLink(data,link,'label_visible')
 
   const source_node = display_nodes[link.idSource]
   const target_node = display_nodes[link.idTarget]
@@ -1006,8 +1013,8 @@ const DrawCurve = (
   }
 
 
-  if (+link_value > display_style.filter_label || val.extension?.free_visible) {
-    DrawLinkText(data, link, display_links, +link_value, display_style, xs, ys, xt, yt,LinkText,GetLinkValue)
+  if (label_visible && (+link_value > display_style.filter_label || val.extension?.free_visible) ) {
+    DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue)
   }
 
   if (ori === 'vh' && !recy) {
@@ -1104,7 +1111,6 @@ export const drawCurveFunction : SankeyDrawCurve = {curve:DrawCurve}
 // Returns the x/y position of link_center / left/right/vert_shift
 const HandlesPositions = (
   data:SankeyData,
-  links: { [link_id: string]: SankeyLink },
   link: SankeyLink,
   xs: number,
   ys: number,
