@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
-import { SankeyLink, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
+import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup, Form, Row, Col } from 'react-bootstrap'
+import { SankeyLink, SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 
 import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
@@ -15,7 +15,9 @@ import { ValueSelectedParameter,NodeVisibleOnsSvg } from '../draw/SankeyDrawFunc
 import { t } from 'i18next'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { MenuConfigurationLinksFType } from './types/SankeyMenuConfigurationLinksTypes'
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faRotate} from '@fortawesome/free-solid-svg-icons'
+import { reorganize_inputLinksId } from '../draw/SankeyDrawLayout'
 export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
@@ -78,7 +80,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const { multi_selected_links,multi_selected_nodes, displayedInputLinkValueRef}=dict_variable_elements_selected
   const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
+  const [pre_idSource,set_pre_idSource]=useState('none')
+  const [pre_idTarget,set_pre_idTarget]=useState('none')
 
+  dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
+  dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget  
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
 
   const set_show_link = useState(true)[1]
@@ -242,6 +248,68 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_show_link(true)
   }
 
+  
+  //Change the source of selected link
+  const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    if(multi_selected_links.current.length>0){
+      const link = multi_selected_links.current[0]
+      //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
+      const previous_node = data.nodes[link.idSource]
+      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
+  
+      const source_node = data.nodes[changeEvent.target.value]
+      link.idSource = source_node.idNode
+      if (link.idSource === link.idTarget) {
+        AssignLinkValueToCorrectVar(link,'recycling',true,false)
+      }
+      source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
+  
+      set_data({ ...data })
+    }else if(Object.keys(data.nodes).length>1){
+      set_pre_idSource(changeEvent.target.value)
+    }
+    
+  }
+
+  const addDropSource = () => {
+    if (Object.keys(data.nodes).length >= 2) {
+      return (
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)
+      )
+    }
+  }
+
+  const addDropCible = () => {
+    if (Object.keys(data.nodes).length >= 2) {
+      return (
+        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)
+      )
+    }
+  }
+
+  //Change the target of selected link
+  const target_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
+    if(multi_selected_links.current.length>0){
+      const { nodes } = data
+      const link = multi_selected_links.current[0]
+      const previous_node = nodes[link.idTarget]
+      previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
+  
+      const target_node = nodes[changeEvent.target.value]
+      link.idTarget = target_node.idNode
+      if (link.idSource === link.idTarget) {
+        AssignLinkValueToCorrectVar(link,'recycling',true,false)
+  
+      }
+      target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
+      set_data({ ...data })
+    }else if(Object.keys(data.nodes).length>1){
+      set_pre_idTarget(changeEvent.target.value)
+    }
+   
+  }
+
+
   return (<>
     {/* Ajout d'un flux  */}
     <InputGroup>
@@ -311,6 +379,79 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         </Button>
       </OverlayTrigger>
     </InputGroup>
+    <Row>
+      <Col xs={11} style={{paddingRight:'0px'}}>{/* Choix du point d'arrivée du flux  */}
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.trgt'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
+          <InputGroup>
+            <InputGroup.Text style={{
+              color:(multi_selected_links.current.length != 1)?'#666666':'',
+              backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
+              width:'45%'}}>
+              {t('Flux.trgt')}
+            </InputGroup.Text>
+            <Form.Select
+              disabled={Object.keys(data.nodes).length<2}
+              style={{width:'55%'}}
+              onChange={target_change}
+              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
+              {addDropCible()}
+            </Form.Select>
+          </InputGroup>
+        </OverlayTrigger>
+    
+        {/* Choix du point de départ du flux  */}
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.src'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.src'}>{t('Flux.tooltips.src')} </Tooltip>}>
+          <InputGroup>
+            <InputGroup.Text style={{
+              color:(multi_selected_links.current.length != 1)?'#666666':'',
+              backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
+              width:'45%'}}>
+              {t('Flux.src')}
+            </InputGroup.Text>
+            <Form.Select
+              disabled={Object.keys(data.nodes).length<2}
+              style={{width:'55%'}}
+              onChange={source_change}
+              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
+              {addDropSource()}
+            </Form.Select>
+          </InputGroup>
+        </OverlayTrigger>
+      </Col>
+      <Col xs={1} style={{paddingLeft:'0px',height:'6em'}}><Button 
+        onClick={()=>{
+          const nodes_to_reorganize: SankeyNode[] = []
+          multi_selected_links.current.forEach(l => {
+            const tmp = l.idSource
+            const previous_node_s = data.nodes[l.idSource]
+            previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
+            const source_node = data.nodes[l.idTarget]
+            l.idSource = source_node.idNode
+            source_node.outputLinksId.push(l.idLink)
+            nodes_to_reorganize.push(source_node)
+            const previous_node_t = data.nodes[l.idTarget]
+            previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
+            const target_node = data.nodes[tmp]
+            l.idTarget = target_node.idNode
+            target_node.inputLinksId.push(l.idLink)
+            nodes_to_reorganize.push(target_node)
+          })
+          nodes_to_reorganize.forEach(n => {
+            reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
+          })
+          set_data({ ...data })
+        }}
+      ><FontAwesomeIcon icon={faRotate}/> </Button></Col>
+    </Row>
+        
 
     { (multi_selected_links.current.length !== 0) ? (
       <Tabs defaultActiveKey="flux_data" id="settings-layout" fill={true}>
