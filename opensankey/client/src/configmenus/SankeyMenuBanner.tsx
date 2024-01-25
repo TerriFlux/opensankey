@@ -37,6 +37,8 @@ import {
 } from './types/SankeyMenuBannerTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from './types/SankeyUtilsTypes'
 import { AddAllDropDownFluxFType } from '../topmenus/types/SankeyMenuTopTypes'
+import { Checkbox } from '@chakra-ui/react'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 
 
 
@@ -228,7 +230,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
             {banner_grouptag.length > 1 ? <FormLabel style={{ color: color }}>{tags_group.group_name}</FormLabel> : <></>}
           </Row>
           <Row>
-            <Col xs={7}>
+            <Col xs={11}>
               <Form.Select
                 style={{color: 'black' }}
                 key={tags_group.group_name}
@@ -244,10 +246,10 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
               </Form.Select>
             </Col>
             {tags_group.siblings !== undefined && tags_group.siblings.length > 0 ?
-              <Col xs={3} style={{margin:'auto'}}>
-                <FormCheck inline
-                  type='switch'
-                  checked={tags_group.activated}
+              <Col xs={1} style={{margin:'auto'}}>
+                <Checkbox
+                  isChecked={tags_group.activated}
+                  icon={tags_group.activated?<FaEye style={{fill:'rgb(120, 194, 173)'}}/>:<FaEyeSlash/>}
                   onChange={evt => {
                     tags_group.activated = evt.target.checked
                     const first_antagonist_tag = data.levelTags[tags_group.siblings[0]]
@@ -452,6 +454,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   const [s_show_data_tag_filter,sShowDataTagFilter]=useState(false)
   const [s_show_link_threshold,sShowLinkThreshold]=useState(false)
   const [s_show_detail_level,sShowDetailLevel]=useState(false)
+  const [s_show_data_type,sShowDataType]=useState(false)
+
   const [s_is_data_type_reconcilied,sIsDataTypeReconcilied]=useState(['reconciled', 'free_value','free_interval'].includes(data.show_structure))
   const [s_force_update,sforceUpdate]=useState(false)
 
@@ -738,7 +742,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
         key={'tooltip-liaison'}
         placement={'left'}
         delay={500}
-        overlay={<Tooltip id={'tooltip-liason'}>{(mode_selection == 'ln')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')} </Tooltip>}>
+        overlay={<Tooltip id={'tooltip-liason'}>{(mode_selection == 's')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')} </Tooltip>}>
         <Button variant={(!(mode_selection == 'ln')) ? 'secondary' : 'secondary'} onClick={() => {
           if(mode_selection=='ln'){
             setSelectionMode('s') 
@@ -803,17 +807,32 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   </Overlay></>
 
 
-  const btn_show_data_type=url_prefix !== '' ?<OverlayTrigger
+  const btn_show_data_type=url_prefix !== '' ?<><OverlayTrigger
     key={'tooltip-structur'}
     placement={'left'}
-    trigger={'click'}
     rootClose
-    overlay={struc_data_reconciled}>
-    <Button variant='success'>
+    overlay={<Tooltip id={'tooltip-datatype'}>{t('Banner.sdr')} </Tooltip>}>
+    <Button variant='success'
+      onClick={()=>{
+        sShowDataType(!s_show_data_type)
+      }}
+    >
       <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
 
     </Button>
   </OverlayTrigger>
+  {/* Popover to display selector of datatype */}
+  <Overlay
+    key={'overlay-popover-data-type'}
+    placement={'left'}
+    target={target_link_threshold}
+    rootClose
+    show={s_show_data_type}
+    onHide={()=>{sShowDataType(false)}}
+  >
+    {struc_data_reconciled}
+  </Overlay>
+  </>
     :
     <OverlayTrigger
       key={'tooltip-structur'}
