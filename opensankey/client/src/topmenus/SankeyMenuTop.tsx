@@ -692,7 +692,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         contextMenu.ref_setter_contextualised_node.current!(undefined)
         contextMenu.ref_contextualised_node.current = undefined
         contextMenu.ref_setter_contextualised_link.current!(undefined)
-        contextMenu.showContextZDDRef.current![0][1](false)
+        contextMenu.showContextZDDRef.current![1](false)
         contextMenu.tagContext.current![0][1](undefined)
       }} >
         <Container className='MenuNavigation'>

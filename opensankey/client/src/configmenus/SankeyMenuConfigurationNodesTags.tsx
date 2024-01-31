@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Row, Form, Tab, InputGroup } from 'react-bootstrap'
 import { SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 import { Checkbox } from '@chakra-ui/react'
@@ -15,19 +15,19 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
-  tags_group_key:string,
-  set_tags_group_key:(_:string)=>void
+  menu_for_modal=false
 )=> {
   const { t } = applicationContext
   const { data, set_data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
+  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
 
   const tags_visible = Object.keys(data.nodeTags).length > 0
   if ((tags_group_key == '' && Object.keys(data.nodeTags).length > 0) || (!Object.keys(data.nodeTags).includes(tags_group_key) && Object.keys(data.nodeTags).length > 0)) {
     set_tags_group_key(Object.keys(data.nodeTags)[0])
   }
-  return <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
-    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.EN')}</h4>
+
+  const content=<>    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.EN')}</h4>
 
     {/* Groupe d'étiquettes  */}
     <InputGroup>
@@ -47,7 +47,7 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
     </InputGroup>
 
     <Form.Group as={Row} style={{margin:'auto'}} >
-      
+  
       {tags_visible && tags_group_key != '' && Object.keys(data.nodeTags).includes(tags_group_key) ? Object.entries(data.nodeTags[tags_group_key].tags).map(
         tags => {
           const allChecked = IsAllNodeTagsSame(multi_selected_nodes.current,tags[0],tags_group_key)
@@ -89,10 +89,13 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
 
 
 
-              
+          
           )
         }) : (<></>)}
-    </Form.Group>
+    </Form.Group></>
+
+  return menu_for_modal?content: <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
+    {content}
   </Tab >
 }
 

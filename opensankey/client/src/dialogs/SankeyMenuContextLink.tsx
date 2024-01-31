@@ -177,7 +177,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   </Dropdown>:<></>
   const dropdown_c_l_style=contextualised_link!==undefined?<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.Style')}
+      {t('Noeud.editStyle')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
       <Dropdown.Item as={Button} variant='light' onClick={()=>{
@@ -263,6 +263,13 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     set_contextualised_link(undefined)
   }} variant='light'>{t('Flux.IB')} {icon_open_modal}</Button>:<></>
 
+  const btn_l_n_show_tags_menu=<Button onClick={()=>{
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(true)
+    set_contextualised_link(undefined)
+    contextMenu.ref_contextualised_node.current = undefined
+  }} variant='light'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
+
+
   // Pop over that serve as context menu
   return contextualised_link!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
     <Popover.Body >
@@ -289,6 +296,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
         {sep}
         {button_open_link_data}
         {button_open_link_appearence}
+        {btn_l_n_show_tags_menu}
         {button_open_link_tooltip}
       </ButtonGroup>
     </Popover.Body>

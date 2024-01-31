@@ -51,7 +51,6 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 ) => {
   const { data } = dict_variable_application_data
 
-  const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
 
   const ui : {[s:string] : JSX.Element}= {
     'Attributes'      : SankeyMenuConfigurationNodesAttributes(
@@ -65,15 +64,15 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
       false
     )
   }
+  const node_tags_submenu=SankeyMenuConfigurationNodesTags(
+    applicationContext,
+    dict_variable_application_data,
+    dict_variable_elements_selected,
+    false
+  )
 
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
-    ui['Tags'] = SankeyMenuConfigurationNodesTags(
-      applicationContext,
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      tags_group_key,
-      set_tags_group_key
-    )
+    ui['Tags'] = node_tags_submenu
   }
   
   ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(

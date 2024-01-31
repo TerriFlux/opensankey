@@ -167,8 +167,8 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
   const { pointer_pos } = contextMenu
   ev.preventDefault()
   pointer_pos.current = [ev.pageX, ev.pageY]
-
-  contextMenu.showContextZDDRef.current![0][1](true)
+  console.log(contextMenu.showContextZDDRef.current)
+  contextMenu.showContextZDDRef.current![1](true)
   //contextZDDRef.current!.hidden = false
   //const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
   //contextZDDRef.current!.attributes[4].value = 'max-width: 100%; position: absolute; inset: '+style_c_n

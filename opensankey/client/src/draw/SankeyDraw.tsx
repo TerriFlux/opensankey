@@ -121,7 +121,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
       )
     svgSankey.on('contextmenu',(evt)=>{
-
       if(!window.SankeyToolsStatic && d3.select(evt.target).attr('class')=='mode_selection'){return EventZDDContextMenu(evt,contextMenu)}
     })
 

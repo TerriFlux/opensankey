@@ -52,7 +52,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   const pre_tag_menu=MenuConfigurationLinksTags(
     dict_variable_application_data,
     dict_variable_elements_selected,
-    applicationContext
+    applicationContext,
+    false
   )
   if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')){
     ui['tags']=pre_tag_menu

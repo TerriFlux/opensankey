@@ -3,6 +3,7 @@ import { applicationContextType, dict_variable_application_dataType, dict_variab
 export type MenuConfigurationLinksTagsFType = (
  dict_variable_application_data:dict_variable_application_dataType,
  dict_variable_elements_selected:dict_variable_elements_selectedType,
- applicationContext:applicationContextType
+ applicationContext:applicationContextType,
+ menu_for_modal:boolean
 )=> JSX.Element
 
