@@ -19,9 +19,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
 }) => {
 
   const [ show_context_zdd, set_show_context_zdd ] = useState(false)
-  if ( contextMenu.showContextZDDRef.current!.length === 0 ) {
-    contextMenu.showContextZDDRef.current!.push([ show_context_zdd, set_show_context_zdd ])
-  }
+  contextMenu.showContextZDDRef.current=[ show_context_zdd, set_show_context_zdd ]
   const { data, set_data } = dict_variable_application_data
   const { t } = applicationContext
   const { pointer_pos } = contextMenu

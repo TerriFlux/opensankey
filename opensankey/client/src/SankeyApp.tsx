@@ -55,6 +55,8 @@ import { CardsTemplateBuilder, welcomeModalBuilder } from './dialogs/SankeyModal
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuConfigurationNodesTooltip'
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
+import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfigurationNodesTags'
+import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
@@ -131,6 +133,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_menu_node_apparence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_node_io : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_node_tooltip : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_node_tags : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_menu_link_tags : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_link_data : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_link_appearence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_menu_link_tooltip : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
@@ -159,10 +163,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       contextMenu.ref_setter_contextualised_node.current!(undefined)
       contextMenu.ref_setter_contextualised_link.current!(undefined)
       contextMenu.tagContext.current![0][1](undefined)
-      contextMenu.showContextZDDRef.current![0][1](false)
+      contextMenu.showContextZDDRef.current![1](false)
     },
     pointer_pos : useRef([window.innerWidth/4,window.innerHeight/4]),
-    showContextZDDRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([])
+    showContextZDDRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>]>()
   }
   /*************************************************************************************************/
   const agregation : agregationType = {
@@ -222,7 +226,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     contextMenu.ref_setter_contextualised_node.current!(undefined)
     contextMenu.ref_setter_contextualised_link.current!(undefined)
     contextMenu.tagContext.current![0][1](undefined)
-    contextMenu.showContextZDDRef.current![0][1](false)
+    contextMenu.showContextZDDRef.current![1](false)
     set_data(new_data)
     sessionStorage.setItem('dismiss_warning_sankey_plus','0')
     sessionStorage.setItem('dismiss_warning_sankey_mfa','0')
@@ -233,9 +237,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_data.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_appearence.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tooltip.current(false)
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tags.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_layout.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current!(false)
     contextMenu.closeAllMenuContext()
@@ -293,6 +299,28 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     menu_node_tooltip,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.IS')
+  )
+
+  // MENU DRAGGABLE NODE tag selection
+  const menu_node_tags = SankeyMenuConfigurationNodesTags(applicationContext,dict_variable_application_data,dict_variable_elements_selected,true)
+
+  const menuNodeTags= MenuDraggable(
+    dict_hook_ref_setter_show_dialog_components,
+    'ref_setter_show_menu_node_tags',
+    menu_node_tags,
+    contextMenu.pointer_pos,
+    applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Menu.Etiquettes')
+  )
+
+  // MENU DRAGGABLE Link tag selection
+  const menu_link_tags = MenuConfigurationLinksTags(dict_variable_application_data,dict_variable_elements_selected,applicationContext,true)
+
+  const menuLinkTags= MenuDraggable(
+    dict_hook_ref_setter_show_dialog_components,
+    'ref_setter_show_menu_link_tags',
+    menu_link_tags,
+    contextMenu.pointer_pos,
+    applicationContext.t('Menu.Flux')+' '+applicationContext.t('Menu.Etiquettes')
   )
 
   Object.values(dict_variable_application_data.data.levelTags).forEach(tag_group=>tag_group.activated = false)
@@ -525,8 +553,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       )
       }
       {menuNodeTooltip}
-
-
+      {menuNodeTags}
+      {menuLinkTags}
       {
         MenuDraggable(
           dict_hook_ref_setter_show_dialog_components,
