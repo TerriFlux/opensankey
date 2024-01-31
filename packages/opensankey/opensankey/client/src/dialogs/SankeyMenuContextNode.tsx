@@ -160,7 +160,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 
   const dropdown_c_n_style=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Noeud.Style')}
+      {t('Noeud.editStyle')}
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
       <Dropdown.Item  as={Button} variant='light' onClick={()=>{
@@ -176,7 +176,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(true)
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }} variant='light'>{t('Noeud.PF.PFM')}{icon_open_modal}</Button>
+  }} variant='light'>{t('Noeud.PF.PF')}{icon_open_modal}</Button>
   const dropdown_c_n_align_h_min_ori=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Noeud.align_horiz_min')}
@@ -234,6 +234,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     </Dropdown.Menu>
   </Dropdown>
 
+
+
   // ===============ALIGNEMENT VERTICAL DES NOEUDS=======================================
   const dropdown_c_n_align_v_min_ori=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
@@ -288,6 +290,16 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     <Dropdown.Menu variant='light'>
       {dropdown_c_n_align_v_min_ori}
       {dropdown_c_n_align_v_max_ori}
+    </Dropdown.Menu>
+  </Dropdown>
+
+  const dropdown_c_n_align=<Dropdown autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
+    <Dropdown.Toggle variant="light" id="dropdown-basic">
+      {t('Noeud.align')}
+    </Dropdown.Toggle>
+    <Dropdown.Menu style={{maxWidth:'190px'}} variant='light'>
+      {dropdown_c_n_align_h}
+      {dropdown_c_n_align_v}
     </Dropdown.Menu>
   </Dropdown>
 
@@ -370,7 +382,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     set_data({...data})
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }}>Agrégation</Button>:<></>
+  }}>{t('Noeud.context_agregate')}</Button>:<></>
 
   const btn_desagregate=multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node &&NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
     Desaggregate(contextualised_node,data,display_nodes,display_links,agregation)
@@ -378,7 +390,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     set_data({...data})
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
-  }}>Désagrégation</Button>:<></>
+  }}>{t('Noeud.context_desagregate')}</Button>:<></>
 
   const btn_mask_shape=<Button variant='light'
     onClick={()=>{
@@ -413,6 +425,14 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     {contextualised_node_value_visible?t('Noeud.apparence.hide_value'):t('Noeud.apparence.display_value')}
   </Button>
 
+
+
+  const btn_c_n_show_tags_menu=<Button onClick={()=>{
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(true)
+    set_contextualised_node(undefined)
+    contextMenu.ref_contextualised_node.current = undefined
+  }} variant='light'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
+
   // Pop over that serve as context menu
   return contextualised_node!==undefined?<Popover id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
     <Popover.Body>
@@ -420,10 +440,11 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         {btn_aggregate}
         {btn_desagregate}
         {sep}
+        {multi_selected_nodes.current.length>1?<>
+          {dropdown_c_n_align}
+          {sep}</>:<></>
+        }
         
-        {dropdown_c_n_align_h}
-        {dropdown_c_n_align_v}
-        {sep}
 
         {additional_context_element_other}
         {sep}
@@ -456,6 +477,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 
         {sep}
         {dropdown_c_n_apparence}
+        {btn_c_n_show_tags_menu}
         {multi_selected_nodes.current.length==1?dropdown_c_n_io:<></>}
         {dropdown_c_n_tooltip}
         {additional_context_element_menu}
