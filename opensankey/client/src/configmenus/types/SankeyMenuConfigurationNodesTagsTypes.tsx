@@ -11,8 +11,7 @@ export type SankeyMenuConfigurationNodesTagsFType = (
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
-  tags_group_key:string,
-  set_tags_group_key:(_:string)=>void
+  menu_for_modal:boolean
 )=> JSX.Element
 
 
