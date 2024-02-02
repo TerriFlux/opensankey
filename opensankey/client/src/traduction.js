@@ -375,10 +375,10 @@ export const open_resources = {
         },
         apparence:{
           apparence:'Appearence',
-          Visibilité:'Shape visibility',
+          Visibilité:'Shape',
           Couleur:'Color',
           CouleurPérenne:'Static color',
-          Forme:'Shape',
+          Forme:'Geometry',
           Cercle:'Circle',
           Rectangle:'Rectangle',
           TML:'Minimum width',
@@ -408,9 +408,9 @@ export const open_resources = {
           }
         },
         labels:{
-          labels:'Labels',
+          labels:'Name',
           node_value:'Value',
-          vdb:'Label text',
+          vdb:'Valeur',
           lb:'White label',
           l_bg:'Background',
           pos:'Position',
@@ -418,7 +418,7 @@ export const open_resources = {
           tp:'Font size',
           police:'Font type',
           cl:'Text box width',
-          vdv:'Value label',
+          vdv:'Value',
           edit_node_label:'Edit node label',
           tooltips: {
             vdb:'Displays or not the label(s) attached to the selected node(s)',
@@ -487,7 +487,7 @@ export const open_resources = {
         IB:'ToolTip',
         IS:'Additional info.',
         ajust_label:'Adjust labels position',
-        FS:'Simple Link',
+        FS:'Link',
         tooltips: {
           src:'Choice of the departure node for the selected link(s)',
           trgt:'Choice of the arrival node for the selected link(s)',
@@ -499,6 +499,7 @@ export const open_resources = {
           as:'Allow to apply a predefined style in the preference menu to the selected link(s)',
           IB:'Tooltip : text formatted in HTML and displayed with the tooltip of the link. This tooltip pops on graphic space with SHIFT + MOUSE on the link.',
           ajust_label:'Reposition links labels above the links if they\'re taller than link stroke',
+          inv:'Inverse the target and the source'
         },
         data:{
           données:'Data',
@@ -937,7 +938,7 @@ export const open_resources = {
         Horizontal:'Ecartement horizontal des noeuds',
         Vertical:'Ecartement vertical des noeuds',
         PA:'Positionnement automatique des noeuds et flux',
-        PA_action:'Positioner',
+        PA_action:'Position',
         factExpH:'Facteur d\'expansion horizontale',
         factExpV:'Facteur d\'expansion verticale',
         stretchH:'Appliquer',
@@ -1043,10 +1044,10 @@ export const open_resources = {
         },
         apparence:{
           apparence:'Apparence',
-          Visibilité:'Noeud simple',
+          Visibilité:'Forme',
           Couleur:'Couleur',
           CouleurPérenne:'Couleur fixe',
-          Forme:'Forme',
+          Forme:'Géométrie',
           Cercle:'Cercle',
           Rectangle:'Rectangle',
           TML:'Largeur minimale',
@@ -1076,7 +1077,7 @@ export const open_resources = {
           }
         },
         labels:{
-          labels:'Labels',
+          labels:'Nom',
           node_value:'Valeur',
           vdb:'Label',
           lb:'Blanc',
@@ -1086,7 +1087,7 @@ export const open_resources = {
           tp:'Taille de police',
           police:'Style de police',
           cl:'Largeur zone de texte',
-          vdv:'Label valeur',
+          vdv:'Valeur',
           edit_node_label:'Éditer le nom',
           tooltips: {
             vdb:'Permet d\'afficher ou non le label accolé au(x) noeud(s) sélectionné(s)',
@@ -1155,8 +1156,8 @@ export const open_resources = {
         as:'Réinitialiser',
         IB:'Info-bulle',
         IS:'Info sup.',
-        ajust_label:'Ajuster la position des labels',
-        FS:'Flux Simple',
+        ajust_label:'Positionner les labels au-dessus des flux s\'ils sont plus épais que les flux',
+        FS:'Flux',
         tooltips: {
           src:'Choix du noeud de départ pour le/les flux sélectionné(s)',
           trgt:'Choix du noeud d\'arrivée pour le/les flux sélectionné(s)',
@@ -1168,6 +1169,7 @@ export const open_resources = {
           as:'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) flux selectionné(s)',
           IB:'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du flux. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le flux',
           ajust_label:'Repositionne les labels de flux au dessus si les labels sont plus grand que l\'épaisseur des flux',
+          inv:'Inverse le sens du flux en inversant sa source et sa cible'
         },
         data:{
           données:'Données',
@@ -1193,7 +1195,7 @@ export const open_resources = {
           opacity:'Opacité',
           recy:'Recyclage',
           courbure:'Courbure',
-          arrow_size:'Taile de la flêche',
+          arrow_size:'Taille de la flêche',
           display_link_lab:'Afficher la valeur',
           hide_link_lab:'Masquer la valeur',
           tooltips: {
@@ -1215,7 +1217,7 @@ export const open_resources = {
         },
         label:{
           label:'Label',
-          vdb:'Label valeur',
+          vdb:'Valeur',
           len:'Label en noir',
           lb:'Label en blanc',
           lec:'Label en couleur',
