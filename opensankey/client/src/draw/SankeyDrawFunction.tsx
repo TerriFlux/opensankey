@@ -687,6 +687,7 @@ const DrawLinkText = (
     if (lab_pos === 'beginning') { 
       // pos x
       x_pos = xs 
+      y_pos=ys
     } else if (lab_pos === 'middle' || lab_pos==='frozen') {
       const handles = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue)
       if (handles.length >= 2) {
@@ -711,6 +712,7 @@ const DrawLinkText = (
       }
     } else if (lab_pos === 'end') {//end
       x_pos = xt -(label_size*label_text.length/2) -5
+      y_pos = yt
     }
     
     
