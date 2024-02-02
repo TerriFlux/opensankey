@@ -1,7 +1,7 @@
 import { TFunction } from 'i18next'
 import {  DictSetterInputValueType, PlusApplicationContextType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType } from './Types'
 import ReactQuill from 'react-quill'
-import { contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { contextMenuType } from 'open-sankey/src/types/Types'
 
 export type SankeyPlusMenuPreferenceLabelsFType=(
   t:TFunction,

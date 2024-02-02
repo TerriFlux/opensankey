@@ -74,7 +74,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
           evt.preventDefault()
           pointer_pos.current=[evt.pageX,evt.pageY]
           if(multi_selected_label.current.includes(d)){
-            d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content);
+            d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
             (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
           }else{
             multi_selected_label.current.forEach(l=>{
@@ -82,7 +82,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
             })
             multi_selected_label.current=[d]
             select_visualy_zdt(d)
-              d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content);
+            d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
               (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
           }
         }
@@ -173,11 +173,11 @@ export const eventLabelClick : eventLabelClickFType =(
       multi_selected_label.current.splice(multi_selected_label.current.indexOf(d), 1)
 
       // If we deselect a zdt use the last one selected as displayed in config
-      if(multi_selected_label.current.length>0)d_setter_input_value.r_setter_editor_content_fo_zdt.current!(multi_selected_label.current[multi_selected_label.current.length-1].content)
+      if(multi_selected_label.current.length>0)d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(multi_selected_label.current[multi_selected_label.current.length-1].content))
     } else {
       multi_selected_label.current.push(d)
       // Display the content of the last zdt selected in the menu config
-      d_setter_input_value.r_setter_editor_content_fo_zdt.current!(d.content)
+      d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content))
     }
 
     set_data({ ...data })

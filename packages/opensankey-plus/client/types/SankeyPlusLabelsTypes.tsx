@@ -1,4 +1,4 @@
-import { SankeyData, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { SankeyData } from 'open-sankey/src/types/Types'
 import { DictSetterInputValueType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
