@@ -9,7 +9,7 @@ import { Row,
   Popover,
   ButtonGroup,
   Badge} from 'react-bootstrap'
-import {  SankeyPlusContextMenuType, SankeyPlusData,SankeyPlusLabel} from '../types/Types'
+import { SankeyPlusContextMenuType, SankeyPlusData,SankeyPlusLabel} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
@@ -72,8 +72,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   const [button_icon_or_image,set_button_icon_or_image]=useState<'zdt'|'image'>(zdt_or_image)
   const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
 
-  d_setter_input_value.r_setter_editor_content_fo_zdt.current=sEditorContentFOZdt
-  
+  d_setter_input_value.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
+
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
