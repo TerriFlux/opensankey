@@ -427,30 +427,41 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           </InputGroup>
         </OverlayTrigger>
       </Col>
-      <Col xs={1} style={{paddingLeft:'0px',height:'6em'}}><Button 
-        onClick={()=>{
-          const nodes_to_reorganize: SankeyNode[] = []
-          multi_selected_links.current.forEach(l => {
-            const tmp = l.idSource
-            const previous_node_s = data.nodes[l.idSource]
-            previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
-            const source_node = data.nodes[l.idTarget]
-            l.idSource = source_node.idNode
-            source_node.outputLinksId.push(l.idLink)
-            nodes_to_reorganize.push(source_node)
-            const previous_node_t = data.nodes[l.idTarget]
-            previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
-            const target_node = data.nodes[tmp]
-            l.idTarget = target_node.idNode
-            target_node.inputLinksId.push(l.idLink)
-            nodes_to_reorganize.push(target_node)
-          })
-          nodes_to_reorganize.forEach(n => {
-            reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
-          })
-          set_data({ ...data })
-        }}
-      ><FontAwesomeIcon icon={faRotate}/> </Button></Col>
+      <Col xs={1} style={{paddingLeft:'0px',height:'3em'}}>
+        <OverlayTrigger 
+          key={'Menu.tooltips.flux.inverse'}
+          placement='top'
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.inv'}>{t('Flux.tooltips.inv')} </Tooltip>}
+        >
+
+          <Button 
+            onClick={()=>{
+              const nodes_to_reorganize: SankeyNode[] = []
+              multi_selected_links.current.forEach(l => {
+                const tmp = l.idSource
+                const previous_node_s = data.nodes[l.idSource]
+                previous_node_s.outputLinksId.splice(previous_node_s.outputLinksId.indexOf(l.idLink), 1)
+                const source_node = data.nodes[l.idTarget]
+                l.idSource = source_node.idNode
+                source_node.outputLinksId.push(l.idLink)
+                nodes_to_reorganize.push(source_node)
+                const previous_node_t = data.nodes[l.idTarget]
+                previous_node_t.inputLinksId.splice(previous_node_t.inputLinksId.indexOf(l.idLink), 1)
+                const target_node = data.nodes[tmp]
+                l.idTarget = target_node.idNode
+                target_node.inputLinksId.push(l.idLink)
+                nodes_to_reorganize.push(target_node)
+              })
+              nodes_to_reorganize.forEach(n => {
+                reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
+              })
+              set_data({ ...data })
+            }}
+          ><FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/> </Button>
+        </OverlayTrigger>
+      
+      </Col>
     </Row>
         
 
