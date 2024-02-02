@@ -6,8 +6,7 @@ import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp } from 'reac
 
 import { Checkbox } from '@chakra-ui/react'
 
-import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge, StyleTitleSubSectionMenuEditionElements} from './SankeyUtils'
-import { LinkStrokeWidth,scale,inv_scale } from '../draw/SankeyDrawFunction'
+import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge, StyleTitleSubSectionMenuEditionElements, IsAllLinkNotLocalAttrSameValue} from './SankeyUtils'
 import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 
@@ -86,6 +85,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
     'label_visible','font_family','recycling','arrow','curved','nb_digit','scientific_precision',
     'text_color','label_position','orthogonal_label_position'] as (keyof SankeyLinkAttrLocal)[]
   const list_value=IsAllLinkAttrSameValue(data,selected_parameter,list_key,menu_for_style)
+
+  const isAllLinksLabelPosOrthAuto=IsAllLinkNotLocalAttrSameValue(data,(menu_for_style)?[]:multi_selected_links.current,['label_pos_auto'])
+  
   
   const shiftCenter = () => {
     if (selected_parameter.length == 0) {
@@ -326,27 +328,6 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       </ButtonGroup>
     </Form.Group>
 
-    {/* Forme courbée  */}
-    <OverlayTrigger
-      key={'flux.apparence.tooltips.9'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'flux.apparence.tooltips.9'}>{t('Flux.apparence.tooltips.courbe')} </Tooltip>}>
-      <Checkbox
-        sx={SmoothClasses({})}
-        iconColor={list_value['curved'][1]?'#78C2AD':'white'}
-        maxW={'90%'}
-        isIndeterminate={list_value['curved'][1]}
-        isChecked={list_value['curved'][0] as boolean}
-        onChange={
-          (evt) => {
-            Object.values(parameter_to_modify)
-              .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
-              .map(d => AssignLinkValueToCorrectVar(d,'curved',evt.target.checked,menu_for_style))
-            set_data({ ...data })
-          }}>{t('Flux.apparence.courbe')}</Checkbox>
-    </OverlayTrigger>
-
     {/* Forme fleche droite  */}
     <OverlayTrigger
       key={'flux.apparence.tooltips.10'}
@@ -395,6 +376,27 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               }}/>
         </OverlayTrigger></Col>
     </Form.Group>
+
+    {/* Forme courbée  */}
+    <OverlayTrigger
+      key={'flux.apparence.tooltips.9'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'flux.apparence.tooltips.9'}>{t('Flux.apparence.tooltips.courbe')} </Tooltip>}>
+      <Checkbox
+        sx={SmoothClasses({})}
+        iconColor={list_value['curved'][1]?'#78C2AD':'white'}
+        maxW={'90%'}
+        isIndeterminate={list_value['curved'][1]}
+        isChecked={list_value['curved'][0] as boolean}
+        onChange={
+          (evt) => {
+            Object.values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
+              .map(d => AssignLinkValueToCorrectVar(d,'curved',evt.target.checked,menu_for_style))
+            set_data({ ...data })
+          }}>{t('Flux.apparence.courbe')}</Checkbox>
+    </OverlayTrigger>
 
     {/* Modification du rayon de courbure du flux  */}
     <Form.Group as={Row}>
@@ -990,10 +992,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              variant={!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='below'?'primary':'outline-primary'}
+              variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] &&!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='below'?'primary':'outline-primary'}
               onClick={
                 () => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                    d.label_pos_auto=false
                     const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position','below',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
@@ -1012,10 +1015,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              variant={!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='middle'?'primary':'outline-primary'}
+              variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='middle'?'primary':'outline-primary'}
               onClick={
                 () => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                    d.label_pos_auto=false
                     const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position','middle',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
@@ -1034,10 +1038,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
             <Button
               className='btn_menu_config'
-              variant={!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='above'?'primary':'outline-primary'}
+              variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='above'?'primary':'outline-primary'}
               onClick={
                 () => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                    d.label_pos_auto=false
                     const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position','above',menu_for_style)
                     AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
@@ -1257,39 +1262,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
     <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
   </>:<></>
 
-  const content_adjust_label_pos =(!menu_for_style)?<>    
-    {/* Button to adjust label position in case the label is bigger than the link */}
-    <OverlayTrigger
-      key={'Menu.tooltips.flux.ajust_label'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.ajust_label')} </Tooltip>}>
-      <Form.Group as={Row}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'50%', margin:'auto'}}
-          variant={'primary'}
-          onClick={
-            () => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                const label_vert_pos=(ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)as string)
-                const stroke_width=LinkStrokeWidth(d,data,scale,inv_scale,2,data.nodes,GetLinkValue)
-                const label_size=(ReturnCorrectLinkAttributeValue(data,d,'label_font_size',menu_for_style)as number)
-                console.log(label_vert_pos,label_size,stroke_width)
-                if(label_vert_pos==='middle' && label_size>stroke_width ){
-                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position','above',menu_for_style)
-                }
-              })
-              set_data({ ...data })
-            }}>{t('Flux.ajust_label')}</Button>
-      </Form.Group></OverlayTrigger>
-    <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-  </>:<></>
+
 
   const content= <div className='apparence_config'>
     {content_style}
     {content_zIndex_and_direction}
-    {content_adjust_label_pos}
 
     {content_appearence}
     <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
