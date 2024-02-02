@@ -208,6 +208,7 @@ export type SankeyLink = {
   //style
   style:string,
 
+  label_pos_auto:boolean,
   local?:SankeyLinkAttrLocal
 }
 

@@ -1022,6 +1022,7 @@ export const DefaultLink :DefaultLinkFuncType= (data: SankeyData): SankeyLink =>
 
     colorTag: '',
     style:'default',
+    label_pos_auto:false,
     local:{dashed:true}
   }
 }
@@ -1839,6 +1840,41 @@ export const IsAllNodeNotLocalAttrSameValue=(
           store_value[k]=[val,false]
         }else{
           // Check if other nodes selected have the same value, if not we set the 2nd value of the array at true
+          store_value[k][1]=val!==store_value[k][0]?true:store_value[k][1]
+        }
+      })
+    })
+  }else{
+    k_list.forEach(k => {
+      store_value[k]=[false,false]
+    })
+  }
+  return store_value
+}
+
+export const IsAllLinkNotLocalAttrSameValue=( 
+  data:SankeyData,
+  m_s_l:SankeyLink[],
+  k_list:(keyof SankeyLink)[]
+)=>{
+// store_value : variable that contain an array forEach key we are looking for
+  // Each array contain in first position the value of the selected links attribute 
+  // In second position it contain a boolean that return true if all selected links have the same value for the key
+  const store_value={} as { [x: string]: [ValueOf<SankeyLink>|boolean, boolean]; }
+
+  if(m_s_l.length>0){
+    // For each selected links
+    m_s_l.forEach((link,i)=>{
+      // For each attributes we want to check
+      k_list.forEach(k => {
+        // Get the value of the link attribute(k)
+        const val=link[k]
+
+        // Store first value of each link attribute
+        if(i===0){
+          store_value[k]=[val,false]
+        }else{
+          // Check if other links selected have the same value, if not we set the 2nd value of the array at true
           store_value[k][1]=val!==store_value[k][0]?true:store_value[k][1]
         }
       })

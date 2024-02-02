@@ -130,6 +130,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
       </InputGroup>
     </OverlayTrigger>
+    {/* In this position of the array, there is an input who can change the node visibility (hide if intermediary)(dev) */}
+    {advanced_appearence_content.splice(1,1)}
 
     <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('Menu.edition')}</h4>
 
