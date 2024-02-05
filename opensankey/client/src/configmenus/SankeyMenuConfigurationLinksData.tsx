@@ -20,9 +20,8 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   const { data, set_data } = dict_variable_application_data
   const { multi_selected_links,displayedInputLinkValueRef  } = dict_variable_elements_selected
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
-  if (displayedInputLinkValueRef.current.length < 2) {
-    displayedInputLinkValueRef.current.push(set_displayed_input_link_value)
-  }
+
+  displayedInputLinkValueRef.current.push(set_displayed_input_link_value)
 
 
 
