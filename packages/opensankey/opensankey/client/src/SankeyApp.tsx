@@ -118,6 +118,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     displayedInputLinkValueRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
     userScaleRef : useRef(dict_variable_application_data.data.user_scale)
   }
+  // Reset list of setter of input link value
+  dict_variable_elements_selected.displayedInputLinkValueRef.current=[]
   /*************************************************************************************************/  
   const uiElementsRef : uiElementsRefType = {
     button_ref : useRef<HTMLLabelElement>(null),
