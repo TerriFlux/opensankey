@@ -23,7 +23,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   external_content,
   exemple_menu: object
 )=>{
-  const [show_wecome,set_show_welcome]=useState(false)
+  const [show_wecome,set_show_welcome]=useState(!never_see_again.current)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current=set_show_welcome
 
   const content_rc_static=<>
@@ -90,8 +90,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
       list_template_data=list_template_data.flat()
     }
   }
-  
-  return <Modal scrollable size='xl' show={show_wecome && !never_see_again} onHide={()=>{
+  return <Modal scrollable size='xl' show={show_wecome && !never_see_again.current} onHide={()=>{
     set_show_welcome(false)
   }}>
     <Modal.Header closeButton>
@@ -115,6 +114,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
       <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again.current} onChange={evt=>{
         never_see_again.current = evt.target.checked
         localStorage.setItem('dontSeeAggainWelcome','1')
+        set_show_welcome(false)
       }}/>
     </Modal.Footer>
   </Modal>
