@@ -311,7 +311,6 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
                     }
                     convert_data(new_data,get_default_data)
                     complete_sankey_data(new_data,get_default_data,DefaultNode,DefaultLink)
-                    console.log('open json')
 
                     set_data(new_data)
                     const test = document.getElementsByClassName('navbar')
