@@ -39,7 +39,6 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
     >
       <Checkbox 
         sx={SmoothClasses({})}
-        maxW={'90%'}
         isDisabled={!is_activated}
         isIndeterminate={gradChecked[1]}
         isChecked={gradChecked[0]}
@@ -52,9 +51,10 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
         }}>
         {t('Flux.apparence.grad')}
         {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}
+        {(IsLinkDiplayingValueLocal(multi_selected_links,(('gradient' as unknown) as (keyof SankeyLinkAttrLocal )),menu_for_style)?TooltipValueSurcharge('link_plus_var_',t):<></>)}
+
       </Checkbox>
     </OverlayTrigger>
-    {(IsLinkDiplayingValueLocal(multi_selected_links,(('gradient' as unknown) as (keyof SankeyLinkAttrLocal )),menu_for_style)?TooltipValueSurcharge('link_plus_var_',t):<></>)}
   </>
 }
 

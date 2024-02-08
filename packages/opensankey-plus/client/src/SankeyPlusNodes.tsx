@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare, faLock,faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 import { Checkbox } from '@chakra-ui/react'
 import * as d3 from 'd3'
-import { Form, Tab, OverlayTrigger,Tooltip, Button, InputGroup, Badge} from 'react-bootstrap'
+import { Form, Tab, OverlayTrigger,Tooltip, Button, Badge, Col, Row, ButtonGroup} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
 import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType} from '../types/Types'
@@ -80,25 +80,26 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'iconDisabled1'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <InputGroup>
-        <Checkbox 
-          sx={SmoothClasses({})}
-          maxW={'40%'}
-          iconColor={value_of_key['iconVisible'][1]?'#78C2AD':'white'}
-          isIndeterminate={value_of_key['iconVisible'][1]}
-          isDisabled={!is_activated}
-          isChecked={value_of_key['iconVisible'][0] as boolean}
-          onChange={(evt) => {
-            Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => {
-                d.iconVisible = evt.target.checked
-                d.is_image=false
-              })
-            set_data({ ...data })
-          }}>
-          {t('Noeud.icon.Visibilité')}
-        </Checkbox>
-      </InputGroup>
+      <Row className='input_row'>
+        <Col>
+          <Checkbox 
+            sx={SmoothClasses({})}
+            iconColor={value_of_key['iconVisible'][1]?'#78C2AD':'white'}
+            isIndeterminate={value_of_key['iconVisible'][1]}
+            isDisabled={!is_activated}
+            isChecked={value_of_key['iconVisible'][0] as boolean}
+            onChange={(evt) => {
+              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.iconVisible = evt.target.checked
+                  d.is_image=false
+                })
+              set_data({ ...data })
+            }}>
+            {t('Noeud.icon.Visibilité')}
+          </Checkbox>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
    
@@ -109,22 +110,23 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
         delay={500}
         overlay={(!is_activated)?(<Tooltip id={'iconDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
       >
-        <InputGroup>
-          <InputGroup.Text
-            style={{
-              color:(!is_activated)?'#666666':'',
-              backgroundColor:(!is_activated)?'#cccccc':'',
-              width:'75%'}}
-          >
-            {t('Noeud.icon.icon_catalog')}
-          </InputGroup.Text>
-
-          <Button style={{width:'25%'}}
-            className='btn_menu_config'
-            disabled={!is_activated}
-            variant={'outline-primary'}
-            onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_import_icons.current!(true) }}>{<FontAwesomeIcon icon={faIcons} />}</Button>
-        </InputGroup>
+        <Row className='input_row'>
+          <Col>
+            <Form.Label
+              style={{
+                color:(!is_activated)?'#666666':'',
+                backgroundColor:(!is_activated)?'#cccccc':''}}
+            >
+              {t('Noeud.icon.icon_catalog')}
+            </Form.Label></Col>
+          <Col>
+            <Button
+              className='btn_menu_config'
+              disabled={!is_activated}
+              variant={'outline-primary'}
+              onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_import_icons.current!(true) }}>{<FontAwesomeIcon icon={faIcons} />}</Button>
+          </Col>
+        </Row>
       </OverlayTrigger>
       <OverlayTrigger
         key={'iconDisabled3'}
@@ -132,34 +134,28 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
         delay={500}
         overlay={(!is_activated)?(<Tooltip id={'iconDisabled3'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
       >
-        <InputGroup>
-          <InputGroup.Text
-            style={{
-              color:(!is_activated)?'#666666':'',
-              backgroundColor:(!is_activated)?'#cccccc':'',
-              width:'40%'}}
-          >
-            {t('Noeud.apparence.Couleur')}
-          </InputGroup.Text>
-          <Form.Label htmlFor="form_color_icon" style={{width:'60%',
-            'background':(multi_selected_nodes.current.length === 1) ? multi_selected_nodes_plus.current[0].iconColor : '#ffffff',
-            border:'1px solid #ced4da',
-            borderTopRightRadius:'4px',
-            borderBottomRightRadius:'4px',
-          }}/>
-          <Form.Control
-            style={{display:'none'}}
-            type='color'
-            id='form_color_icon'
-            name='form_color_icon'
-            value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes_plus.current[0].iconColor : '#ffffff'}
-            onChange={evt => {
-              const color = evt.target.value
-              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
-              set_data({ ...data })
-            }}
-          />
-        </InputGroup>
+        <Row className='input_row'>
+          <Col>
+            <Form.Label
+              style={{
+                color:(!is_activated)?'#666666':'',
+                backgroundColor:(!is_activated)?'#cccccc':''}}
+            >
+              {t('Noeud.apparence.Couleur')}
+            </Form.Label></Col>
+          <Col>
+            <Form.Control
+              type='color'
+              id='form_color_icon'
+              name='form_color_icon'
+              value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes_plus.current[0].iconColor : '#ffffff'}
+              onChange={evt => {
+                const color = evt.target.value
+                Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
+                set_data({ ...data })
+              }}
+            /></Col>
+        </Row>
       </OverlayTrigger>
 
 
@@ -175,25 +171,26 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'imageDisabled1'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <InputGroup>
-        <Checkbox 
-          sx={SmoothClasses({})}
-          maxW={'40%'}
-          iconColor={value_of_key['is_image'][1]?'#78C2AD':'white'}
-          isDisabled={!is_activated}
-          isIndeterminate={value_of_key['is_image'][1]}
-          isChecked={value_of_key['is_image'][0] as boolean}
-          onChange={(evt) => {
-            Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => {
-                d.iconVisible = evt.target.checked
-                d.is_image=false
-              })
-            set_data({ ...data })
-          }}>
-          {t('Noeud.img_visibility')}
-        </Checkbox>
-      </InputGroup>
+      <Row className='input_row'>
+        <Col>
+          <Checkbox 
+            sx={SmoothClasses({})}
+            iconColor={value_of_key['is_image'][1]?'#78C2AD':'white'}
+            isDisabled={!is_activated}
+            isIndeterminate={value_of_key['is_image'][1]}
+            isChecked={value_of_key['is_image'][0] as boolean}
+            onChange={(evt) => {
+              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.iconVisible = evt.target.checked
+                  d.is_image=false
+                })
+              set_data({ ...data })
+            }}>
+            {t('Noeud.img_visibility')}
+          </Checkbox>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
     {/* Import image */}
@@ -203,38 +200,39 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <InputGroup>
-        <InputGroup.Text
-          style={{
-            color:(!is_activated)?'#666666':'',
-            backgroundColor:(!is_activated)?'#cccccc':'',
-            width:'40%'}}
-        >
-          {t('Noeud.img_src')}
-        </InputGroup.Text>
-
-        <Button
-          variant='outline-primary'
-          style={{width:'30%'}}
-          className='btn_menu_config'
-          onClick={()=>{
-            if (_load_image.current) {
-              _load_image.current.name = ''
-              _load_image.current.click()
-            }
-          }}
-        ><FaFileImport/></Button>
-        <Button
-          variant='outline-primary'
-          style={{width:'30%'}}
-          className='btn_menu_config'
-          onClick={()=>{
-            Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .forEach(n=>n.image_src='')
-            set_data({...data})
-          }}
-        ><FontAwesomeIcon icon={faDeleteLeft}/></Button>
-
+      <Row className='input_row'>
+        <Col>
+          <Form.Label
+            style={{
+              color:(!is_activated)?'#666666':'',
+              backgroundColor:(!is_activated)?'#cccccc':''}}
+          >
+            {t('Noeud.img_src')}
+          </Form.Label>
+        </Col>
+        <Col>
+          <ButtonGroup>
+            <Button
+              variant='outline-primary'
+              className='btn_menu_config'
+              onClick={()=>{
+                if (_load_image.current) {
+                  _load_image.current.name = ''
+                  _load_image.current.click()
+                }
+              }}
+            ><FaFileImport/></Button>
+            <Button
+              variant='outline-primary'
+              className='btn_menu_config'
+              onClick={()=>{
+                Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                  .forEach(n=>n.image_src='')
+                set_data({...data})
+              }}
+            ><FontAwesomeIcon icon={faDeleteLeft}/></Button>
+          </ButtonGroup>
+        </Col>
         <Form.Control
           ref={_load_image}
           style={{display:'none'}}
@@ -258,7 +256,7 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
             reader.readAsDataURL(files[0])
           }}
         />
-      </InputGroup>
+      </Row>
     </OverlayTrigger>:<></>}
     
   </>
@@ -271,58 +269,63 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
       placement={'top'}
       delay={500}
       overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
-      <InputGroup key={'node_visibility'} >
-        <Checkbox 
-          sx={SmoothClasses({})}
-          iconColor={isAllNodeVisible[1]?'#78C2AD':'white'}
-          maxW={'40%'}
-          isIndeterminate={isAllNodeVisible[1]}
-          isChecked={isAllNodeVisible[0]}
-          onChange={(evt) => {
-            Object.values(data.nodes)
-              .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,false))
-            set_data({ ...data })
-          }}>
-          {t('Noeud.apparence.Visibilité')}
-        </Checkbox>
-        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',false)?TooltipValueSurcharge('node_plus_var',t):<></>)}
-      </InputGroup>
+      <Row className='input_row' key={'node_visibility'} >
+        <Col>
+          <Checkbox 
+            sx={SmoothClasses({})}
+            iconColor={isAllNodeVisible[1]?'#78C2AD':'white'}
+            isIndeterminate={isAllNodeVisible[1]}
+            isChecked={isAllNodeVisible[0]}
+            onChange={(evt) => {
+              Object.values(data.nodes)
+                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,false))
+              set_data({ ...data })
+            }}>
+            {t('Noeud.apparence.Visibilité')}
+            {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',false)?TooltipValueSurcharge('node_plus_var',t):<></>)}
+          </Checkbox>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
-    <InputGroup key={'node_illustration_type'} >
-      <InputGroup.Text style={{width:'40%'}}>
-        {t('Noeud.illustration_type')}
-      </InputGroup.Text>
-      <Button
-        className='btn_menu_config'
-        style={{width:'30%'}}
-        variant={button_icon_or_image==='icon'?'primary':'outline-primary'}
-        onClick={() => {
-          Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-            .forEach(d => {
-              d.is_image = false
-              d.iconVisible=true
-            })
+    <Row className='input_row' key={'node_illustration_type'} >
+      <Col>
+        <Form.Label>
+          {t('Noeud.illustration_type')}
+        </Form.Label>
+      </Col>
+      <Col>
+        <ButtonGroup>
+          <Button
+            className='btn_menu_config'
+            variant={button_icon_or_image==='icon'?'primary':'outline-primary'}
+            onClick={() => {
+              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.is_image = false
+                  d.iconVisible=true
+                })
 
-          set_button_icon_or_image('icon')
-          set_data({...data})
-        }}>{t('Noeud.icon.icon')}</Button>
+              set_button_icon_or_image('icon')
+              set_data({...data})
+            }}>{t('Noeud.icon.icon')}</Button>
 
-      <Button
-        className='btn_menu_config'
-        style={{width:'30%'}}
-        variant={button_icon_or_image==='image'?'primary':'outline-primary'}
-        onClick={() => {
-          Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-            .forEach(d => {
-              d.is_image=true
-              d.iconVisible = false
-            })
-          set_button_icon_or_image('image')
-          set_data({...data})
-        }}>Image</Button>
-    </InputGroup>
+          <Button
+            className='btn_menu_config'
+            variant={button_icon_or_image==='image'?'primary':'outline-primary'}
+            onClick={() => {
+              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.is_image=true
+                  d.iconVisible = false
+                })
+              set_button_icon_or_image('image')
+              set_data({...data})
+            }}>Image</Button>
+        </ButtonGroup>
+      </Col>
+    </Row>
     {button_icon_or_image==='icon'?content_icon:content_image}
   </>
 
@@ -336,6 +339,7 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   return <Tab
     key="node_icon"
     eventKey="node_icon"
+    className='content_editon_elements'
     title={<>
       {t('Noeud.illustration')}
       {(!is_activated)?
@@ -384,21 +388,23 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'imageDisabledHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <InputGroup>
-        <InputGroup.Text
-          style={{
-            color:(!is_activated)?'#666666':'',
-            backgroundColor:(!is_activated)?'#cccccc':'',
-            width:'40%'}}
-        >
-          {t('Noeud.HL')}
-        </InputGroup.Text>
-
-        <Form.Control value={node_hyperlink} type='text' onChange={(evt)=>{
-          Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
-          set_data({ ...data })
-        }}/>
-      </InputGroup>
+      <Row className='input_row'>
+        <Col>
+          <Form.Label
+            style={{
+              color:(!is_activated)?'#666666':'',
+              backgroundColor:(!is_activated)?'#cccccc':''}}
+          >
+            {t('Noeud.HL')}
+          </Form.Label>
+        </Col>
+        <Col>
+          <Form.Control value={node_hyperlink} type='text' onChange={(evt)=>{
+            Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
+            set_data({ ...data })
+          }}/>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
     {/* Open Hyperlink */}
@@ -408,29 +414,35 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'imageDisabledOHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <InputGroup>
-        <InputGroup.Text
-          style={{
-            color:(!is_activated)?'#666666':'',
-            backgroundColor:(!is_activated)?'#cccccc':'',
-            width:'40%'}}
-        >
-          {t('Noeud.open_HL')}
-        </InputGroup.Text>
-        <Button variant='outline-primary' style={{width:'60%'}} onClick={()=>{
-          window.open(node_hyperlink)
-        }}>
-          <FontAwesomeIcon icon={faUpRightFromSquare} />
-        </Button>
+      <Row className='input_row'>
+
+        <Col>
+          <Form.Label
+            style={{
+              color: (!is_activated) ? '#666666' : '',
+              backgroundColor: (!is_activated) ? '#cccccc' : ''
+            }}
+          >
+            {t('Noeud.open_HL')}
+          </Form.Label>
+        </Col>
+        <Col>
+          <Button variant='outline-primary' onClick={()=>{
+            window.open(node_hyperlink)
+          }}>
+            <FontAwesomeIcon icon={faUpRightFromSquare} />
+          </Button>
+        </Col>
 
 
-      </InputGroup>
+      </Row>
     </OverlayTrigger>
   </>:<></>
 
   return <Tab
     key="hyperlink"
     eventKey="hyperlink"
+    className='content_editon_elements'
     title={<>
       {t('Noeud.HL')}
       {(!is_activated)?

@@ -1,8 +1,8 @@
 
 import React,{ChangeEvent,useRef} from 'react'
-import { OverlayTrigger,Tooltip,Form, InputGroup, Button} from 'react-bootstrap'
+import { OverlayTrigger,Tooltip,Form, Button, Row, Col} from 'react-bootstrap'
 import { TFunction } from 'i18next'
-import { FaFileImport} from 'react-icons/fa'
+import { FaEye, FaEyeSlash, FaFileImport} from 'react-icons/fa'
 import * as d3 from 'd3'
 
 import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from '../types/Types'
@@ -45,71 +45,67 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
 
 
   const content_image=<>
-    <Checkbox 
-      sx={SmoothClasses({})}
-      iconColor='white'
-      maxW={'50%'}
-      isChecked={data.show_background_image}
-      onChange={(evt) => {
-        data.show_background_image = evt.target.checked
-        set_data({ ...data })
-      }}
-    >
-      {t('MEP.show_image')}
-    </Checkbox>
-
-    {/* Import image */}
-    <OverlayTrigger
-      key={'imageDisabled2'}
-      placement={'top'}
-      delay={500}
-      overlay={(!has_open_sankey_plus)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
-      <InputGroup>
-        <InputGroup.Text
-          style={{
-            color:(!has_open_sankey_plus)?'#666666':'',
-            backgroundColor:(!has_open_sankey_plus)?'#cccccc':'',
-            width:'40%'}}
+    <Row className='input_row'>
+      <Col>
+        <Checkbox 
+          sx={SmoothClasses({})}
+          iconColor={data.show_background_image?'#78C2AD':'white'}
+          isChecked={data.show_background_image}
+          icon={data.show_background_image?<FaEye/>:<FaEyeSlash/>}
+          onChange={(evt) => {
+            data.show_background_image = evt.target.checked
+            set_data({ ...data })
+          }}
         >
-          {t('Image')}
-        </InputGroup.Text>
-        <Button
-          variant='outline-primary'
-          style={{width:'30%'}}
-          className='btn_menu_config'
-          onClick={()=>{
-            if (_load_image.current) {
-              _load_image.current.name = ''
-              _load_image.current.click()
-            }
-          }}
-        ><FaFileImport/></Button>
-
-        <Form.Control
-          ref={_load_image}
-          style={{display:'none'}}
-          accept='image/*'
-          type="file"
-          value={''}
-          disabled={!has_open_sankey_plus}
-          onChange={(evt: ChangeEvent) => {
-            const files = (evt.target as HTMLFormElement).files
-            const reader = new FileReader()
-            reader.onload = (() => {
-              return (e: ProgressEvent<FileReader>) => {
-                const resultat = (e.target as FileReader).result
-                const res=resultat?.toString().replaceAll('=','')
-                data.background_image=(res as string)
-                set_data({...data})
+          {t('MEP.show_image')}
+        </Checkbox>
+      </Col>
+      {/* Import image */}
+      <OverlayTrigger
+        key={'imageDisabled2'}
+        placement={'top'}
+        delay={500}
+        overlay={(!has_open_sankey_plus)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+      >
+        <Col>
+          <Button
+            variant='outline-primary'
+            style={{width:'100%'}}
+            className='btn_menu_config'
+            disabled={!data.show_background_image}
+            onClick={()=>{
+              if (_load_image.current) {
+                _load_image.current.name = ''
+                _load_image.current.click()
               }
-            })()
-            reader.readAsDataURL(files[0])
-          }}
-        />
+            }}
+          ><FaFileImport/></Button>
 
-      </InputGroup>
-    </OverlayTrigger>
+          <Form.Control
+            ref={_load_image}
+            style={{display:'none'}}
+            accept='image/*'
+            type="file"
+            value={''}
+            disabled={!has_open_sankey_plus}
+            onChange={(evt: ChangeEvent) => {
+              const files = (evt.target as HTMLFormElement).files
+              const reader = new FileReader()
+              reader.onload = (() => {
+                return (e: ProgressEvent<FileReader>) => {
+                  const resultat = (e.target as FileReader).result
+                  const res=resultat?.toString().replaceAll('=','')
+                  data.background_image=(res as string)
+                  set_data({...data})
+                }
+              })()
+              reader.readAsDataURL(files[0])
+            }}
+          />
+        </Col>
+      </OverlayTrigger>
+    </Row>
+
   </>
   return content_image
 }

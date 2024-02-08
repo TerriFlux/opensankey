@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Form, Tab, OverlayTrigger, Tooltip, Badge, InputGroup } from 'react-bootstrap'
+import { Form, Tab, OverlayTrigger, Tooltip, Badge, Col, Row } from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {  faLock } from '@fortawesome/free-solid-svg-icons'
@@ -112,7 +112,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
     }}
   />
 
-  return <Tab key="node_fo" eventKey="node_fo" title={
+  return <Tab key="node_fo" eventKey="node_fo" className='content_editon_elements' title={
     <>
       {t('Noeud.FO.FO')}
       {(!is_activated)?
@@ -140,24 +140,25 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <InputGroup>
-        <Checkbox 
-          sx={SmoothClasses({})}
-          maxW={'40%'}
-          iconColor={value_of_key['has_FO'][1]?'#78C2AD':'white'}
-          isDisabled={!is_activated}
-          isIndeterminate={value_of_key['has_FO'][1]}
-          isChecked={value_of_key['has_FO'][0] as boolean}
-          onChange={(evt) => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => {
-                d.has_FO = evt.target.checked
-              })
-            set_data({ ...data })
-          }}>
-          {t('Noeud.foreign_object.Visibilité')}
-        </Checkbox>
-      </InputGroup>
+      <Row>
+        <Col>
+          <Checkbox 
+            sx={SmoothClasses({})}
+            iconColor={value_of_key['has_FO'][1]?'#78C2AD':'white'}
+            isDisabled={!is_activated}
+            isIndeterminate={value_of_key['has_FO'][1]}
+            isChecked={value_of_key['has_FO'][0] as boolean}
+            onChange={(evt) => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.has_FO = evt.target.checked
+                })
+              set_data({ ...data })
+            }}>
+            {t('Noeud.foreign_object.Visibilité')}
+          </Checkbox>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
     <OverlayTrigger
@@ -166,24 +167,25 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
       delay={500}
       overlay={(!is_activated)?(<Tooltip id={'foRawDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <InputGroup>
-        <Checkbox 
-          sx={SmoothClasses({})}
-          maxW={'40%'}
-          iconColor={value_of_key['is_FO_raw'][1]?'#78C2AD':'white'}
-          isDisabled={!is_activated}
-          isIndeterminate={value_of_key['is_FO_raw'][1]}
-          isChecked={value_of_key['is_FO_raw'][0] as boolean}
-          onChange={(evt) => {
-            Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => {
-                d.is_FO_raw = evt.target.checked
-              })
-            set_data({ ...data })
-          }}>
-          {t('Noeud.foreign_object.raw')}
-        </Checkbox>
-      </InputGroup>
+      <Row>
+        <Col>
+          <Checkbox 
+            sx={SmoothClasses({})}
+            iconColor={value_of_key['is_FO_raw'][1]?'#78C2AD':'white'}
+            isDisabled={!is_activated}
+            isIndeterminate={value_of_key['is_FO_raw'][1]}
+            isChecked={value_of_key['is_FO_raw'][0] as boolean}
+            onChange={(evt) => {
+              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.is_FO_raw = evt.target.checked
+                })
+              set_data({ ...data })
+            }}>
+            {t('Noeud.foreign_object.raw')}
+          </Checkbox>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
     {(multi_selected_nodes.current.length>0)?
@@ -197,15 +199,6 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
       >
         <Form className='FO_node_editeur'>
           <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
-          {/* <Button
-            onClick={()=>{
-
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                d.FO_content = s_editor_content_fo_node
-              })
-              set_data({...data})
-            }}
-          >{t('Menu.updateFOZdd')}</Button> */}
         </Form>
       </OverlayTrigger>
       :<></>}
