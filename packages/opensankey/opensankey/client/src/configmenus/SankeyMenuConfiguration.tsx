@@ -33,6 +33,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   const {links_accordion_ref,nodes_accordion_ref}=uiElementsRef
   const {multi_selected_nodes}=dict_variable_elements_selected
   const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
+  const show_menu_config_tag=(data.accordeonToShow.includes('EN') || data.accordeonToShow.includes('EF') || data.accordeonToShow.includes('ED'))
   return [
     <Accordion.Item
       key='1'
@@ -135,7 +136,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       </Accordion.Body>
     </Accordion.Item>,
 
-    <Accordion.Item
+    show_menu_config_tag?<Accordion.Item
       key='5'
       style={{ 'display': 'block' }}
       id='SubAccordionEtiquette'
@@ -210,7 +211,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
           </Accordion.Item>
         </Accordion>
       </Accordion.Body>
-    </Accordion.Item>,
+    </Accordion.Item>:<></>,
 
   ]
 }
