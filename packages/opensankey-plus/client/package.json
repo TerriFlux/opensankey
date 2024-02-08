@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@babel/cli": "^7.13.16",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@babel/preset-typescript": "^7.16.7",
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
@@ -40,7 +41,6 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/deep-diff": "^1.0.2",
     "@types/react-dom": "^18.2.18",
     "eslint": "^8.6.0",
