@@ -53,8 +53,10 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       }
       <Accordion.Header>{t('Menu.MEP')}</Accordion.Header>
       <Accordion.Body>
-        {menu_configuration_layout.map((c,i)=>{
-          return <React.Fragment key={i}>{c}</React.Fragment>})}
+        <div className='content_editon_elements'>
+          {menu_configuration_layout.map((c,i)=>{
+            return <React.Fragment key={i}>{c}</React.Fragment>})}
+        </div>
       </Accordion.Body>
     </Accordion.Item>,
     <Accordion.Item

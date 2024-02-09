@@ -35,7 +35,7 @@ export const MenuConfigurationLinksTooltip : MenuConfigurationLinksTooltipFType 
       </Col>
     </Form.Group></>
 
-  return menu_for_modal?content:<Tab key="flux_tooltip" eventKey="flux_tooltip" title={t('Flux.IS')}>
+  return menu_for_modal?content:<Tab key="flux_tooltip" className='content_editon_elements' eventKey="flux_tooltip" title={t('Flux.IS')}>
     {content}
   </Tab>
 

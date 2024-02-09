@@ -173,12 +173,9 @@ export const DrawLinks : DrawLinksFType = (
     let label_vert_pos=(ReturnValueLink(data,l,'orthogonal_label_position')as string)
     const stroke_width=LinkStrokeWidth(l,data,scale,inv_scale,2,data.nodes,GetLinkValue)
     const label_size=(ReturnValueLink(data,l,'label_font_size')as number)
-    console.log(l.idSource,'--->',l.idTarget,' ',stroke_width,label_size)
     if(l.label_pos_auto && label_vert_pos==='middle' && label_size>stroke_width){
       label_vert_pos='above'
     }
-    console.log(l)
-    console.log(label_vert_pos,label_size>stroke_width)
 
     if (label_vert_pos === 'middle') {
       return '0.3em'
@@ -186,7 +183,6 @@ export const DrawLinks : DrawLinksFType = (
       const tmp=GetLinkValue(data, l.idLink).value as number
       return scale((tmp)?tmp:0) / 2 + (ReturnValueLink(data,l,'label_font_size') as string) + 'px'
     } else if (label_vert_pos === 'above') {
-      console.log('here')
       const tmp=GetLinkValue(data, l.idLink).value as number
       return -scale((tmp)?tmp:0) / 2 + 'px'
     }
