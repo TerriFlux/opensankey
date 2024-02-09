@@ -7,8 +7,10 @@ import { Form,
   FormControl,
   Button,
   ButtonGroup,
-  InputGroup,
-  Dropdown } from 'react-bootstrap'
+  Dropdown,
+  Col,
+  Row,
+  InputGroup} from 'react-bootstrap'
 import { SankeyNodeAttrLocal } from '../types/Types'
 import { ReturnCorrectNodeAttributeValue,
   AssignNodeValueToCorrectVar,
@@ -16,8 +18,7 @@ import { ReturnCorrectNodeAttributeValue,
   IsAllNodeAttrSameValue,
   CutName,
   SmoothClasses,
-  TooltipValueSurcharge,
-  StyleTitleSubSectionMenuEditionElements} from './SankeyUtils'
+  TooltipValueSurcharge} from './SankeyUtils'
 import { FaAlignLeft,
   FaAlignCenter,
   FaAlignRight,
@@ -105,16 +106,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
   const content_appearence=<Form.Group>
     {/* Visibilite du noeud */}
-    <OverlayTrigger
-      key={'noeud.apparence.tooltips.1'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
-      <InputGroup key={'node_visibility'} >
 
+    <Row className='input_row' key={'node_visibility'} >
+      <Col>
         <Checkbox 
-          style={StyleTitleSubSectionMenuEditionElements({underline:true})}
-          sx={SmoothClasses({})}
+          sx={SmoothClasses({text_as_title:true})}
           icon={(list_value['shape_visible'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
           iconColor={list_value['shape_visible'][1]?'#78C2AD':'white'}
           isIndeterminate={list_value['shape_visible'][1]}
@@ -125,15 +121,25 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,menu_for_style))
             set_data({ ...data })
           }}>
-          {t('Noeud.apparence.Visibilité')}
+          <OverlayTrigger
+            key={'noeud.apparence.tooltips.1'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
+            <> {t('Noeud.apparence.Visibilité')}
+              {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
+            </>
+          </OverlayTrigger>
         </Checkbox>
-        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
-      </InputGroup>
-    </OverlayTrigger>
+      </Col>
+    </Row>
+      
     {/* In this position of the array, there is an input who can change the node visibility (hide if intermediary)(dev) */}
     {advanced_appearence_content.splice(1,1)}
 
-    <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('Menu.edition')}</h4>
+    <Row>
+      <span className='title_grp_attributes'>{t('Menu.edition')}</span>
+    </Row>
 
     {/* Couleur du noeud */}
     <OverlayTrigger
@@ -145,57 +151,54 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           {t('Noeud.apparence.tooltips.Couleur')}
         </Tooltip>
       }>
-      <InputGroup>
-        <InputGroup.Text
-          style={{width:'40%'}}
-        >
-          {t('Noeud.apparence.Couleur')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'color',menu_for_style)?'*':'')}
-        </InputGroup.Text>
-        <Form.Label htmlFor="form_color_node"
-          style={{
-            width:'50%',
-            background:(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string): '#ffffff',
-            border:'1px solid #ced4da',
-          }}/>
-        {(getBrowserName()==='Firefox')?<Form.Control
-          style={{width:'50%',display:'none'}}
-          type='color'
-          id='form_color_node'
-          name='form_color_node'
-          value={(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
-          onChange={evt=>{
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
-            set_data({ ...data })
-          }}
-        />:<Form.Control
-          style={{width:'50%',display:'none'}}
-          type='color'
-          id='form_color_node'
-          name='form_color_node'
-          value={(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
-          onChange={evt=>{
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
-          }}
-          onBlurCapture={()=>{
-            set_data({ ...data })
-          }}
-        />}
-        <OverlayTrigger
-          key={'noeud.apparence.tooltips.3'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.apparence.tooltips.3'}>{t('Noeud.apparence.tooltips.CouleurPérenne')} </Tooltip>}>
-          <Button
+      <Row className='input_row'>
+        <Col>
+          <Form.Label
+          >
+            {t('Noeud.apparence.Couleur')}{(IsNodeDisplayingValueLocal(multi_selected_nodes,'color',menu_for_style)?<>{TooltipValueSurcharge('node_var_',t)}</>:<></>)}
+          </Form.Label>
+        </Col>
+
+        <Col>
+          {(getBrowserName()==='Firefox')?<Form.Control
+            type='color'
+            id='form_color_node'
             className='btn_menu_config'
-            style={{width:'10%'}}
-            //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-            variant={list_value['colorSustainable'][0]?'primary':'outline-primary'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'colorSustainable',!list_value['colorSustainable'][0],menu_for_style))
+            value={(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+            onChange={evt=>{
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
               set_data({ ...data })
-            }}>{list_value['colorSustainable'][0]?<FaLock/>:<FaLockOpen/>}</Button>
-        </OverlayTrigger>
-      </InputGroup>
+            }}
+          />:<Form.Control
+            type='color'
+            id='form_color_node'
+            className='btn_menu_config'
+            name='form_color_node'
+            value={(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
+            onChange={evt=>{
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
+            }}
+            onBlurCapture={()=>{
+              set_data({ ...data })
+            }}
+          />}</Col>
+        <Col>
+          <OverlayTrigger
+            key={'noeud.apparence.tooltips.3'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'noeud.apparence.tooltips.3'}>{t('Noeud.apparence.tooltips.CouleurPérenne')} </Tooltip>}>
+            <Button
+              //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+              variant={list_value['colorSustainable'][0]?'primary':'outline-primary'}
+              className='btn_menu_config'
+              onClick={() => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'colorSustainable',!list_value['colorSustainable'][0],menu_for_style))
+                set_data({ ...data })
+              }}>{list_value['colorSustainable'][0]?<FaLock/>:<FaLockOpen/>}</Button>
+          </OverlayTrigger>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
     {/* Forme du noeud */}
@@ -205,40 +208,40 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
       delay={500}
       overlay={<Tooltip id={'noeud.apparence.tooltips.4'}>{t('Noeud.apparence.tooltips.Forme')} </Tooltip>}>
 
-      <InputGroup>
-        <InputGroup.Text
-          style={{width:'40%',
-            color:(!menu_for_style )?'#666666':'',
-          }}
-        >
-          {t('Noeud.apparence.Forme')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape',menu_for_style)?'*':'')}
-        </InputGroup.Text>
+      <Row className='input_row'>
+        <Col>
+          <Form.Label>
+            {t('Noeud.apparence.Forme')}{(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape',menu_for_style)?<>{TooltipValueSurcharge('node_var_',t)}</>:<></>)}
+          </Form.Label>
+        </Col>
+        <Col>
+          <ButtonGroup 
+            className='btn_menu_config'>
+            <Button 
+              value="ellipse"
+              variant={list_value['shape'][0]==='ellipse'?'primary':'outline-primary'}
+              onClick={() => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','ellipse',menu_for_style))
+                set_data({ ...data })
+              }}>{t('Noeud.apparence.Cercle')}</Button>
 
-        <Button className='btn_menu_config'
-          style={{width:'20%'}}
-          value="ellipse"
-          variant={list_value['shape'][0]==='ellipse'?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','ellipse',menu_for_style))
-            set_data({ ...data })
-          }}>{t('Noeud.apparence.Cercle')}</Button>
+            <Button 
+              variant={list_value['shape'][0]==='rect'?'primary':'outline-primary'}
+              onClick={() => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','rect',menu_for_style))
+                set_data({ ...data })
+              }}>{t('Noeud.apparence.Rectangle')}</Button>
 
-        <Button className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={list_value['shape'][0]==='rect'?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','rect',menu_for_style))
-            set_data({ ...data })
-          }}>{t('Noeud.apparence.Rectangle')}</Button>
+            <Button 
+              variant={list_value['shape'][0]==='arrow'?'primary':'outline-primary'}
+              onClick={() => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','arrow',menu_for_style))
+                set_data({ ...data })
+              }}>{t('Noeud.apparence.arrow')}</Button>  
+          </ButtonGroup>
 
-        <Button className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={list_value['shape'][0]==='arrow'?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','arrow',menu_for_style))
-            set_data({ ...data })
-          }}>{t('Noeud.apparence.arrow')}</Button>  
-      </InputGroup>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
     { /* Change the angle of the arrow shaped node */ 
@@ -250,75 +253,76 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           delay={500}
           rootClose
           overlay={<Tooltip id={'noeud.apparence.tooltips.arrow_angle'}>{t('Noeud.apparence.tooltips.arrow_angle')} </Tooltip>}>
-          <InputGroup>
-            <InputGroup.Text style={{width:'40%'}}>{t('Noeud.apparence.arrow_angle')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'node_arrow_angle_factor',menu_for_style)?'*':'')}</InputGroup.Text>
-            <Form.Range min={5} 
-              max={45}
-              step={5}
-              value={list_value['node_arrow_angle_factor'][0] as number}
-              style={{width:'50%'}}
-              onChange={(evt)=>{
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_factor',+evt.target.value,menu_for_style))
-                set_data({...data})
-              }}
+          <Row className='input_row'>
+            <Col><Form.Label >{t('Noeud.apparence.arrow_angle')}{(IsNodeDisplayingValueLocal(multi_selected_nodes,'node_arrow_angle_factor',menu_for_style)?<>{TooltipValueSurcharge('node_var_',t)}</>:<></>)}</Form.Label></Col>
+            <Col xs={5}>
+              <Form.Range min={5} 
+                max={45}
+                step={5}
+                value={list_value['node_arrow_angle_factor'][0] as number}
+                onChange={(evt)=>{
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_factor',+evt.target.value,menu_for_style))
+                  set_data({...data})
+                }}
 
-            />
-            <InputGroup.Text style={{width:'10%'}}>{list_value['node_arrow_angle_factor'][0]}°</InputGroup.Text>
-          </InputGroup>
+              /></Col>
+            <Col xs={1}><Form.Label>{list_value['node_arrow_angle_factor'][0]}°</Form.Label></Col>
+          </Row>
         </OverlayTrigger>
 
-        <InputGroup >
-          <InputGroup.Text style={{width:'40%'}}>
-            {t('Noeud.apparence.angle_orientation')}
-          </InputGroup.Text>
+        <Row >
+          <Col>
+            <Form.Label>
+              {t('Noeud.apparence.angle_orientation')}
+            </Form.Label>
+          </Col>
+          <Col>
+            <ButtonGroup>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['node_arrow_angle_direction'][0]==='left'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','left',menu_for_style))
+                  set_data({ ...data })
+                }}
+              ><FaArrowLeft/></Button>
 
-          <Button
-            className='btn_menu_config'
-            style={{width:'15%'}}
-            variant={list_value['node_arrow_angle_direction'][0]==='left'?'primary':'outline-primary'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','left',menu_for_style))
-              set_data({ ...data })
-            }}
-          ><FaArrowLeft/></Button>
+              <Button
+                className='btn_menu_config'                variant={list_value['node_arrow_angle_direction'][0]==='right'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','right',menu_for_style))
+                  set_data({ ...data })
+                }}
+              ><FaArrowRight/></Button>
 
-          <Button
-            className='btn_menu_config'
-            style={{width:'15%'}}
-            variant={list_value['node_arrow_angle_direction'][0]==='right'?'primary':'outline-primary'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','right',menu_for_style))
-              set_data({ ...data })
-            }}
-          ><FaArrowRight/></Button>
+              <Button
+                className='btn_menu_config'        
+                variant={list_value['node_arrow_angle_direction'][0]==='top'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','top',menu_for_style))
+                  set_data({ ...data })
+                }}
+              ><FaArrowUp/></Button>
 
-          <Button
-            className='btn_menu_config'
-            style={{width:'15%'}}
-        
-            variant={list_value['node_arrow_angle_direction'][0]==='top'?'primary':'outline-primary'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','top',menu_for_style))
-              set_data({ ...data })
-            }}
-          ><FaArrowUp/></Button>
-
-          <Button
-            className='btn_menu_config'
-            style={{width:'15%'}}
-        
-            variant={list_value['node_arrow_angle_direction'][0]==='bottom'?'primary':'outline-primary'}
-            onClick={() => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','bottom',menu_for_style))
-              set_data({ ...data })
-            }}
-          ><FaArrowDown/></Button>
-        </InputGroup>
+              <Button
+                className='btn_menu_config'        
+                variant={list_value['node_arrow_angle_direction'][0]==='bottom'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','bottom',menu_for_style))
+                  set_data({ ...data })
+                }}
+              ><FaArrowDown/></Button>
+            </ButtonGroup>
+          </Col>
+        </Row>
       
       
       </>:<></>
     }
-    <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('Noeud.size')}</h4>
+
+    <Row>
+      <span className='title_grp_attributes'>{t('Noeud.size')}</span>
+    </Row>
 
     {/* Largeur minimale du noeud */}
     <OverlayTrigger
@@ -327,31 +331,37 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
       delay={500}
       rootClose
       overlay={<Tooltip id={'noeud.apparence.tooltips.6'}>{t('Noeud.apparence.tooltips.TML')} </Tooltip>}>
-      <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>
+      <Row className='input_row'>
+        <Col><Form.Label >
           {t('Noeud.apparence.TML')}
-        </InputGroup.Text>
+        </Form.Label>
+        </Col>
 
-        <FormControl
-          min={0}
-          step={1}
-          type={'number'}
-          value={list_value['node_width'][0] as number}
-          onChange={
-            evt => {
-              const val=evt.target.value
-              let value=40
-              if(!isNaN(+val)){
-                value=Math.abs(Math.round(+val))
-              }
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'node_width',value,menu_for_style))
-              set_data({ ...data })
-            }}/>
+        <Col xs={5}>
+          <FormControl
+            min={0}
+            step={1}
+            type={'number'}
+            className='btn_menu_config'
+            value={list_value['node_width'][0] as number}
+            onChange={
+              evt => {
+                const val=evt.target.value
+                let value=40
+                if(!isNaN(+val)){
+                  value=Math.abs(Math.round(+val))
+                }
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'node_width',value,menu_for_style))
+                set_data({ ...data })
+              }}/>
+        </Col>
 
-        <InputGroup.Text style={{width:'10%'}}>
+        <Col xs={1}>
+          <Form.Label>
             px
-        </InputGroup.Text>
-      </InputGroup>
+          </Form.Label>
+        </Col>
+      </Row>
     </OverlayTrigger>
 
     {/* Hauteur minimale du noeud */}
@@ -361,30 +371,35 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
       delay={500}
       rootClose
       overlay={<Tooltip id={'noeud.apparence.tooltips.7'}>{t('Noeud.apparence.tooltips.TMH')} </Tooltip>}>
-      <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>
+      <Row className='input_row'>
+        <Col><Form.Label>
           {t('Noeud.apparence.TMH')}
-        </InputGroup.Text>
+        </Form.Label>
+        </Col>
+        <Col xs={5}>
+          <FormControl
+            min={0} 
+            type={'number'}
+            className='btn_menu_config'
+            value={list_value['node_height'][0] as number}
+            onChange={
+              evt => {
+                const val=evt.target.value
+                let value=40
+                if(!isNaN(+val)){
+                  value=Math.abs(Math.round(+val))
+                }
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'node_height',value,menu_for_style))
+                set_data({ ...data })
+              }}/>
+        </Col>
 
-        <FormControl
-          min={0} 
-          type={'number'}
-          value={list_value['node_height'][0] as number}
-          onChange={
-            evt => {
-              const val=evt.target.value
-              let value=40
-              if(!isNaN(+val)){
-                value=Math.abs(Math.round(+val))
-              }
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'node_height',value,menu_for_style))
-              set_data({ ...data })
-            }}/>
-
-        <InputGroup.Text style={{width:'10%'}}>
+        <Col xs={1}>
+          <Form.Label>
             px
-        </InputGroup.Text>
-      </InputGroup>
+          </Form.Label>
+        </Col>
+      </Row>
     </OverlayTrigger>
     {advanced_appearence_content}
   </Form.Group>
@@ -400,10 +415,9 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
       placement={'top'}
       delay={500}
       overlay={<Tooltip id={'noeud.labels.tooltips.1'}>{t('Noeud.labels.tooltips.vdb')} </Tooltip>}>
-      <InputGroup>
-        <Checkbox 
-          style={StyleTitleSubSectionMenuEditionElements({underline:true})}
-          sx={SmoothClasses({})}
+      <Row className='input_row'>
+        <Col><Checkbox 
+          sx={SmoothClasses({text_as_title:true})}
           icon={(list_value['label_visible'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
           iconColor={list_value['label_visible'][1]?'#78C2AD':'white'}
           isIndeterminate={list_value['label_visible'][1]}
@@ -415,108 +429,108 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             set_data({ ...data })
           }}>
           {t('Noeud.labels.vdb')}
+          {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_visible',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
         </Checkbox>
-        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_visible',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
-      </InputGroup>
+        </Col>
+      </Row>
     </OverlayTrigger>
     {list_value['label_visible'][0] as boolean?<Form.Group>
-      <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('Menu.edition')}</h4>
-      <h4 style={{fontSize:'14px' ,}}>{t('Noeud.text')}</h4>
+      <Row>
+        <span className='title_grp_attributes'>{t('Menu.edition')}</span>
+      </Row>
+      <span style={{fontSize:'14px' ,fontStyle:'italic'}}>{t('Noeud.text')}</span>
       {/* Label en blanc ou noir */}
       <OverlayTrigger
         key={'noeud.labels.tooltips.2'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
-        <InputGroup>
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={list_value['label_color'][1]?'#78C2AD':'white'}
-            maxW={'70%'}
-            isIndeterminate={list_value['label_color'][1]}
-            isChecked={list_value['label_color'][0] as boolean}
-            onChange={(evt) => {
-              Object.values(parameter_to_modify)
-                .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => AssignNodeValueToCorrectVar(d,'label_color',evt.target.checked,menu_for_style))
-              set_data({ ...data })
-            }}>
-            {t('Noeud.labels.lb')}
-          </Checkbox>
-          {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_color',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
-        </InputGroup>
+        <Row className='input_row'>
+          <Col>
+            <Checkbox 
+              sx={SmoothClasses({})}
+              iconColor={list_value['label_color'][1]?'#78C2AD':'white'}
+              isIndeterminate={list_value['label_color'][1]}
+              isChecked={list_value['label_color'][0] as boolean}
+              onChange={(evt) => {
+                Object.values(parameter_to_modify)
+                  .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+                  .forEach(d => AssignNodeValueToCorrectVar(d,'label_color',evt.target.checked,menu_for_style))
+                set_data({ ...data })
+              }}>
+              {t('Noeud.labels.lb')}
+              {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_color',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
+            </Checkbox>
+          </Col>
+
+        </Row>
       </OverlayTrigger>
 
+      <span style={{fontSize:'14px' ,fontStyle:'italic'}}>Police</span>
+
       {/* Police et taille du texte de label */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'17.5%'}} >{'Police'}</InputGroup.Text>
+      <Row>
+        <InputGroup as={Col} className='input_row'>
+          <ButtonGroup style={{width:'33%'}} >
+            {/* Gras */}
+            <Button
+              style={{'borderRadius':'5px 0px 0px 5px'}}
+              variant={list_value['bold'][0]?'primary':'outline-primary'}
+              onClick={() => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  AssignNodeValueToCorrectVar(d,'bold',!list_value['bold'][0],menu_for_style)
+                })
+                set_data({ ...data })
+              }}><FaBold/></Button>
 
-        {/* Gras */}
-        <Button
-          className='btn_menu_config'
-          style={{width:'7.5%'}}
-          variant={list_value['bold'][0]?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-              AssignNodeValueToCorrectVar(d,'bold',!list_value['bold'][0],menu_for_style)
-            })
-            set_data({ ...data })
-          }}><FaBold/></Button>
+            {/* en majuscule */}
+            <Button
+              variant={list_value['uppercase'][0]?'primary':'outline-primary'}
+              onClick={() => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  AssignNodeValueToCorrectVar(d,'uppercase',!list_value['uppercase'][0],menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{svg_label_upper}</Button>
 
-        {/* en majuscule */}
-        <Button
-          className='btn_menu_config'
-          style={{width:'7.5%'}}
-          variant={list_value['uppercase'][0]?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-              AssignNodeValueToCorrectVar(d,'uppercase',!list_value['uppercase'][0],menu_for_style)
-            })
-            set_data({ ...data })
-          }}>{svg_label_upper}</Button>
+            {/* En italique */}
+            <Button
+              variant={list_value['italic'][0]?'primary':'outline-primary'}
+              onClick={() => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                  AssignNodeValueToCorrectVar(d,'italic',!list_value['italic'][0],menu_for_style)
+                })
+                set_data({ ...data })
+              }}><FaItalic/></Button>
+          </ButtonGroup>
+          <Form.Select
+            value={list_value['font_family'][0]?(ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'font_family',menu_for_style) as string):''}
+            onChange={
+              (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
+                set_data({ ...data })
+              }}>
+            {data.display_style.font_family.map((d) => {
+              return <option
+                style={{fontFamily:d}}
+                key={'ff-' + d}
+                value={d}
+              >{d}</option>
+            })}
+          </Form.Select>
 
-        {/* En italique */}
-        <Button
-          className='btn_menu_config'
-          style={{width:'7.5%'}}
-          variant={list_value['italic'][0]?'primary':'outline-primary'}
-          onClick={() => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-              AssignNodeValueToCorrectVar(d,'italic',!list_value['italic'][0],menu_for_style)
-            })
-            set_data({ ...data })
-          }}><FaItalic/></Button>
-
-        <Form.Select
-          value={list_value['font_family'][0]?(ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'font_family',menu_for_style) as string):''}
-          onChange={
-            (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
+          <FormControl
+            min={11}
+            type={'number'}
+            value={list_value['font_size'][0] as number}
+            onChange={evt => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'font_size',+evt.target.value,menu_for_style))
               set_data({ ...data })
-            }}>
-          {data.display_style.font_family.map((d) => {
-            return <option
-              style={{fontFamily:d}}
-              key={'ff-' + d}
-              value={d}
-            >{d}</option>
-          })}
-        </Form.Select>
-
-        <FormControl
-          min={11}
-          type={'number'}
-          value={list_value['font_size'][0] as number}
-          onChange={evt => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'font_size',+evt.target.value,menu_for_style))
-            set_data({ ...data })
-          }}
-        />
-        <InputGroup.Text style={{width:'10%'}}>
-          px
-        </InputGroup.Text>
-      </InputGroup>
-
+            }}
+          />
+          <InputGroup.Text>px</InputGroup.Text>
+        </InputGroup>
+      </Row>
 
       {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
       <OverlayTrigger
@@ -524,27 +538,29 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'noeud.labels.tooltips.l_bg'}>{t('Noeud.labels.tooltips.l_bg')} </Tooltip>}>
-        <InputGroup>
-
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={list_value['label_background'][1]?'#78C2AD':'white'}
-            maxW={'70%'}
-            isIndeterminate={list_value['label_background'][1]}
-            isChecked={list_value['label_background'][0] as boolean}
-            onChange={(evt) => {
-              Object.values(parameter_to_modify)
-                .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => AssignNodeValueToCorrectVar(d,'label_background',evt.target.checked,menu_for_style))
-              set_data({ ...data })
-            }}>
-            {t('Noeud.labels.l_bg')}
-          </Checkbox>
-          {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_background',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
-        </InputGroup>
+        <Row className='input_row'>
+          <Col>
+            <Checkbox 
+              sx={SmoothClasses({})}
+              iconColor={list_value['label_background'][1]?'#78C2AD':'white'}
+              isIndeterminate={list_value['label_background'][1]}
+              isChecked={list_value['label_background'][0] as boolean}
+              onChange={(evt) => {
+                Object.values(parameter_to_modify)
+                  .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+                  .forEach(d => AssignNodeValueToCorrectVar(d,'label_background',evt.target.checked,menu_for_style))
+                set_data({ ...data })
+              }}>
+              {t('Noeud.labels.l_bg')}
+              {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_background',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
+            </Checkbox>
+          </Col>
+        </Row>
       </OverlayTrigger>
 
-      <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('MEP.leg_pos')}</h4>
+      <Row>
+        <span className='title_grp_attributes'>{t('MEP.leg_pos')}</span>
+      </Row>
       
       {/* Largeur de la zone de texte du label */}
       <OverlayTrigger
@@ -553,151 +569,162 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         delay={500}
         rootClose
         overlay={<Tooltip id={'noeud.labels.tooltips.9'}>{t('Noeud.labels.tooltips.cl')} </Tooltip>}>
-        <InputGroup>
-          <InputGroup.Text style={{width:'40%'}}>{t('Menu.larg')+(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_box_width',menu_for_style)?'*':'')}</InputGroup.Text>
-          <FormControl
-            value={list_value['label_box_width'][0] as (string | number)}
-            type={'number'}
-            placeholder={'110'}
-            min={0}
-            max={500}
-            onChange={evt => {
-              if (!isNaN(+evt.target.value)) {
-                const val = (+evt.target.value < 0) ? 0 : +evt.target.value
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'label_box_width',val,menu_for_style))
-                set_data({ ...data })
-              }
-            }}/>
-          <InputGroup.Text style={{width:'10%'}}>
+        <Row className='input_row'>
+          <Col>
+            <Form.Label>{t('Menu.larg')}{(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_box_width',menu_for_style)?<>{TooltipValueSurcharge('node_var_',t)}</>:<></>)}</Form.Label>
+          </Col>
+          <Col xs={5}>
+            <FormControl
+              className='btn_menu_config'
+              value={list_value['label_box_width'][0] as (string | number)}
+              type={'number'}
+              placeholder={'110'}
+              min={0}
+              max={500}
+              onChange={evt => {
+                if (!isNaN(+evt.target.value)) {
+                  const val = (+evt.target.value < 0) ? 0 : +evt.target.value
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'label_box_width',val,menu_for_style))
+                  set_data({ ...data })
+                }
+              }}/>
+          </Col>
+          <Col xs={1}>
+            <Form.Label >
             px
-          </InputGroup.Text>
-        </InputGroup>
+            </Form.Label>
+          </Col>
+        </Row>
       </OverlayTrigger>
       
       {/* Position  du label par rapport au noeud */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>{'Position'}</InputGroup.Text>
+      <Row className='input_row'>
+        <Col>
+          <Form.Label >{'Position'}</Form.Label>
+        </Col>
 
         {/* Position horizontale */}
-        <ButtonGroup style={{width:'30%'}}>
-          {/* A gauche  */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.6'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.6'}>{t('Noeud.labels.tooltips.gauche')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_horiz'][0]=== 'left'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_horiz','left',menu_for_style)
-                  delete d.x_label
-                  delete d.y_label
-                })
-                set_data({ ...data })
-              }}><FaAlignLeft/></Button>
-          </OverlayTrigger>
+        <Col>
+          <ButtonGroup style={{width:'50%'}}>
+            {/* A gauche  */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.6'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.6'}>{t('Noeud.labels.tooltips.gauche')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_horiz'][0]=== 'left'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_horiz','left',menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
+                  })
+                  set_data({ ...data })
+                }}><FaAlignLeft/></Button>
+            </OverlayTrigger>
 
-          {/* Au milieu */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.7'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.7'}>{t('Noeud.labels.tooltips.Milieu_ph')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_horiz'][0]=== 'middle'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_horiz','middle',menu_for_style)
-                  delete d.x_label
-                  delete d.y_label
-                })
-                set_data({ ...data })
-              }}><FaAlignCenter/></Button>
-          </OverlayTrigger>
+            {/* Au milieu */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.7'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.7'}>{t('Noeud.labels.tooltips.Milieu_ph')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_horiz'][0]=== 'middle'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_horiz','middle',menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
+                  })
+                  set_data({ ...data })
+                }}><FaAlignCenter/></Button>
+            </OverlayTrigger>
 
-          {/* A droite */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.8'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.8'}>{t('Noeud.labels.tooltips.droite')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_horiz'][0]==='right'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_horiz','right',menu_for_style)
-                  delete d.x_label
-                  delete d.y_label
-                })
-                set_data({ ...data })
-              }}><FaAlignRight/></Button>
-          </OverlayTrigger>
-        </ButtonGroup>
+            {/* A droite */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.8'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.8'}>{t('Noeud.labels.tooltips.droite')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_horiz'][0]==='right'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_horiz','right',menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
+                  })
+                  set_data({ ...data })
+                }}><FaAlignRight/></Button>
+            </OverlayTrigger>
+          </ButtonGroup>
 
-        {/* Position verticale */}
-        <ButtonGroup style={{width:'30%'}}>
-          {/* En haut */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.3'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.3'}>{t('Noeud.labels.tooltips.haut')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_vert'][0]==='top'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_vert','top',menu_for_style)
-                  delete d.x_label
-                  delete d.y_label
-                })
-                set_data({ ...data })
-              }}>{svg_label_top}</Button>
-          </OverlayTrigger>
+          {/* Position verticale */}
+          <ButtonGroup style={{width:'50%'}}>
+            {/* En haut */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.3'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.3'}>{t('Noeud.labels.tooltips.haut')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_vert'][0]==='top'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_vert','top',menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
+                  })
+                  set_data({ ...data })
+                }}>{svg_label_top}</Button>
+            </OverlayTrigger>
 
-          {/* au Milieu */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.4'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.4'}>{t('Noeud.labels.tooltips.Milieu_pv')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_vert'][0]==='middle'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_vert','middle',menu_for_style)
-                  delete d.x_label
-                  delete d.y_label
-                })
-                set_data({ ...data })
-              }}>{svg_label_center}</Button>
-          </OverlayTrigger>
+            {/* au Milieu */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.4'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.4'}>{t('Noeud.labels.tooltips.Milieu_pv')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_vert'][0]==='middle'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_vert','middle',menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
+                  })
+                  set_data({ ...data })
+                }}>{svg_label_center}</Button>
+            </OverlayTrigger>
 
-          {/* En bas */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.5'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.5'}>{t('Noeud.labels.tooltips.Bas')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_vert'][0]==='bottom'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_vert','bottom',menu_for_style)
-                  delete d.x_label
-                  delete d.y_label
-                })
-                set_data({ ...data })
-              }}>{svg_label_bottom}</Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </InputGroup>
+            {/* En bas */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.5'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.5'}>{t('Noeud.labels.tooltips.Bas')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_vert'][0]==='bottom'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_vert','bottom',menu_for_style)
+                    delete d.x_label
+                    delete d.y_label
+                  })
+                  set_data({ ...data })
+                }}>{svg_label_bottom}</Button>
+            </OverlayTrigger>
+          </ButtonGroup></Col>
+      
+      </Row>
 
       {advanced_label_content}
     
@@ -708,155 +735,169 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     placement={'top'}
     delay={500}
     overlay={<Tooltip id={'noeud.labels.tooltips.10'}>{t('Noeud.labels.tooltips.vdv')} </Tooltip>}>
-    <InputGroup>
-      <Checkbox 
-        style={StyleTitleSubSectionMenuEditionElements({underline:true})}
-        sx={SmoothClasses({})}
-        icon={(list_value['show_value'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
-        iconColor={list_value['show_value'][1]?'#78C2AD':'white'}
-        isIndeterminate={list_value['show_value'][1]}
-        isChecked={list_value['show_value'][0] as boolean}
-        onChange={(evt) => {
-          Object.values(parameter_to_modify)
-            .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-            .forEach(d => AssignNodeValueToCorrectVar(d,'show_value',evt.target.checked,menu_for_style))
-          set_data({ ...data })
-        }}>
-        {t('Noeud.labels.vdv')}
-      </Checkbox>
-      {(IsNodeDisplayingValueLocal(multi_selected_nodes,'show_value',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
-    </InputGroup>
+    <Row className='input_row'>
+      <Col>
+        <Checkbox 
+          sx={SmoothClasses({text_as_title:true})}
+          icon={(list_value['show_value'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
+          iconColor={list_value['show_value'][1]?'#78C2AD':'white'}
+          isIndeterminate={list_value['show_value'][1]}
+          isChecked={list_value['show_value'][0] as boolean}
+          onChange={(evt) => {
+            Object.values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => AssignNodeValueToCorrectVar(d,'show_value',evt.target.checked,menu_for_style))
+            set_data({ ...data })
+          }}>
+          {t('Noeud.labels.vdv')}
+          {(IsNodeDisplayingValueLocal(multi_selected_nodes,'show_value',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
+        </Checkbox>
+      </Col>
+    </Row>
   </OverlayTrigger>
   {list_value['show_value'][0] as boolean?
     <Form.Group>
-      <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('Menu.edition')}</h4>
+      <Row>
+        <span className='title_grp_attributes'>{t('Menu.edition')}</span>
+      </Row>
+      
       {/* Taille de la police du texte de la valeur */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>Police</InputGroup.Text>
-        <FormControl
-          min={11}
-          type={'number'}
-          value={list_value['value_font_size'][0] as number}
-          onChange={evt => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'value_font_size',+evt.target.value,menu_for_style))
-            set_data({ ...data })
-          }}
-        />
-        <InputGroup.Text style={{width:'10%'}}>px</InputGroup.Text>
-      </InputGroup>
+      <Row className='input_row'>
+        <Col>
+          <Form.Label>Police</Form.Label>
+        </Col>
+        <Col xs={5}>
+          <FormControl
+            min={11}
+            type={'number'}
+            value={list_value['value_font_size'][0] as number}
+            onChange={evt => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'value_font_size',+evt.target.value,menu_for_style))
+              set_data({ ...data })
+            }}
+          />
+        </Col>
+        <Col xs={1}>
+          <Form.Label style={{width:'10%'}}>px</Form.Label>
+        </Col>
+      </Row>
 
-      <h4 style={StyleTitleSubSectionMenuEditionElements({})}>Position</h4>
+      <Row>
+        <span className='title_grp_attributes'>Position</span>
+      </Row>
       {/* Position de l'affichage des données par rapport au noeud */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'40%'}}>{'Position'}</InputGroup.Text>
-        {/* Horizontale */}
-        <ButtonGroup style={{width:'30%'}}>
-          {/* A gauche */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.14'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.14'}>{t('Noeud.labels.tooltips.gauche_val')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_horiz_valeur'][0]==='left'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_horiz_valeur','left',menu_for_style)
-                })
-                set_data({ ...data })
-              }}><FaAlignLeft/></Button>
-          </OverlayTrigger>
+      <Row className='input_row'>
+        <Col><Form.Label >{'Position'}</Form.Label></Col>
+        <Col>
+          {/* Horizontale */}
+          <ButtonGroup style={{width:'50%'}}>
+            {/* A gauche */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.14'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.14'}>{t('Noeud.labels.tooltips.gauche_val')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_horiz_valeur'][0]==='left'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_horiz_valeur','left',menu_for_style)
+                  })
+                  set_data({ ...data })
+                }}><FaAlignLeft/></Button>
+            </OverlayTrigger>
 
-          {/* Au milieu */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.15'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.15'}>{t('Noeud.labels.tooltips.Milieu_ph_val')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_horiz_valeur'][0]==='middle'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_horiz_valeur','middle',menu_for_style)
-                })
-                set_data({ ...data })
-              }}><FaAlignCenter/></Button>
-          </OverlayTrigger>
+            {/* Au milieu */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.15'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.15'}>{t('Noeud.labels.tooltips.Milieu_ph_val')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_horiz_valeur'][0]==='middle'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_horiz_valeur','middle',menu_for_style)
+                  })
+                  set_data({ ...data })
+                }}><FaAlignCenter/></Button>
+            </OverlayTrigger>
 
-          {/* A droite */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.16'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.16'}>{t('Noeud.labels.tooltips.droite_val')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_horiz_valeur'][0]==='right'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_horiz_valeur','right',menu_for_style)
-                })
-                set_data({ ...data })
-              }}><FaAlignRight/></Button>
-          </OverlayTrigger>
-        </ButtonGroup>
+            {/* A droite */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.16'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.16'}>{t('Noeud.labels.tooltips.droite_val')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_horiz_valeur'][0]==='right'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_horiz_valeur','right',menu_for_style)
+                  })
+                  set_data({ ...data })
+                }}><FaAlignRight/></Button>
+            </OverlayTrigger>
+          </ButtonGroup>
 
-        {/* Verticale */}
-        <ButtonGroup style={{width:'30%'}}>
-          {/* en haut */}
+          {/* Verticale */}
+          <ButtonGroup style={{width:'50%'}}>
+            {/* en haut */}
 
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.11'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.11'}>{t('Noeud.labels.tooltips.haut_val')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_vert_valeur'][0]==='top'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_vert_valeur','top',menu_for_style)
-                })
-                set_data({ ...data })
-              }}>{svg_label_top}</Button>
-          </OverlayTrigger>
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.11'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.11'}>{t('Noeud.labels.tooltips.haut_val')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_vert_valeur'][0]==='top'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_vert_valeur','top',menu_for_style)
+                  })
+                  set_data({ ...data })
+                }}>{svg_label_top}</Button>
+            </OverlayTrigger>
 
-          {/* Au milieu */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.12'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.12'}>{t('Noeud.labels.tooltips.Milieu_pv_val')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={list_value['label_vert_valeur'][0]==='middle'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_vert_valeur','middle',menu_for_style)
-                })
-                set_data({ ...data })
-              }}>{svg_label_center}</Button>
-          </OverlayTrigger>
+            {/* Au milieu */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.12'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.12'}>{t('Noeud.labels.tooltips.Milieu_pv_val')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={list_value['label_vert_valeur'][0]==='middle'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_vert_valeur','middle',menu_for_style)
+                  })
+                  set_data({ ...data })
+                }}>{svg_label_center}</Button>
+            </OverlayTrigger>
 
-          {/* EN bas */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.13'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.13'}>{t('Noeud.labels.tooltips.Bas_val')} </Tooltip>}>
-            <Button className='btn_menu_config'
-              variant={list_value['label_vert_valeur'][0]==='bottom'?'primary':'outline-primary'}
-              onClick={() => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  AssignNodeValueToCorrectVar(d,'label_vert_valeur','bottom',menu_for_style)
-                })
-                set_data({ ...data })
-              }}>{svg_label_bottom}</Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </InputGroup>
+            {/* EN bas */}
+            <OverlayTrigger
+              key={'noeud.labels.tooltips.13'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'noeud.labels.tooltips.13'}>{t('Noeud.labels.tooltips.Bas_val')} </Tooltip>}>
+              <Button className='btn_menu_config'
+                variant={list_value['label_vert_valeur'][0]==='bottom'?'primary':'outline-primary'}
+                onClick={() => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
+                    AssignNodeValueToCorrectVar(d,'label_vert_valeur','bottom',menu_for_style)
+                  })
+                  set_data({ ...data })
+                }}>{svg_label_bottom}</Button>
+            </OverlayTrigger>
+          </ButtonGroup>
+        </Col>
+      </Row>
 
     
     
@@ -864,45 +905,48 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
       {advanced_label_value_content}
     </Form.Group>:<></>}</>
 
-  const style_node=!menu_for_style? <InputGroup>
-    <InputGroup.Text style={{width:'25%'}}>{t('Noeud.Style')}</InputGroup.Text>
-    <Dropdown  >
-      <Dropdown.Toggle
-        style={{width:'50%'}}
-        variant='outline-primary'>{style_of_selected_nodes()}</Dropdown.Toggle>
-      <Dropdown.Menu>
-        {Object.keys(data.style_node).map((d,i) => {
-          return (<Dropdown.Item
-            key={i}
-            onClick={() => {
-              ref_selected_style_node.current = d
-              multi_selected_nodes.current.map(n => {
-                n.style = d
-              })
-              set_data({ ...data })
-            }}
-          >{data.style_node[d].name}</Dropdown.Item>)
-        })}
-      </Dropdown.Menu>
-    </Dropdown>
-
-    <OverlayTrigger
-      key={'menu.tooltips.noeud.5'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'menu.tooltips.noeud.5'}>{t('Noeud.tooltips.AS')} </Tooltip>}>
-      <Button className='btn_menu_config'
-        size="sm"
-        variant='outline-primary'
-        style={{width:'25%'}}
-        onClick={() => {
-          ApplyStyleToNodes()
-          set_data({ ...data })
-        }}>
-        {t('Noeud.AS')}
-      </Button>
-    </OverlayTrigger>
-  </InputGroup>:<></>
+  const style_node=!menu_for_style? <Row className='input_row'>
+    <Col xs={2}>
+      <Form.Label>{t('Noeud.Style')}</Form.Label></Col>
+    <Col>
+      <Dropdown>
+        <Dropdown.Toggle
+          className='btn_menu_config'
+          variant='outline-primary'>{style_of_selected_nodes()}</Dropdown.Toggle>
+        <Dropdown.Menu>
+          {Object.keys(data.style_node).map((d,i) => {
+            return (<Dropdown.Item
+              key={i}
+              onClick={() => {
+                ref_selected_style_node.current = d
+                multi_selected_nodes.current.map(n => {
+                  n.style = d
+                })
+                set_data({ ...data })
+              }}
+            >{data.style_node[d].name}</Dropdown.Item>)
+          })}
+        </Dropdown.Menu>
+      </Dropdown>
+    </Col>
+    <Col>
+      <OverlayTrigger
+        key={'menu.tooltips.noeud.5'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'menu.tooltips.noeud.5'}>{t('Noeud.tooltips.AS')} </Tooltip>}>
+        <Button 
+          className='btn_menu_config'
+          variant='outline-primary'
+         
+          onClick={() => {
+            ApplyStyleToNodes()
+            set_data({ ...data })
+          }}>
+          {t('Noeud.AS')}
+        </Button>
+      </OverlayTrigger></Col>
+  </Row>:<></>
 
   // Tableau d'elements de sous-menu attribut de noeuds
   return [
@@ -925,10 +969,10 @@ export const SankeyMenuConfigurationNodesAttributes = (
   for_modal = false
 ) => {
   //Function that check if all selected nodes have the same value for some parameter
-  return for_modal ? <Form >
+  return for_modal ? <Form className='content_editon_elements' >
     {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
       return <React.Fragment key={i}>{c}</React.Fragment>})}
-  </Form>:<Tab key='nodes_desc' eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}>
+  </Form>:<Tab key='nodes_desc' className='content_editon_elements' eventKey="nodes_desc" title={t('Noeud.apparence.apparence')}>
     <Form >
       {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>})}

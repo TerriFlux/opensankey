@@ -36,7 +36,7 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
       </Col>
     </Row>
   </Form>
-  return menu_for_modal?content:<Tab key="node_tooltip" eventKey="node_tooltip" title={t('Noeud.IS')}>
+  return menu_for_modal?content:<Tab className='content_editon_elements' key="node_tooltip" eventKey="node_tooltip" title={t('Noeud.IS')}>
     {content}
   </Tab>
 }

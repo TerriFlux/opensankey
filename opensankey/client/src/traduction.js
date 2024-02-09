@@ -247,7 +247,7 @@ export const open_resources = {
       },
       MEP:{
         onBlur:'Value is applied when we leave the input or we press enter',
-        Echelle:'Scale (value for 100px)',
+        Echelle:'Scale (value for 100 px)',
         leg_layout:'Layout',
         leg_layout_text:'Text',
         leg_layout_background:'Background',
@@ -259,7 +259,7 @@ export const open_resources = {
         MaxFlux:'Max',
         MinFlux:'Min',
         link_size_limit:'Link size limit (px)',
-        vp100:'value for 100px',
+        vp100:'value for 100 px',
         TCG:'Grid',
         TCG_shift:'Shift (square in px)',
 
@@ -920,7 +920,7 @@ export const open_resources = {
       },
       MEP:{
         onBlur:'La valeur sera appliqué dès que l\'on quitte l\'input ou presser la touche entrée',
-        Echelle:'Echelle (valeur pour 100px)',
+        Echelle:'Echelle (valeur pour 100 px)',
         links_size:'Taille des flux',
         leg_layout:'Mise en forme',
         leg_layout_text:'Texte',
@@ -931,7 +931,7 @@ export const open_resources = {
         MaxFlux:'Max',
         MinFlux:'Min',
         link_size_limit:'Taille limite des flux (px)',
-        vp100:'valeur pour 100px',
+        vp100:'valeur pour 100 px',
         TCG:'Quadrillage',
         TCG_shift:'Espacement (px)',
         SLIP:'Légende',

@@ -146,7 +146,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
         }) : (<></>)}
     </Form.Group></>
     
-  return menu_for_modal?content: <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
+  return menu_for_modal?content: <Tab key="tags" eventKey="tags" className='content_editon_elements' title={t('Noeud.tags_node.tags')}>
     {content}
   </Tab >
 }

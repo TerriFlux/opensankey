@@ -94,7 +94,7 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
         }) : (<></>)}
     </Form.Group></>
 
-  return menu_for_modal?content: <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
+  return menu_for_modal?content: <Tab className='content_editon_elements' key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
     {content}
   </Tab >
 }
