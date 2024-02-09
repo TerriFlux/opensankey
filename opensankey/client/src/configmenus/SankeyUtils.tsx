@@ -1141,7 +1141,7 @@ export const NodeColor:NodeColorFuncType = (n: SankeyNode,data:SankeyData): stri
   if (n.colorParameter === 'groupTag' || data.show_structure === 'structure' ) {
     //Le couleur est définie dans les parametres du groupTag pour le favoriteTag
     //on controle ici qu'il y a bien un favorite tag
-    if (n.colorTag !== undefined && n.colorTag !== '') {
+    if (n.colorTag !== undefined && n.colorTag !== '' && n.colorTag !=='no_colormap') {
       const tagGroup = n.colorTag
       if (n.tags[tagGroup] === undefined) {
         return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:''
@@ -1162,7 +1162,7 @@ export const NodeColor:NodeColorFuncType = (n: SankeyNode,data:SankeyData): stri
     // Le couleur est définie dans les parametres locaux du noeud
     return ReturnValueNode(data,n,'color') as string
   }
-  return ''
+  return 'grey'
 }
 
 export const GetVerticalMarginForSankeyZone:GetVerticalMarginForSankeyZoneFuncType=(): number=>{
