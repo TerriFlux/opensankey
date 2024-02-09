@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
-import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
+import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, Form, Row, Col } from 'react-bootstrap'
 import { SankeyData, SankeyNode } from '../types/Types'
-import { LinkVisible,LinkColor,ReturnValueLink} from './SankeyUtils'
+import { LinkVisible,LinkColor,ReturnValueLink, SmoothClasses} from './SankeyUtils'
 import { reorganize_node_outputLinksId,reorganize_node_inputLinksId } from '../draw/SankeyDrawLayout'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import { SelectVisualyLinks } from '../draw/SankeyDrawFunction' 
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { SankeyMenuConfigurationNodesIOFType} from './types/SankeyMenuConfigurationNodesIOTypes'
+import { Checkbox } from '@chakra-ui/react'
 
 // Search links coming from/going to(io) from a face of it (pos) and return them
 const getIOLink=(
@@ -492,52 +493,55 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
   const content_for_one_node=multi_selected_nodes.current.length===1?<>
 
     {/* Choisir un lien entrant / sortant */}
-    <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>
-        {t('Noeud.PF.FES')}
-      </InputGroup.Text>
-
-      <ButtonGroup style={{width:'60%'}}>
+    <Row className='input_row'>
+      <Col>
+        <Form.Label>
+          {t('Noeud.PF.FES')}
+        </Form.Label>
+      </Col>
+      <Col >
+        <ButtonGroup style={{width:'100%'}}>
         
-        {/* Choisir un lien entrant */}
-        <OverlayTrigger
-          key={'noeud.pf.tooltips.2'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.pf.tooltips.2'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            variant={(link_io=='input')?'primary':'outline-primary'}
-            onClick={() => {
-              set_link_io('input')
-              set_link_pos('')
-            }}>{logo_enter}</Button>
-        </OverlayTrigger>
+          {/* Choisir un lien entrant */}
+          <OverlayTrigger
+            key={'noeud.pf.tooltips.2'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'noeud.pf.tooltips.2'}>{t('Noeud.PF.tooltips.ent')} </Tooltip>}>
+            <Button
+              className='btn_menu_config'
+              variant={(link_io=='input')?'primary':'outline-primary'}
+              onClick={() => {
+                set_link_io('input')
+                set_link_pos('')
+              }}>{logo_enter}</Button>
+          </OverlayTrigger>
 
-        {/* Choisir un lien entrant */}
-        <OverlayTrigger
-          key={'noeud.pf.tooltips.1'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'noeud.pf.tooltips.1'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
-          <Button
-            className='btn_menu_config'
-            variant={(link_io=='output')?'primary':'outline-primary'}
-            onClick={() => {
-              set_link_io('output')
-              set_link_pos('')
-            }}>{logo_exit}</Button>
-        </OverlayTrigger>
-      </ButtonGroup>
-    </InputGroup>
+          {/* Choisir un lien entrant */}
+          <OverlayTrigger
+            key={'noeud.pf.tooltips.1'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'noeud.pf.tooltips.1'}>{t('Noeud.PF.tooltips.sort')} </Tooltip>}>
+            <Button
+              className='btn_menu_config'
+              variant={(link_io=='output')?'primary':'outline-primary'}
+              onClick={() => {
+                set_link_io('output')
+                set_link_pos('')
+              }}>{logo_exit}</Button>
+          </OverlayTrigger>
+        </ButtonGroup>
+      </Col>
+    </Row>
 
     {/* Choix des liens */}
-    <InputGroup>
-      <InputGroup.Text style={{width:'40%'}}>
+    <Row className='input_row'>
+      <Col><Form.Label>
         {t('Noeud.PF.FRN')}
-      </InputGroup.Text>
+      </Form.Label></Col>
 
-      <ButtonGroup style={{width:'60%'}}>
+      <Col xs={10}><ButtonGroup>
 
         {/* Choisir un lien situé à gauche */}
         <OverlayTrigger
@@ -546,7 +550,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           delay={500}
           overlay={<Tooltip id={'noeud.pf.tooltips.3'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
           <Button
-            className='btn_menu_config'
+            className='btn_menu_config_node_io'
             disabled={has_link_come_from(data,set_data,display_nodes,multi_selected_nodes,link_io,'left',GetLinkValue)}
             variant={(link_pos=='left')?'primary':'outline-primary'}
             onClick={() => {
@@ -563,7 +567,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           delay={500}
           overlay={<Tooltip id={'noeud.pf.tooltips.4'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
           <Button
-            className='btn_menu_config'
+            className='btn_menu_config_node_io'
             disabled={has_link_come_from(data,set_data,display_nodes,multi_selected_nodes,link_io,'right',GetLinkValue)}
             variant={(link_pos=='right')?'primary':'outline-primary'}
             onClick={() => {
@@ -580,7 +584,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           delay={500}
           overlay={<Tooltip id={'noeud.pf.tooltips.5'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
           <Button
-            className='btn_menu_config'
+            className='btn_menu_config_node_io'
             disabled={has_link_come_from(data,set_data,display_nodes,multi_selected_nodes,link_io,'top',GetLinkValue)}
             variant={(link_pos=='top')?'primary':'outline-primary'}
             onClick={() => {
@@ -597,7 +601,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           delay={500}
           overlay={<Tooltip id={'noeud.pf.tooltips.6'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
           <Button
-            className='btn_menu_config'
+            className='btn_menu_config_node_io'
             disabled={has_link_come_from(data,set_data,display_nodes,multi_selected_nodes,link_io,'bottom',GetLinkValue)}
             variant={(link_pos=='bottom')?'primary':'outline-primary'}
             onClick={() => {
@@ -607,30 +611,31 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           </Button>
         </OverlayTrigger>
       </ButtonGroup>
-    </InputGroup>
+      </Col>
+    </Row>
 
     {/* Mettre les couleurs des flux dans le tableau pour les indentifier */}
-    <InputGroup>
-      <InputGroup.Text style={{width:'70%'}}>
-        {t('Noeud.PF.lti')}
-      </InputGroup.Text>
-
+    <Row className='input_row'>
       <OverlayTrigger
         key={'noeud.pf.tooltips.7'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'noeud.pf.tooltips.7'}>{t('Noeud.PF.tooltips.lti')}</Tooltip>}>
-        <Button
-          className='btn_menu_config'
-          style={{width:'30%'}}
-          variant={tab_colored?'primary':'outline-primary'}
-          onClick={() => {
-            set_tab_colored(!tab_colored)
-          }}>
-          {t('Noeud.PF.col')}
-        </Button>
+        <Col>
+          <Checkbox
+            sx={SmoothClasses({})}
+            isChecked={tab_colored}
+            onChange={(evt) => {
+              set_tab_colored(evt.target.checked)
+            }}
+          >
+            {t('Noeud.PF.lti')}
+          </Checkbox>
+        </Col>
       </OverlayTrigger>
-    </InputGroup>
+
+      
+    </Row>
 
     {/* Table montrant les noeuds selectionnés  */}
     {tab_pos_link(t,data,set_data,display_nodes,multi_selected_nodes,link_pos,link_io,tab_colored,GetLinkValue)}
@@ -639,9 +644,9 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
 
   const content_always_present=<>
     <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Noeud.Slct')}</h4>
-    <InputGroup>
+    <Row>
       {/* Boutons de rérrangement / selection des flux  */}
-      <ButtonGroup>
+      <ButtonGroup as={Col}>
         <OverlayTrigger
           key={'menu.tooltips.noeud.8'}
           placement={'top'}
@@ -649,7 +654,6 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           overlay={<Tooltip id={'menu.tooltips.noeud.8'}>{t('Noeud.tooltips.SlctOutLink')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            style={{width:'50%'}}
             variant='primary'
             onClick={() => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
@@ -670,7 +674,6 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           overlay={<Tooltip id={'menu.tooltips.noeud.9'}>{t('Noeud.tooltips.SlctInLink')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-            style={{width:'50%'}}
             variant='primary'
             onClick={() => {
               Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
@@ -684,7 +687,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           </Button>
         </OverlayTrigger>
       </ButtonGroup>
-    </InputGroup>
+    </Row>
   </>
 
   const content=<>
@@ -693,7 +696,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
     {content_always_present}
   </>
 
-  return menu_for_modal?content:<Tab key="node_link_io" eventKey="node_link_io" title={t('Noeud.PF.PF')}>{content}</Tab>
+  return menu_for_modal?content:<Tab key="node_link_io" className='content_editon_elements' eventKey="node_link_io" title={t('Noeud.PF.PF')}>{content}</Tab>
 }
 
 

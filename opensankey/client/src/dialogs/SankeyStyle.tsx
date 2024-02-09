@@ -36,7 +36,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
       <Modal.Header closeButton>
         <Modal.Title>{t('Menu.esn')}</Modal.Title>
       </Modal.Header>
-      <Modal.Body className='sankey-menu'>
+      <Modal.Body className='sankey-menu content_editon_elements'>
         <Form.Group>
           <InputGroup>
             <Button
@@ -126,11 +126,11 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
   }
 
   return (
-    <Modal show={show_style_link} onHide={closeStyleEditionLink} size={'lg'} >
+    <Modal show={show_style_link} onHide={closeStyleEditionLink} size={'lg'}>
       <Modal.Header closeButton>
         <Modal.Title>{t('Menu.esf')}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className='content_editon_elements'>
         <Form.Group>
           <InputGroup >
             <Button  onClick={() => {

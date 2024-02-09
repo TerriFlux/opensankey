@@ -4331,7 +4331,7 @@ fieldset:disabled .btn {
   display: block;
   padding-top: 20px;
   padding-bottom: 20px;
-  border: 1px solid #78c2ad;
+  /* border: 1px solid #78c2ad; */
   padding-left: 5px;
   padding-right: 5px;
   border-radius: 5px;
