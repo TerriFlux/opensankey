@@ -387,7 +387,8 @@ export type dict_variable_elements_selectedType = {
   ref_pre_idSource : MutableRefObject<string>,
   ref_pre_idTarget : MutableRefObject<string>,
   ref_display_link_opacity : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
-  displayedInputLinkValueRef : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
+  displayedInputLinkValueSetterRef : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
+  displayedInputLinkValueRef : MutableRefObject<string>,
   userScaleRef : MutableRefObject<number>,
 }
 

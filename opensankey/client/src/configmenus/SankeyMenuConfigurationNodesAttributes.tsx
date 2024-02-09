@@ -745,7 +745,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         <InputGroup.Text style={{width:'10%'}}>px</InputGroup.Text>
       </InputGroup>
 
-      <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('MEP.PA_action')}</h4>
+      <h4 style={StyleTitleSubSectionMenuEditionElements({})}>Position</h4>
       {/* Position de l'affichage des données par rapport au noeud */}
       <InputGroup>
         <InputGroup.Text style={{width:'40%'}}>{'Position'}</InputGroup.Text>

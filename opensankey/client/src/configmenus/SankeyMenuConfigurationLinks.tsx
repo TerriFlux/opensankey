@@ -78,7 +78,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 ) => {
   const {t}=applicationContext
   const {data,set_data}=dict_variable_application_data
-  const { multi_selected_links,multi_selected_nodes, displayedInputLinkValueRef}=dict_variable_elements_selected
+  const { multi_selected_links,multi_selected_nodes, displayedInputLinkValueSetterRef}=dict_variable_elements_selected
   const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
   const [pre_idSource,set_pre_idSource]=useState('none')
@@ -157,7 +157,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
                 }
                 tags_selected = new_tags_selected
-                displayedInputLinkValueRef.current.forEach(setter=>setter(
+                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
                   ValueSelectedParameter(
                     dict_variable_application_data,
                     multi_selected_links,
@@ -176,7 +176,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   n_t_s[dt]=tmp[i]
                 })
                 tags_selected = (n_t_s)
-                displayedInputLinkValueRef.current.forEach(setter=>setter(
+                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
                   ValueSelectedParameter(
                     dict_variable_application_data,
                     multi_selected_links,
@@ -184,7 +184,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   ).value as string
                 ))
               }else{
-                displayedInputLinkValueRef.current.forEach(setter=>setter(
+                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
                   ValueSelectedParameter(
                     dict_variable_application_data,
                     multi_selected_links,
@@ -382,28 +382,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     </InputGroup>
     <Row>
       <Col xs={11} style={{paddingRight:'0px'}}>{/* Choix du point d'arrivée du flux  */}
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.trgt'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-          <InputGroup>
-            <InputGroup.Text style={{
-              color:(multi_selected_links.current.length != 1)?'#666666':'',
-              backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-              width:'45%'}}>
-              {t('Flux.trgt')}
-            </InputGroup.Text>
-            <Form.Select
-              disabled={Object.keys(data.nodes).length<2}
-              style={{width:'55%'}}
-              onChange={target_change}
-              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
-              {addDropCible()}
-            </Form.Select>
-          </InputGroup>
-        </OverlayTrigger>
-    
         {/* Choix du point de départ du flux  */}
         <OverlayTrigger
           key={'Menu.tooltips.flux.src'}
@@ -423,6 +401,28 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               onChange={source_change}
               value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
               {addDropSource()}
+            </Form.Select>
+          </InputGroup>
+        </OverlayTrigger>
+
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.trgt'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
+          <InputGroup>
+            <InputGroup.Text style={{
+              color:(multi_selected_links.current.length != 1)?'#666666':'',
+              backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
+              width:'45%'}}>
+              {t('Flux.trgt')}
+            </InputGroup.Text>
+            <Form.Select
+              disabled={Object.keys(data.nodes).length<2}
+              style={{width:'55%'}}
+              onChange={target_change}
+              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
+              {addDropCible()}
             </Form.Select>
           </InputGroup>
         </OverlayTrigger>

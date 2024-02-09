@@ -268,7 +268,7 @@ export const open_resources = {
         Horizontal:'Horizontal spacing between nodes',
         Vertical:'Vertical spacing between nodes',
         PA:'Automatic positioning of nodes and links',
-        PA_action:'Position',
+        PA_action:'Apply',
         factExpH:'Horizontal expansion factor',
         factExpV:'Vertical expansion factor',
         stretchH:'Apply',
@@ -504,6 +504,7 @@ export const open_resources = {
         data:{
           données:'Data',
           vpp:'Value',
+          edit_value:'Edit value',
           affichage:'Display',
           tooltips: {
             vpp:'Data associated to the selected link and, if existing, for the selected tag(s)',
@@ -811,7 +812,7 @@ export const open_resources = {
         rth_support:'Nous sommes là pour vous aider',
         support_explication:'Si vous rencontrez un problème technique, écrivez-nous à [], nous traiterons votre demande dans les meilleurs délais.',
         suppr:'Supprimer',
-        rand_node_color:'Assigne une couleur aléatoire à tous les noeuds',
+        rand_node_color:'Assigner une couleur aléatoire à tous les noeuds',
         load_file:'Lecture du fichier',
         compute_file:'Traitement des informations',
         loaded_file:'Chargement terminé',
@@ -938,7 +939,7 @@ export const open_resources = {
         Horizontal:'Ecartement horizontal des noeuds',
         Vertical:'Ecartement vertical des noeuds',
         PA:'Positionnement automatique des noeuds et flux',
-        PA_action:'Position',
+        PA_action:'Appliquer',
         factExpH:'Facteur d\'expansion horizontale',
         factExpV:'Facteur d\'expansion verticale',
         stretchH:'Appliquer',
@@ -1002,7 +1003,7 @@ export const open_resources = {
         editStyle:'Assigner un style',
         SelectStyle:'Sélectionner un style',
         context_agregate:'Agréger',
-        context_desagregate:'Désagreger',
+        context_desagregate:'Désagréger',
         AS:'Réinitialiser',
         TS:'Tout sélectionner',
         NS:'Aucun noeud sélectionné',
@@ -1054,12 +1055,12 @@ export const open_resources = {
           TMH:'Hauteur minimale',
           asn:'Appliquer le style aux noeuds',
           override_type_node_shape:'Déverrouiller la forme',
-          arrow:'Flêche',
-          arrow_angle:'Inclinaison flêche',
-          angle_orientation:'Orientation flêche',
+          arrow:'Flèche',
+          arrow_angle:'Inclinaison flèche',
+          angle_orientation:'Orientation flèche',
           display_shape:'Afficher le noeud',
           hide_shape:'Masquer le noeud',
-          display_label:'Afficher le label',
+          display_label:'Afficher le nom',
           hide_label:'Masquer le nom',
           display_value:'Afficher la valeur',
           hide_value:'Masquer la valeur',
@@ -1072,8 +1073,8 @@ export const open_resources = {
             TML:'Largeur minimale en pixel du/des noeud(s) selectionné(s)',
             TMH:'Hauteur minimale en pixel du/des noeud(s) selectionné(s)',
             override_type_node_shape:'Permet de changer la forme forcée par défaut sur les noeuds de types produits et secteur',
-            arrow_angle:'Change l\'angle du noeud en forme  de flêche',
-            angle_orientation:'Change l\'orientation du noeud en forme  de flêche',
+            arrow_angle:'Change l\'angle du noeud en forme  de flèche',
+            angle_orientation:'Change l\'orientation du noeud en forme  de flèche',
           }
         },
         labels:{
@@ -1172,6 +1173,7 @@ export const open_resources = {
           inv:'Inverse le sens du flux en inversant sa source et sa cible'
         },
         data:{
+          edit_value:'Éditer la valeur',
           données:'Données',
           vpp:'Valeur',
           affichage:'Affichage',
@@ -1195,7 +1197,7 @@ export const open_resources = {
           opacity:'Opacité',
           recy:'Recyclage',
           courbure:'Courbure',
-          arrow_size:'Taille de la flêche',
+          arrow_size:'Taille de la flèche',
           display_link_lab:'Afficher la valeur',
           hide_link_lab:'Masquer la valeur',
           tooltips: {
@@ -1212,7 +1214,7 @@ export const open_resources = {
             fleche:'Représente le/les flux sélectionné(s) avec une pointe de flèche à la fin.',
             recy:'Représente le/les flux sélectionné(s) sous forme de recyclage, ie. avec un retour vers l\'arrière.',
             courbure:'Paramétrage du rayon de courbure dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
-            arrow_size:'Modifie la taille de la flêche (largeur entre la fin du flux et le noeud'
+            arrow_size:'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud'
           }
         },
         label:{

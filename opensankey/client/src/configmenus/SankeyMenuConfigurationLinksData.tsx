@@ -18,11 +18,11 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   const { t } = applicationContext
 
   const { data, set_data } = dict_variable_application_data
-  const { multi_selected_links,displayedInputLinkValueRef  } = dict_variable_elements_selected
+  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef  } = dict_variable_elements_selected
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
 
-  displayedInputLinkValueRef.current.push(set_displayed_input_link_value)
-
+  displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)
+  displayedInputLinkValueRef.current=displayed_input_link_value
 
 
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
@@ -73,7 +73,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                     set_tags_selected(tmp)
                     //   return ({...prevState,[name]: value}) 
                     // } )
-                    displayedInputLinkValueRef.current.forEach(setter=>setter(
+                    displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
                       ValueSelectedParameter(
                         dict_variable_application_data,
                         multi_selected_links,
@@ -112,7 +112,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
           isInvalid={is_link_data_invalid}
           onChange={
             evt => {
-              displayedInputLinkValueRef.current.forEach(setter=>setter(evt.target.value))
+              displayedInputLinkValueSetterRef.current.forEach(setter=>setter(evt.target.value))
               const formatedValue=evt.target.value.replace(',','.')
               if(formatedValue!='' && isNaN(+formatedValue)){
                 d3.select('.inputValueLink').style('border','red 1px solid')
