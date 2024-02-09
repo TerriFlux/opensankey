@@ -115,11 +115,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_pre_idTarget : useRef('none'),
 
     ref_display_link_opacity : useRef<Dispatch<SetStateAction<string>>[]>([]),
-    displayedInputLinkValueRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
+    displayedInputLinkValueSetterRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
+    displayedInputLinkValueRef : useRef<string>(''),
     userScaleRef : useRef(dict_variable_application_data.data.user_scale)
   }
   // Reset list of setter of input link value
-  dict_variable_elements_selected.displayedInputLinkValueRef.current=[]
+  dict_variable_elements_selected.displayedInputLinkValueSetterRef.current=[]
   /*************************************************************************************************/  
   const uiElementsRef : uiElementsRefType = {
     button_ref : useRef<HTMLLabelElement>(null),
@@ -551,7 +552,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         'ref_setter_show_menu_layout',
         menu_configuration_layout,
         contextMenu.pointer_pos,
-        applicationContext.t('Menu.MEP')
+        applicationContext.t('Menu.MEP'),
+        33
       )
       }
       {menuNodeTooltip}

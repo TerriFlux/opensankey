@@ -37,7 +37,7 @@ export const DrawLinks : DrawLinksFType = (
   const{ pointer_pos, ref_setter_contextualised_link} = contextMenu
   const{ button_ref, accordion_ref, links_accordion_ref} = uiElementsRef
   const{ data, set_data, display_nodes, display_links} = dict_variable_application_data
-  const { multi_selected_links,ref_getter_mode_selection,ref_setter_mode_selection, displayedInputLinkValueRef} = dict_variable_elements_selected
+  const { multi_selected_links,ref_getter_mode_selection,ref_setter_mode_selection, displayedInputLinkValueSetterRef} = dict_variable_elements_selected
   const default_handle_size = 10
   const default_horiz_shift = 50
 
@@ -110,7 +110,7 @@ export const DrawLinks : DrawLinksFType = (
             new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
           }
           //set_tags_selected(new_tags_selected)
-          displayedInputLinkValueRef.current.forEach(setter=>setter(
+          displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
             ValueSelectedParameter(
               dict_variable_application_data,
               multi_selected_links,
@@ -127,14 +127,14 @@ export const DrawLinks : DrawLinksFType = (
           Object.keys(data.dataTags).forEach((dt,i)=>{
             n_t_s[dt]=tmp[i]
           })
-          displayedInputLinkValueRef.current.forEach(setter=>setter(
+          displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
             ValueSelectedParameter(
               dict_variable_application_data,
               multi_selected_links,
               n_t_s
             ).value as unknown as string))
         }else{
-          displayedInputLinkValueRef.current.forEach(setter=>setter(
+          displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
             ValueSelectedParameter(
               dict_variable_application_data,
               multi_selected_links,
@@ -142,7 +142,7 @@ export const DrawLinks : DrawLinksFType = (
             ).value as unknown as string))
         }
       }else{
-        displayedInputLinkValueRef.current.forEach(setter=>setter(''))
+        displayedInputLinkValueSetterRef.current.forEach(setter=>setter(''))
       }
       set_data({...data})
     }
@@ -266,7 +266,7 @@ export const DrawLinks : DrawLinksFType = (
       if(!window.SankeyToolsStatic){
         return EventLinkContextMenu(
           dict_variable_application_data,ev,l,ref_setter_contextualised_link,pointer_pos,
-          multi_selected_links,displayedInputLinkValueRef,tags_selected,
+          multi_selected_links,displayedInputLinkValueSetterRef,tags_selected,
           dict_variable_elements_selected.ref_display_link_opacity
         )}}
     )
