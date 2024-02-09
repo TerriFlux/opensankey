@@ -1,16 +1,29 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup, Form, Row, Col } from 'react-bootstrap'
-import { SankeyLink, SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
+import {
+  SankeyLink,
+  SankeyNode,
+  applicationContextType,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType
+} from '../types/Types'
 
-import {  DefaultLink, DeleteLink,ReturnValueLink,AssignLinkValueToCorrectVar,ReturnCorrectLinkAttributeValue, AddNewNode } from './SankeyUtils'
+import {
+  DefaultLink,
+  DeleteLink,
+  ReturnValueLink,
+  AssignLinkValueToCorrectVar,
+  ReturnCorrectLinkAttributeValue,
+  AddNewNode
+} from './SankeyUtils'
 import { MultiSelect } from 'react-multi-select-component'
-import { selected_type } from '../topmenus/SankeyMenuTop' 
+import { selected_type } from '../topmenus/SankeyMenuTop'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
-import {MenuConfigurationLinksData} from './SankeyMenuConfigurationLinksData'
-import {MenuConfigurationLinksAppearence} from './SankeyMenuConfigurationLinksAppearence'
-import {MenuConfigurationLinksTags} from './SankeyMenuConfigurationLinksTags'
-import {MenuConfigurationLinksTooltip} from './SankeyMenuConfigurationLinksTooltip'
-import { ValueSelectedParameter,NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction' 
+import { MenuConfigurationLinksData } from './SankeyMenuConfigurationLinksData'
+import { MenuConfigurationLinksAppearence } from './SankeyMenuConfigurationLinksAppearence'
+import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
+import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
+import { ValueSelectedParameter, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 
 import { t } from 'i18next'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
@@ -24,8 +37,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   applicationContext:applicationContextType,
   additional_data_element:JSX.Element[],
   additional_link_appearence_items:JSX.Element[],
-  GetLinkValue:GetLinkValueFuncType,
-
+  GetLinkValue:GetLinkValueFuncType
 ) => {
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
@@ -85,7 +97,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const [pre_idTarget,set_pre_idTarget]=useState('none')
 
   dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
-  dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget  
+  dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
 
   const set_show_link = useState(true)[1]
@@ -106,10 +118,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   //supprime les groupe tag qui n'ont pas de tag car on ne peux pas choisir de tags pour affecter une valeur au flux
   delete tags_selected['n']
-
-  // if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
-  //   set_tags_selected(dataTagsSelected)
-  // }
 
   const INITIAL_OPTIONS_LINKS = Object.values(data.links).filter(l=>(data.displayed_link_selector)?(node_visible.includes(l.idSource) && node_visible.includes(l.idTarget) ):true).map((d) => { return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink } })
   const selected_links = multi_selected_links.current.map((d) => {
@@ -228,7 +236,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     if ( ref_pre_idTarget.current !== 'none' ){
       idt = ref_pre_idTarget.current
     }
-    
+
     link.idSource = nodes[ids].idNode
     link.idTarget = nodes[idt].idNode
     if (link.idSource === link.idTarget) {
@@ -249,7 +257,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     set_show_link(true)
   }
 
-  
+
   //Change the source of selected link
   const source_change = (changeEvent: React.ChangeEvent<HTMLSelectElement>) => {
     if(multi_selected_links.current.length>0){
@@ -257,19 +265,19 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
       const previous_node = data.nodes[link.idSource]
       previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-  
+
       const source_node = data.nodes[changeEvent.target.value]
       link.idSource = source_node.idNode
       if (link.idSource === link.idTarget) {
         AssignLinkValueToCorrectVar(link,'recycling',true,false)
       }
       source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
-  
+
       set_data({ ...data })
-    }else if(Object.keys(data.nodes).length>1){
+    } else if(Object.keys(data.nodes).length>1){
       set_pre_idSource(changeEvent.target.value)
     }
-    
+
   }
 
   const addDropSource = () => {
@@ -295,19 +303,19 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       const link = multi_selected_links.current[0]
       const previous_node = nodes[link.idTarget]
       previous_node.inputLinksId.splice(previous_node.inputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
-  
+
       const target_node = nodes[changeEvent.target.value]
       link.idTarget = target_node.idNode
       if (link.idSource === link.idTarget) {
         AssignLinkValueToCorrectVar(link,'recycling',true,false)
-  
+
       }
       target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
       set_data({ ...data })
     }else if(Object.keys(data.nodes).length>1){
       set_pre_idTarget(changeEvent.target.value)
     }
-   
+
   }
 
 
@@ -341,6 +349,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         overlay={<Tooltip id={'Menu.tooltips.flux.slct'}>{t('Menu.tooltips.flux.slct')} </Tooltip>}>
         {dropdownMultiLinks()}
       </OverlayTrigger>
+
       {/* Suppression d'un flux  */}
       <OverlayTrigger
         key={'Menu.tooltips.flux.rm'}
@@ -361,6 +370,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           <FaMinus />
         </Button>
       </OverlayTrigger>
+
+      {/* Activer / Désactiver selection uniquement des flux actuellement visibles */}
       <OverlayTrigger
         key={'menu.tooltips.noeud.4'}
         placement={'top'}
@@ -380,8 +391,32 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         </Button>
       </OverlayTrigger>
     </InputGroup>
+
     <Row>
-      <Col xs={11} style={{paddingRight:'0px'}}>{/* Choix du point d'arrivée du flux  */}
+      <Col xs={11} style={{paddingRight:'0px'}}>
+        {/* Choix du point d'arrivée du flux  */}
+        <OverlayTrigger
+          key={'Menu.tooltips.flux.trgt'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
+          <InputGroup>
+            <InputGroup.Text style={{
+              color:(multi_selected_links.current.length != 1)?'#666666':'',
+              backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
+              width:'45%'}}>
+              {t('Flux.trgt')}
+            </InputGroup.Text>
+            <Form.Select
+              disabled={Object.keys(data.nodes).length<2}
+              style={{width:'45%'}}
+              onChange={target_change}
+              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
+              {addDropCible()}
+            </Form.Select>
+          </InputGroup>
+        </OverlayTrigger>
+
         {/* Choix du point de départ du flux  */}
         <OverlayTrigger
           key={'Menu.tooltips.flux.src'}
@@ -397,7 +432,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             </InputGroup.Text>
             <Form.Select
               disabled={Object.keys(data.nodes).length<2}
-              style={{width:'55%'}}
+              style={{width:'45%'}}
               onChange={source_change}
               value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
               {addDropSource()}
@@ -427,15 +462,15 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           </InputGroup>
         </OverlayTrigger>
       </Col>
+
+      {/* Bouton d'inversions du flux : cible <-> source */}
       <Col xs={1} style={{paddingLeft:'0px',height:'3em'}}>
-        <OverlayTrigger 
+        <OverlayTrigger
           key={'Menu.tooltips.flux.inverse'}
           placement='top'
           delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.inv'}>{t('Flux.tooltips.inv')} </Tooltip>}
-        >
-
-          <Button 
+          overlay={<Tooltip id={'Menu.tooltips.flux.inv'}>{t('Flux.tooltips.inv')} </Tooltip>}>
+          <Button
             onClick={()=>{
               const nodes_to_reorganize: SankeyNode[] = []
               multi_selected_links.current.forEach(l => {
@@ -460,10 +495,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             }}
           ><FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/> </Button>
         </OverlayTrigger>
-      
+
       </Col>
     </Row>
-        
+
 
     { (multi_selected_links.current.length !== 0) ? (
       <Tabs defaultActiveKey="flux_data" id="settings-layout" fill={true}>

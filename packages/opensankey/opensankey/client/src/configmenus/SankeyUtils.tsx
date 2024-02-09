@@ -11,29 +11,29 @@ import { SankeyData,
   TagsCatalog } from '../types/Types'
 import * as d3 from 'd3'
 import colormap from 'colormap'
-import { menu_config_width } from '../topmenus/SankeyMenuTop' 
-import React from 'react'
+import { menu_config_width } from '../topmenus/SankeyMenuTop'
+import React, { CSSProperties } from 'react'
 import { FaCaretRight } from 'react-icons/fa'
 import { OverlayTrigger,Tooltip } from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { faCircleInfo} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-import {  
-  AddDataTagsFuncType, AddGroupTagFuncType, AddNewNodeFuncType, AddTagFuncType, AdjustSankeyZoneFuncType, 
-  ApplyStyleToNodesFuncType, AssignLinkLocalAttributeFuncType, AssignLinkStyleAttributeFuncType, 
-  AssignLinkValueToCorrectVarFuncType, AssignNodeLocalAttributeFuncType, AssignNodeStyleAttributeFuncType, 
-  AssignNodeValueToCorrectVarFuncType, ComputeTotalOffsetsFuncType, 
-  CreateObjectFuncType, DefaultLinkFuncType, DefaultLinkStyleFuncType, DefaultNodeFuncType, DefaultNodeProductStyleFuncStyle, 
-  DefaultNodeSectorStyleFuncStyle, DefaultNodeStyleFuncType, DefaultSankeyDataFuncType, DeleteLinkFuncType, 
-  DeleteNodeFuncType, 
-  FindMaxLinkValueFuncType, GetLinkAttributeValueFromStyleFuncType, GetLinkValueFuncType, 
-  GetNodeAttributeValueFromStyleFuncType, GetVerticalMarginForSankeyZoneFuncType, IsAllLinkAttrSameValueFuncType, 
-  IsAllNodeAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, IsNodeDisplayingValueLocalFuncType, 
-  LinkColorFuncType, LinkTextFuncType, LinkVisibleFunctType, NodeColorFuncType, NodeContextHasAggregateFuncType, 
-  NodeContextHasDesaggregateFuncType, NodeDisplayedFuncType, RecursionDataTagFuncType, 
-  ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType, 
-  ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType, 
+import {
+  AddDataTagsFuncType, AddGroupTagFuncType, AddNewNodeFuncType, AddTagFuncType, AdjustSankeyZoneFuncType,
+  ApplyStyleToNodesFuncType, AssignLinkLocalAttributeFuncType, AssignLinkStyleAttributeFuncType,
+  AssignLinkValueToCorrectVarFuncType, AssignNodeLocalAttributeFuncType, AssignNodeStyleAttributeFuncType,
+  AssignNodeValueToCorrectVarFuncType, ComputeTotalOffsetsFuncType,
+  CreateObjectFuncType, DefaultLinkFuncType, DefaultLinkStyleFuncType, DefaultNodeFuncType, DefaultNodeProductStyleFuncStyle,
+  DefaultNodeSectorStyleFuncStyle, DefaultNodeStyleFuncType, DefaultSankeyDataFuncType, DeleteLinkFuncType,
+  DeleteNodeFuncType,
+  FindMaxLinkValueFuncType, GetLinkAttributeValueFromStyleFuncType, GetLinkValueFuncType,
+  GetNodeAttributeValueFromStyleFuncType, GetVerticalMarginForSankeyZoneFuncType, IsAllLinkAttrSameValueFuncType,
+  IsAllNodeAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, IsNodeDisplayingValueLocalFuncType,
+  LinkColorFuncType, LinkTextFuncType, LinkVisibleFunctType, NodeColorFuncType, NodeContextHasAggregateFuncType,
+  NodeContextHasDesaggregateFuncType, NodeDisplayedFuncType, RecursionDataTagFuncType,
+  ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
+  ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType} from './types/SankeyUtilsTypes'
 
 declare const window: Window &
@@ -526,8 +526,8 @@ export const LinkText:LinkTextFuncType = (
 
 
 export const TestLinkValue:TestLinkValueFuncType = (
-  data:SankeyData, 
-  nodes: { [node_id: string]: SankeyNode }, 
+  data:SankeyData,
+  nodes: { [node_id: string]: SankeyNode },
   d: SankeyLink,
   GetLinkValue:GetLinkValueFuncType
 ) => {
@@ -761,8 +761,8 @@ export const LinkColor:LinkColorFuncType = (l: SankeyLink,data:SankeyData,
  * @returns {boolean}
  */
 export const LinkVisible: LinkVisibleFunctType=(
-  l: SankeyLink, 
-  data: SankeyData,  
+  l: SankeyLink,
+  data: SankeyData,
   display_nodes : { [node_id: string]: SankeyNode },
   GetLinkValue:GetLinkValueFuncType
 ): boolean => {
@@ -1209,7 +1209,7 @@ export const AdjustSankeyZone:AdjustSankeyZoneFuncType =(
 export interface DataSuiteType{
   is_catalog?:boolean,
   view?:{id: string,view_data: object,nom:string,details:string}[],
-} 
+}
 
 export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string): void=>{
   const elementTagName = type_tag_name
@@ -1291,7 +1291,7 @@ export const ReturnLocalNodeValue:ReturnLocalNodeValueFuncType=(n:SankeyNode,key
 // If the value come from local attribute or the style of the node doesn't matter, we look only the value
 export const IsAllNodeAttrSameValue:IsAllNodeAttrSameValueFuncType=(data:SankeyData,m_s_n:SankeyNode[]|SankeyNodeStyle[],k_list:(keyof SankeyNodeAttrLocal)[],menu_for_style:boolean): { [x: string]: [string | number | boolean, boolean] }=>{
   // store_value : variable that contain an array forEach key we are looking for
-  // Each array contain in first position the value of the selected nodes attribute 
+  // Each array contain in first position the value of the selected nodes attribute
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
   const store_value={} as {[x:string]:[(string | number | boolean),boolean]}
 
@@ -1527,7 +1527,7 @@ export const ReturnLocalLinkValue:ReturnLocalLinkValueFuncType=(l:SankeyLink,key
 export const IsAllLinkAttrSameValue:IsAllLinkAttrSameValueFuncType=(data:SankeyData,m_s_l:SankeyLink[]|SankeyLinkStyle[],k_list:(keyof SankeyLinkAttrLocal)[],menu_for_style:boolean)=>{
 
   // store_value : variable that contain an array forEach key we are looking for
-  // Each array contain in first position the value of the selected nodes attribute 
+  // Each array contain in first position the value of the selected nodes attribute
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
   const store_value={} as {[x:string]:[(string | number | boolean),boolean]}
   if(m_s_l.length>0){
@@ -1753,13 +1753,16 @@ export const SmoothClasses = ({
   bgChecked = '#C1E5DB',
   bgHovered = '#C1E5DB',
   controlColor = '#25B48C',
-  focusColor = '#78C2AD'
+  focusColor = '#78C2AD',
+  text_as_title=false
+
 }) => {
   return {
     h: '24px',
     px: '12px',
     w: '100%',
     borderRadius: '6px',
+    border:'solid 1px '+bgHovered,
     marginBottom:0,
     transition: 'all 150ms',
     _checked: {
@@ -1771,6 +1774,8 @@ export const SmoothClasses = ({
       border:'solid 2px '+controlColor,
       width:'1rem',
       height:'1rem',
+      marginLeft:text_as_title?'auto':'',
+      marginRight:text_as_title?'2px':'',
       _checked: {
         bg: controlColor,
         borderColor: controlColor
@@ -1788,6 +1793,13 @@ export const SmoothClasses = ({
       _checked: {
         bg: bgChecked
       }
+    },
+    'span[class*=\'chakra-checkbox__label\']:not([data-disabled])': {
+      width:'100%',
+      marginLeft:text_as_title?'0':'',
+      marginRight:text_as_title?'auto':'',
+      fontSize:text_as_title?'14px':'',
+      fontWeight:text_as_title?'bold':'',
     }
   }
 }
@@ -1802,20 +1814,26 @@ export const SmoothClasses = ({
  */
 export const StyleTitleSubSectionMenuEditionElements=({
   v_font_size='14px',
-  v_font_weight='bold', 
+  v_font_weight='bold',
   underline=false,
-  v_max_width='100%'
+  v_max_width='100%',
 })=>{
-  return {fontSize:v_font_size ,fontWeight:v_font_weight,textDecoration:underline?'underline':'',maxWidth:v_max_width}
+  return {fontSize:v_font_size ,
+    fontWeight:v_font_weight,
+    textDecoration:underline?'underline':'',
+    maxWidth:v_max_width,
+    display:'block',
+    textAlign:'center'} as CSSProperties
 }
 
 // Tooltipe added to input in menu when add a local value (for nodes & links local attributes)
 export const TooltipValueSurcharge=(k:string,t:TFunction)=>{
   const rand_key=k+GetRandomInt(1000)
   return <OverlayTrigger overlay={<Tooltip id={rand_key}>{t('Menu.overcharge_style_value')}</Tooltip>}>
-    <FontAwesomeIcon style={{color:'#6cc3d5',height:'12',width:'12'}} icon={faCircleInfo}/>
+    <FontAwesomeIcon style={{color:'#6cc3d5',height:'12',width:'12',float:'right'}} icon={faCircleInfo}/>
   </OverlayTrigger>
 }
+
 type ValueOf<T>=T[keyof T]
 export const IsAllNodeNotLocalAttrSameValue=(
   data:SankeyData,
@@ -1823,7 +1841,7 @@ export const IsAllNodeNotLocalAttrSameValue=(
   k_list:(keyof SankeyNode)[]
 )=>{
   // store_value : variable that contain an array forEach key we are looking for
-  // Each array contain in first position the value of the selected nodes attribute 
+  // Each array contain in first position the value of the selected nodes attribute
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
   const store_value={} as { [x: string]: [ValueOf<SankeyNode>|boolean, boolean]; }
 
@@ -1852,13 +1870,13 @@ export const IsAllNodeNotLocalAttrSameValue=(
   return store_value
 }
 
-export const IsAllLinkNotLocalAttrSameValue=( 
+export const IsAllLinkNotLocalAttrSameValue=(
   data:SankeyData,
   m_s_l:SankeyLink[],
   k_list:(keyof SankeyLink)[]
 )=>{
 // store_value : variable that contain an array forEach key we are looking for
-  // Each array contain in first position the value of the selected links attribute 
+  // Each array contain in first position the value of the selected links attribute
   // In second position it contain a boolean that return true if all selected links have the same value for the key
   const store_value={} as { [x: string]: [ValueOf<SankeyLink>|boolean, boolean]; }
 
@@ -1906,4 +1924,7 @@ typeof globalThis & {
     advanced: boolean,
     intro: string
   }
+}
+export const styleRowInput=()=>{
+  return {marginLeft:'-0.5rem'}
 }

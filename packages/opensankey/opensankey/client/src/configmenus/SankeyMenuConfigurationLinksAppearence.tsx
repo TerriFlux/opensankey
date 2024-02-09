@@ -1,7 +1,7 @@
 import React,{useState} from 'react'
-import { Row, Form, Tab, FormControl, OverlayTrigger, Tooltip, InputGroup, Button, ButtonGroup, Dropdown, Col} from 'react-bootstrap'
+import { Row, Form, Tab, FormControl, OverlayTrigger, Tooltip, Button, ButtonGroup, Dropdown, Col} from 'react-bootstrap'
 import { SankeyData, SankeyLinkAttrLocal } from '../types/Types'
-import { FaAlignLeft,FaAlignCenter,FaAlignRight, FaEyeSlash, FaEye} from 'react-icons/fa'
+import { FaAlignLeft, FaAlignCenter, FaAlignRight, FaEyeSlash, FaEye } from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp } from 'react-icons/fa'
 
 import { Checkbox } from '@chakra-ui/react'
@@ -11,8 +11,8 @@ import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLin
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
-  width="20"
-  height="20"
+  width="16"
+  height="16"
   viewBox="0 0 26 26"
 >
   <g>
@@ -23,9 +23,11 @@ const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
 </svg>
 
 const logo_vh=<svg xmlns="http://www.w3.org/2000/svg"
-  width="20"
-  height="20"
-  viewBox="0 0 26 26">
+  width="16"
+  height="16"
+  viewBox="0 0 26 26"
+  style={{transform:'rotate(180deg)'}}
+>
   <g>
     <path
       d="m 3.1500765,17.283934 c 1.282992,-1.269418 2.454122,-2.346574 2.602512,-2.393679 0.187118,-0.0594 0.364549,-0.01495 0.578998,0.145033 0.305339,0.227793 0.30961,0.251457 0.341824,1.893906 l 0.03262,1.663232 h 5.0448465 c 3.278554,0 5.16073,-0.04379 5.375831,-0.125076 0.450418,-0.170206 0.972723,-0.677665 1.168491,-1.135279 0.129085,-0.301737 0.161883,-1.402969 0.161883,-5.435473 V 6.8395274 l -1.662971,-0.03263 c -1.65136,-0.0324 -1.664613,-0.03483 -1.898566,-0.348521 -0.203132,-0.272363 -0.216128,-0.362903 -0.09431,-0.65705 0.07771,-0.187636 1.160016,-1.355183 2.405127,-2.594548 1.686558,-1.678774 2.336228,-2.25339004 2.547722,-2.25339004 0.212412,0 0.884111,0.60032204 2.667967,2.38445804 2.546366,2.546767 2.671811,2.737072 2.148932,3.260033 -0.212755,0.212788 -0.391917,0.235188 -1.881201,0.235188 H 21.043731 V 11.92368 c 0,5.443018 -0.04455,5.946321 -0.610539,6.897173 -0.351422,0.590386 -1.004393,1.254964 -1.62455,1.65343 -1.036613,0.666046 -1.426315,0.705198 -7.019257,0.705198 H 6.6995735 v 1.646309 c 0,1.489519 -0.0224,1.668709 -0.235151,1.881497 -0.519121,0.519204 -0.708915,0.394333 -3.256165,-2.142301 -1.84224,-1.834562 -2.387833,-2.445485 -2.389168,-2.675253 -0.0013,-0.232072 0.51292,-0.80697 2.330984,-2.605802 z"
@@ -34,8 +36,8 @@ const logo_vh=<svg xmlns="http://www.w3.org/2000/svg"
 </svg>
 
 const logo_vv=<svg xmlns="http://www.w3.org/2000/svg"
-  width="20"
-  height="20"
+  width="16"
+  height="16"
   viewBox="0 0 27 70">
   <g>
     <path
@@ -45,8 +47,8 @@ const logo_vv=<svg xmlns="http://www.w3.org/2000/svg"
 </svg>
 
 const logo_hh=<svg xmlns="http://www.w3.org/2000/svg"
-  width="20"
-  height="20"
+  width="16"
+  height="16"
   viewBox="0 0 70 27"
 >
   <g>
@@ -87,8 +89,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   const list_value=IsAllLinkAttrSameValue(data,selected_parameter,list_key,menu_for_style)
 
   const isAllLinksLabelPosOrthAuto=IsAllLinkNotLocalAttrSameValue(data,(menu_for_style)?[]:multi_selected_links.current,['label_pos_auto'])
-  
-  
+
+
   const shiftCenter = () => {
     if (selected_parameter.length == 0) {
       return 0.5
@@ -214,36 +216,44 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
     }
   }
 
+  const content_appearence = < >
 
-  const content_appearence = <Form >
-    <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('Menu.edition')}</h4>
+    <Row>
+      <span className='title_grp_attributes'>{t('Menu.edition')}</span>
+    </Row>
     {/* Flux en recyclage  */}
-    <OverlayTrigger
-      key={'flux.apparence.tooltips.11'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'flux.apparence.tooltips.11'}>{t('Flux.apparence.tooltips.recy')} </Tooltip>}>
-      <Checkbox 
-        sx={SmoothClasses({})}
-        iconColor={list_value['recycling'][1]?'#78C2AD':'white'}
-        maxW={'90%'}
-        isIndeterminate={list_value['recycling'][1]}
-        isChecked={list_value['recycling'][0] as boolean}
-        onChange={
-          (evt) => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-              AssignLinkValueToCorrectVar(d,'recycling',evt.target.checked,menu_for_style)
-              AssignLinkValueToCorrectVar(d,'left_horiz_shift',(!evt.target.checked?0.2:0),menu_for_style)
-              AssignLinkValueToCorrectVar(d,'right_horiz_shift',(!evt.target.checked?0.8:0),menu_for_style)
-            })
-            set_data({ ...data })
-          }}>{t('Flux.apparence.recy')}</Checkbox>
-    </OverlayTrigger>
+    <Row>
+      <Col>
+        <OverlayTrigger
+          key={'flux.apparence.tooltips.11'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.apparence.tooltips.11'}>{t('Flux.apparence.tooltips.recy')} </Tooltip>}>
+          <Checkbox
+            sx={SmoothClasses({})}
+            iconColor={list_value['recycling'][1]?'#78C2AD':'white'}
+            isIndeterminate={list_value['recycling'][1]}
+            isChecked={list_value['recycling'][0] as boolean}
+            onChange={
+              (evt) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  AssignLinkValueToCorrectVar(d,'recycling',evt.target.checked,menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'left_horiz_shift',(!evt.target.checked?0.2:0),menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'right_horiz_shift',(!evt.target.checked?0.8:0),menu_for_style)
+                })
+                set_data({ ...data })
+              }}>{t('Flux.apparence.recy')}</Checkbox>
+        </OverlayTrigger>
+      </Col>
+    </Row>
+
     {/* Orientation du flux */}
-    <Form.Group as={Row}>
-      <Col><Form.Label >
-        {t('Flux.apparence.of')+(IsLinkDiplayingValueLocal(multi_selected_links,'orientation',menu_for_style)?'*':'')}
-      </Form.Label></Col>
+    <Row className='input_row'>
+      <Col>
+        <Form.Label >
+          {t('Flux.apparence.of')}{(IsLinkDiplayingValueLocal(multi_selected_links,'orientation',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
+        </Form.Label>
+      </Col>
       <ButtonGroup as={Col}>
         {/* Horizontal - Horizontal  */}
         <OverlayTrigger
@@ -253,7 +263,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           overlay={<Tooltip id={'Flux.apparence.tooltips.3'}>{t('Flux.apparence.tooltips.of_hh')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-          
+
             value='hh'
             variant={linkOrientation('hh')?'primary':'outline-primary'}
             onClick={
@@ -274,7 +284,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           overlay={<Tooltip id={'Flux.apparence.tooltips.4'}>{t('Flux.apparence.tooltips.of_vv')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-          
+
             value='vv'
             variant={linkOrientation('vv')?'primary':'outline-primary'}
             onClick={
@@ -294,7 +304,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           overlay={<Tooltip id={'Flux.apparence.tooltips.5'}>{t('Flux.apparence.tooltips.of_vh')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-          
+
             value='vh'
             variant={linkOrientation('vh')?'primary':'outline-primary'}
             onClick={
@@ -314,7 +324,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           overlay={<Tooltip id={'flux.apparence.tooltips.6'}>{t('Flux.apparence.tooltips.of_hv')} </Tooltip>}>
           <Button
             className='btn_menu_config'
-          
+
             value='hv'
             variant={linkOrientation('hv')?'primary':'outline-primary'}
             onClick={
@@ -326,32 +336,37 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               }}>{logo_hv}</Button>
         </OverlayTrigger>
       </ButtonGroup>
-    </Form.Group>
+    </Row>
 
     {/* Forme fleche droite  */}
-    <OverlayTrigger
-      key={'flux.apparence.tooltips.10'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'flux.apparence.tooltips.10'}>{t('Flux.apparence.tooltips.fleche')} </Tooltip>}>
-      <Checkbox
-        sx={SmoothClasses({})}
-        iconColor={list_value['arrow'][1]?'#78C2AD':'white'}
-        maxW={'90%'}
-        isIndeterminate={list_value['arrow'][1]}
-        isChecked={list_value['arrow'][0] as boolean}
-        onChange={
-          (evt) => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>AssignLinkValueToCorrectVar(d,'arrow',evt.target.checked,menu_for_style)
-            )
-            set_data({ ...data })
-          }}>{t('Flux.apparence.fleche')}</Checkbox>
-    </OverlayTrigger>
+    <Row>
+      <Col>
+        <OverlayTrigger
+          key={'flux.apparence.tooltips.10'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.apparence.tooltips.10'}>{t('Flux.apparence.tooltips.fleche')} </Tooltip>}>
+          <Checkbox
+            sx={SmoothClasses({})}
+            iconColor={list_value['arrow'][1]?'#78C2AD':'white'}
+            isIndeterminate={list_value['arrow'][1]}
+            isChecked={list_value['arrow'][0] as boolean}
+            onChange={
+              (evt) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>AssignLinkValueToCorrectVar(d,'arrow',evt.target.checked,menu_for_style)
+                )
+                set_data({ ...data })
+              }}>{t('Flux.apparence.fleche')}</Checkbox>
+        </OverlayTrigger>
+      </Col>
+    </Row>
 
-    <Form.Group as={Row}>
-      <Col><Form.Label >
-        {t('Flux.apparence.arrow_size')+(IsLinkDiplayingValueLocal(multi_selected_links,'arrow_size',menu_for_style)?'*':'')}
-      </Form.Label></Col>
+    <Row className='input_row'>
+      <Col>
+        <Form.Label >
+          {t('Flux.apparence.arrow_size')}{(IsLinkDiplayingValueLocal(multi_selected_links,'arrow_size',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
+        </Form.Label>
+      </Col>
       <Col>
         <OverlayTrigger
           key={'flux.apparence.tooltips.13'}
@@ -360,7 +375,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           rootClose
           overlay={<Tooltip id={'flux.apparence.tooltips.13'}>{t('Flux.apparence.tooltips.arrow_size')} </Tooltip>}>
           <FormControl
-          
+
             min={1}  step={1}
             type={'number'}
             value={arrow_size()}
@@ -375,32 +390,35 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 set_data({ ...data })
               }}/>
         </OverlayTrigger></Col>
-    </Form.Group>
+    </Row>
 
     {/* Forme courbée  */}
-    <OverlayTrigger
-      key={'flux.apparence.tooltips.9'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'flux.apparence.tooltips.9'}>{t('Flux.apparence.tooltips.courbe')} </Tooltip>}>
-      <Checkbox
-        sx={SmoothClasses({})}
-        iconColor={list_value['curved'][1]?'#78C2AD':'white'}
-        maxW={'90%'}
-        isIndeterminate={list_value['curved'][1]}
-        isChecked={list_value['curved'][0] as boolean}
-        onChange={
-          (evt) => {
-            Object.values(parameter_to_modify)
-              .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
-              .map(d => AssignLinkValueToCorrectVar(d,'curved',evt.target.checked,menu_for_style))
-            set_data({ ...data })
-          }}>{t('Flux.apparence.courbe')}</Checkbox>
-    </OverlayTrigger>
+    <Row>
+      <Col>
+        <OverlayTrigger
+          key={'flux.apparence.tooltips.9'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.apparence.tooltips.9'}>{t('Flux.apparence.tooltips.courbe')} </Tooltip>}>
+          <Checkbox
+            sx={SmoothClasses({})}
+            iconColor={list_value['curved'][1]?'#78C2AD':'white'}
+            isIndeterminate={list_value['curved'][1]}
+            isChecked={list_value['curved'][0] as boolean}
+            onChange={
+              (evt) => {
+                Object.values(parameter_to_modify)
+                  .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
+                  .map(d => AssignLinkValueToCorrectVar(d,'curved',evt.target.checked,menu_for_style))
+                set_data({ ...data })
+              }}>{t('Flux.apparence.courbe')}</Checkbox>
+        </OverlayTrigger>
+      </Col>
+    </Row>
 
     {/* Modification du rayon de courbure du flux  */}
-    <Form.Group as={Row}>
-      <Col><Form.Label >{t('Flux.apparence.courbure')+(IsLinkDiplayingValueLocal(multi_selected_links,'curvature',menu_for_style)?'*':'')}</Form.Label></Col>
+    <Row className='input_row'>
+      <Col><Form.Label >{t('Flux.apparence.courbure')}{(IsLinkDiplayingValueLocal(multi_selected_links,'curvature',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Form.Label></Col>
       <Col><OverlayTrigger
         key={'flux.apparence.tooltips.12'}
         placement={'top'}
@@ -408,7 +426,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         rootClose
         overlay={<Tooltip id={'flux.apparence.tooltips.12'}>{t('Flux.apparence.tooltips.courbure')} </Tooltip>}>
         <FormControl
-          
+
           min={0} max={1} step={0.01}
           type={'number'}
           value={courbure()}
@@ -421,96 +439,102 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               set_data({ ...data })
             }}/>
       </OverlayTrigger></Col>
-    </Form.Group>
+    </Row>
 
     {/* Positionnement du centre du flux  */}
-    <Form.Group as={Row}>
+    <Row className='input_row'>
       <Col><Form.Label >
         {t('Flux.apparence.pdc')}
       </Form.Label></Col>
 
-      <Col><OverlayTrigger
-        key={'flux.apparence.tooltips.7'}
-        placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'flux.apparence.tooltips.7'}>{t('Flux.apparence.tooltips.pdc')} </Tooltip>}>
-        <FormControl
-         
-          min={0} max={100}
-          type={'number'}
-          value={Math.round(shiftCenter()*100)}
-          disabled={(linkOrientation('hv')||linkOrientation('vh'))}
-          onChange={
-            evt => {
-              const center = +evt.target.value/100
-              selected_parameter.forEach(d => {
-                let shift_gap = (Number(ReturnCorrectLinkAttributeValue(data,d,'right_horiz_shift',menu_for_style)) - Number(ReturnCorrectLinkAttributeValue(data,d,'left_horiz_shift',menu_for_style)))/2
-                if (center - shift_gap < 0) {
-                  shift_gap = center
-                }
-                if (center + shift_gap > 1) {
-                  shift_gap = 1-center
-                }
-                AssignLinkValueToCorrectVar(d,'left_horiz_shift',(center - shift_gap),menu_for_style)
-                AssignLinkValueToCorrectVar(d,'right_horiz_shift',(center + shift_gap),menu_for_style)
-              })
-              set_data({ ...data })
-            }}/>
-      </OverlayTrigger></Col>
-    </Form.Group>
+      <Col>
+        <OverlayTrigger
+          key={'flux.apparence.tooltips.7'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'flux.apparence.tooltips.7'}>{t('Flux.apparence.tooltips.pdc')} </Tooltip>}>
+          <FormControl
+
+            min={0} max={100}
+            type={'number'}
+            value={Math.round(shiftCenter()*100)}
+            disabled={(linkOrientation('hv')||linkOrientation('vh'))}
+            onChange={
+              evt => {
+                const center = +evt.target.value/100
+                selected_parameter.forEach(d => {
+                  let shift_gap = (Number(ReturnCorrectLinkAttributeValue(data,d,'right_horiz_shift',menu_for_style)) - Number(ReturnCorrectLinkAttributeValue(data,d,'left_horiz_shift',menu_for_style)))/2
+                  if (center - shift_gap < 0) {
+                    shift_gap = center
+                  }
+                  if (center + shift_gap > 1) {
+                    shift_gap = 1-center
+                  }
+                  AssignLinkValueToCorrectVar(d,'left_horiz_shift',(center - shift_gap),menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'right_horiz_shift',(center + shift_gap),menu_for_style)
+                })
+                set_data({ ...data })
+              }}/>
+        </OverlayTrigger>
+      </Col>
+    </Row>
 
     {/* Distance des poignée */}
-    <Form.Group as={Row}>
-      <Col><Form.Label >
-        {t('Flux.apparence.eep')+(IsLinkDiplayingValueLocal(multi_selected_links,'left_horiz_shift',menu_for_style)&&IsLinkDiplayingValueLocal(multi_selected_links,'right_horiz_shift',menu_for_style)?'*':'')}
-      </Form.Label></Col>
+    <Row className='input_row'>
+      <Col>
+        <Form.Label >
+          {t('Flux.apparence.eep')}{(IsLinkDiplayingValueLocal(multi_selected_links,'left_horiz_shift',menu_for_style)&&IsLinkDiplayingValueLocal(multi_selected_links,'right_horiz_shift',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
+        </Form.Label>
+      </Col>
 
-      <Col><OverlayTrigger
-        key={'flux.apparence.tooltips.8'}
-        placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'flux.apparence.tooltips.8'}>{t('Flux.apparence.tooltips.eep')} </Tooltip>}>
-        <FormControl
-         
-          min={0} max={50}
-          type={'number'}
-          value={Math.round(shift()*100)}
-          disabled={(linkOrientation('hv')||linkOrientation('vh'))}
-          onChange={
-            evt => {
-              const shift_gap = +evt.target.value/100
-              if (shift_gap > 0.5 ) {
-                return
+      <Col>
+        <OverlayTrigger
+          key={'flux.apparence.tooltips.8'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'flux.apparence.tooltips.8'}>{t('Flux.apparence.tooltips.eep')} </Tooltip>}>
+          <FormControl
+
+            min={0} max={50}
+            type={'number'}
+            value={Math.round(shift()*100)}
+            disabled={(linkOrientation('hv')||linkOrientation('vh'))}
+            onChange={
+              evt => {
+                const shift_gap = +evt.target.value/100
+                if (shift_gap > 0.5 ) {
+                  return
+                }
+                selected_parameter.forEach(d => {
+                  let new_center_position = shiftCenter()
+                  if (new_center_position - shift_gap < 0) {
+                    new_center_position = shift_gap
+                  }
+                  if (new_center_position + shift_gap > 1) {
+                    new_center_position = 1-shift_gap
+                  }
+
+                  AssignLinkValueToCorrectVar(d,'left_horiz_shift',(new_center_position - shift_gap),menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'right_horiz_shift',(new_center_position + shift_gap),menu_for_style)
+
+                })
+                set_data({ ...data })
               }
-              selected_parameter.forEach(d => {
-                let new_center_position = shiftCenter()
-                if (new_center_position - shift_gap < 0) {
-                  new_center_position = shift_gap
-                }
-                if (new_center_position + shift_gap > 1) {
-                  new_center_position = 1-shift_gap
-                }
-
-                AssignLinkValueToCorrectVar(d,'left_horiz_shift',(new_center_position - shift_gap),menu_for_style)
-                AssignLinkValueToCorrectVar(d,'right_horiz_shift',(new_center_position + shift_gap),menu_for_style)
-
-              })
-              set_data({ ...data })
             }
-          }
-        />
-      </OverlayTrigger></Col>
-    </Form.Group>
-
-   
+          />
+        </OverlayTrigger>
+      </Col>
+    </Row>
 
     {/* Choix de la couleur du flux */}
-    <Form.Group as={Row}>
-      <Col><Form.Label >
-        {t('Flux.apparence.couleur')+(IsLinkDiplayingValueLocal(multi_selected_links,'color',menu_for_style)?'*':'')}
-      </Form.Label></Col>
+    <Row className='input_row'>
+      <Col>
+        <Form.Label>
+          {t('Flux.apparence.couleur')}{(IsLinkDiplayingValueLocal(multi_selected_links,'color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
+        </Form.Label>
+      </Col>
       <Col>
         <OverlayTrigger
           key={'Flux.apparence.tooltips.1'}
@@ -538,45 +562,48 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => AssignLinkValueToCorrectVar(d,'color',color,menu_for_style))
             set_data({ ...data })
           }}/>
-    </Form.Group>
+    </Row>
 
     {/* Opacité */}
-    <Form.Group as={Row}>
-      <Col><Form.Label  >{t('Flux.apparence.opacity')+(IsLinkDiplayingValueLocal(multi_selected_links,'opacity',menu_for_style)?'*':'')}</Form.Label></Col>
-      <Col><OverlayTrigger
-        key={'Flux.apparence.tooltips.1'}
-        placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'Flux.apparence.tooltips.1'}>{t('Flux.apparence.tooltips.opacity')} </Tooltip>}><>
-          <Form.Control
-            type="number"
-            max={1}
-            min={0}
-            step={0.1}
-            value={display_link_opacity}
-            isInvalid={selected_parameter.length>0?+display_link_opacity!=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'opacity',menu_for_style):false}
-            onChange={
-              evt => {
-                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(evt.target.value))
-              }}
-            onBlur={(evt)=>{
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(
-                d => AssignLinkValueToCorrectVar(d,'opacity',+evt.target.value,menu_for_style)
-              )
-              set_data({...data})
-            }}
-          />
-          <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
-        </>
-      </OverlayTrigger>
+    <Row className='input_row'>
+      <Col>
+        <Form.Label>
+          {t('Flux.apparence.opacity')}{(IsLinkDiplayingValueLocal(multi_selected_links,'opacity',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
+        </Form.Label>
       </Col>
-    </Form.Group>
-
-
+      <Col>
+        <OverlayTrigger
+          key={'Flux.apparence.tooltips.1'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'Flux.apparence.tooltips.1'}>{t('Flux.apparence.tooltips.opacity')} </Tooltip>}><>
+            <Form.Control
+              type="number"
+              max={1}
+              min={0}
+              step={0.1}
+              value={display_link_opacity}
+              isInvalid={selected_parameter.length>0?+display_link_opacity!=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'opacity',menu_for_style):false}
+              onChange={
+                evt => {
+                  dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(evt.target.value))
+                }}
+              onBlur={(evt)=>{
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(
+                  d => AssignLinkValueToCorrectVar(d,'opacity',+evt.target.value,menu_for_style)
+                )
+                set_data({...data})
+              }}
+            />
+            <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
+          </>
+        </OverlayTrigger>
+      </Col>
+    </Row>
 
     {/* Flux hachuré */}
-    <Form.Group as={Row}>
+    <Row className='input_row'>
       <Col>
         <OverlayTrigger
           key={'Flux.apparence.tooltips.2'}
@@ -584,30 +611,30 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           delay={500}
           overlay={<Tooltip id={'Flux.apparence.tooltips.2'}>{t('Flux.apparence.tooltips.hach')} </Tooltip>}>
 
-          <Checkbox 
+          <Checkbox
             sx={SmoothClasses({})}
             iconColor={list_value['dashed'][1]?'#78C2AD':'white'}
-            maxW={'90%'}
             isIndeterminate={list_value['dashed'][1]}
             isChecked={list_value['dashed'][0] as boolean}
             onChange={(evt) => {
               Object.values(parameter_to_modify)
                 .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
                 .forEach(d => AssignLinkValueToCorrectVar(d,'dashed',evt.target.checked,menu_for_style))
-
               set_data({ ...data })
             }}>
             {t('Flux.apparence.hach')+' '}
+            {(IsLinkDiplayingValueLocal(multi_selected_links,'dashed',menu_for_style)?
+              TooltipValueSurcharge('link_var_',t):<></>)}
           </Checkbox>
         </OverlayTrigger>
-        {(IsLinkDiplayingValueLocal(multi_selected_links,'dashed',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
       </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
+    </Row>
+
+    <Row className='input_row'>
       <Col>
-        <Checkbox 
+        <Checkbox
           sx={SmoothClasses({})}
-          maxW={'70%'}
+          iconColor={!data.display_style.null_flux?'#78C2AD':'white'}
           isChecked={data.display_style.null_flux}
           onChange={(evt) => {
             data.display_style.null_flux=evt.target.checked
@@ -616,457 +643,506 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           {t('Banner.fn')}
         </Checkbox>
       </Col>
-    </Form.Group>
-    <Form.Group as={Row}>
+    </Row>
+    <Row className='input_row'>
       <Col>
         {additional_link_appearence_items}
-      </Col></Form.Group>
-  </Form>
+      </Col>
+    </Row>
+  </>
 
   const content_label=<>
     {/* Display label  */}
-    <Form.Group as={Row}>
-      <Col><OverlayTrigger
-        key={'flux.label.tooltips.1'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'flux.label.tooltips.1'}>{t('Flux.label.tooltips.label')} </Tooltip>}>
-        <Checkbox 
-          style={StyleTitleSubSectionMenuEditionElements({underline:true,v_max_width:'90%'})}
-          sx={SmoothClasses({})}
-          icon={list_value['label_visible'][0] as boolean?<FaEye/>:<FaEyeSlash/>}
-          iconColor={list_value['label_visible'][1]?'#78C2AD':'white'}
-          isIndeterminate={list_value['label_visible'][1]}
-          isChecked={list_value['label_visible'][0] as boolean}
-          onChange={(evt) => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-              AssignLinkValueToCorrectVar(d,'label_visible',evt.target.checked,menu_for_style)
-            })
-            set_data({ ...data })
-          }}>
-      
-          <> {t('Flux.label.vdb')+' '}</>
-        </Checkbox>
-      </OverlayTrigger></Col>
-      {(IsLinkDiplayingValueLocal(multi_selected_links,'label_visible',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}
-    </Form.Group>
+    <Row className='input_row'>
+      <Col>
+        <OverlayTrigger
+          key={'flux.label.tooltips.1'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'flux.label.tooltips.1'}>{t('Flux.label.tooltips.label')} </Tooltip>}>
+          <Checkbox
+            style={StyleTitleSubSectionMenuEditionElements({underline:true,v_max_width:'90%'})}
+            sx={SmoothClasses({})}
+            icon={list_value['label_visible'][0] as boolean?<FaEye/>:<FaEyeSlash/>}
+            iconColor={list_value['label_visible'][1]?'#78C2AD':'white'}
+            isIndeterminate={list_value['label_visible'][1]}
+            isChecked={list_value['label_visible'][0] as boolean}
+            onChange={(evt) => {
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                AssignLinkValueToCorrectVar(d,'label_visible',evt.target.checked,menu_for_style)
+              })
+              set_data({ ...data })
+            }}>
+            {t('Flux.label.vdb')+' '}
+            {(IsLinkDiplayingValueLocal(multi_selected_links,'label_visible',menu_for_style)?
+              TooltipValueSurcharge('link_var_',t):<></>)}
+          </Checkbox>
+        </OverlayTrigger>
+      </Col>
+    </Row>
 
     {list_value['label_visible'][0] as boolean?<>
-      
+
       {/* Choose number of significant number */}
-      <Form.Group as={Row}>
-        <Col><Form.Label>{t('Flux.label.NbPrecision')}</Form.Label></Col>
-        <Col><OverlayTrigger
-          key={'flux.label.tooltips.14'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.14'}>{t('Flux.label.tooltips.NbPrecision')} </Tooltip>}>
-          <Form.Control
-            type='number'
-            min={0}
-            step={1}
-            value={list_value['scientific_precision'][0] as number}
-            onChange={evt=>{
-              const value=+evt.target.value
-              if(!isNaN(value)){
-                const val=isNaN(value) || value<=0?5:Math.round(value)
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'scientific_precision',val,menu_for_style))
-                set_data({...data})
-              }
-           
-            }}/>
-        </OverlayTrigger></Col>
-      </Form.Group>
-
-      {/* Choix d'affichage en notation scientifique  */}
-      <Form.Group as={Row}>
-        <Col><OverlayTrigger
-          key={'flux.label.tooltips.13'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.13'}>{t('Flux.label.tooltips.toPrecision')} </Tooltip>}>
-       
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={list_value['to_precision'][1]?'#78C2AD':'white'}
-            maxW={'90%'}
-            isIndeterminate={list_value['to_precision'][1]}
-            isChecked={list_value['to_precision'][0] as boolean}
-            onChange={(evt) => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                AssignLinkValueToCorrectVar(d,'custom_digit',false,menu_for_style)
-                AssignLinkValueToCorrectVar(d,'to_precision',evt.target.checked,menu_for_style)
-              })
-              set_data({ ...data })
-            }}>
-            {t('Flux.label.toPrecision')+' '}
-          </Checkbox>
-        </OverlayTrigger>
-        {(IsLinkDiplayingValueLocal(multi_selected_links,'to_precision',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}</Col>
-      </Form.Group>
-
-      {list_value['to_precision'][0]?<>  
-      </>:<></>}
-
-      {/* Choix d'affichage du nombre de chiffre après la virgule  */}
-      <Form.Group as={Row}>
-        <Col><OverlayTrigger
-          key={'flux.label.tooltips.cd'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.cd'}>{t('Flux.label.tooltips.custom_digit')} </Tooltip>}>
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={list_value['custom_digit'][1]?'#78C2AD':'white'}
-            maxW={'90%'}
-            isIndeterminate={list_value['custom_digit'][1]}
-            isChecked={list_value['custom_digit'][0] as boolean}
-            onChange={(evt) => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                AssignLinkValueToCorrectVar(d,'to_precision',false,menu_for_style)
-                AssignLinkValueToCorrectVar(d,'custom_digit',evt.target.checked,menu_for_style)
-              })
-              set_data({ ...data })
-            }}>
-            {t('Flux.label.custom_digit')+' '}
-          </Checkbox>
-        </OverlayTrigger>
-        {(IsLinkDiplayingValueLocal(multi_selected_links,'custom_digit',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}</Col>
-      </Form.Group>
-
-      {list_value['custom_digit'][0]?<>  {/* Choose number of custom digit */}
-        <Form.Group as={Row}>
-          <Col><Form.Label >{t('Flux.label.NbDigit')}</Form.Label></Col>
-          <Col><OverlayTrigger
-            key={'flux.label.tooltips.nd'}
+      <Row className='input_row'>
+        <Col>
+          <Form.Label>
+            {t('Flux.label.NbPrecision')}
+          </Form.Label>
+        </Col>
+        <Col>
+          <OverlayTrigger
+            key={'flux.label.tooltips.14'}
             placement={'top'}
             delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.nd'}>{t('Flux.label.tooltips.NbDigit')} </Tooltip>}>
+            overlay={<Tooltip id={'flux.label.tooltips.14'}>{t('Flux.label.tooltips.NbPrecision')} </Tooltip>}>
             <Form.Control
-             
               type='number'
               min={0}
               step={1}
-              disabled={!(list_value['custom_digit'][0] as boolean)}
-              value={list_value['nb_digit'][0] as number}
+              value={list_value['scientific_precision'][0] as number}
               onChange={evt=>{
                 const value=+evt.target.value
-                const val=isNaN(value) 
-                Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'nb_digit',value,menu_for_style))
-                set_data({...data})
+                if(!isNaN(value)){
+                  const val=isNaN(value) || value<=0?5:Math.round(value)
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'scientific_precision',val,menu_for_style))
+                  set_data({...data})
+                }
               }}/>
-          </OverlayTrigger></Col>
-        </Form.Group></>:<></>}
+          </OverlayTrigger>
+        </Col>
+      </Row>
 
-      <Form.Group as={Row}>
+      {/* Choix d'affichage en notation scientifique  */}
+      <Row className='input_row'>
+        <Col>
+          <OverlayTrigger
+            key={'flux.label.tooltips.13'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'flux.label.tooltips.13'}>{t('Flux.label.tooltips.toPrecision')} </Tooltip>}>
+            <Checkbox
+              sx={SmoothClasses({})}
+              iconColor={list_value['to_precision'][1]?'#78C2AD':'white'}
+              isIndeterminate={list_value['to_precision'][1]}
+              isChecked={list_value['to_precision'][0] as boolean}
+              onChange={(evt) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  AssignLinkValueToCorrectVar(d,'custom_digit',false,menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'to_precision',evt.target.checked,menu_for_style)
+                })
+                set_data({ ...data })
+              }}>
+              {t('Flux.label.toPrecision')+' '}
+              {(IsLinkDiplayingValueLocal(multi_selected_links,'to_precision',menu_for_style)?
+                TooltipValueSurcharge('link_var_',t):<></>)}
+            </Checkbox>
+          </OverlayTrigger>
+        </Col>
+      </Row>
+
+      {list_value['to_precision'][0]?<>
+      </>:<></>}
+
+      {/* Choix d'affichage du nombre de chiffre après la virgule  */}
+      <Row className='input_row'>
+        <Col>
+          <OverlayTrigger
+            key={'flux.label.tooltips.cd'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'flux.label.tooltips.cd'}>{t('Flux.label.tooltips.custom_digit')} </Tooltip>}>
+            <Checkbox
+              sx={SmoothClasses({})}
+              iconColor={list_value['custom_digit'][1]?'#78C2AD':'white'}
+              isIndeterminate={list_value['custom_digit'][1]}
+              isChecked={list_value['custom_digit'][0] as boolean}
+              onChange={(evt) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  AssignLinkValueToCorrectVar(d,'to_precision',false,menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'custom_digit',evt.target.checked,menu_for_style)
+                })
+                set_data({ ...data })
+              }}>
+              {t('Flux.label.custom_digit')+' '}
+              {(IsLinkDiplayingValueLocal(multi_selected_links,'custom_digit',menu_for_style)?
+                TooltipValueSurcharge('link_var_',t):<></>)}
+            </Checkbox>
+          </OverlayTrigger></Col>
+      </Row>
+
+      {list_value['custom_digit'][0]?<>
+        {/* Choose number of custom digit */}
+        <Row className='input_row'>
+          <Col>
+            <Form.Label>
+              {t('Flux.label.NbDigit')}
+            </Form.Label>
+          </Col>
+          <Col>
+            <OverlayTrigger
+              key={'flux.label.tooltips.nd'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.nd'}>{t('Flux.label.tooltips.NbDigit')} </Tooltip>}>
+              <Form.Control
+                type='number'
+                min={0}
+                step={1}
+                disabled={!(list_value['custom_digit'][0] as boolean)}
+                value={list_value['nb_digit'][0] as number}
+                onChange={evt=>{
+                  const value=+evt.target.value
+                  const val=isNaN(value)
+                  Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'nb_digit',value,menu_for_style))
+                  set_data({...data})
+                }}/>
+            </OverlayTrigger>
+          </Col>
+        </Row></>:<></>}
+
+      <Row className='input_row'>
         {/* Ajout une unité au label de flux */}
-        <Col><OverlayTrigger
-          key={'Flux.label.tooltips.2'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Flux.label.tooltips.2'}>{t('Flux.label.tooltips.l_u_v')} </Tooltip>}>
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={list_value['label_unit_visible'][1]?'#78C2AD':'white'}
-            maxW={'90%'}
-            icon={list_value['label_unit_visible'][0] as boolean?<FaEye/>:<FaEyeSlash/>}
-            isChecked={list_value['label_unit_visible'][0] as boolean}
-            onChange={(evt) => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                AssignLinkValueToCorrectVar(d,'label_unit_visible',evt.target.checked,menu_for_style)
-              })
-              set_data({ ...data })
-            }}>
-            {t('Flux.label.l_u_v')+' '}
-          </Checkbox>
-        </OverlayTrigger>
-        {(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit_visible',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}</Col>
-      </Form.Group>
+        <Col>
+          <OverlayTrigger
+            key={'Flux.label.tooltips.2'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'Flux.label.tooltips.2'}>{t('Flux.label.tooltips.l_u_v')} </Tooltip>}>
+            <Checkbox
+              sx={SmoothClasses({})}
+              iconColor={list_value['label_unit_visible'][1]?'#78C2AD':'white'}
+              icon={list_value['label_unit_visible'][0] as boolean?<FaEye/>:<FaEyeSlash/>}
+              isChecked={list_value['label_unit_visible'][0] as boolean}
+              onChange={(evt) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  AssignLinkValueToCorrectVar(d,'label_unit_visible',evt.target.checked,menu_for_style)
+                })
+                set_data({ ...data })
+              }}>
+              {t('Flux.label.l_u_v')+' '}
+              {(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit_visible',menu_for_style)?
+                TooltipValueSurcharge('link_var_',t):<></>)}
+            </Checkbox>
+          </OverlayTrigger>
+        </Col>
+      </Row>
 
       {/* Modifie l'unité du label de flux */}
-      {list_value['label_unit_visible'][0]?<>   
-        <Form.Group as={Row}>
-          <Col><Form.Label >
-            {t('Flux.label.l_u')+(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit',menu_for_style)?'*':'')}
-          </Form.Label></Col>
-          <Col><OverlayTrigger
-            key={'Flux.label.tooltips.l_u'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'Flux.label.tooltips.l_u'}>{t('Flux.label.tooltips.l_u')} </Tooltip>}>
-            <Form.Control
-              type='text'
-              
-              value={ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_unit',menu_for_style) as string}
-              onChange={evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'label_unit',evt.target.value,menu_for_style))
-                set_data({ ...data })
-              }}/>
-          </OverlayTrigger></Col>
-        </Form.Group></>:<></>}
+      {list_value['label_unit_visible'][0]?<>
+        <Row className='input_row'>
+          <Col>
+            <Form.Label >
+              {t('Flux.label.l_u')}{(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
+            </Form.Label>
+          </Col>
+          <Col>
+            <OverlayTrigger
+              key={'Flux.label.tooltips.l_u'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'Flux.label.tooltips.l_u'}>{t('Flux.label.tooltips.l_u')} </Tooltip>}>
+              <Form.Control
+                type='text'
+                value={ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_unit',menu_for_style) as string}
+                onChange={evt => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'label_unit',evt.target.value,menu_for_style))
+                  set_data({ ...data })
+                }}/>
+            </OverlayTrigger>
+          </Col>
+        </Row></>:<></>}
 
+      <Row>
+        <span className='title_grp_attributes'>{t('Menu.edition')}</span>
+      </Row>
 
-      <h4 style={StyleTitleSubSectionMenuEditionElements({})}>{t('Menu.edition')}</h4>
-      
       {/* Couleur des Labels  */}
-      <Form.Group as={Row} >
-        <ButtonGroup>
-          {/* Label en noir  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.2'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.2'}>{t('Flux.label.tooltips.len')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              style={{width:'33%', height:'2rem'}}
-              disabled={!list_value['label_visible'][0]}
-              variant={!list_value['text_color'][1] && list_value['text_color'][0]==='black'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    AssignLinkValueToCorrectVar(d,'text_color','black',menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{t('Flux.label.len')+(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
-          </OverlayTrigger>
+      <Row className='input_row' >
+        <Col>
+          <ButtonGroup>
+            {/* Label en noir  */}
+            <OverlayTrigger
+              key={'flux.label.tooltips.2'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.2'}>{t('Flux.label.tooltips.len')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                disabled={!list_value['label_visible'][0]}
+                variant={!list_value['text_color'][1] && list_value['text_color'][0]==='black'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      AssignLinkValueToCorrectVar(d,'text_color','black',menu_for_style)
+                    })
+                    set_data({ ...data })
+                  }}>{t('Flux.label.len')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
+            </OverlayTrigger>
 
-          {/* Label en blanc  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.3'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.3'}>{t('Flux.label.tooltips.lb')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              style={{width:'33%', height:'2rem'}}
-              disabled={!list_value['label_visible'][0]}
-              variant={!list_value['text_color'][1] && list_value['text_color'][0]==='white'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    AssignLinkValueToCorrectVar(d,'text_color','white',menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{t('Flux.label.lb')+(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
-          </OverlayTrigger>
+            {/* Label en blanc  */}
+            <OverlayTrigger
+              key={'flux.label.tooltips.3'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.3'}>{t('Flux.label.tooltips.lb')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                disabled={!list_value['label_visible'][0]}
+                variant={!list_value['text_color'][1] && list_value['text_color'][0]==='white'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      AssignLinkValueToCorrectVar(d,'text_color','white',menu_for_style)
+                    })
+                    set_data({ ...data })
+                  }}>{t('Flux.label.lb')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
+            </OverlayTrigger>
 
-          {/* Label en couleur  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.4'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.4'}>{t('Flux.label.tooltips.lec')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              style={{width:'34%', height:'2rem'}}
-              disabled={!list_value['label_visible'][0]}
-              variant={!list_value['text_color'][1] && list_value['text_color'][0]==='color'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    AssignLinkValueToCorrectVar(d,'text_color',ReturnCorrectLinkAttributeValue(data,d,'color',menu_for_style),menu_for_style)
-                  })
-                  set_data({ ...data })
-                }}>{t('Flux.label.lec')+(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?'*':'')}</Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </Form.Group>
+            {/* Label en couleur  */}
+            <OverlayTrigger
+              key={'flux.label.tooltips.4'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.4'}>{t('Flux.label.tooltips.lec')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                disabled={!list_value['label_visible'][0]}
+                variant={!list_value['text_color'][1] && list_value['text_color'][0]==='color'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      AssignLinkValueToCorrectVar(d,'text_color',ReturnCorrectLinkAttributeValue(data,d,'color',menu_for_style),menu_for_style)
+                    })
+                    set_data({ ...data })
+                  }}>{t('Flux.label.lec')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
+            </OverlayTrigger>
+          </ButtonGroup>
+        </Col>
+      </Row>
+
+      <span style={{fontSize:'14px' ,fontStyle:'italic'}}>Police</span>
 
       {/* Police des labels de flux  */}
-      <InputGroup>
-        <InputGroup.Text >{'Police'}</InputGroup.Text>
-        <Form.Select
-          // style={{width:'30%'}}
-          value={list_value['font_family'][0]?ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'font_family',menu_for_style) as string:''}
-          onChange={
-            (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
-              set_data({...data})
-            }}>
-          {data.display_style.font_family.map((d) => {
-            return <option
-              style={{fontFamily:d}}
-              key={'ff-' + d}
-              value={d}
-            >{d}</option>
-          })}
-        </Form.Select>
-        <FormControl
-          min={11}
-          type={'number'}
-          disabled={!list_value['label_visible'][0]}
-          value={allNodeLabelFontSize()}
-          onChange={evt => {
-            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>{
-              AssignLinkValueToCorrectVar(d,'label_font_size',+evt.target.value,menu_for_style)
-            })
-            set_data({ ...data })
-          }}
-        />
-        <InputGroup.Text>px</InputGroup.Text>
-      </InputGroup>
+      <Row>
+        <Col>
+          <Form.Select
+            value={list_value['font_family'][0]?ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'font_family',menu_for_style) as string:''}
+            onChange={
+              (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
+                set_data({...data})
+              }}>
+            {data.display_style.font_family.map((d) => {
+              return <option
+                style={{fontFamily:d}}
+                key={'ff-' + d}
+                value={d}
+              >{d}</option>
+            })}
+          </Form.Select>
+        </Col>
+        <Col>
+          <Row>
+            <Col>
+              <FormControl
+                min={11}
+                type={'number'}
+                disabled={!list_value['label_visible'][0]}
+                value={allNodeLabelFontSize()}
+                onChange={evt => {
+                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>{
+                    AssignLinkValueToCorrectVar(d,'label_font_size',+evt.target.value,menu_for_style)
+                  })
+                  set_data({ ...data })
+                }}
+              />
+            </Col>
+            <Col xs={4}>
+              <Form.Label>px</Form.Label>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
 
-      <h4 style={StyleTitleSubSectionMenuEditionElements({})}>Position</h4>
+      <Row>
+        <span className='title_grp_attributes'>Position</span>
+      </Row>
 
       {/* Positionnement lateral des label */}
-      <InputGroup>
-        <InputGroup.Text style={{width:'33.4%'}}>
-          {t('Flux.label.pos')+(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?'*':'')}
-        </InputGroup.Text>
+      <Row>
+        <Col>
+          <Form.Label>
+            {t('Flux.label.pos')}{(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
+          </Form.Label>
+        </Col>
         {/* Vers le début  */}
-        <ButtonGroup style={{width:'33.3%'}}>
-          <OverlayTrigger
-            key={'flux.label.tooltips.6'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.6'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={!list_value['label_position'][1] && list_value['label_position'][0]==='beginning'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-                }}><FaAlignLeft/></Button>
-          </OverlayTrigger>
 
-          {/* Vers le milieu  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.7'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.7'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={!list_value['label_position'][1] && list_value['label_position'][0]==='middle'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'label_position','middle',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-                }}><FaAlignCenter/></Button>
-          </OverlayTrigger>
+        <Col>
+          <ButtonGroup style={{width:'50%'}}>
+            <OverlayTrigger
+              key={'flux.label.tooltips.6'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.6'}>{t('Flux.label.tooltips.deb')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={!list_value['label_position'][1] && list_value['label_position'][0]==='beginning'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                      delete d.x_label
+                      delete d.y_label
+                    })
+                    set_data({ ...data })
+                  }}>
+                <FaAlignLeft/>
+              </Button>
+            </OverlayTrigger>
 
-          {/* Vers la fin du flux  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.8'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.8'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={!list_value['label_position'][1] && list_value['label_position'][0]==='end'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'label_position','end',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-                }}><FaAlignRight/></Button>
-          </OverlayTrigger>
-        </ButtonGroup>
+            {/* Vers le milieu  */}
+            <OverlayTrigger
+              key={'flux.label.tooltips.7'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.7'}>{t('Flux.label.tooltips.milieu_h')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={!list_value['label_position'][1] && list_value['label_position'][0]==='middle'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'label_position','middle',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                      delete d.x_label
+                      delete d.y_label
+                    })
+                    set_data({ ...data })
+                  }}>
+                <FaAlignCenter/>
+              </Button>
+            </OverlayTrigger>
 
-        {/* Positionnement vertical des label  */}
-        <ButtonGroup style={{width:'33.3%'}}>
-          {/* Positionnement au dessous  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.9'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] &&!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='below'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.label_pos_auto=false
-                    const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'orthogonal_label_position','below',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-                }}>{svg_label_bottom}</Button>
-          </OverlayTrigger>
+            {/* Vers la fin du flux  */}
+            <OverlayTrigger
+              key={'flux.label.tooltips.8'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.8'}>{t('Flux.label.tooltips.fin')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={!list_value['label_position'][1] && list_value['label_position'][0]==='end'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'label_position','end',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                      delete d.x_label
+                      delete d.y_label
+                    })
+                    set_data({ ...data })
+                  }}>
+                <FaAlignRight/>
+              </Button>
+            </OverlayTrigger>
+          </ButtonGroup>
 
-          {/* Positionnement au milieu  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.10'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='middle'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.label_pos_auto=false
-                    const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'orthogonal_label_position','middle',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-                }}>{svg_label_center}</Button>
-          </OverlayTrigger>
+          {/* Positionnement vertical des label  */}
+          <ButtonGroup style={{width:'50%'}}>
+            {/* Positionnement au dessous  */}
+            <OverlayTrigger
+              key={'flux.label.tooltips.9'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.9'}>{t('Flux.label.tooltips.dessous')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] &&!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='below'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.label_pos_auto=false
+                      const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'orthogonal_label_position','below',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                      delete d.x_label
+                      delete d.y_label
+                    })
+                    set_data({ ...data })
+                  }}>
+                {svg_label_bottom}
+              </Button>
+            </OverlayTrigger>
 
-          {/* Positionnement au dessus  */}
-          <OverlayTrigger
-            key={'flux.label.tooltips.11'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
-            <Button
-              className='btn_menu_config'
-              variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='above'?'primary':'outline-primary'}
-              onClick={
-                () => {
-                  Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    d.label_pos_auto=false
-                    const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'orthogonal_label_position','above',menu_for_style)
-                    AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
-                    delete d.x_label
-                    delete d.y_label
-                  })
-                  set_data({ ...data })
-                }}>{svg_label_top}</Button>
-          </OverlayTrigger>
-        </ButtonGroup>
-      </InputGroup>
+            {/* Positionnement au milieu  */}
+            <OverlayTrigger
+              key={'flux.label.tooltips.10'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.10'}>{t('Flux.label.tooltips.milieu_v')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='middle'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.label_pos_auto=false
+                      const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'orthogonal_label_position','middle',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                      delete d.x_label
+                      delete d.y_label
+                    })
+                    set_data({ ...data })
+                  }}>
+                {svg_label_center}
+              </Button>
+            </OverlayTrigger>
+
+            {/* Positionnement au dessus  */}
+            <OverlayTrigger
+              key={'flux.label.tooltips.11'}
+              placement={'top'}
+              delay={500}
+              overlay={<Tooltip id={'flux.label.tooltips.11'}>{t('Flux.label.tooltips.dessus')} </Tooltip>}>
+              <Button
+                className='btn_menu_config'
+                variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='above'?'primary':'outline-primary'}
+                onClick={
+                  () => {
+                    Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                      d.label_pos_auto=false
+                      const lab_pos=ReturnCorrectLinkAttributeValue(data,d,'label_position',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'orthogonal_label_position','above',menu_for_style)
+                      AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
+                      delete d.x_label
+                      delete d.y_label
+                    })
+                    set_data({ ...data })
+                  }}>
+                {svg_label_top}
+              </Button>
+            </OverlayTrigger>
+          </ButtonGroup>
+        </Col>
+      </Row>
 
       {/* Orienter le texte du label le long du flux  */}
-      <Form.Group as={Row}>
+      <Row className='input_row'>
         <Col>
           <OverlayTrigger
             key={'flux.label.tooltips.5'}
             placement={'top'}
             delay={500}
             overlay={<Tooltip id={'flux.label.tooltips.5'}>{t('Flux.label.tooltips.acf')} </Tooltip>}>
-            <Checkbox 
+            <Checkbox
               sx={SmoothClasses({})}
               iconColor={list_value['label_on_path'][1]?'#78C2AD':'white'}
-              maxW={'90%'}
               isIndeterminate={list_value['label_on_path'][1]}
               isChecked={list_value['label_on_path'][0] as boolean}
               onChange={(evt) => {
@@ -1084,87 +1160,97 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 set_data({ ...data })
               }}>
               {t('Flux.label.acf')+' '}
+              {(IsLinkDiplayingValueLocal(multi_selected_links,'label_on_path',menu_for_style)?
+                TooltipValueSurcharge('link_var_',t):<></>)}
             </Checkbox>
           </OverlayTrigger>
-          {(IsLinkDiplayingValueLocal(multi_selected_links,'label_on_path',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}</Col>
-      </Form.Group>
+        </Col>
+      </Row>
 
       {/* Positionnement à la souris  */}
-      <Form.Group as={Row}>
-        <Col><OverlayTrigger
-          key={'flux.label.tooltips.12'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.label.tooltips.12'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
-
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={label_link_free_checked[1]?'#78C2AD':'white'}
-            maxW={'90%'}
-            isIndeterminate={label_link_free_checked[1]}
-            isChecked={label_link_free_checked[0]}
-            onChange={(evt) => {
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                const l_o_p=ReturnCorrectLinkAttributeValue(data,d,'label_on_path',menu_for_style)
-                AssignLinkValueToCorrectVar(d,'label_on_path',((evt.target.checked)?false:l_o_p),menu_for_style)
-                AssignLinkValueToCorrectVar(d,'label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
-                AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
-              })
-              set_data({ ...data })
-            }}>
-            {t('Flux.label.pls')+' '}
-          </Checkbox>
-        </OverlayTrigger>
-        {(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>)}</Col>
-      </Form.Group></>:<></>}
-    
+      <Row className='input_row'>
+        <Col>
+          <OverlayTrigger
+            key={'flux.label.tooltips.12'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'flux.label.tooltips.12'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
+            <Checkbox
+              sx={SmoothClasses({})}
+              iconColor={label_link_free_checked[1]?'#78C2AD':'white'}
+              isIndeterminate={label_link_free_checked[1]}
+              isChecked={label_link_free_checked[0]}
+              onChange={(evt) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  const l_o_p=ReturnCorrectLinkAttributeValue(data,d,'label_on_path',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_on_path',((evt.target.checked)?false:l_o_p),menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
+                })
+                set_data({ ...data })
+              }}>
+              {t('Flux.label.pls')+' '}
+              {(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?
+                TooltipValueSurcharge('link_var_',t):<></>)}
+            </Checkbox>
+          </OverlayTrigger>
+        </Col>
+      </Row></>:<></>}
   </>
 
-  const content_style=(!menu_for_style)?<><InputGroup>
-    <InputGroup.Text style={{width:'25%'}}>{t('Flux.style')}</InputGroup.Text>
+  const content_style=(!menu_for_style)?<><Row>
+    <Col><Form.Label>{t('Flux.style')}</Form.Label></Col>
+    <Col>
+      {/* Choix du style  */}
+      <Dropdown>
+        <Dropdown.Toggle variant="outline-primary" id="dropdown-basic"
+          className='btn_menu_config'
+        >{style_of_selected_links()}</Dropdown.Toggle>
+        <Dropdown.Menu>
+          {Object.keys(data.style_link).map((d,i) => {
+            return (<Dropdown.Item key={i} onClick={() => {
+              set_style_to_apply_to_link(d)
+              multi_selected_links.current.map(n => {
+                n.style = d
+              })
+              set_data({ ...data })
+            }}>{data.style_link[d].idLink}</Dropdown.Item>)
+          })}
+        </Dropdown.Menu>
+      </Dropdown>
+    </Col>
 
-    {/* Choix du style  */}
-    <Dropdown>
-      <Dropdown.Toggle style={{width:'50%'}} variant="outline-primary" id="dropdown-basic">{style_of_selected_links()}</Dropdown.Toggle>
-      <Dropdown.Menu>
-        {Object.keys(data.style_link).map((d,i) => {
-          return (<Dropdown.Item key={i} onClick={() => {
-            set_style_to_apply_to_link(d)
-            multi_selected_links.current.map(n => {
-              n.style = d
-            })
-            set_data({ ...data })
-          }}>{data.style_link[d].idLink}</Dropdown.Item>)
-        })}
-      </Dropdown.Menu>
-    </Dropdown>
+    <Col>
+      
+      {/* Appliquer le style  */}
+      <OverlayTrigger
+        key={'Menu.tooltips.flux.as'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'Menu.tooltips.flux.as'}>{t('Flux.tooltips.as')} </Tooltip>}>
+        <Button
+          variant="outline-primary"
+          className='btn_menu_config'
+          onClick={
+            () => {
+              apply_style_to_selected_links()
+              set_data({ ...data })
+            }}>
+          {t('Flux.as')}
+        </Button>
+      </OverlayTrigger>
+    </Col>
 
-    {/* Appliquer le style  */}
-    <OverlayTrigger
-      key={'Menu.tooltips.flux.as'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.flux.as'}>{t('Flux.tooltips.as')} </Tooltip>}>
-      <Button
-       
-        size="sm"
-        variant="outline-primary"
-        className='btn_menu_config'
-        onClick={
-          () => {
-            apply_style_to_selected_links()
-            set_data({ ...data })
-          }}>
-        {t('Flux.as')}
-      </Button>
-    </OverlayTrigger>
-  </InputGroup>
+  </Row>
   <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
   </>:<></>
-  const content_zIndex_and_direction=(!menu_for_style)?<>    
-    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Flux.FS')}</h4>
+  const content_zIndex_and_direction=(!menu_for_style)?<>
 
-    <Form.Group as={Row}>
+    <Row>
+      <span className='title_grp_attributes'>{t('Flux.FS')}</span>
+    </Row>
+
+    <Row className='input_row'>
       <Col><Form.Label style={{
         color:(multi_selected_links.current.length != 1)?'#666666':'',
         backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':''
@@ -1258,7 +1344,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           </Button>
         </OverlayTrigger>
       </ButtonGroup>
-    </Form.Group>
+    </Row>
     <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
   </>:<></>
 
@@ -1274,7 +1360,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   </div>
 
   /* Formattage de l'affichage du menu attribut de flux */
-  return menu_for_modal?content:<Tab key="flux_attributes" eventKey="flux_attributes" title={t('Flux.apparence.apparence')}>{content}</Tab>
+  return menu_for_modal?content:<Tab key="flux_attributes" eventKey="flux_attributes" className='content_editon_elements' title={t('Flux.apparence.apparence')}>{content}</Tab>
 }
 
 //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data

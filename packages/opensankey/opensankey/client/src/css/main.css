@@ -1184,6 +1184,7 @@ textarea {
 .btn_menu_config{
 	border-radius: 5px;
 	font-size: 12px;
+	/* height: 1.5rem; */
 }
 .btn_menu_config:hover svg,.btn_menu_config.btn-primary svg,.btn_menu_config.btn-outline-primary:hover svg{
 	fill:white
@@ -1242,4 +1243,45 @@ flex-direction: initial;
 	color:#2D3748;
 	font-weight: 700;
 	font-size: 16px;
+}
+.col{
+	margin-left: inherit;
+    margin-right: inherit;
+    max-width: inherit;
+}
+
+.tab-content .col,.tab-content .col-1,.tab-content .col-2,.tab-content .col-3,.tab-content .col-4,.tab-content .col-5,.tab-content .col-6,.tab-content .col-7,.tab-content .col-8,.tab-content .col-9,.tab-content .col-10,.tab-content .col-11,.tab-content .col-1{
+	margin-left: inherit;
+    margin-right: inherit;
+    max-width: inherit;
+}
+.tab-content .btn_menu_config{
+	width: 100%;
+}
+
+
+.btn_menu_config_node_io{
+	border-radius: 5px;
+	font-size: 10px;
+	/* font-weight: bold; */
+	height: 2.2rem;
+}
+
+
+.content_editon_elements {
+	.btn-group{
+		width: 100%;
+	};
+	.form-control, .btn, .form-select,.input-group-text{
+	height: 1.5rem;
+	} 
+	.form-select{
+		font-size: 9px;
+	}
+	.title_grp_attributes{
+		font-weight: bold;
+		font-size: 14px;
+		display: block;
+		padding: 0;
+	}
 }
