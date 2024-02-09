@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState, useRef } from 'react'
 import { 
   Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, 
-  InputGroup,Overlay,Popover, ButtonGroup 
+  InputGroup,Overlay,Popover, ButtonGroup, Col, Form, Row 
 } from 'react-bootstrap'
 import FolderTree from 'react-folder-tree'
 import 'react-folder-tree/dist/style.css'
@@ -190,7 +190,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             // For now nothing happen when we click on node name
             null
           }}
-          
           data={ tree_of_nodes }
           onChange={ (state, event) => {
             const ev=event as {type:string,path:number[],params:number[]}
@@ -238,91 +237,101 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <></>
     }
 
-    <InputGroup>
-      {/* Boutton pour ajouter un noeud */}
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.1'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
-        <Button
-          style={{width:'10%'}}
-          size="sm"
-          variant='outline-primary'
-          className='btn_menu_config'
-          disabled={token==false && Object.keys(data.nodes).length>15}
-          onClick={() => {
-            AddNewNode(data,set_data,multi_selected_nodes)
-            ApplyStyleToNodes(data,set_data,multi_selected_nodes)
-          }}>
-          <FaPlus/>
-        </Button>
-      </OverlayTrigger>
-
-      {/* Liste déroulante pour selectionner un noeud */}
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.2'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
-        {/* {dropdownMultiNode()} */}
-        <Button style={{width:'70%'}} ref={target_node_selector} variant='outline-primary' id='button-node_selector' onClick={()=>{set_show_node_selector(!show_node_selector)}} >
-          {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n => n.name).join(','), 25 ):'None'}
-        </Button>
-      </OverlayTrigger>
-      {overlayNodeSlector}
-      {/* Boutton pour supprimer le noeud selectionné */}
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.3'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
-        <Button
-          style={{width:'10%'}}
-          size="sm"
-          variant='outline-primary'
-          className='btn_menu_config'
-          disabled={multi_selected_nodes.current.length == 0}
-          onClick={
-            () => {
-              multi_selected_nodes.current.map(d => DeleteNode(data, d))
-              multi_selected_nodes.current = []
-              set_data({ ...data })
+    <Row >
+      <Col>
+        {/* Boutton pour ajouter un noeud */}
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.1'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
+          <Button
+            style={{width:'10%'}}
+            size="sm"
+            variant='outline-primary'
+            className='btn_menu_config'
+            disabled={token==false && Object.keys(data.nodes).length>15}
+            onClick={() => {
+              AddNewNode(data,set_data,multi_selected_nodes)
+              ApplyStyleToNodes(data,set_data,multi_selected_nodes)
             }}>
-          <FaMinus />
-        </Button>
-      </OverlayTrigger>
+            <FaPlus/>
+          </Button>
+        </OverlayTrigger>
 
-      {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.4'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
-        <Button
-          style={{width:'10%'}}
-          size="sm"
-          variant={data.displayed_node_selector?'primary':'outline-primary'}
-          className='btn_menu_config'
-          onClick={
-            () => {
-              data.displayed_node_selector=!data.displayed_node_selector
-              set_data({...data})
-            }}>
-          <FaEye />
-        </Button>
-      </OverlayTrigger>
-    </InputGroup>
+        {/* Liste déroulante pour selectionner un noeud */}
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.2'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
+          {/* {dropdownMultiNode()} */}
+          <Button 
+            style={{width:'70%'}} 
+            ref={target_node_selector} 
+            variant='outline-primary' 
+            className='btn_menu_config'
+            id='button-node_selector' 
+            onClick={()=>{set_show_node_selector(!show_node_selector)}} 
+          >
+            {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n => n.name).join(','), 25 ):'None'}
+          </Button>
+        </OverlayTrigger>
+        {overlayNodeSlector}
+        {/* Boutton pour supprimer le noeud selectionné */}
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.3'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
+          <Button
+            style={{width:'10%'}}
+            size="sm"
+            variant='outline-primary'
+            className='btn_menu_config'
+            disabled={multi_selected_nodes.current.length == 0}
+            onClick={
+              () => {
+                multi_selected_nodes.current.map(d => DeleteNode(data, d))
+                multi_selected_nodes.current = []
+                set_data({ ...data })
+              }}>
+            <FaMinus />
+          </Button>
+        </OverlayTrigger>
+
+        {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.4'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
+          <Button
+            style={{width:'10%'}}
+            size="sm"
+            variant={data.displayed_node_selector?'primary':'outline-primary'}
+            className='btn_menu_config'
+            onClick={
+              () => {
+                data.displayed_node_selector=!data.displayed_node_selector
+                set_data({...data})
+              }}>
+            <FaEye />
+          </Button>
+        </OverlayTrigger>
+      </Col>
+    </Row>
 
     {/* Affichage du nom des noeuds selectionnés */}
-    <InputGroup>
-      <InputGroup.Text>{t('Noeud.Nom')}</InputGroup.Text>
-      <OverlayTrigger
+    <Row>
+      <Col xs={2} style={{paddingLeft:'inherit',paddingRight:'inherit'}}><Form.Label>{t('Noeud.Nom')}</Form.Label></Col>
+      <Col xs={10} style={{paddingLeft:'inherit',paddingRight:'inherit'}}><OverlayTrigger
         key={'menu.tooltips.noeud.6'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'menu.tooltips.noeud.6'}>{t('Noeud.tooltips.Nom')} </Tooltip>}>
         <FormControl
+          className='btn_menu_config'
           value={
             (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
           }
@@ -365,13 +374,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             setForceUpdate(!forceUpdate)
           }}
           disabled={(multi_selected_nodes.current.length == 1) ? false : true} />
-      </OverlayTrigger>
-    </InputGroup>
+      </OverlayTrigger></Col>
+    </Row>
 
     {/* Declenché si des neouds sont selectionnées */}
     {(multi_selected_nodes.current.length !== 0) ? (
       <>
-        <Tabs defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
+        <Tabs style={{marginLeft:'-0.6125rem',marginRight:'-0.6125rem'}} defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
           {menu_configuration_nodes.map((c: ReactElementLike)=>{
             return c})}
         </Tabs>
