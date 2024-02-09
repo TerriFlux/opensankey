@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { ReturnValueLink, DefaultNode, ReturnValueNode, DefaultLink, AssignLinkLocalAttribute } from '../configmenus/SankeyUtils'
-import { SankeyNode, SankeyLink, SankeyData } from '../types/Types'
+import { SankeyNode, SankeyLink, SankeyData, SankeyLinkValue } from '../types/Types'
 import { DeselectVisualyNodes, SelectVisualyNodes, DeselectVisualyLinks, SelectVisualyLinks, ValueSelectedParameter, NodeVisibleOnsSvg, LinkVisibleOnSvg, SortOutputLinksIdByYPos } from './SankeyDrawFunction'
 import { draw_legend_handles } from './SankeyDrawLegend'
 import { EventNodeClickFType, EventNodeContextMenuFType, EventLinkContextMenuFType, EventOnZoneMouseDownFuncType, EventOnZoneMouseMoveFuncType, EventOnZoneMouseUpFuncType, EventOnMouseUpAddNodesAndLinkFType, SimpleGNodeClickFuncType, SvgDragMiddleMouseStartFuncType, SvgDragMiddleMouseMoveFuncType, EventZDDContextMenuFType, ZoomFunctionFuncType } from './types/SankeyDrawEventFunctionTypes'
@@ -93,7 +93,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   ref_setter_contextualised_link,
   pointer_pos,
   multi_selected_links,
-  displayedInputLinkValueRef,
+  displayedInputLinkValueSetterRef,
   tags_selected,
   ref_display_link_opacity
 ) => {
@@ -111,6 +111,13 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   }
   const link_data_ref = l.idLink
   let new_tags_selected = tags_selected
+
+  let valueLinkInContext:SankeyLinkValue=ValueSelectedParameter(
+    dict_variable_application_data,
+    multi_selected_links,
+    new_tags_selected
+  )
+
   if (link_data_ref.includes('_')) {
     const index_grp_tag = link_data_ref.split('_')
     // Supprime le première élément du tableau qui ne contient que l'id du flux
@@ -121,13 +128,15 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
       const key = Object.keys(data.dataTags)[Number(i)]
       new_tags_selected[key] = Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
     }
+
+    valueLinkInContext=ValueSelectedParameter(
+      dict_variable_application_data,
+      multi_selected_links,
+      tags_selected
+    )
     //set_tags_selected(new_tags_selected)
-    displayedInputLinkValueRef.current.forEach(setter => setter(
-      ValueSelectedParameter(
-        dict_variable_application_data,
-        multi_selected_links,
-        tags_selected
-      ).value as unknown as string
+    displayedInputLinkValueSetterRef.current.forEach(setter => setter(
+      valueLinkInContext.value as string
     ))
   } else if (Object.values(data.dataTags).length > 0) {
     // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
@@ -139,20 +148,17 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
     Object.keys(data.dataTags).forEach((dt, i) => {
       n_t_s[dt] = tmp[i]
     })
-    displayedInputLinkValueRef.current.forEach(setter => setter(
-      ValueSelectedParameter(
-        dict_variable_application_data,
-        multi_selected_links,
-        n_t_s
-      ).value as unknown as string
+    valueLinkInContext=ValueSelectedParameter(
+      dict_variable_application_data,
+      multi_selected_links,
+      n_t_s
+    )
+    displayedInputLinkValueSetterRef.current.forEach(setter => setter(
+      valueLinkInContext.value as string
     ))
   } else {
-    displayedInputLinkValueRef.current.forEach(setter => setter(
-      ValueSelectedParameter(
-        dict_variable_application_data,
-        multi_selected_links,
-        new_tags_selected
-      ).value as unknown as string
+    displayedInputLinkValueSetterRef.current.forEach(setter => setter(
+      valueLinkInContext.value as string
     ))
   }
 
@@ -328,7 +334,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   legend_clicked
 ) => {
   const { data, set_data } = dict_variable_application_data
-  const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueRef } = dict_variable_elements_selected
+  const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = dict_variable_elements_selected
   const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
 
   // Special cast usefull for when the app is used in SankeySuiteManager
@@ -450,7 +456,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       data.nodes[node_keys[node_keys.length - 1]].inputLinksId.push(new_link.idLink)
       multi_selected_links.current = [new_link]
       data.linkZIndex.push(new_link.idLink)
-      displayedInputLinkValueRef.current.forEach(setter => setter(''))
+      displayedInputLinkValueSetterRef.current.forEach(setter => setter(''))
       OpenLinksMenu()
       first_selected_node.current = undefined
       set_data({ ...data })
@@ -486,7 +492,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       fsn.outputLinksId = SortOutputLinksIdByYPos(data, fsn)
       n_node.inputLinksId.push(n_link.idLink)
       data.linkZIndex.push(n_link.idLink)
-      displayedInputLinkValueRef.current.forEach(setter => setter(''))
+      displayedInputLinkValueSetterRef.current.forEach(setter => setter(''))
       multi_selected_links.current = [n_link]
       OpenLinksMenu()
 
@@ -507,7 +513,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   uiElementsRef
 ) => {
   const { data, set_data } = dict_variable_application_data
-  const { first_selected_node, multi_selected_links, displayedInputLinkValueRef } = dict_variable_elements_selected
+  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef } = dict_variable_elements_selected
   const { button_ref, accordion_ref, links_accordion_ref } = uiElementsRef
   if ((!event.ctrlKey && !event.metaKey) && first_selected_node.current) {
 
@@ -535,7 +541,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       fsn.outputLinksId.push(n_link.idLink)
       d.inputLinksId.push(n_link.idLink)
       data.linkZIndex.push(n_link.idLink)
-      displayedInputLinkValueRef.current.forEach(setter => setter(''))
+      displayedInputLinkValueSetterRef.current.forEach(setter => setter(''))
       multi_selected_links.current = [n_link]
 
       if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
