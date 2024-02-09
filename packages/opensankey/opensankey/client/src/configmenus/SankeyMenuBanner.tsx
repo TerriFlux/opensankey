@@ -1097,7 +1097,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                     if(evt.target.checked){
                       Object.values(data.nodes).forEach(el => {
                         el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
+                        el.colorTag ='no_colormap'
                       })
                       Object.values(data.links).forEach(el => {
                         el.colorTag = tags_selected[0]
@@ -1181,7 +1181,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                     if(evt.target.checked){
                       Object.values(data.nodes).forEach(el => {
                         el.colorParameter = 'groupTag'
-                        el.colorTag = tags_selected[0]
+                        el.colorTag ='no_colormap'
                       })
                       Object.values(data['links']).forEach(el => {
                         el.colorTag = tags_selected[0]

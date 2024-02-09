@@ -56,93 +56,96 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
   if(!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length>0){
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
-  const content =
-<h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.EF')}</h4>
+  const content =<>
+    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.EF')}</h4>
 
-  {/* Groupe d'étiquettes  */}
-  <InputGroup>
-    <Form.Select
-      style={{width:'60%'}}
-      onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
-      value={tags_group_key}
-    >
-      {Object.entries(fluxTags).map(
-        (tags_group, i) =>
-          <option
-            key={i}
-            value={tags_group[0]}>
-            {tags_group[1].group_name}
-          </option>)}
-    </Form.Select>
-  </InputGroup>
+    {/* Groupe d'étiquettes  */}
+    <InputGroup>
+      <Form.Select
+        style={{width:'60%'}}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
+        value={tags_group_key}
+      >
+        {Object.entries(fluxTags).map(
+          (tags_group, i) =>
+            <option
+              key={i}
+              value={tags_group[0]}>
+              {tags_group[1].group_name}
+            </option>)}
+      </Form.Select>
+    </InputGroup>
 
-  {//Définition des valeurs selon les paramètre dataTags
-    Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
-      if (Object.keys(dataTag.tags).length != 0) {
-        return (
-          <InputGroup>
-            <InputGroup.Text style={{width:'40%'}}>
-              {dataTag.group_name}
-            </InputGroup.Text>
-            <Form.Select
-              name={dataTagKey}
-              style={{width:'60%'}}
-              value={tags_selected[dataTagKey]}
-              onChange={
-                (/*evt: React.ChangeEvent<HTMLSelectElement>*/) => {
-                //Modifie les paramètres selectionnés
-                //const { name, value } = evt.target
-                //let tmp={}
-                // set_tags_selected( prevState => {
-                //tmp= ({...tags_selected,[name]: value}) //TODO
-                // set_tags_selected(prevState => ({
-                //   ...prevState,
-                //   [name]: value
-                // }))
-                }}>
-              {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
-                return (
-                  <option key={tag.name} value={tag_key}>{tag.name}</option>
-                )
-              })}
-            </Form.Select>
-          </InputGroup>
-        )
-      }
-    })}
+    {//Définition des valeurs selon les paramètre dataTags
+      Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
+        if (Object.keys(dataTag.tags).length != 0) {
+          return (
+            <InputGroup>
+              <InputGroup.Text style={{width:'40%'}}>
+                {dataTag.group_name}
+              </InputGroup.Text>
+              <Form.Select
+                name={dataTagKey}
+                style={{width:'60%'}}
+                value={tags_selected[dataTagKey]}
+                onChange={
+                  (/*evt: React.ChangeEvent<HTMLSelectElement>*/) => {
+                    //Modifie les paramètres selectionnés
+                    //const { name, value } = evt.target
+                    //let tmp={}
+                    // set_tags_selected( prevState => {
+                    //tmp= ({...tags_selected,[name]: value}) //TODO
+                    // set_tags_selected(prevState => ({
+                    //   ...prevState,
+                    //   [name]: value
+                    // }))
+                  }}>
+                {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
+                  return (
+                    <option key={tag.name} value={tag_key}>{tag.name}</option>
+                  )
+                })}
+              </Form.Select>
+            </InputGroup>
+          )
+        }
+      })}
 
-  <Form.Group as={Row} style={{margin: 'auto'}} >
-    {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
-      ([tag_key,tag]) => {
-        const is_selected=ValueSelectedParameter().tags[tags_group_key].includes(tag_key) 
-        return (
-          <Checkbox 
-            sx={SmoothClasses({})}
-            maxW={'100%'}
-            isChecked={is_selected}
-            onChange={(evt) => {
-              const visible = evt.target.checked
-              Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                let val = Object(d.value)
-                Object.values(tags_selected).forEach(tag => {
-                  if (val[tag] === undefined) {
-                    val[tag] = {}
+    <Form.Group as={Row} style={{margin: 'auto'}} >
+      {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
+        ([tag_key,tag]) => {
+          const is_selected= ValueSelectedParameter().tags[tags_group_key] && ValueSelectedParameter().tags[tags_group_key].includes(tag_key) 
+          return (
+            <Checkbox 
+              sx={SmoothClasses({})}
+              isChecked={is_selected}
+              onChange={(evt) => {
+                const visible = evt.target.checked
+                Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  let val = Object(d.value)
+                  Object.values(tags_selected).forEach(tag => {
+                    if (val[tag] === undefined) {
+                      val[tag] = {}
+                    }
+                    val = val[tag]
+                  })
+                  if (visible) {
+                    if(val.tags[tags_group_key]===undefined){
+                      val.tags[tags_group_key]=[]
+                    }
+                    val.tags[tags_group_key].push(tag_key)
+                  } else {
+                    val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
                   }
-                  val = val[tag]
                 })
-                if (visible) {
-                  val.tags[tags_group_key].push(tag_key)
-                } else {
-                  val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
-                }
-              })
-              set_data({ ...data })
-            }}>
-            {tag.name}
-          </Checkbox>
-        )
-      }) : (<></>)}
-  </Form.Group>
+                set_data({ ...data })
+              }}>
+              {tag.name}
+            </Checkbox>
+          )
+        }) : (<></>)}
+    </Form.Group></>
+    
   return menu_for_modal?content: <Tab key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
     {content}
   </Tab >
