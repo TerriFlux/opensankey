@@ -1218,9 +1218,11 @@ const addAllDropDownLinks = (dict_variable_application_data:dict_variable_applic
           <FormGroup as={Row}>
             <Col xs={10}>
               {<Form.Select key={tags_group.group_name} value={selected} onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                let had_suffix=false
                 const pl=Object.entries(data.links).map(l=>{
                   const suffixeStart= l[0].indexOf('_')
                   if(suffixeStart>=0){
+                    had_suffix=true
                     l[0]=l[0].slice(0,suffixeStart)
                     l[1].idLink=l[0]
                     data.nodes[l[1].idSource].outputLinksId=data.nodes[l[1].idSource].outputLinksId.filter(nl=>nl.indexOf('_')==-1)
@@ -1241,14 +1243,10 @@ const addAllDropDownLinks = (dict_variable_application_data:dict_variable_applic
                 // Reforme les flux originel (sans suffixe) et supprime les doublons par la méme occasions
                 const pureLinks=Object.fromEntries(pl)
                 data.links=pureLinks
+                if(had_suffix){
+                  data.linkZIndex=Object.keys(pureLinks)
+                }
                 handleSimpleDropdown(evt, tags_group,data,set_data)
-                // const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
-                //   return (Object.keys(dataTag.tags).length > 0) ? [
-                //     dataTagKey,
-                //     Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
-                // }))
-                // const dataTagsSelected = Object.fromEntries(newEntries)
-                // set_tags_selected(dataTagsSelected)
               }}>
                 {
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -1300,6 +1298,7 @@ const addAllDropDownLinks = (dict_variable_application_data:dict_variable_applic
                   RecursionDataTag(data,data.dataTags,0,suffix,(l as SankeyLink),new_links)
                 })
                 data.links=new_links
+                data.linkZIndex=Object.keys(new_links)
                 set_data({...data})
               }
             }} />
