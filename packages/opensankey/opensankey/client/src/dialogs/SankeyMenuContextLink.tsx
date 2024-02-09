@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Dropdown, ButtonGroup, Button, Popover } from 'react-bootstrap'
+import { Dropdown, ButtonGroup, Button, Popover, Form } from 'react-bootstrap'
 import { ContextMenuLinkFType } from './types/SankeyMenuContextLinkTypes'
 import { SankeyLink, SankeyNode,  SankeyLinkValue } from '../types/Types'
 import { reorganize_inputLinksId} from '../draw/SankeyDrawLayout'
@@ -7,6 +7,8 @@ import { handleDownLink, handleUpLink } from '../configmenus/SankeyMenuConfigura
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { AssignLinkLocalAttribute, ReturnValueLink } from '../configmenus/SankeyUtils'
+import * as d3 from 'd3'
+import { ValueSelectedParameter } from '../draw/SankeyDrawFunction'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -23,7 +25,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   contextMenu.ref_setter_contextualised_link.current = set_contextualised_link
 
   const { pointer_pos } = contextMenu
-  const { multi_selected_links } = dict_variable_elements_selected
+  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef } = dict_variable_elements_selected
   const { data, set_data } = dict_variable_application_data
   const { t } = applicationContext
 
@@ -261,13 +263,81 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   const button_open_link_tooltip=contextualised_link!==undefined?<Button onClick={()=>{
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_link_tooltip.current(true)
     set_contextualised_link(undefined)
-  }} variant='light'>{t('Flux.IB')} {icon_open_modal}</Button>:<></>
+  }} variant='light'>{t('Flux.IS')} {icon_open_modal}</Button>:<></>
 
   const btn_l_n_show_tags_menu=<Button onClick={()=>{
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tags.current(true)
     set_contextualised_link(undefined)
     contextMenu.ref_contextualised_node.current = undefined
   }} variant='light'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
+
+
+
+  const btn_edit_value=contextualised_link!==undefined?<Dropdown  autoClose='outside' as={ButtonGroup} variant='light' drop='end'> 
+    <Dropdown.Toggle variant="light" id="dropdown-basic">{t('Flux.data.edit_value')}</Dropdown.Toggle>
+    <Dropdown.Menu>
+      <Dropdown.Item>
+        <Form.Control
+          type='string'
+          value={displayedInputLinkValueRef.current}
+          onChange={
+            evt => {
+              displayedInputLinkValueSetterRef.current.forEach(setter=>setter(evt.target.value))
+              const formatedValue=evt.target.value.replace(',','.')
+              if(formatedValue!='' && isNaN(+formatedValue)){
+                d3.select('.inputValueLink').style('border','red 1px solid')
+              }else{
+                d3.select('.inputValueLink').style('border','#ced4da 1px solid')
+              }
+            }
+          }
+          onBlur={evt=>{
+            const formatedValue=evt.target.value.replace(',','.')
+            if(formatedValue!=='' && !isNaN(+formatedValue )){
+              const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
+              let val = Object(multi_selected_links.current[0].value)
+              multi_selected_links.current.map(d => {
+                const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
+                AssignLinkLocalAttribute(d,'dashed',(was_empty)?false:dashed)
+
+                val = d.value
+                Object.values(tags_selected).forEach(tag => {
+                  if (val[tag] === undefined) {
+                    val[tag] = {}
+                  }
+                  val = val[tag]
+                })
+                val.value = +formatedValue
+              })
+              const scale = d3.scaleLinear()
+                .domain([0, data.user_scale])
+                .range([0, 100])
+              if (scale(+formatedValue) > 500) {
+                data.user_scale = +formatedValue
+              }
+              set_data({ ...data })
+            }
+            else if(formatedValue=='') {
+              let val = Object(multi_selected_links.current[0].value)
+              multi_selected_links.current.map(d => {
+                val = d.value
+                AssignLinkLocalAttribute(d,'dashed',true)
+                Object.values(tags_selected).forEach(tag => {
+                  if (val[tag] === undefined) {
+                    val[tag] = {}
+                  }
+                  val = val[tag]
+                })
+                val.value = ''
+              })
+              set_data({ ...data })
+            }
+          }}
+
+        ></Form.Control>
+      </Dropdown.Item>
+    </Dropdown.Menu>
+  </Dropdown>:<></>
 
 
   // Pop over that serve as context menu
@@ -291,6 +361,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
         {sep}
         {dropdown_c_l_layout}
         {button_mask_link_label}
+        {btn_edit_value}
         {has_flux_tags && sep}
         {dropdown_c_l_tag}
         {sep}
