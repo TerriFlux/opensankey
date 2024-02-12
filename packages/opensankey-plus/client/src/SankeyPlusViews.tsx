@@ -628,7 +628,7 @@ export const SelecteurView : SelecteurViewFType =(
 }
 export const viewsAccordion : viewsAccordionFType = (
   dict_variable_application_data,
-  ref_nav_item_active,
+  uiElementsRef,
   _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
@@ -647,10 +647,10 @@ export const viewsAccordion : viewsAccordionFType = (
     eventKey="Visualisation"
     onClick={
       evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === 'Visualisation') {
-          ref_nav_item_active.current = ''
+        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && uiElementsRef.ref_nav_item_active.current === 'Visualisation') {
+          uiElementsRef.ref_setter_nav_item_active.current!('')
         } else {
-          ref_nav_item_active.current = 'Visualisation'
+          uiElementsRef.ref_setter_nav_item_active.current!('Visualisation')
         }
       }
     }>
