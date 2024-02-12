@@ -1,8 +1,7 @@
 import { TFunction } from 'i18next'
-import { DictSetterInputValueType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
+import { DictSetterInputValueType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
 import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { setDiagramFuncType } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
-import { MutableRefObject } from 'react'
 
 export type getSetDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
@@ -65,13 +64,13 @@ export type SelecteurViewFType = (
 
 export type viewsAccordionFType = (
   dict_variable_application_data:SankeyPlusApplicationDataType,
-  ref_nav_item_active: MutableRefObject<string>,
+  uiElementsRef:PlusUiElementsRefType,
   _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
   DefaultSankeyData: ()=>SankeyPlusData,
-  view_selector:JSX.Element
+  view_selector:JSX.Element,
 
 ) => JSX.Element
 
