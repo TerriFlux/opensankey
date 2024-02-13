@@ -79,9 +79,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   const selected_parameter=(menu_for_style)?[data.style_link[ref_selected_style_link.current]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
   const [display_link_opacity, set_display_link_opacity] = useState('0')
-  if (!menu_for_style && dict_variable_elements_selected.ref_display_link_opacity.current.length < 2) {
-    dict_variable_elements_selected.ref_display_link_opacity.current.push(set_display_link_opacity)
-  }
+  dict_variable_elements_selected.ref_display_link_opacity.current.push(set_display_link_opacity)
 
   const list_key=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible',
     'label_visible','font_family','recycling','arrow','curved','nb_digit','scientific_precision',
