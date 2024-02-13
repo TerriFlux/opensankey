@@ -121,6 +121,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   // Reset list of setter of input link value
   dict_variable_elements_selected.displayedInputLinkValueSetterRef.current=[]
+  dict_variable_elements_selected.ref_display_link_opacity.current=[]
+
   /*************************************************************************************************/  
   const uiElementsRef : uiElementsRefType = {
     button_ref : useRef<HTMLLabelElement>(null),
