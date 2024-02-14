@@ -46,6 +46,7 @@ import { UploadExcelImpl } from '../dialogs/SankeyPersistence'
 import { DownloadExamples } from '../dialogs/SankeyPersistence'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { RepositionneSidebar } from '../draw/SankeyDrawFunction'
+import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
 
 declare const window: Window &
   typeof globalThis & {
@@ -492,13 +493,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const toggleShow = () => {
     set_show_nav(!show_nav)
     if(!show_nav){
-      [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = applicationDraw.GetSankeyMinWidthAndHeight(dict_variable_application_data.data)
-      const transform=d3.select('.opensankey #svg').attr('transform')
-      let scale_svg=1
-      if(transform!==undefined && transform!==null){
-        scale_svg=Number(transform.split('scale(')[1].replace(')',''))
-      }
-      d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
+      actualizeDrawAreaFrame(dict_variable_application_data)
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
