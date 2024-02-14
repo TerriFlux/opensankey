@@ -28,7 +28,7 @@ import { NodeTooltipsContent, LinkTooltipsContent } from './draw/SankeyTooltip'
 import { 
   GetLinkValue, NodeDisplayed, ReturnValueLink, LinkText, LinkVisible, AdjustSankeyZone, 
   DefaultSankeyData, windowSankey, LinkColor} from './configmenus/SankeyUtils'
-import { RetrieveExcelResults } from './dialogs/SankeyPersistence'
+import { ClickSaveDiagram, RetrieveExcelResults } from './dialogs/SankeyPersistence'
 import { updateLayout } from './draw/SankeyDrawLayout'
 import { convert_data } from './configmenus/SankeyConvert'
 import { ToolbarBuilder, addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
@@ -44,7 +44,7 @@ import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfig
 import { ContextMenuLink } from './dialogs/SankeyMenuContextLink'
 import { ContextMenuNode } from './dialogs/SankeyMenuContextNode'
 import { ContextMenuZdd } from './dialogs/SankeyMenuContextZDD'
-import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
+import { ApplySaveJSONDialog, OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 import { 
   ModalPreference, OpenSankeyDefaultModalePreferenceContent 
 } from './dialogs/SankeyMenuPreferences'
@@ -682,6 +682,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           DiagramSelector={OpenSankeyDiagramSelector}
         />
       </>
+      <ApplySaveJSONDialog
+        t={applicationContext.t}
+        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+        sankey_data={dict_variable_application_data.data}
+        additionnal_button_option_save_json={[]}
+        ClickSaveDiagram={ClickSaveDiagram}
+      />
     </div>
     <ContextMenuNode
       applicationContext = {applicationContext}
