@@ -31,7 +31,7 @@ import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
 import SankeyLoad from '../dialogs/SankeyPersistence'
 import { SankeyConfigurationMenu } from '../configmenus/SankeyMenuConfiguration'
-import { ExcelModal,ApplyLayoutDialog,ApplySaveJSONDialog } from '../dialogs/SankeyMenuDialogs'
+import { ExcelModal,ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
 import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,faPlus} from '@fortawesome/free-solid-svg-icons'
@@ -44,7 +44,6 @@ import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
 import { UploadExcelImpl } from '../dialogs/SankeyPersistence'
 import { DownloadExamples } from '../dialogs/SankeyPersistence'
-import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { RepositionneSidebar } from '../draw/SankeyDrawFunction'
 
 declare const window: Window &
@@ -769,13 +768,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
               <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Processing...
             </Button></Modal.Dialog>) : (<></>)
       }
-      <ApplySaveJSONDialog
-        t={applicationContext.t}
-        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-        sankey_data={dict_variable_application_data.data}
-        additionnal_button_option_save_json={[]}
-        ClickSaveDiagram={ClickSaveDiagram}
-      />
       <ApplyLayoutDialog
         t={applicationContext.t}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
