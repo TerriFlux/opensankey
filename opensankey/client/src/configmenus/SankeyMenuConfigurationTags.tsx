@@ -5,9 +5,13 @@ import { TagsGroup } from '../types/Types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
-import { AddTag,AddGroupTag, GetRandomInt } from './SankeyUtils'
+import { AddTag,AddGroupTag, GetRandomInt, resetLinkValueAfterDeleteDTGrp } from './SankeyUtils'
 import { FaEye,FaEyeSlash} from 'react-icons/fa'
 import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
+const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
+  d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
+  d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
+  d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
 
 const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionElementTagsTypes> = ({ 
   t,data, set_data,elementTagNameProp,elementNameProp 
@@ -24,21 +28,17 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     'bathymetry', 'cdom', 'chlorophyll', 'density', 'freesurface-blue', 'freesurface-red', 'oxygen', 'par', 'phase', 'salinity', 'temperature', 'turbidity', 'velocity-blue', 'velocity-green',
     'cubehelix'
   ]
-  const elementTagName = type_tag_name
   //Permet de modifier le type de bannier pour le groupTag (si ce non Aucun)
   const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
     data[type_tag_name][tags_group_key].banner = evt.target.value
     set_data({ ...data })
   }
   // Couleur issu de : https://github.com/d3/d3-scale-chromatic
-  const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
-    d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
-    d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
-    d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
+
   let element_tags : string [] = []
-  if ( Object.keys(data[elementTagName]).length > 0 && tags_group_key !== '') {
-    if (tags_group_key in data[elementTagName]) {
-      element_tags = Object.keys(data[elementTagName][tags_group_key].tags)
+  if ( Object.keys(data[type_tag_name]).length > 0 && tags_group_key !== '') {
+    if (tags_group_key in data[type_tag_name]) {
+      element_tags = Object.keys(data[type_tag_name][tags_group_key].tags)
     } else {
       console.log('tutu')
     }
@@ -61,17 +61,17 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
   // Delete a tag
   const handleDelTag = (n: string) => {
-    const elementTagName = type_tag_name
-    delete data[elementTagName][tags_group_key].tags[n]
+    
+    delete data[type_tag_name][tags_group_key].tags[n]
     set_data({ ...data })
   }
 
 
   // Delete a groupTag
   const handleDelGroupTag = (tags_group_key: string) => {
-    const elementTagName = type_tag_name
+    
     const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
-    delete data[elementTagName][tags_group_key]
+    delete data[type_tag_name][tags_group_key]
     Object.values(data[elementName]).forEach(
       n => {
         if (n.colorTag === tags_group_key) {
@@ -81,42 +81,46 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           delete n.tags[tags_group_key]
         }
       })
-    if (Object.keys(data[elementTagName]).length > 0) {
-      const lastElmt = Object.keys(data[elementTagName])[Object.keys(data[elementTagName]).length - 1]
+    if (Object.keys(data[type_tag_name]).length > 0) {
+      const lastElmt = Object.keys(data[type_tag_name])[Object.keys(data[type_tag_name]).length - 1]
       set_tags_group_key(lastElmt)
+    }
+    // If we delete a group data tag then we have to reset links value since the link value tree structure change drastically
+    if(type_tag_name==='dataTags'){
+      resetLinkValueAfterDeleteDTGrp(data)
     }
     set_data({ ...data })
   }
 
   // Switch the position of the groupTag with the one before him on the list of grouptag
   const handleUpGrpTag = (i: string) => {
-    const elementTagName = type_tag_name
-    const listElmt = Object.keys(data[elementTagName])
+    
+    const listElmt = Object.keys(data[type_tag_name])
     const posElemt = listElmt.indexOf(i)
     listElmt.splice(posElemt, 1)
     listElmt.splice(posElemt - 1, 0, i)
     const new_cat: { [key: string]: TagsGroup } = {}
     listElmt.forEach(elt => {
-      new_cat[elt] = data[elementTagName][elt]
+      new_cat[elt] = data[type_tag_name][elt]
     })
-    for (const member in data[elementTagName]) delete data[elementTagName][member]
-    Object.assign(data[elementTagName], new_cat)
+    for (const member in data[type_tag_name]) delete data[type_tag_name][member]
+    Object.assign(data[type_tag_name], new_cat)
     set_data({ ...data })
   }
 
   // Switch the position of the groupTag with the one after him on the list of grouptag
   const handleDownGrpTag = (i: string) => {
-    const elementTagName = type_tag_name
-    const listElmt = Object.keys(data[elementTagName])
+    
+    const listElmt = Object.keys(data[type_tag_name])
     const posElemt = listElmt.indexOf(i)
     listElmt.splice(posElemt, 1)
     listElmt.splice(posElemt + 1, 0, i)
     const new_cat: { [key: string]: TagsGroup } = {}
     listElmt.forEach(elt => {
-      new_cat[elt] = data[elementTagName][elt]
+      new_cat[elt] = data[type_tag_name][elt]
     })
-    for (const member in data[elementTagName]) delete data[elementTagName][member]
-    Object.assign(data[elementTagName], new_cat)
+    for (const member in data[type_tag_name]) delete data[type_tag_name][member]
+    Object.assign(data[type_tag_name], new_cat)
     set_data({ ...data })
   }
 
@@ -133,13 +137,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             set_data({ ...data })
           }}
         value={tags_group_key}>
-        {Object.keys(data[elementTagName]).map(
+        {Object.keys(data[type_tag_name]).map(
           (key, i) =>
             <option
               key={i}
               value={key}
             >
-              {data[elementTagName][key].group_name}
+              {data[type_tag_name][key].group_name}
             </option>
         )}
       </Form.Select>
@@ -156,9 +160,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             size='sm'
             onClick={()=>{
               const color_selected=list_palette_color[GetRandomInt(list_palette_color.length)]
-              const size_color=Object.keys(data[elementTagName][tags_group_key].tags).length
+              const size_color=Object.keys(data[type_tag_name][tags_group_key].tags).length
               for(const i in d3.range(size_color)){
-                data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
+                data[type_tag_name][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
               }
               set_data({...data})
             }}>
@@ -175,7 +179,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             size='sm'
             onClick={()=>{
               const color=element_tags.map(d=>{
-                return data[elementTagName][tags_group_key].tags[d].color
+                return data[type_tag_name][tags_group_key].tags[d].color
               })
               let size_color=color.length
               for(const i in d3.range(size_color)){
@@ -184,7 +188,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                 const c=color.splice(color_to_select,1)
                 if(c!=undefined && c!=null){
                   const v=c[0]
-                  data[elementTagName][tags_group_key].tags[element_tags[i]].color=v
+                  data[type_tag_name][tags_group_key].tags[element_tags[i]].color=v
                 }
               }
               set_data({...data})
@@ -204,8 +208,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           style={{width:'25%'}}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              data[elementTagName][tags_group_key].color_map = evt.target.value
-              const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
+              data[type_tag_name][tags_group_key].color_map = evt.target.value
+              const nb_tags = Object.keys(data[type_tag_name][tags_group_key].tags).length
               if (evt.target.value === 'custom') {
                 return
               }
@@ -219,12 +223,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               if (nb_tags < 11) {
                 step = Math.round(11 / nb_tags)
               }
-              Object.keys(data[elementTagName][tags_group_key].tags).forEach(
-                (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
+              Object.keys(data[type_tag_name][tags_group_key].tags).forEach(
+                (tag_key, i) => data[type_tag_name][tags_group_key].tags[tag_key].color = colors[i * step]
               )
               set_data({ ...data })
             }}
-          value={(Object.keys(data[elementTagName]).length>0 && data[elementTagName][tags_group_key] &&  tags_group_key!='')? data[elementTagName][tags_group_key].color_map:''}
+          value={(Object.keys(data[type_tag_name]).length>0 && data[type_tag_name][tags_group_key] &&  tags_group_key!='')? data[type_tag_name][tags_group_key].color_map:''}
         >
           {colormaps.map(
             (cur_colormap, i) =>
@@ -255,7 +259,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             {t('Tags.Nom')}
           </th>
           {/* Etiquette visible  */}
-          { elementTagName !== 'dataTags' ?
+          { type_tag_name !== 'dataTags' ?
             <th>
               {t('Tags.Visible')}
             </th>:<></>
@@ -275,7 +279,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
       <tbody>
         {element_tags.length > 0 ? element_tags.map(
           (tag_key, i) => {
-            const tag_visible=data[elementTagName][tags_group_key].tags[tag_key].selected
+            const tag_visible=data[type_tag_name][tags_group_key].tags[tag_key].selected
             return (
               <tr key={i.toString()}>
                 {/* Supprimer une etiquette  */}
@@ -301,19 +305,19 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                     <FormControl
                       id={i.toString()}
                       type="text"
-                      value={data[elementTagName][tags_group_key].tags[tag_key].name}
+                      value={data[type_tag_name][tags_group_key].tags[tag_key].name}
                       onChange={
                         (evt: React.ChangeEvent) => {
                           const new_nb_element = evt.target as HTMLInputElement
                           const name = new_nb_element.value
-                          data[elementTagName][tags_group_key].tags[tag_key].name = name
+                          data[type_tag_name][tags_group_key].tags[tag_key].name = name
                           set_data({ ...data })
                         }
                       }/>
                   </OverlayTrigger>
                 </td>
                 {/* Rendre ou non visible  */}
-                { elementTagName !== 'dataTags' ?
+                { type_tag_name !== 'dataTags' ?
                   <td style={{ 'width': '20%' }}>
                     <OverlayTrigger
                       key={'tags.tooltips.7'}
@@ -327,14 +331,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                         onClick={
                           () => {
                             const visible = !tag_visible
-                            data[elementTagName][tags_group_key].tags[tag_key].selected = visible
+                            data[type_tag_name][tags_group_key].tags[tag_key].selected = visible
                             set_data({ ...data })
                           }}>{tag_visible?<FaEye/>:<FaEyeSlash/>}</Button>
                     </OverlayTrigger>
                   </td>:<></>
                 }
                 {/* Choix de la couleur*/}
-                <td style={{'width':elementTagName !== 'dataTags'?'10%':'30%'}}>
+                <td style={{'width':type_tag_name !== 'dataTags'?'10%':'30%'}}>
                   <OverlayTrigger
                     key={'tags.tooltips.8'}
                     placement={'top'}
@@ -342,10 +346,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                     overlay={<Tooltip id={'tags.tooltips.8'}>{t('Tags.tooltips.couleur')} </Tooltip>}>
                     <Form.Control
                       type="color"
-                      value={data[elementTagName][tags_group_key].tags[tag_key].color as string}
+                      value={data[type_tag_name][tags_group_key].tags[tag_key].color as string}
                       onChange={
                         evt => {
-                          data[elementTagName][tags_group_key].tags[tag_key].color = evt.target.value
+                          data[type_tag_name][tags_group_key].tags[tag_key].color = evt.target.value
                           set_data({ ...data })
                         }}/>
                   </OverlayTrigger>
@@ -360,10 +364,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                       overlay={<Tooltip id={'tags.tooltips.9'}>{t('Tags.tooltips.forme')} </Tooltip>}>
                       <Form.Select
                         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          data[elementTagName][tags_group_key].tags[tag_key].shape = evt.target.value
+                          data[type_tag_name][tags_group_key].tags[tag_key].shape = evt.target.value
                           set_data({ ...data })
                         }}
-                        value={data[elementTagName][tags_group_key].tags[tag_key].shape as string}
+                        value={data[type_tag_name][tags_group_key].tags[tag_key].shape as string}
                       >
                         <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
                         <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
@@ -403,13 +407,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             {/* Autre entetes  */}
             <th>{t('Tags.Nom')}</th>
             <th>{t('Tags.Bannière')}</th>
-            {(elementTagName!='dataTags')?<th>{t('Tags.Position')}</th>:<></>}
+            {(type_tag_name!='dataTags')?<th>{t('Tags.Position')}</th>:<></>}
           </tr>
         </thead>
         {/* Liste des groupes d'étiquettes  */}
         <tbody>
           {
-            Object.keys(data[elementTagName]).map(
+            Object.keys(data[type_tag_name]).map(
               (tags_group_key, i) => {
                 return (
                   <tr key={i.toString()}>
@@ -435,11 +439,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                         <FormControl
                           id={i.toString()}
                           type="text"
-                          value={data[elementTagName][tags_group_key].group_name}
+                          value={data[type_tag_name][tags_group_key].group_name}
                           onChange={
                             (evt: React.ChangeEvent) => {
                               const new_name = (evt.target as HTMLInputElement).value
-                              data[elementTagName][tags_group_key].group_name = new_name
+                              data[type_tag_name][tags_group_key].group_name = new_name
                               set_data({ ...data })
                             }}/>
                       </OverlayTrigger>
@@ -454,14 +458,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                         <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
                           value={data[type_tag_name][tags_group_key].banner}
                         >
-                          {(elementTagName!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Menu.Aucun')}</option>:<></>}
+                          {(type_tag_name!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Menu.Aucun')}</option>:<></>}
                           <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
                           <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
                         </Form.Select>
                       </OverlayTrigger>
                     </td>
                     {/* Monter ou descendre groupe d'étiquette  */}
-                    {(elementTagName!='dataTags')?
+                    {(type_tag_name!='dataTags')?
                       <td style={{ 'width': '10%' }}>
                         <ButtonGroup className="button_position" size="sm">
                           {/* Monter le groupe d'étiquette */}
@@ -493,7 +497,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           }
         </tbody>
       </Table>
-      {Object.keys(data[elementTagName]).length > 0 ? tagSetting : <></>}
+      {Object.keys(data[type_tag_name]).length > 0 ? tagSetting : <></>}
     </>
   )
 }
