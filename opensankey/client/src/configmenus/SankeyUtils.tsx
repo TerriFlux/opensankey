@@ -34,7 +34,7 @@ import {
   NodeContextHasDesaggregateFuncType, NodeDisplayedFuncType, RecursionDataTagFuncType,
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
-  TestLinkValueFuncType, ToPrecisionFuncType} from './types/SankeyUtilsTypes'
+  TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -114,7 +114,7 @@ export const GetLinkValue:GetLinkValueFuncType = (
   let val = links[idLink].value
   const listKey = [] as string[]
   let missing_key = false
-  Object.values(dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false }).forEach((dataTag,i) => {
+  Object.values(dataTags).filter(dataTag =>(Object.keys(dataTag.tags).length != 0)).forEach((dataTag,i) => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
@@ -965,7 +965,7 @@ export const DefaultLinkStyle:DefaultLinkStyleFuncType=()=>{
  * @param {string[]} l
  * @returns {*}
  */
-const CreateObject:CreateObjectFuncType = (data: SankeyData, l: string[]): SankeyLinkValue => {
+const CreateObject:CreateObjectFuncType = (data: SankeyData, l: string[]): SankeyLinkValueDict| SankeyLinkValue => {
   const { dataTags,fluxTags } = data
   if (l.length == 0) {
     const obj = Object.create({}) as SankeyLinkValue
@@ -1002,14 +1002,7 @@ const CreateObject:CreateObjectFuncType = (data: SankeyData, l: string[]): Sanke
 export const DefaultLink :DefaultLinkFuncType= (data: SankeyData): SankeyLink => {
   const { dataTags } = data
   let nObjet = Object.create({})
-  const listK = Object.keys(dataTags).filter(d => {
-
-    if (Object.keys(dataTags[d].tags).length != 0) {
-      return true
-    } else {
-      return false
-    }
-  })
+  const listK = Object.keys(dataTags).filter(d => Object.keys(dataTags[d].tags).length != 0)
 
 
   nObjet = CreateObject(data, listK)
@@ -1210,18 +1203,23 @@ export interface DataSuiteType{
   is_catalog?:boolean,
   view?:{id: string,view_data: object,nom:string,details:string}[],
 }
-
-export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string): void=>{
-  const elementTagName = type_tag_name
+/**
+ * 
+ * @param data 
+ * @param type_tag_name 
+ * @param tags_group_key 
+ * @param is_auto_from_add_grp_tag variable used to avoid redondancie when we add a new group data tag
+ */
+export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,is_auto_from_add_grp_tag=false): void=>{
   // Méthode pour incrementer idElement
-  let idElement = Object.keys(data[elementTagName][tags_group_key].tags).length
-  while (data[elementTagName][tags_group_key].tags['element' + idElement]) {
+  let idElement = Object.keys(data[type_tag_name][tags_group_key].tags).length
+  while (data[type_tag_name][tags_group_key].tags['element' + idElement]) {
     idElement = idElement+1
   }
-  data[elementTagName][tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
-  const nb_tags = Object.keys(data[elementTagName][tags_group_key].tags).length
+  data[type_tag_name][tags_group_key].tags['element' + idElement] = { name: 'étiquette' + idElement, color: '#000000', selected: true }
+  const nb_tags = Object.keys(data[type_tag_name][tags_group_key].tags).length
   const colors = colormap({
-    colormap: data[elementTagName][tags_group_key].color_map,
+    colormap: data[type_tag_name][tags_group_key].color_map,
     nshades: Math.max(11, nb_tags),
     format: 'hex',
     alpha: 1
@@ -1230,39 +1228,129 @@ export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 
   if (nb_tags < 11) {
     step = Math.round(11 / nb_tags)
   }
-  Object.keys(data[elementTagName][tags_group_key].tags).forEach(
-    (tag_key, i) => data[elementTagName][tags_group_key].tags[tag_key].color = colors[i * step]
+  Object.keys(data[type_tag_name][tags_group_key].tags).forEach(
+    (tag_key, i) => data[type_tag_name][tags_group_key].tags[tag_key].color = colors[i * step]
   )
+  // If we create a data tags then we redesign link value object
+  // Since dataTags is a tree structure adding a new tag can lead to 2 transformation:
+  //  - If the group is a branch then we need to create it sub tree with the layout of all sub datatags
+  //  - If the group is a leaf then we just add a new entrie to the last subtree
+  if(type_tag_name==='dataTags' && !is_auto_from_add_grp_tag){
+    const listK = Object.keys(data.dataTags).filter(d => Object.keys(data.dataTags[d].tags).length != 0)
+    const nObjet = CreateObject(data, listK)
+    const depth_of_tag_grp= Object.keys(data.dataTags).findIndex(kl=>kl===tags_group_key)
+    const new_link_value_tag=createDefaultLinkValueForNewDataTag(nObjet as SankeyLinkValueDict,depth_of_tag_grp,0)
+    Object.values(data.links).forEach(link=>{
+      addNewSubTreeValueToLink(link.value as SankeyLinkValueDict,depth_of_tag_grp,0,new_link_value_tag)
+    })
+  }
+}
+
+/**
+ * Create a subtree value for link, this function is used when we add a new tag to an existing data tag group
+ * It allow to get a default subtree that we add to each link value at the correct depth
+ * Ex : - we have 2 grp : grp1 and group2 with each one have at least 1 tag already wich give us link value like : value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}}}
+ *  
+ * - if we add a new tag to a group branch (grp1) we have to recreate subtree to be similar to other tag of the same grp wich give us :
+ *  value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}},
+ *          tag2_grp1:{tag1_grp2:{value:'',display_value:'',...}}
+ *           }
+ * 
+ *  - if we add a new tag to a group leaf (in that case grp2) we just add a new value possible :
+ *  value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}, tag2_grp2:{value:'',display_value:'',...}}}
+ */
+const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagType=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number)=>{
+  if(current_index<index_of_grp_tag){
+    const next_link_value_depth=Object.values(link_value)[0] as SankeyLinkValueDict
+    return createDefaultLinkValueForNewDataTag(next_link_value_depth,index_of_grp_tag,current_index+1) 
+  }else{
+    const entries_of_values= Object.entries(link_value)
+    const last_entrie=entries_of_values[entries_of_values.length-1]
+    return last_entrie
+  }
+}
+
+/**
+ * Add a the new value subtree to the link value
+ */
+const addNewSubTreeValueToLink=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number,new_value:[string, SankeyLinkValueDict | SankeyLinkValue])=>{
+  if(current_index<index_of_grp_tag){
+    Object.values(link_value).forEach(lv=>addNewSubTreeValueToLink(lv as SankeyLinkValueDict,index_of_grp_tag,current_index+1,new_value))
+  }else{
+    link_value[new_value[0]]=JSON.parse(JSON.stringify(new_value[1]))
+  }
 }
 
 export const AddGroupTag:AddGroupTagFuncType = (data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,elementNameProp:string): string=>{
-  const elementTagName = type_tag_name
   const elementName = elementNameProp === 'nodes' ? 'nodes' : 'links'
   // Méthode pour incrementer idGroup
-  const idGroup = Object.keys(data[elementTagName]).length+1
+  const idGroup = Object.keys(data[type_tag_name]).length+1
   //la clé est unique grâce au timestamp mais le nom est liée au nombre de grouptag
   const k='tag_group_' + String(new Date().getTime())
-  data[elementTagName][k] = {
+  data[type_tag_name][k] = {
     group_name: 'Étiquette Group ' + idGroup,
     show_legend: false,
     color_map: 'jet',
     tags: {},
-    banner: 'multi',
+    banner:  type_tag_name==='dataTags'?'one':'multi',
     activated: true,
     siblings: []
   }
   if (elementName === 'nodes' ) {
     Object.values(data[elementName]).forEach(n => n.tags[k] = [])
   }
-  if (Object.keys(data[elementTagName]).length === 1) {
-    Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[elementTagName])[0])
+  if (Object.keys(data[type_tag_name]).length === 1) {
+    Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[type_tag_name])[0])
   }
 
-  // Add an element to the group newly created
-  // Méthode pour incrementer idElement
+  // Add a tag to the group 
+  AddTag(data,type_tag_name,k,true)
 
-  AddTag(data,type_tag_name,k)
+  // If we create a group of data tags then we redesign link value object
+  // Since dataTags is a tree structure adding a new group reshape the tree and the previous values are 'lost'
+  if(elementName === 'links' && type_tag_name==='dataTags'){
+    addDepthLinkValueWithNewDTGrp(data)
+  }
   return k
+}
+
+export const resetLinkValueAfterDeleteDTGrp=(data:SankeyData)=>{
+  const listK = Object.keys(data.dataTags).filter(d => Object.keys(data.dataTags[d].tags).length != 0)
+  const nObjet = CreateObject(data, listK)
+  Object.entries(data.links).forEach(l=>{
+    // We parse a stringified version of the object to make a copy of it
+    // if we didn't do it all link value would reference the same object therefore modifying one link value would modify all of them 
+    l[1].value=JSON.parse(JSON.stringify(nObjet))
+  })
+}
+
+
+export const addDepthLinkValueWithNewDTGrp=(data:SankeyData)=>{
+  const listK = Object.keys(data.dataTags).filter(d => Object.keys(data.dataTags[d].tags).length != 0)
+  const first_tag_of_last_grp=Object.keys(data.dataTags[listK[listK.length-1]].tags)[0]
+  Object.entries(data.links).forEach(l=>{
+    //For eack link we go through each value and add a new depath to the value with the first tag of the new dataTagGrp 
+    l[1].value=updateLinkValueDepthWithNewDTGrp(l[1].value,first_tag_of_last_grp)
+  })
+}
+
+// Recursive func that search if we are at the data level of link value ({value:x,display_value:y,extensions:...})
+// and if we are then change it by adding a new depth with the new tag of the new grp ({new_tag_of_new_grp:{value:x,display_value:y,extensions:...}})
+// If current prev_l is like {tag_x_of_grp_a:{...},tag_y_of_grp_a:{...}} then we call the func updateLinkValueDepthWithNewDTGrp on each entries of prev_l
+const updateLinkValueDepthWithNewDTGrp=(prev_l:SankeyLinkValueDict|SankeyLinkValue,new_tag_of_new_grp:string)=>{
+  if(prev_l.value===undefined){
+    const tmp=Object.entries(prev_l).map(next_depth=>{
+      next_depth[1]=updateLinkValueDepthWithNewDTGrp(next_depth[1],new_tag_of_new_grp)
+      return next_depth
+    })
+    prev_l=Object.fromEntries(tmp)
+  }else{
+    const copy_last_value=JSON.parse(JSON.stringify(prev_l))
+    prev_l={}  as SankeyLinkValueDict
+    prev_l[new_tag_of_new_grp]=copy_last_value as SankeyLinkValueDict
+  }
+  return prev_l
+
 }
 
 // Return the value of an attribute from node :
