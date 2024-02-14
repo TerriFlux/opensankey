@@ -56,7 +56,7 @@ export type DefaultNodeProductStyleFuncStyle = () => SankeyNodeStyle
 
 export type DefaultLinkStyleFuncType = () => SankeyLinkStyle
 
-export type CreateObjectFuncType = (data: SankeyData, l: string[]) => SankeyLinkValue
+export type CreateObjectFuncType = (data: SankeyData, l: string[]) => SankeyLinkValueDict| SankeyLinkValue
 
 export type DefaultLinkFuncType = (data: SankeyData) => SankeyLink
 
@@ -80,7 +80,7 @@ export type ToPrecisionFuncType = (v: number,nb_scientific?:number)=> string | n
 
 export type LinkTextFuncType = (data: SankeyData,d: SankeyLink,GetLinkValue:GetLinkValueFuncType)=>string
 
-export type AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string)=> void
+export type AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,is_auto_from_add_grp_tag?:boolean)=> void
 
 export type AddGroupTagFuncType = (data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,elementNameProp:string)=> string
 
@@ -132,3 +132,4 @@ export type AddNewNodeFuncType = (data: SankeyData, set_data: (d: SankeyData) =>
 
 export type RecursionDataTagFuncType = (data: SankeyData, DT: TagsCatalog, ind: number, suffix: string, link_to_copy: SankeyLink, new_links: {[link_id: string]: SankeyLink;}) => void
 
+export type createDefaultLinkValueForNewDataTagType=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number)=>[string, SankeyLinkValueDict | SankeyLinkValue]
