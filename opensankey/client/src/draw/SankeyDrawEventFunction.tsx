@@ -1,8 +1,8 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { ReturnValueLink, DefaultNode, ReturnValueNode, DefaultLink, AssignLinkLocalAttribute } from '../configmenus/SankeyUtils'
-import { SankeyNode, SankeyLink, SankeyData, SankeyLinkValue } from '../types/Types'
-import { DeselectVisualyNodes, SelectVisualyNodes, DeselectVisualyLinks, SelectVisualyLinks, ValueSelectedParameter, NodeVisibleOnsSvg, LinkVisibleOnSvg, SortOutputLinksIdByYPos } from './SankeyDrawFunction'
+import { SankeyNode, SankeyLink, SankeyData, SankeyLinkValue, dict_variable_application_dataType } from '../types/Types'
+import { DeselectVisualyNodes, SelectVisualyNodes, DeselectVisualyLinks, SelectVisualyLinks, ValueSelectedParameter, NodeVisibleOnsSvg, LinkVisibleOnSvg, SortOutputLinksIdByYPos, GetSankeyMinWidthAndHeight } from './SankeyDrawFunction'
 import { draw_legend_handles } from './SankeyDrawLegend'
 import { EventNodeClickFType, EventNodeContextMenuFType, EventLinkContextMenuFType, EventOnZoneMouseDownFuncType, EventOnZoneMouseMoveFuncType, EventOnZoneMouseUpFuncType, EventOnMouseUpAddNodesAndLinkFType, SimpleGNodeClickFuncType, SvgDragMiddleMouseStartFuncType, SvgDragMiddleMouseMoveFuncType, EventZDDContextMenuFType, ZoomFunctionFuncType } from './types/SankeyDrawEventFunctionTypes'
 
@@ -609,6 +609,7 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
     .style('border', Math.max(1, Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
   d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale(' + (scale_legend) + ')')
   d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale / 2) * scale_legend)))
+  actualizeDrawAreaFrame({data} as dict_variable_application_dataType)
 
   // RepositionneSidebar()
 }
@@ -723,3 +724,12 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
 
 }
 
+export const actualizeDrawAreaFrame=(dict_variable_application_data:dict_variable_application_dataType)=>{
+  [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data.data)
+  const transform=d3.select('.opensankey #svg').attr('transform')
+  let scale_svg=1
+  if(transform!==undefined && transform!==null){
+    scale_svg=Number(transform.split('scale(')[1].replace(')',''))
+  }
+  d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
+}
