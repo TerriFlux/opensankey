@@ -295,6 +295,7 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
 ) => {
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
   const is_current_data_master=data.current_view==='none'
+  const [forceUpdate,setForceUpdate]=useState(false)
   return [
     <InputGroup>
       <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
@@ -305,10 +306,10 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
         onClick={() => {
           if(!elementToDispose.current.includes('freeLabels')){
             elementToDispose.current.push('freeLabels')
-            //setForceUpdate(!forceUpdate)
+            setForceUpdate(!forceUpdate)
           }else{
             elementToDispose.current.splice(elementToDispose.current.indexOf('freeLabels'),1)
-            //setForceUpdate(!forceUpdate)
+            setForceUpdate(!forceUpdate)
           }}
         }
       >{elementToDispose.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
@@ -335,10 +336,10 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           onClick={() => {
             if(!elementToDispose.current.includes('Views')){
               elementToDispose.current.push('Views')
-              //setForceUpdate(!forceUpdate)
+              setForceUpdate(!forceUpdate)
             }else{
               elementToDispose.current.splice(elementToDispose.current.indexOf('Views'),1)
-              //setForceUpdate(!forceUpdate)
+              setForceUpdate(!forceUpdate)
             }}
           }
         >{elementToDispose.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
