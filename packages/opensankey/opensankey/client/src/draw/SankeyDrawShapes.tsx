@@ -545,12 +545,14 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     const extension = GetLinkValue(data, n.outputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
+      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
       if (display_free_as_dashed) {
         // Generale settings: free link value are displayed dashed without text without witdh
         const link_value_is_free = extension?.free_mini !== undefined ?? false
         if (link_value_is_free) {
           // Link value is free should be displayed dashed without text
-          if (extension?.free_visible) {
+          if (special_data_cast.free_null_link_visible) {
             //treated as not free
           } else {
             link_value = inv_scale(5)
