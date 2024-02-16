@@ -1,16 +1,63 @@
-import { faArrowPointer, faShareNodes, faFolderTree, faSliders, faArrowsUpDown, faArrowsLeftRight, faDiagramProject } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Accordion, Pagination, Col, Card, ButtonGroup, Button, Carousel, FormCheck, Modal } from 'react-bootstrap'
-import { FaUser, FaAngleDoubleLeft, FaHome, FaCaretSquareLeft, FaCaretSquareRight } from 'react-icons/fa'
-import { SankeyData, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
+// Standard lib
+import React, {
+  Dispatch,
+  MutableRefObject,
+  SetStateAction,
+  useState
+} from 'react'
+import {
+  Button,
+  ButtonGroup,
+  Card,
+  Carousel,
+  Col,
+  FormCheck,
+  Modal,
+  Pagination,
+} from 'react-bootstrap'
+import {
+  FaUser,
+  FaAngleDoubleLeft,
+  FaHome,
+  FaCaretSquareLeft,
+  FaCaretSquareRight
+} from 'react-icons/fa'
 import parse from 'html-react-parser'
+import { TFunction } from 'i18next'
+
+// Imported libs
+import {
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Box
+} from '@chakra-ui/react'
+import {
+  faArrowPointer,
+  faShareNodes,
+  faFolderTree,
+  faSliders,
+  faArrowsUpDown,
+  faArrowsLeftRight,
+  faDiagramProject
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
+// Local libs
+import {
+  SankeyData,
+  applicationContextType,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType,
+  dict_hook_ref_setter_show_dialog_componentsType
+} from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
-import React, { Dispatch, MutableRefObject, SetStateAction, useState } from 'react'
 import { windowSankey } from '../configmenus/SankeyUtils'
 import { DownloadExempleExcel } from './SankeyPersistence'
 import { UploadExemple } from './SankeyPersistence'
 import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
-import { TFunction } from 'i18next'
 
 export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   t,
@@ -30,19 +77,31 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
     <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
     <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
-  
+
     <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
     <p><b>{t('Menu.rcc_F8_bold')}</b>{t('Menu.rcc_F8')}</p>
     <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
-  
+
   </>
-  
-  const content_rc_not_static=<Accordion className='accordion_new_welcome' defaultActiveKey={'OS'}>
-    <Accordion.Item eventKey='OS'>
-      <Accordion.Header>
-        <h2>{t('Menu.rcc_titre_princ')}</h2>
-      </Accordion.Header>
-      <Accordion.Body>
+
+  const content_rc_not_static=<Accordion
+    // className='accordion_new_welcome'
+    // defaultActiveKey={'OS'}
+    allowToggle
+  >
+    <AccordionItem
+      // eventKey='OS'
+    >
+      <AccordionButton>
+        <Box
+          as='span'
+          layerStyle='menuconfig_entry'
+        >
+          {t('Menu.rcc_titre_princ')}
+        </Box>
+        <AccordionIcon/>
+      </AccordionButton>
+      <AccordionPanel>
         <h5>{t('Menu.rcc_titre_select')}:</h5>
         <p><b>{t('Menu.rcc_cn_bold')}</b>{t('Menu.rcc_cn')}</p>
         <p><b>{t('Menu.rcc_ctrl_cn_bold')}</b>{t('Menu.rcc_ctrl_cn')}</p>
@@ -52,33 +111,33 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
         <p><b>{t('Menu.rcc_click_and_drag_bold')}</b>{t('Menu.rcc_click_and_drag')}</p>
         <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
         <p><b>{t('Menu.rcc_ad_bold')}</b>{t('Menu.rcc_ad')}</p>
-  
+
         <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-  
+
         <h5>{t('Menu.rcc_titre_edi')} :</h5>
-  
+
         <p><b>{t('Menu.rcc_e_cn_bold')}</b>{t('Menu.rcc_e_cn')}</p>
         <p><b>{t('Menu.rcc_e_ds_bold')}</b>{t('Menu.rcc_e_ds')}</p>
         <p><b>{t('Menu.rcc_e_dn_bold')}</b>{t('Menu.rcc_e_dn')}</p>
-  
+
         <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-  
+
         <h5>{t('Menu.rcc_titre_autre')} :</h5>
-  
+
         <p><b>{t('Menu.rcc_a_s_bold')}</b>{t('Menu.rcc_a_s')}</p>
         <p><b>{t('Menu.rcc_a_fc_bold')}</b>{t('Menu.rcc_a_fc')}</p>
         <p><b>{t('Menu.rcc_a_dbm_bold')}</b>{t('Menu.rcc_a_dbm')}</p>
         <p><b>{t('Menu.rcc_a_ech_bold')}</b>{t('Menu.rcc_a_ech')}</p>
         <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
         <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-      </Accordion.Body>
-    </Accordion.Item>
-  
-  
+      </AccordionPanel>
+    </AccordionItem>
+
+
     {additional_shortcut_item}
   </Accordion>
   external_content['rc'] = windowSankey.SankeyToolsStatic?content_rc_static:content_rc_not_static
-  
+
   const tmp=JSON.parse(JSON.stringify(exemple_menu))
   let list_template_data=[] as string[]
   // Si exemple_menu contient OpenSankey et que ce sous dossier contient les templates simple alors remple la liste des templates avec les modèle simples
@@ -99,17 +158,17 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
     <Modal.Body>
       {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
     </Modal.Body>
-  
+
     <Modal.Footer style={{justifyContent:'center'}}>
       <Pagination >
         {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
-  
+
         <Pagination.Item active={active_page==='rc'} key={'rc'} onClick={()=>{
           set_active_page('rc')
         }}>
           {t('welcome.rc')}
         </Pagination.Item>
-  
+
       </Pagination>
       <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again.current} onChange={evt=>{
         never_see_again.current = evt.target.checked
@@ -161,7 +220,7 @@ export const CardsTemplateBuilder = (
                     //dict_variable_elements_selected.multi_selected_label.current = [] TODO
                     const difficulty_file=(tmp['OpenSankey']['easy_template'].includes(list_template_data[idx]))?'easy_template':'expert_template'
                     UploadExemple(
-                      'OpenSankey/'+difficulty_file+'/'+list_template_data[idx], applicationContext.url_prefix, 
+                      'OpenSankey/'+difficulty_file+'/'+list_template_data[idx], applicationContext.url_prefix,
                       dict_variable_application_data.data,dict_variable_application_data.set_data as (d:SankeyData)=>void,
                       Reinitialization,convert_data ,dict_variable_application_data.get_default_data
                     )
