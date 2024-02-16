@@ -1,10 +1,45 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
-import { ReturnValueLink, DefaultNode, ReturnValueNode, DefaultLink, AssignLinkLocalAttribute } from '../configmenus/SankeyUtils'
-import { SankeyNode, SankeyLink, SankeyData, SankeyLinkValue, dict_variable_application_dataType } from '../types/Types'
-import { DeselectVisualyNodes, SelectVisualyNodes, DeselectVisualyLinks, SelectVisualyLinks, ValueSelectedParameter, NodeVisibleOnsSvg, LinkVisibleOnSvg, SortOutputLinksIdByYPos, GetSankeyMinWidthAndHeight } from './SankeyDrawFunction'
+import {
+  ReturnValueLink,
+  DefaultNode,
+  ReturnValueNode,
+  DefaultLink,
+  AssignLinkLocalAttribute
+} from '../configmenus/SankeyUtils'
+import {
+  dict_variable_application_dataType,
+  SankeyData,
+  SankeyLink,
+  SankeyLinkValue,
+  SankeyNode,
+} from '../types/Types'
+import {
+  DeselectVisualyLinks,
+  DeselectVisualyNodes,
+  GetSankeyMinWidthAndHeight,
+  LinkVisibleOnSvg,
+  NodeVisibleOnsSvg,
+  SelectVisualyLinks,
+  SelectVisualyNodes,
+  SortOutputLinksIdByYPos,
+  ValueSelectedParameter,
+} from './SankeyDrawFunction'
 import { draw_legend_handles } from './SankeyDrawLegend'
-import { EventNodeClickFType, EventNodeContextMenuFType, EventLinkContextMenuFType, EventOnZoneMouseDownFuncType, EventOnZoneMouseMoveFuncType, EventOnZoneMouseUpFuncType, EventOnMouseUpAddNodesAndLinkFType, SimpleGNodeClickFuncType, SvgDragMiddleMouseStartFuncType, SvgDragMiddleMouseMoveFuncType, EventZDDContextMenuFType, ZoomFunctionFuncType } from './types/SankeyDrawEventFunctionTypes'
+import {
+  EventLinkContextMenuFType,
+  EventNodeClickFType,
+  EventNodeContextMenuFType,
+  EventOnMouseUpAddNodesAndLinkFType,
+  EventOnZoneMouseDownFuncType,
+  EventOnZoneMouseMoveFuncType,
+  EventOnZoneMouseUpFuncType,
+  EventZDDContextMenuFType,
+  SimpleGNodeClickFuncType,
+  SvgDragMiddleMouseMoveFuncType,
+  SvgDragMiddleMouseStartFuncType,
+  ZoomFunctionFuncType
+} from './types/SankeyDrawEventFunctionTypes'
 
 
 declare const window: Window &
@@ -13,8 +48,17 @@ declare const window: Window &
   }
 
 
-// Function triggerd on click on nodes
-// Add or delete visual element to show that the node is selected like a thickker border
+/**
+ * Function triggerd on click on nodes
+ * Add or delete visual element to show that the node is selected like a thickker border
+ *
+ * @param dict_variable_application_data
+ * @param uiElementsRef
+ * @param dict_variable_elements_selected
+ * @param event
+ * @param d
+ * @param sankeyTooltip
+ */
 export const EventNodeClick: EventNodeClickFType = (
   dict_variable_application_data,
   uiElementsRef,
@@ -33,20 +77,35 @@ export const EventNodeClick: EventNodeClickFType = (
       button_ref.current.click()
     }
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
+
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
-    } else {
+    }
+    else {
       multi_selected_nodes.current.push(d)
       if (multi_selected_nodes.current.length == 1) {
         d3.select(' .opensankey #ggg_' + d.idNode + ' .box_width_threshold').attr('visibility', 'visible')
       }
     }
-    if (accordion_ref && accordion_ref.current) {
+
+    // Open element accordion if not already openend
+    if (
+      accordion_ref &&
+      accordion_ref.current &&
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
       accordion_ref.current.click()
     }
-    if (nodes_accordion_ref && nodes_accordion_ref.current) {
+
+    // Open node accordion if not already openend
+    if (
+      nodes_accordion_ref &&
+      nodes_accordion_ref.current &&
+      d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
       nodes_accordion_ref.current.click()
     }
+
     set_data({ ...data })
   } else if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) && !event.ctrlKey) {
     // If we click a node without pressing Ctrl then we select only the node cliked
@@ -144,7 +203,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
     Object.values(data.dataTags).forEach(dt => {
       tmp.push(Object.entries(dt.tags).filter(t => t[1].selected)[0][0])
     })
-    const n_t_s = {} as { [x: string]: string} 
+    const n_t_s = {} as { [x: string]: string}
     Object.keys(data.dataTags).forEach((dt, i) => {
       n_t_s[dt] = tmp[i]
     })
@@ -194,11 +253,11 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
   const { data, set_data } = dict_variable_application_data
   const { ref_getter_mode_selection, first_selected_node } = dict_variable_elements_selected
   closeAllMenuContext()
-  const evt = evt2 as { target: string; ctrlKey: boolean; metaKey: boolean; which: number} 
+  const evt = evt2 as { target: string; ctrlKey: boolean; metaKey: boolean; which: number}
   //si le mode de souris est noeud+flux alors crée le premier noeuds
   if (evt.which == 1) {
 
-    // blur all the input of the config menu in case we modify a value from an input (where the value is truly apply on blur) 
+    // blur all the input of the config menu in case we modify a value from an input (where the value is truly apply on blur)
     // and click on the drawing zone wich normally doesn't count as a blur of the input
     for (const item of document.getElementsByTagName('input')) {
       if (item.className.includes('form-control') && (item.type == 'text' || item.type == 'number')) {
@@ -207,7 +266,7 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
     }
 
     if (d3.select(evt.target).attr('class') != 'node node_shape' && ref_getter_mode_selection.current == 'ln') {
-      
+
       if ((!evt.ctrlKey && !evt.metaKey)) {
         if (!token && Object.keys(data.nodes).length > 15) {
           if (setter_limited_application?.ref_setter_show_toast_limit_node) setter_limited_application.ref_setter_show_toast_limit_node.current!(true)
@@ -246,7 +305,7 @@ export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
   dict_variable_application_data,
   dict_variable_elements_selected,
   evt: MouseEvent,
-  start_point: { current: number[]} 
+  start_point: { current: number[]}
 ) => {
   const { data } = dict_variable_application_data
   const { ref_getter_mode_selection,first_selected_node } = dict_variable_elements_selected
@@ -603,7 +662,7 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
   if (d3.select('.offcanvas-body').node()) {
     d3.select('.scroll_zone').style('width', ((data.width + 600) * evt.transform.k - (600 * (evt.transform.k - 1.1))) + 'px')
   }
-  //Compensate the scale of the legend when we dezoom so the legend has alway a readable size 
+  //Compensate the scale of the legend when we dezoom so the legend has alway a readable size
   const scale_legend = 1 / ((evt.transform.k < 1) ? evt.transform.k : 1)
   svgSankey
     .style('border', Math.max(1, Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
