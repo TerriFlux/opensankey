@@ -45,7 +45,8 @@ export type ToolbarBuilderFType = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again: MutableRefObject<boolean>,
-  convert_data:ConvertDataFuncType,
+  additional_link_visual_filter_content:JSX.Element[]
+
 ) => JSX.Element
 
 export type stretchButtonsFType=(
