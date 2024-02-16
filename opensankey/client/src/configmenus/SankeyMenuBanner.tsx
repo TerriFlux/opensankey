@@ -436,6 +436,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   GetSankeyMinWidthAndHeight,
   dict_hook_ref_setter_show_dialog_components,
   never_see_again,
+  additional_link_visual_filter_content
 ) => {
 
   const {data,set_data}=dict_variable_application_data
@@ -613,6 +614,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
           </Col>
         </Form.Group>
         {content_adjust_label_pos}
+        {additional_link_visual_filter_content}
       </Form>
     </Popover.Body>
   </Popover>
