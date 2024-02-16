@@ -1,11 +1,44 @@
-import Accordion from 'react-bootstrap/Accordion'
+// Standard libs
+import React, {
+  FunctionComponent,
+  Ref
+} from 'react'
 import { ReactElementLike } from 'prop-types'
-import React, { FunctionComponent, MutableRefObject, Ref, useState } from 'react'
+
+// Imported libs
+import {
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Box
+} from '@chakra-ui/react'
+
+// Local libs
 import SankeyNodeEdition from './SankeyMenuConfigurationNodes'
 import SankeyMenuConfigurationLinks from './SankeyMenuConfigurationLinks'
 import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurationTypes'
 
 
+/**
+ *  Define configuration menu
+ *
+ * @param { TODO type } dict_variable_application_data - TODO description
+ * @param { TODO type } dict_variable_elements_selected - TODO description
+ * @param { TODO type } applicationContext - TODO description
+ * @param { TODO type } uiElementsRef - TODO description
+ * @param { TODO type } dict_hook_ref_setter_show_dialog_components - TODO description
+ * @param { TODO type } menu_configuration_layout - TODO description
+ * @param { TODO type } menu_configuration_node_tags - TODO description
+ * @param { TODO type } menu_configuration_link_tags - TODO description
+ * @param { TODO type } menu_configuration_data_tags - TODO description
+ * @param { TODO type } menu_configuration_nodes - TODO description
+ * @param { TODO type } menu_configuration_links - TODO description
+ * @param { TODO type } additional_accordion_edition_elements - TODO description
+ * @param { TODO type } token - TODO description
+ *
+ */
 export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType = (
   dict_variable_application_data,
   dict_variable_elements_selected,
@@ -21,78 +54,80 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   additional_accordion_edition_elements,
   token
 ) => {
-  const [navitemactive, setnavitemactive] = useState('')
-  const [subnavitemactive, setsubnavitemactive] = useState('')
-  const { ref_setter_nav_item_active, ref_setter_sub_nav_item_active, ref_nav_item_active} = uiElementsRef
-  ref_setter_nav_item_active.current = setnavitemactive
-  ref_setter_sub_nav_item_active.current = setsubnavitemactive
-  ref_nav_item_active.current = navitemactive
+  // const [subnavitemactive, setsubnavitemactive] = useState('')
+  // const [nav_index, setNavIndex] = useState(-1)
+  // const { ref_setter_nav_item_active, ref_setter_sub_nav_item_active, ref_nav_item_active} = uiElementsRef
+  // ref_setter_nav_item_active.current = setNavIndex
+  // ref_setter_sub_nav_item_active.current = setsubnavitemactive
+  // ref_nav_item_active.current = nav_index
 
   const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
-  const {links_accordion_ref,nodes_accordion_ref}=uiElementsRef
+  const {links_accordion_ref, nodes_accordion_ref, accordion_ref} = uiElementsRef
   const {multi_selected_nodes}=dict_variable_elements_selected
-  const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
-  const show_menu_config_tag=(data.accordeonToShow.includes('EN') || data.accordeonToShow.includes('EF') || data.accordeonToShow.includes('ED'))
+  // const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
+  const show_menu_config_tag = (
+    (data.accordeonToShow.includes('EN') ||
+     data.accordeonToShow.includes('EF') ||
+     data.accordeonToShow.includes('ED')))
+
   return [
-    <Accordion.Item
-      key='1'
-      id='MEP'
-      style={{ 'display': (data.accordeonToShow.includes('MEP')) ? 'block' : 'none' }}
-      eventKey="1"
-      onClick={
-        evt => {
-          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === '1') {
-            setnavitemactive('')
-          } else {
-            setnavitemactive('1')
-          }
-        }}>
+    data.accordeonToShow.includes('MEP')?
+      <AccordionItem>
+        {
+          //MENU PARAMETRE GENERAUX
+        }
+        <AccordionButton>
+          <Box
+            as='span'
+            layerStyle='menuconfig_entry'>
+            {t('Menu.MEP')}
+          </Box>
+          <AccordionIcon/>
+        </AccordionButton>
+        <AccordionPanel>
+          <div className='content_editon_elements'>
+            {menu_configuration_layout.map((c,i)=>{
+              return <React.Fragment key={i}>{c}</React.Fragment>})}
+          </div>
+        </AccordionPanel>
+      </AccordionItem>:
+      <></>,
+
+    <AccordionItem>
       {
-        //MENU PARAMETRE GENERAUX
+        //MENU ITEMS
       }
-      <Accordion.Header>{t('Menu.MEP')}</Accordion.Header>
-      <Accordion.Body>
-        <div className='content_editon_elements'>
-          {menu_configuration_layout.map((c,i)=>{
-            return <React.Fragment key={i}>{c}</React.Fragment>})}
-        </div>
-      </Accordion.Body>
-    </Accordion.Item>,
-    <Accordion.Item
-      key='2'
-      style={{ 'display': 'block'  }}
-      eventKey="2"
-      id="SubAccordionElements"
-      onClick={
-        evt => {
-          if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ((evt.target as unknown) as { textContent: string }).textContent === t('Menu.Elements') && navitemactive === '2') {
-            setnavitemactive('')
-          } else {
-            setnavitemactive('2')
-          }
-        }}
-    >
-      <Accordion.Header>{t('Menu.Elements')}</Accordion.Header>
-      <Accordion.Body style={{ padding: '0px' }}>
-        <Accordion  activeKey={subnavitemactive} >
-          <Accordion.Item
-            key='4' eventKey='editionNoeud'
-            onClick={
-              evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                  setsubnavitemactive('')
-                } else {
-                  setsubnavitemactive('editionNoeud')
-                }
-                setnavitemactive('2')
-                ref_setter_show_menu_config.current(true)
-              }
+      <AccordionButton
+        ref={accordion_ref as Ref<HTMLButtonElement>}
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfig_entry'>
+          {t('Menu.Elements')}
+        </Box>
+        <AccordionIcon/>
+      </AccordionButton>
+      <AccordionPanel>
+        <Accordion
+          allowToggle
+          variant="accordion_sublevel_style"
+        >
+          <AccordionItem>
+            {
+              //MENU NODES
             }
-            ref={nodes_accordion_ref  as Ref<HTMLDivElement>}
-          >
-            <Accordion.Header className='level2' >{t('Menu.EdN')}</Accordion.Header>
-            <Accordion.Body>
+            <AccordionButton
+              ref={nodes_accordion_ref as Ref<HTMLButtonElement>}
+            >
+              <Box
+                as='span'
+                layerStyle='submenuconfig_entry'>
+                {t('Menu.EdN')}
+              </Box>
+              <AccordionIcon/>
+            </AccordionButton>
+            <AccordionPanel>
               <SankeyNodeEdition
                 t={t}
                 data={data}
@@ -101,120 +136,115 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
                 token={token}
               />
-            </Accordion.Body>
-          </Accordion.Item>
+            </AccordionPanel>
+          </AccordionItem>
 
-          <Accordion.Item
-            ref={links_accordion_ref as Ref<HTMLDivElement>}
-            key='7'
-            eventKey='editionFlux'
-            onClick={
-              evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                  setsubnavitemactive('')
-                  setnavitemactive('3')
-                  ref_setter_show_menu_config.current(true)
-
-                } else {
-                  setsubnavitemactive('editionFlux')
-                  setnavitemactive('3')
-                  ref_setter_show_menu_config.current(true)
-
-                }
-              }
-            }>
-            <Accordion.Header className='level2'>{t('Menu.EdF')}</Accordion.Header>
-            <Accordion.Body>
+          <AccordionItem>
+            {
+              //MENU LINKS
+            }
+            <AccordionButton
+              ref={links_accordion_ref as Ref<HTMLButtonElement>}
+            >
+              <Box
+                as='span'
+                layerStyle='submenuconfig_entry'>
+                {t('Menu.EdF')}
+              </Box>
+              <AccordionIcon/>
+            </AccordionButton>
+            <AccordionPanel>
               <SankeyMenuConfigurationLinks
                 dict_variable_application_data={dict_variable_application_data}
                 applicationContext={applicationContext}
                 dict_variable_elements_selected={dict_variable_elements_selected}
                 menu_configuration_links={Object.values(menu_configuration_links)}
               />
-            </Accordion.Body>
-          </Accordion.Item>
+            </AccordionPanel>
+          </AccordionItem>
           {additional_accordion_edition_elements}
         </Accordion>
-      </Accordion.Body>
-    </Accordion.Item>,
+      </AccordionPanel>
+    </AccordionItem>,
 
-    show_menu_config_tag?<Accordion.Item
-      key='5'
-      style={{ 'display': 'block' }}
-      id='SubAccordionEtiquette'
-      eventKey="3"
-      onClick={evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === '3') {
-          setnavitemactive('')
-        } else {
-          setnavitemactive('3')
+    show_menu_config_tag?
+      <AccordionItem>
+        {
+          //MENU ETIQUETTES
         }
-      }}
-    >
-      <Accordion.Header >{t('Menu.Etiquettes')}</Accordion.Header>
-      <Accordion.Body  style={{ padding: '0px' }}>
-        <Accordion activeKey={subnavitemactive}>
-          <Accordion.Item
-            key='3'
-            style={{ 'display': (data.accordeonToShow.includes('EN')) ? 'block' : 'none' }}
-            eventKey="EtiquetteNoeud"
-            onClick={
-              evt => {
-                if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                  setsubnavitemactive('')
-                } else {
-                  setsubnavitemactive('EtiquetteNoeud')
-                }
-                setnavitemactive('2')
-                ref_setter_show_menu_config.current(true)
-              }}
+        <AccordionButton>
+          <Box
+            as='span'
+            layerStyle='menuconfig_entry'>
+            {t('Menu.Etiquettes')}
+          </Box>
+          <AccordionIcon/>
+        </AccordionButton>
+        <AccordionPanel>
+          <Accordion
+            allowToggle
+            variant="accordion_sublevel_style"
           >
-            <Accordion.Header className='level2' >
-              {t('Menu.EN')}
-            </Accordion.Header>
-            <Accordion.Body>
-              {menu_configuration_node_tags}
-            </Accordion.Body>
-          </Accordion.Item>
-
-          <Accordion.Item
-            key='6'
-            eventKey="8"
-            style={{ 'display': (data.accordeonToShow.includes('EF')) ? 'block' : 'none' }}
-            onClick={evt => {
-              if (((evt.target as unknown) as { className: string }).className === 'accordion-button') {
-                setsubnavitemactive('')
-              } else {
-                setsubnavitemactive('8')
+            <AccordionItem
+              style={{ 'display': (data.accordeonToShow.includes('EN')) ? 'initial' : 'none' }}
+            >
+              {
+                //MENU ETIQUETTES DE NOEUDS
               }
-              setnavitemactive('3')
-              ref_setter_show_menu_config.current(true)
-            }}
-          >
-            <Accordion.Header className='level2' >{t('Menu.EF')}</Accordion.Header>
-            <Accordion.Body>{menu_configuration_link_tags}</Accordion.Body>
-          </Accordion.Item>
+              <AccordionButton>
+                <Box
+                  as='span'
+                  layerStyle='submenuconfig_entry'>
+                  {t('Menu.EN')}
+                </Box>
+                <AccordionIcon/>
+              </AccordionButton>
+              <AccordionPanel>
+                {menu_configuration_node_tags}
+              </AccordionPanel>
+            </AccordionItem>
 
-          <Accordion.Item
-            key='dt'
-            id="dataTags"
-            eventKey="dimension"
-            style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'block' : 'none' }}
-            onClick={evt => {
-              if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && navitemactive === 'dimension') {
-                setsubnavitemactive('')
-              } else {
-                setsubnavitemactive('dimension')
+            <AccordionItem
+              style={{ 'display': (data.accordeonToShow.includes('EF')) ? 'initial' : 'none' }}
+            >
+              {
+                //MENU ETIQUETTES DE FLUX
               }
-            }}
-          >
-            <Accordion.Header className='level2'>{t('Menu.ED')}</Accordion.Header>
-            <Accordion.Body>{menu_configuration_data_tags}</Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-      </Accordion.Body>
-    </Accordion.Item>:<></>,
+              <AccordionButton>
+                <Box
+                  as='span'
+                  layerStyle='submenuconfig_entry'>
+                  {t('Menu.EF')}
+                </Box>
+                <AccordionIcon/>
+              </AccordionButton>
+              <AccordionPanel>
+                {menu_configuration_link_tags}
+              </AccordionPanel>
+            </AccordionItem>
 
+            <AccordionItem
+              style={{ 'display': (data.accordeonToShow.includes('ED')) ? 'initial' : 'none' }}
+            >
+              {
+                //MENU ETIQUETTES DE DONNÉES
+              }
+              <AccordionButton>
+                <Box
+                  as='span'
+                  layerStyle='submenuconfig_entry'>
+                  {t('Menu.ED')}
+                </Box>
+                <AccordionIcon/>
+              </AccordionButton>
+              <AccordionPanel>
+                {menu_configuration_data_tags}
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
+        </AccordionPanel>
+      </AccordionItem>:
+      <></>
   ]
 }
 
@@ -224,20 +254,17 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
  * @type {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
 export type ConfigurationMenuTypes = {
-  accordion_ref: MutableRefObject<HTMLDivElement|null>,
-  ref_nav_item_active: MutableRefObject<string>,
   configuration_menus: JSX.Element[],
 }
 
 export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> = (
   {
-    ref_nav_item_active,
-    accordion_ref,
     configuration_menus
   }
 ) => {
+
   return (
-    <Accordion ref={accordion_ref as Ref<HTMLDivElement>} activeKey={ref_nav_item_active.current} >
+    <Accordion allowToggle>
       {configuration_menus.map((c:ReactElementLike, i:number)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>})}
     </Accordion>
