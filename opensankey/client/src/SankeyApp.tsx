@@ -359,7 +359,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     GetSankeyMinWidthAndHeight,
     dict_hook_ref_setter_show_dialog_components,
     never_see_again,
-    convert_data,
+    [],
   )
 
   sankey_menus['toolbar']=toolbar

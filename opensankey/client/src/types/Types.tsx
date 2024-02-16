@@ -234,7 +234,7 @@ export type TagsCatalog = {[_:string]:TagsGroup}
 export type display_styleType = {
   filter: number,
   filter_label: number,
-  null_flux: boolean,
+  // null_flux: boolean,
   font_family: string[]
 }
 
