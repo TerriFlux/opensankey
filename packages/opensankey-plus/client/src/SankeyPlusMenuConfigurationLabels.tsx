@@ -1,5 +1,7 @@
-import React,{useState,ChangeEvent, FunctionComponent} from 'react'
-import { Row,
+// Standard libs
+import React, { Ref, useState, ChangeEvent, FunctionComponent } from 'react'
+import {
+  Row,
   Form,
   FormControl,
   Button,
@@ -8,34 +10,59 @@ import { Row,
   InputGroup,
   Popover,
   ButtonGroup,
-  Badge} from 'react-bootstrap'
-import { SankeyPlusContextMenuType, SankeyPlusData,SankeyPlusLabel} from '../types/Types'
+  Badge
+} from 'react-bootstrap'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
-import Accordion from 'react-bootstrap/Accordion'
-import ReactQuill from 'react-quill'
+import ReactQuill, { Quill } from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
-import { Quill } from 'react-quill'
 import * as d3 from 'd3'
 
-import {  preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
-import { Checkbox } from '@chakra-ui/react'
-import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
+// Imported libs
+import {
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Box,
+  Checkbox
+} from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
+
+// Local libs
 import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
-import { SankeyPlusMenuConfigurationFreeLabelsFType, SankeyPlusMenuPreferenceLabelsFType, blur_ZDT_wysiwygFType, context_zdtFType, zdtMenuAsAccordeonItemType } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
+import { SankeyPlusContextMenuType, SankeyPlusData,SankeyPlusLabel} from '../types/Types'
+import {
+  SankeyPlusMenuConfigurationFreeLabelsFType,
+  SankeyPlusMenuPreferenceLabelsFType,
+  blur_ZDT_wysiwygFType,
+  context_zdtFType,
+  zdtMenuAsAccordeonItemType
+} from '../types/SankeyPlusMenuConfigurationLabelsTypes'
+
+// OpenSankey libs
+import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
+import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
+/**
+ *  TODO
+ *
+ * @param { TFunction } t - TODO description
+ * @param { SankeyPlusData } data - TODO description
+ * @param { Function } set_data - TODO description
+ *
+ */
 export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFType = (
   t:TFunction,
   data:SankeyPlusData,
   set_data:(_:SankeyPlusData)=>void
 )=>{
   return <InputGroup>
-    <Checkbox 
+    <Checkbox
       sx={SmoothClasses({})}
       maxW={'30%'}
       isChecked={data.accordeonToShow.includes('LL')}
@@ -179,9 +206,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     })
     return (display_size) ? opa : 0
   }
-  
+
   const valAllLabelBorderTransparent=IsAllZdtAttrSameValue(data,multi_selected_label.current,'transparent_border') as boolean[]
- 
+
   // Create a custom size list of font-size
   const list_size=[]
   for(let i=6;i<=50;i++){
@@ -204,9 +231,18 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     ],
   }
 
-  const formats = ['font','size',
-    'bold', 'italic', 'underline', 'strike','color','background',
-    'list', 'bullet','align'
+  const formats = [
+    'font',
+    'size',
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'color',
+    'background',
+    'list',
+    'bullet',
+    'align'
   ]
 
   const disable_options = is_activated? (multi_selected_label.current.length === 0):true
@@ -215,7 +251,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
-  const editor_fo=<ReactQuill
+  const editor_fo = <ReactQuill
     className='quill_editor'
     value={s_editor_content_fo_zdt}
     ref={r_editor_ZDT}
@@ -238,7 +274,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       backgroundColor:(disable_options)?'#cccccc':''}}
   />
 
-  const content_wysiwyg=<Form>
+  const content_wysiwyg = <Form>
     <Form className='FO_zdt_editeur'>
       <Form.Group>
         {editor_fo}
@@ -255,11 +291,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       <FormControl.Feedback type='invalid'>{t('MEP.onBlurNoEnter')}</FormControl.Feedback>
 
     </Form>
-
-
   </Form>
 
-  const content_image=<>
+  const content_image = <>
     {/* Import image */}
     <OverlayTrigger
       key={'imageDisabled2'}
@@ -404,6 +438,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         }}
       />
     </InputGroup>
+
     <InputGroup key={'node_illustration_type'} >
       <InputGroup.Text style={{width:'40%',
         color:(disable_options)?'#666666':'',
@@ -440,7 +475,6 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     </InputGroup>
 
     {button_icon_or_image==='zdt'?content_wysiwyg:content_image}
-
 
     <InputGroup>
       <InputGroup.Text
@@ -573,7 +607,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         }}
       />
 
-      <Checkbox 
+      <Checkbox
         sx={SmoothClasses({})}
         maxW={'50%'}
         iconColor={valAllLabelBorderTransparent[1]?'#78C2AD':'white'}
@@ -677,7 +711,7 @@ export const blur_ZDT_wysiwyg : blur_ZDT_wysiwygFType = (
  * @param {boolean} is_activated
  * @param {TFunction} t
  * @param {JSX.Element} content_menu_zdt
- * @return {*} 
+ * @return {*}
  */
 export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
   data,
@@ -685,26 +719,33 @@ export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
   applicationContext,
   content_menu_zdt
 )=>{
-  const {ref_nav_item_active,ref_setter_sub_nav_item_active,zdt_accordion_ref}=uiElementsRef
+  // const {ref_nav_item_active,ref_setter_sub_nav_item_active,zdt_accordion_ref}=uiElementsRef
   const {t,has_open_sankey_plus} = applicationContext
-  return <Accordion.Item
-    key='9'
-    id="LL"
-    eventKey="ZDT"
-    ref={zdt_accordion_ref}
-    style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'block' : 'none' }}
-    onClick={evt => {
-      if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === 'ZDT') {
-        ref_setter_sub_nav_item_active.current!('')
-        // ref_setter_show_menu_config.current(true)
-      } else {
-        ref_setter_sub_nav_item_active.current!('ZDT')
-        // ref_setter_show_menu_config.current(true)
-      }
-    }}
+  return <AccordionItem
+    // key='9'
+    // id="LL"
+    // eventKey="ZDT"
+    //
+    style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'initial' : 'none' }}
+    // onClick={evt => {
+    //   if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === 'ZDT') {
+    //     ref_setter_sub_nav_item_active.current!('')
+    //     // ref_setter_show_menu_config.current(true)
+    //   } else {
+    //     ref_setter_sub_nav_item_active.current!('ZDT')
+    //     // ref_setter_show_menu_config.current(true)
+    //   }
+    // }}
   >
-    <Accordion.Header className='level2'>
-      {t('Menu.LL')}
+    <AccordionButton
+      ref={uiElementsRef.zdt_accordion_ref as Ref<HTMLButtonElement>}
+    >
+      <Box
+        as='span'
+        layerStyle='submenuconfig_entry'
+      >
+        {t('Menu.LL')}
+      </Box>
       {(!has_open_sankey_plus)?
         <OverlayTrigger
           key={'textZoneDisabled'}
@@ -721,9 +762,10 @@ export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
                 color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           </Badge>
         </OverlayTrigger>:<></>}
-    </Accordion.Header>
-    <Accordion.Body>
+      <AccordionIcon/>
+    </AccordionButton>
+    <AccordionPanel>
       {content_menu_zdt}
-    </Accordion.Body>
-  </Accordion.Item>
+    </AccordionPanel>
+  </AccordionItem>
 }

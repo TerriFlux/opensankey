@@ -1,8 +1,9 @@
+// Standard libs
 import React, { ChangeEvent, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import LZString from 'lz-string'
-import { Accordion,
+import {
   Button,
   ButtonGroup,
   Col,
@@ -16,33 +17,61 @@ import { Accordion,
   Popover,
   Modal,
   InputGroup,
-  Overlay } from 'react-bootstrap'
+  Overlay
+} from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
 import { FaArrowDown, FaArrowUp, FaMinus, FaSave,FaCheck,FaCopy} from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock,faListCheck, faXmark,faExclamation,faFloppyDisk} from '@fortawesome/free-solid-svg-icons'
 
+// Imported libs
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLock, faListCheck, faXmark, faExclamation, faFloppyDisk } from '@fortawesome/free-solid-svg-icons'
+import {
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  Box,
+  Checkbox
+} from '@chakra-ui/react'
+
+// OpenSankey Libs
 import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
 import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
-import { 
-  MenuEnregistrerViewFType, OpenSankeyPlusCheckpointButtonFType, SankeyPlusBannerViewFType, 
-  SankeyPlusMenuPreferenceViewFType, CheckCurrentViewSavedFType, FilterViewFType, 
-  GetDataFromViewFType, keyHandlerFType, modal_transparent_view_attrFType, 
-  modal_view_not_savedFType, RecomputeViewsFType, SelecteurViewFType, getSetDiagramFType, 
-  setValueFType, view_toastFType, view_toast_update_viewFType, viewsAccordionFType
+
+// Local libs
+import {
+  CheckCurrentViewSavedFType,
+  FilterViewFType,
+  GetDataFromViewFType,
+  getSetDiagramFType,
+  keyHandlerFType,
+  MenuEnregistrerViewFType,
+  modal_transparent_view_attrFType,
+  modal_view_not_savedFType,
+  OpenSankeyPlusCheckpointButtonFType,
+  RecomputeViewsFType,
+  SankeyPlusBannerViewFType,
+  SankeyPlusMenuPreferenceViewFType,
+  SelecteurViewFType,
+  setValueFType,
+  view_toast_update_viewFType,
+  view_toastFType,
+  viewsAccordionFType
 } from '../types/SankeyPlusViewsTypes'
 
-import { SankeyPlusData,
+import {
+  SankeyPlusData,
   SankeyPlusLabel,
   differenceType,
   DiffType,
-  ViewType, 
-  SankeyPlusApplicationDataType} from '../types/Types'
+  ViewType,
+  SankeyPlusApplicationDataType
+} from '../types/Types'
 import {
   updateLayoutOSTyped,
-  AdjustSankeyZone } from './import/OpenSankey'
+  AdjustSankeyZone
+} from './import/OpenSankey'
 import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
-import { Checkbox } from '@chakra-ui/react'
 
 /* eslint-disable */
 // @ts-ignore
@@ -152,7 +181,7 @@ export const GetDataFromView : GetDataFromViewFType = (
   updateLayoutOSTyped(data_init,master_data,view_object.heredited_attr_from_master)
   // updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
   return data_init
-  
+
 }
 
 export const FilterView : FilterViewFType =(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
@@ -185,7 +214,7 @@ export const RecomputeViews : RecomputeViewsFType = (
         return
       }
       const data_view=GetDataFromView(prev_master_data,current_v.id) as SankeyPlusData
-      
+
       if((current_v.view_data as SankeyPlusData).version){
         current_v.view_data=data_view
       }else{
@@ -196,7 +225,7 @@ export const RecomputeViews : RecomputeViewsFType = (
           (current_v.view_data as DiffType).diff = difference
         }
       }
-      
+
     })
   }
   // master data is now set
@@ -279,8 +308,8 @@ export const keyHandler : keyHandlerFType = (
         heredited_attr_from_master:[]
 
       })
-      
-     
+
+
       // master data is now set
       master_data!.current_view=new_ind
       set_view(new_ind)
@@ -638,205 +667,207 @@ export const viewsAccordion : viewsAccordionFType = (
 ) => {
   const {data,set_data,master_data,set_master_data,view,set_view}= dict_variable_application_data
 
-  
+
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
-  return <><Accordion.Item
-    id='Visualisation'
-    style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'block' : 'none' }}
-    eventKey="Visualisation"
-    onClick={
-      evt => {
-        if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && uiElementsRef.ref_nav_item_active.current === 'Visualisation') {
-          uiElementsRef.ref_setter_nav_item_active.current!('')
-        } else {
-          uiElementsRef.ref_setter_nav_item_active.current!('Visualisation')
-        }
-      }
-    }>
-    <Accordion.Header>
-      {t('view.storytelling')}
-      {(!is_activated)?
-        <OverlayTrigger
-          key={'textZoneDisabled'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+  return <>
+    <AccordionItem
+      // id='Visualisation'
+      style={{ 'display': (data.accordeonToShow.includes('Vis')) ? 'initial' : 'none' }}
+      // eventKey="Visualisation"
+      // onClick={
+      //   evt => {
+      //     if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && uiElementsRef.ref_nav_item_active.current === 'Visualisation') {
+      //       uiElementsRef.ref_setter_nav_item_active.current!('')
+      //     } else {
+      //       uiElementsRef.ref_setter_nav_item_active.current!('Visualisation')
+      //     }
+      //   }
+      // }
+    >
+      <AccordionButton>
+        <Box
+          as='span'
+          layerStyle='menuconfig_entry'
         >
-          <Badge pill
-            bg="white"
-            style={{marginLeft:'5px', fontSize:'1.3em'}}>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Badge>
-        </OverlayTrigger>:
-        <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge>}
-    </Accordion.Header>
-    <Accordion.Body>
+          {t('view.storytelling')}
+        </Box>
+        {(!is_activated)?
+          <OverlayTrigger
+            key={'textZoneDisabled'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+          >
+            <Badge pill
+              bg="white"
+              style={{marginLeft:'5px', fontSize:'1.3em'}}>
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{
+                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+            </Badge>
+          </OverlayTrigger>:
+          <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge>}
+        <AccordionIcon/>
+      </AccordionButton>
+      <AccordionPanel>
+        <InputGroup>
+          <InputGroup.Text
+            style={{
+              color:!(is_activated)?'#666666':'',
+              backgroundColor:!(is_activated)?'#cccccc':'',
+              width:'50%'}}>
+            {t('view.select')}
+          </InputGroup.Text>
+          <>{view_selector}</>
+        </InputGroup>
 
-      <InputGroup>
-        <InputGroup.Text
-          style={{
-            color:!(is_activated)?'#666666':'',
-            backgroundColor:!(is_activated)?'#cccccc':'',
-            width:'50%'}}>
-          {t('view.select')}
-        </InputGroup.Text>
-        <>{view_selector}</>
-          
-      </InputGroup>
-
-      <Form>
-        <Table bordered size='sm'
-          style={{
-            color:!(is_activated)?'#666666':'',
-            backgroundColor:!(is_activated)?'#cccccc':''}}>
-          <thead>
-            <tr>
-              <th>{t('view.name')}</th>
-              <th>Position</th>
-              <th>{t('view.delete')}</th>
-              {/* <th>{t('view.copy')}</th>
-              <th>{t('view.import')}</th>
-              <th>{t('view.export')}</th> */}
-            </tr>
-          </thead>
-          <tbody>
-            {master_data ? Object.values(master_data.view).map(d => {
-              return (
-                <tr style={{ 'border': (d.id === view) ? '2px solid #5a9282' : 'none' }}>
-                  <td><FormControl size='sm'
-                    value={d.nom}
-                    disabled={!is_activated}
-                    onChange={evt => {
-                      // Change the name of the view
-                      master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
-                      set_master_data({...master_data})
-                    }}
-                  /></td>
-                  <td>
-                    {/* Change the position of the view in the liste of view from master data */}
-                    <ButtonGroup className="button_position" size="sm">
-                      <Button
-                        size="sm"
-                        variant="light"
-                        disabled={!is_activated}
-                        onClick={
-                          () => {
-                            let ind = -1
-                            master_data.view.map((v, i) => {
-                              ind = (v.id === d.id) ? i : ind
-                            })
-                            const toShift = master_data.view[ind]
-                            master_data.view.splice(ind, 1)
-                            master_data.view.splice(ind - 1, 0, toShift)
-                            set_master_data({...master_data})
-                            set_data({ ...data })
-                          }
-                        }
-                      ><FaArrowUp /></Button><Button
-                        size="sm"
-                        variant="light"
-                        disabled={!is_activated}
-                        onClick={
-                          () => {
-                            let ind = -1
-                            master_data.view.map((v, i) => {
-                              ind = (v.id === d.id) ? i : ind
-                            })
-                            const toShift = master_data.view[ind]
-                            master_data.view.splice(ind, 1)
-                            master_data.view.splice(ind + 1, 0, toShift)
-                            set_master_data({...master_data})
-                            set_data({ ...data })
-                          }
-                        }
-                      ><FaArrowDown /></Button>
-                    </ButtonGroup>
-
-                  </td>
-                  <td><Button
-                    size="sm"
-                    variant='light'
-                    disabled={!is_activated}
-                    onClick={
-                      // Delete the view
-                      () => {
-                        let ind = -1
-                        master_data.view.map((v, i) => {
-                          ind = (v.id === d.id) ? i : ind
-                        })
-                        master_data.view.splice(ind, 1)
-                        // If master is not a catalog & we delete the current view then we go to master
-                        // If master is a catalog and the catalog of view is empty then we got to master 
-                        if((master_data.current_view===view && master_data.is_catalog===false) || (master_data.view.length===0 && master_data.is_catalog===true)){
-                          set_view('none')
-                          set_data({ ...master_data })
-                        }else if(master_data.is_catalog && master_data.view.length>0){
-                        // If master is a catalog and the catalog is not empty then we got to the first view 
-                          set_view(master_data.view[0].id)
-                          const tmp=GetDataFromView(master_data,master_data.view[0].id) as SankeyPlusData
-                          set_data({ ...tmp })
-                        }
-                        if(master_data.view.length===0){
-                          master_data.is_catalog=false
-                          set_data({...master_data})
-
-                        }
+        <Form>
+          <Table bordered size='sm'
+            style={{
+              color:!(is_activated)?'#666666':'',
+              backgroundColor:!(is_activated)?'#cccccc':''}}>
+            <thead>
+              <tr>
+                <th>{t('view.name')}</th>
+                <th>Position</th>
+                <th>{t('view.delete')}</th>
+                {/* <th>{t('view.copy')}</th>
+                <th>{t('view.import')}</th>
+                <th>{t('view.export')}</th> */}
+              </tr>
+            </thead>
+            <tbody>
+              {master_data ? Object.values(master_data.view).map(d => {
+                return (
+                  <tr style={{ 'border': (d.id === view) ? '2px solid #5a9282' : 'none' }}>
+                    <td><FormControl size='sm'
+                      value={d.nom}
+                      disabled={!is_activated}
+                      onChange={evt => {
+                        // Change the name of the view
+                        master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
                         set_master_data({...master_data})
+                      }}
+                    /></td>
+                    <td>
+                      {/* Change the position of the view in the liste of view from master data */}
+                      <ButtonGroup className="button_position" size="sm">
+                        <Button
+                          size="sm"
+                          variant="light"
+                          disabled={!is_activated}
+                          onClick={
+                            () => {
+                              let ind = -1
+                              master_data.view.map((v, i) => {
+                                ind = (v.id === d.id) ? i : ind
+                              })
+                              const toShift = master_data.view[ind]
+                              master_data.view.splice(ind, 1)
+                              master_data.view.splice(ind - 1, 0, toShift)
+                              set_master_data({...master_data})
+                              set_data({ ...data })
+                            }
+                          }
+                        ><FaArrowUp /></Button><Button
+                          size="sm"
+                          variant="light"
+                          disabled={!is_activated}
+                          onClick={
+                            () => {
+                              let ind = -1
+                              master_data.view.map((v, i) => {
+                                ind = (v.id === d.id) ? i : ind
+                              })
+                              const toShift = master_data.view[ind]
+                              master_data.view.splice(ind, 1)
+                              master_data.view.splice(ind + 1, 0, toShift)
+                              set_master_data({...master_data})
+                              set_data({ ...data })
+                            }
+                          }
+                        ><FaArrowDown /></Button>
+                      </ButtonGroup>
+
+                    </td>
+                    <td><Button
+                      size="sm"
+                      variant='light'
+                      disabled={!is_activated}
+                      onClick={
+                        // Delete the view
+                        () => {
+                          let ind = -1
+                          master_data.view.map((v, i) => {
+                            ind = (v.id === d.id) ? i : ind
+                          })
+                          master_data.view.splice(ind, 1)
+                          // If master is not a catalog & we delete the current view then we go to master
+                          // If master is a catalog and the catalog of view is empty then we got to master
+                          if((master_data.current_view===view && master_data.is_catalog===false) || (master_data.view.length===0 && master_data.is_catalog===true)){
+                            set_view('none')
+                            set_data({ ...master_data })
+                          }else if(master_data.is_catalog && master_data.view.length>0){
+                          // If master is a catalog and the catalog is not empty then we got to the first view
+                            set_view(master_data.view[0].id)
+                            const tmp=GetDataFromView(master_data,master_data.view[0].id) as SankeyPlusData
+                            set_data({ ...tmp })
+                          }
+                          if(master_data.view.length===0){
+                            master_data.is_catalog=false
+                            set_data({...master_data})
+
+                          }
+                          set_master_data({...master_data})
+                        }
                       }
-                    }
-                  ><FaMinus /></Button></td>
-                  
+                    ><FaMinus /></Button></td>
+                  </tr>
+                )
+              }) : <></>}
+            </tbody>
+          </Table>
+        </Form>
+      </AccordionPanel>
+    </AccordionItem>
 
-                </tr>
-              )
-            }) : <></>}
-          </tbody>
-        </Table>
-      </Form>
-    </Accordion.Body>
-  </Accordion.Item>
+    <Form.Control
+      type="file"
+      ref={_load_json}
+      style={{ display: 'none' }}
+      onChange={(evt: ChangeEvent) => {
+        const files = (evt.target as HTMLFormElement).files
+        const reader = new FileReader()
 
-  <Form.Control
-    type="file"
-    ref={_load_json}
-    style={{ display: 'none' }}
-    onChange={(evt: ChangeEvent) => {
-      const files = (evt.target as HTMLFormElement).files
-      const reader = new FileReader()
+        reader.onload = (() => {
+          return (e: ProgressEvent<FileReader>) => {
+            const result = String((e.target as FileReader).result)
+            const result_data = JSON.parse(result)
+            let ind = -1
+            master_data!.view.map((v, i) => {
+              ind = (v.id === _load_json.current?.id) ? i : ind
+            })
+            const cur_view = master_data!.view[ind]
+            const imported_data=JSON.parse(JSON.stringify(result_data))
+            imported_data.view=[]
+            convert_data(imported_data,DefaultSankeyData)
+            let difference = deep_diff.diff(master_data,imported_data)
+            difference=JSON.parse(JSON.stringify((difference !== undefined)?difference:[]))
+            difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+            cur_view.view_data = {diff:difference}
 
-      reader.onload = (() => {
-        return (e: ProgressEvent<FileReader>) => {
-          const result = String((e.target as FileReader).result)
-          const result_data = JSON.parse(result)
-          let ind = -1
-          master_data!.view.map((v, i) => {
-            ind = (v.id === _load_json.current?.id) ? i : ind
-          })
-          const cur_view = master_data!.view[ind]
-          const imported_data=JSON.parse(JSON.stringify(result_data))
-          imported_data.view=[]
-          convert_data(imported_data,DefaultSankeyData)
-          let difference = deep_diff.diff(master_data,imported_data)
-          difference=JSON.parse(JSON.stringify((difference !== undefined)?difference:[]))
-          difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-          cur_view.view_data = {diff:difference}
+            cur_view.nom = (files[0].name).replace('.json','')
 
-          cur_view.nom = (files[0].name).replace('.json','')
-
-          set_master_data({...master_data!})
-          set_data({...imported_data})
-          set_view(cur_view.id)
-        }
-      })()
-      reader.readAsText(files[0])
-    }}
-  />
-
-
+            set_master_data({...master_data!})
+            set_data({...imported_data})
+            set_view(cur_view.id)
+          }
+        })()
+        reader.readAsText(files[0])
+      }}
+    />
   </>
 }
 
@@ -1048,12 +1079,12 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             })
             master_data!.view.splice(ind, 1)
             // If master is not a catalog & we delete the current view then we go to master
-            // If master is a catalog and the catalog of view is empty then we got to master 
+            // If master is a catalog and the catalog of view is empty then we got to master
             if((master_data!.current_view===view && master_data!.is_catalog===false) || (master_data!.view.length===0 && master_data!.is_catalog===true)){
               set_view('none')
               set_data({ ...master_data! })
             }else if(master_data!.is_catalog && master_data!.view.length>0){
-              // If master is a catalog and the catalog is not empty then we got to the first view 
+              // If master is a catalog and the catalog is not empty then we got to the first view
               set_view(master_data!.view[0].id)
               const tmp=GetDataFromView(master_data,master_data!.view[0].id) as SankeyPlusData
               set_data({ ...tmp })
@@ -1080,13 +1111,13 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.delete')}</Col></Button></span>
   </OverlayTrigger>
 
-  
+
 
   const popover_modify_view_name=
   <Popover id="popover-link-filter" style={{maxWidth:'100%','overflowY':'auto'}}>
     <Popover.Header as="h3">{t('view.modify_name_view')}</Popover.Header>
     <Popover.Body >
-      <Form.Control 
+      <Form.Control
         type='text'
         value={master_data && master_data.current_view && master_data.current_view!=='none'?master_data.view.filter(v=>v.id===master_data!.current_view)[0].nom:''}
         onChange={(evt)=>{
@@ -1098,8 +1129,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
       </Form.Control>
     </Popover.Body>
   </Popover>
-  
-  
+
+
   const file_reder_for_catalog=<Form.Control
     type="file"
     multiple
@@ -1333,7 +1364,7 @@ export const SankeyPlusMenuPreferenceView : SankeyPlusMenuPreferenceViewFType =(
   preferenceCheck:(str: string, data: SankeyPlusData) => void
 )=>{
   return <InputGroup>
-    <Checkbox 
+    <Checkbox
       sx={SmoothClasses({})}
       maxW={'30%'}
       isChecked={data.accordeonToShow.includes('Vis')}
@@ -1478,13 +1509,13 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
     <Modal.Header closeButton>{t('view.setTransparentAttr')}</Modal.Header>
     <Modal.Body>
       <InputGroup>
-            
+
         <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Topology')}</InputGroup.Text>
-         
-        <Button 
+
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('addNode')?'primary':'outline-primary'} 
+          variant={ current_view.heredited_attr_from_master.includes('addNode')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('addNode')){
               current_view.heredited_attr_from_master.push('addNode')
@@ -1498,10 +1529,10 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
         >{t('Menu.Transformation.addNode')}</Button>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('removeNode')?'primary':'outline-primary'} 
+          variant={ current_view.heredited_attr_from_master.includes('removeNode')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('removeNode')){
               current_view.heredited_attr_from_master.push('removeNode')
@@ -1515,10 +1546,10 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
         >{t('Menu.Transformation.removeNode')}</Button>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('addFlux')?'primary':'outline-primary'} 
+          variant={ current_view.heredited_attr_from_master.includes('addFlux')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('addFlux')){
               current_view.heredited_attr_from_master.push('addFlux')
@@ -1531,10 +1562,10 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
           }>{t('Menu.Transformation.addFlux')}</Button>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('removeFlux')?'primary':'outline-primary'} 
+          variant={ current_view.heredited_attr_from_master.includes('removeFlux')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('removeFlux')){
               current_view.heredited_attr_from_master.push('removeFlux')
@@ -1546,16 +1577,16 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
 
           }
           }>{t('Menu.Transformation.removeFlux')}</Button>
-            
-      </InputGroup>           
+
+      </InputGroup>
       <InputGroup>
-            
+
         <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('posNode')?'primary':'outline-primary'} 
+          variant={ current_view.heredited_attr_from_master.includes('posNode')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('posNode')){
               current_view.heredited_attr_from_master.push('posNode')
@@ -1568,10 +1599,10 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
           }>{t('Menu.Transformation.PosNoeud')}</Button>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('posFlux')?'primary':'outline-primary'} 
+          variant={ current_view.heredited_attr_from_master.includes('posFlux')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('posFlux')){
               current_view.heredited_attr_from_master.push('posFlux')
@@ -1583,16 +1614,16 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
 
           }
           }> {t('Menu.Transformation.posFlux')}</Button>
-            
+
       </InputGroup>
       <InputGroup>
-            
+
         <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Values')}</InputGroup.Text>
 
-        <Button 
-          className='btn_menu_config' 
+        <Button
+          className='btn_menu_config'
           style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('Values')?'primary':'outline-primary'} 
+          variant={ current_view.heredited_attr_from_master.includes('Values')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('Values')){
               current_view.heredited_attr_from_master.push('Values')
@@ -1605,21 +1636,21 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
           }
         >{current_view.heredited_attr_from_master.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-            
+
       </InputGroup>
       <InputGroup>
-            
+
         <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('attrNode')?'primary':'outline-primary'} 
+          variant={current_view.heredited_attr_from_master.includes('attrNode')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('attrNode')){
               current_view.heredited_attr_from_master.push('attrNode')
-                    
-    
+
+
             }else{
               current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'),1)
             }
@@ -1630,10 +1661,10 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
         >{t('Menu.Transformation.attrNode')}</Button>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('attrFlux')?'primary':'outline-primary'} 
+          variant={current_view.heredited_attr_from_master.includes('attrFlux')?'primary':'outline-primary'}
           onClick={() =>{
             if(!current_view.heredited_attr_from_master.includes('attrFlux')){
               current_view.heredited_attr_from_master.push('attrFlux')
@@ -1646,16 +1677,16 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
           }
         >{t('Menu.Transformation.attrFlux')}</Button>
-            
+
       </InputGroup>
       <InputGroup>
-            
+
         <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Tags')}</InputGroup.Text>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('tagNode')?'primary':'outline-primary'} 
+          variant={current_view.heredited_attr_from_master.includes('tagNode')?'primary':'outline-primary'}
           onClick={() =>{
             if(!current_view.heredited_attr_from_master.includes('tagNode')){
               current_view.heredited_attr_from_master.push('tagNode')
@@ -1668,10 +1699,10 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
         >{t('Menu.Transformation.tagNode')}</Button>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('tagFlux')?'primary':'outline-primary'} 
+          variant={current_view.heredited_attr_from_master.includes('tagFlux')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('tagFlux')){
               current_view.heredited_attr_from_master.push('tagFlux')
@@ -1685,7 +1716,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
         >{t('Menu.Transformation.tagFlux')}</Button>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
           variant={current_view.heredited_attr_from_master.includes('tagData')?'primary':'outline-primary'}
@@ -1701,16 +1732,16 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
           }
         >{t('Menu.Transformation.tagData')}</Button>
-            
+
       </InputGroup>
       <InputGroup>
-            
+
         <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('tagLevel')?'primary':'outline-primary'} 
+          variant={current_view.heredited_attr_from_master.includes('tagLevel')?'primary':'outline-primary'}
           onClick={() => {
             if(!current_view.heredited_attr_from_master.includes('tagLevel')){
               current_view.heredited_attr_from_master.push('tagLevel')
@@ -1723,16 +1754,16 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
           }
         >{current_view.heredited_attr_from_master.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-            
+
       </InputGroup>
       <InputGroup>
-            
+
         <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
 
-        <Button 
+        <Button
           className='btn_menu_config'
           style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('attrGeneral')?'primary':'outline-primary'} 
+          variant={current_view.heredited_attr_from_master.includes('attrGeneral')?'primary':'outline-primary'}
           onClick={() =>{
             if(!current_view.heredited_attr_from_master.includes('attrGeneral')){
               current_view.heredited_attr_from_master.push('attrGeneral')
@@ -1745,7 +1776,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
           }
           }
         >{current_view.heredited_attr_from_master.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-            
+
       </InputGroup>
 
     </Modal.Body>
@@ -1771,7 +1802,7 @@ export const MenuEnregistrerView : MenuEnregistrerViewFType = (
       delay={500}
       overlay={<Tooltip id={'buttonExportView'}>{t('view.tooltips.buttonExportView')} </Tooltip>}
     >
-      <Checkbox 
+      <Checkbox
         sx={SmoothClasses({})}
         maxW={'40%'}
         isChecked={save_only_view}
@@ -1787,7 +1818,7 @@ export const MenuEnregistrerView : MenuEnregistrerViewFType = (
 export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFType = (
   master_data:SankeyPlusData|undefined,
   data:SankeyPlusData,
-  view:string, 
+  view:string,
   view_not_saved:string,
   connected:boolean,
   t:TFunction
@@ -1827,7 +1858,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
       <FontAwesomeIcon
         icon={faFloppyDisk}
         style={{opacity:(!connected)?'0.6':'1',width:'2rem',height:'2rem'}}/>
-      {!connected?<>          
+      {!connected?<>
         <FontAwesomeIcon
           icon={faLock}
           style={{
@@ -1849,7 +1880,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
 
 
 // const getNodeFromTree=(path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
-      
+
 //   if(tree.children && path.length>0){
 //     const index=path.shift()??-1
 //     const sub_tree=tree.children[index]
