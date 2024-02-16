@@ -630,20 +630,6 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
 
     <Row className='input_row'>
       <Col>
-        <Checkbox
-          sx={SmoothClasses({})}
-          iconColor={!data.display_style.null_flux?'#78C2AD':'white'}
-          isChecked={data.display_style.null_flux}
-          onChange={(evt) => {
-            data.display_style.null_flux=evt.target.checked
-            set_data({ ...data })
-          }}>
-          {t('Banner.fn')}
-        </Checkbox>
-      </Col>
-    </Row>
-    <Row className='input_row'>
-      <Col>
         {additional_link_appearence_items}
       </Col>
     </Row>
