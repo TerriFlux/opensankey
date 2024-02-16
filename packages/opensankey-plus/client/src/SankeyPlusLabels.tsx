@@ -4,7 +4,7 @@ import { SankeyData } from 'open-sankey/src/types/Types'
 import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {
-  PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType, 
+  PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType,
   sankey_plus_zoom_text_zoneFType, zone_selection_labelFType
 } from '../types/SankeyPlusLabelsTypes'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
@@ -62,8 +62,6 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
         .attr('stroke-width', ((multi_selected_label.current.includes(d))?3:1))
         .attr('rx', 5)
 
-      
-
       draw_text_zone_handles(data_plus,d,multi_selected_label,set_data)
 
       gg_label.on('click', (event) => eventLabelClick(event,d,data_plus,uiElementsRef,d_setter_input_value,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links))
@@ -87,6 +85,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
           }
         }
       })
+
       // Traite les labels qui sont des zone de texte
       gg_label
         .filter(()=>!d.is_image)
@@ -109,7 +108,6 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
         .style('height',d.label_height)
         .attr('id', d.idLabel + '_img')
         .attr('href',d.image_src)
-
 
       gg_label.call(
         dragLabelEvent(
@@ -154,18 +152,35 @@ export const eventLabelClick : eventLabelClickFType =(
   multi_selected_links,
 )=>{
 
-  const {button_ref,accordion_ref,zdt_accordion_ref} =uiElementsRef
+  const { button_ref, accordion_ref, zdt_accordion_ref } =uiElementsRef
   if ((event.ctrlKey || event.metaKey )&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     const sankeyTooltip=d3.select('.sankey-tooltip')
 
     sankeyTooltip.style('opacity', 0)
+
+    // Open side panel
     if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current === null) {
       button_ref.current.click()
     }
 
+    // Open element accordion if not already openend
+    if (
+      accordion_ref &&
+      accordion_ref.current &&
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
+      accordion_ref.current.click()
+    }
 
-    if (zdt_accordion_ref && zdt_accordion_ref.current) {
-      zdt_accordion_ref.current.click()
+    // Open node accordion if not already openend
+    if ( accordion_ref && accordion_ref.current) {
+      if (
+        zdt_accordion_ref &&
+        zdt_accordion_ref.current &&
+        d3.select(zdt_accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        zdt_accordion_ref.current.click()
+      }
     }
 
     d3.select('#'+d.idLabel+ ' rect').attr('stroke-width',(multi_selected_label.current.includes(d))?3:1)
@@ -182,16 +197,6 @@ export const eventLabelClick : eventLabelClickFType =(
 
     set_data({ ...data })
 
-    if ( accordion_ref && accordion_ref.current) {
-      let index_LL=-1
-      //Loop sur le tableau d'item via un for car les HTMLCollection ressemblent à des tableaux mais n'en sont pas (on peut pas faire de map,filter,join ...)
-      for (let i = 0; i < accordion_ref.current.children.length; i++) {
-        index_LL=(accordion_ref.current.children[i] === (accordion_ref.current.children as HTMLCollection).namedItem('LL'))?i:index_LL
-      }
-      if(index_LL !== -1){
-        (accordion_ref.current.children[index_LL] as HTMLLabelElement).click()
-      }
-    }
 
   }else{
     multi_selected_label.current=[]
@@ -227,7 +232,7 @@ const dragLabelEvent = (
 
       if(multi_selected_label.current.includes(d)){
         d3.selectAll('.node_shape').nodes().forEach(element => {
-          node_visible.push(d3.select(element).attr('id')) 
+          node_visible.push(d3.select(element).attr('id'))
         })
       }else if(ref_getter_mode_selection.current==='s' && !evt.ctrlKey){
         // const pos = d3.pointer(evt)
@@ -236,7 +241,7 @@ const dragLabelEvent = (
         d3.select('#svg').append('g').attr('class','selection_zone')
           .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
       }
-      
+
     })
     .subject(Object).on('drag', function (event) {
       if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
@@ -244,17 +249,17 @@ const dragLabelEvent = (
         const pos = [event.x,event.y]
         const new_x=(pos[0]>start_point.current[0])?start_point.current[0]:pos[0]
         const new_w=(pos[0]>start_point.current[0])?(pos[0]-start_point.current[0]):start_point.current[0]-pos[0]
-    
+
         const new_y=(pos[1]>start_point.current[1])?start_point.current[1]:pos[1]
         const new_h=(pos[1]>start_point.current[1])?(pos[1]-start_point.current[1]):start_point.current[1]-pos[1]
-    
+
         d3.select('.selection_zone rect').attr('x',new_x)
         d3.select('.selection_zone rect').attr('y',new_y)
         d3.select('.selection_zone rect').attr('width',Math.abs(new_w))
         d3.select('.selection_zone rect').attr('height',Math.abs(new_h))
       }else{
         // Drag zdt
-        // Cherche si des element seront hors zone si on les drag 
+        // Cherche si des element seront hors zone si on les drag
         // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
         const out_of_zone_item=PlusReturnOutOfBoundElements(d,data,event,multi_selected_nodes,node_visible)
         // Pousse les element non sélectionnés dans la direction opposé
@@ -307,15 +312,15 @@ const dragLabelEvent = (
         // multi_selected_links.current.forEach(l=>DeselectVisualyLinks(l))
         // multi_selected_links.current=[]
         start_point.current=[0,0]
-        
+
         d3.selectAll('.selection_zone').remove()
         set_data(data)
 
       }else if (multi_selected_label.current.length>0){
         set_data(data)
       }
-      
-      
+
+
     })
   )
 }
@@ -345,7 +350,7 @@ export const zone_selection_label : zone_selection_labelFType = (
   multi_selected_label:{current:SankeyPlusLabel[]},
   evt:MouseEvent
 )=>{
-  
+
   if( d3.selectAll('.selection_zone').nodes().length>0){
     const z_x=Number(d3.select('.selection_zone rect').attr('x'))
     const z_y=Number(d3.select('.selection_zone rect').attr('y'))
@@ -396,7 +401,7 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{curre
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
     .call(drag_text_zone_hande(zdt,pos,data,set_data))
-  // Position the handle 
+  // Position the handle
   switch (pos){
   case 'top':
     gg_zdt_h_circle
@@ -430,7 +435,7 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,s
   const g_text_zone=d3.select('#'+zdt.idLabel)
   return d3.drag<SVGRectElement, unknown, HTMLElement>()
     .subject(Object)
-        
+
     .on('drag', function (event) {
       // The handles change the width and height of the text_zone
       // The top and left handles also shift the x/y of text zone
@@ -482,7 +487,7 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,s
     })
     .on('end',()=>set_data(data))
 
-        
+
 }
 
 
