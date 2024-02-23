@@ -68,7 +68,7 @@ a:hover{color:#c0392b}
 .button-transparent a, .button-transparent_2 a {
 	border-color:#c0392b;
 }
-.button-transparent a:hover, , .button-transparent_2 a:hover {
+.button-transparent a:hover, .button-transparent_2 a:hover {
 	background-color:#c0392b;
 }
 .button-quote a:hover {
