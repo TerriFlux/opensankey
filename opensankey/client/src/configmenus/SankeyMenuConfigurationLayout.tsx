@@ -382,7 +382,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
       <Row>
         <Col>
           <Checkbox
-            isChecked={data.mask_legend}
+            isChecked={data.display_legend_scale}
             iconColor='white'
             checked={data.display_legend_scale}
             onChange={(evt) => {
