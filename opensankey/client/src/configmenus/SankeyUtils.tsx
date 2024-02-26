@@ -211,6 +211,8 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   const top_flux: string[] = []
   const bottom_flux: string[] = []
 
+  const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
   node.outputLinksId.filter(lid=>display_links[lid]).forEach(
     (idLink) => {
       const link = links[idLink]
@@ -340,7 +342,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !extension.free_visible
+                      !special_data_cast.free_null_link_visible
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_width_top += inv_scale(5)
@@ -374,7 +376,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !extension.free_visible
+                      !special_data_cast.free_null_link_visible
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_width_bottom += inv_scale(5)
@@ -409,7 +411,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !extension.free_visible
+                      !special_data_cast.free_null_link_visible
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_left += inv_scale(5)
@@ -444,7 +446,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
                       data.show_structure !== 'free_value' &&
-                      !extension.free_visible
+                      !special_data_cast.free_null_link_visible
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_right += inv_scale(5)
@@ -630,7 +632,6 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     display_style: {
       filter: 0,
       filter_label: 0,
-      null_flux: false,
       font_family: ['Arial,sans-serif','Helvetica,sans-serif','Verdana,sans-serif','Calibri,sans-serif','Noto,sans-serif','Lucida Sans,sans-serif','Gill Sans,sans-serif','Century Gothic,sans-serif','Candara,sans-serif','Futara,sans-serif','Franklin Gothic Medium,sans-serif','Trebuchet MS,sans-serif','Geneva,sans-serif','Segoe UI,sans-serif','Optima,sans-serif','Avanta Garde,sans-serif',
         'Times New Roman,serif','Big Caslon,serif','Bodoni MT,serif','Book Antiqua,serif','Bookman,serif','New Century Schoolbook,serif','Calisto MT,serif','Cambria,serif','Didot,serif','Garamond,serif','Georgia,serif','Goudy Old Style,serif','Hoefler Text,serif','Lucida Bright,serif','Palatino,serif','Perpetua,serif','Rockwell,serif','Rockwell Extra Bold,serif','Baskerville,serif',
         'Consolas,monospace','Courier,monospace','Courier New,monospace','Lucida Console,monospace','Lucidatypewriter,monospace','Lucida Sans Typewriter,monospace','Monaco,monospace','Andale Mono,monospace',
@@ -767,6 +768,8 @@ export const LinkVisible: LinkVisibleFunctType=(
   GetLinkValue:GetLinkValueFuncType
 ): boolean => {
   const { dataTags, fluxTags } = data
+  const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
   if (!l) {
     return false
   }
@@ -829,14 +832,11 @@ export const LinkVisible: LinkVisibleFunctType=(
   const is_free = link_values.extension?.free_mini !== undefined &&
                   data.show_structure !== 'free_interval' &&
                   data.show_structure !== 'free_value' &&
-                  !link_values.extension?.free_visible
-  if (link_values.extension?.free_visible) {
+                  !special_data_cast.free_null_link_visible
+  if (special_data_cast.free_null_link_visible && link_values?.extension.free_mini!==undefined) {
     return true
   }
   if (!is_free && TestLinkValue(data, data.nodes, l,GetLinkValue) === 0) {
-    if (data.display_style.null_flux) {
-      return true
-    }
     return false
   }
   return true
@@ -1524,11 +1524,15 @@ const NodeHasDisplayedLevel=(data:SankeyData,n:SankeyNode)=>{
 // Check if incoming and/or outgoing links have all 0 for value, if that the case we we returne false
 // We can short-circuit the function if the variable null_flux is true or the variable is show_structur is 'structure' (doesn't care about links value)
 const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
-  if((node.outputLinksId.length==0 && node.inputLinksId.length==0)|| data.display_style.null_flux || data.show_structure == 'structure'){
+  if((node.outputLinksId.length==0 && node.inputLinksId.length==0)|| 
+  // data.display_style.null_flux || 
+  data.show_structure == 'structure'){
     return true
   }else{
     let total_input = 0
     if (node.inputLinksId.length > 0) {
+      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
       for (let i = 0; i < node.inputLinksId.length; i++) {
         const link = data.links[node.inputLinksId[i]]
         if (link === undefined) {
@@ -1540,7 +1544,7 @@ const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
         }
         if (data.nodes[link.idSource]  && data.nodes[link.idTarget]) {
           const val = GetLinkValue(data, link.idLink)
-          if (val.extension?.free_visible) {
+          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined) {
             total_input +=1
             continue
           }
@@ -1554,6 +1558,8 @@ const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
     }
     let total_output = 0
     if (node.outputLinksId.length > 0) {
+      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
       for (let i = 0; i < node.outputLinksId.length; i++) {
         const link = data.links[node.outputLinksId[i]]
         if (link === undefined) {
@@ -1565,7 +1571,7 @@ const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
         }
         if (data.nodes[link.idSource] && data.nodes[link.idTarget]) {
           const val = GetLinkValue(data, link.idLink)
-          if (val.extension?.free_visible) {
+          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined) {
             total_input +=1
             continue
           }

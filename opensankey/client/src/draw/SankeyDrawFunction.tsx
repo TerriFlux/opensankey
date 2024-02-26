@@ -63,6 +63,8 @@ export const StrokeDasharray : StrokeDasharrayFType =(
   data:SankeyData,
   GetLinkValue:GetLinkValueFuncType
 )=>{
+  const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
   if (data.show_structure === 'structure') {
     return '10, 2'
   }
@@ -83,7 +85,7 @@ export const StrokeDasharray : StrokeDasharrayFType =(
   const is_free = link_values.extension?.free_mini !== undefined &&
                  data.show_structure !== 'free_value' &&
                  data.show_structure !== 'free_interval'  &&
-                 !link_values.extension?.free_visible
+                 !special_data_cast.free_null_link_visible
   if (ReturnValueLink(data,d,'dashed') || link_values.value as unknown as string === '' || is_free || link_values.extension?.display_thin) {
     return '10, 2'
   } else {
@@ -377,12 +379,14 @@ export const DrawArrows : DrawArrowsType = (
     const extension = GetLinkValue(data, n.inputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
+      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
       if (display_free_as_dashed) {
         // Generale settings: free link value are displayed dashed without text without witdh
         const link_value_is_free = extension?.free_mini !== undefined ??false
         if (link_value_is_free) {
           // Link value is free should be displayed dashed without text
-          if (extension?.free_visible) {
+          if (special_data_cast.free_null_link_visible) {
             //treated as not free
           } else {
             link_value = inv_scale(5)
@@ -972,6 +976,8 @@ const DrawCurve = (
   DrawArrows:DrawArrowsType
 ): string => {
   const {data,display_nodes,display_links}=dict_variable_application_data
+  const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
   if (!LinkVisible(link, data, display_nodes,GetLinkValue)) {
     return ''
   }
@@ -1015,7 +1021,7 @@ const DrawCurve = (
   }
 
 
-  if (label_visible && (+link_value > display_style.filter_label || val.extension?.free_visible) ) {
+  if (label_visible && (+link_value > display_style.filter_label || (special_data_cast.free_null_link_visible && val.extension?.free_mini)) ) {
     DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue)
   }
 
@@ -1545,12 +1551,14 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
     // Generale settings: free link value are displayed dashed without text without witdh
     const link_value_is_free = link_values.extension && link_values.extension?.free_mini !== undefined
     if (link_value_is_free) {
-      if (link_values.extension?.free_visible && link_values.value === 0 ) {
+      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
+      if (special_data_cast.free_null_link_visible && link_values.value === 0 ) {
         // zero value of free variables are displayed when free_visible is set to true
         return 5
-      } else if (link_values.extension?.free_visible && link_values.value !== 0 ) {
+      } else if (special_data_cast.free_null_link_visible && link_values.value !== 0 ) {
         // Not treated as free
-      } else if (!link_values.extension?.free_visible) {
+      } else if (!special_data_cast.free_null_link_visible) {
         // Link value is free should be displayed dashed without text without witdh
         return 5
       }

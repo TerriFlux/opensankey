@@ -13,7 +13,12 @@ import { Row,
   Overlay } from 'react-bootstrap'
 import {  SankeyData, SankeyLink, TagsCatalog, TagsGroup, dict_variable_application_dataType} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
-import { FindMaxLinkValue,AdjustSankeyZone, RecursionDataTag, IsAllLinkNotLocalAttrSameValue, SmoothClasses } from './SankeyUtils'
+import {
+  FindMaxLinkValue,
+  AdjustSankeyZone,
+  RecursionDataTag,
+  IsAllLinkNotLocalAttrSameValue,
+  SmoothClasses } from './SankeyUtils'
 import * as d3 from 'd3'
 // import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -31,9 +36,9 @@ import { faShareNodes,
 import { selected_type } from '../topmenus/SankeyMenuTop'
 import { TFunction } from 'i18next'
 import { ConvertDataFuncType } from './types/SankeyConvertTypes'
-import { 
-  addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType, 
-  setDiagramFuncType, stretchButtonsFType, ToolbarBuilderFType 
+import {
+  addAllDropDownNodeFType, addSimpleLevelDropDownFType, col_title_level_filterFType,
+  setDiagramFuncType, stretchButtonsFType, ToolbarBuilderFType
 } from './types/SankeyMenuBannerTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from './types/SankeyUtilsTypes'
 import { AddAllDropDownFluxFType } from '../topmenus/types/SankeyMenuTopTypes'
@@ -66,7 +71,7 @@ const logo_btn_filter_link=<svg   xmlns="http://www.w3.org/2000/svg"
   </g>
 </svg>
 
-// Delete all local node variable : local_aggregation when we switch general aggregation 
+// Delete all local node variable : local_aggregation when we switch general aggregation
 const delete_local_aggregation=(data:SankeyData)=>{
   Object.values(data.nodes).filter(n=>n.local!==undefined).forEach(n=>{
     if(n.local){
@@ -92,11 +97,11 @@ export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
       <>
         <tr>
           <td >
-            {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected}  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => { 
-            
+            {<Form.Select style={{ width: '200px', color: 'black' }} key={levelTags['Primaire'].group_name} value={selected}  onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+
               delete_local_aggregation(data)
-              handleSimpleDropdown(evt, levelTags['Primaire'], data, set_data) 
-          
+              handleSimpleDropdown(evt, levelTags['Primaire'], data, set_data)
+
             }}>{
                 Object.entries(levelTags['Primaire'].tags).map(([tag_key, tag],i) => {
                   return (<option key={i} value={tag_key}>{tag.name}</option>)
@@ -116,7 +121,7 @@ export const col_title_level_filter : col_title_level_filterFType = (
 )=>{
   const {levelTags}=data
   let banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.banner !== 'none')
-  
+
   const nb_level_tag = Object.values(levelTags).filter(tags_group=>(Object.keys(tags_group.tags).length > 0 )).length
   if (nb_level_tag > 1) {
     banner_grouptag = Object.entries(levelTags).filter(([, tags_group]) => tags_group.group_name !== 'Primaire' && Object.keys(tags_group.tags).length > 0)
@@ -237,8 +242,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                 value={selected}
                 onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                   delete_local_aggregation(data)
-                  handleSimpleDropdown(evt, tags_group, data, set_data) 
-                    
+                  handleSimpleDropdown(evt, tags_group, data, set_data)
+
                 }}>{
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
                     return (<option key={i} value={tag_key}>{tag.name}</option>)
@@ -358,9 +363,9 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
  * @returns {(void) => void}
  */
 const handleSimpleDropdown  = (
-  evt: React.ChangeEvent<HTMLSelectElement>, 
-  tags_group: TagsGroup, 
-  data: SankeyData, 
+  evt: React.ChangeEvent<HTMLSelectElement>,
+  tags_group: TagsGroup,
+  data: SankeyData,
   set_data: (data: SankeyData) => void
 ) => {
   const val = evt.target.value
@@ -436,6 +441,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   GetSankeyMinWidthAndHeight,
   dict_hook_ref_setter_show_dialog_components,
   never_see_again,
+  additional_link_visual_filter_content
 ) => {
 
   const {data,set_data}=dict_variable_application_data
@@ -487,7 +493,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       first_selected_node.current = undefined
     }
   }
-  
+
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   let max_link_value = 0
@@ -499,9 +505,9 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     max_link_value = new_max_link_value > max_link_value ? new_max_link_value : max_link_value
   })
   max_link_value += 1
-  
 
-  
+
+
   const legend_filter=<FormGroup as={Row}>
     <Col xs={9}>
       {t('Menu.group')}
@@ -516,7 +522,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   // ===================Create the popover diplayed near the buttons========================
   // Checkbox that adjust the label position according to the link stroke width
   const isAllLinksLabelPosOrthAuto=IsAllLinkNotLocalAttrSameValue(data,Object.values(data.links),['label_pos_auto'])
-  const content_adjust_label_pos =<>    
+  const content_adjust_label_pos =<>
     {/* Button to adjust label position in case the label is bigger than the link */}
     <OverlayTrigger
       key={'Menu.tooltips.flux.ajust_label'}
@@ -613,6 +619,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
           </Col>
         </Form.Group>
         {content_adjust_label_pos}
+        {additional_link_visual_filter_content}
       </Form>
     </Popover.Body>
   </Popover>
@@ -740,7 +747,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
 
 
   // ===========Creation Button to show popover========================
-  
+
   const button_fullscreen=<>
     <OverlayTrigger
       key={'tooltip-fullscreen'}
@@ -776,9 +783,9 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
         overlay={<Tooltip id={'tooltip-liason'}>{(mode_selection == 's')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')} </Tooltip>}>
         <Button variant={(!(mode_selection == 'ln')) ? 'secondary' : 'secondary'} onClick={() => {
           if(mode_selection=='ln'){
-            setSelectionMode('s') 
+            setSelectionMode('s')
           }else{
-            setSelectionMode('ln') 
+            setSelectionMode('ln')
           }
         }} >
           <Col><FontAwesomeIcon icon={(mode_selection == 's')?faShareNodes:faArrowPointer}/></Col>
@@ -885,7 +892,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       overlay={<Tooltip id={'tooltip-node-tag-filter'}>{t('Banner.hlp_node_tag_filter')} </Tooltip>}
       rootClose
     >
-      <Button ref={node_tag_filter} size='sm' variant='info' 
+      <Button ref={node_tag_filter} size='sm' variant='info'
         onClick={()=>{
           sShowNodeTagFilter(!s_show_node_tag_filter)
         }}
@@ -915,8 +922,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       placement={'left'}
       rootClose
       overlay={<Tooltip id={'tooltip-link-tag-filter'}>{t('Banner.hlp_link_tag_filter')} </Tooltip>}>
-    
-      <Button ref={link_tag_filter} size='sm' variant='info' 
+
+      <Button ref={link_tag_filter} size='sm' variant='info'
         onClick={()=>{
           sShowLinkTagFilter(!s_show_link_tag_filter)
         }}
@@ -999,9 +1006,9 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
 
     {button_fullscreen}
   </>
-  
 
-  
+
+
 }
 
 

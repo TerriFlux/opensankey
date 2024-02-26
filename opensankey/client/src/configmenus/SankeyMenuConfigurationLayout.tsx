@@ -1,8 +1,11 @@
 import React,{useState} from 'react'
 import { FormControl, Form, OverlayTrigger, Tooltip, Col, FormLabel, Row } from 'react-bootstrap'
-import { Checkbox } from '@chakra-ui/react'
+import {
+  Box,
+  Checkbox
+} from '@chakra-ui/react'
 
-import { GetLinkValue, SmoothClasses, StyleTitleSubSectionMenuEditionElements, styleRowInput } from './SankeyUtils'
+import { GetLinkValue, StyleTitleSubSectionMenuEditionElements, styleRowInput } from './SankeyUtils'
 import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
 import { DrawLegend } from '../draw/SankeyDrawLegend'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -31,7 +34,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
     set_maximum_flux(data.minimum_flux)
   }
   return [
-    <span style={StyleTitleSubSectionMenuEditionElements({})}>{t('Menu.background')}</span>,
+    <Box
+      as='span'
+      layerStyle='submenuconfig_part'>
+      {t('Menu.background')}
+    </Box>,
 
     /* Couleur du fond de la page */
     <Row>
@@ -69,7 +76,6 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           rootClose
           overlay={<Tooltip id={'MEP.tooltips.GV'}>{t('MEP.tooltips.GV')} </Tooltip>}>
           <Checkbox
-            sx={SmoothClasses({})}
             isChecked={data.grid_visible}
             iconColor={data.grid_visible?'#78C2AD':'white'}
             icon={data.grid_visible?<FaEye/>:<FaEyeSlash/>}
@@ -196,7 +202,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
     <Row>
       <Col>
         <Checkbox
-          sx={SmoothClasses({text_as_title:true})}
+          variant='checkbox_title_style'
           icon={data.mask_legend?<FaEye/>:<FaEyeSlash/>}
           isChecked={data.mask_legend}
           onChange={(evt) => {
@@ -294,7 +300,6 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegBgBorder'}>{t('Menu.tooltips.LegBgBorder')} </Tooltip>}>
           <Checkbox
-            sx={SmoothClasses({})}
             iconColor='white'
             isChecked={data.legend_bg_border}
             onChange={(evt) => {
@@ -375,32 +380,36 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
 
       {/* Afficher l'échelle sur le graphe*/}
       <Row>
-        <Col><Checkbox isChecked={data.mask_legend}
-          sx={SmoothClasses({})}
-          iconColor='white'
-          checked={data.display_legend_scale}
-          onChange={(evt) => {
-            data.display_legend_scale = evt.target.checked
-            set_data({ ...data })
-          }}
-        >
-          {t('Menu.display_scale')}
-        </Checkbox></Col>
+        <Col>
+          <Checkbox
+            isChecked={data.display_legend_scale}
+            iconColor='white'
+            checked={data.display_legend_scale}
+            onChange={(evt) => {
+              data.display_legend_scale = evt.target.checked
+              set_data({ ...data })
+            }}
+          >
+            {t('Menu.display_scale')}
+          </Checkbox>
+        </Col>
       </Row>
 
       {/* Afficher les dataTags dans la légende*/}
       <Row>
-        <Col><Checkbox isChecked={data.legend_show_dataTags}
-          sx={SmoothClasses({})}
-          iconColor='white'
-          checked={data.legend_show_dataTags}
-          onChange={(evt) => {
-            data.legend_show_dataTags = evt.target.checked
-            set_data({ ...data })
-          }}
-        >
-          {t('MEP.leg_show_dataTags')}
-        </Checkbox></Col>
+        <Col>
+          <Checkbox
+            isChecked={data.legend_show_dataTags}
+            iconColor='white'
+            checked={data.legend_show_dataTags}
+            onChange={(evt) => {
+              data.legend_show_dataTags = evt.target.checked
+              set_data({ ...data })
+            }}
+          >
+            {t('MEP.leg_show_dataTags')}
+          </Checkbox>
+        </Col>
       </Row>
     </div>
   ]

@@ -394,29 +394,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     <Row>
       <Col xs={11} style={{paddingRight:'0px'}}>
-        {/* Choix du point d'arrivée du flux  */}
-        <OverlayTrigger
-          key={'Menu.tooltips.flux.trgt'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-          <InputGroup>
-            <InputGroup.Text style={{
-              color:(multi_selected_links.current.length != 1)?'#666666':'',
-              backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-              width:'45%'}}>
-              {t('Flux.trgt')}
-            </InputGroup.Text>
-            <Form.Select
-              disabled={Object.keys(data.nodes).length<2}
-              style={{width:'45%'}}
-              onChange={target_change}
-              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
-              {addDropCible()}
-            </Form.Select>
-          </InputGroup>
-        </OverlayTrigger>
-
         {/* Choix du point de départ du flux  */}
         <OverlayTrigger
           key={'Menu.tooltips.flux.src'}
