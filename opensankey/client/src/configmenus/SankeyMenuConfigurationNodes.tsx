@@ -422,7 +422,7 @@ const check_node_has_no_valid_dimensions=(n:SankeyNode)=>{
     return true
   }
   let invalid=true
-  Object.entries(n.dimensions).filter(nd=>nd[0]!=='Primaire').forEach(value_dim=>{
+  Object.entries(n.dimensions).filter(nd=>nd[0]==='Primaire').forEach(value_dim=>{
     if(value_dim[1].parent_name!==undefined){
       invalid=false
     }
@@ -436,26 +436,22 @@ export const add_children : add_childrenFType =(
   multi_selected_nodes:{current:SankeyNode[]},
   displayed_node_selector:boolean,
   node_visible:string[],filter_node_selector:string[]
-)=>{
+)=> {
   const children:treeFolderType[]=[]
   Object.entries(nodes)
     .filter(nd=> check_node_has_node_type(nd[1] as SankeyNode,filter_node_selector))
     .forEach(nn=>{
-      if(nn[1].dimensions){
-        Object.entries(nn[1].dimensions).filter(nd=>nd[0]!=='Primaire' && nd[1].parent_name===n.idNode ).forEach(()=>{
-          const c:treeFolderType={id:nn[0],name:nn[1].name,checked:multi_selected_nodes.current.includes(nn[1])?1:0}        
-          const child=add_children(nodes,nn[1],multi_selected_nodes,displayed_node_selector,node_visible,filter_node_selector)
-          if(child.length!=0){
-            c.children=child 
-          }
-          if(displayed_node_selector && !node_visible.includes(nn[0])){
-            c.checked=0.5
-          }
-          children.push(c)
-
-        })
-      }
-    })
+      if(nn[1].dimensions['Primaire'].parent_name===n.idNode ) {
+        const c:treeFolderType={id:nn[0],name:nn[1].name,checked:multi_selected_nodes.current.includes(nn[1])?1:0}        
+        const child=add_children(nodes,nn[1],multi_selected_nodes,displayed_node_selector,node_visible,filter_node_selector)
+        if(child.length!=0){
+          c.children=child 
+        }
+        if(displayed_node_selector && !node_visible.includes(nn[0])){
+          c.checked=0.5
+        }
+        children.push(c)
+      }})
   return children
 }
 
