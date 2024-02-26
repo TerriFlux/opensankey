@@ -1,33 +1,61 @@
-import React, { useState, useEffect, useRef, FunctionComponent, Dispatch, SetStateAction } from 'react'
+import React, {
+  Dispatch,
+  FunctionComponent,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 import * as d3 from 'd3'
 import { useTranslation } from 'react-i18next'
 import i18next from 'i18next'
 import { Popover, Form } from 'react-bootstrap'
+import { ChakraProvider } from '@chakra-ui/react'
 /*************************************************************************************************/
-import { 
-  SankeyAppTypes, SankeyData, SankeyLink, SankeyNode, agregationType, applicationContextType, 
-  dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, 
-  dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType, applicationDrawType, processFunctionsType 
+import {
+  agregationType,
+  applicationContextType,
+  applicationDrawType,
+  contextMenuType,
+  dict_hook_ref_setter_show_dialog_componentsType,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType,
+  processFunctionsType,
+  SankeyAppTypes,
+  SankeyData,
+  SankeyLink,
+  SankeyNode,
+  uiElementsRefType
 } from './types/Types'
 /*************************************************************************************************/
 import SankeyDraw, { keyHandler } from './draw/SankeyDraw'
-import { 
-  GetSankeyMinWidthAndHeight, LinkStroke, 
-  DrawArrows 
+import {
+  GetSankeyMinWidthAndHeight,
+  LinkStroke,
+  DrawArrows
 } from './draw/SankeyDrawFunction'
 import { ZoomFunction } from './draw/SankeyDrawEventFunction'
 import {
   EventOnZoneMouseDown,
-  EventOnZoneMouseMove, EventOnZoneMouseUp
+  EventOnZoneMouseMove,
+  EventOnZoneMouseUp
 } from './draw/SankeyDrawEventFunction'
 import { ContextLegendTags, DrawLegend, drag_legend } from './draw/SankeyDrawLegend'
 import { DrawLinks } from './draw/SankeyDrawLinks'
 import { DrawNodes } from './draw/SankeyDrawNodes'
 import { OpenSankeyDrawNodesLabel } from './draw/SankeyDrawNodesLabel'
 import { NodeTooltipsContent, LinkTooltipsContent } from './draw/SankeyTooltip'
-import { 
-  GetLinkValue, NodeDisplayed, ReturnValueLink, LinkText, LinkVisible, AdjustSankeyZone, 
-  DefaultSankeyData, windowSankey, LinkColor} from './configmenus/SankeyUtils'
+import {
+  AdjustSankeyZone,
+  DefaultSankeyData,
+  GetLinkValue,
+  LinkColor,
+  LinkText,
+  LinkVisible,
+  NodeDisplayed,
+  ReturnValueLink,
+  windowSankey
+} from './configmenus/SankeyUtils'
 import { ClickSaveDiagram, RetrieveExcelResults } from './dialogs/SankeyPersistence'
 import { updateLayout } from './draw/SankeyDrawLayout'
 import { convert_data } from './configmenus/SankeyConvert'
@@ -45,11 +73,11 @@ import { ContextMenuLink } from './dialogs/SankeyMenuContextLink'
 import { ContextMenuNode } from './dialogs/SankeyMenuContextNode'
 import { ContextMenuZdd } from './dialogs/SankeyMenuContextZDD'
 import { ApplySaveJSONDialog, OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
-import { 
-  ModalPreference, OpenSankeyDefaultModalePreferenceContent 
+import {
+  ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
-import { 
-  OpenSankeyMenus, MenuDraggable, LastCheckpointTime, OpenSankeySaveButton, Menu 
+import {
+  OpenSankeyMenus, MenuDraggable, LastCheckpointTime, OpenSankeySaveButton, Menu
 } from './topmenus/SankeyMenuTop'
 import { CardsTemplateBuilder, welcomeModalBuilder } from './dialogs/SankeyModalWelcome'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
@@ -57,6 +85,7 @@ import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuCon
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
 import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfigurationNodesTags'
 import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
+import { opensankey_theme } from './chakra/Theme'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
@@ -123,14 +152,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   dict_variable_elements_selected.displayedInputLinkValueSetterRef.current=[]
   dict_variable_elements_selected.ref_display_link_opacity.current=[]
 
-  /*************************************************************************************************/  
+  /*************************************************************************************************/
   const uiElementsRef : uiElementsRefType = {
     button_ref : useRef<HTMLLabelElement>(null),
     accordion_ref : useRef<HTMLDivElement>(null),
     links_accordion_ref : useRef<HTMLDivElement>(null),
     nodes_accordion_ref : useRef<HTMLDivElement>(null),
-    ref_setter_nav_item_active : useRef<Dispatch<SetStateAction<string>>>(()=>null),
-    ref_nav_item_active : useRef<string>(''),
+    ref_setter_nav_item_active : useRef<Dispatch<SetStateAction<number>>>(()=>null),
+    ref_nav_item_active : useRef<number>(-1),
     ref_setter_sub_nav_item_active : useRef<Dispatch<SetStateAction<string>>>(()=>null)
   }
   /*************************************************************************************************/
@@ -197,7 +226,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     },
     RetrieveExcelResults
   }
-  /*************************************************************************************************/  
+  /*************************************************************************************************/
   const applicationDraw : applicationDrawType = {
     GetSankeyMinWidthAndHeight,
     updateLayout
@@ -271,7 +300,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     [],
     []
   )
- 
+
   const sankey_menus = OpenSankeyMenus(
     applicationContext.t,
     Reinitialization,
@@ -359,7 +388,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     GetSankeyMinWidthAndHeight,
     dict_hook_ref_setter_show_dialog_components,
     never_see_again,
-    convert_data,
+    [],
   )
 
   sankey_menus['toolbar']=toolbar
@@ -377,7 +406,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     setTimeout(()=>{
       //Ajout des events sur les l'ajout des noeuds aux click
       const svgSankey=d3.select('.opensankey #svg')
-  
+
       svgSankey.on('mousedown',evt=>{
         EventOnZoneMouseDown(
           dict_variable_application_data,
@@ -495,245 +524,246 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     return () => clearTimeout(timer)
   }, [])
 
-  return <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
-    <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
-      { MenuDraggable(
-        dict_hook_ref_setter_show_dialog_components,
-        'ref_setter_show_menu_node_apparence',
-        menu_configuration_nodes_attributes,
-        contextMenu.pointer_pos,
-        applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.apparence.apparence'),
-      )
-      }
-      { MenuDraggable(
-        dict_hook_ref_setter_show_dialog_components,
-        'ref_setter_show_menu_node_io',
-        SankeyMenuConfigurationNodesIO(
-          applicationContext,
-          dict_variable_application_data,
-          dict_variable_elements_selected,
-          GetLinkValue,
-          true
-        ),
-        contextMenu.pointer_pos,
-        applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.PF.PFM')
-      )
-      }
-      { MenuDraggable(
-        dict_hook_ref_setter_show_dialog_components,
-        'ref_setter_show_menu_link_data',
-        MenuConfigurationLinksData(
-          dict_variable_application_data,
-          dict_variable_elements_selected,
-          applicationContext,
-          [<></>],
-          true
-        ),
-        contextMenu.pointer_pos,
-        applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
-      )
-      }
-      { MenuDraggable(
-        dict_hook_ref_setter_show_dialog_components,
-        'ref_setter_show_menu_link_appearence',
-        MenuConfigurationLinksAppearence(
-          dict_variable_application_data,
-          dict_variable_elements_selected,
-          applicationContext,
-          [],
-          false,
-          GetLinkValue,
-          true
-        ),
-        contextMenu.pointer_pos,
-        applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')
-      )
-      }
-      { MenuDraggable(
-        dict_hook_ref_setter_show_dialog_components,
-        'ref_setter_show_menu_layout',
-        menu_configuration_layout,
-        contextMenu.pointer_pos,
-        applicationContext.t('Menu.MEP'),
-        33
-      )
-      }
-      {menuNodeTooltip}
-      {menuNodeTags}
-      {menuLinkTags}
-      {
-        MenuDraggable(
+  return <ChakraProvider theme={opensankey_theme}>
+    <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
+      <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
+        { MenuDraggable(
           dict_hook_ref_setter_show_dialog_components,
-          'ref_setter_show_menu_link_tooltip',
-          menu_link_tooltip,
+          'ref_setter_show_menu_node_apparence',
+          menu_configuration_nodes_attributes,
           contextMenu.pointer_pos,
-          applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.IB'),
-        )}
-      <>
-        <Menu
-          applicationContext={applicationContext}
-          dict_variable_application_data={dict_variable_application_data}
-          uiElementsRef={uiElementsRef}
-          contextMenu={contextMenu}
-          processFunctions={processFunctions}
-          dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-          applicationDraw={applicationDraw}
-
-          ref_nav_item_active={uiElementsRef.ref_nav_item_active}
-          example_menu={<></>}
-          configurations_menus={ OpenSankeyConfigurationsMenus(
+          applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.apparence.apparence'),
+        )
+        }
+        { MenuDraggable(
+          dict_hook_ref_setter_show_dialog_components,
+          'ref_setter_show_menu_node_io',
+          SankeyMenuConfigurationNodesIO(
+            applicationContext,
+            dict_variable_application_data,
+            dict_variable_elements_selected,
+            GetLinkValue,
+            true
+          ),
+          contextMenu.pointer_pos,
+          applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.PF.PFM')
+        )
+        }
+        { MenuDraggable(
+          dict_hook_ref_setter_show_dialog_components,
+          'ref_setter_show_menu_link_data',
+          MenuConfigurationLinksData(
             dict_variable_application_data,
             dict_variable_elements_selected,
             applicationContext,
-            uiElementsRef,
-            dict_hook_ref_setter_show_dialog_components,
-            menu_configuration_layout,
-            <SankeySettingsEditionElementTags
-              t={applicationContext.t}
-              data={dict_variable_application_data.data}
-              set_data={dict_variable_application_data.set_data}
-              elementTagNameProp='nodeTags'
-              elementNameProp='nodes'
-            />, 
-            <SankeySettingsEditionElementTags
-              t={applicationContext.t}
-              data={dict_variable_application_data.data}
-              set_data={dict_variable_application_data.set_data}
-              elementTagNameProp='fluxTags'
-              elementNameProp='links' 
-            />,
-            <SankeySettingsEditionElementTags
-              t={applicationContext.t}
-              data={dict_variable_application_data.data}
-              set_data={dict_variable_application_data.set_data}
-              elementTagNameProp='dataTags'
-              elementNameProp='links' 
-            />,
-            OpenSankeyMenuConfigurationNodes(
-              applicationContext,
-              dict_variable_application_data,
-              dict_variable_elements_selected,
-              contextMenu,
-              menu_configuration_nodes_attributes,
-              GetLinkValue,
-            ),
-            MenuConfigurationLinks(
-              dict_variable_application_data,
-              dict_variable_elements_selected,
-              applicationContext,
-              [<></>],
-              [<></>],
-              GetLinkValue
-            ),
             [<></>],
-            false, //TODO
-          )}
-          menus={sankey_menus}
-          cardsTemplate={CardsTemplateBuilder(
-            exemple_menu,
-            dict_variable_elements_selected,
+            true
+          ),
+          contextMenu.pointer_pos,
+          applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
+        )
+        }
+        { MenuDraggable(
+          dict_hook_ref_setter_show_dialog_components,
+          'ref_setter_show_menu_link_appearence',
+          MenuConfigurationLinksAppearence(
             dict_variable_application_data,
+            dict_variable_elements_selected,
             applicationContext,
-            Reinitialization,
-            convert_data
+            [],
+            false,
+            GetLinkValue,
+            true
+          ),
+          contextMenu.pointer_pos,
+          applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')
+        )
+        }
+        { MenuDraggable(
+          dict_hook_ref_setter_show_dialog_components,
+          'ref_setter_show_menu_layout',
+          menu_configuration_layout,
+          contextMenu.pointer_pos,
+          applicationContext.t('Menu.MEP'),
+          33
+        )
+        }
+        {menuNodeTooltip}
+        {menuNodeTags}
+        {menuLinkTags}
+        {
+          MenuDraggable(
+            dict_hook_ref_setter_show_dialog_components,
+            'ref_setter_show_menu_link_tooltip',
+            menu_link_tooltip,
+            contextMenu.pointer_pos,
+            applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.IB'),
           )}
-          external_modal={[
-            <React.Fragment key={'modale_style_link'}>{SankeyModalStyleLink(
-              applicationContext,
+        <>
+          <Menu
+            applicationContext={applicationContext}
+            dict_variable_application_data={dict_variable_application_data}
+            uiElementsRef={uiElementsRef}
+            contextMenu={contextMenu}
+            processFunctions={processFunctions}
+            dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+            applicationDraw={applicationDraw}
+
+            example_menu={<></>}
+            configurations_menus={ OpenSankeyConfigurationsMenus(
               dict_variable_application_data,
               dict_variable_elements_selected,
-              dict_hook_ref_setter_show_dialog_components.ref_show_style_link,
-              []
-            )
-            }</React.Fragment>,
-            <React.Fragment key={'modale_style_node'}>{SankeyModalStyleNode(
               applicationContext,
-              dict_variable_application_data,
-              dict_hook_ref_setter_show_dialog_components.ref_show_style_node,
-              dict_variable_elements_selected.ref_selected_style_node,
-              []
-            )}</React.Fragment>,
-            <React.Fragment key={'modale_preference'}><ModalPreference
-              dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-              ui={Object.values(OpenSankeyDefaultModalePreferenceContent(applicationContext.t,
-                dict_variable_application_data.data, dict_variable_application_data.set_data,
-                i18next)).map(d=>{
-                return <>{d}<hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} /></>
-              })}
-              t={applicationContext.t}
-            /></React.Fragment> ,
-            welcomeModalBuilder(
-              applicationContext.t,
-              exemple_menu,
+              uiElementsRef,
               dict_hook_ref_setter_show_dialog_components,
-              never_see_again,
-              active_page
-            )
-          ]}
-          Reinitialization={Reinitialization}
-          formations_menu={formations_menu}
-          additional_nav_item={[
-            LastCheckpointTime(applicationContext.t),
-            OpenSankeySaveButton(applicationContext.t)
-          ]}
-          convert_data={convert_data}
-          elementToDispose={elementToDispose}
-          apply_transformation_additional_elements={[]}
-          DiagramSelector={OpenSankeyDiagramSelector}
+              menu_configuration_layout,
+              <SankeySettingsEditionElementTags
+                t={applicationContext.t}
+                data={dict_variable_application_data.data}
+                set_data={dict_variable_application_data.set_data}
+                elementTagNameProp='nodeTags'
+                elementNameProp='nodes'
+              />,
+              <SankeySettingsEditionElementTags
+                t={applicationContext.t}
+                data={dict_variable_application_data.data}
+                set_data={dict_variable_application_data.set_data}
+                elementTagNameProp='fluxTags'
+                elementNameProp='links'
+              />,
+              <SankeySettingsEditionElementTags
+                t={applicationContext.t}
+                data={dict_variable_application_data.data}
+                set_data={dict_variable_application_data.set_data}
+                elementTagNameProp='dataTags'
+                elementNameProp='links'
+              />,
+              OpenSankeyMenuConfigurationNodes(
+                applicationContext,
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                contextMenu,
+                menu_configuration_nodes_attributes,
+                GetLinkValue,
+              ),
+              MenuConfigurationLinks(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                applicationContext,
+                [<></>],
+                [<></>],
+                GetLinkValue
+              ),
+              [<></>],
+              false, //TODO
+            )}
+            menus={sankey_menus}
+            cardsTemplate={CardsTemplateBuilder(
+              exemple_menu,
+              dict_variable_elements_selected,
+              dict_variable_application_data,
+              applicationContext,
+              Reinitialization,
+              convert_data
+            )}
+            external_modal={[
+              <React.Fragment key={'modale_style_link'}>{SankeyModalStyleLink(
+                applicationContext,
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                dict_hook_ref_setter_show_dialog_components.ref_show_style_link,
+                []
+              )
+              }</React.Fragment>,
+              <React.Fragment key={'modale_style_node'}>{SankeyModalStyleNode(
+                applicationContext,
+                dict_variable_application_data,
+                dict_hook_ref_setter_show_dialog_components.ref_show_style_node,
+                dict_variable_elements_selected.ref_selected_style_node,
+                []
+              )}</React.Fragment>,
+              <React.Fragment key={'modale_preference'}><ModalPreference
+                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+                ui={Object.values(OpenSankeyDefaultModalePreferenceContent(applicationContext.t,
+                  dict_variable_application_data.data, dict_variable_application_data.set_data,
+                  i18next)).map(d=>{
+                  return <>{d}<hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} /></>
+                })}
+                t={applicationContext.t}
+              /></React.Fragment> ,
+              welcomeModalBuilder(
+                applicationContext.t,
+                exemple_menu,
+                dict_hook_ref_setter_show_dialog_components,
+                never_see_again,
+                active_page
+              )
+            ]}
+            Reinitialization={Reinitialization}
+            formations_menu={formations_menu}
+            additional_nav_item={[
+              LastCheckpointTime(applicationContext.t),
+              OpenSankeySaveButton(applicationContext.t)
+            ]}
+            convert_data={convert_data}
+            elementToDispose={elementToDispose}
+            apply_transformation_additional_elements={[]}
+            DiagramSelector={OpenSankeyDiagramSelector}
+          />
+        </>
+        <ApplySaveJSONDialog
+          t={applicationContext.t}
+          dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+          sankey_data={dict_variable_application_data.data}
+          additionnal_button_option_save_json={[]}
+          ClickSaveDiagram={ClickSaveDiagram}
         />
-      </>
-      <ApplySaveJSONDialog
-        t={applicationContext.t}
-        dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-        sankey_data={dict_variable_application_data.data}
-        additionnal_button_option_save_json={[]}
-        ClickSaveDiagram={ClickSaveDiagram}
+      </div>
+      <ContextMenuNode
+        applicationContext = {applicationContext}
+        dict_variable_application_data = {dict_variable_application_data}
+        dict_variable_elements_selected = {dict_variable_elements_selected}
+        contextMenu = {contextMenu}
+        dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
+        agregation = {agregation}
+        additional_context_element_menu = {[<></>]}
+        additional_context_element_other = {[<></>]}
+      />
+      <ContextMenuLink
+        applicationContext = {applicationContext}
+        dict_variable_application_data = {dict_variable_application_data}
+        dict_variable_elements_selected = {dict_variable_elements_selected}
+        contextMenu = {contextMenu}
+        dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
+      />
+      <ContextMenuZdd
+        applicationContext = {applicationContext}
+        dict_variable_application_data = {dict_variable_application_data}
+        contextMenu = {contextMenu}
+        dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
+      />
+      <ContextLegendTags
+        applicationContext = {applicationContext}
+        dict_variable_application_data = {dict_variable_application_data}
+        dict_variable_elements_selected = {dict_variable_elements_selected}
+        contextMenu = {contextMenu}
+        GetLinkValue = {GetLinkValue}
+      />
+
+      <SankeyDraw
+        contextMenu={contextMenu}
+        data={data}
+        set_data={set_data}
+        display_nodes={display_nodes}
+        display_links={display_links}
+        animation={useRef(false)}
+        dict_variable_elements_selected={dict_variable_elements_selected}
+        agregation={agregation}
+        ref_alt_key_pressed={ref_alt_key_pressed}
+        GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
       />
     </div>
-    <ContextMenuNode
-      applicationContext = {applicationContext}
-      dict_variable_application_data = {dict_variable_application_data}
-      dict_variable_elements_selected = {dict_variable_elements_selected}
-      contextMenu = {contextMenu}
-      dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
-      agregation = {agregation}
-      additional_context_element_menu = {[<></>]} 
-      additional_context_element_other = {[<></>]}
-    />
-    <ContextMenuLink
-      applicationContext = {applicationContext}
-      dict_variable_application_data = {dict_variable_application_data}
-      dict_variable_elements_selected = {dict_variable_elements_selected}
-      contextMenu = {contextMenu}
-      dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
-    />
-    <ContextMenuZdd
-      applicationContext = {applicationContext}
-      dict_variable_application_data = {dict_variable_application_data}
-      contextMenu = {contextMenu}
-      dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
-    />
-    <ContextLegendTags
-      applicationContext = {applicationContext}
-      dict_variable_application_data = {dict_variable_application_data}
-      dict_variable_elements_selected = {dict_variable_elements_selected}
-      contextMenu = {contextMenu}
-      GetLinkValue = {GetLinkValue}
-    />
-
-    <SankeyDraw
-      contextMenu={contextMenu}
-      data={data}
-      set_data={set_data}
-      display_nodes={display_nodes}
-      display_links={display_links}
-      animation={useRef(false)}
-      dict_variable_elements_selected={dict_variable_elements_selected}
-      agregation={agregation}
-      ref_alt_key_pressed={ref_alt_key_pressed}
-      GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
-    />
-  </div>
+  </ChakraProvider>
 }
 
 export default SankeyApp

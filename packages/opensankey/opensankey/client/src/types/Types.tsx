@@ -234,7 +234,7 @@ export type TagsCatalog = {[_:string]:TagsGroup}
 export type display_styleType = {
   filter: number,
   filter_label: number,
-  null_flux: boolean,
+  // null_flux: boolean,
   font_family: string[]
 }
 
@@ -350,7 +350,7 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
 
 export type applicationContextType = {
   t: TFunction,
-  logo : string 
+  logo : string
   logo_terriflux : string,
   logo_width : number,
   app_name: string,
@@ -369,21 +369,21 @@ export type uiElementsRefType = {
   button_ref : MutableRefObject<HTMLLabelElement|null>,
   accordion_ref : MutableRefObject<HTMLDivElement|null>,
   links_accordion_ref : MutableRefObject<HTMLDivElement|null>,
-  nodes_accordion_ref : MutableRefObject<HTMLDivElement|null>
-  ref_setter_nav_item_active : MutableRefObject<Dispatch<SetStateAction<string>>>,
-  ref_nav_item_active : MutableRefObject<string>,
+  nodes_accordion_ref : MutableRefObject<HTMLDivElement|null>,
+  ref_setter_nav_item_active : MutableRefObject<Dispatch<SetStateAction<number>>>,
+  ref_nav_item_active : MutableRefObject<number>,
   ref_setter_sub_nav_item_active : MutableRefObject<Dispatch<SetStateAction<string>>>
 }
 
 export type dict_variable_elements_selectedType = {
-  ref_getter_mode_selection: MutableRefObject<string|undefined> 
+  ref_getter_mode_selection: MutableRefObject<string|undefined>
   ref_setter_mode_selection: MutableRefObject<Dispatch<SetStateAction<string>>>
   multi_selected_nodes : { current : SankeyNode[] },
   multi_selected_links : { current : SankeyLink[] },
   ref_selected_style_node : MutableRefObject<string>,
   ref_selected_style_link : MutableRefObject<string>,
   first_selected_node :  {current:SankeyNode|undefined},
-    
+
   ref_pre_idSource : MutableRefObject<string>,
   ref_pre_idTarget : MutableRefObject<string>,
   ref_display_link_opacity : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
@@ -398,7 +398,7 @@ export type contextMenuType = {
   ref_setter_contextualised_link : MutableRefObject<Dispatch<SetStateAction<SankeyLink|undefined>>|undefined>,
   tagContext : RefObject<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>,
   closeAllMenuContext : () => void,
-  pointer_pos : { current : number[] }, 
+  pointer_pos : { current : number[] },
   showContextZDDRef : MutableRefObject<[boolean, Dispatch<SetStateAction<boolean>>]|undefined>
 }
 
@@ -433,7 +433,6 @@ export type MenuTypes = {
   processFunctions : processFunctionsType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   applicationDraw: applicationDrawType,
-  ref_nav_item_active: MutableRefObject<string>,
   Reinitialization:() => void,
   convert_data:(data: SankeyData, DefaultSankeyData: () => SankeyData)=>void
   elementToDispose:MutableRefObject<string[]>,
