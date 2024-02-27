@@ -10,12 +10,14 @@ export const accordion_base_style = definePartsStyle({
     margin: '0',
     padding: '0',
     color: 'gray.500',
-    bgColor: 'white'
+    bg: 'white',
+    bgColor: 'white',
   },
   container: {
     margin: '0',
     padding: '0',
     color: 'gray.500',
+    bg: 'white',
     bgColor: 'white',
     width: '100%',
     border: '0',
@@ -25,6 +27,7 @@ export const accordion_base_style = definePartsStyle({
     margin: '0',
     padding: '1rem 1.25rem',
     color: 'gray.500',
+    bg: 'white',
     bgColor: 'white',
     border: '0',
     borderRadius: '0',
@@ -37,6 +40,7 @@ export const accordion_base_style = definePartsStyle({
 
     _expanded: {
       color: 'openSankey.200',
+      bg: 'openSankey.100',
       bgColor: 'openSankey.100',
       border: '1px',
       borderColor: 'openSankey.100',
@@ -46,6 +50,7 @@ export const accordion_base_style = definePartsStyle({
     margin: '0',
     padding: '0.5rem 1.5rem',
     color: 'gray.500',
+    bg: 'white',
     bgColor: 'white',
     border: '0',
     borderRadius: '0'
