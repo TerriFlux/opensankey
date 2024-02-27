@@ -40,10 +40,7 @@ import {
   EventOnZoneMouseMove,
   EventOnZoneMouseUp
 } from './draw/SankeyDrawEventFunction'
-import { ContextLegendTags, DrawLegend, drag_legend } from './draw/SankeyDrawLegend'
-import { DrawLinks } from './draw/SankeyDrawLinks'
-import { DrawNodes } from './draw/SankeyDrawNodes'
-import { OpenSankeyDrawNodesLabel } from './draw/SankeyDrawNodesLabel'
+import { ContextLegendTags } from './draw/SankeyDrawLegend'
 import { NodeTooltipsContent, LinkTooltipsContent } from './draw/SankeyTooltip'
 import {
   AdjustSankeyZone,
@@ -298,7 +295,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_variable_elements_selected.ref_selected_style_node,
     [],
     [],
-    []
+    [],
+    GetLinkValue
   )
 
   const sankey_menus = OpenSankeyMenus(
@@ -390,7 +388,20 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     never_see_again,
     [],
   )
-
+  const node_arrow_visible =
+  (data:SankeyData,n: SankeyNode) => !NodeDisplayed(data,n) || (n.inputLinksId.length === 0) || (!ReturnValueLink(data,data.links[n.inputLinksId[0]],'arrow')) ? false : true
+  
+  // Color for the sabot when the source node is an arrow
+  const LinkSabotColor=LinkColor
+  const link_function = {
+    GetLinkValue,
+    LinkText,
+    DrawArrows,
+    LinkStroke,
+    LinkSabotColor,
+    node_arrow_visible,
+    LinkTooltipsContent  
+  }
   sankey_menus['toolbar']=toolbar
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
@@ -409,13 +420,19 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
       svgSankey.on('mousedown',evt=>{
         EventOnZoneMouseDown(
+          contextMenu,
           dict_variable_application_data,
+          uiElementsRef,
           dict_variable_elements_selected,
-          false,
           dict_hook_ref_setter_show_dialog_components,
+          ref_alt_key_pressed,
+          NodeTooltipsContent,
+          accept_simple_click,
+          false,
           evt,
           start_point,
-          contextMenu.closeAllMenuContext
+          contextMenu.closeAllMenuContext,
+          link_function
         )
       })
       svgSankey.on('mousemove',evt=>{
@@ -428,14 +445,19 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       })
       svgSankey.on('mouseup',evt=>{
         EventOnZoneMouseUp(
+          contextMenu,
           dict_variable_application_data,
-          dict_variable_elements_selected,
           uiElementsRef,
-          false,
+          dict_variable_elements_selected,
           dict_hook_ref_setter_show_dialog_components,
+          ref_alt_key_pressed,
+          accept_simple_click,
+          false,
           evt,
           start_point,
-          legend_clicked
+          legend_clicked,
+          link_function,
+          NodeTooltipsContent
         )
       })
     },100)
@@ -443,62 +465,65 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   /*************************************************************************************************/
   useEffect(() => {
     // Call the function that add nodes to the sankey
-    DrawNodes(
-      contextMenu,
-      dict_variable_application_data,
-      uiElementsRef,
-      dict_variable_elements_selected,
-      ref_alt_key_pressed,
-      NodeTooltipsContent,
-      LinkText,
-      GetLinkValue,
-      accept_simple_click
-    )
-    OpenSankeyDrawNodesLabel(
-      data,
-      set_data as (d:SankeyData)=>void,
-      dict_variable_elements_selected.multi_selected_nodes,
-      GetLinkValue
-    )
+    // DrawNodes(
+    //   contextMenu,
+    //   dict_variable_application_data,
+    //   uiElementsRef,
+    //   dict_variable_elements_selected,
+    //   ref_alt_key_pressed,
+    //   NodeTooltipsContent,
+    //   LinkText,
+    //   GetLinkValue,
+    //   accept_simple_click
+    // )
+    // OpenSankeyDrawNodesLabel(
+    //   data,
+    //   set_data as (d:SankeyData)=>void,
+    //   dict_variable_elements_selected.multi_selected_nodes,
+    //   GetLinkValue
+    // )
 
-    // const suiteDrawArrows= DrawArrows
-    d3.selectAll(' .opensankey #svg #sankey_def').remove()
+    // // const suiteDrawArrows= DrawArrows
+    // d3.selectAll(' .opensankey #svg #sankey_def').remove()
 
-    // const suiteLinkStroke= LinkStroke
-    // const suiteDrawArrows= OpenSankeyDrawFunction.DrawArrows
+    // // const suiteLinkStroke= LinkStroke
+    // // const suiteDrawArrows= OpenSankeyDrawFunction.DrawArrows
 
-    // Call the function that add links to the sankey
-    d3.select(' .opensankey #svg #sankey_def').remove()
-    d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
-    DrawLinks(
-      contextMenu,
-      dict_variable_application_data,
-      uiElementsRef,
-      dict_variable_elements_selected,
-      ref_alt_key_pressed,
-      (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
-      (data:SankeyData,n: SankeyNode) => !NodeDisplayed(data,n) || (n.inputLinksId.length === 0) || (!ReturnValueLink(data,data.links[n.inputLinksId[0]],'arrow')) ? false : true,
-      LinkTooltipsContent,
-      LinkText,
-      GetLinkValue,
-      LinkStroke,
-      DrawArrows,
-      LinkColor
-    )
-    // Create traduction function
-    DrawLegend(
-      dict_variable_application_data,
-      applicationContext,
-      contextMenu,
-      GetLinkValue,
-      legend_clicked
-    )
+    // // Call the function that add links to the sankey
+    // d3.select(' .opensankey #svg #sankey_def').remove()
+    // d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
+    // DrawLinks(
+    //   contextMenu,
+    //   dict_variable_application_data,
+    //   uiElementsRef,
+    //   dict_variable_elements_selected,
+    //   ref_alt_key_pressed,
+    //   (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
+    //   (data:SankeyData,n: SankeyNode) => !NodeDisplayed(data,n) || (n.inputLinksId.length === 0) || (!ReturnValueLink(data,data.links[n.inputLinksId[0]],'arrow')) ? false : true,
+    //   LinkTooltipsContent,
+    //   LinkText,
+    //   GetLinkValue,
+    //   LinkStroke,
+    //   DrawArrows,
+    //   LinkColor
+    // )
+    // // Create traduction function
+    // DrawLegend(
+    //   dict_variable_application_data,
+    //   applicationContext,
+    //   contextMenu,
+    //   GetLinkValue,
+    //   legend_clicked
+    // )
 
-    const g_legend=d3.select(' .opensankey #g_legend .drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
-    if(!windowSankey.SankeyToolsStatic){
-      g_legend.call(drag_legend(data,set_data))
-    }
+    // const g_legend=d3.select(' .opensankey #g_legend .drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
+    // if(!windowSankey.SankeyToolsStatic){
+    //   g_legend.call(drag_legend(data,set_data))
+    // }
 
+    // DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent)
+    // DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
+    // link_function)
     // Zoom Behavior
     const svgSankey = d3.select('.opensankey #svg');
     (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
@@ -572,7 +597,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             applicationContext,
             [],
             false,
-            GetLinkValue,
+            link_function,
             true
           ),
           contextMenu.pointer_pos,
@@ -652,7 +677,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 applicationContext,
                 [<></>],
                 [<></>],
-                GetLinkValue
+                link_function
               ),
               [<></>],
               false, //TODO
@@ -672,7 +697,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 dict_variable_application_data,
                 dict_variable_elements_selected,
                 dict_hook_ref_setter_show_dialog_components.ref_show_style_link,
-                []
+                [],
+                link_function
               )
               }</React.Fragment>,
               <React.Fragment key={'modale_style_node'}>{SankeyModalStyleNode(

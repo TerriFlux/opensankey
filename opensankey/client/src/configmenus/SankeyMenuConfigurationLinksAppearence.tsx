@@ -8,7 +8,7 @@ import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge, StyleTitleSubSectionMenuEditionElements, IsAllLinkNotLocalAttrSameValue} from './SankeyUtils'
 import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
-import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
+import { drawLinkShape } from '../draw/SankeyDrawLinks'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
   width="16"
@@ -69,7 +69,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   applicationContext,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,
-  GetLinkValue:GetLinkValueFuncType,
+  link_function,
   menu_for_modal=false
 )=>{
   const {t}=applicationContext
@@ -239,8 +239,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'left_horiz_shift',(!evt.target.checked?0.2:0),menu_for_style)
                   AssignLinkValueToCorrectVar(d,'right_horiz_shift',(!evt.target.checked?0.8:0),menu_for_style)
                 })
-                set_data({ ...data })
-              }}>{t('Flux.apparence.recy')}</Checkbox>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}>{t('Flux.apparence.recy')}</Checkbox>
         </OverlayTrigger>
       </Col>
     </Row>
@@ -270,8 +273,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'orientation','hh',menu_for_style)
 
                 })
-                set_data({ ...data })
-              }}>{logo_hh}</Button>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}>{logo_hh}</Button>
         </OverlayTrigger>
 
         {/* Vertical - Verticale  */}
@@ -290,8 +296,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   AssignLinkValueToCorrectVar(d,'orientation','vv',menu_for_style)
                 })
-                set_data({ ...data })
-              }}>{logo_vv}</Button>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}>{logo_vv}</Button>
         </OverlayTrigger>
 
         {/* Vertical - Horizontal  */}
@@ -310,8 +319,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   AssignLinkValueToCorrectVar(d,'orientation','vh',menu_for_style)
                 })
-                set_data({ ...data })
-              }}>{logo_vh}</Button>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}>{logo_vh}</Button>
         </OverlayTrigger>
 
         {/* Horizontal - Vertical  */}
@@ -330,8 +342,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   AssignLinkValueToCorrectVar(d,'orientation','hv',menu_for_style)
                 })
-                set_data({ ...data })
-              }}>{logo_hv}</Button>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}>{logo_hv}</Button>
         </OverlayTrigger>
       </ButtonGroup>
     </Row>
@@ -353,8 +368,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               (evt) => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>AssignLinkValueToCorrectVar(d,'arrow',evt.target.checked,menu_for_style)
                 )
-                set_data({ ...data })
-              }}>{t('Flux.apparence.fleche')}</Checkbox>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}>{t('Flux.apparence.fleche')}</Checkbox>
         </OverlayTrigger>
       </Col>
     </Row>
@@ -385,8 +403,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'arrow_size',value,menu_for_style)
 
                 })
-                set_data({ ...data })
-              }}/>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}/>
         </OverlayTrigger></Col>
     </Row>
 
@@ -408,8 +429,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 Object.values(parameter_to_modify)
                   .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
                   .map(d => AssignLinkValueToCorrectVar(d,'curved',evt.target.checked,menu_for_style))
-                set_data({ ...data })
-              }}>{t('Flux.apparence.courbe')}</Checkbox>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}>{t('Flux.apparence.courbe')}</Checkbox>
         </OverlayTrigger>
       </Col>
     </Row>
@@ -434,8 +458,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 AssignLinkValueToCorrectVar(d,'curvature',+evt.target.value,menu_for_style)
 
               })
-              set_data({ ...data })
-            }}/>
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )            }}/>
       </OverlayTrigger></Col>
     </Row>
 
@@ -472,8 +499,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'left_horiz_shift',(center - shift_gap),menu_for_style)
                   AssignLinkValueToCorrectVar(d,'right_horiz_shift',(center + shift_gap),menu_for_style)
                 })
-                set_data({ ...data })
-              }}/>
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }}/>
         </OverlayTrigger>
       </Col>
     </Row>
@@ -518,8 +548,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'right_horiz_shift',(new_center_position + shift_gap),menu_for_style)
 
                 })
-                set_data({ ...data })
-              }
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )              }
             }
           />
         </OverlayTrigger>
@@ -558,8 +591,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           evt => {
             const color = evt.target.value
             Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => AssignLinkValueToCorrectVar(d,'color',color,menu_for_style))
-            set_data({ ...data })
-          }}/>
+            drawLinkShape(
+              dict_variable_application_data,
+              dict_variable_elements_selected,
+              link_function
+            )          }}/>
     </Row>
 
     {/* Opacité */}
@@ -618,8 +654,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               Object.values(parameter_to_modify)
                 .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
                 .forEach(d => AssignLinkValueToCorrectVar(d,'dashed',evt.target.checked,menu_for_style))
-              set_data({ ...data })
-            }}>
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )            }}>
             {t('Flux.apparence.hach')+' '}
             {(IsLinkDiplayingValueLocal(multi_selected_links,'dashed',menu_for_style)?
               TooltipValueSurcharge('link_var_',t):<></>)}
@@ -655,7 +694,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                 AssignLinkValueToCorrectVar(d,'label_visible',evt.target.checked,menu_for_style)
               })
-              set_data({ ...data })
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )
             }}>
             {t('Flux.label.vdb')+' '}
             {(IsLinkDiplayingValueLocal(multi_selected_links,'label_visible',menu_for_style)?
@@ -715,7 +758,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'custom_digit',false,menu_for_style)
                   AssignLinkValueToCorrectVar(d,'to_precision',evt.target.checked,menu_for_style)
                 })
-                set_data({ ...data })
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )
               }}>
               {t('Flux.label.toPrecision')+' '}
               {(IsLinkDiplayingValueLocal(multi_selected_links,'to_precision',menu_for_style)?
@@ -746,7 +793,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'to_precision',false,menu_for_style)
                   AssignLinkValueToCorrectVar(d,'custom_digit',evt.target.checked,menu_for_style)
                 })
-                set_data({ ...data })
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )
               }}>
               {t('Flux.label.custom_digit')+' '}
               {(IsLinkDiplayingValueLocal(multi_selected_links,'custom_digit',menu_for_style)?
@@ -802,7 +853,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                   AssignLinkValueToCorrectVar(d,'label_unit_visible',evt.target.checked,menu_for_style)
                 })
-                set_data({ ...data })
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )
               }}>
               {t('Flux.label.l_u_v')+' '}
               {(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit_visible',menu_for_style)?
@@ -831,7 +886,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 value={ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_unit',menu_for_style) as string}
                 onChange={evt => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'label_unit',evt.target.value,menu_for_style))
-                  set_data({ ...data })
+                  drawLinkShape(
+                    dict_variable_application_data,
+                    dict_variable_elements_selected,
+                    link_function
+                  )
                 }}/>
             </OverlayTrigger>
           </Col>
@@ -860,7 +919,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                       AssignLinkValueToCorrectVar(d,'text_color','black',menu_for_style)
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>{t('Flux.label.len')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
             </OverlayTrigger>
 
@@ -879,7 +942,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                       AssignLinkValueToCorrectVar(d,'text_color','white',menu_for_style)
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>{t('Flux.label.lb')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
             </OverlayTrigger>
 
@@ -898,7 +965,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
                       AssignLinkValueToCorrectVar(d,'text_color',ReturnCorrectLinkAttributeValue(data,d,'color',menu_for_style),menu_for_style)
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>{t('Flux.label.lec')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
             </OverlayTrigger>
           </ButtonGroup>
@@ -938,7 +1009,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>{
                     AssignLinkValueToCorrectVar(d,'label_font_size',+evt.target.value,menu_for_style)
                   })
-                  set_data({ ...data })
+                  drawLinkShape(
+                    dict_variable_application_data,
+                    dict_variable_elements_selected,
+                    link_function
+                  )
                 }}
               />
             </Col>
@@ -981,7 +1056,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       delete d.x_label
                       delete d.y_label
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>
                 <FaAlignLeft/>
               </Button>
@@ -1005,7 +1084,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       delete d.x_label
                       delete d.y_label
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>
                 <FaAlignCenter/>
               </Button>
@@ -1029,7 +1112,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       delete d.x_label
                       delete d.y_label
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>
                 <FaAlignRight/>
               </Button>
@@ -1057,7 +1144,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       delete d.x_label
                       delete d.y_label
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>
                 {svg_label_bottom}
               </Button>
@@ -1082,7 +1173,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       delete d.x_label
                       delete d.y_label
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>
                 {svg_label_center}
               </Button>
@@ -1107,7 +1202,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       delete d.x_label
                       delete d.y_label
                     })
-                    set_data({ ...data })
+                    drawLinkShape(
+                      dict_variable_application_data,
+                      dict_variable_elements_selected,
+                      link_function
+                    )
                   }}>
                 {svg_label_top}
               </Button>
@@ -1141,7 +1240,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     delete d.y_label
                   }
                 })
-                set_data({ ...data })
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )
               }}>
               {t('Flux.label.acf')+' '}
               {(IsLinkDiplayingValueLocal(multi_selected_links,'label_on_path',menu_for_style)?
@@ -1171,7 +1274,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
                   AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
                 })
-                set_data({ ...data })
+                drawLinkShape(
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  link_function
+                )
               }}>
               {t('Flux.label.pls')+' '}
               {(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?
@@ -1197,7 +1304,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               multi_selected_links.current.map(n => {
                 n.style = d
               })
-              set_data({ ...data })
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )
             }}>{data.style_link[d].idLink}</Dropdown.Item>)
           })}
         </Dropdown.Menu>
@@ -1218,7 +1329,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           onClick={
             () => {
               apply_style_to_selected_links()
-              set_data({ ...data })
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )
             }}>
           {t('Flux.as')}
         </Button>
@@ -1256,7 +1371,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               multi_selected_links.current.map(l => {
                 handleDownLink(data,l.idLink)
               })
-              set_data({ ...data })
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )
             }}>
             <FaAngleUp/>
           </Button>
@@ -1278,7 +1397,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 tab_toshift.push(data.linkZIndex.splice(posElemt, 1)[0])
               })
               tab_toshift.forEach(l=>data.linkZIndex.push(l))
-              set_data({ ...data })
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )
             }}>
             <FaAngleDoubleUp />
           </Button>
@@ -1296,7 +1419,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               multi_selected_links.current.map(l => {
                 handleUpLink(data,l.idLink)
               })
-              set_data({ ...data })
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )
 
             }}>
             <FaAngleDown />
@@ -1321,7 +1448,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               const reverse_linkzindex=data.linkZIndex.reverse();
               (tab_toshift.reverse()).forEach(l=>reverse_linkzindex.push(l))
               data.linkZIndex=reverse_linkzindex.reverse()
-              set_data({ ...data })
+              drawLinkShape(
+                dict_variable_application_data,
+                dict_variable_elements_selected,
+                link_function
+              )
 
             }}>
             <FaAngleDoubleDown />

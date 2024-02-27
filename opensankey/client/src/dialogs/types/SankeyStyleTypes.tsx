@@ -1,5 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import { 
+  LinkFunctionTypes,
   applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType 
 } from '../../types/Types'
 
@@ -17,6 +18,7 @@ export type SankeyModalStyleLinkFType = (
     dict_variable_application_data:dict_variable_application_dataType,
     dict_variable_elements_selected:dict_variable_elements_selectedType,
     ref_show_style_link: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-    additional_link_appearence_items:JSX.Element[]
+    additional_link_appearence_items:JSX.Element[],
+    link_function:LinkFunctionTypes
 ) => JSX.Element
 

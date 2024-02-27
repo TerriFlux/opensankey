@@ -1,6 +1,7 @@
 import { TFunction } from 'i18next'
 import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { MutableRefObject } from 'react'
+import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
 export type OpenSankeyConfigurationNodesAttributesFType = (
   applicationContext : applicationContextType,
@@ -11,6 +12,8 @@ export type OpenSankeyConfigurationNodesAttributesFType = (
   advanced_appearence_content:JSX.Element[],
   advanced_label_content:JSX.Element[],
   advanced_label_value_content:JSX.Element[],
+  GetLinkValue:GetLinkValueFuncType
+
 ) => JSX.Element[]
 
 export type SankeyMenuConfigurationNodesAttributesFType = (

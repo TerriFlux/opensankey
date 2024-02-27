@@ -1,11 +1,12 @@
 import { TFunction } from 'i18next'
 
-import { DrawArrowsType } from '../draw/types/SankeyDrawFunctionTypes'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
+import { DrawArrowsType, LinkStrokeFType } from '../draw/types/SankeyDrawFunctionTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkColorFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
 import { RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistenceTypes'
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { OpenSankeyDiagramSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
+import { LinkTooltipsContentFType } from '../draw/types/SankeyTooltipTypes'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -455,4 +456,14 @@ export type SankeyAppTypes = {
   formations_menu      : object
   logo: string,
   logo_terriflux: string,
+}
+
+export type LinkFunctionTypes = {
+  GetLinkValue : GetLinkValueFuncType,
+  LinkText : LinkTextFuncType
+  DrawArrows : DrawArrowsType,
+  LinkStroke : LinkStrokeFType,
+  LinkSabotColor:LinkColorFuncType,
+  node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
+  LinkTooltipsContent: LinkTooltipsContentFType
 }
