@@ -86,10 +86,10 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
           <AccordionIcon/>
         </AccordionButton>
         <AccordionPanel>
-          <div className='content_editon_elements'>
+          <Box layerStyle='menuconfigpanel_grid'>
             {menu_configuration_layout.map((c,i)=>{
               return <React.Fragment key={i}>{c}</React.Fragment>})}
-          </div>
+          </Box>
         </AccordionPanel>
       </AccordionItem>:
       <></>,
