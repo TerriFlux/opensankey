@@ -26,7 +26,6 @@ import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksToo
 import { ValueSelectedParameter, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 
 import { t } from 'i18next'
-import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { MenuConfigurationLinksFType } from './types/SankeyMenuConfigurationLinksTypes'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRotate} from '@fortawesome/free-solid-svg-icons'
@@ -37,7 +36,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   applicationContext:applicationContextType,
   additional_data_element:JSX.Element[],
   additional_link_appearence_items:JSX.Element[],
-  GetLinkValue:GetLinkValueFuncType
+  link_function
 ) => {
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
@@ -57,7 +56,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       applicationContext,
       additional_link_appearence_items,
       false,
-      GetLinkValue
+      link_function
     ),
     'tooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t,false)
   }
@@ -214,9 +213,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     if (Object.keys(nodes).length < 2) {
       if (Object.keys(nodes).length == 0) {
-        AddNewNode(data,()=>null,multi_selected_nodes)
+        AddNewNode(dict_variable_application_data,multi_selected_nodes)
       }
-      AddNewNode(data,()=>null,multi_selected_nodes)
+      AddNewNode(dict_variable_application_data,multi_selected_nodes)
     }
     const link: SankeyLink = DefaultLink(data)
     // Méthode pour incrementer idNode

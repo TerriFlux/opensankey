@@ -8,7 +8,8 @@ import { SankeyData,
   SankeyNodeStyle,
   SankeyLinkAttrLocal,
   SankeyLinkStyle,
-  TagsCatalog } from '../types/Types'
+  TagsCatalog, 
+  dict_variable_application_dataType} from '../types/Types'
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
@@ -35,6 +36,8 @@ import {
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
+import { drawNodeShape } from '../draw/SankeyDrawNodes'
+import { DrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1752,19 +1755,20 @@ export const NodeContextHasDesaggregate:NodeContextHasDesaggregateFuncType = (n:
 
 }
 
-export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (dict_variable_application_data:dict_variable_application_dataType,
   multi_selected_nodes:{current:SankeyNode[]}) => {
   multi_selected_nodes.current.map(d => {
     // Delete local value so the used value come from the style
     delete d.local
   })
-  set_data({ ...data })
+  drawNodeShape(dict_variable_application_data.data,multi_selected_nodes)
+  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+
 }
 
-export const AddNewNode:AddNewNodeFuncType = (data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   multi_selected_nodes:{current:SankeyNode[]}) => {
+  const {data,set_data}=dict_variable_application_data
   const { nodes } = data
   const node: SankeyNode = DefaultNode(data)
 
@@ -1786,7 +1790,7 @@ export const AddNewNode:AddNewNodeFuncType = (data:SankeyData,
   }
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
-  ApplyStyleToNodes(data,set_data,multi_selected_nodes)
+  ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes)
   set_data({...data})
 }
 
