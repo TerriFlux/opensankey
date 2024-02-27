@@ -1,19 +1,48 @@
 
-import React,{ChangeEvent,useRef} from 'react'
-import { OverlayTrigger,Tooltip,Form, Button, Row, Col} from 'react-bootstrap'
+import React, { ChangeEvent, useRef } from 'react'
+import { OverlayTrigger, Tooltip, Form} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FaEye, FaEyeSlash, FaFileImport} from 'react-icons/fa'
 import * as d3 from 'd3'
 
-import { SankeyPlusData, SankeyPlusLinkStyle,SankeyPlusLabel,SankeyPlusNode,SankeyPlusLinkAttrLocal,SankeyPlusLink } from '../types/Types'
-import {OSPIsAllNodeNotLocalAttrSameValueFType, PlusAssignLinkValueToCorrectVarFType, PlusLinkSabotColorFType, PlusReturnValueLinkFType, ValueOf, DefaultSankeyPlusStyleLinkFType, DragLegendPlusFType, ImportImageAsSvgBgFType, IsAllZdtAttrSameValueFType, SetSvgBgFType} from '../types/SankeyPlusUtilsTypes'
-import { OpposingDragElementsPlus } from './SankeyPlusNodes'
-import { DragLegendGElementOSTyped,ReturnValueLink,LinkColor,NodeColor,AssignLinkValueToCorrectVar,DefaultLinkStyle} from './import/OpenSankey'
+import {
+  Box,
+  Button,
+  Checkbox
+} from '@chakra-ui/react'
 
-import { SankeyLinkAttrLocal,SankeyLinkStyle } from 'open-sankey/src/types/Types'
+import {
+  SankeyPlusData,
+  SankeyPlusLabel,
+  SankeyPlusLink,
+  SankeyPlusLinkAttrLocal,
+  SankeyPlusLinkStyle,
+  SankeyPlusNode,
+} from '../types/Types'
+import {
+  DefaultSankeyPlusStyleLinkFType,
+  DragLegendPlusFType,
+  ImportImageAsSvgBgFType,
+  IsAllZdtAttrSameValueFType,
+  OSPIsAllNodeNotLocalAttrSameValueFType,
+  PlusAssignLinkValueToCorrectVarFType,
+  PlusLinkSabotColorFType,
+  PlusReturnValueLinkFType,
+  SetSvgBgFType,
+  ValueOf,
+} from '../types/SankeyPlusUtilsTypes'
+import { OpposingDragElementsPlus } from './SankeyPlusNodes'
+import {
+  AssignLinkValueToCorrectVar,
+  DefaultLinkStyle,
+  DragLegendGElementOSTyped,
+  LinkColor,
+  NodeColor,
+  ReturnValueLink,
+} from './import/OpenSankey'
+
+import { SankeyLinkAttrLocal, SankeyLinkStyle } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-import { Checkbox } from '@chakra-ui/react'
-import {SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 
 
 export const DefaultSankeyPlusStyleLink : DefaultSankeyPlusStyleLinkFType = () => {
@@ -45,42 +74,45 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
 
 
   const content_image=<>
-    <Row className='input_row'>
-      <Col>
-        <Checkbox 
-          sx={SmoothClasses({})}
-          iconColor={data.show_background_image?'#78C2AD':'white'}
-          isChecked={data.show_background_image}
-          icon={data.show_background_image?<FaEye/>:<FaEyeSlash/>}
-          onChange={(evt) => {
-            data.show_background_image = evt.target.checked
-            set_data({ ...data })
-          }}
-        >
-          {t('MEP.show_image')}
-        </Checkbox>
-      </Col>
-      {/* Import image */}
+    {/* Import image */}
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={data.show_background_image}
+        isDisabled={!has_open_sankey_plus}
+        icon={data.show_background_image?<FaEye/>:<FaEyeSlash/>}
+        onChange={(evt) => {
+          data.show_background_image = evt.target.checked
+          set_data({ ...data })
+        }}
+      >
+        {t('MEP.show_image')}
+      </Checkbox>
       <OverlayTrigger
         key={'imageDisabled2'}
         placement={'top'}
         delay={500}
-        overlay={(!has_open_sankey_plus)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+        overlay={
+          (!has_open_sankey_plus)?
+          <Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
+          <></>}
       >
-        <Col>
+        <Box>
           <Button
-            variant='outline-primary'
-            style={{width:'100%'}}
-            className='btn_menu_config'
-            disabled={!data.show_background_image}
+            variant='menuconfigpanel_option_button'
+            isDisabled={!data.show_background_image || !has_open_sankey_plus}
             onClick={()=>{
               if (_load_image.current) {
                 _load_image.current.name = ''
                 _load_image.current.click()
               }
             }}
-          ><FaFileImport/></Button>
-
+          >
+            <FaFileImport/>
+          </Button>
           <Form.Control
             ref={_load_image}
             style={{display:'none'}}
@@ -102,10 +134,9 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
               reader.readAsDataURL(files[0])
             }}
           />
-        </Col>
+        </Box>
       </OverlayTrigger>
-    </Row>
-
+    </Box>
   </>
   return content_image
 }
@@ -149,7 +180,7 @@ export const OSPIsAllNodeNotLocalAttrSameValue : OSPIsAllNodeNotLocalAttrSameVal
   k_list:(keyof SankeyPlusNode)[]
 )=>{
   // store_value : variable that contain an array forEach key we are looking for
-  // Each array contain in first position the value of the selected nodes attribute 
+  // Each array contain in first position the value of the selected nodes attribute
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
   const store_value={} as {[x:string]:[ValueOf<SankeyPlusNode>|false,boolean]}
 
