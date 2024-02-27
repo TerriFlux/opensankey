@@ -1,11 +1,19 @@
 import React,{useState} from 'react'
-import { FormControl, Form, OverlayTrigger, Tooltip, Col, FormLabel, Row } from 'react-bootstrap'
+import { OverlayTrigger, Tooltip } from 'react-bootstrap'
 import {
   Box,
-  Checkbox
+  Checkbox,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  Input,
+  InputGroup,
+  InputRightAddon,
 } from '@chakra-ui/react'
 
-import { GetLinkValue, StyleTitleSubSectionMenuEditionElements, styleRowInput } from './SankeyUtils'
+import { GetLinkValue } from './SankeyUtils'
 import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
 import { DrawLegend } from '../draw/SankeyDrawLegend'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -29,6 +37,13 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
   const [minimum_flux,set_minimum_flux] = useState(data.minimum_flux)
   const [maximum_flux,set_maximum_flux] = useState(data.maximum_flux)
 
+  const right_addon_pixel = (val: number) => {
+    if (val === 1) {
+      return 'pixel'
+    }
+    return 'pixels'
+  }
+
   if(data.maximum_flux && data.minimum_flux && data.minimum_flux>data.maximum_flux){
     data.maximum_flux=data.minimum_flux
     set_maximum_flux(data.minimum_flux)
@@ -36,271 +51,407 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
   return [
     <Box
       as='span'
-      layerStyle='submenuconfig_part'>
+      layerStyle='menuconfigpanel_part_title_1'>
       {t('Menu.background')}
     </Box>,
 
     /* Couleur du fond de la page */
-    <Row>
-      <Col><Form.Label>{t('Menu.BgC')}</Form.Label></Col>
-      <Col>
-        <OverlayTrigger
-          key={'MEP.tooltips.BgC'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.BgC'}>{t('MEP.tooltips.BgC')} </Tooltip>}>
-          <Form.Control
-            type='color'
-            value={data.couleur_fond_sankey}
-            id='form_color_zdd'
-            name='form_color_zdd'
-            className='btn_menu_config'
-            onChange={evt=>{
-              data.couleur_fond_sankey=evt.target.value
-              set_data({...data})
-            }}/>
-        </OverlayTrigger></Col>
-    </Row>,
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.BgC')}
+      </Box>
+      <OverlayTrigger
+        key={'MEP.tooltips.BgC'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'MEP.tooltips.BgC'}>{t('MEP.tooltips.BgC')} </Tooltip>}>
+        <Input
+          variant='menuconfigpanel_option_input_color'
+          type='color'
+          value={data.couleur_fond_sankey}
+          onChange={evt=>{
+            data.couleur_fond_sankey=evt.target.value
+            set_data({...data})
+          }}
+        />
+      </OverlayTrigger>
+    </Box>,
 
     extra_background_element,
 
     /* Quadrillage */
     /* Afficher le quadrillage */
-    <Row>
-      <Col>
-        <OverlayTrigger
-          key={'MEP.tooltips.GV'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.GV'}>{t('MEP.tooltips.GV')} </Tooltip>}>
-          <Checkbox
-            isChecked={data.grid_visible}
-            iconColor={data.grid_visible?'#78C2AD':'white'}
-            icon={data.grid_visible?<FaEye/>:<FaEyeSlash/>}
-            onChange={(evt) => {
-              data.grid_visible = evt.target.checked
-              set_data({ ...data })
-            }}
-          >
-            {t('MEP.TCG')}
-          </Checkbox>
-        </OverlayTrigger>
-      </Col>
-    </Row>,
+    <Box as='span'>
+      <OverlayTrigger
+        key={'MEP.tooltips.GV'}
+        placement={'top'}
+        delay={500}
+        rootClose
+        overlay={<Tooltip id={'MEP.tooltips.GV'}>{t('MEP.tooltips.GV')} </Tooltip>}>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={data.grid_visible}
+          icon={data.grid_visible?<FaEye/>:<FaEyeSlash/>}
+          onChange={(evt) => {
+            data.grid_visible = evt.target.checked
+            set_data({ ...data })
+          }}
+        >
+          {t('MEP.TCG')}
+        </Checkbox>
+      </OverlayTrigger>
+    </Box>,
 
-    <Row style={{display:(data.grid_visible?'':'none')}}>
-      <Col><Form.Label>{t('MEP.TCG_shift')}</Form.Label></Col>
-
-      {/* Taille de la grille */}
-      <Col>
+    /* Taille de la grille */
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+      style={{display:(data.grid_visible?'':'none')}}
+    >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.TCG_shift')}
+      </Box>
+      <Box>
         <OverlayTrigger
           key={'MEP.tooltips.TCG'}
           placement={'top'}
           delay={500}
           rootClose
           overlay={<Tooltip id={'MEP.tooltips.TCG'}>{t('MEP.tooltips.TCG')} </Tooltip>}>
-          <FormControl
-            type="number"
-            min={1}
-            max={100}
-            step={1}
-            className='btn_menu_config'
-            value={data.grid_square_size}
-            onChange={evt => {
-              data.grid_square_size = (+evt.target.value >= 1) ? +evt.target.value : 10
-              set_data({ ...data })
-            }}/>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              min={10}
+              step={1}
+              value={data.grid_square_size}
+              onChange={value => {
+                data.grid_square_size = Number(value)
+                set_data({ ...data })
+              }}
+            >
+              <NumberInputField/>
+              <NumberInputStepper>
+                <NumberIncrementStepper/>
+                <NumberDecrementStepper/>
+              </NumberInputStepper>
+            </NumberInput>
+            <InputRightAddon>
+              pixels
+            </InputRightAddon>
+          </InputGroup>
         </OverlayTrigger>
-      </Col>
-    </Row>,
+      </Box>
+    </Box>,
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />,
 
-    <span style={StyleTitleSubSectionMenuEditionElements({})}>{t('MEP.links_size')}</span>,
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_part_title_1'>
+      {t('MEP.links_size')}
+    </Box>,
 
-    <Row >
-      <Col><FormLabel>{t('MEP.Echelle')}</FormLabel></Col>
-      <Col><FormControl
-        type="text"
-        value={  userScaleRef.current }
-        isInvalid={userScaleRef.current!=data.user_scale}
-        className='btn_menu_config'
-        onChange={evt => {
-          userScaleRef.current =+evt.target.value
-          set_user_scale(+evt.target.value)
-        }}
-        onBlur={() => {
-          data.user_scale = userScaleRef.current
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.Echelle')}
+      </Box>
+      <Box>
+        <InputGroup
+          variant='menuconfigpanel_option_input'
+        >
+          <NumberInput
+            variant='menuconfigpanel_option_numberinput_with_right_addon'
+            min={1}
+            value={userScaleRef.current}
+            isInvalid={userScaleRef.current != data.user_scale}
+            inputMode='numeric'
+            errorBorderColor='red'
+            onChange={value => {
+              userScaleRef.current = Number(value)
+              set_user_scale(Number(value))
+            }}
+            onBlur={() => {
+              data.user_scale = userScaleRef.current
+              set_data({ ...data })
+            }}
+          >
+            <NumberInputField/>
+          </NumberInput>
+          <InputRightAddon>
+            {'unit. / 100 pixels'}
+          </InputRightAddon>
+        </InputGroup>
+        {/* <FormControl.Feedback type='invalid'>
+          {t('MEP.onBlur')}
+        </FormControl.Feedback> */}
+      </Box>
+    </Box>,
+
+    /* Taille minimale du flux */
+    <Box
+      layerStyle='menuconfigpanel_2row_3cols'
+    >
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='1'
+        gridColumnEnd='2'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        {t('MEP.link_size_limit')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MinFlux')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MaxFlux')}
+      </Box>
+      <Box
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OverlayTrigger
+          key={'MEP.tooltips.MinFlux'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'MEP.tooltips.MinFlux'}>{t('MEP.tooltips.MinFlux')} </Tooltip>}>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              min={1}
+              value={minimum_flux!}
+              inputMode='numeric'
+              onChange={value => {
+                set_minimum_flux(Number(value))
+              }}
+              onBlur={() => {
+                data.minimum_flux = isNaN(Number(minimum_flux))?undefined:minimum_flux
+                set_data({ ...data })
+              }}
+            >
+              <NumberInputField/>
+            </NumberInput>
+            <InputRightAddon>
+              {right_addon_pixel(minimum_flux!)}
+            </InputRightAddon>
+          </InputGroup>
+        </OverlayTrigger>
+      </Box>
+      <Box
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OverlayTrigger
+          key={'MEP.tooltips.MaxFlux'}
+          placement={'top'}
+          delay={500}
+          rootClose
+          overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              min={1}
+              value={maximum_flux!}
+              inputMode='numeric'
+              onChange={value => {
+                set_maximum_flux(Number(value))
+              }}
+              onBlur={() => {
+                data.maximum_flux = maximum_flux
+                set_data({ ...data })
+              }}
+            >
+              <NumberInputField/>
+            </NumberInput>
+            <InputRightAddon>
+              {right_addon_pixel(maximum_flux!)}
+            </InputRightAddon>
+          </InputGroup>
+        </OverlayTrigger>
+      </Box>
+    </Box>,
+
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />,
+
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_part_title_1'
+    >
+      <Checkbox
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={data.mask_legend?<FaEye/>:<FaEyeSlash/>}
+        isChecked={data.mask_legend}
+        onChange={(evt) => {
+          data.mask_legend = evt.target.checked
           set_data({ ...data })
         }}
-      />
-      <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback></Col>
-
-    </Row>,
-
-    <Row >
-      <Col><Form.Label>{t('MEP.link_size_limit')}</Form.Label></Col>
-      {/* Taille minimale du flux */}
-      <Col xs={6}>
-        <Row>
-          <Col><FormLabel >{t('MEP.MinFlux')}</FormLabel></Col>
-          <Col><FormLabel >{t('MEP.MaxFlux')}</FormLabel></Col>
-        </Row>
-
-        <Row>
-          <Col>
-            <OverlayTrigger
-              key={'MEP.tooltips.MinFlux'}
-              placement={'top'}
-              delay={500}
-              rootClose
-              overlay={<Tooltip id={'MEP.tooltips.MinFlux'}>{t('MEP.tooltips.MinFlux')} </Tooltip>}>
-
-              <FormControl
-                type="number"
-                value={minimum_flux!}
-                className='btn_menu_config'
-                onChange={evt => {
-                  set_minimum_flux(+evt.target.value)
-                }}
-                onBlur={() => {
-                  data.minimum_flux = isNaN(Number(minimum_flux))?undefined:minimum_flux
-                  set_data({ ...data })
-                }}/>
-            </OverlayTrigger>
-          </Col>
-
-          <Col>
-            <OverlayTrigger
-              key={'MEP.tooltips.MaxFlux'}
-              placement={'top'}
-              delay={500}
-              rootClose
-              overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
-              <FormControl
-                type="number"
-                value={maximum_flux!}
-                className='btn_menu_config'
-                onChange={evt => {
-                  set_maximum_flux(+evt.target.value)
-                }}
-                onBlur={() => {
-                  data.maximum_flux = maximum_flux
-                  set_data({ ...data })
-                }}/>
-            </OverlayTrigger>
-          </Col>
-        </Row>
-      </Col>
-
-    </Row>,
-
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />,
-
-    <Row>
-      <Col>
-        <Checkbox
-          variant='checkbox_title_style'
-          icon={data.mask_legend?<FaEye/>:<FaEyeSlash/>}
-          isChecked={data.mask_legend}
-          onChange={(evt) => {
-            data.mask_legend = evt.target.checked
-            set_data({ ...data })
-          }}
-        >
-          {t('Menu.Leg')}
-        </Checkbox>
-      </Col>
-    </Row>
+      >
+        {t('Menu.Leg')}
+      </Checkbox>
+    </Box>
     ,
 
-    <div style={{display:(data.mask_legend?'':'none')}}>
+    <Box
+      layerStyle='menuconfigpanel_grid'
+      style={{display:(data.mask_legend?'':'none')}}
+    >
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_part_title_2'>
+        {t('MEP.leg_layout')}
+      </Box>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_part_title_3'>
+        {t('MEP.leg_layout_text')}
+      </Box>
 
-      <Row><Col><b>{t('MEP.leg_layout')}</b></Col></Row>
-      <Row><Col><span style={{fontStyle:'italic'}}>{t('MEP.leg_layout_text')}</span></Col></Row>
       {/* Font size de la legende*/}
-
-      <Row style={styleRowInput()}>
-        <Col><Form.Label>{t('Menu.fontSize')}</Form.Label></Col>
-        <Col><OverlayTrigger
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_suboption_name'>
+          {t('Menu.fontSize')}
+        </Box>
+        <OverlayTrigger
           key={'Menu.tooltips.fontSize'}
           placement={'top'}
           delay={500}
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.fontSize'}>{t('Menu.tooltips.fontSize')} </Tooltip>}>
-          <FormControl
-            className='btn_menu_config'
-            type="number"
+          <NumberInput
+            variant='menuconfigpanel_option_numberinput'
+            min={1}
             step={1}
             value={data.legend_police}
-            onChange={evt =>{
-              data.legend_police=+evt.target.value
+            inputMode='numeric'
+            onChange={value =>{
+              data.legend_police = Number(value)
               set_data({ ...data })
-            }}/>
-        </OverlayTrigger></Col>
-      </Row>
+            }}
+          >
+            <NumberInputField/>
+            <NumberInputStepper>
+              <NumberIncrementStepper/>
+              <NumberDecrementStepper/>
+            </NumberInputStepper>
+          </NumberInput>
+        </OverlayTrigger>
+      </Box>
 
-      <Row><Col><span style={{fontStyle:'italic'}}>{t('MEP.leg_layout_background')}</span></Col></Row>
       {/* Couleur de fond de la légende */}
-      <Row style={styleRowInput()}>
-        <Col><Form.Label >{t('Menu.LegBgColor')}</Form.Label></Col>
-        <Col><OverlayTrigger
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_part_title_3'>
+        {t('MEP.leg_layout_background')}
+      </Box>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_suboption_name'>
+          {t('Menu.LegBgColor')}
+        </Box>
+        <OverlayTrigger
           key={'Menu.tooltips.LegBgColor'}
           placement={'top'}
           delay={500}
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegBgColor'}>{t('Menu.tooltips.LegBgColor')} </Tooltip>}>
-
-          <FormControl
-            className='btn_menu_config'
-            type="color"
-            id='form_color_leg'
-            name='form_color_leg'
+          <Input
+            variant='menuconfigpanel_option_input_color'
+            type='color'
             value={data.legend_bg_color}
             onChange={evt => {
               data.legend_bg_color = evt.target.value
               set_data({ ...data })
             }}
           />
-        </OverlayTrigger></Col>
-      </Row>
+        </OverlayTrigger>
+      </Box>
 
       {/* Opacité du fond de la légende */}
-      <Row style={styleRowInput()}>
-        <Col><Form.Label >{t('Menu.LegBgOpacity')}</Form.Label></Col>
-        <Col><OverlayTrigger
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_suboption_name'>
+          {t('Menu.LegBgOpacity')}
+        </Box>
+        <OverlayTrigger
           key={'Menu.tooltips.LegBgOpacity'}
           placement={'top'}
           delay={500}
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegBgOpacity'}>{t('Menu.tooltips.LegBgOpacity')} </Tooltip>}>
-          <FormControl
-            className='btn_menu_config'
-            type="number"
+          <NumberInput
+            variant='menuconfigpanel_option_numberinput'
             min={0}
-            max={1}
-            step={0.1}
+            max={100}
+            step={1}
             value={current_legend_bg_opacity}
-            onChange={evt => set_current_legend_bg_opacity(+evt.target.value)}
+            inputMode='numeric'
+            onChange={value => set_current_legend_bg_opacity(Number(value))}
             onBlur={() => {
               data.legend_bg_opacity = current_legend_bg_opacity
               set_data({ ...data })
-            }}/>
-        </OverlayTrigger></Col>
-      </Row>
+            }}
+          >
+            <NumberInputField/>
+            <NumberInputStepper>
+              <NumberIncrementStepper/>
+              <NumberDecrementStepper/>
+            </NumberInputStepper>
+          </NumberInput>
+        </OverlayTrigger>
+      </Box>
 
       {/* Affichage du bord de la légende */}
-      <Row style={styleRowInput()}>
-        <Col><OverlayTrigger
+      <Box as='span'>
+        <OverlayTrigger
           key={'Menu.tooltips.LegBgBorder'}
           placement={'top'}
           delay={500}
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegBgBorder'}>{t('Menu.tooltips.LegBgBorder')} </Tooltip>}>
           <Checkbox
-            iconColor='white'
+            variant='menuconfigpanel_option_checkbox'
             isChecked={data.legend_bg_border}
             onChange={(evt) => {
               data.legend_bg_border = evt.target.checked
@@ -309,108 +460,180 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           >
             {t('Menu.LegBgBorder')}
           </Checkbox>
-        </OverlayTrigger></Col>
-      </Row>
+        </OverlayTrigger>
+      </Box>
 
-      <Row><Col><b>{t('MEP.leg_pos')}</b></Col></Row>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_part_title_2'>
+        {t('MEP.leg_pos')}
+      </Box>
 
-      <Row >
-        <Col><Form.Label >{t('Menu.LegX')}</Form.Label></Col>
-        <Col><OverlayTrigger
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.LegX')}
+        </Box>
+        <OverlayTrigger
           key={'Menu.tooltips.LegX'}
           placement={'top'}
           delay={500}
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegX'}>{t('Menu.tooltips.LegX')} </Tooltip>}>
-          <FormControl
-            className='btn_menu_config'
-            type="text"
-            value={Math.round(legend_position[0])}
-            onChange={evt => set_legend_position([+evt.target.value, legend_position[1]])}
-            onBlur={() => {
-              data.legend_position = legend_position
-              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
-            }}/>
-        </OverlayTrigger></Col>
-      </Row>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              min={0}
+              step={1}
+              value={Math.round(legend_position[0])}
+              inputMode='numeric'
+              onChange={value => set_legend_position([Number(value), legend_position[1]])}
+              onBlur={() => {
+                data.legend_position = legend_position
+                DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              }}
+            >
+              <NumberInputField/>
+              <NumberInputStepper>
+                <NumberIncrementStepper/>
+                <NumberDecrementStepper/>
+              </NumberInputStepper>
+            </NumberInput>
+            <InputRightAddon>
+              {right_addon_pixel(Math.round(legend_position[0]))}
+            </InputRightAddon>
+          </InputGroup>
+        </OverlayTrigger>
+      </Box>
 
       {/* Position Y de la legende */}
-      <Row >
-        <Col><Form.Label>{t('Menu.LegY')}</Form.Label></Col>
-        <Col><OverlayTrigger
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.LegY')}
+        </Box>
+        <OverlayTrigger
           key={'Menu.tooltips.LegY'}
           placement={'top'}
           delay={500}
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegY'}>{t('Menu.tooltips.LegY')} </Tooltip>}>
-          <FormControl
-            className='btn_menu_config'
-            type="text"
-            value={Math.round(legend_position[1])}
-            onChange={evt => set_legend_position([legend_position[0], +evt.target.value])}
-            onBlur={() => {
-              data.legend_position = legend_position
-              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
-            }}/>
-        </OverlayTrigger></Col>
-      </Row>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              min={0}
+              step={1}
+              value={Math.round(legend_position[1])}
+              inputMode='numeric'
+              onChange={value => set_legend_position([legend_position[0], Number(value)])}
+              onBlur={() => {
+                data.legend_position = legend_position
+                DrawLegend(
+                  dict_variable_application_data,
+                  applicationContext,
+                  contextMenu,
+                  GetLinkValue,
+                  legend_clicked)
+              }}
+            >
+              <NumberInputField/>
+              <NumberInputStepper>
+                <NumberIncrementStepper/>
+                <NumberDecrementStepper/>
+              </NumberInputStepper>
+            </NumberInput>
+            <InputRightAddon>
+              {right_addon_pixel(Math.round(legend_position[1]))}
+            </InputRightAddon>
+          </InputGroup>
+        </OverlayTrigger>
+      </Box>
 
       {/* Largeur de la fenetre de legende */}
-      <Row >
-        <Col><Form.Label>{t('Menu.LegWidth')}</Form.Label></Col>
-        <Col><OverlayTrigger
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.LegWidth')}
+        </Box>
+        <OverlayTrigger
           key={'Menu.tooltips.LegWidth'}
           placement={'top'}
           delay={500}
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegWidth'}>{t('Menu.tooltips.LegWidth')} </Tooltip>}>
-          <FormControl
-            className='btn_menu_config'
-            type="number"
-            step={1}
-            value={data.legend_width}
-            onChange={evt =>{
-              data.legend_width=+evt.target.value
-              set_data({ ...data })
-            }}/>
-        </OverlayTrigger></Col>
-      </Row>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              min={0}
+              step={1}
+              value={data.legend_width}
+              inputMode='numeric'
+              onChange={value =>{
+                data.legend_width = Number(value)
+                set_data({ ...data })
+              }}
+            >
+              <NumberInputField/>
+              <NumberInputStepper>
+                <NumberIncrementStepper/>
+                <NumberDecrementStepper/>
+              </NumberInputStepper>
+            </NumberInput>
+            <InputRightAddon>
+              {right_addon_pixel(data.legend_width)}
+            </InputRightAddon>
+          </InputGroup>
+        </OverlayTrigger>
+      </Box>
 
-      <Row><Col><b>{t('MEP.leg_info')}</b></Col></Row>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_part_title_2'>
+        {t('MEP.leg_info')}
+      </Box>
 
       {/* Afficher l'échelle sur le graphe*/}
-      <Row>
-        <Col>
-          <Checkbox
-            isChecked={data.display_legend_scale}
-            iconColor='white'
-            checked={data.display_legend_scale}
-            onChange={(evt) => {
-              data.display_legend_scale = evt.target.checked
-              set_data({ ...data })
-            }}
-          >
-            {t('Menu.display_scale')}
-          </Checkbox>
-        </Col>
-      </Row>
+      <Box as='span'>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={data.display_legend_scale}
+          checked={data.display_legend_scale}
+          onChange={(evt) => {
+            data.display_legend_scale = evt.target.checked
+            set_data({ ...data })
+          }}
+        >
+          {t('Menu.display_scale')}
+        </Checkbox>
+      </Box>
 
       {/* Afficher les dataTags dans la légende*/}
-      <Row>
-        <Col>
-          <Checkbox
-            isChecked={data.legend_show_dataTags}
-            iconColor='white'
-            checked={data.legend_show_dataTags}
-            onChange={(evt) => {
-              data.legend_show_dataTags = evt.target.checked
-              set_data({ ...data })
-            }}
-          >
-            {t('MEP.leg_show_dataTags')}
-          </Checkbox>
-        </Col>
-      </Row>
-    </div>
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={data.legend_show_dataTags}
+        checked={data.legend_show_dataTags}
+        onChange={(evt) => {
+          data.legend_show_dataTags = evt.target.checked
+          set_data({ ...data })
+        }}
+      >
+        {t('MEP.leg_show_dataTags')}
+      </Checkbox>
+    </Box>
   ]
 }
