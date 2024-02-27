@@ -1,5 +1,4 @@
-import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
-import { GetLinkValueFuncType } from './SankeyUtilsTypes'
+import { LinkFunctionTypes, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 
 
 export type MenuConfigurationLinksFType = (
@@ -8,6 +7,6 @@ export type MenuConfigurationLinksFType = (
   applicationContext:applicationContextType,
   additional_data_element:JSX.Element[],
   additional_link_appearence_items:JSX.Element[],
-  GetLinkValue:GetLinkValueFuncType
+  link_function:LinkFunctionTypes,
 ) => { [s: string]: JSX.Element; }
 

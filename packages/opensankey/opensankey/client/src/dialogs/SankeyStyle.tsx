@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { Dispatch, MutableRefObject, SetStateAction, useState } from 'react'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
-import {  CutName,DefaultNodeStyle,DefaultLinkStyle, GetLinkValue } from '../configmenus/SankeyUtils'
+import {  CutName,DefaultNodeStyle,DefaultLinkStyle } from '../configmenus/SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import {SankeyMenuConfigurationNodesAttributes} from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import {MenuConfigurationLinksAppearence} from '../configmenus/SankeyMenuConfigurationLinksAppearence'
@@ -108,7 +108,8 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   ref_show_style_link: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  additional_link_appearence_items:JSX.Element[]
+  additional_link_appearence_items:JSX.Element[],
+  link_function
 ) => {
   const {data,set_data}=dict_variable_application_data
   const {t}=applicationContext
@@ -182,7 +183,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
           <Col md={12}>
             {MenuConfigurationLinksAppearence(
               dict_variable_application_data,dict_variable_elements_selected,applicationContext,additional_link_appearence_items,
-              true,GetLinkValue,true
+              true,link_function,true
             )
             }
           </Col>

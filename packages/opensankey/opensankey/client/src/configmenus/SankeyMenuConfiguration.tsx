@@ -61,7 +61,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   // ref_setter_sub_nav_item_active.current = setsubnavitemactive
   // ref_nav_item_active.current = nav_index
 
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const {t}=applicationContext
   const {links_accordion_ref, nodes_accordion_ref, accordion_ref} = uiElementsRef
   const {multi_selected_nodes}=dict_variable_elements_selected
@@ -130,8 +130,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             <AccordionPanel>
               <SankeyNodeEdition
                 t={t}
-                data={data}
-                set_data={set_data}
+                dict_variable_application_data={dict_variable_application_data}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
                 token={token}

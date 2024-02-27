@@ -12,7 +12,7 @@ import { textwrap } from 'd3-textwrap'
 import { TFunction } from 'i18next'
 
 /*************************************************************************************************/
-import { SankeyData, SankeyNode, treeFolderType } from '../types/Types'
+import { SankeyData, SankeyNode, dict_variable_application_dataType, treeFolderType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { 
   OpenSankeyMenuConfigurationNodesFType, add_childrenFType, 
@@ -33,8 +33,7 @@ import { selected_type } from '../topmenus/SankeyMenuTop'
 
 type SankeyEditionTypes = {
   t : TFunction,
-  data : SankeyData,
-  set_data : (_:SankeyData)=>void,
+  dict_variable_application_data:dict_variable_application_dataType,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes : JSX.Element[],
   token : boolean
@@ -85,8 +84,9 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,data, set_data, multi_selected_nodes, menu_configuration_nodes,token }
+  {t,dict_variable_application_data, multi_selected_nodes, menu_configuration_nodes,token }
 ) => {
+  const {data,set_data}=dict_variable_application_data
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
 
@@ -252,8 +252,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           className='btn_menu_config'
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
-            AddNewNode(data,set_data,multi_selected_nodes)
-            ApplyStyleToNodes(data,set_data,multi_selected_nodes)
+            AddNewNode(dict_variable_application_data,multi_selected_nodes)
+            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes)
           }}>
           <FaPlus/>
         </Button>
