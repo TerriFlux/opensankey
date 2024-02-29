@@ -1,6 +1,8 @@
 import React, { FunctionComponent, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup, Form, Row, Col } from 'react-bootstrap'
 import {
+  ComponentUpdaterType,
+  LinkFunctionTypes,
   SankeyLink,
   SankeyNode,
   applicationContextType,
@@ -36,10 +38,15 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   applicationContext:applicationContextType,
   additional_data_element:JSX.Element[],
   additional_link_appearence_items:JSX.Element[],
-  link_function
+  link_function,
+  ComponentUpdater
 ) => {
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
+  const [forceUpdate,setForceUpdate]=useState(false)
+  const {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
+  ref_get_update_menu_config_link.current=forceUpdate
+  ref_set_update_menu_config_link.current=setForceUpdate
 
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
@@ -56,7 +63,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       applicationContext,
       additional_link_appearence_items,
       false,
-      link_function
+      link_function,
+      ComponentUpdater
     ),
     'tooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t,false)
   }
@@ -77,14 +85,18 @@ type SankeyMenuConfigurationLinksTypes = {
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
-  menu_configuration_links : JSX.Element[]
+  menu_configuration_links : JSX.Element[],
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType
+
 }
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
   { dict_variable_application_data,
     dict_variable_elements_selected,
     applicationContext,
-    menu_configuration_links
+    menu_configuration_links,
+    link_function,
   }
 ) => {
   const {t}=applicationContext
@@ -94,7 +106,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
   const [pre_idSource,set_pre_idSource]=useState('none')
   const [pre_idTarget,set_pre_idTarget]=useState('none')
-
   dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
@@ -213,9 +224,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     if (Object.keys(nodes).length < 2) {
       if (Object.keys(nodes).length == 0) {
-        AddNewNode(dict_variable_application_data,multi_selected_nodes)
+        AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function)
       }
-      AddNewNode(dict_variable_application_data,multi_selected_nodes)
+      AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function)
     }
     const link: SankeyLink = DefaultLink(data)
     // Méthode pour incrementer idNode

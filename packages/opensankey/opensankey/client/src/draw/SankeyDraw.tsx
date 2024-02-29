@@ -15,6 +15,7 @@ import { RemoveAnimate,
 import LZString from 'lz-string'
 import { SankeyDrawTypes, keyHandlerFType } from './types/SankeyDrawTypes'
 import { SvgDragMiddleMouseStart, SvgDragMiddleMouseMove, EventZDDContextMenu } from './SankeyDrawEventFunction'
+import { AddDrawNodesEvent } from './SankeyDrawNodes'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -187,13 +188,22 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // ctrl + s save a view of the data
 // Delete key allow us to delete selected elments (nodes,links, free label)
 export const keyHandler : keyHandlerFType = (
+  dict_variable_application_data,
+  uiElementsRef,
+  contextMenu,
   e: KeyboardEvent,data:SankeyData,
   dict_variable_elements_selected,
   set_data:(d:SankeyData)=>void,
-  closeAllMenu:()=>void
-
+  closeAllMenu:()=>void,
+  ref_alt_key_pressed,
+  accept_simple_click,
+  link_function,
+  NodeTooltipsContent,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components
 ) => {
   const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
+  const{ref_get_update_menu_config_node,ref_set_update_menu_config_node,ref_get_update_menu_config_link,ref_set_update_menu_config_link,ref_get_update_menu_config_node_appearence,ref_set_update_menu_config_node_appearence}=ComponentUpdater
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true && (!document.activeElement?.className.includes('ql-editor')))) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
@@ -288,8 +298,11 @@ export const keyHandler : keyHandlerFType = (
     multi_selected_links.current=[]
 
     closeAllMenu()
+    AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,  dict_hook_ref_setter_show_dialog_components)
+    ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
+    ref_set_update_menu_config_node_appearence.current(!ref_get_update_menu_config_node_appearence.current)
 
-
+    ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
   }else if(e.key=='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
