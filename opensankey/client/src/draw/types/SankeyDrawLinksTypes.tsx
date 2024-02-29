@@ -1,7 +1,7 @@
 import { MutableRefObject } from 'react'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkColorFuncType, LinkTextFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType, LinkFunctionTypes } from '../../types/Types'
+import { SankeyData, SankeyLink, SankeyNode, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType, LinkFunctionTypes, dict_hook_ref_setter_show_dialog_componentsType, ComponentUpdaterType } from '../../types/Types'
 
 export type LinkStrokeFuncType = (l: SankeyLink, data: SankeyData, GetLinkValue: GetLinkValueFuncType) => string
 
@@ -31,7 +31,10 @@ export type DrawAllLinksFType = (
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   alt_key_pressed:MutableRefObject<boolean>,
   position:'absolute' | 'relative',
-  link_functions : LinkFunctionTypes
+  link_functions : LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+
 ) => JSX.Element
 
 export type AddDrawLinksEventsFType = (
@@ -39,6 +42,9 @@ export type AddDrawLinksEventsFType = (
   dict_variable_application_data:dict_variable_application_dataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
-  link_functions : LinkFunctionTypes
+  link_functions : LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+
 ) => void
 

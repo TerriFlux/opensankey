@@ -9,7 +9,8 @@ import { SankeyData,
   SankeyLinkAttrLocal,
   SankeyLinkStyle,
   TagsCatalog, 
-  dict_variable_application_dataType} from '../types/Types'
+  dict_variable_application_dataType,
+  LinkFunctionTypes} from '../types/Types'
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
@@ -36,8 +37,8 @@ import {
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
-import { drawNodeShape } from '../draw/SankeyDrawNodes'
-import { DrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
+import { updateDrawNodeShape } from '../draw/SankeyDrawNodes'
+import { UpdateDrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1756,18 +1757,22 @@ export const NodeContextHasDesaggregate:NodeContextHasDesaggregateFuncType = (n:
 }
 
 export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (dict_variable_application_data:dict_variable_application_dataType,
-  multi_selected_nodes:{current:SankeyNode[]}) => {
+  multi_selected_nodes:{current:SankeyNode[]},
+  link_function:LinkFunctionTypes
+) => {
   multi_selected_nodes.current.map(d => {
     // Delete local value so the used value come from the style
     delete d.local
   })
-  drawNodeShape(dict_variable_application_data.data,multi_selected_nodes)
-  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+  updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
+  UpdateDrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
 
 }
 
 export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
-  multi_selected_nodes:{current:SankeyNode[]}) => {
+  multi_selected_nodes:{current:SankeyNode[]},
+  link_function
+) => {
   const {data,set_data}=dict_variable_application_data
   const { nodes } = data
   const node: SankeyNode = DefaultNode(data)
@@ -1790,7 +1795,7 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   }
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
-  ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes)
+  ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes,link_function)
   set_data({...data})
 }
 

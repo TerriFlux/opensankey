@@ -248,19 +248,36 @@ export const SetNodeHeight:SetNodeHeightFuncType = (
 ) => {
   const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
   const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
+  const n_w=ReturnValueNode(data,n,'node_width') as number
+  const n_h=ReturnValueNode(data,n,'node_height') as number
   let node_size_s_height = Math.max(
-    inv_scale((ReturnValueNode(data,n,'node_height') as number)), total_offset_height_left, total_offset_height_right
+    inv_scale(n_h), total_offset_height_left, total_offset_height_right
   )
   let node_size_s_width = Math.max(
-    inv_scale((ReturnValueNode(data,n,'node_width') as number)), total_offset_width_top, total_offset_width_bottom
+    inv_scale(n_w), total_offset_width_top, total_offset_width_bottom
   )
   //Hauteur des noeuds
   if (res[0] === 0 && res[1] === 0 && res[2] === 0 && res[3] === 0 || data.show_structure == 'structure') {
-    node_size_s_height = inv_scale((ReturnValueNode(data,n,'node_height') as number))
-    node_size_s_width = inv_scale((ReturnValueNode(data,n,'node_width') as number))
+    node_size_s_height = inv_scale(n_h)
+    node_size_s_width = inv_scale(n_w)
   }
   d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))
+
+  const shape=ReturnValueNode(data, n, 'shape')
+  if( shape=== 'ellipse'){
+    d3.select(' .opensankey #shape_' + n.idNode)
+      .attr('cx', () => scale(node_size_s_width) / 2)
+      .attr('cy', () =>scale(node_size_s_height)/ 2)
+      .attr('rx', () => scale(node_size_s_width) / 2)
+      .attr('ry', () => scale(node_size_s_height)/ 2)
+    
+  }else if(shape==='arrow'){
+    const k_angle = ReturnValueNode(data, n, 'node_arrow_angle_factor') as number
+    const angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
+    const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction)
+    d3.select(' .opensankey #shape_' + n.idNode).attr('d',path)
+  }
 }
 
 
@@ -433,7 +450,6 @@ export const DrawArrows : DrawArrowsType = (
     if (!display_style.filter || link_value >= display_style.filter) {
       //selection
       d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
-      SetNodeHeight(n, display_nodes,display_links, data,scale,inv_scale,GetLinkValue)
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'arrow')
