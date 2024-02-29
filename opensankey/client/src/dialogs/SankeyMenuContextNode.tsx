@@ -334,7 +334,6 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         onClick={() => {
           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
             multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>d.outputLinksId.includes(l.idLink)))
-            console.log(multi_selected_links.current[0])
             const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
             dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
           })

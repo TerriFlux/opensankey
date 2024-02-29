@@ -237,10 +237,8 @@ export const DrawLegend : DrawLegendFType= (
       dx = dx + pas
 
     })
-    console.log(data.legend_show_dataTags)
 
     if(data.legend_show_dataTags){
-      console.log('draw dataTags')
       dy+=(dy==0)?-30:30
     
       const data_tags = Object.assign({},data.dataTags)

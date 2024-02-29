@@ -1,18 +1,19 @@
 import React from 'react'
 import * as d3 from 'd3'
 
-import { SankeyData, SankeyNode} from '../types/Types'
+import { LinkFunctionTypes, SankeyNode, dict_variable_application_dataType} from '../types/Types'
 import { AddDrawNodesFType, DrawNodesFType, drawNodeShapeFType } from './types/SankeyDrawNodesTypes'
 
-import {NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
+import { NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
-  scale,inv_scale,SetNodeHeight,
+  SetNodeHeight,
   nodeTransform,NodeStrokeWidth,PathNodeArrowShape 
 } from './SankeyDrawFunction'
 import { SimpleGNodeClick } from './SankeyDrawEventFunction'
 import { EventOnMouseUpAddNodesAndLink } from './SankeyDrawEventFunction'
 import { EventNodeContextMenu } from './SankeyDrawEventFunction'
 import { DragGNodeEvent } from './SankeyDragNodes'
+import { updateDrawAllNodesLabel } from './SankeyDrawNodesLabel'
 
 declare const window: Window &
 typeof globalThis & {
@@ -235,25 +236,23 @@ export const DrawAllNodes : DrawNodesFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent
+  NodeTooltipsContent,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components
 ) => {
-  const { GetLinkValue } = link_function
-  const { data, display_nodes, display_links } = dict_variable_application_data
+  const {display_nodes}=dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
-        
+  const {GetLinkValue}=link_function
   // The majority of data used to design the node are located in data['nodes']
   // Or if you want information about the type of these variable, you can find them in file types.tsx
   d3.selectAll(' .opensankey .gg_nodes').remove()
-  dict_variable_elements_selected.multi_selected_nodes.current=Object.values(dict_variable_application_data.display_nodes)
   drawAddNodes(
     contextMenu, dict_variable_application_data, uiElementsRef, dict_variable_elements_selected,
-    alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent
+    alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components
   )
-  drawNodeShape(data,multi_selected_nodes)
+  updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
+  updateDrawAllNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
 
-  Object.values(display_nodes).map(n => SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue))
-
-  dict_variable_elements_selected.multi_selected_nodes.current=[]
 
 }
 
@@ -265,15 +264,23 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent
+  NodeTooltipsContent,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components
 ) => {
   const { LinkText, GetLinkValue } = link_function
   const { data, display_nodes } = dict_variable_application_data
   const { ref_getter_mode_selection, multi_selected_nodes, first_selected_node } = dict_variable_elements_selected
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
-  const filtered_gggnodes = ggg_nodes.filter(
-    n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
-  )
+  // const filtered_gggnodes = ggg_nodes.filter(
+  //   n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
+  // )
   
   if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
     // Add event listener to click 
@@ -293,15 +300,16 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
         accept_simple_click.current=true
       },200)
     }
-    filtered_gggnodes
+    ggg_nodes
+      .filter(()=>!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))
       .on('click', (event, d) => SimpleGNodeClick(
-        dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click
+        dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components
       )
       )
       .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
 
     if (ref_getter_mode_selection.current == 'ln') {
-      filtered_gggnodes.on('mousedown', function (event, d) {
+      ggg_nodes.on('mousedown', function (event, d) {
         if (!event.ctrlKey && !event.metaKey) {
           first_selected_node.current = d
         }
@@ -314,13 +322,15 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
           uiElementsRef,
           contextMenu,
           link_function,
-          alt_key_pressed
+          alt_key_pressed,
+          ComponentUpdater,
+          dict_hook_ref_setter_show_dialog_components
         )
         )
     }
     // When the mouse is in mode selection, it allow nodes to be dragged
     if(ref_getter_mode_selection.current=='s' && window.SankeyToolsStatic!==true){
-      filtered_gggnodes.call(
+      ggg_nodes.call(
         DragGNodeEvent(
           dict_variable_application_data,dict_variable_elements_selected,
           alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale
@@ -329,7 +339,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     }
   }
   // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-  filtered_gggnodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)}})
+  ggg_nodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)}})
   // Add tooltip when mouse hover the <g> element that contains shape/label/icon (everything that compose a node)
   const gg_nodes = d3.selectAll(' .opensankey .gg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>
   const filtered_gg_nodes = gg_nodes.filter(
@@ -370,18 +380,28 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
         
 }
 
-export const drawNodeShape  = (
-  data: SankeyData,
-  multi_selected_nodes : { current : SankeyNode[] }
+export const updateDrawNodeShape  = (
+  dict_variable_application_data:dict_variable_application_dataType,
+  link_function:LinkFunctionTypes,
+  multi_selected_nodes : { current : SankeyNode[] },
+  node_to_update:SankeyNode[]
 ) =>{
+  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {GetLinkValue}=link_function
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
   const filtered_gggnodes = ggg_nodes.filter(
-    n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
+    n=> node_to_update.length>0 ? node_to_update.includes(n) : true
   )
-  filtered_gggnodes.selectAll('rect').remove()
-  filtered_gggnodes.selectAll('ellipse').remove()
-  filtered_gggnodes.selectAll('path').remove()
-  
+  // filtered_gggnodes.selectAll('rect').remove()
+  // filtered_gggnodes.selectAll('ellipse').remove()
+  // filtered_gggnodes.selectAll('path').remove()
+  filtered_gggnodes.selectAll('*').remove()
   filtered_gggnodes
     .filter(d => ReturnValueNode(data, d, 'shape') === 'rect')
     .append('rect')
@@ -414,7 +434,7 @@ export const drawNodeShape  = (
       return path
     })
   // Apply node's parameters to each node
-  d3.selectAll(' .opensankey .node')
+  d3.selectAll(' .opensankey .node_shape')
     .attr('id', d => 'shape_'+(d as SankeyNode).idNode)
     .attr('fill-opacity', d => ReturnValueNode(data,(d as SankeyNode),'shape_visible') ? '1' : '0')
     .attr('fill', d => NodeColor(d as SankeyNode,data) as string)
@@ -425,12 +445,14 @@ export const drawNodeShape  = (
     }
     )
 
-  multi_selected_nodes.current.forEach(n=>{
-    const node_size_s_height = inv_scale((ReturnValueNode(data,n,'node_height') as number))
-    const node_size_s_width = inv_scale((ReturnValueNode(data,n,'node_width') as number))
-    d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
-    d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))
-  })
+  // multi_selected_nodes.current.forEach(n=>{
+  //   const node_size_s_height = inv_scale((ReturnValueNode(data,n,'node_height') as number))
+  //   const node_size_s_width = inv_scale((ReturnValueNode(data,n,'node_width') as number))
+  //   d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
+  //   d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))    
+  // })
+  // SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue)
+  node_to_update.forEach(n=>SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue))
 }
 
 
@@ -442,11 +464,14 @@ export const drawAddNodes : drawNodeShapeFType = (
   alt_key_pressed,
   accept_simple_click,
   link_function,
-  NodeTooltipsContent
+  NodeTooltipsContent,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components
 ) => {
   const {multi_selected_nodes } = dict_variable_elements_selected
   const { data,display_nodes, display_links } = dict_variable_application_data
-  const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
+  // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
+  const filtered_data = Object.values(display_nodes)
   filtered_data.forEach(n=>{
     d3.select(' .opensankey #g_nodes').datum(n).append('g')
       .attr('id', d => {
@@ -468,7 +493,7 @@ export const drawAddNodes : drawNodeShapeFType = (
       .attr('class', 'ggg_nodes')
       .attr('transform', d => nodeTransform(d, display_nodes, display_links))
   })
-  drawNodeShape(data,multi_selected_nodes)
+  updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
   AddDrawNodesEvent(
     contextMenu,
     dict_variable_application_data,
@@ -477,7 +502,9 @@ export const drawAddNodes : drawNodeShapeFType = (
     alt_key_pressed,
     accept_simple_click,
     link_function,
-    NodeTooltipsContent
+    NodeTooltipsContent,
+    ComponentUpdater,
+    dict_hook_ref_setter_show_dialog_components
   )
 }
 

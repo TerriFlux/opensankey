@@ -1,6 +1,6 @@
 import { 
   applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType,
-  dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType 
+  dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType, LinkFunctionTypes, ComponentUpdaterType 
 } from '../../types/Types'
 
 
@@ -21,6 +21,9 @@ export type OpenSankeyConfigurationsMenusFType = (
     [s: string]: JSX.Element;
   },
   additional_accordion_edition_elements:JSX.Element[],
-  token:boolean
+  token:boolean,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType
+
 ) => JSX.Element[]
 

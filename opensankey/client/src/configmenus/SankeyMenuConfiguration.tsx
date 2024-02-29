@@ -52,7 +52,10 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   menu_configuration_nodes,
   menu_configuration_links,
   additional_accordion_edition_elements,
-  token
+  token,
+  link_function,
+  ComponentUpdater
+
 ) => {
   // const [subnavitemactive, setsubnavitemactive] = useState('')
   // const [nav_index, setNavIndex] = useState(-1)
@@ -63,7 +66,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
 
   const {data}=dict_variable_application_data
   const {t}=applicationContext
-  const {links_accordion_ref, nodes_accordion_ref, accordion_ref} = uiElementsRef
+  const {links_accordion_ref, nodes_accordion_ref} = uiElementsRef
   const {multi_selected_nodes}=dict_variable_elements_selected
   // const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const show_menu_config_tag = (
@@ -99,7 +102,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
         //MENU ITEMS
       }
       <AccordionButton
-        ref={accordion_ref as Ref<HTMLButtonElement>}
+        
       >
         <Box
           as='span'
@@ -134,6 +137,8 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
                 token={token}
+                link_function={link_function}
+                ComponentUpdater={ComponentUpdater}
               />
             </AccordionPanel>
           </AccordionItem>
@@ -158,6 +163,9 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 applicationContext={applicationContext}
                 dict_variable_elements_selected={dict_variable_elements_selected}
                 menu_configuration_links={Object.values(menu_configuration_links)}
+                link_function={link_function}
+                ComponentUpdater={ComponentUpdater}
+
               />
             </AccordionPanel>
           </AccordionItem>

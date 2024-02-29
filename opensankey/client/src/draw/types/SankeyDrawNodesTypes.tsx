@@ -1,6 +1,6 @@
 import { MutableRefObject} from 'react'
 
-import { dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,LinkFunctionTypes } from '../../types/Types'
+import { dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,LinkFunctionTypes, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType } from '../../types/Types'
 import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 
 
@@ -12,7 +12,10 @@ export type DrawNodesFType = (
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType
+  NodeTooltipsContent:NodeTooltipsContentFType,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+
 ) => void
   
 
@@ -24,7 +27,11 @@ export type AddDrawNodesFType = (
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType
+  NodeTooltipsContent:NodeTooltipsContentFType,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+
+
 ) => void
   
 export type drawNodeShapeFType = (
@@ -35,5 +42,8 @@ export type drawNodeShapeFType = (
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType
+  NodeTooltipsContent:NodeTooltipsContentFType,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+
   ) => void

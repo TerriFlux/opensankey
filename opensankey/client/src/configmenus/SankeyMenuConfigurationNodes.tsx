@@ -12,7 +12,7 @@ import { textwrap } from 'd3-textwrap'
 import { TFunction } from 'i18next'
 
 /*************************************************************************************************/
-import { SankeyData, SankeyNode, dict_variable_application_dataType, treeFolderType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, SankeyNode, dict_variable_application_dataType, treeFolderType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { 
   OpenSankeyMenuConfigurationNodesFType, add_childrenFType, 
@@ -36,7 +36,10 @@ type SankeyEditionTypes = {
   dict_variable_application_data:dict_variable_application_dataType,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes : JSX.Element[],
-  token : boolean
+  token : boolean,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType
+
 }
 
 export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
@@ -84,11 +87,14 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,dict_variable_application_data, multi_selected_nodes, menu_configuration_nodes,token }
+  {t,dict_variable_application_data, multi_selected_nodes, menu_configuration_nodes,token,link_function,ComponentUpdater }
 ) => {
   const {data,set_data}=dict_variable_application_data
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
+  const {ref_get_update_menu_config_node,ref_set_update_menu_config_node}=ComponentUpdater
+  ref_get_update_menu_config_node.current=forceUpdate
+  ref_set_update_menu_config_node.current=setForceUpdate
 
   const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
   const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?node_visible.includes(d.idNode):true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
@@ -252,8 +258,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           className='btn_menu_config'
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
-            AddNewNode(dict_variable_application_data,multi_selected_nodes)
-            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes)
+            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function)
+            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function)
           }}>
           <FaPlus/>
         </Button>

@@ -46,6 +46,7 @@ import { UploadExcelImpl } from '../dialogs/SankeyPersistence'
 import { DownloadExamples } from '../dialogs/SankeyPersistence'
 import { RepositionneSidebar } from '../draw/SankeyDrawFunction'
 import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
+import { AddDrawNodesEvent } from '../draw/SankeyDrawNodes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -443,6 +444,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   {
     applicationContext,
     dict_variable_application_data,
+    dict_variable_elements_selected,
     uiElementsRef,
     contextMenu,
     processFunctions,
@@ -457,15 +459,22 @@ export const Menu: FunctionComponent<MenuTypes> = (
     convert_data,
     elementToDispose,
     apply_transformation_additional_elements,
-    DiagramSelector
+    DiagramSelector,
+    ref_alt_key_pressed,
+    accept_simple_click,
+    link_function,
+    NodeTooltipsContent,
+    ComponentUpdater
   }
 ) => {
-  const {ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
+  const {ref_getter_show_menu_config,ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
+  const {ref_setter_mode_selection} = dict_variable_elements_selected
   const [show_nav,set_show_nav] = useState(false)
   const [show_tuto,set_show_tuto]=useState(false)
   const [show_support,set_show_support]=useState(false)
   const [show_template,set_show_template]=useState(false)
 
+  ref_getter_show_menu_config.current=show_nav
   ref_setter_show_menu_config.current=set_show_nav
   ref_setter_show_modale_tuto.current=set_show_tuto
   ref_setter_show_modale_support.current=set_show_support
@@ -686,6 +695,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
         contextMenu.ref_setter_contextualised_link.current!(undefined)
         contextMenu.showContextZDDRef.current![1](false)
         contextMenu.tagContext.current![0][1](undefined)
+        ref_setter_mode_selection.current('s')
+        AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>

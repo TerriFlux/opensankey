@@ -6,7 +6,7 @@ import { RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistence
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { OpenSankeyDiagramSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
-import { LinkTooltipsContentFType } from '../draw/types/SankeyTooltipTypes'
+import { LinkTooltipsContentFType, NodeTooltipsContentFType } from '../draw/types/SankeyTooltipTypes'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -345,6 +345,7 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_modal_template : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_getter_show_menu_config :  MutableRefObject<boolean|undefined>,
   ref_show_style_node : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>
 }
@@ -429,6 +430,7 @@ export type agregationType = {
 export type MenuTypes = {
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   uiElementsRef : uiElementsRefType,
   contextMenu : contextMenuType,
   processFunctions : processFunctionsType,
@@ -445,7 +447,14 @@ export type MenuTypes = {
   apply_transformation_additional_elements: JSX.Element[],
   additional_nav_item:JSX.Element[],
   example_menu: JSX.Element,
-  formations_menu: object
+  formations_menu: object,
+  ref_alt_key_pressed:MutableRefObject<boolean>,
+  accept_simple_click:{current:boolean},
+  link_function:LinkFunctionTypes,
+  NodeTooltipsContent:NodeTooltipsContentFType,
+  ComponentUpdater:ComponentUpdaterType
+
+  
 }
 
 export type callbackFuncType = (server_data: SankeyData) => void
@@ -466,4 +475,15 @@ export type LinkFunctionTypes = {
   LinkSabotColor:LinkColorFuncType,
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
   LinkTooltipsContent: LinkTooltipsContentFType
+}
+
+export type ComponentUpdaterType={
+  ref_set_update_menu_config_node:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_get_update_menu_config_node:MutableRefObject<boolean| undefined>,
+  ref_set_update_menu_config_node_appearence:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_get_update_menu_config_node_appearence:MutableRefObject<boolean| undefined>,
+
+  ref_set_update_menu_config_link:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_get_update_menu_config_link:MutableRefObject<boolean| undefined>,
+
 }

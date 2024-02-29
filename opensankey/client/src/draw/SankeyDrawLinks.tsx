@@ -1,10 +1,10 @@
-import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyLinkAttrLocal, LinkFunctionTypes, contextMenuType, uiElementsRefType } from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyLinkAttrLocal, LinkFunctionTypes, contextMenuType, uiElementsRefType, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
 import React, { MutableRefObject } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
   drawCurveFunction, scale, inv_scale, SetNodesHeight, StrokeDasharray,
-  GetSankeyMinWidthAndHeight, DeselectVisualyLinks} from './SankeyDrawFunction'
+  GetSankeyMinWidthAndHeight, DeselectVisualyLinks, SelectVisualyLinks} from './SankeyDrawFunction'
 import { EventLinkContextMenu } from './SankeyDrawEventFunction'
 import {DragLinkEvent} from './SankeyDragLinks'
 import {ValueSelectedParameter,LinkStrokeWidth} from './SankeyDrawFunction'
@@ -109,8 +109,13 @@ const eventLinkClick=(
   dict_variable_elements_selected: dict_variable_elements_selectedType,
   data: SankeyData,
   displayedInputLinkValueRef : MutableRefObject<React.Dispatch<React.SetStateAction<string>>[]>,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+
 )=>{
   const {multi_selected_links,ref_getter_mode_selection}=dict_variable_elements_selected
+  const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
+  const {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -122,8 +127,10 @@ const eventLinkClick=(
     sankeyTooltip.style('opacity', 0)
     multi_selected_links.current = multi_selected_links.current.filter(d => (d != null && d.idLink != ''))
     if(!event.ctrlKey){
+      multi_selected_links.current.forEach(l=>DeselectVisualyLinks(l))
       // If we click a link without pressing Ctrl then we select only the link cliked
       multi_selected_links.current=[d]
+      SelectVisualyLinks(d)
     }else{
       // If we click a link while pressing Ctrl then we either select the link if it's not selected or we deselect it
       if (multi_selected_links.current.includes(d)) {
@@ -131,6 +138,7 @@ const eventLinkClick=(
         DeselectVisualyLinks(d)
       } else {
         multi_selected_links.current.push(d)
+        SelectVisualyLinks(d)
         dict_variable_elements_selected.ref_display_link_opacity.current.forEach(
           setter=>setter(ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string)
         )
@@ -138,8 +146,8 @@ const eventLinkClick=(
 
     }
     if((event.ctrlKey || event.metaKey)){
-      if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
-        button_ref.current.click()
+      if(ref_getter_show_menu_config.current===false){
+        ref_setter_show_menu_config.current(true)
       }
       if ( accordion_ref && accordion_ref.current) {
         for ( const child in accordion_ref.current.children) {
@@ -149,9 +157,9 @@ const eventLinkClick=(
           }
         }
       }
-      if ( links_accordion_ref && links_accordion_ref.current) {
-        (links_accordion_ref.current.children[0] as HTMLLabelElement).click();
-        (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
+      if ( links_accordion_ref && links_accordion_ref.current && d3.select(links_accordion_ref.current).attr('aria-expanded')==='false' ) {
+        (links_accordion_ref.current.children[0] as HTMLLabelElement).click()
+        // (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
       }
     }
     if(multi_selected_links.current.length>0){
@@ -205,6 +213,7 @@ const eventLinkClick=(
     }else{
       displayedInputLinkValueRef.current.forEach(setter=>setter(''))
     }
+    ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
     //set_data({...data})
   }
 }
@@ -214,7 +223,10 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
-  link_functions
+  link_functions,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components,
+
 ) => {
   const { GetLinkValue,LinkTooltipsContent } = link_functions
   const{ pointer_pos, ref_setter_contextualised_link} = contextMenu
@@ -317,7 +329,8 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   paths.on('click', (event, d) =>eventLinkClick(
     event,d,sankeyTooltip,
     accordion_ref,button_ref,
-    links_accordion_ref,dict_variable_application_data,dict_variable_elements_selected,data,displayedInputLinkValueSetterRef
+    links_accordion_ref,dict_variable_application_data,dict_variable_elements_selected,data,displayedInputLinkValueSetterRef,
+    ComponentUpdater,dict_hook_ref_setter_show_dialog_components
   )
   )
 }
@@ -329,13 +342,13 @@ export const DrawAllLinks : DrawAllLinksFType = (
   dict_variable_elements_selected,
   alt_key_pressed,
   position,
-  link_functions
+  link_functions,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components
 ) => {
   d3.select(' .opensankey #g_links').selectAll('.gg_links').remove()
   d3.select(' .opensankey #svg').selectAll('.link_value').remove()
   d3.selectAll('.opensankey .gg_link_handles').remove()
-
-  dict_variable_elements_selected.multi_selected_links.current=Object.values(dict_variable_application_data.display_links)
 
   drawAddLinks(
     contextMenu,
@@ -343,9 +356,11 @@ export const DrawAllLinks : DrawAllLinksFType = (
     uiElementsRef,
     dict_variable_elements_selected,
     alt_key_pressed,
-    link_functions
+    link_functions,
+    ComponentUpdater,
+    dict_hook_ref_setter_show_dialog_components,
+    Object.values(dict_variable_application_data.display_links)
   )
-  dict_variable_elements_selected.multi_selected_links.current=[]
 
   return (<>[]
     <g className='g_links' id='g_links' style={{ 'position': position,  /*'fontFamily': node_font */ }} ></g>
@@ -359,15 +374,18 @@ export const drawAddLinks = (
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   alt_key_pressed:MutableRefObject<boolean>,
-  link_functions : LinkFunctionTypes
+  link_functions : LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+  link_to_redraw:SankeyLink[]
+
 ) => {
   // const default_handle_size = 10
   // const default_horiz_shift = 50
   const {LinkText,GetLinkValue,DrawArrows } = link_functions
   const min_thickness=2
-  const { data, display_links} = dict_variable_application_data
-  const { multi_selected_links } = dict_variable_elements_selected
-  const filtered_data = multi_selected_links.current.length>0 ? multi_selected_links.current : Object.values(display_links)
+  const { data} = dict_variable_application_data
+  const filtered_data =link_to_redraw
   // const node_visible=NodeVisibleOnsSvg()
   filtered_data.forEach(l=>{
     const gg_links = d3
@@ -377,6 +395,7 @@ export const drawAddLinks = (
       .attr('id', l => 'gg_' + l.idLink)
       .attr('class', 'gg_links')
     const paths = gg_links.append('path')
+      .classed('link',true)
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
       let error_msg: { text: string | undefined } | undefined
       paths.call(
@@ -425,7 +444,7 @@ export const drawAddLinks = (
   drawLinkShape(
     dict_variable_application_data,
     dict_variable_elements_selected,
-    link_functions
+    link_functions,link_to_redraw
   )
 
   AddDrawLinksEvent(
@@ -433,14 +452,16 @@ export const drawAddLinks = (
     dict_variable_application_data,
     uiElementsRef,
     dict_variable_elements_selected,
-    link_functions
+    link_functions,ComponentUpdater,
+    dict_hook_ref_setter_show_dialog_components
   )
 }
 
 export const drawLinkShape  = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
-  link_functions: LinkFunctionTypes
+  link_functions: LinkFunctionTypes,
+  link_to_redraw:SankeyLink[]
 ) => {
   const { GetLinkValue,LinkStroke,node_arrow_visible,LinkText,DrawArrows,LinkSabotColor } = link_functions
   const { multi_selected_links } = dict_variable_elements_selected
@@ -449,13 +470,16 @@ export const drawLinkShape  = (
 
   const min_thickness=2
   const { display_style } = data
-
   const gg_links = d3
     .select('.opensankey #g_links')
     .selectAll('.gg_links')  as d3.Selection<SVGGElement, SankeyLink, d3.BaseType, unknown>
   const filtered_gglinks = gg_links.filter(
-    n=> multi_selected_links.current.length>0 ? multi_selected_links.current.includes(n) : true
+    n=> link_to_redraw.length>0 ? link_to_redraw.includes(n) : true
   )
+
+  if(multi_selected_links.current.length>0){
+    filtered_gglinks.selectAll('.arrow').remove()
+  }
   filtered_gglinks.style('display', (d) => {
     let display: string
     if (LinkVisible(d, data,display_nodes,GetLinkValue)) { display = 'inline' } else { display = 'none' }
@@ -466,8 +490,7 @@ export const drawLinkShape  = (
     .attr('stroke-dasharray', d => {
       return StrokeDasharray(d,data,GetLinkValue)
     })
-
-  const paths = gg_links.selectAll('path') as d3.Selection<SVGPathElement, SankeyLink, SVGGElement, SankeyLink>
+  const paths = filtered_gglinks.selectAll('path.link') as d3.Selection<SVGPathElement, SankeyLink, SVGGElement, SankeyLink>
   if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
     let error_msg: { text: string | undefined } | undefined
     paths.call(
@@ -477,7 +500,7 @@ export const drawLinkShape  = (
       )
     )
   }
-  gg_links
+  filtered_gglinks
     .filter(
       d => ReturnValueLink(data,d,'label_position') !== 'frozen' && ReturnValueLink(data,d,'label_on_path') === true
     )
@@ -498,7 +521,7 @@ export const drawLinkShape  = (
     .attr('href', d => '#path_' + d.idLink)
 
 
-  const select2 = gg_links
+  const select2 = filtered_gglinks
     .filter(d => ReturnValueLink(data,d,'label_position') === 'frozen' || !ReturnValueLink(data,d,'label_on_path') || ReturnValueLink(data,d,'label_on_path') === undefined)
     .select('text')
 

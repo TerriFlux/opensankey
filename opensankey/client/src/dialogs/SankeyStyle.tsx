@@ -1,11 +1,11 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import React, { Dispatch, MutableRefObject, SetStateAction, useState } from 'react'
+import React, { Dispatch, MutableRefObject, SetStateAction, useRef, useState } from 'react'
 import { Form, FormControl, FormLabel, Row, Col, Modal, Button, Dropdown, InputGroup } from 'react-bootstrap'
 import {  CutName,DefaultNodeStyle,DefaultLinkStyle } from '../configmenus/SankeyUtils'
 import { FaPlus, FaMinus} from 'react-icons/fa'
 import {SankeyMenuConfigurationNodesAttributes} from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import {MenuConfigurationLinksAppearence} from '../configmenus/SankeyMenuConfigurationLinksAppearence'
-import { applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
+import { ComponentUpdaterType, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
 import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
 
 
@@ -115,17 +115,26 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
   const {t}=applicationContext
   const {ref_selected_style_link}=dict_variable_elements_selected
   const [selected_style_link,set_selected_style_link] = useState('default')
+  const [forceUpdate,setForceUpdate]=useState(false)
   ref_selected_style_link.current = selected_style_link
   const [show_style_link, set_show_style_link] = useState(false)
   ref_show_style_link.current = set_show_style_link
 
+  const ComponentUpdaterForStyle:ComponentUpdaterType={
+    ref_get_update_menu_config_node:useRef(),
+    ref_set_update_menu_config_node:useRef(()=>null),
+    ref_get_update_menu_config_node_appearence:useRef(),
+    ref_set_update_menu_config_node_appearence:useRef(()=>null),
+
+    ref_get_update_menu_config_link:useRef(forceUpdate),
+    ref_set_update_menu_config_link:useRef(setForceUpdate),
+  }
   if(selected_style_link !== 'default'){
     set_selected_style_link('default')
   }
   const closeStyleEditionLink = () => {
     set_show_style_link(false)
   }
-
   return (
     <Modal show={show_style_link} onHide={closeStyleEditionLink} size={'lg'}>
       <Modal.Header closeButton>
@@ -183,7 +192,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
           <Col md={12}>
             {MenuConfigurationLinksAppearence(
               dict_variable_application_data,dict_variable_elements_selected,applicationContext,additional_link_appearence_items,
-              true,link_function,true
+              true,link_function,ComponentUpdaterForStyle,true
             )
             }
           </Col>

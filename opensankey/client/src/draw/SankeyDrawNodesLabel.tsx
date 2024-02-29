@@ -44,7 +44,11 @@ export const OpenSankeyDrawNodesLabel : OpenSankeyDrawNodesLabelFType = (
         
     //------------------LABEL------------------------
     // Add node label and apply parameter
-    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
+    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>).filter(
+      n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
+    )
+
+
     const bg_text_node=ggg_nodes
       .filter(n=>(ReturnValueNode(data,n,'label_visible') as boolean) && (ReturnValueNode(data,n,'label_background') as boolean))
       .append('rect')
@@ -233,15 +237,15 @@ export const OpenSankeyDrawNodesLabel : OpenSankeyDrawNodesLabelFType = (
 }
 
 
-export const DrawAllNodesLabel : DrawAllNodesLabelFType = (
+export const updateDrawAllNodesLabel : DrawAllNodesLabelFType = (
   dict_variable_application_data,
   multi_selected_nodes,
   GetLinkValue
 ) => {
-  DrawAddNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
 }
 
-export const DrawAddNodesLabel : DrawAddNodesFtype = (
+export const RedrawNodesLabel : DrawAddNodesFtype = (
   dict_variable_application_data,
   multi_selected_nodes,
   GetLinkValue
@@ -251,10 +255,10 @@ export const DrawAddNodesLabel : DrawAddNodesFtype = (
   //------------------LABEL------------------------
   // Add node label and apply parameter
   const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
-  const filtered_gggnodes = ggg_nodes.filter(
-    n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
-  )
-  filtered_gggnodes
+  // const filtered_gggnodes = ggg_nodes.filter(
+  //   n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
+  // )
+  ggg_nodes
     .filter(n=>(ReturnValueNode(data,n,'label_visible') as boolean) && (ReturnValueNode(data,n,'label_background') as boolean))
     .append('rect')
     .attr('class','label_background')
@@ -262,7 +266,7 @@ export const DrawAddNodesLabel : DrawAddNodesFtype = (
   // .attr('fill-opacity',0.55)
   // .attr('rx',4)
 
-  filtered_gggnodes
+  ggg_nodes
     .filter(n=>(ReturnValueNode(data,n,'label_visible') as boolean))
     .append('text')
   // .attr('fill',n=>(ReturnValueNode(data,n,'label_color') )?'white':'black')
@@ -296,7 +300,7 @@ export const DrawAddNodesLabel : DrawAddNodesFtype = (
   if(!windowSankey.SankeyToolsStatic){
     // Add an input to change the name of the node 
     // The input appear when we double click on the label
-    filtered_gggnodes
+    ggg_nodes
       .append('foreignObject')
       .attr('id',d=>'fo_input_label_'+d.idNode)
       .attr('class','fo_input_label')
@@ -369,7 +373,7 @@ export const DrawAddNodesLabel : DrawAddNodesFtype = (
 
   // Display value of nodes
   // Value of nodes are the maximum between the sum of input links and the sum of output links
-  filtered_gggnodes
+  ggg_nodes
     .filter(n=>(ReturnValueNode(data,n,'show_value') as boolean))
     .append('text')
   // .attr('fill',n=>(ReturnValueNode(data,n,'label_color'))?'white':'black')
@@ -386,7 +390,7 @@ export const DrawAddNodesLabel : DrawAddNodesFtype = (
         
   // Drag zone for changing label box width
   // (if the label length exceed a certian length the text is wrapped, the box visually represent the length to not exceed)
-  filtered_gggnodes
+  ggg_nodes
     .filter(n=>n.x_label==undefined)
     .filter(n=>(ReturnValueNode(data,n,'label_visible') as boolean))
     .append('rect')
@@ -437,16 +441,15 @@ export const DrawAddNodesLabel : DrawAddNodesFtype = (
   // .filter(()=>window.SankeyToolsStatic!==true)
   //.call(dragNodeTextEventWidthBoxEvent(data,set_data)) TODO
 
-  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+  UpdateDrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
 }
 
-export const DrawNodesLabel : DrawAddNodesFtype = (
+export const UpdateDrawNodesLabel : DrawAddNodesFtype = (
   dict_variable_application_data,
   multi_selected_nodes,
   GetLinkValue
 ) => {        
   const { data, display_nodes,display_links } = dict_variable_application_data
-
   const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
   const filtered_gggnodes = ggg_nodes.filter(
     n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
@@ -464,7 +467,8 @@ export const DrawNodesLabel : DrawAddNodesFtype = (
   filtered_gggnodes
     .filter(n=>(ReturnValueNode(data,n,'label_visible') as boolean))
     .select('.node_text')
-    .attr('fill',n=>(ReturnValueNode(data,n,'label_color') )?'white':'black')
+    .attr('fill',n=>{
+      return (ReturnValueNode(data,n,'label_color') )?'white':'black'})
   // .classed('node', true)
   // .classed('node_text', true)
   //.classed('test_new_file',true)

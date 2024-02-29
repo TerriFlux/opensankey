@@ -35,8 +35,9 @@ import { FaAlignLeft,
   FaEyeSlash} from 'react-icons/fa'
 import { Checkbox } from '@chakra-ui/react'
 import { OpenSankeyConfigurationNodesAttributesFType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
-import { drawNodeShape } from '../draw/SankeyDrawNodes'
-import { DrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
+import { updateDrawNodeShape } from '../draw/SankeyDrawNodes'
+import { RedrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
+import { drawLinkShape } from '../draw/SankeyDrawLinks'
 
 export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNodesAttributesFType = (
   applicationContext,
@@ -47,16 +48,31 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   advanced_appearence_content,
   advanced_label_content,
   advanced_label_value_content,
-  GetLinkValue
+  link_function,
+  ComponentUpdater
 ) => {
   const { t } = applicationContext
   const { data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
-  const [update,setUpdate] = useState(true)
-
+  const {GetLinkValue}=link_function
+  const [forceUpdate,setForceUpdate]=useState(false)
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[ref_selected_style_node.current]]:multi_selected_nodes.current
-
+  const {ref_get_update_menu_config_node,ref_set_update_menu_config_node,ref_get_update_menu_config_node_appearence,ref_set_update_menu_config_node_appearence}= ComponentUpdater
+  
+  ref_get_update_menu_config_node_appearence.current=forceUpdate
+  ref_set_update_menu_config_node_appearence.current=setForceUpdate
+  
+  
+  const updateMenuConfigNode=()=>{
+    updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
+    RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+    // UpdateDrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+    if(!menu_for_style){
+      ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
+    }
+    setForceUpdate(!forceUpdate)
+  }
   const getBrowserName = () => {
     const browserInfo = navigator.userAgent
     let browser
@@ -101,7 +117,6 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     }
   }
 
-
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
   const content_appearence=<Form.Group>
     {/* Visibilite du noeud */}
@@ -118,8 +133,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             Object.values(parameter_to_modify)
               .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
               .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,menu_for_style))
-            drawNodeShape(data,multi_selected_nodes)
-            setUpdate(!update)
+            updateMenuConfigNode()
+            
           }}>
           <OverlayTrigger
             key={'noeud.apparence.tooltips.1'}
@@ -167,8 +182,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             value={(selected_parameter.length == 1) ? (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string) : '#ffffff'}
             onChange={evt=>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
-              drawNodeShape(data,multi_selected_nodes)
-              setUpdate(!update)
+              updateMenuConfigNode()
+              
             }}
           />:<Form.Control
             type='color'
@@ -180,8 +195,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
             }}
             onBlurCapture={()=>{
-              drawNodeShape(data,multi_selected_nodes)
-              setUpdate(!update)
+              updateMenuConfigNode()
+              
             }}
           />}</Col>
         <Col>
@@ -196,9 +211,9 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               className='btn_menu_config'
               onClick={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'colorSustainable',!list_value['colorSustainable'][0],menu_for_style))
-                drawNodeShape(data,multi_selected_nodes)
-                drawNodeShape(data,multi_selected_nodes)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                updateMenuConfigNode()
+                
               }}>{list_value['colorSustainable'][0]?<FaLock/>:<FaLockOpen/>}</Button>
           </OverlayTrigger>
         </Col>
@@ -226,24 +241,24 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               variant={list_value['shape'][0]==='ellipse'?'primary':'outline-primary'}
               onClick={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','ellipse',menu_for_style))
-                drawNodeShape(data,multi_selected_nodes)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}>{t('Noeud.apparence.Cercle')}</Button>
 
             <Button 
               variant={list_value['shape'][0]==='rect'?'primary':'outline-primary'}
               onClick={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','rect',menu_for_style))
-                drawNodeShape(data,multi_selected_nodes)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}>{t('Noeud.apparence.Rectangle')}</Button>
 
             <Button 
               variant={list_value['shape'][0]==='arrow'?'primary':'outline-primary'}
               onClick={() => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'shape','arrow',menu_for_style))
-                drawNodeShape(data,multi_selected_nodes)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}>{t('Noeud.apparence.arrow')}</Button>  
           </ButtonGroup>
 
@@ -269,8 +284,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 value={list_value['node_arrow_angle_factor'][0] as number}
                 onChange={(evt)=>{
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_factor',+evt.target.value,menu_for_style))
-                  drawNodeShape(data,multi_selected_nodes)
-                  setUpdate(!update)        
+                  updateMenuConfigNode()
+                          
                 }}
 
               /></Col>
@@ -291,8 +306,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 variant={list_value['node_arrow_angle_direction'][0]==='left'?'primary':'outline-primary'}
                 onClick={() => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','left',menu_for_style))
-                  drawNodeShape(data,multi_selected_nodes)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}
               ><FaArrowLeft/></Button>
 
@@ -300,8 +315,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 className='btn_menu_config'                variant={list_value['node_arrow_angle_direction'][0]==='right'?'primary':'outline-primary'}
                 onClick={() => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','right',menu_for_style))
-                  drawNodeShape(data,multi_selected_nodes)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}
               ><FaArrowRight/></Button>
 
@@ -310,8 +325,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 variant={list_value['node_arrow_angle_direction'][0]==='top'?'primary':'outline-primary'}
                 onClick={() => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','top',menu_for_style))
-                  drawNodeShape(data,multi_selected_nodes)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}
               ><FaArrowUp/></Button>
 
@@ -320,8 +335,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 variant={list_value['node_arrow_angle_direction'][0]==='bottom'?'primary':'outline-primary'}
                 onClick={() => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','bottom',menu_for_style))
-                  drawNodeShape(data,multi_selected_nodes)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}
               ><FaArrowDown/></Button>
             </ButtonGroup>
@@ -364,8 +379,21 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   value=Math.abs(Math.round(+val))
                 }
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'node_width',value,menu_for_style))
-                drawNodeShape(data,multi_selected_nodes)
-                setUpdate(!update)   
+                updateMenuConfigNode()
+
+                if(!menu_for_style){
+                  // Redraw link attached to modified node when the modification to the node 
+                  // modify links path
+                  let link_to_update:string[]=[]
+                  multi_selected_nodes.current.forEach(n=>{
+                    link_to_update=link_to_update.concat(n.outputLinksId)
+                    link_to_update=link_to_update.concat(n.inputLinksId)
+                  })
+                  link_to_update=[...new Set(link_to_update)]
+                  const list_links=link_to_update.map(lid=>data.links[lid])
+                  drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,link_function,list_links)
+                }
+                
               }}/>
         </Col>
 
@@ -403,8 +431,19 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   value=Math.abs(Math.round(+val))
                 }
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'node_height',value,menu_for_style))
-                drawNodeShape(data,multi_selected_nodes)
-                setUpdate(!update)   
+                updateMenuConfigNode()
+                if(!menu_for_style){
+                  // Redraw link attached to modified node when the modification to the node 
+                  // modify links path
+                  let link_to_update:string[]=[]
+                  multi_selected_nodes.current.forEach(n=>{
+                    link_to_update=link_to_update.concat(n.outputLinksId)
+                    link_to_update=link_to_update.concat(n.inputLinksId)
+                  })
+                  link_to_update=[...new Set(link_to_update)]
+                  const list_links=link_to_update.map(lid=>data.links[lid])
+                  drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,link_function,list_links)
+                }
               }}/>
         </Col>
 
@@ -440,8 +479,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             Object.values(parameter_to_modify)
               .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
               .forEach(d => AssignNodeValueToCorrectVar(d,'label_visible',evt.target.checked,menu_for_style))
-            DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-            setUpdate(!update)
+            updateMenuConfigNode()
+            
           }}>
           {t('Noeud.labels.vdb')}
           {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_visible',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
@@ -471,8 +510,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 Object.values(parameter_to_modify)
                   .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                   .forEach(d => AssignNodeValueToCorrectVar(d,'label_color',evt.target.checked,menu_for_style))
-                DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}>
               {t('Noeud.labels.lb')}
               {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_color',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
@@ -496,8 +535,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   AssignNodeValueToCorrectVar(d,'bold',!list_value['bold'][0],menu_for_style)
                 })
-                DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}><FaBold/></Button>
 
             {/* en majuscule */}
@@ -507,8 +546,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   AssignNodeValueToCorrectVar(d,'uppercase',!list_value['uppercase'][0],menu_for_style)
                 })
-                DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}>{svg_label_upper}</Button>
 
             {/* En italique */}
@@ -518,8 +557,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                   AssignNodeValueToCorrectVar(d,'italic',!list_value['italic'][0],menu_for_style)
                 })
-                DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}><FaItalic/></Button>
           </ButtonGroup>
           <Form.Select
@@ -527,8 +566,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
-                DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}>
             {data.display_style.font_family.map((d) => {
               return <option
@@ -545,8 +584,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             value={list_value['font_size'][0] as number}
             onChange={evt => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'font_size',+evt.target.value,menu_for_style))
-              DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-              setUpdate(!update)
+              updateMenuConfigNode()
+              
             }}
           />
           <InputGroup.Text>px</InputGroup.Text>
@@ -570,8 +609,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 Object.values(parameter_to_modify)
                   .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                   .forEach(d => AssignNodeValueToCorrectVar(d,'label_background',evt.target.checked,menu_for_style))
-                DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                setUpdate(!update)
+                updateMenuConfigNode()
+                
               }}>
               {t('Noeud.labels.l_bg')}
               {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_background',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
@@ -607,8 +646,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 if (!isNaN(+evt.target.value)) {
                   const val = (+evt.target.value < 0) ? 0 : +evt.target.value
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'label_box_width',val,menu_for_style))
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }
               }}/>
           </Col>
@@ -644,8 +683,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     delete d.x_label
                     delete d.y_label
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}><FaAlignLeft/></Button>
             </OverlayTrigger>
 
@@ -664,8 +703,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     delete d.x_label
                     delete d.y_label
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}><FaAlignCenter/></Button>
             </OverlayTrigger>
 
@@ -684,8 +723,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     delete d.x_label
                     delete d.y_label
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}><FaAlignRight/></Button>
             </OverlayTrigger>
           </ButtonGroup>
@@ -707,8 +746,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     delete d.x_label
                     delete d.y_label
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}>{svg_label_top}</Button>
             </OverlayTrigger>
 
@@ -727,8 +766,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     delete d.x_label
                     delete d.y_label
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}>{svg_label_center}</Button>
             </OverlayTrigger>
 
@@ -747,8 +786,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     delete d.x_label
                     delete d.y_label
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}>{svg_label_bottom}</Button>
             </OverlayTrigger>
           </ButtonGroup></Col>
@@ -776,8 +815,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             Object.values(parameter_to_modify)
               .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
               .forEach(d => AssignNodeValueToCorrectVar(d,'show_value',evt.target.checked,menu_for_style))
-            DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-            setUpdate(!update)
+            updateMenuConfigNode()
+            
           }}>
           {t('Noeud.labels.vdv')}
           {(IsNodeDisplayingValueLocal(multi_selected_nodes,'show_value',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
@@ -803,8 +842,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             value={list_value['value_font_size'][0] as number}
             onChange={evt => {
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'value_font_size',+evt.target.value,menu_for_style))
-              DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-              setUpdate(!update)
+              updateMenuConfigNode()
+              
             }}
           />
         </Col>
@@ -835,8 +874,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                     AssignNodeValueToCorrectVar(d,'label_horiz_valeur','left',menu_for_style)
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}><FaAlignLeft/></Button>
             </OverlayTrigger>
 
@@ -853,8 +892,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                     AssignNodeValueToCorrectVar(d,'label_horiz_valeur','middle',menu_for_style)
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}><FaAlignCenter/></Button>
             </OverlayTrigger>
 
@@ -871,8 +910,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                     AssignNodeValueToCorrectVar(d,'label_horiz_valeur','right',menu_for_style)
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}><FaAlignRight/></Button>
             </OverlayTrigger>
           </ButtonGroup>
@@ -893,8 +932,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                     AssignNodeValueToCorrectVar(d,'label_vert_valeur','top',menu_for_style)
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}>{svg_label_top}</Button>
             </OverlayTrigger>
 
@@ -911,8 +950,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                     AssignNodeValueToCorrectVar(d,'label_vert_valeur','middle',menu_for_style)
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}>{svg_label_center}</Button>
             </OverlayTrigger>
 
@@ -928,8 +967,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).map(d => {
                     AssignNodeValueToCorrectVar(d,'label_vert_valeur','bottom',menu_for_style)
                   })
-                  DrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
-                  setUpdate(!update)
+                  updateMenuConfigNode()
+                  
                 }}>{svg_label_bottom}</Button>
             </OverlayTrigger>
           </ButtonGroup>
@@ -959,7 +998,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 multi_selected_nodes.current.map(n => {
                   n.style = d
                 })
-                ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes)
+                ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function)
                 
               }}
             >{data.style_node[d].name}</Dropdown.Item>)
@@ -978,7 +1017,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           variant='outline-primary'
          
           onClick={() => {
-            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes)
+            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function)
           }}>
           {t('Noeud.AS')}
         </Button>
