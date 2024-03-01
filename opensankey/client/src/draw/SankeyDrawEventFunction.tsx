@@ -42,8 +42,8 @@ import {
   ZoomFunctionFuncType
 } from './types/SankeyDrawEventFunctionTypes'
 import { drawAddNodes } from './SankeyDrawNodes'
-import { RedrawNodesLabel, UpdateDrawNodesLabel } from './SankeyDrawNodesLabel'
 import { drawAddLinks } from './SankeyDrawLinks'
+import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
 
 
 
@@ -270,7 +270,6 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
 ) => {
   // Special cast usefull for when the app is used in SankeySuiteManager
   const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
-  const {GetLinkValue}=link_function
   const { data } = dict_variable_application_data
   const { ref_getter_mode_selection, first_selected_node } = dict_variable_elements_selected
   closeAllMenuContext()
@@ -309,6 +308,8 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
           new_node1.y = pos[1] - ((ReturnValueNode(data, new_node1, 'node_height') as number) / 2)
           start_point.current = pos
           first_selected_node.current = new_node1
+          dict_variable_application_data.display_nodes[new_node1.idNode]=new_node1
+
           drawAddNodes(  
             contextMenu,
             dict_variable_application_data,
@@ -320,11 +321,6 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
             NodeTooltipsContent,
             ComponentUpdater,
             dict_hook_ref_setter_show_dialog_components
-          )
-          RedrawNodesLabel(
-            dict_variable_application_data,
-            dict_variable_elements_selected.multi_selected_nodes,
-            GetLinkValue
           )
         }
       }
@@ -439,7 +435,6 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = dict_variable_elements_selected
   const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
   const {ref_get_update_menu_config_node,ref_set_update_menu_config_node,ref_get_update_menu_config_link,ref_set_update_menu_config_link,ref_get_update_menu_config_node_appearence,ref_set_update_menu_config_node_appearence}=ComponentUpdater
-  const {GetLinkValue} = link_function
   // Special cast usefull for when the app is used in SankeySuiteManager
   const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
 
@@ -532,12 +527,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       }
     } else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt_recast).attr('class') != 'node node_shape') {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
-      Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
-      UpdateDrawNodesLabel(
-        dict_variable_application_data,
-        multi_selected_nodes,
-        GetLinkValue
-      )     
+      Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)  
       //Création second noeud
       const new_node1 = DefaultNode(data)
       let idNode = Object.keys(data.nodes).length
@@ -576,7 +566,12 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       displayedInputLinkValueSetterRef.current.forEach(setter => setter(''))
       OpenLinksMenu()
       first_selected_node.current = undefined
-      drawAddNodes(  
+      // Deselect old selected links to then only select the new one
+      Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
+
+      dict_variable_application_data.display_nodes[new_node1.idNode]=new_node1
+      dict_variable_application_data.display_links[new_link.idLink]=new_link
+      drawAddNodes(
         contextMenu,
         dict_variable_application_data,
         uiElementsRef,
@@ -587,11 +582,6 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         NodeTooltipsContent,ComponentUpdater,
         dict_hook_ref_setter_show_dialog_components
       )
-      RedrawNodesLabel(
-        dict_variable_application_data,
-        dict_variable_elements_selected.multi_selected_nodes,
-        GetLinkValue
-      )
       drawAddLinks(
         contextMenu,
         dict_variable_application_data,
@@ -601,7 +591,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         link_function,
         ComponentUpdater,
         dict_hook_ref_setter_show_dialog_components,
-        Object.values(dict_variable_application_data.display_links)
+        [new_link]
       )
     } else if ((!evt.ctrlKey && !evt.metaKey) && first_selected_node.current && d3.select(evt_recast).attr('class') != 'node node_shape') {
 
@@ -638,8 +628,12 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       displayedInputLinkValueSetterRef.current.forEach(setter => setter(''))
       multi_selected_links.current = [n_link]
       OpenLinksMenu()
-
+      // Deselect old selected links to then only select the new one
+      Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
+      
       first_selected_node.current = undefined
+      dict_variable_application_data.display_nodes[n_node.idNode]=n_node
+      dict_variable_application_data.display_links[n_link.idLink]=n_link
       drawAddNodes(  
         contextMenu,
         dict_variable_application_data,
@@ -652,11 +646,6 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         ComponentUpdater,
         dict_hook_ref_setter_show_dialog_components
       )
-      RedrawNodesLabel(
-        dict_variable_application_data,
-        dict_variable_elements_selected.multi_selected_nodes,
-        GetLinkValue
-      )
       drawAddLinks(
         contextMenu,
         dict_variable_application_data,
@@ -666,7 +655,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         link_function,
         ComponentUpdater,
         dict_hook_ref_setter_show_dialog_components,
-        Object.values(dict_variable_application_data.display_links)
+        [n_link]
 
       )
       // set_data({ ...data })
@@ -689,18 +678,17 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components
 ) => {
-  const { data } = dict_variable_application_data
-  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,multi_selected_nodes} = dict_variable_elements_selected
+  const { data,display_links } = dict_variable_application_data
+  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef} = dict_variable_elements_selected
   const { accordion_ref, links_accordion_ref } = uiElementsRef
   const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
-
   const {GetLinkValue}=link_function
   if ((!event.ctrlKey && !event.metaKey) && first_selected_node.current) {
 
     if (d.name.includes('_tmp')) {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
-
       d.name = d.idNode
+      RedrawNodesLabel(dict_variable_application_data,{current:[d]},GetLinkValue)
     } else {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       const n_link = DefaultLink(data)
@@ -724,6 +712,24 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       displayedInputLinkValueSetterRef.current.forEach(setter => setter(''))
       multi_selected_links.current = [n_link]
 
+      // Deselect old selected links to then only select the new one
+      Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
+
+      first_selected_node.current = undefined
+      // dict_variable_application_data.display_nodes[n_node.idNode]=n_node
+      dict_variable_application_data.display_links[n_link.idLink]=n_link
+      drawAddLinks(
+        contextMenu,
+        dict_variable_application_data,
+        uiElementsRef,
+        dict_variable_elements_selected,
+        alt_key_pressed,
+        link_function,
+        ComponentUpdater,
+        dict_hook_ref_setter_show_dialog_components,
+        [n_link]
+      )
+
       if(ref_getter_show_menu_config.current===false){
         ref_setter_show_menu_config.current(true)
       }
@@ -746,18 +752,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     }
 
     first_selected_node.current = undefined
-    drawAddLinks(
-      contextMenu,
-      dict_variable_application_data,
-      uiElementsRef,
-      dict_variable_elements_selected,
-      alt_key_pressed,
-      link_function,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      Object.values(dict_variable_application_data.display_links)
 
-    )
   } else if (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
 
     const tmp = Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
@@ -782,11 +777,12 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     data.linkZIndex.push(new_link.idLink)
     first_selected_node.current = undefined
 
-    UpdateDrawNodesLabel(
-      dict_variable_application_data,
-      multi_selected_nodes,
-      GetLinkValue
-    )
+
+    // Deselect old selected links to then only select the new one
+    Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
+
+    // dict_variable_application_data.display_nodes[n_node.idNode]=n_node
+    dict_variable_application_data.display_links[new_link.idLink]=new_link
     drawAddLinks(
       contextMenu,
       dict_variable_application_data,
@@ -796,9 +792,9 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       link_function,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
-      Object.values(dict_variable_application_data.display_links)
-
+      [new_link]
     )
+
   }
 }
 export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => {

@@ -1,6 +1,7 @@
+import { MutableRefObject } from 'react'
 import { 
   applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType,
-  dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType, LinkFunctionTypes, ComponentUpdaterType 
+  dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType, LinkFunctionTypes, ComponentUpdaterType, contextMenuType 
 } from '../../types/Types'
 
 
@@ -23,7 +24,10 @@ export type OpenSankeyConfigurationsMenusFType = (
   additional_accordion_edition_elements:JSX.Element[],
   token:boolean,
   link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  contextMenu:contextMenuType,
+  alt_key_pressed:MutableRefObject<boolean>,
+  accept_simple_click:{current:boolean},
 
 ) => JSX.Element[]
 

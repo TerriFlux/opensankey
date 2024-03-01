@@ -54,7 +54,10 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   additional_accordion_edition_elements,
   token,
   link_function,
-  ComponentUpdater
+  ComponentUpdater,
+  contextMenu,
+  alt_key_pressed,
+  accept_simple_click
 
 ) => {
   // const [subnavitemactive, setsubnavitemactive] = useState('')
@@ -139,6 +142,12 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 token={token}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
+                contextMenu={contextMenu}
+                uiElementsRef={uiElementsRef}
+                dict_variable_elements_selected={dict_variable_elements_selected}
+                alt_key_pressed={alt_key_pressed}
+                accept_simple_click={accept_simple_click}
+                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
               />
             </AccordionPanel>
           </AccordionItem>
@@ -165,6 +174,11 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 menu_configuration_links={Object.values(menu_configuration_links)}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
+                contextMenu={contextMenu}
+                uiElementsRef={uiElementsRef}
+                alt_key_pressed={alt_key_pressed}
+                accept_simple_click={accept_simple_click}
+                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
 
               />
             </AccordionPanel>

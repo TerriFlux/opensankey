@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { LinkFunctionTypes, SankeyNode, dict_variable_application_dataType} from '../types/Types'
 import { AddDrawNodesFType, DrawNodesFType, drawNodeShapeFType } from './types/SankeyDrawNodesTypes'
 
-import { NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
+import { GetLinkValue, NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
   SetNodeHeight,
   nodeTransform,NodeStrokeWidth,PathNodeArrowShape 
@@ -398,6 +398,10 @@ export const updateDrawNodeShape  = (
   const filtered_gggnodes = ggg_nodes.filter(
     n=> node_to_update.length>0 ? node_to_update.includes(n) : true
   )
+  node_to_update=[]
+  filtered_gggnodes.each(d=>{
+    node_to_update.push(d)
+  })
   // filtered_gggnodes.selectAll('rect').remove()
   // filtered_gggnodes.selectAll('ellipse').remove()
   // filtered_gggnodes.selectAll('path').remove()
@@ -472,6 +476,8 @@ export const drawAddNodes : drawNodeShapeFType = (
   const { data,display_nodes, display_links } = dict_variable_application_data
   // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
   const filtered_data = Object.values(display_nodes)
+  d3.selectAll('.ggg_nodes').remove()
+
   filtered_data.forEach(n=>{
     d3.select(' .opensankey #g_nodes').datum(n).append('g')
       .attr('id', d => {
@@ -494,6 +500,7 @@ export const drawAddNodes : drawNodeShapeFType = (
       .attr('transform', d => nodeTransform(d, display_nodes, display_links))
   })
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
+  updateDrawAllNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
   AddDrawNodesEvent(
     contextMenu,
     dict_variable_application_data,
