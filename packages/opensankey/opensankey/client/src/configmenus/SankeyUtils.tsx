@@ -37,8 +37,9 @@ import {
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
-import { updateDrawNodeShape } from '../draw/SankeyDrawNodes'
-import { UpdateDrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
+import { drawAddNodes, updateDrawNodeShape } from '../draw/SankeyDrawNodes'
+import { NodeTooltipsContent } from '../draw/SankeyTooltip'
+import { RedrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1765,15 +1766,22 @@ export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (dict_variable_applic
     delete d.local
   })
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
-  UpdateDrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
 
 }
 
 export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   multi_selected_nodes:{current:SankeyNode[]},
-  link_function
+  link_function,
+  contextMenu,
+  uiElementsRef,
+  dict_variable_elementsselected,
+  alt_key_pressed,
+  accept_simple_click,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components
 ) => {
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const { nodes } = data
   const node: SankeyNode = DefaultNode(data)
 
@@ -1796,7 +1804,8 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
   ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes,link_function)
-  set_data({...data})
+  dict_variable_application_data.display_nodes[node.idNode]=node
+  drawAddNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elementsselected,alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
 }
 
 // Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link

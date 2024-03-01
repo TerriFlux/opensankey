@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useState } from 'react'
 import { 
   Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, 
   InputGroup,Col, Form, Row 
@@ -12,7 +12,7 @@ import { textwrap } from 'd3-textwrap'
 import { TFunction } from 'i18next'
 
 /*************************************************************************************************/
-import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, SankeyNode, dict_variable_application_dataType, treeFolderType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, SankeyNode, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType, uiElementsRefType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { 
   OpenSankeyMenuConfigurationNodesFType, add_childrenFType, 
@@ -20,12 +20,12 @@ import {
 } from './types/SankeyMenuConfigurationNodesTypes'
 /*************************************************************************************************/
 import { 
-  DeleteNode,ReturnValueNode,ApplyStyleToNodes,AddNewNode} from './SankeyUtils'
+  DeleteNode,ReturnValueNode,AddNewNode} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
-import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction' 
+import { DeselectVisualyNodes, NodeVisibleOnsSvg, SelectVisualyNodes } from '../draw/SankeyDrawFunction' 
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from '../topmenus/SankeyMenuTop'
 /*************************************************************************************************/
@@ -38,7 +38,13 @@ type SankeyEditionTypes = {
   menu_configuration_nodes : JSX.Element[],
   token : boolean,
   link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  contextMenu:contextMenuType,
+  uiElementsRef:uiElementsRefType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  alt_key_pressed:MutableRefObject<boolean>,
+  accept_simple_click:{current:boolean},
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
 
 }
 
@@ -87,7 +93,18 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,dict_variable_application_data, multi_selected_nodes, menu_configuration_nodes,token,link_function,ComponentUpdater }
+  {t,
+    dict_variable_application_data,
+    multi_selected_nodes,
+    menu_configuration_nodes,token,
+    link_function,ComponentUpdater,
+    contextMenu,
+    uiElementsRef,
+    dict_variable_elements_selected,
+    alt_key_pressed,
+    accept_simple_click,
+    dict_hook_ref_setter_show_dialog_components,
+  }
 ) => {
   const {data,set_data}=dict_variable_application_data
   const [forceUpdate, setForceUpdate] = useState(false)
@@ -132,7 +149,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',2)
             )
             setForceUpdate(!forceUpdate)
-            set_data({...data})
+            multi_selected_nodes.current.forEach(d=>SelectVisualyNodes(d))
           }}
           labelledBy={'hello'}/>
       </div>)
@@ -258,8 +275,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           className='btn_menu_config'
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
-            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function)
-            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function)
+            Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
+            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+            SelectVisualyNodes(multi_selected_nodes.current[0])
+            setForceUpdate(!forceUpdate)
           }}>
           <FaPlus/>
         </Button>

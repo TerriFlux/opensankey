@@ -709,7 +709,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               [<></>],
               false, //TODO
               link_function,
-              ComponentUpdater
+              ComponentUpdater,
+              contextMenu,
+              ref_alt_key_pressed,
+              accept_simple_click
             )}
             menus={sankey_menus}
             cardsTemplate={CardsTemplateBuilder(

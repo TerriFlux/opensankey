@@ -263,7 +263,6 @@ export const SetNodeHeight:SetNodeHeightFuncType = (
   }
   d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
   d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))
-
   const shape=ReturnValueNode(data, n, 'shape')
   if( shape=== 'ellipse'){
     d3.select(' .opensankey #shape_' + n.idNode)
