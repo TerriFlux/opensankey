@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useState } from 'react'
 import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup, Form, Row, Col } from 'react-bootstrap'
 import {
   ComponentUpdaterType,
@@ -6,8 +6,11 @@ import {
   SankeyLink,
   SankeyNode,
   applicationContextType,
+  contextMenuType,
+  dict_hook_ref_setter_show_dialog_componentsType,
   dict_variable_application_dataType,
-  dict_variable_elements_selectedType
+  dict_variable_elements_selectedType,
+  uiElementsRefType
 } from '../types/Types'
 
 import {
@@ -25,7 +28,7 @@ import { MenuConfigurationLinksData } from './SankeyMenuConfigurationLinksData'
 import { MenuConfigurationLinksAppearence } from './SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
-import { ValueSelectedParameter, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
+import { ValueSelectedParameter, NodeVisibleOnsSvg, SelectVisualyLinks, DeselectVisualyLinks } from '../draw/SankeyDrawFunction'
 
 import { t } from 'i18next'
 import { MenuConfigurationLinksFType } from './types/SankeyMenuConfigurationLinksTypes'
@@ -87,7 +90,12 @@ type SankeyMenuConfigurationLinksTypes = {
   applicationContext:applicationContextType,
   menu_configuration_links : JSX.Element[],
   link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  contextMenu:contextMenuType,
+  uiElementsRef:uiElementsRefType,
+  alt_key_pressed:MutableRefObject<boolean>,
+  accept_simple_click:{current:boolean},
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
 
 }
 
@@ -97,6 +105,12 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     applicationContext,
     menu_configuration_links,
     link_function,
+    ComponentUpdater,
+    contextMenu,
+    uiElementsRef,
+    alt_key_pressed,
+    accept_simple_click,
+    dict_hook_ref_setter_show_dialog_components
   }
 ) => {
   const {t}=applicationContext
@@ -109,7 +123,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
-
+  const {ref_set_update_menu_config_link,ref_get_update_menu_config_link}=ComponentUpdater 
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
 
@@ -210,7 +224,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   ).value as string))
               }
             }
-            set_data({...data})
+            Object.values(dict_variable_application_data.display_links).forEach(l=>DeselectVisualyLinks(l))
+            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
+            ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
           }}
           labelledBy={'hello'}
         />
@@ -224,9 +240,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     if (Object.keys(nodes).length < 2) {
       if (Object.keys(nodes).length == 0) {
-        AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function)
+        AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
       }
-      AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function)
+      AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
     }
     const link: SankeyLink = DefaultLink(data)
     // Méthode pour incrementer idNode
