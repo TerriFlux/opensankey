@@ -140,3 +140,8 @@ export interface PlusApplicationContextType extends applicationContextType{
 export interface PlusUiElementsRefType extends uiElementsRefType{
   zdt_accordion_ref : MutableRefObject<HTMLDivElement|null>,
 }
+
+// TO DELETE WHEN UNITARY SANKEY WILL BE MERGE IN SANKEYPLUS
+export interface SankeyUnitData extends SankeyPlusData{
+  unitary_node: string[],
+}
