@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Row, Form,  Tab, InputGroup } from 'react-bootstrap'
 import {SankeyLinkValue } from '../types/Types'
 import { Checkbox } from '@chakra-ui/react'
-import { SmoothClasses } from './SankeyUtils'
+import { SmoothClasses, updateLinkTagValue } from './SankeyUtils'
 import { MenuConfigurationLinksTagsFType } from './types/SankeyMenuConfigurationLinksTagsTypes'
 
 export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
@@ -122,21 +122,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
               onChange={(evt) => {
                 const visible = evt.target.checked
                 Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  let val = Object(d.value)
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  if (visible) {
-                    if(val.tags[tags_group_key]===undefined){
-                      val.tags[tags_group_key]=[]
-                    }
-                    val.tags[tags_group_key].push(tag_key)
-                  } else {
-                    val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
-                  }
+                  updateLinkTagValue(d,tags_selected,tags_group_key,tag_key,visible)
                 })
                 set_data({ ...data })
               }}>

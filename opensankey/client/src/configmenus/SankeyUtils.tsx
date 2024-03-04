@@ -665,7 +665,7 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
   const node_style_prod=DefaultNodeProductStyle()
   const default_data = {
     ...data,
-    style_node: { 'default' : DefaultNodeStyle(),'style_node_prod':node_style_prod,'style_node_sect':node_style_sect },
+    style_node: { 'default' : DefaultNodeStyle(),'NodeSectorStyle':node_style_prod,'NodeProductStyle':node_style_sect },
     style_link: { 'default' : DefaultLinkStyle() }
   }
   return (default_data as unknown as SankeyData)
@@ -2021,4 +2021,27 @@ typeof globalThis & {
 }
 export const styleRowInput=()=>{
   return {marginLeft:'-0.5rem'}
+}
+
+export const updateLinkTagValue=(d:SankeyLink,
+  tags_selected: {[k: string]: string},
+  tags_group_key:string,
+  tag_key:string,
+  visible:boolean
+)=>{
+  let val = Object(d.value)
+  Object.values(tags_selected).forEach(tag => {
+    if (val[tag] === undefined) {
+      val[tag] = {}
+    }
+    val = val[tag]
+  })
+  if(val.tags[tags_group_key]===undefined){
+    val.tags[tags_group_key]=[]
+  }
+  if (visible) {
+    val.tags[tags_group_key].push(tag_key)
+  } else {
+    val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
+  }
 }
