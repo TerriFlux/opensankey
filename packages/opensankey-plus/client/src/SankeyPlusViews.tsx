@@ -65,7 +65,8 @@ import {
   differenceType,
   DiffType,
   ViewType,
-  SankeyPlusApplicationDataType
+  SankeyPlusApplicationDataType,
+  SankeyUnitData
 } from '../types/Types'
 import {
   updateLayoutOSTyped,
@@ -977,9 +978,10 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   </OverlayTrigger>
 
 
+  // TO DELETE WHEN UNITARY SANKEY WILL BE MERGE IN SANKEYPLUS
+  const special_cast_for_unit_sankey=data as SankeyUnitData
 
-
-  const button_heredited_attr_from_master=<OverlayTrigger
+  const button_heredited_attr_from_master=!(special_cast_for_unit_sankey.unitary_node && special_cast_for_unit_sankey.unitary_node.length>0)?<OverlayTrigger
     key={'buttonCloneMasterAttrViewDisabled'}
     placement={'bottom'}
     delay={500}
@@ -1016,7 +1018,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.keep_master_var')}</Col>
       </Button>
     </span>
-  </OverlayTrigger>
+  </OverlayTrigger>:<></>
 
   const create_data_catalog=<OverlayTrigger
     key={'buttonCloneViewDisabled'}

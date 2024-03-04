@@ -97,8 +97,8 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
         delay={500}
         overlay={
           (!has_open_sankey_plus)?
-          <Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-          <></>}
+            <Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
+            <></>}
       >
         <Box>
           <Button
