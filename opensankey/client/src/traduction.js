@@ -673,6 +673,8 @@ export const open_resources = {
       fullscreen:'Activate fullscreen',
       exitFullscreen:'Exit fullscreen',
       Avancé:'Advanced',
+      separator_interval:',',
+      sep_decimal:'.',
 
 
     }
@@ -1345,6 +1347,8 @@ export const open_resources = {
       fullscreen:'Activer le mode plein écran',
       exitFullscreen:'Quitter le mode plein écran',
       Avancé:'Avancé',
+      separator_interval:';',
+      sep_decimal:',',
 
 
     }

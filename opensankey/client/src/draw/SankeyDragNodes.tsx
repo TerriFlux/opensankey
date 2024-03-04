@@ -30,6 +30,7 @@ typeof globalThis & {
 export const DragGNodeEvent: DragGNodeEventFType = (
   dict_variable_application_data: dict_variable_application_dataType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
+  applicationContext,
   alt_key_pressed: MutableRefObject<boolean>,
   LinkText: LinkTextFuncType,
   GetLinkValue: GetLinkValueFuncType,
@@ -52,11 +53,11 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
           drag_node_text(node, event)
         } else if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && !alt_key_pressed.current) {
-          DragNodes(node, event, dict_variable_application_data, dict_variable_elements_selected, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible
+          DragNodes(node, event, dict_variable_application_data, dict_variable_elements_selected,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible
           )
         }
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'rect' || d3.select(event.subject.sourceEvent.target).node().tagName == 'ellipse') {
-          DragNodes(node, event, dict_variable_application_data, dict_variable_elements_selected, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible
+          DragNodes(node, event, dict_variable_application_data, dict_variable_elements_selected,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible
           )
         }
       }
@@ -128,6 +129,7 @@ export const DragNodes: DragNodesFType = (
   event: { dx: number; dy: number; x: number; y: number} ,
   dict_variable_application_data: dict_variable_application_dataType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
+  applicationContext,
   LinkText: LinkTextFuncType,
   GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue: GetLinkValueFuncType,
@@ -146,7 +148,7 @@ export const DragNodes: DragNodesFType = (
     OpposingDragElements(out_of_zone_item, event, node, data, multi_selected_nodes)
   }
 
-  DragElements(node, dict_variable_application_data, dict_variable_elements_selected, event, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale)
+  DragElements(node, dict_variable_application_data, dict_variable_elements_selected,applicationContext, event, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale)
 
 }/**
  * Function that shift node text when triggered
@@ -242,6 +244,7 @@ export const DragElements: DragElementsFuncType = (
   dragged: SankeyNode,
   dict_variable_application_data,
   dict_variable_elements_selected,
+  applicationContext,
   event: { dx: number; dy: number; x: number; y: number} ,
   LinkText: LinkTextFuncType,
   GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
@@ -291,6 +294,7 @@ export const DragElements: DragElementsFuncType = (
           drawCurveFunction.curve(
             dict_variable_application_data,
             dict_variable_elements_selected,
+            applicationContext,
             data.display_style,
             data.nodeTags, l, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
             DrawArrows
@@ -306,6 +310,7 @@ export const DragElements: DragElementsFuncType = (
         drawCurveFunction.curve(
           dict_variable_application_data,
           dict_variable_elements_selected,
+          applicationContext,
           data.display_style,
           data.nodeTags, l, error_msg, LinkText,
           GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows

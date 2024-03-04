@@ -306,6 +306,7 @@ export type SankeyDrawCurve={
   curve:(
     dict_variable_application_data:dict_variable_application_dataType,
     dict_variable_elements_selected:dict_variable_elements_selectedType,
+    applicationContext:applicationContextType,
     display_style : display_styleType,
     nodeTags : TagsCatalog,
     l : SankeyLink,
