@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
+import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType, applicationContextType } from '../types/Types'
 import { ComputeTotalOffsets,
   TestLinkValue,
   LinkColor,
@@ -47,6 +47,7 @@ import {
   GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType
 } from '../configmenus/types/SankeyUtilsTypes'
 import { ComputeEndPoints } from './SankeyDrawShapes'
+import { TFunction } from 'i18next'
 // Function that create the dashed pattern on links
 
 const default_handle_size = 10
@@ -664,13 +665,13 @@ const DrawLinkText = (
   xt: number,
   yt: number,
   LinkText:LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType
-
+  GetLinkValue:GetLinkValueFuncType,
+  t:TFunction
 ) => {
 
   const lab_pos=ReturnValueLink(data,link,'label_position') as string
   const label_on_path=ReturnValueLink(data,link,'label_on_path')
-  const label_text=LinkText(data, link,GetLinkValue )
+  const label_text=LinkText(data, link,GetLinkValue,t )
   // middle : valeur par défault
   // est-ce necessaire car on force l'option middle à la création du flux
   if (!lab_pos) {
@@ -768,6 +769,7 @@ const DrawLinkText = (
 const AddCenterHandle=(
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   link:SankeyLink,
   selected_tags: TagsCatalog,
   LinkText:LinkTextFuncType,
@@ -820,7 +822,7 @@ const AddCenterHandle=(
       .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
       .call(
         DragLinkCenterHandleEvent(
-          link,dict_variable_application_data,dict_variable_elements_selected,selected_tags,
+          link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,selected_tags,
           GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue
         )
       )
@@ -877,6 +879,7 @@ const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
 const AddShiftHandle = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   link: SankeyLink,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
@@ -898,7 +901,7 @@ const AddShiftHandle = (
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
       .attr('cursor',(multi_selected_links.current.includes(link)&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'ew-resize':'pointer')
-      .call(DragLinkShiftHandleEvent(dict_variable_application_data,dict_variable_elements_selected,link,display_style,selected_tags,position,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
+      .call(DragLinkShiftHandleEvent(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,display_style,selected_tags,position,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
       )
   }
 
@@ -914,6 +917,7 @@ export const update_scale : update_scaleFType  = (user_scale: number) => {
 const add_shift_handles = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   link: SankeyLink,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
@@ -946,7 +950,7 @@ const add_shift_handles = (
   for (let i = 0; i < shift_handles.length; i++) {
     const selection = d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
     if (selection.empty()) { // if the handle do not exist, create it
-      AddShiftHandle(dict_variable_application_data,dict_variable_elements_selected,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
+      AddShiftHandle(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue
       )
     }
   }
@@ -966,6 +970,7 @@ const add_shift_handles = (
 const DrawCurve = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   display_style: display_styleType,
   nodeTags: TagsCatalog,
   link: SankeyLink,
@@ -1015,14 +1020,14 @@ const DrawCurve = (
 
   let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, display_nodes, display_links, nodeTags,data,scale,inv_scale,GetLinkValue)
   if(ori=='vv' ||ori=='hh'){
-    add_shift_handles(dict_variable_application_data,dict_variable_elements_selected,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
-    AddDragLinkZone(link,dict_variable_application_data,dict_variable_elements_selected,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
-    AddCenterHandle(dict_variable_application_data,dict_variable_elements_selected,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
+    add_shift_handles(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
+    AddDragLinkZone(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
+    AddCenterHandle(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue)
   }
 
 
   if (label_visible && (+link_value > display_style.filter_label || (special_data_cast.free_null_link_visible && val.extension?.free_mini)) ) {
-    DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue)
+    DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t)
   }
 
   if (ori === 'vh' && !recy) {

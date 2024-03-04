@@ -78,7 +78,7 @@ export type GetSankeyMinWidthAndHeightFuncType = (data:SankeyData)=>number[]
 
 export type ToPrecisionFuncType = (v: number,nb_scientific?:number)=> string | number
 
-export type LinkTextFuncType = (data: SankeyData,d: SankeyLink,GetLinkValue:GetLinkValueFuncType)=>string
+export type LinkTextFuncType = (data: SankeyData,d: SankeyLink,GetLinkValue:GetLinkValueFuncType,t:TFunction)=>string
 
 export type AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,is_auto_from_add_grp_tag?:boolean)=> void
 

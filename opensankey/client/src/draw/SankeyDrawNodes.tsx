@@ -25,6 +25,7 @@ export const DrawNodes : DrawNodesFType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
+  applicationContext,
   alt_key_pressed,
   NodeTooltipsContent,
   LinkText:LinkTextFuncType,
@@ -145,7 +146,7 @@ export const DrawNodes : DrawNodesFType = (
       if(ref_getter_mode_selection.current=='s' && window.SankeyToolsStatic!==true){
         ggg_nodes.call(
           DragGNodeEvent(
-            dict_variable_application_data,dict_variable_elements_selected,
+            dict_variable_application_data,dict_variable_elements_selected,applicationContext,
             alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale
           )
         )

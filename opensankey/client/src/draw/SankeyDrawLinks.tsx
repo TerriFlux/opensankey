@@ -23,6 +23,7 @@ export const DrawLinks : DrawLinksFType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
+  applicationContext,
   alt_key_pressed,
   position,
   node_arrow_visible,
@@ -270,7 +271,7 @@ export const DrawLinks : DrawLinksFType = (
     const paths = gg_links.append('path')
     if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
       let error_msg: { text: string | undefined } | undefined
-      paths.call(DragLinkEvent(dict_variable_application_data,dict_variable_elements_selected,error_msg,display_style,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
+      paths.call(DragLinkEvent(dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,display_style,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
       )
 
     }
@@ -423,6 +424,7 @@ export const DrawLinks : DrawLinksFType = (
       SetNodesHeight(data,display_nodes,display_links, d, GetLinkValue)
       return drawCurveFunction.curve(
         dict_variable_application_data,dict_variable_elements_selected,
+        applicationContext,
         display_style,
         data.nodeTags, d, error_msg,
         LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
@@ -436,7 +438,7 @@ export const DrawLinks : DrawLinksFType = (
       })
       .each(function (l) {
         if(ReturnValueLink(data,(l as SankeyLink),'orientation')=='vv' ||ReturnValueLink(data,(l as SankeyLink),'orientation')=='hh'){
-          AddDragLinkZone((l as SankeyLink),dict_variable_application_data,dict_variable_elements_selected,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
+          AddDragLinkZone((l as SankeyLink),dict_variable_application_data,dict_variable_elements_selected,applicationContext,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
         }
       })
     if (error_msg && error_msg.text) {
