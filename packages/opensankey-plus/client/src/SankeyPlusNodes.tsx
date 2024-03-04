@@ -8,7 +8,7 @@ import * as d3 from 'd3'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, Badge, Col, Row, ButtonGroup} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
-import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType} from '../types/Types'
+import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType, PlusApplicationContextType} from '../types/Types'
 import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import {RemoveAnimate,
   DrawArrows,
@@ -890,6 +890,7 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
 export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   applicaTionData,
   dict_variable_elements_selected,
+  applicationContext,
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -908,6 +909,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   if(ref_getter_mode_selection.current==='s' && window.SankeyToolsStatic!==true){
     (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(
       SankeyPlusDragGNodeEvent(applicaTionData,dict_variable_elements_selected,
+        applicationContext,
         alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight
       )
     )
@@ -940,6 +942,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
 const SankeyPlusDragGNodeEvent = (
   dict_variable_application_data:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
+  applicationContext:PlusApplicationContextType,
   alt_key_pressed:boolean,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -962,7 +965,7 @@ const SankeyPlusDragGNodeEvent = (
         if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else {
-          PlusDragNodes(dict_variable_application_data,dict_variable_elements_selected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
+          PlusDragNodes(dict_variable_application_data,dict_variable_elements_selected,applicationContext,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
           )
         }
       }
@@ -976,6 +979,7 @@ const SankeyPlusDragGNodeEvent = (
 const PlusDragNodes = (
   dict_variable_application_data:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
+  applicationContext:PlusApplicationContextType,
   node:SankeyPlusNode,
   event: { dx: number; dy: number,x:number,y:number },
   LinkText:LinkTextFuncType,
@@ -998,7 +1002,7 @@ const PlusDragNodes = (
   }
 
   PlusDragElements(
-    dict_variable_application_data,dict_variable_elements_selected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
+    dict_variable_application_data,dict_variable_elements_selected,applicationContext,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
   )
 
 }
@@ -1006,6 +1010,7 @@ const PlusDragNodes = (
 export const PlusDragElements : PlusDragElementsFType = (
   dict_variable_application_data,
   dict_variable_elements_selected,
+  applicationContext,
   dragged:SankeyPlusNode|SankeyPlusLabel,
   event:{ dx: number; dy: number,x:number,y:number },
   LinkText:LinkTextFuncType,
@@ -1019,7 +1024,7 @@ export const PlusDragElements : PlusDragElementsFType = (
   // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
   // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
   DragElements(
-    dragged as SankeyNode,dict_variable_application_data,dict_variable_elements_selected,event,LinkText,GetSankeyMinWidthAndHeight,
+    dragged as SankeyNode,dict_variable_application_data,dict_variable_elements_selected,applicationContext, event,LinkText,GetSankeyMinWidthAndHeight,
     GetLinkValue,DrawArrows,scale,inv_scale
   )
 
