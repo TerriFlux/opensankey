@@ -49,6 +49,7 @@ typeof globalThis & {
 export const DragLinkEvent : DragLinkEventFType =(
   dict_variable_application_data,
   dict_variable_elements_selected,
+  applicationContext,
   error_msg: { text: string | undefined } | undefined,
   display_style: display_styleType,
   drawCurveFunction : SankeyDrawCurve,
@@ -74,6 +75,7 @@ export const DragLinkEvent : DragLinkEventFType =(
                 return drawCurveFunction.curve(
                   dict_variable_application_data,
                   dict_variable_elements_selected,
+                  applicationContext,
                   display_style,
                   data.nodeTags, link,
                   error_msg,
@@ -147,6 +149,7 @@ export const DragLinkIOPosition : DragLinkIOPositionFType =(
   link:SankeyLink,
   dict_variable_application_data,
   dict_variable_elements_selected,
+  applicationContext,
   error_msg: { text: string | undefined } | undefined,
   drawCurveFunction : SankeyDrawCurve,
   scale:(t:number)=>number,
@@ -172,6 +175,7 @@ export const DragLinkIOPosition : DragLinkIOPositionFType =(
               return drawCurveFunction.curve(
                 dict_variable_application_data,
                 dict_variable_elements_selected,
+                applicationContext,
                 data.display_style,data.nodeTags, link,
                 error_msg,LinkText,
                 GetSankeyMinWidthAndHeight,GetLinkValue,
@@ -205,6 +209,7 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
   link:SankeyLink,
   dict_variable_application_data,
   dict_variable_elements_selected,
+  applicationContext,
   selected_tags,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   default_horiz_shift:number,
@@ -224,8 +229,8 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
     .on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && (l_ori=='hh' || l_ori=='vv')){
         const shift_handle=d3.selectAll(' .opensankey #gg_link_handle_'+link.idLink+' .handle').nodes()
-        DragHandle(link, dict_variable_application_data,dict_variable_elements_selected,data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
-        DragHandle(link, dict_variable_application_data,dict_variable_elements_selected,data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
+        DragHandle(link, dict_variable_application_data,dict_variable_elements_selected,applicationContext,data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
+        DragHandle(link, dict_variable_application_data,dict_variable_elements_selected,applicationContext,data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue)
       }            
     }).on('end',()=>set_data({...data}))
 }
@@ -252,6 +257,7 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
 export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
   dict_variable_application_data,
   dict_variable_elements_selected,
+  applicationContext,
   link:SankeyLink,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
@@ -272,7 +278,7 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
     .subject(Object).on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
         DragHandle(
-          link, dict_variable_application_data,dict_variable_elements_selected, display_style,    selected_tags,    this, position, event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction, LinkText,GetLinkValue
+          link, dict_variable_application_data,dict_variable_elements_selected,applicationContext, display_style,    selected_tags,    this, position, event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction, LinkText,GetLinkValue
         )
       }
         
@@ -479,6 +485,7 @@ export const DragHandle : DragHandleFType = (
   link: SankeyLink,
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
   dragged: Element,
@@ -599,6 +606,7 @@ export const DragHandle : DragHandleFType = (
     return drawCurveFunction.curve(
       dict_variable_application_data,
       dict_variable_elements_selected,
+      applicationContext,
       display_style,
       data.nodeTags, d, error_msg,LinkText,
       GetSankeyMinWidthAndHeight,
@@ -715,6 +723,7 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
   link: SankeyLink,
   dict_variable_application_data,
   dict_variable_elements_selected,
+  applicationContext,
   default_handle_size:number,
   default_horiz_shift:number,
   scale:(t:number)=>number,
@@ -762,7 +771,7 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link))?'ns-resize':'pointer')
-      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
+      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows)
       )  
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
@@ -777,7 +786,7 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[1])
       .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows))  
+      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,drawCurveFunction,scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows))  
   }
 }
 
