@@ -2,6 +2,7 @@ import { TFunction } from 'i18next'
 import { SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode, display_styleType } from 'open-sankey/src/types/Types'
+import { MutableRefObject } from 'react'
 
 export type menu_conf_link_apparence_gradientFType=(
   t:TFunction,
@@ -10,7 +11,7 @@ export type menu_conf_link_apparence_gradientFType=(
   set_data:(d:SankeyPlusData)=>void,
   is_activated:boolean,
   menu_for_style:boolean,
-  selected_style_link:string,
+  selected_style_link:MutableRefObject<string>,
 )=> JSX.Element
 
 export type LinkStrokeFType=(
