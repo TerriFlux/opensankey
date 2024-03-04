@@ -477,6 +477,15 @@ export const convert_tags:convert_tagsFuncType = (
       data.nodeTags['Type de noeud'].tags['echange'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud'].tags['échange']))
       delete data.nodeTags['Type de noeud'].tags['échange']
     }
+
+    // Delete residue of old key for sector & product style to avoid redondance in list of node style 
+    if(Object.keys(data.style_node).includes('style_node_prod')){
+      delete data.style_node['style_node_prod']
+    }
+    if(Object.keys(data.style_node).includes('style_node_sect')){
+      delete data.style_node['style_node_sect']
+    }
+
     // If data has NodeTags 'Type de noeud' but not the style associated to it
     // then add it
     if(!Object.keys(data.style_node).includes('NodeProductStyle')){
