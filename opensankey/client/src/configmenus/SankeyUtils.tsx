@@ -487,7 +487,8 @@ export const ToPrecision:ToPrecisionFuncType = (
 export const LinkText:LinkTextFuncType = (
   data: SankeyData,
   d: SankeyLink,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  t
 ): string=> {
 
   let the_link_value = GetLinkValue(data, d.idLink).value
@@ -521,7 +522,7 @@ export const LinkText:LinkTextFuncType = (
       the_link_value =(the_link_value as number).toFixed((ReturnValueLink(data,d,'nb_digit') as number))
     }
     const unit=ReturnValueLink(data,d,'label_unit_visible')?ReturnValueLink(data,d,'label_unit') as string:''
-    return (+the_link_value)+unit
+    return (String(the_link_value).replace('.',t('sep_decimal')))+unit
   }
 }
 
