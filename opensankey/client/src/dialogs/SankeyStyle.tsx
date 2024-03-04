@@ -47,6 +47,8 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                 new_style.idNode=new_id
                 data.style_node[new_id] = new_style
                 set_data({ ...data })
+                ref_selected_style_node.current = new_style.idNode
+                set_selected_style_node(new_style.idNode)
               }}><FaPlus /></Button>
 
             {
@@ -118,9 +120,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
   const [show_style_link, set_show_style_link] = useState(false)
   ref_show_style_link.current = set_show_style_link
 
-  if(selected_style_link !== 'default'){
-    set_selected_style_link('default')
-  }
+
   const closeStyleEditionLink = () => {
     set_show_style_link(false)
   }
@@ -140,6 +140,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
               new_style.idLink = new_id
               data.style_link[new_id] = new_style
               set_data({ ...data })
+              set_selected_style_link(new_style.idLink)
 
             }}><FaPlus /></Button>
             <Dropdown>
