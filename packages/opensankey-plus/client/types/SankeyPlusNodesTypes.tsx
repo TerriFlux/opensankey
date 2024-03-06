@@ -48,7 +48,8 @@ export type SankeyPlusDrawNodesIconFType = (
   display_nodes : { [node_id: string]: SankeyPlusNode },
   dict_variable_elements_selected:PlusElementsSelectedType,
   NodeTooltipsContent: NodeTooltipsContentFType,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  t:TFunction
 ) => void
 
 export type ContextNodeIconFType = (

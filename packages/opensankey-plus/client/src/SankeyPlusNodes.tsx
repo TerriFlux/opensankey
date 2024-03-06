@@ -702,7 +702,8 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
   display_nodes : { [node_id: string]: SankeyPlusNode },
   dict_variable_elements_selected,
   NodeTooltipsContent: NodeTooltipsContentFType,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  trad
 ) => {
   const {ref_getter_mode_selection}=dict_variable_elements_selected
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
@@ -712,7 +713,7 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent((data as SankeyPlusData),display_nodes, d as SankeyPlusNode,GetLinkValue))
+        .html(NodeTooltipsContent((data as SankeyPlusData),display_nodes, d as SankeyPlusNode,GetLinkValue,trad))
     }
   }
 
