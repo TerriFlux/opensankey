@@ -31,7 +31,7 @@ export const OpenSankeyDrawNodesLabel : OpenSankeyDrawNodesLabelFType = (
   set_data:(d:SankeyData)=>void,
   multi_selected_nodes:{current: SankeyNode[] },
   GetLinkValue:GetLinkValueFuncType,
-  
+  t
 ) => {
   const display_nodes=data.nodes
   const display_links=data.links
@@ -170,7 +170,7 @@ export const OpenSankeyDrawNodesLabel : OpenSankeyDrawNodesLabelFType = (
       .attr('text-anchor', (n) => (ReturnValueNode(data,n,'label_horiz_valeur') as string).replace('left','end').replace('right','start'))
       .style('font-family', n => ReturnValueNode(data,n,'font_family'))
       .style('font-size', n => ReturnValueNode(data,n,'value_font_size') + 'px')
-      .text(n => TextNodeValue((n as SankeyNode),data,display_links,display_nodes,GetLinkValue))
+      .text(n => TextNodeValue((n as SankeyNode),data,display_links,display_nodes,GetLinkValue,t))
 
         
     // Drag zone for changing label box width
