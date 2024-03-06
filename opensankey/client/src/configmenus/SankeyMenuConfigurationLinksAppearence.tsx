@@ -88,7 +88,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       dict_variable_application_data,
       dict_variable_elements_selected,
       link_function,
-      multi_selected_links.current
+      multi_selected_links.current,
+      ComponentUpdater
     )
     ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
   }

@@ -102,7 +102,6 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       .on('keypress',(evt)=>{
         if(evt.keyCode==13){
         // if 'enter' key pressed, update the label
-        //set_data({...data}) TODO
         }
       })
       .style('background-color','white')
