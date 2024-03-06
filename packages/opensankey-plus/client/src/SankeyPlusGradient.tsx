@@ -21,11 +21,21 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   set_data:(d:SankeyPlusData)=>void,
   is_activated:boolean,
   menu_for_style:boolean,
-  selected_style_link:string,
+  selected_style_link,
 )=>{
 
+  // I have to do this because when we change selected_style_link it only re-render SankeyModalStyleLink 
+  // who re-render MenuConfigurationLinksAppearence 
+  // but menu_conf_link_apparence_gradient is rendered outside the scope of SankeyModalStyleLink 
+  // so selected_style_link can be out of sync with the real selected_style_link
+  if(menu_for_style && !Object.keys(data.style_link).includes(selected_style_link.current)){
+    selected_style_link.current=(Object.keys(data.style_link)[0])
+  }
+
+
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
-  const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link]]:multi_selected_links.current
+  const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link.current]]:multi_selected_links.current
+
   const k_list=['gradient'] as unknown as (keyof SankeyLinkAttrLocal)[]
   const gradChecked=IsAllLinkAttrSameValue(data,selected_parameter,k_list,menu_for_style)['gradient'] as boolean[]
 

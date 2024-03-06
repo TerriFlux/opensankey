@@ -110,7 +110,8 @@ export const plus_convert_data : plus_convert_dataFType = (
       v.heredited_attr_from_master=['']
     }
     if((v.view_data as unknown as SankeyPlusData ).version){
-      complete_sankey_data(v.view_data as SankeyPlusData,DefaultSankeyData,DefaultNode,DefaultLink)
+      complete_sankey_data(v.view_data as SankeyPlusData,DefaultSankeyData,DefaultNode,DefaultLink);
+      (v.view_data as unknown as SankeyPlusData ).view= []
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
@@ -150,7 +151,6 @@ export const plus_convert_data : plus_convert_dataFType = (
       difference=FilterView(difference)
       v.view_data={diff:difference}
     }
-
   })
 }
 

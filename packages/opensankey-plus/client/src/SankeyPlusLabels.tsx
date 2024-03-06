@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 
 import { ComponentUpdaterType, SankeyData } from 'open-sankey/src/types/Types'
-import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType} from '../types/Types'
+import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, PlusApplicationContextType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {
   PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType,
@@ -25,6 +25,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   dict_variable_elements_selected,
   uiElementsRef,
   contextMenu,
+  applicationContext,
   d_setter_input_value,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   LinkText: LinkTextFuncType,
@@ -113,6 +114,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
       gg_label.call(
         dragLabelEvent(
           applicaTionData,dict_variable_elements_selected,
+          applicationContext,
           d,
           GetSankeyMinWidthAndHeight,DrawGrid,
           LinkText,GetLinkValue,DrawArrows,scale,inv_scale,start_point,ComponentUpdater
@@ -214,6 +216,7 @@ export const eventLabelClick : eventLabelClickFType =(
 const dragLabelEvent = (
   dict_variable_application_data:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
+  applicationContext:PlusApplicationContextType,
   d:SankeyPlusLabel,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   DrawGrid:(d:SankeyPlusData)=>void,
@@ -272,6 +275,7 @@ const dragLabelEvent = (
         PlusDragElements(
           dict_variable_application_data,
           dict_variable_elements_selected,
+          applicationContext,
           d,event,LinkText,
           GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
         )

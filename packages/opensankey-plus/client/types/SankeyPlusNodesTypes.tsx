@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
+import { PlusApplicationContextType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
@@ -71,6 +71,7 @@ export type OpposingDragElementsPlusFType = (
 export type PlusNodeDragEventFType = (
   applicaTionData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
+  applicationContext:PlusApplicationContextType,
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -82,6 +83,7 @@ export type PlusNodeDragEventFType = (
 export type PlusDragElementsFType = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
+  applicationContext:PlusApplicationContextType,
   dragged:SankeyPlusNode|SankeyPlusLabel,
   event:{ dx: number; dy: number,x:number,y:number },
   LinkText:LinkTextFuncType,
