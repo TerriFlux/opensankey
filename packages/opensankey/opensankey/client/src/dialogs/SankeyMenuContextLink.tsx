@@ -6,7 +6,7 @@ import { reorganize_inputLinksId} from '../draw/SankeyDrawLayout'
 import { handleDownLink, handleUpLink } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { AssignLinkLocalAttribute, ReturnValueLink } from '../configmenus/SankeyUtils'
+import { AssignLinkLocalAttribute, ReturnValueLink, updateLinkTagValue } from '../configmenus/SankeyUtils'
 import * as d3 from 'd3'
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction'
 import { drawAddLinks, drawLinkShape } from '../draw/SankeyDrawLinks'
@@ -39,7 +39,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
       const cast_l=g_l as SankeyLink
       return multi_selected_links.current.includes(cast_l)
     }).remove()
-    drawAddLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,alt_key_pressed,link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,multi_selected_links.current)
+    drawAddLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,multi_selected_links.current)
     ComponentUpdater.ref_set_update_menu_config_link.current(!ComponentUpdater.ref_get_update_menu_config_link.current)
     setForceUpdate(!forceUpdate)
   }
@@ -111,7 +111,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
 
   const has_flux_tags=Object.values(data.fluxTags).length>0
   // Dropdown to change some pararmeter concerning the appearence of the node
-  const dropdown_c_l_tag=(contextualised_link!==undefined && has_flux_tags) && Object.entries(data.nodeTags).length>0?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
+  const dropdown_c_l_tag=(contextualised_link!==undefined && has_flux_tags) && has_flux_tags?<Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">
       {t('Menu.Transformation.tagFlux_assign')}
     </Dropdown.Toggle>
@@ -124,47 +124,18 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           </Dropdown.Toggle>
           <Dropdown.Menu  variant='light'>
             {Object.keys(nt[1].tags).map(t=>{
+              const has_tag=value_selected_parameter_contextualised_link().tags[nt[0]]!==undefined
+              const is_selected= value_selected_parameter_contextualised_link().tags[nt[0]] && value_selected_parameter_contextualised_link().tags[nt[0]].includes(t) 
+              
               return <Dropdown.Item onClick={()=>{
                 // Assign tag to selected links
                 multi_selected_links.current.filter(l=>l!==contextualised_link).forEach(l=>{
-                  let val = Object(l.value)
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  if(!Object.keys(val.tags).includes(nt[0])){
-                    val.tags[nt[0]]=[]
-                  }
-                  if(!val.tags[nt[0]].includes(t)){
-                    val.tags[nt[0]].push(t)
-                  }else{
-                    val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
-                  }
+                  updateLinkTagValue(l,tags_selected,nt[0],t,!is_selected)
                 })
-
-                // Assign tag to contextualised link
-                let val = Object(contextualised_link!.value)
-                Object.values(tags_selected).forEach(tag => {
-                  if (val[tag] === undefined) {
-                    val[tag] = {}
-                  }
-                  val = val[tag]
-                })
-                if(!Object.keys(val.tags).includes(nt[0])){
-                  val.tags[nt[0]]=[]
-                }
-                if(!val.tags[nt[0]].includes(t)){
-                  val.tags[nt[0]].push(t)
-                }else{
-                  val.tags[nt[0]].splice(val.tags[nt[0]].indexOf(t))
-                }
-
-
+                updateLinkTagValue(contextualised_link,tags_selected,nt[0],t,!is_selected)
                 redraw_selected_links()
               }}>
-                {nt[1].tags[t].name}{checked(value_selected_parameter_contextualised_link().tags[nt[0]].includes(t))}
+                {nt[1].tags[t].name}{has_tag?checked(value_selected_parameter_contextualised_link().tags[nt[0]].includes(t)):<></>}
               </Dropdown.Item>
             })}
           </Dropdown.Menu>
@@ -187,12 +158,12 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     </Dropdown.Toggle>
     <Dropdown.Menu variant='light'>
       {
-        Object.values(data.style_node).map(sn=>{
+        Object.values(data.style_link).map(sn=>{
           return <Dropdown.Item onClick={()=>{
-            contextualised_link!.style=sn.idNode
-            multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>n.style=sn.idNode)
+            contextualised_link!.style=sn.idLink
+            multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>n.style=sn.idLink)
             redraw_selected_links()
-          }}>{sn.name}{checked(contextualised_link!.style==sn.idNode)}</Dropdown.Item>
+          }}>{sn.name}{checked(contextualised_link!.style==sn.idLink)}</Dropdown.Item>
         })
       }
     </Dropdown.Menu>
@@ -390,7 +361,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           })
           link_to_update=[...new Set(link_to_update)]
           const list_links=link_to_update.map(lid=>data.links[lid])
-          drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,link_function,list_links,ComponentUpdater)
+          drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,list_links,ComponentUpdater)
         }}>{t('Flux.if')}</Button>
 
         {sep}
