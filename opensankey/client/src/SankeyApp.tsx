@@ -459,7 +459,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       data,
       set_data as (d:SankeyData)=>void,
       dict_variable_elements_selected.multi_selected_nodes,
-      GetLinkValue
+      GetLinkValue,
+      applicationContext.t
     )
 
     // const suiteDrawArrows= DrawArrows

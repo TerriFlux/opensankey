@@ -466,13 +466,14 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
  */
 export const ToPrecision:ToPrecisionFuncType = (
   v: number,
+  t,
   nb_scientific=3
 ): string | number=> {
   if(!isNaN(v)) {
     if (v > Math.pow(10,nb_scientific)){
       return v.toExponential(nb_scientific)
     }
-    return parseFloat(v.toPrecision(nb_scientific))
+    return String(parseFloat(v.toPrecision(nb_scientific))).replace('.',t('sep_decimal'))
   }
   return v
 }
@@ -517,7 +518,7 @@ export const LinkText:LinkTextFuncType = (
     }
 
     if((ReturnValueLink(data,d,'to_precision'))){
-      the_link_value =ToPrecision(the_link_value as number,nb_sign)
+      the_link_value =ToPrecision(the_link_value as number,t,nb_sign)
     }else if (ReturnValueLink(data,d,'custom_digit')){
       the_link_value =(the_link_value as number).toFixed((ReturnValueLink(data,d,'nb_digit') as number))
     }
