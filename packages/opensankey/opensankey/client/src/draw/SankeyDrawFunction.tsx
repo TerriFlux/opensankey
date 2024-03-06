@@ -1310,7 +1310,8 @@ export const TextNodeValue : TextNodeValueFType =(
   d:SankeyNode,data:SankeyData,
   display_links:{[link_id:string]:SankeyLink},
   display_nodes:{[nodes_id:string]:SankeyNode},
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  t
 )=>{
   let total = 0
   const node_visible=NodeVisibleOnsSvg()
@@ -1359,7 +1360,7 @@ export const TextNodeValue : TextNodeValueFType =(
       }
     }
     if (scientific_precision !==0) {
-      return ToPrecision(total,scientific_precision)+unit
+      return ToPrecision(total,t,scientific_precision)+unit
     }
     return total+unit
   } else {
