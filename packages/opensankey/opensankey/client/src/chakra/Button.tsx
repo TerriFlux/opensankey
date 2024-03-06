@@ -6,7 +6,7 @@ export const button_base_style = defineStyle({
   padding: '0',
   border: 'solid 1px ',
   borderRadius: '6px',
-  borderColor: 'openSankey.50',
+  borderColor: 'grey.50',
   bg: 'openSankey.50',
   bgColor: 'openSankey.50',
   _hover: {
@@ -27,10 +27,30 @@ export const menuconfigpanel_option_button = defineStyle({
   minWidth: '4.5rem',
   textStyle: 'h4',
   fontSize: '12px',
-  _disabled: {
-    borderColor: 'grey.300',
-    bg: 'grey.300',
-    bgColor: 'grey.300',
-  }
 })
 
+export const menuconfigpanel_add_button = defineStyle({
+  size: 'xs',
+  height: '2rem',
+  textStyle: 'h4',
+  fontSize: '12px',
+  bg: 'green.100',
+  bgColor: 'green.100',
+  _hover: {
+    bg: 'green.200',
+    bgColor: 'green.200',
+  },
+})
+
+export const menuconfigpanel_del_button = defineStyle({
+  size: 'xs',
+  height: '2rem',
+  textStyle: 'h4',
+  fontSize: '12px',
+  bg: 'red.100',
+  bgColor: 'red.100',
+  _hover: {
+    bg: 'red.200',
+    bgColor: 'red.200',
+  },
+})

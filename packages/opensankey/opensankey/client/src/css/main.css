@@ -1273,7 +1273,7 @@ flex-direction: initial;
 	};
 	.form-control, .btn, .form-select,.input-group-text{
 	height: 1.5rem;
-	} 
+	}
 	.form-select{
 		font-size: 9px;
 	}
@@ -1283,4 +1283,13 @@ flex-direction: initial;
 		display: block;
 		padding: 0;
 	}
+}
+
+/* React multiselect component */
+.rmsc {
+	--rmsc-radius: 6px !important;
+	--rmsc-h: 2rem !important;
+}
+.rmsc .dropdown-container {
+	height: 2rem !important;
 }
