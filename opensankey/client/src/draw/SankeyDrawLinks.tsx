@@ -214,7 +214,6 @@ const eventLinkClick=(
       displayedInputLinkValueRef.current.forEach(setter=>setter(''))
     }
     ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
-    //set_data({...data})
   }
 }
 
@@ -401,7 +400,7 @@ export const drawAddLinks = (
       paths.call(
         DragLinkEvent(
           dict_variable_application_data,dict_variable_elements_selected,error_msg,data.display_style,drawCurveFunction,
-          scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows
+          scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater
         )
       )
     }
@@ -444,7 +443,7 @@ export const drawAddLinks = (
   drawLinkShape(
     dict_variable_application_data,
     dict_variable_elements_selected,
-    link_functions,link_to_redraw
+    link_functions,link_to_redraw,ComponentUpdater
   )
 
   AddDrawLinksEvent(
@@ -461,7 +460,9 @@ export const drawLinkShape  = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   link_functions: LinkFunctionTypes,
-  link_to_redraw:SankeyLink[]
+  link_to_redraw:SankeyLink[],
+  ComponentUpdater:ComponentUpdaterType
+
 ) => {
   const { GetLinkValue,LinkStroke,node_arrow_visible,LinkText,DrawArrows,LinkSabotColor } = link_functions
   const { multi_selected_links } = dict_variable_elements_selected
@@ -496,7 +497,7 @@ export const drawLinkShape  = (
     paths.call(
       DragLinkEvent(
         dict_variable_application_data,dict_variable_elements_selected,error_msg,display_style,drawCurveFunction,
-        scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows
+        scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater
       )
     )
   }
@@ -581,7 +582,7 @@ export const drawLinkShape  = (
       display_style,
       data.nodeTags, d, error_msg,
       LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
-      DrawArrows
+      DrawArrows,ComponentUpdater
     )
   })
 

@@ -314,7 +314,9 @@ export type SankeyDrawCurve={
     LinkText : LinkTextFuncType,
     GetSankeyMinWidthAndHeight : GetSankeyMinWidthAndHeightFuncType,
     GetLinkValue : GetLinkValueFuncType,
-    DrawArrows:DrawArrowsType
+    DrawArrows:DrawArrowsType,
+    ComponentUpdater:ComponentUpdaterType
+
   ) => string | number | boolean | readonly (string | number)[] | null
 }
 
