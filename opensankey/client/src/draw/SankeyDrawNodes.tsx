@@ -35,13 +35,14 @@ export const DrawNodes : DrawNodesFType = (
   const { data, display_nodes, display_links } = dict_variable_application_data
   const { ref_getter_mode_selection, multi_selected_nodes, first_selected_node } = dict_variable_elements_selected
 
+
   const node_mouse_over=(data:SankeyData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (ref_getter_mode_selection.current == 's')? 'pointer' : 'unset')
     if ( (window.SankeyToolsStatic ||event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue))
+        .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue,applicationContext.t))
     }
   }
     

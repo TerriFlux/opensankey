@@ -41,7 +41,7 @@ export const DrawLinks : DrawLinksFType = (
   const { multi_selected_links,ref_getter_mode_selection,ref_setter_mode_selection, displayedInputLinkValueSetterRef} = dict_variable_elements_selected
   const default_handle_size = 10
   const default_horiz_shift = 50
-
+  const {t} = applicationContext
   const min_thickness=2
 
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
@@ -362,7 +362,7 @@ export const DrawLinks : DrawLinksFType = (
           return
         }
         sankeyTooltip
-          .html(LinkTooltipsContent(data, d,GetLinkValue))
+          .html(LinkTooltipsContent(data, d,GetLinkValue,t))
 
         let tmp=GetLinkValue(data, d.idLink).value as number
         tmp=(tmp)?tmp:0
