@@ -76,7 +76,7 @@ export type AdjustSankeyZoneFuncType = (data:SankeyData,GetSankeyMinWidthAndHeig
 
 export type GetSankeyMinWidthAndHeightFuncType = (data:SankeyData)=>number[]
 
-export type ToPrecisionFuncType = (v: number,nb_scientific?:number)=> string | number
+export type ToPrecisionFuncType = (v: number,t:TFunction,nb_scientific?:number)=> string | number
 
 export type LinkTextFuncType = (data: SankeyData,d: SankeyLink,GetLinkValue:GetLinkValueFuncType,t:TFunction)=>string
 
