@@ -1,0 +1,31 @@
+import { selectAnatomy } from '@chakra-ui/anatomy'
+import { createMultiStyleConfigHelpers } from '@chakra-ui/react'
+
+const { definePartsStyle } = createMultiStyleConfigHelpers(selectAnatomy.keys)
+
+export const select_base_style = definePartsStyle({
+  field: {
+    height: '2rem',
+    border: 'solid 1px ',
+    borderRadius: '6px',
+    borderColor: 'grey.50',
+    textStyle: 'h4',
+    bg: 'white',
+    bgColor: 'white',
+    _disabled: {
+      bg: 'grey.300',
+      bgColor: 'grey.300'
+    },
+    _focus: {
+      border: 'solid 2px ',
+      borderColor: 'openSankey.100',
+    }
+  }
+})
+
+export const select_custom_style = definePartsStyle({
+  field: {
+    borderRadius: '0px 6px 6px 0px',
+    fontSize: '12px'
+  }
+})

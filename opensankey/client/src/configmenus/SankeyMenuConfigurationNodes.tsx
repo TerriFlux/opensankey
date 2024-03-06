@@ -1,31 +1,45 @@
 import React, { FunctionComponent, useState } from 'react'
-import { 
-  Tabs, Button, FormControl, FormLabel, OverlayTrigger, Tooltip, 
-  InputGroup,Col, Form, Row 
+import {
+  Tabs,
+  OverlayTrigger,
+  Tooltip,
 } from 'react-bootstrap'
 import 'react-folder-tree/dist/style.css'
 import { ReactElementLike } from 'prop-types'
-import { FaPlus, FaMinus, FaEye,} from 'react-icons/fa'
+import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
 
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import { TFunction } from 'i18next'
 
+import {
+  Box,
+  Button,
+  InputGroup,
+  Input,
+} from '@chakra-ui/react'
 /*************************************************************************************************/
 import { SankeyData, SankeyNode, treeFolderType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
-import { 
-  OpenSankeyMenuConfigurationNodesFType, add_childrenFType, 
-  check_node_has_node_typeFType, getNodeFromTreeFType, tree_data_nodesFType 
+import {
+  add_childrenFType,
+  check_node_has_node_typeFType,
+  getNodeFromTreeFType,
+  OpenSankeyMenuConfigurationNodesFType,
+  tree_data_nodesFType,
 } from './types/SankeyMenuConfigurationNodesTypes'
 /*************************************************************************************************/
-import { 
-  DeleteNode,ReturnValueNode,ApplyStyleToNodes,AddNewNode} from './SankeyUtils'
+import {
+  AddNewNode,
+  ApplyStyleToNodes,
+  DeleteNode,
+  ReturnValueNode,
+} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
-import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction' 
+import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from '../topmenus/SankeyMenuTop'
 /*************************************************************************************************/
@@ -73,14 +87,14 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
     ui['Tags'] = node_tags_submenu
   }
-  
+
   ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(
     applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
     GetLinkValue
   )
-  
+
   return ui
 }
 
@@ -90,8 +104,25 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
 
-  const tmpNodes = Object.fromEntries(Object.entries(data.nodes).sort(([, a], [, b]) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)))
-  const INITIAL_OPTIONS = Object.values(tmpNodes).filter(d=>(data.displayed_node_selector)?node_visible.includes(d.idNode):true).map((d) => { return { 'label': d.name, 'value': d.idNode } })
+  const tmpNodes = Object
+    .fromEntries(
+      Object.entries(data.nodes)
+        .sort(([, a], [, b]) =>
+          (a.name > b.name) ?
+            1 :
+            ((b.name > a.name) ?
+              -1 :
+              0)
+        ))
+  const INITIAL_OPTIONS = Object
+    .values(tmpNodes)
+    .filter(d => (
+      data.displayed_node_selector)?
+      node_visible.includes(d.idNode):
+      true)
+    .map(d => {
+      return { 'label': d.name, 'value': d.idNode }
+    })
   // const target_node_selector=useRef(null)
   // const [show_node_selector,set_show_node_selector]=useState(false)
 
@@ -102,34 +133,41 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
   const selected : selected_type[] = multi_selected_nodes.current.map((d) => { return { 'label': d.name, 'value': d.idNode } })
+
   // Renvoie le menu déroulant pour la sélection des noeuds
   const dropdownMultiNode = () => {
     const DD = (
-      <div id='DD_multi_node' style={{width:'70%',zIndex:3}}>
-        <MultiSelect
-          valueRenderer={(selected: selected_type[]) => {
-            return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
-          }}
-          options={INITIAL_OPTIONS}
-          value={selected}
-          overrideStrings={{
-            'selectAll': t('Noeud.TS'),
-          }}
-          onChange={(selected: [{ label: string, value: string }]) => {
-            const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
-            multi_selected_nodes.current = m_s
-            Object.values(data.nodes).forEach( n =>
-              d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',0)
-            )
-            multi_selected_nodes.current.forEach( n =>
-              d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',2)
-            )
-            setForceUpdate(!forceUpdate)
-            set_data({...data})
-          }}
-          labelledBy={'hello'}/>
-      </div>)
+      <Box
+        layerStyle='submenuconfig_droplist'
+      >
+        {/* Position custom pour MultiSelect */}
+        <Box
+          height='2rem'
+          width='14.75rem'
+        >
+          <MultiSelect
+            options={INITIAL_OPTIONS}
+            value={selected}
+            label={t('Noeud.TS')}
+            onChange={(selected: [{ label: string, value: string }]) => {
+              const new_sel = selected.map(d => d.value)
+              const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
+              multi_selected_nodes.current = m_s
+              Object.values(data.nodes).forEach( n =>
+                d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',0)
+              )
+              multi_selected_nodes.current.forEach( n =>
+                d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',2)
+              )
+              setForceUpdate(!forceUpdate)
+              set_data({...data})
+            }}
+            valueRenderer={(selected: selected_type[]) => {
+              return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
+            }}
+          />
+        </Box>
+      </Box>)
     return DD
   }
 
@@ -211,7 +249,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   //               }
   //             }
   //             set_data({...data})
-              
+
   //           }else if(ev.type==='checkNode' &&ev.path && ev.path.length==0 && state.checked===1 && !root_is_checked){
   //             // select all nodes
   //             multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(data.displayed_node_selector?node_visible.includes(n.idNode):true) && check_node_has_node_type(n,filter_node_selector)).map(n=>n)
@@ -228,17 +266,23 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // </Overlay>
 
 
-  return (<>
+  return (<Box layerStyle='menuconfigpanel_grid'>
     {
       (token==false && Object.keys(data.nodes).length>15)?
-        <>
-          <FormLabel style={{'color':'red'}}>{t('Menu.warningLimitNode')}</FormLabel>
-        </>
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_warn_msg'
+        >
+          {t('Menu.warningLimitNode')}
+        </Box>
         :
         <></>
     }
 
-    <InputGroup>
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_droplist'
+    >
       {/* Boutton pour ajouter un noeud */}
       <OverlayTrigger
         key={'menu.tooltips.noeud.1'}
@@ -246,10 +290,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         delay={500}
         overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
         <Button
-          style={{width:'10%'}}
-          size="sm"
-          variant='outline-primary'
-          className='btn_menu_config'
+          variant='menuconfigpanel_add_button'
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
             AddNewNode(data,set_data,multi_selected_nodes)
@@ -266,18 +307,19 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         delay={500}
         overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
         {dropdownMultiNode()}
-        {/* <Button 
-            style={{width:'70%'}} 
-            ref={target_node_selector} 
-            variant='outline-primary' 
+        {/* <Button
+            style={{width:'70%'}}
+            ref={target_node_selector}
+            variant='outline-primary'
             className='btn_menu_config'
-            id='button-node_selector' 
-            onClick={()=>{set_show_node_selector(!show_node_selector)}} 
+            id='button-node_selector'
+            onClick={()=>{set_show_node_selector(!show_node_selector)}}
           >
             {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n => n.name).join(','), 25 ):'None'}
           </Button> */}
+        {/* {overlayNodeSlector} */}
       </OverlayTrigger>
-      {/* {overlayNodeSlector} */}
+
       {/* Boutton pour supprimer le noeud selectionné */}
       <OverlayTrigger
         key={'menu.tooltips.noeud.3'}
@@ -285,10 +327,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         delay={500}
         overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
         <Button
-          style={{width:'10%'}}
-          size="sm"
-          variant='outline-primary'
-          className='btn_menu_config'
+          variant='menuconfigpanel_del_button'
           disabled={multi_selected_nodes.current.length == 0}
           onClick={
             () => {
@@ -307,10 +346,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         delay={500}
         overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
         <Button
-          style={{width:'10%'}}
-          size="sm"
-          variant={data.displayed_node_selector?'primary':'outline-primary'}
-          className='btn_menu_config'
+          variant='menuconfigpanel_option_button'
           onClick={
             () => {
               data.displayed_node_selector=!data.displayed_node_selector
@@ -319,62 +355,78 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           <FaEye />
         </Button>
       </OverlayTrigger>
-    </InputGroup>
+    </Box>
 
     {/* Affichage du nom des noeuds selectionnés */}
-    <Row>
-      <Col xs={2} style={{paddingLeft:'inherit',paddingRight:'inherit'}}><Form.Label>{t('Noeud.Nom')}</Form.Label></Col>
-      <Col xs={10} style={{paddingLeft:'inherit',paddingRight:'inherit'}}><OverlayTrigger
-        key={'menu.tooltips.noeud.6'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.6'}>{t('Noeud.tooltips.Nom')} </Tooltip>}>
-        <FormControl
-          className='btn_menu_config'
-          value={
-            (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
-          }
-          onChange={evt => {
-            if (multi_selected_nodes.current.length != 1) {
-              return
-            }
-            multi_selected_nodes.current[0].name = evt.target.value
-            const d = multi_selected_nodes.current[0]
-            d3.select(' .opensankey #text_' + d.idNode).text(evt.target.value)
-            const wrap = textwrap()
-              .bounds({ height: 100, width: (ReturnValueNode(data,d,'label_box_width') as number != 0) ? ReturnValueNode(data,d,'label_box_width') as number : 110 })
-              .method('tspans')
-            d3.select(' .opensankey #ggg_' + d.idNode + ' text')
-              .call(wrap)
-            if (!d.x_label || data.show_structure === 'structure') {
-              d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
-                if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
-                  return width / 2
-                } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
-                  return ReturnValueNode(data,d,'label_vert') == 'middle' ? width : 0
-                } else {
-                  return 0
-                }
-              })
-            }
-            d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-              const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
-              if (d.x_label) {
-                return d.x_label
-              } else if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
-                return width / 2
-              } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
-                return width
-              } else {
-                return 0
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+      gridTemplateColumns='1fr 9fr'
+    >
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        textStyle='h3'
+      >
+        {t('Noeud.Nom')}
+      </Box>
+      <Box>
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.6'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.6'}>{t('Noeud.tooltips.Nom')} </Tooltip>}>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <Input
+              variant='menuconfigpanel_option_input'
+              value={
+                (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
               }
-            })
-            setForceUpdate(!forceUpdate)
-          }}
-          disabled={(multi_selected_nodes.current.length == 1) ? false : true} />
-      </OverlayTrigger></Col>
-    </Row>
+              onChange={evt => {
+                if (multi_selected_nodes.current.length != 1) {
+                  return
+                }
+                multi_selected_nodes.current[0].name = evt.target.value
+                const d = multi_selected_nodes.current[0]
+                d3.select(' .opensankey #text_' + d.idNode).text(evt.target.value)
+                const wrap = textwrap()
+                  .bounds({ height: 100, width: (ReturnValueNode(data,d,'label_box_width') as number != 0) ? ReturnValueNode(data,d,'label_box_width') as number : 110 })
+                  .method('tspans')
+                d3.select(' .opensankey #ggg_' + d.idNode + ' text')
+                  .call(wrap)
+                if (!d.x_label || data.show_structure === 'structure') {
+                  d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                    const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
+                    if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
+                      return width / 2
+                    } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
+                      return ReturnValueNode(data,d,'label_vert') == 'middle' ? width : 0
+                    } else {
+                      return 0
+                    }
+                  })
+                }
+                d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                  const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
+                  if (d.x_label) {
+                    return d.x_label
+                  } else if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
+                    return width / 2
+                  } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
+                    return width
+                  } else {
+                    return 0
+                  }
+                })
+                setForceUpdate(!forceUpdate)
+              }}
+              disabled={(multi_selected_nodes.current.length == 1) ? false : true}
+            />
+          </InputGroup>
+        </OverlayTrigger>
+      </Box>
+    </Box>
 
     {/* Declenché si des neouds sont selectionnées */}
     {(multi_selected_nodes.current.length !== 0) ? (
@@ -384,7 +436,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             return c})}
         </Tabs>
       </>) : (<></>)}
-  </>
+  </Box>
   )
 }
 
@@ -442,10 +494,10 @@ export const add_children : add_childrenFType =(
     .filter(nd=> check_node_has_node_type(nd[1] as SankeyNode,filter_node_selector))
     .forEach(nn=>{
       if(nn[1].dimensions['Primaire'].parent_name===n.idNode ) {
-        const c:treeFolderType={id:nn[0],name:nn[1].name,checked:multi_selected_nodes.current.includes(nn[1])?1:0}        
+        const c:treeFolderType={id:nn[0],name:nn[1].name,checked:multi_selected_nodes.current.includes(nn[1])?1:0}
         const child=add_children(nodes,nn[1],multi_selected_nodes,displayed_node_selector,node_visible,filter_node_selector)
         if(child.length!=0){
-          c.children=child 
+          c.children=child
         }
         if(displayed_node_selector && !node_visible.includes(nn[0])){
           c.checked=0.5
@@ -457,7 +509,7 @@ export const add_children : add_childrenFType =(
 
 export const getNodeFromTree : getNodeFromTreeFType =(
   path:number[],tree:treeFolderType):{id:string,checked?:number}=>{
-      
+
   if(tree.children && path.length>0){
     const index=path.shift()??-1
     const sub_tree=tree.children[index]
