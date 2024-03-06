@@ -197,3 +197,9 @@ export type computeHorizontalIndexFuncType= (
   links: { [link_id: string]: SankeyLink},
   nodes: { [node_id: string]: SankeyNode},
 ) => void
+
+export type hasAggregationLinkToNodeFuncType=(data : SankeyData,
+  idNodeFather: string,
+  idNodeCurr:string,
+  cur_dimension: string,
+)=>boolean
