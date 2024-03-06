@@ -111,7 +111,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
       <AccordionPanel>
         <Accordion
           allowToggle
-          variant="accordion_sublevel_style"
+          variant='accordion_sublevel_style'
         >
           <AccordionItem>
             {
