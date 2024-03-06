@@ -47,6 +47,8 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                 new_style.idNode=new_id
                 data.style_node[new_id] = new_style
                 set_data({ ...data })
+                ref_selected_style_node.current = new_style.idNode
+                set_selected_style_node(new_style.idNode)
               }}><FaPlus /></Button>
 
             {
@@ -74,7 +76,10 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                 () => {
                   Object.values(data.nodes).filter(n=>n.style==selected_style_node).forEach(n=>n.style='default')
                   delete data.style_node[selected_style_node]
-                  set_selected_style_node((Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : '')
+                  const new_style=(Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : ''
+                  set_selected_style_node(new_style)
+                  ref_selected_style_node.current=new_style
+                  set_data({...data})
                 }
               }
             ><FaMinus /></Button>
@@ -150,6 +155,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
               new_style.idLink = new_id
               data.style_link[new_id] = new_style
               set_data({ ...data })
+              set_selected_style_link(new_style.idLink)
 
             }}><FaPlus /></Button>
             <Dropdown>
@@ -165,8 +171,11 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
               disabled={selected_style_link === 'default'}
               onClick={
                 () => {
+                  Object.values(data.links).filter(l=>l.style==selected_style_link).forEach(l=>l.style='default')
                   delete data.style_link[selected_style_link]
-                  set_selected_style_link((Object.keys(data.style_link).length > 0) ? Object.keys(data.style_link)[0] : '')
+                  set_selected_style_link('default')
+                  ref_selected_style_link.current='default'
+                  set_data({...data})
                 }
               }
             ><FaMinus /></Button>

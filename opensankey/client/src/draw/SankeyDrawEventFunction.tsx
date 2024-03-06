@@ -255,6 +255,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
   uiElementsRef,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
+  applicationContext,
   alt_key_pressed,
   NodeTooltipsContent,
   accept_simple_click,
@@ -312,6 +313,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
             dict_variable_application_data,
             uiElementsRef,
             dict_variable_elements_selected,
+            applicationContext,
             alt_key_pressed,
             accept_simple_click,
             link_function,
@@ -418,6 +420,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   uiElementsRef,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
+  applicationContext,
   alt_key_pressed,
   accept_simple_click,
   token,
@@ -572,6 +575,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         dict_variable_application_data,
         uiElementsRef,
         dict_variable_elements_selected,
+        applicationContext,
         alt_key_pressed,
         accept_simple_click,
         link_function,
@@ -583,6 +587,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         dict_variable_application_data,
         uiElementsRef,
         dict_variable_elements_selected,
+        applicationContext,
         alt_key_pressed,
         link_function,
         ComponentUpdater,
@@ -635,6 +640,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         dict_variable_application_data,
         uiElementsRef,
         dict_variable_elements_selected,
+        applicationContext,
         alt_key_pressed,
         accept_simple_click,
         link_function,
@@ -647,6 +653,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         dict_variable_application_data,
         uiElementsRef,
         dict_variable_elements_selected,
+        applicationContext,
         alt_key_pressed,
         link_function,
         ComponentUpdater,
@@ -666,6 +673,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   dict_variable_application_data,
   dict_variable_elements_selected,
   uiElementsRef,
+  applicationContext,
   contextMenu,
   link_function,
   alt_key_pressed,
@@ -717,6 +725,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
         dict_variable_application_data,
         uiElementsRef,
         dict_variable_elements_selected,
+        applicationContext,
         alt_key_pressed,
         link_function,
         ComponentUpdater,
@@ -730,8 +739,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       if (accordion_ref && accordion_ref.current) {
         for (const child in accordion_ref.current.children) {
           if (accordion_ref.current.children[child].id === 'Flux') {
-            (accordion_ref.current.children[0] as HTMLLabelElement).click();
-            (accordion_ref.current.children[child] as HTMLLabelElement).click()
+            (accordion_ref.current.children[0] as HTMLLabelElement).click()
           }
         }
       }
@@ -782,6 +790,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       dict_variable_application_data,
       uiElementsRef,
       dict_variable_elements_selected,
+      applicationContext,
       alt_key_pressed,
       link_function,
       ComponentUpdater,

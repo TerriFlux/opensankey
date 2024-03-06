@@ -696,7 +696,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         contextMenu.showContextZDDRef.current![1](false)
         contextMenu.tagContext.current![0][1](undefined)
         ref_setter_mode_selection.current('s')
-        AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+        AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>

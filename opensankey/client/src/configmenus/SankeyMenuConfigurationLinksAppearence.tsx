@@ -87,6 +87,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
     drawLinkShape(
       dict_variable_application_data,
       dict_variable_elements_selected,
+      applicationContext,
       link_function,
       multi_selected_links.current,
       ComponentUpdater
@@ -217,7 +218,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
       if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? CutName(data.style_link[style_to_display].idLink, 25 ) : 'Multiple style parmi les noeuds sélectionnés'
+        return (inchangee) ? CutName(data.style_link[style_to_display].name, 25 ) : 'Multiple style parmi les noeuds sélectionnés'
       } else {
         return 'Aucun'
       }
@@ -1197,7 +1198,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 n.style = d
               })
               updateMenuConfigLink()
-            }}>{data.style_link[d].idLink}</Dropdown.Item>)
+            }}>{data.style_link[d].name}</Dropdown.Item>)
           })}
         </Dropdown.Menu>
       </Dropdown>

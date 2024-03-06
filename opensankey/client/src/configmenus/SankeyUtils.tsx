@@ -492,7 +492,8 @@ export const ToPrecision:ToPrecisionFuncType = (
 export const LinkText:LinkTextFuncType = (
   data: SankeyData,
   d: SankeyLink,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  t
 ): string=> {
 
   let the_link_value = GetLinkValue(data, d.idLink).value
@@ -526,7 +527,7 @@ export const LinkText:LinkTextFuncType = (
       the_link_value =(the_link_value as number).toFixed((ReturnValueLink(data,d,'nb_digit') as number))
     }
     const unit=ReturnValueLink(data,d,'label_unit_visible')?ReturnValueLink(data,d,'label_unit') as string:''
-    return (+the_link_value)+unit
+    return (String(the_link_value).replace('.',t('sep_decimal')))+unit
   }
 }
 
@@ -670,7 +671,7 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
   const node_style_prod=DefaultNodeProductStyle()
   const default_data = {
     ...data,
-    style_node: { 'default' : DefaultNodeStyle(),'style_node_prod':node_style_prod,'style_node_sect':node_style_sect },
+    style_node: { 'default' : DefaultNodeStyle(),'NodeSectorStyle':node_style_prod,'NodeProductStyle':node_style_sect },
     style_link: { 'default' : DefaultLinkStyle() }
   }
   return (default_data as unknown as SankeyData)
@@ -1776,6 +1777,7 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   contextMenu,
   uiElementsRef,
   dict_variable_elementsselected,
+  applicationContext,
   alt_key_pressed,
   accept_simple_click,
   ComponentUpdater,
@@ -1805,7 +1807,7 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   multi_selected_nodes.current = [node]
   ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes,link_function)
   dict_variable_application_data.display_nodes[node.idNode]=node
-  drawAddNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elementsselected,alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+  drawAddNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elementsselected,applicationContext,alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
 }
 
 // Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link
@@ -2039,4 +2041,27 @@ typeof globalThis & {
 }
 export const styleRowInput=()=>{
   return {marginLeft:'-0.5rem'}
+}
+
+export const updateLinkTagValue=(d:SankeyLink,
+  tags_selected: {[k: string]: string},
+  tags_group_key:string,
+  tag_key:string,
+  visible:boolean
+)=>{
+  let val = Object(d.value)
+  Object.values(tags_selected).forEach(tag => {
+    if (val[tag] === undefined) {
+      val[tag] = {}
+    }
+    val = val[tag]
+  })
+  if(val.tags[tags_group_key]===undefined){
+    val.tags[tags_group_key]=[]
+  }
+  if (visible) {
+    val.tags[tags_group_key].push(tag_key)
+  } else {
+    val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
+  }
 }

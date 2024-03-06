@@ -12,7 +12,7 @@ import { textwrap } from 'd3-textwrap'
 import { TFunction } from 'i18next'
 
 /*************************************************************************************************/
-import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, SankeyNode, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType, uiElementsRefType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, SankeyNode, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType, uiElementsRefType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { 
   OpenSankeyMenuConfigurationNodesFType, add_childrenFType, 
@@ -45,7 +45,7 @@ type SankeyEditionTypes = {
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-
+  applicationContext:applicationContextType,
 }
 
 export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
@@ -104,6 +104,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     alt_key_pressed,
     accept_simple_click,
     dict_hook_ref_setter_show_dialog_components,
+    applicationContext
   }
 ) => {
   const {data,set_data}=dict_variable_application_data
@@ -276,7 +277,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
             Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
-            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
             SelectVisualyNodes(multi_selected_nodes.current[0])
             setForceUpdate(!forceUpdate)
           }}>

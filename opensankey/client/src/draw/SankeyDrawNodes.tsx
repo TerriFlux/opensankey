@@ -233,6 +233,7 @@ export const DrawAllNodes : DrawNodesFType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
+  applicationContext,
   alt_key_pressed,
   accept_simple_click,
   link_function,
@@ -247,7 +248,7 @@ export const DrawAllNodes : DrawNodesFType = (
   // Or if you want information about the type of these variable, you can find them in file types.tsx
   d3.selectAll(' .opensankey .gg_nodes').remove()
   drawAddNodes(
-    contextMenu, dict_variable_application_data, uiElementsRef, dict_variable_elements_selected,
+    contextMenu, dict_variable_application_data, uiElementsRef, dict_variable_elements_selected,applicationContext,
     alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components
   )
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
@@ -261,6 +262,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
+  applicationContext,
   alt_key_pressed,
   accept_simple_click,
   link_function,
@@ -320,6 +322,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
           dict_variable_application_data,
           dict_variable_elements_selected,
           uiElementsRef,
+          applicationContext,
           contextMenu,
           link_function,
           alt_key_pressed,
@@ -332,7 +335,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     if(ref_getter_mode_selection.current=='s' && window.SankeyToolsStatic!==true){
       ggg_nodes.call(
         DragGNodeEvent(
-          dict_variable_application_data,dict_variable_elements_selected,
+          dict_variable_application_data,dict_variable_elements_selected,applicationContext,
           alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater
         )
       )
@@ -465,6 +468,7 @@ export const drawAddNodes : drawNodeShapeFType = (
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
+  applicationContext,
   alt_key_pressed,
   accept_simple_click,
   link_function,
@@ -506,6 +510,7 @@ export const drawAddNodes : drawNodeShapeFType = (
     dict_variable_application_data,
     uiElementsRef,
     dict_variable_elements_selected,
+    applicationContext,
     alt_key_pressed,
     accept_simple_click,
     link_function,
