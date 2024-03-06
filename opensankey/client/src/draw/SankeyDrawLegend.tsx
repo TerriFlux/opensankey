@@ -339,7 +339,7 @@ export const DrawLegend : DrawLegendFType= (
     // DRAW SCALE
     if(data.display_legend_scale){
       d3.selectAll(' .opensankey #svg .g_scale').remove()
-      dy+=60
+      dy+=65
       const g_scale=legend.append('g').attr('class','g_scale').style('transform', 'translate(0,' + (dy) + 'px)')
       g_scale.append('text').text(t('scale')+':').style('font-size',data.legend_police+'px')
     

@@ -1,6 +1,6 @@
 import { DragBehavior, SubjectPosition } from 'd3'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
-import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, ComponentUpdaterType } from '../../types/Types'
+import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType } from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from '../../configmenus/types/SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
 
@@ -21,6 +21,7 @@ export type DragElementsFuncType = (
   dragged: SankeyNode,
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   event: {dx: number;dy: number;x: number;y: number;},
   LinkText: LinkTextFuncType,
   GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
@@ -52,6 +53,7 @@ export type drag_node_textFuncType = (node: SankeyNode, event: d3.D3DragEvent<El
 export type DragLinkEventFType=(
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   error_msg: { text: string | undefined } | undefined,
   display_style: display_styleType,
   drawCurveFunction : SankeyDrawCurve,
@@ -94,6 +96,7 @@ export type DragLinkIOPositionFType=(
   link:SankeyLink,
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   error_msg: { text: string | undefined } | undefined,
   drawCurveFunction : SankeyDrawCurve,
   scale:(t:number)=>number,
@@ -128,6 +131,7 @@ export type DragLinkCenterHandleEventFType=(
   link:SankeyLink,
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   selected_tags:TagsCatalog,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   default_horiz_shift:number,
@@ -164,6 +168,7 @@ export type DragLinkCenterHandleEventFType=(
 export type DragLinkShiftHandleEventFType=(
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   link:SankeyLink,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
@@ -204,6 +209,7 @@ export type DragLinkShiftHandleEventFType=(
 export type DragGNodeEventFType=(
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -252,6 +258,7 @@ export type DragNodesFType = (
   event: { dx: number; dy: number,x:number,y:number },
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
@@ -287,6 +294,7 @@ export type DragHandleFType = (
   link: SankeyLink,
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
   dragged: Element,
@@ -326,6 +334,7 @@ export type AddDragLinkZoneFType=(
   link: SankeyLink,
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
     default_handle_size:number,
   default_horiz_shift:number,
   scale:(t:number)=>number,

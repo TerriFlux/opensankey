@@ -428,7 +428,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       contextMenu,
       e,dict_variable_application_data.data,dict_variable_elements_selected,
       dict_variable_application_data.set_data,closeAllMenu,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,
-      ComponentUpdater,dict_hook_ref_setter_show_dialog_components
+      ComponentUpdater,dict_hook_ref_setter_show_dialog_components,applicationContext
     )
   }
   document.onkeydown = formatKeyHandler
@@ -445,6 +445,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           uiElementsRef,
           dict_variable_elements_selected,
           dict_hook_ref_setter_show_dialog_components,
+          applicationContext,
           ref_alt_key_pressed,
           NodeTooltipsContent,
           accept_simple_click,
@@ -471,6 +472,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           uiElementsRef,
           dict_variable_elements_selected,
           dict_hook_ref_setter_show_dialog_components,
+          applicationContext,
           ref_alt_key_pressed,
           accept_simple_click,
           false,
@@ -542,8 +544,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     //   g_legend.call(drag_legend(data,set_data))
     // }
 
-    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
-    DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
+    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+    DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
       link_function,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components

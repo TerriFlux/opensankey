@@ -240,9 +240,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     if (Object.keys(nodes).length < 2) {
       if (Object.keys(nodes).length == 0) {
-        AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+        AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
       }
-      AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+      AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
     }
     const link: SankeyLink = DefaultLink(data)
     // Méthode pour incrementer idNode

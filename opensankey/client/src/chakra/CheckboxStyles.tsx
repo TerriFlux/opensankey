@@ -7,52 +7,67 @@ const { definePartsStyle } = createMultiStyleConfigHelpers(checkboxAnatomy.keys)
 
 export const checkbox_base_style = definePartsStyle({
   container: {
-    h: '24px',
-    px: '12px',
+    h: '2rem',
     w: '100%',
+    border: 'solid 1px ',
     borderRadius: '6px',
-    border: 'solid 1px ' + '#C1E5DB',
+    borderColor: 'grey.50',
     margin: '0',
     padding: '0',
     transition: 'all 150ms',
     _checked: {
-      bg: '#C1E5DB'
+      bg: 'white'
     },
     _hover: {
-      bg: '#C1E5DB',
+      bg: 'openSankey.50',
       transition: 'all 250ms',
-      _checked: {
-        bg: '#C1E5DB'
-      }
     },
   },
   control: {
     margin: '0.25rem',
-    borderColor: '#25B48C',
-    borderRadius: '2px',
-    border: 'solid 2px ' + '#25B48C',
     width: '1rem',
     height: '1rem',
+    bg: 'gray.400',
+    borderColor: 'gray.400',
+    iconColor: 'white',
+    border: 'solid 1px ',
+    borderRadius: '2px',
     _checked: {
-      bg: '#25B48C',
-      borderColor: '#25B48C'
-    },
-    _focus: {
-      boxShadow: '0 0 0 2px #78C2AD',
-      _checked: {
-        boxShadow: '0 0 0 2px #78C2AD',
+      bg: 'openSankey.300',
+      borderColor: 'openSankey.300',
+      iconColor: 'openSankey.400',
+      _hover: {
+        bg: 'gray.400',
+        borderColor: 'gray.400',
+        iconColor: 'white',
       }
+    },
+    _hover: {
+      bg: 'openSankey.300',
+      borderColor: 'openSankey.300',
+      iconColor: 'openSankey.400',
     }
   },
   label: {
     width:'100%',
     margin: '0',
-    textStyle: 'h4',
     fontSize: '12px',
+    textStyle: 'h4',
   }
 })
 
-export const checkbox_title_style = definePartsStyle({
+export const menuconfigpanel_option_checkbox = definePartsStyle({
+  container: {
+    border: '0px',
+    borderRadius: '6px',
+    borderColor: 'white',
+  },
+  label: {
+    fontSize: '12px'
+  }
+})
+
+export const menuconfigpanel_part_title_1_checkbox = definePartsStyle({
   label: {
     padding: '0 1.5rem 0 0',
     textStyle: 'h2',
