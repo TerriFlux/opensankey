@@ -333,7 +333,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
       ggg_nodes.call(
         DragGNodeEvent(
           dict_variable_application_data,dict_variable_elements_selected,
-          alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale
+          alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater
         )
       )
     }

@@ -109,7 +109,6 @@ export const EventNodeClick : EventNodeClickFType =(
         const dd = (d as SankeyNode)
         return NodeStrokeWidth(dd,multi_selected_nodes)
       })
-    //set_data({...data}) // TO SYSTEMATIZE
     multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
 
   }else if(!event.ctrlKey){
@@ -119,7 +118,6 @@ export const EventNodeClick : EventNodeClickFType =(
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
     } else {
       multi_selected_nodes.current=[d]
-      //set_data({...data}) // TO SYSTEMATIZE
     }
     d3.select(' .opensankey #ggg_' + d.idNode + ' rect')
       .style('stroke-width', d => {
@@ -236,7 +234,6 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   }
 
   ref_display_link_opacity.current.forEach(setter => setter(ReturnValueLink(data, l, 'opacity') as string))
-  // set_data({ ...data })
 }
 
 export const EventZDDContextMenu: EventZDDContextMenuFType = (
@@ -504,7 +501,6 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     ref_set_update_menu_config_node_appearence.current(!ref_get_update_menu_config_node_appearence.current)
     ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
 
-    // set_data(data)
   }
   // si le token de connexion est à false alors ne crée pas de second noeud
   //si le mode de souris est noeud+flux alors crée un second noeud au relachement
@@ -658,8 +654,6 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         [n_link]
 
       )
-      // set_data({ ...data })
-
     }
   }
 }

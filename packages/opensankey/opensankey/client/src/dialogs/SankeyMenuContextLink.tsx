@@ -390,7 +390,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           })
           link_to_update=[...new Set(link_to_update)]
           const list_links=link_to_update.map(lid=>data.links[lid])
-          drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,link_function,list_links)
+          drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,link_function,list_links,ComponentUpdater)
         }}>{t('Flux.if')}</Button>
 
         {sep}
