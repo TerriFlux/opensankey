@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 
-import { SankeyData } from 'open-sankey/src/types/Types'
+import { ComponentUpdaterType, SankeyData } from 'open-sankey/src/types/Types'
 import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {
@@ -32,6 +32,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   DrawArrows:DrawArrowsType,
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
+  ComponentUpdater
 ) => {
   const {data,set_data}=applicaTionData
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}=dict_variable_elements_selected
@@ -114,7 +115,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
           applicaTionData,dict_variable_elements_selected,
           d,
           GetSankeyMinWidthAndHeight,DrawGrid,
-          LinkText,GetLinkValue,DrawArrows,scale,inv_scale,start_point
+          LinkText,GetLinkValue,DrawArrows,scale,inv_scale,start_point,ComponentUpdater
         )
       )
       gg_label.append('rect')
@@ -221,7 +222,9 @@ const dragLabelEvent = (
   DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  start_point:{current:number[]}
+  start_point:{current:number[]},
+  ComponentUpdater:ComponentUpdaterType
+
 )=>{
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links,multi_selected_label,multi_selected_nodes,ref_getter_mode_selection}=dict_variable_elements_selected
@@ -270,7 +273,7 @@ const dragLabelEvent = (
           dict_variable_application_data,
           dict_variable_elements_selected,
           d,event,LinkText,
-          GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
+          GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
         )
       }
     })

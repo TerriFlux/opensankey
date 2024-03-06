@@ -3,7 +3,7 @@ import { PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
-import { dict_variable_application_dataType, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { dict_variable_application_dataType, contextMenuType, uiElementsRefType, ComponentUpdaterType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
 
 
@@ -30,7 +30,9 @@ export type PlusNodeClickEventFType=(
   uiElementsRef:uiElementsRefType,
   animating:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: SankeyPlusShowMenuComponentsType,
 )=> void
 
 
@@ -72,7 +74,9 @@ export type PlusNodeDragEventFType = (
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  ComponentUpdater:ComponentUpdaterType
+
 )=> void
 
 export type PlusDragElementsFType = (
@@ -85,7 +89,9 @@ export type PlusDragElementsFType = (
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
-  inv_scale:(t:number)=>number
+  inv_scale:(t:number)=>number,
+  ComponentUpdater:ComponentUpdaterType
+
 )=> void
 
 

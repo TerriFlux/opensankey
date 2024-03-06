@@ -8,7 +8,7 @@ import * as d3 from 'd3'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, Badge, Col, Row, ButtonGroup} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
-import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType} from '../types/Types'
+import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusShowMenuComponentsType} from '../types/Types'
 import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import {RemoveAnimate,
   DrawArrows,
@@ -28,7 +28,7 @@ import {RemoveAnimate,
 } from './import/OpenSankey'
 
 import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
-import { SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { ComponentUpdaterType, SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { 
   SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, PlusNodeDragEventFType, 
@@ -498,7 +498,9 @@ const node_mouse_click=(
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   accept_simple_click:{current:boolean},
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: SankeyPlusShowMenuComponentsType,
 )=>{
   const {data,display_links,display_nodes}=dict_variable_application_data
 
@@ -544,7 +546,9 @@ const node_mouse_click=(
       window.open(n.hyperlink)
     }
   }else{
-    SimpleGNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click)
+    SimpleGNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components)
 
   }
 }
@@ -655,7 +659,9 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
   uiElementsRef,
   animating,
   accept_simple_click,
-  GetLinkValue
+  GetLinkValue,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components,
 )=>{
   d3.selectAll(' .opensankey .ggg_nodes')
     .on('click', (event, d) => {
@@ -666,7 +672,9 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
         event,
         (d as SankeyPlusNode),
         accept_simple_click,
-        GetLinkValue
+        GetLinkValue,
+        ComponentUpdater,
+        dict_hook_ref_setter_show_dialog_components
       )
     })
 }
@@ -893,7 +901,8 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  ComponentUpdater,
 )=>{
   const {data,set_data}=applicaTionData
   const {ref_getter_mode_selection}=dict_variable_elements_selected
@@ -908,7 +917,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   if(ref_getter_mode_selection.current==='s' && window.SankeyToolsStatic!==true){
     (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(
       SankeyPlusDragGNodeEvent(applicaTionData,dict_variable_elements_selected,
-        alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight
+        alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight,ComponentUpdater
       )
     )
   }
@@ -945,7 +954,9 @@ const SankeyPlusDragGNodeEvent = (
   GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  ComponentUpdater:ComponentUpdaterType
+
 )=>{
   const {data,set_data}=dict_variable_application_data
   const {ref_getter_mode_selection}=dict_variable_elements_selected
@@ -962,7 +973,13 @@ const SankeyPlusDragGNodeEvent = (
         if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else {
-          PlusDragNodes(dict_variable_application_data,dict_variable_elements_selected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,node_visible
+          PlusDragNodes(dict_variable_application_data,
+            dict_variable_elements_selected,
+            node,
+            event,
+            LinkText,
+            GetSankeyMinWidthAndHeight,
+            GetLinkValue,DrawArrows,scale,inv_scale,node_visible,ComponentUpdater
           )
         }
       }
@@ -984,7 +1001,9 @@ const PlusDragNodes = (
   DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  node_visible:string[]
+  node_visible:string[],
+  ComponentUpdater:ComponentUpdaterType
+
 ) => {
   RemoveAnimate()
   const {data,}=dict_variable_application_data
@@ -998,7 +1017,7 @@ const PlusDragNodes = (
   }
 
   PlusDragElements(
-    dict_variable_application_data,dict_variable_elements_selected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale
+    dict_variable_application_data,dict_variable_elements_selected,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
   )
 
 }
@@ -1013,14 +1032,16 @@ export const PlusDragElements : PlusDragElementsFType = (
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
-  inv_scale:(t:number)=>number
+  inv_scale:(t:number)=>number,
+  ComponentUpdater:ComponentUpdaterType
+
 )=>{
   const {multi_selected_label}=dict_variable_elements_selected
   // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
   // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
   DragElements(
     dragged as SankeyNode,dict_variable_application_data,dict_variable_elements_selected,event,LinkText,GetSankeyMinWidthAndHeight,
-    GetLinkValue,DrawArrows,scale,inv_scale
+    GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
   )
 
 

@@ -346,7 +346,6 @@ export const keyHandler : keyHandlerFType = (
       // Save master_data data in localStorage
       localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
 
-      // set_data({...data})
       dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(true)
       setTimeout(function () {
         dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(false)
