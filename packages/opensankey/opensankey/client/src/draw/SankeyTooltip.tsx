@@ -1,6 +1,7 @@
 import { SankeyNode, SankeyLink, SankeyData } from '../types/Types'
 import { ToPrecision,LinkVisible,NodeDisplayed,ReturnValueLink } from '../configmenus/SankeyUtils'
 import {  GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
+import { TFunction } from 'i18next'
 
 
 /**
@@ -19,8 +20,8 @@ function WriteChildrenTable(
   data: SankeyData,
   t: string, 
   l: SankeyLink,
-  GetLinkValue:GetLinkValueFuncType
-
+  GetLinkValue:GetLinkValueFuncType,
+  trad:TFunction
 ) {
   let header_written = false
   desagregate_source_nodes.forEach(n1 => {
@@ -48,7 +49,7 @@ function WriteChildrenTable(
         }
         t += '<tr>'
         t += '<td>' + data.nodes[desagregated_link.idSource].name + '->' + data.nodes[desagregated_link.idTarget].name + '</td>'
-        t += '<td>' + ToPrecision((value_to_display)?value_to_display as number:0) + '</td>'
+        t += '<td>' + ToPrecision((value_to_display)?value_to_display as number:0,trad) + '</td>'
         t += '</tr>'
       }
     )
@@ -62,8 +63,9 @@ function WriteChildrenTable(
 
 
 const TooltipLinkToPrecision=(data : SankeyData,
-  l : SankeyLink,value:number)=>{
-  return ReturnValueLink(data,l,'to_precision')?ToPrecision(value):value
+  l : SankeyLink,value:number,trad:TFunction)=>{
+  const tmp=ReturnValueLink(data,l,'to_precision')?ToPrecision(value,trad):value
+  return String(tmp).replace('.',trad('sep_decimal'))
 }
 /**
  * Function used to fill the tooltip of link
@@ -76,8 +78,8 @@ const TooltipLinkToPrecision=(data : SankeyData,
 export const  LinkTooltipsContent = (
   data : SankeyData,
   d : SankeyLink | SankeyNode,
-  GetLinkValue:GetLinkValueFuncType
-
+  GetLinkValue:GetLinkValueFuncType,
+  trad:TFunction
 ) => {  
   const l = d as SankeyLink
   let t = '<p class="title" style="margin-bottom: 5px;">'+ data.nodes[l.idSource].name.split('\\n').join(' ') + ' → ' + data.nodes[l.idTarget].name.split('\\n').join(' ') + '</p>'
@@ -97,7 +99,7 @@ export const  LinkTooltipsContent = (
   if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
   } 
-  t += '<td>' + TooltipLinkToPrecision(data,l,(the_value)?the_value as number:0) +'</td>'
+  t += '<td>' + TooltipLinkToPrecision(data,l,(the_value)?the_value as number:0,trad) +'</td>'
   t += '</td>'
   t += '</tr>'
   Object.entries(link_info.tags).forEach(([tag_group_key,tags])=> {
@@ -151,7 +153,7 @@ export const  LinkTooltipsContent = (
     desagregate_source_nodes.push(source_node)
   }
   if (children) {
-    t = WriteChildrenTable(desagregate_source_nodes, desagregate_target_nodes, data, t, l,GetLinkValue)
+    t = WriteChildrenTable(desagregate_source_nodes, desagregate_target_nodes, data, t, l,GetLinkValue,trad)
   }
 
   return t
@@ -169,7 +171,8 @@ export const NodeTooltipsContent = (
   data : SankeyData,
   display_nodes : { [node_id: string]: SankeyNode }, 
   d : SankeyNode,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  trad:TFunction
 ) => {
   const n = d as SankeyNode
   const {nodes} = data
@@ -233,7 +236,7 @@ export const NodeTooltipsContent = (
       if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
         t += '<tr><td style="white-space: nowrap;">' + source_name + '</td>'
-        t +=  '<td>' + ToPrecision( (the_value)?the_value as number:0)+'</td>'
+        t +=  '<td>' + ToPrecision( (the_value)?the_value as number:0,trad)+'</td>'
         if (n.inputLinksId.length>1) {
           const percent = Math.round(((the_value)?the_value as number :0)*100/total)
           t += '<td>'+ percent + '%</td>'
@@ -249,7 +252,7 @@ export const NodeTooltipsContent = (
         }
       }
     }
-    t += '<tr><th>Total</th><td>' + ToPrecision(total) +'</td>'
+    t += '<tr><th>Total</th><td>' + ToPrecision(total,trad) +'</td>'
     Object.keys(data.fluxTags).forEach(()=> t +='<td></td>')
     t += '<td></td></tr></tbody></table>'
   }
@@ -302,7 +305,7 @@ export const NodeTooltipsContent = (
         if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
           const target_name = data.nodes[link.idTarget].name.split('\\n').join(' ')
           t += '<tr><td style="white-space: nowrap;">' + target_name + '</td>'
-          t +=  '<td>' + ToPrecision( (the_value)?the_value as number:0)+'</td>'
+          t +=  '<td>' + ToPrecision( (the_value)?the_value as number:0,trad)+'</td>'
           if (n.outputLinksId.length>1) {
             const percent = Math.round(((the_value)?the_value as number:0)*100/total)
             t += '<td>'+ percent + '%</td>'
@@ -319,7 +322,7 @@ export const NodeTooltipsContent = (
         }
       }
     }
-    t += '<tr><th>Total</th><td>' + ToPrecision(total) +'</td>'
+    t += '<tr><th>Total</th><td>' + ToPrecision(total,trad) +'</td>'
     Object.keys(data.fluxTags).forEach(()=> t +='<td></td>')
     t += '<td></td></tr></tbody></table>'
   }

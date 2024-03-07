@@ -471,13 +471,14 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
  */
 export const ToPrecision:ToPrecisionFuncType = (
   v: number,
+  t,
   nb_scientific=3
 ): string | number=> {
   if(!isNaN(v)) {
     if (v > Math.pow(10,nb_scientific)){
       return v.toExponential(nb_scientific)
     }
-    return parseFloat(v.toPrecision(nb_scientific))
+    return String(parseFloat(v.toPrecision(nb_scientific))).replace('.',t('sep_decimal'))
   }
   return v
 }
@@ -522,7 +523,7 @@ export const LinkText:LinkTextFuncType = (
     }
 
     if((ReturnValueLink(data,d,'to_precision'))){
-      the_link_value =ToPrecision(the_link_value as number,nb_sign)
+      the_link_value =ToPrecision(the_link_value as number,t,nb_sign)
     }else if (ReturnValueLink(data,d,'custom_digit')){
       the_link_value =(the_link_value as number).toFixed((ReturnValueLink(data,d,'nb_digit') as number))
     }
@@ -1760,14 +1761,15 @@ export const NodeContextHasDesaggregate:NodeContextHasDesaggregateFuncType = (n:
 
 export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (dict_variable_application_data:dict_variable_application_dataType,
   multi_selected_nodes:{current:SankeyNode[]},
-  link_function:LinkFunctionTypes
+  link_function:LinkFunctionTypes,
+  applicationContext
 ) => {
   multi_selected_nodes.current.map(d => {
     // Delete local value so the used value come from the style
     delete d.local
   })
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
-  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,applicationContext.t)
 
 }
 
@@ -1805,7 +1807,7 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   }
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
-  ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes,link_function)
+  ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes,link_function,applicationContext)
   dict_variable_application_data.display_nodes[node.idNode]=node
   drawAddNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elementsselected,applicationContext,alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
 }

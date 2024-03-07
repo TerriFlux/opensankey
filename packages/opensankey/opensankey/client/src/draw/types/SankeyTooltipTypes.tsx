@@ -1,3 +1,4 @@
+import { TFunction } from 'i18next'
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode } from '../../types/Types'
 
@@ -12,8 +13,8 @@ import { SankeyData, SankeyLink, SankeyNode } from '../../types/Types'
 export type  LinkTooltipsContentFType = (
   data : SankeyData,
   d : SankeyLink | SankeyNode,
-  GetLinkValue:GetLinkValueFuncType
-
+  GetLinkValue:GetLinkValueFuncType,
+  t:TFunction
 ) => string
 
 /**
@@ -28,5 +29,6 @@ export type NodeTooltipsContentFType = (
   data : SankeyData,
   display_nodes : { [node_id: string]: SankeyNode }, 
   d : SankeyNode,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  t:TFunction
 ) => string

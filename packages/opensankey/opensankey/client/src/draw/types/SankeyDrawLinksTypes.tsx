@@ -2,6 +2,7 @@ import { MutableRefObject } from 'react'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkColorFuncType, LinkTextFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType, LinkFunctionTypes, dict_hook_ref_setter_show_dialog_componentsType, ComponentUpdaterType, applicationContextType } from '../../types/Types'
+import { TFunction } from 'i18next'
 
 export type LinkStrokeFuncType = (l: SankeyLink, data: SankeyData, GetLinkValue: GetLinkValueFuncType) => string
 
@@ -14,7 +15,7 @@ export type DrawLinksFType = (
   alt_key_pressed:MutableRefObject<boolean>,
   position:'absolute' | 'relative',
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
-  LinkTooltipsContent:(data: SankeyData, l: SankeyLink, GetLinkValue:GetLinkValueFuncType) => string,
+  LinkTooltipsContent:(data: SankeyData, l: SankeyLink, GetLinkValue:GetLinkValueFuncType,t:TFunction) => string,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   LinkStroke:LinkStrokeFuncType,
@@ -47,6 +48,7 @@ export type AddDrawLinksEventsFType = (
   link_functions : LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+  applicationContext:applicationContextType,
 
 ) => void
 

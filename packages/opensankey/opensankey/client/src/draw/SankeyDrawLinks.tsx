@@ -225,7 +225,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   link_functions,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
-
+  applicationContext
 ) => {
   const { GetLinkValue,LinkTooltipsContent } = link_functions
   const{ pointer_pos, ref_setter_contextualised_link} = contextMenu
@@ -233,6 +233,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   const{ data,display_nodes } = dict_variable_application_data
   const { display_style } = data
   const { multi_selected_links, displayedInputLinkValueSetterRef} = dict_variable_elements_selected
+  const {t}=applicationContext
   const min_thickness=2
 
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
@@ -289,7 +290,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
         return
       }
       sankeyTooltip
-        .html(LinkTooltipsContent(data, d,GetLinkValue))
+        .html(LinkTooltipsContent(data, d,GetLinkValue,t))
 
       let tmp=GetLinkValue(data, d.idLink).value as number
       tmp=(tmp)?tmp:0
@@ -456,7 +457,7 @@ export const drawAddLinks = (
     uiElementsRef,
     dict_variable_elements_selected,
     link_functions,ComponentUpdater,
-    dict_hook_ref_setter_show_dialog_components
+    dict_hook_ref_setter_show_dialog_components,applicationContext
   )
 }
 

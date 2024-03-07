@@ -12,6 +12,9 @@ export const accordion_base_style = definePartsStyle({
     color: 'gray.500',
     bg: 'white',
     bgColor: 'white',
+    '.chakra-collapse': {
+      overflow: 'visible !important',
+    },
   },
   container: {
     margin: '0',

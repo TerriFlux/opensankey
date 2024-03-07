@@ -66,7 +66,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   
   const updateMenuConfigNode=()=>{
     updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
-    RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+    RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,t)
     // UpdateDrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
     if(!menu_for_style){
       ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
@@ -998,7 +998,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 multi_selected_nodes.current.map(n => {
                   n.style = d
                 })
-                ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function)
+                ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function,applicationContext)
                 
               }}
             >{data.style_node[d].name}</Dropdown.Item>)
@@ -1017,7 +1017,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           variant='outline-primary'
          
           onClick={() => {
-            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function)
+            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function,applicationContext)
           }}>
           {t('Noeud.AS')}
         </Button>
