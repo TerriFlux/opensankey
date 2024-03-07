@@ -18,6 +18,7 @@ export type PlusDrawNodesFOFType = (
   display_nodes : { [node_id: string]: SankeyPlusNode },
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   NodeTooltipsContent: NodeTooltipsContentFType,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  t:TFunction
 ) => void
 
