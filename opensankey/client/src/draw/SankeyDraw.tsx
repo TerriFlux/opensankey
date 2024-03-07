@@ -315,9 +315,10 @@ export const keyHandler : keyHandlerFType = (
       SelectVisualyLinks(l)
     })
 
-  }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && document.activeElement?.className.includes('form-control')){
+  }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && (document.activeElement?.className.includes('form-control') || document.activeElement?.className.includes('chakra-numberinput__field'))){
     for(const item of document.getElementsByTagName('input')){
-      if(item.className.includes('form-control') && item.type=='text'){
+
+      if((item.className.includes('form-control') || item.className.includes('chakra-numberinput__field')) && item.type=='text'){
         item.blur()
       }
     }
