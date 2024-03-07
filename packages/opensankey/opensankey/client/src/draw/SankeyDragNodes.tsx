@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { MutableRefObject } from 'react'
 import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { LinkTextFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData, ComponentUpdaterType } from '../types/Types'
+import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData } from '../types/Types'
 import { RemoveAnimate, GetSankeyMinWidthAndHeight, DrawArrows, drawCurveFunction, LinkStrokeWidth } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
@@ -36,7 +36,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   GetLinkValue: GetLinkValueFuncType,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
-    ComponentUpdater,
+  ComponentUpdater,
 
 ) => {
   const { data, set_data } = dict_variable_application_data
@@ -56,12 +56,12 @@ export const DragGNodeEvent: DragGNodeEventFType = (
           drag_node_text(node, event)
         } else if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && !alt_key_pressed.current) {
           DragNodes(node, event, dict_variable_application_data, dict_variable_elements_selected,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
-              ComponentUpdater
+            ComponentUpdater
           )
         }
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'rect' || d3.select(event.subject.sourceEvent.target).node().tagName == 'ellipse') {
           DragNodes(node, event, dict_variable_application_data, dict_variable_elements_selected,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
-              ComponentUpdater
+            ComponentUpdater
           )
         }
       }

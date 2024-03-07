@@ -225,7 +225,7 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
   ComponentUpdater
 
 )=>{
-  const {data,set_data}= dict_variable_application_data
+  const {data}= dict_variable_application_data
   const {multi_selected_links}= dict_variable_elements_selected
   const  {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
 
@@ -282,7 +282,6 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
   ComponentUpdater
 
 )=>{
-  const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const  {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
   return d3.drag<SVGRectElement, unknown>()
