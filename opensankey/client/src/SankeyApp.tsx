@@ -86,6 +86,7 @@ import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfiguratio
 import { opensankey_theme } from './chakra/Theme'
 import { DrawAllLinks } from './draw/SankeyDrawLinks'
 import { DrawAllNodes } from './draw/SankeyDrawNodes'
+import { package_for_drawLegend_FuncType } from './draw/types/SankeyDrawLegendTypes'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
@@ -130,6 +131,31 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     get_default_data : DefaultSankeyData,
     display_nodes : display_nodes,
     display_links : display_links
+  }
+
+
+  const recomputeDisplayedElement=()=>{
+    dict_variable_application_data.display_nodes = Object.keys(data.nodes)
+      .filter((key) => NodeDisplayed(data,data.nodes[key]))
+      .reduce((obj, key) => {
+        return Object.assign(obj, {
+          [key]: data.nodes[key]
+        })
+      }, {}) as {[idNode:string]:SankeyNode}
+
+    const pre_display_links=Object.keys(data.links)
+      .filter((key) =>LinkVisible(data.links[key],data,dict_variable_application_data.display_nodes,GetLinkValue))
+      .reduce((obj, key) => {
+        return Object.assign(obj, {
+          [key]: data.links[key]
+        })
+      }, {}) as {[idLink:string]:SankeyLink}
+    const pre_link_key=Object.keys(pre_display_links)
+  
+    dict_variable_application_data.display_links={}
+    data.linkZIndex=pre_link_key
+    pre_link_key.forEach(lid=>dict_variable_application_data.display_links[lid]=data.links[lid])
+
   }
   /*************************************************************************************************/
   const dict_variable_elements_selected : dict_variable_elements_selectedType = {
@@ -307,13 +333,29 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     LinkTooltipsContent  
   }
   /*************************************************************************************************/
+
+  /*******************************************************************************/
+  /*Create package to transfert variable needed to function used inside other function*/
+  const package_for_draw_legend:package_for_drawLegend_FuncType= [dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked]
+  // const package_for_DrawAllNodes:package_for_DrawAllNodes_Type=[contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components]
+  /*******************************************************************************/
+  const redrawAllNodes=()=>{
+    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+  }
+  const redrawAllLinks=()=>{
+    DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
+      link_function,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components
+    )  }
+
+
   const menu_configuration_layout= OpenSankeyMenuConfigurationLayout(
     applicationContext,
     dict_variable_application_data,
-    contextMenu,
     dict_variable_elements_selected,
-    legend_clicked,
-    <></>
+    <></>,
+    package_for_draw_legend
   )
 
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(
@@ -406,7 +448,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
 
         <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
-          {addSimpleLevelDropDown(applicationContext.t,dict_variable_application_data.data,dict_variable_application_data.set_data)}</>
+          {addSimpleLevelDropDown(dict_variable_application_data,package_for_draw_legend,redrawAllNodes,redrawAllLinks,recomputeDisplayedElement)}</>
         ) : (<>
           <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
       </Popover.Body>
@@ -417,6 +459,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_hook_ref_setter_show_dialog_components,
     never_see_again,
     [],
+    package_for_draw_legend,
+    redrawAllNodes,redrawAllLinks,
+    recomputeDisplayedElement
   )
 
   sankey_menus['toolbar']=toolbar

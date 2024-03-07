@@ -2,6 +2,7 @@ import { TFunction } from 'i18next'
 import { SankeyData, TagsCatalog, dict_hook_ref_setter_show_dialog_componentsType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
+import { package_for_drawLegend_FuncType } from '../../draw/types/SankeyDrawLegendTypes'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -15,7 +16,12 @@ export type AddAllDropDownFluxFType = (
   t:TFunction,
   fluxTags: TagsCatalog,
   data: SankeyData,
-  set_data: (data: SankeyData) => void
+  set_data: (data: SankeyData) => void,
+  package_for_draw_legend:package_for_drawLegend_FuncType,
+  redrawAllNodes:()=>void,
+  redrawAllLinks:()=>void,
+  recomputeDisplayedElement:()=>void
+
 ) => JSX.Element
 
 export type OpenSankeyMenusFType = (

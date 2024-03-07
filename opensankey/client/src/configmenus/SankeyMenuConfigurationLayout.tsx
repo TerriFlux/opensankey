@@ -13,7 +13,6 @@ import {
   InputRightAddon,
 } from '@chakra-ui/react'
 
-import { GetLinkValue } from './SankeyUtils'
 import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
 import { DrawLegend } from '../draw/SankeyDrawLegend'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -21,22 +20,21 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
   applicationContext,
   dict_variable_application_data,
-  contextMenu,
   dict_variable_elements_selected,
-  legend_clicked,
-  extra_background_element
+  extra_background_element,
+  package_for_draw_legend
 ) => {
   const { t } = applicationContext
   const { data, set_data} = dict_variable_application_data
   const { userScaleRef } = dict_variable_elements_selected
-  //const { pointer_pos, set_tag_contextualised } = contextMenu
+  const [,,contextMenu,GetLinkValue,legend_clicked]=package_for_draw_legend
 
   const [legend_position,set_legend_position] = useState(data.legend_position)
   const [current_legend_bg_opacity,set_current_legend_bg_opacity]=useState(data.legend_bg_opacity)
   const [,set_user_scale]=useState(data.user_scale)
   const [minimum_flux,set_minimum_flux] = useState(data.minimum_flux)
   const [maximum_flux,set_maximum_flux] = useState(data.maximum_flux)
-
+  const [forceUpdate,setForceUpdate]=useState(false)
   const right_addon_pixel = (val: number) => {
     if (val === 1) {
       return 'pixel'
@@ -361,7 +359,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             inputMode='numeric'
             onChange={value =>{
               data.legend_police = Number(value)
-              set_data({ ...data })
+              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              setForceUpdate(!forceUpdate)
             }}
           >
             <NumberInputField/>
@@ -399,7 +398,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             value={data.legend_bg_color}
             onChange={evt => {
               data.legend_bg_color = evt.target.value
-              set_data({ ...data })
+              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              setForceUpdate(!forceUpdate)
             }}
           />
         </OverlayTrigger>
@@ -430,7 +430,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             onChange={value => set_current_legend_bg_opacity(Number(value))}
             onBlur={() => {
               data.legend_bg_opacity = current_legend_bg_opacity
-              set_data({ ...data })
+              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              setForceUpdate(!forceUpdate)
             }}
           >
             <NumberInputField/>
@@ -455,7 +456,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             isChecked={data.legend_bg_border}
             onChange={(evt) => {
               data.legend_bg_border = evt.target.checked
-              set_data({ ...data })
+              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              setForceUpdate(!forceUpdate)
             }}
           >
             {t('Menu.LegBgBorder')}
@@ -496,6 +498,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               onBlur={() => {
                 data.legend_position = legend_position
                 DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+                setForceUpdate(!forceUpdate)
               }}
             >
               <NumberInputField/>
@@ -544,6 +547,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
                   contextMenu,
                   GetLinkValue,
                   legend_clicked)
+                setForceUpdate(!forceUpdate)
               }}
             >
               <NumberInputField/>
@@ -585,7 +589,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               inputMode='numeric'
               onChange={value =>{
                 data.legend_width = Number(value)
-                set_data({ ...data })
+                DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+                setForceUpdate(!forceUpdate)
               }}
             >
               <NumberInputField/>
@@ -615,7 +620,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           checked={data.display_legend_scale}
           onChange={(evt) => {
             data.display_legend_scale = evt.target.checked
-            set_data({ ...data })
+            DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+            setForceUpdate(!forceUpdate)
           }}
         >
           {t('Menu.display_scale')}
@@ -629,7 +635,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         checked={data.legend_show_dataTags}
         onChange={(evt) => {
           data.legend_show_dataTags = evt.target.checked
-          set_data({ ...data })
+          DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+          setForceUpdate(!forceUpdate)
         }}
       >
         {t('MEP.leg_show_dataTags')}
