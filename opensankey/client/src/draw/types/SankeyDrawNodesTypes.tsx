@@ -4,7 +4,7 @@ import { dict_variable_application_dataType, contextMenuType, dict_variable_elem
 import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 
 
-export type DrawNodesFType = (
+export type DrawAllNodesFType = (
   contextMenu:contextMenuType,
   dict_variable_application_data:dict_variable_application_dataType,
   uiElementsRef:uiElementsRefType,
@@ -18,6 +18,8 @@ export type DrawNodesFType = (
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
 
 ) => void
+
+export type package_for_DrawAllNodes_Type=Parameters<DrawAllNodesFType>
   
 
 export type AddDrawNodesFType = (

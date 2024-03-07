@@ -2,7 +2,7 @@ import React from 'react'
 import * as d3 from 'd3'
 
 import { LinkFunctionTypes, SankeyNode, dict_variable_application_dataType} from '../types/Types'
-import { AddDrawNodesFType, DrawNodesFType, drawNodeShapeFType } from './types/SankeyDrawNodesTypes'
+import { AddDrawNodesFType, DrawAllNodesFType, drawNodeShapeFType } from './types/SankeyDrawNodesTypes'
 
 import { GetLinkValue, NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
@@ -20,7 +20,7 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-// export const DrawNodes : DrawNodesFType = (
+// export const DrawNodes : DrawAllNodesFType = (
 //   contextMenu,
 //   dict_variable_application_data,
 //   uiElementsRef,
@@ -228,7 +228,7 @@ typeof globalThis & {
 // }
 
 
-export const DrawAllNodes : DrawNodesFType = (
+export const DrawAllNodes : DrawAllNodesFType = (
   contextMenu,
   dict_variable_application_data,
   uiElementsRef,

@@ -24,3 +24,10 @@ export type ContextLegendTagsFType = {
 }
 
 export type drag_legend_g_elementFuncType = (data: SankeyData, event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void
+
+
+// Create a type that contain parameters needed for the function DrawLegend
+// This is for :
+//  - 1 : Compact function parameters length
+//  - 2 : Create a type that automatically match drawLegend needed parameter 
+export type package_for_drawLegend_FuncType=Parameters<DrawLegendFType>
