@@ -690,7 +690,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     if (d.name.includes('_tmp')) {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       d.name = d.idNode
-      RedrawNodesLabel(dict_variable_application_data,{current:[d]},GetLinkValue)
+      RedrawNodesLabel(dict_variable_application_data,{current:[d]},GetLinkValue,applicationContext.t)
     } else {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       const n_link = DefaultLink(data)

@@ -5,6 +5,8 @@ import {
 } from './AccordionStyles'
 import {
   button_base_style,
+  menuconfigpanel_add_button,
+  menuconfigpanel_del_button,
   menuconfigpanel_option_button
 } from './Button'
 import {
@@ -22,6 +24,10 @@ import {
   menuconfigpanel_option_numberinput,
   menuconfigpanel_option_numberinput_with_right_addon,
 } from './NumberInputStyle'
+import {
+  select_base_style,
+  select_custom_style
+} from './SelectStyle'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -32,7 +38,9 @@ export const opensankey_theme = extendTheme({
     Button: {
       baseStyle: button_base_style,
       variants: {
-        menuconfigpanel_option_button
+        menuconfigpanel_option_button,
+        menuconfigpanel_add_button,
+        menuconfigpanel_del_button
       }
     },
     Checkbox: {
@@ -54,6 +62,12 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_numberinput,
         menuconfigpanel_option_numberinput_with_right_addon
       }
+    },
+    Select: {
+      baseStyle: select_base_style,
+      variants: {
+        select_custom_style
+      }
     }
   },
   layerStyles: {
@@ -66,6 +80,12 @@ export const opensankey_theme = extendTheme({
       textStyle: 'h2',
       textAlign: 'left',
       flex: '1'
+    },
+    submenuconfig_droplist: {
+      textStyle: 'h2',
+      textAlign: 'left',
+      flex: '1',
+      height: '2rem'
     },
     menuconfigpanel_part_title_1: {
       textStyle: 'h2',
@@ -85,6 +105,13 @@ export const opensankey_theme = extendTheme({
       display: 'block',
       height: '1rem'
     },
+    menuconfigpanel_warn_msg: {
+      textStyle: 'h4',
+      textAlign: 'left',
+      display: 'flex',
+      alignItems: 'center',
+      color: 'red'
+    },
     menuconfigpanel_option_name: {
       textStyle: 'h4',
       textAlign: 'left',
@@ -100,7 +127,13 @@ export const opensankey_theme = extendTheme({
     },
     menuconfigpanel_grid: {
       display: 'grid',
-      gridRowGap: '0.1rem',
+      gridRowGap: '0.25rem',
+    },
+    menuconfigpanel_row_droplist: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 6fr 1fr 1fr',
+      gridColumnGap: '0.25rem',
+      height: '2rem'
     },
     menuconfigpanel_row_2cols: {
       display: 'grid',

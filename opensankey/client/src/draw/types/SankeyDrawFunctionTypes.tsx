@@ -1,5 +1,6 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, dict_variable_application_dataType, display_styleType } from '../../types/Types'
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
+import { TFunction } from 'i18next'
 
 
 export type ValueSelectedParameterFuncType = (
@@ -126,7 +127,8 @@ export type TextNodeValueFType = (
   data:SankeyData,
   display_links:{[link_id:string]:SankeyLink},
   display_nodes:{[nodes_id:string]:SankeyNode},
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  t:TFunction
 )=> string
 
 export type NodeLabelPosXFType = (data:SankeyData,n:SankeyNode) => number

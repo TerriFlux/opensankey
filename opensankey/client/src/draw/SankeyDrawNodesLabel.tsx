@@ -12,15 +12,16 @@ import { windowSankey } from '../configmenus/SankeyUtils'
 export const updateDrawAllNodesLabel : DrawAllNodesLabelFType = (
   dict_variable_application_data,
   multi_selected_nodes,
-  GetLinkValue
+  GetLinkValue,
+  t
 ) => {
-  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,t)
 }
 
 export const RedrawNodesLabel : DrawAddNodesFtype = (
   dict_variable_application_data,
   multi_selected_nodes,
-  GetLinkValue
+  GetLinkValue,t
 ) => {        
   const { data,display_nodes,display_links } = dict_variable_application_data
   //------------------LABEL------------------------
@@ -163,7 +164,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .attr('text-anchor', (n) => (ReturnValueNode(data,n,'label_horiz_valeur') as string).replace('left','end').replace('right','start'))
     .style('font-family', n => ReturnValueNode(data,n,'font_family'))
     .style('font-size', n => ReturnValueNode(data,n,'value_font_size') + 'px')
-    .text(n => TextNodeValue((n as SankeyNode),data,display_links,display_nodes,GetLinkValue))
+    .text(n => TextNodeValue((n as SankeyNode),data,display_links,display_nodes,GetLinkValue,t))
 
         
   // Drag zone for changing label box width

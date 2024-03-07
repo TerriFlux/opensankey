@@ -77,7 +77,7 @@ export type AdjustSankeyZoneFuncType = (data:SankeyData,GetSankeyMinWidthAndHeig
 
 export type GetSankeyMinWidthAndHeightFuncType = (data:SankeyData)=>number[]
 
-export type ToPrecisionFuncType = (v: number,nb_scientific?:number)=> string | number
+export type ToPrecisionFuncType = (v: number,t:TFunction,nb_scientific?:number)=> string | number
 
 export type LinkTextFuncType = (data: SankeyData,d: SankeyLink,GetLinkValue:GetLinkValueFuncType,t:TFunction)=>string
 
@@ -128,7 +128,9 @@ export type NodeContextHasAggregateFuncType = (n:SankeyNode,data:SankeyData)=>bo
 export type  NodeContextHasDesaggregateFuncType = (n: SankeyNode, data: SankeyData) => boolean
 
 export type ApplyStyleToNodesFuncType = (dict_variable_application_data:dict_variable_application_dataType, multi_selected_nodes: {current: SankeyNode[];},
-  link_function:LinkFunctionTypes
+  link_function:LinkFunctionTypes,
+  applicationContext:applicationContextType,
+
     ) => void
 
 export type AddNewNodeFuncType = (dict_variable_application_data:dict_variable_application_dataType, multi_selected_nodes: {current: SankeyNode[];},

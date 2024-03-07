@@ -21,6 +21,7 @@ import {
   dict_hook_ref_setter_show_dialog_componentsType,
   dict_variable_application_dataType,
   dict_variable_elements_selectedType,
+  LinkFunctionTypes,
   processFunctionsType,
   SankeyAppTypes,
   SankeyData,
@@ -323,7 +324,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   // Color for the sabot when the source node is an arrow
   const LinkSabotColor=LinkColor
 
-  const link_function = {
+  const link_function:LinkFunctionTypes = {
     GetLinkValue,
     LinkText,
     DrawArrows,

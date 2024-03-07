@@ -17,6 +17,7 @@ import {
   AggregateFuncType, 
   DesaggregateFuncType, 
   computeHorizontalIndexFuncType, 
+  hasAggregationLinkToNodeFuncType, 
   synchronizeNodesandLinksIdFuncType, 
   updateLayoutFuncType 
 } from './types/SankeyDrawLayoutTypes'
@@ -820,12 +821,34 @@ export const desagregation : desagregationFType = (
   }
 }
 
+const hasAggregationLinkToNode:hasAggregationLinkToNodeFuncType=(data : SankeyData,
+  idNodeFather: string,
+  idNodeCurr:string,
+  cur_dimension: string,
+)=>{
+  if(data.nodes[idNodeCurr].dimensions){
+    const father_for_curr_node_with_curr_dim=data.nodes[idNodeCurr].dimensions[cur_dimension]
+    if(father_for_curr_node_with_curr_dim && father_for_curr_node_with_curr_dim.parent_name){
+      if(idNodeFather === father_for_curr_node_with_curr_dim.parent_name){
+        return true
+      }else{
+        return hasAggregationLinkToNode(data,idNodeFather,father_for_curr_node_with_curr_dim.parent_name,cur_dimension)
+      }
+    }else{
+      return false
+    }
+  }else{
+    return false
+  }
+}
+
 /**
- * TODO
+ * Function that display the parent node of the node in parameter
+ * and hide all descendant of the parent node linked by the dimension cur_dimension
  *
  * @param {SankeyData} data Data structure for Sankey
- * @param {string} idNode Id of node that we desagregate
- * @param {string} cur_dimension Dimension on which we desagregage node
+ * @param {string} idNode Id of node that we aggregate
+ * @param {string} cur_dimension Dimension on which we aggregate node 
  */
 export const agregation : agregationFType = (
   data : SankeyData,
@@ -843,15 +866,11 @@ export const agregation : agregationFType = (
   const cur_parentId = desagregated_node.dimensions[cur_dimension].parent_name
   const dim_desagregated_nodes = Object.values(data.nodes).filter( n => {
     const cur_n_dim = n.dimensions[cur_dimension]
-    if (cur_n_dim && cur_n_dim.parent_name && !data.nodes[cur_n_dim.parent_name]) {
+    if ((cur_n_dim && cur_n_dim.parent_name && !data.nodes[cur_n_dim.parent_name]) || cur_parentId===undefined) {
       return
     }
-    return cur_n_dim && (
-      cur_n_dim.parent_name === cur_parentId ||
-        (cur_n_dim.parent_name && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension] && data.nodes[cur_n_dim.parent_name].dimensions[cur_dimension].parent_name === cur_parentId)
-    )
+    return hasAggregationLinkToNode(data,cur_parentId,n.idNode,cur_dimension)
   })
-
   if (dim_desagregated_nodes.length === 0) {
     return
   }

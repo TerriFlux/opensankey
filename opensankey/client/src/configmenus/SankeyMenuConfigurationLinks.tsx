@@ -1,5 +1,14 @@
 import React, { FunctionComponent, MutableRefObject, useState } from 'react'
-import { Tabs,  Button, OverlayTrigger, Tooltip, InputGroup, Form, Row, Col } from 'react-bootstrap'
+import { Tabs, OverlayTrigger, Tooltip } from 'react-bootstrap'
+
+import {
+  Box,
+  Button,
+  InputGroup,
+  InputLeftAddon,
+  Select
+} from '@chakra-ui/react'
+
 import {
   ComponentUpdaterType,
   LinkFunctionTypes,
@@ -21,6 +30,7 @@ import {
   ReturnCorrectLinkAttributeValue,
   AddNewNode
 } from './SankeyUtils'
+
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from '../topmenus/SankeyMenuTop'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -154,83 +164,89 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
     const DD = (
-      <div id='DD_multi_links'
-        style={{width:'70%',zIndex:'3'}}>
-        <MultiSelect
-          valueRenderer={ (selected :selected_type[]) => {
-            return selected.filter(d=>d!==undefined).length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
-          }}
-          options={INITIAL_OPTIONS_LINKS}
-          value={selected_links}
-          overrideStrings={{
-            'selectAll': 'Tout sélectionner',
-          }}
-          onChange={(selected: [{ label: string, value: string }]) => {
-            const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
-            multi_selected_links.current = m_s
-            if(m_s.length>0){
-              dict_variable_elements_selected.ref_display_link_opacity.current.forEach(
-                setter=>setter(ReturnValueLink(data,m_s[0],'opacity') as string)
-              )
-            }
-
-            if(multi_selected_links.current.length>0){
-              let new_tags_selected=tags_selected
-
-              if(multi_selected_links.current[0].idLink.includes('_')){
-                const index_grp_tag=multi_selected_links.current[0].idLink.split('_')
-                // Supprime le première élément du tableau qui ne contient que l'id du flux
-                index_grp_tag.shift()
-                new_tags_selected={}
-                // On fabrique un tags_selected pour récupérer la bonne valeur pour ValueSelectedParameter
-                for(const i in index_grp_tag){
-                  const key=Object.keys(data.dataTags)[Number(i)]
-                  new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
-                }
-                tags_selected = new_tags_selected
-                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                  ValueSelectedParameter(
-                    dict_variable_application_data,
-                    multi_selected_links,
-                    new_tags_selected
-                  ).value as string
-                ))
-
-              }else if(Object.values(data.dataTags).length>0){
-                // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
-                const tmp=[] as string[]
-                Object.values(data.dataTags).forEach(dt=>{
-                  tmp.push(Object.entries(dt.tags).filter(t=>t[1].selected)[0][0])
-                })
-                const n_t_s={} as {[x:string]:string}
-                Object.keys(data.dataTags).forEach((dt,i)=>{
-                  n_t_s[dt]=tmp[i]
-                })
-                tags_selected = (n_t_s)
-                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                  ValueSelectedParameter(
-                    dict_variable_application_data,
-                    multi_selected_links,
-                    n_t_s
-                  ).value as string
-                ))
-              }else{
-                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                  ValueSelectedParameter(
-                    dict_variable_application_data,
-                    multi_selected_links,
-                    new_tags_selected
-                  ).value as string))
+      <Box
+        layerStyle='submenuconfig_droplist'
+      >
+        {/* Position custom pour MultiSelect */}
+        <Box
+          height='2rem'
+          width='14.75rem'
+        >
+          <MultiSelect
+            valueRenderer={ (selected :selected_type[]) => {
+              return selected.filter(d=>d!==undefined).length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
+            }}
+            options={INITIAL_OPTIONS_LINKS}
+            value={selected_links}
+            overrideStrings={{
+              'selectAll': 'Tout sélectionner',
+            }}
+            onChange={(selected: [{ label: string, value: string }]) => {
+              const new_sel = selected.map(d => d.value)
+              const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
+              multi_selected_links.current = m_s
+              if(m_s.length>0){
+                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(
+                  setter=>setter(ReturnValueLink(data,m_s[0],'opacity') as string)
+                )
               }
-            }
-            Object.values(dict_variable_application_data.display_links).forEach(l=>DeselectVisualyLinks(l))
-            multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-            ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
-          }}
-          labelledBy={'hello'}
-        />
-      </div>)
+
+              if(multi_selected_links.current.length>0){
+                let new_tags_selected=tags_selected
+
+                if(multi_selected_links.current[0].idLink.includes('_')){
+                  const index_grp_tag=multi_selected_links.current[0].idLink.split('_')
+                  // Supprime le première élément du tableau qui ne contient que l'id du flux
+                  index_grp_tag.shift()
+                  new_tags_selected={}
+                  // On fabrique un tags_selected pour récupérer la bonne valeur pour ValueSelectedParameter
+                  for(const i in index_grp_tag){
+                    const key=Object.keys(data.dataTags)[Number(i)]
+                    new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
+                  }
+                  tags_selected = new_tags_selected
+                  displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
+                    ValueSelectedParameter(
+                      dict_variable_application_data,
+                      multi_selected_links,
+                      new_tags_selected
+                    ).value as string
+                  ))
+
+                }else if(Object.values(data.dataTags).length>0){
+                  // Dans le cas où il n'y a pas de '_' ce qui implique que les datatags sont en mode selection simple
+                  const tmp=[] as string[]
+                  Object.values(data.dataTags).forEach(dt=>{
+                    tmp.push(Object.entries(dt.tags).filter(t=>t[1].selected)[0][0])
+                  })
+                  const n_t_s={} as {[x:string]:string}
+                  Object.keys(data.dataTags).forEach((dt,i)=>{
+                    n_t_s[dt]=tmp[i]
+                  })
+                  tags_selected = (n_t_s)
+                  displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
+                    ValueSelectedParameter(
+                      dict_variable_application_data,
+                      multi_selected_links,
+                      n_t_s
+                    ).value as string
+                  ))
+                }else{
+                  displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
+                    ValueSelectedParameter(
+                      dict_variable_application_data,
+                      multi_selected_links,
+                      new_tags_selected
+                    ).value as string))
+                }
+              }
+              Object.values(dict_variable_application_data.display_links).forEach(l=>DeselectVisualyLinks(l))
+              multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
+              ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+            }}
+          />
+        </Box>
+      </Box>)
     return DD
   }
 
@@ -344,20 +360,19 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   }
 
-
-  return (<>
-    {/* Ajout d'un flux  */}
-    <InputGroup>
+  return (<Box layerStyle='menuconfigpanel_grid'>
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_droplist'
+    >
+      {/* Ajout d'un flux  */}
       <OverlayTrigger
         key={'Menu.tooltips.flux.plus'}
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'Menu.tooltips.flux.plus'}>{t('Menu.tooltips.flux.plus')} </Tooltip>}>
         <Button
-          size="sm"
-          variant="outline-primary"
-          style={{width:'10%'}}
-          className='btn_menu_config'
+          variant='menuconfigpanel_add_button'
           onClick={
             () => {
               add_new_link()
@@ -383,10 +398,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         delay={500}
         overlay={<Tooltip id={'Menu.tooltips.flux.rm'}>{t('Menu.tooltips.flux.rm')} </Tooltip>}>
         <Button
-          size="sm"
-          variant="outline-primary"
-          className='btn_menu_config'
-          style={{width:'10%'}}
+          variant='menuconfigpanel_del_button'
           onClick={
             () => {
               multi_selected_links.current.forEach(l => DeleteLink(data, l))
@@ -404,10 +416,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         delay={500}
         overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
         <Button
-          style={{width:'10%'}}
-          size="sm"
-          variant={data.displayed_link_selector?'primary':'outline-primary'}
-          className='btn_menu_config'
+          variant='menuconfigpanel_option_button'
           onClick={
             () => {
               data.displayed_link_selector=!data.displayed_link_selector
@@ -416,64 +425,80 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           {data.displayed_link_selector?<FaEye/>:<FaEyeSlash/>}
         </Button>
       </OverlayTrigger>
-    </InputGroup>
+    </Box>
 
-    <Row>
-      <Col xs={11} style={{paddingRight:'0px'}}>
+    <Box
+      display='grid'
+      gridTemplateColumns='9fr 1fr'
+      gridTemplateRows='1fr 1fr'
+      gridColumnGap='0.25rem'
+      gridRowGap='0.25rem'
+      height='4.25rem'
+    >
+      <Box
+        display='grid'
+        gridTemplateColumns='1fr'
+        gridTemplateRows='1fr 1fr'
+        gridRowGap='0.25rem'
+      >
         {/* Choix du point de départ du flux  */}
         <OverlayTrigger
           key={'Menu.tooltips.flux.src'}
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'Menu.tooltips.flux.src'}>{t('Flux.tooltips.src')} </Tooltip>}>
-          <InputGroup>
-            <InputGroup.Text style={{
-              color:(multi_selected_links.current.length != 1)?'#666666':'',
-              backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-              width:'45%'}}>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <InputLeftAddon
+              width='5rem'
+            >
               {t('Flux.src')}
-            </InputGroup.Text>
-            <Form.Select
+            </InputLeftAddon>
+            <Select
+              variant='select_custom_style'
               disabled={Object.keys(data.nodes).length<2}
-              style={{width:'45%'}}
               onChange={source_change}
               value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
               {addDropSource()}
-            </Form.Select>
+            </Select>
           </InputGroup>
         </OverlayTrigger>
 
+        {/* Choix du point d'arrivée du flux  */}
         <OverlayTrigger
           key={'Menu.tooltips.flux.trgt'}
           placement={'top'}
           delay={500}
           overlay={<Tooltip id={'Menu.tooltips.flux.trgt'}>{t('Flux.tooltips.trgt')} </Tooltip>}>
-          <InputGroup>
-            <InputGroup.Text style={{
-              color:(multi_selected_links.current.length != 1)?'#666666':'',
-              backgroundColor:(multi_selected_links.current.length != 1)?'#cccccc':'',
-              width:'45%'}}>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <InputLeftAddon
+              width='5rem'
+            >
               {t('Flux.trgt')}
-            </InputGroup.Text>
-            <Form.Select
+            </InputLeftAddon>
+            <Select
+              variant='select_custom_style'
               disabled={Object.keys(data.nodes).length<2}
-              style={{width:'55%'}}
               onChange={target_change}
               value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
               {addDropCible()}
-            </Form.Select>
+            </Select>
           </InputGroup>
         </OverlayTrigger>
-      </Col>
+      </Box>
 
       {/* Bouton d'inversions du flux : cible <-> source */}
-      <Col xs={1} style={{paddingLeft:'0px',height:'3em'}}>
+      <Box>
         <OverlayTrigger
           key={'Menu.tooltips.flux.inverse'}
           placement='top'
           delay={500}
           overlay={<Tooltip id={'Menu.tooltips.flux.inv'}>{t('Flux.tooltips.inv')} </Tooltip>}>
           <Button
+            height='100%'
             onClick={()=>{
               const nodes_to_reorganize: SankeyNode[] = []
               multi_selected_links.current.forEach(l => {
@@ -496,11 +521,12 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               })
               set_data({ ...data })
             }}
-          ><FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/> </Button>
+          >
+            <FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/>
+          </Button>
         </OverlayTrigger>
-
-      </Col>
-    </Row>
+      </Box>
+    </Box>
 
 
     { (multi_selected_links.current.length !== 0) ? (
@@ -508,7 +534,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         {menu_configuration_links as unknown as JSX.Element}
       </Tabs>
     ):(<></>)
-    }</>)
+    }
+  </Box>)
 }
 
 export default SankeyMenuConfigurationLinks

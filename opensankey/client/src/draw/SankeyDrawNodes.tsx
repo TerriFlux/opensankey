@@ -244,6 +244,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
   const {display_nodes}=dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
   const {GetLinkValue}=link_function
+  const {t}=applicationContext
   // The majority of data used to design the node are located in data['nodes']
   // Or if you want information about the type of these variable, you can find them in file types.tsx
   d3.selectAll(' .opensankey .gg_nodes').remove()
@@ -252,7 +253,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
     alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components
   )
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
-  updateDrawAllNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+  updateDrawAllNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,t)
 
 
 }
@@ -355,7 +356,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
       const sankeyTooltip=d3.select('.sankey-tooltip')
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue))
+        .html(NodeTooltipsContent(data, display_nodes, d as SankeyNode,GetLinkValue,applicationContext.t))
     }
   })
   filtered_gg_nodes.on('mousemove', function (event) {
@@ -478,6 +479,7 @@ export const drawAddNodes : drawNodeShapeFType = (
 ) => {
   const {multi_selected_nodes } = dict_variable_elements_selected
   const { data,display_nodes, display_links } = dict_variable_application_data
+  const {t} = applicationContext
   // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
   const filtered_data = Object.values(display_nodes)
   d3.selectAll('.ggg_nodes').remove()
@@ -504,7 +506,7 @@ export const drawAddNodes : drawNodeShapeFType = (
       .attr('transform', d => nodeTransform(d, display_nodes, display_links))
   })
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
-  updateDrawAllNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+  updateDrawAllNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,t)
   AddDrawNodesEvent(
     contextMenu,
     dict_variable_application_data,
