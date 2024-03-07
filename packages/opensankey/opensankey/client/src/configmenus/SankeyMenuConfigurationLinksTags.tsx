@@ -20,10 +20,14 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
       dataTagKey,
       Object.entries(dataTag.tags).filter(tag => tag[1].selected).length > 0 ? Object.entries(dataTag.tags).filter(tag => tag[1].selected)[0][0] : Object.keys(dataTag.tags)[0]] : ['n', 'n']
   }))
-  const tags_selected = Object.fromEntries(newEntries)
+  const dataTagsSelected = Object.fromEntries(newEntries)
 
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.fluxTags).length > 0 ? Object.keys(data.fluxTags)[0] : '')
+  const [data_tags_selected, set_data_tags_selected] = useState(dataTagsSelected)
 
+  if (Object.keys(data_tags_selected).length !== Object.keys(dataTagsSelected).length) {
+    set_data_tags_selected(dataTagsSelected)
+  }
   const {fluxTags}=data
   const tags_visible = Object.keys(fluxTags).length > 0
 
@@ -33,7 +37,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
     }else{
       if ( Object.keys(data.links).length === 0 || !(multi_selected_links.current[0].idLink in data.links) ) {
         let val = JSON.parse(JSON.stringify(Object(multi_selected_links.current[0].value)))
-        Object.values(tags_selected).map(tag_selected => {
+        Object.values(data_tags_selected).map(tag_selected => {
           if (val[tag_selected] === undefined) {
             val[tag_selected] = {}
           }
@@ -42,7 +46,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
         return val
       }
       let val = JSON.parse(JSON.stringify(Object(data.links[multi_selected_links.current[0].idLink].value)))
-      Object.values(tags_selected).map(tag_selected => {
+      Object.values(data_tags_selected).map(tag_selected => {
         if (val[tag_selected] === undefined) {
           val[tag_selected] = {'display_value': '',tags:{},value:0}
         }
@@ -87,18 +91,15 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
               <Form.Select
                 name={dataTagKey}
                 style={{width:'60%'}}
-                value={tags_selected[dataTagKey]}
+                value={data_tags_selected[dataTagKey]}
                 onChange={
-                  (/*evt: React.ChangeEvent<HTMLSelectElement>*/) => {
+                  (evt: React.ChangeEvent<HTMLSelectElement>) => {
                     //Modifie les paramètres selectionnés
-                    //const { name, value } = evt.target
-                    //let tmp={}
-                    // set_tags_selected( prevState => {
-                    //tmp= ({...tags_selected,[name]: value}) //TODO
-                    // set_tags_selected(prevState => ({
-                    //   ...prevState,
-                    //   [name]: value
-                    // }))
+                    const { name, value } = evt.target
+                    set_data_tags_selected(prevState => ({
+                      ...prevState,
+                      [name]: value
+                    }))
                   }}>
                 {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                   return (
@@ -122,7 +123,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
               onChange={(evt) => {
                 const visible = evt.target.checked
                 Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  updateLinkTagValue(d,tags_selected,tags_group_key,tag_key,visible)
+                  updateLinkTagValue(d,data_tags_selected,tags_group_key,tag_key,visible)
                 })
                 set_data({ ...data })
               }}>
