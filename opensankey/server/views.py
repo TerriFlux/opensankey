@@ -14,7 +14,6 @@ from PIL import Image
 import imgkit
 import pdfkit
 import re
-import pathlib
 import pandas as pd
 try:
     import pythoncom
@@ -639,7 +638,7 @@ def load_process():
             json.dumps({'output':  'ERROR:load_process: le fichier tmp_log ne peut pas être ouvert.'}),
             status=500,
             mimetype='application/json')
-    
+
 
 def _html_to_image(
     html_file,
@@ -648,8 +647,6 @@ def _html_to_image(
     output_height_px=None,
     output_width_px=None
 ):
-    # print(pathlib.Path().resolve())
-    # print(os.listdir('.'))
     # Get html page as str
     html_as_str = '<meta charset="utf-8">' + html_file.read().decode('UTF-8')
     # Deal with Textpaths
@@ -709,8 +706,6 @@ def _html_to_image(
                     output_filename,
                     output_filename+'.pdf'))
             os.remove(output_filename+'.pdf')
-
-
 
 
 @opensankey.route('/sankey/save_svg', methods=['POST'])
