@@ -689,7 +689,8 @@ export type ExcelModalTypes = {
   UploadExcelImpl: UploadExcelImplFuncType,
   url_prefix: string,
   launch: (path: string) => void,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
+  Reinitialization:()=>void
 }
 
 /**
@@ -698,7 +699,7 @@ export type ExcelModalTypes = {
  * @param {{ UploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { UploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,dict_hook_ref_setter_show_dialog_components }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,dict_hook_ref_setter_show_dialog_components,Reinitialization }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const [show_excel_dialog,set_show_excel_dialog]=useState(false)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current=set_show_excel_dialog
@@ -728,6 +729,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
           variant="secondary"
           onClick={
             () => {
+              Reinitialization()
               launch((input_file_name as unknown as {[name:string]:string}).name)
               UploadExcelImpl(
                 set_show_excel_dialog,input_file_name as Blob,url_prefix
