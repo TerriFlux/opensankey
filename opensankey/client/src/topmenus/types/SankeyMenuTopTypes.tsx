@@ -28,6 +28,7 @@ export type OpenSankeyMenusFType = (
   set_data:(d:SankeyData)=>void,
   external_edition_item:JSX.Element[],
   external_file_item:JSX.Element[],
+  external_file_export_item:JSX.Element[],
   externale_save_item:JSX.Element[],
   convert_data:(d:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
   setDiagram: setDiagramFuncType,
@@ -69,3 +70,10 @@ export type MenuDraggableFType = (
 export type OpenSankeySaveButtonFType = (t:TFunction) => JSX.Element
  
 export type LastCheckpointTimeFType = (t:TFunction) => JSX.Element
+export type SankeyMenuFileExportFType=(
+  t:TFunction,
+  data:SankeyData,
+  additonal_export_item:JSX.Element[]
+  )=> JSX.Element
+
+
