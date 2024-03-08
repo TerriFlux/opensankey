@@ -232,7 +232,6 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
   const { pointer_pos } = contextMenu
   ev.preventDefault()
   pointer_pos.current = [ev.pageX, ev.pageY]
-  console.log(contextMenu.showContextZDDRef.current)
   contextMenu.showContextZDDRef.current![1](true)
   //contextZDDRef.current!.hidden = false
   //const style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
@@ -406,13 +405,24 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   draw_legend_handles(data, set_data, legend_clicked.current, h)
 
   const OpenLinksMenu = () => {
-    if (button_ref?.current && accordion_ref && accordion_ref.current == null) {
+    if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
       button_ref.current.click()
     }
-    if (accordion_ref?.current) {
+    // Open element accordion if not already openend
+    if (
+      accordion_ref &&
+      accordion_ref.current &&
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
       accordion_ref.current.click()
     }
-    if (links_accordion_ref && links_accordion_ref.current) {
+
+    // Open link accordion if not already openend
+    if (
+      links_accordion_ref &&
+      links_accordion_ref.current &&
+      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
       links_accordion_ref.current.click()
     }
   }
@@ -606,15 +616,23 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
         button_ref.current.click()
       }
-      if (accordion_ref && accordion_ref.current) {
-        for (const child in accordion_ref.current.children) {
-          if (accordion_ref.current.children[child].id === 'Flux') {
-            (accordion_ref.current.children[0] as HTMLLabelElement).click()
-          }
-        }
+      
+      // Open element accordion if not already openend
+      if (
+        accordion_ref &&
+      accordion_ref.current &&
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        accordion_ref.current.click()
       }
-      if (links_accordion_ref && links_accordion_ref.current) {
-        (links_accordion_ref.current.children[0] as HTMLLabelElement).click()
+
+      // Open link accordion if not already openend
+      if (
+        links_accordion_ref &&
+      links_accordion_ref.current &&
+      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        links_accordion_ref.current.click()
       }
       if (Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0) {
         const tmp = Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
