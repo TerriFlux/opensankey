@@ -87,10 +87,22 @@ export const DrawLinks : DrawLinksFType = (
         if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
           button_ref.current.click()
         }
-        if ( accordion_ref && accordion_ref.current) {
+        
+        // Open element accordion if not already openend
+        if (
+          accordion_ref &&
+      accordion_ref.current &&
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
           accordion_ref.current.click()
         }
-        if ( links_accordion_ref && links_accordion_ref.current) {
+
+        // Open link accordion if not already openend
+        if (
+          links_accordion_ref &&
+      links_accordion_ref.current &&
+      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
           links_accordion_ref.current.click()
         }
       }
