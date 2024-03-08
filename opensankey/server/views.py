@@ -656,11 +656,10 @@ def _html_to_image(
         html_as_str = html_as_str.replace(match_str, new_str)
     # Keep css style when exporting
     css = [
-        'OpenSankey/opensankey/client/src/css/colors/red.css',
-        'OpenSankey/opensankey/client/src/css/main.css',
-        'SankeySuite/client/src/css/react-quill.css',
-        'OpenSankey/opensankey/client/src/css/bootstrap.css'
-        ]
+        'client/node_modules/open-sankey/src/css/colors/red.css',
+        'client/node_modules/open-sankey/src/css/main.css',
+        'client/src/css/react-quill.css',
+        'client/node_modules/open-sankey/src/css/bootstrap.css']
     # Common options for conversions
     options = {
         'enable-local-file-access': ''}
