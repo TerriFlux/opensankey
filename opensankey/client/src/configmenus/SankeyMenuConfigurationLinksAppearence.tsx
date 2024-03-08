@@ -178,17 +178,18 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
 
   const labelLinkFree = () => {
     if(selected_parameter.length==0){
-      return [null,null]
+      return [false,false]
+    }else{
+      const first_value=(ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_position',menu_for_style) === 'frozen'&& (ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'orthogonal_label_position',menu_for_style)) === 'frozen')
+      let is_indeterminate=false
+      selected_parameter.forEach(l=>{
+        const link_value_param=(ReturnCorrectLinkAttributeValue(data,l,'label_position',menu_for_style) === 'frozen'&& (ReturnCorrectLinkAttributeValue(data,l,'orthogonal_label_position',menu_for_style)) === 'frozen')
+        is_indeterminate=( first_value===link_value_param ? is_indeterminate : true)
+      })
+      return [first_value,is_indeterminate]
     }
-    const first_value=(ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_position',menu_for_style) === 'frozen'&& (ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'orthogonal_label_position',menu_for_style)) === 'frozen')
-    let all_same=true
-    selected_parameter.forEach(l=>{
-      all_same=((ReturnCorrectLinkAttributeValue(data,l,'label_position',menu_for_style) === 'frozen'&& (ReturnCorrectLinkAttributeValue(data,l,'orthogonal_label_position',menu_for_style)) === 'frozen') ? false : all_same)
-    })
-    return (all_same?[first_value,false]:[false,true])
   }
   const label_link_free_checked=labelLinkFree() as boolean[]
-
   const apply_style_to_selected_links = () => {
     multi_selected_links.current.map(d => {
       delete d.local
