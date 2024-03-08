@@ -311,7 +311,7 @@ class SankeyToJson(object):
                (tagg.name_unformatted in DEFAULT_LEVEL_TAGGS):
                 banner = 'level'
             # tag group dict
-# if there are antagonists_taggs only one can be selected
+            # if there are antagonists_taggs only one can be selected
             activated = True
             for antagonists_tagg in tagg.antagonists_taggs:
                 if antagonists_tagg.name_unformatted in node_tags_json:
@@ -952,7 +952,9 @@ class JsonToSankey(object):
         self.sankey = Sankey()
         # Private attributes - for computation purpose
         self._nodes_id_corresp = {}
-        self._tags2taggroup_corresp = {}
+        self._nodetags_corresp = {}
+        self._fluxtags_corresp = {}
+        self._datatags_corresp = {}
 
     def run(self):
         """
@@ -1021,31 +1023,37 @@ class JsonToSankey(object):
         :param tagg_type_json: Tagg group type (dataTag, NodeTag, FluxTag, LevelTag)
         :type tagg_type_json: str
         """
-        for tagg_name, tagg_json in self.json[tagg_type_json].items():
+        for tagg_id, tagg_json in self.json[tagg_type_json].items():
             # Get tag type
             tagg_type = JSON_TO_IO_XL__TAGG_TYPES[tagg_type_json]
             # For node tag, check if it's not a level tag instead
             if (tagg_type == CONST_IO_XL.TAG_TYPE_NODE) and \
-               ((tagg_json['banner'] == 'level') or (tagg_name in DEFAULT_LEVEL_TAGGS)):
+               ((tagg_json['banner'] == 'level') or (tagg_id in DEFAULT_LEVEL_TAGGS)):
                 tagg_type = CONST_IO_XL.TAG_TYPE_LEVEL
             # Specific taggs to ignore
             if (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL) and \
-               (tagg_name in DEFAULT_LEVEL_TAGGS):
+               (tagg_id in DEFAULT_LEVEL_TAGGS):
                 continue
             if (tagg_type == CONST_IO_XL.TAG_TYPE_FLUX) and \
-               (tagg_name == 'flux_types'):
+               (tagg_id == 'flux_types'):
                 continue
             # Create tag groupe
-            tagg = self.sankey.get_or_create_tagg(tagg_name, tagg_type)
+            tagg = self.sankey.get_or_create_tagg(tagg_json['group_name'], tagg_type)
+            # Create tags corresp table
+            tags_corresp = {}
             # Create tags
-            tags_names_list = []
             for tag_name, tag_json in tagg_json['tags'].items():
-                tag = tagg.get_or_create_tag(tag_name)
+                tag = tagg.get_or_create_tag(tag_json['name'])
                 tag.color = _get_value_if_in_dict(tag_json, 'color')
                 # For latter reference
-                tags_names_list.append(tag_name)
+                tags_corresp[tag_name] = tag
             # Update correspondance dict
-            self._tags2taggroup_corresp[tuple(tags_names_list)] = tagg
+            if (tagg_type == CONST_IO_XL.TAG_TYPE_NODE):
+                self._nodetags_corresp[tagg_id] = tags_corresp
+            if (tagg_type == CONST_IO_XL.TAG_TYPE_FLUX):
+                self._fluxtags_corresp[tagg_id] = tags_corresp
+            if (tagg_type == CONST_IO_XL.TAG_TYPE_DATA):
+                self._datatags_corresp[tagg] = tags_corresp
             # Check siblings tag groups
             if 'siblings' in tagg_json.keys():
                 for sib_tagg_name in tagg_json['siblings']:
@@ -1108,20 +1116,10 @@ class JsonToSankey(object):
             # Keep node id in mind
             self._nodes_id_corresp[node_id] = node
             # Apply node tags
-            for tagg_name, tags_names in node_json['tags'].items():
-                # We dont know if tag group is of type level_tag or node_tag
-                tagg = self.sankey.get_tagg_from_name_and_type(
-                    tagg_name,
-                    CONST_IO_XL.TAG_TYPE_NODE)
-                if tagg is None:
-                    tagg = self.sankey.get_tagg_from_name_and_type(
-                        tagg_name,
-                        CONST_IO_XL.TAG_TYPE_LEVEL)
-                if tagg is None:
-                    continue
+            for tagg_id in node_json['tags'].keys():
                 # Get corresponding tags
-                for tag_name in tags_names:
-                    tag = tagg.get_or_create_tag(tag_name)
+                for tag_id in node_json['tags'][tagg_id]:
+                    tag = self._nodetags_corresp[tagg_id][tag_id]
                     node.add_tag(tag)
             # Apply level tags
             # But, save parenthood relations for latter
@@ -1223,9 +1221,15 @@ class JsonToSankey(object):
             dest_node = self._nodes_id_corresp[flux_json['idTarget']]
             flux = self.sankey.get_or_create_flux(orig_node.name, dest_node.name)
             # Get data
-            self._extract_data(flux_json['value'], flux, [])
+            self._extract_data(flux_json['value'], flux)
 
-    def _extract_data(self, datas_json, flux, datatags_list):
+    def _extract_data(
+        self,
+        datas_json,
+        flux,
+        datatags_list=[],
+        datataggs_list=None
+    ):
         """
         Extract all datas (recursively) from json flux struct to fill a Sankey struct.
 
@@ -1272,48 +1276,54 @@ class JsonToSankey(object):
         """
         # Check if we reach the bottom of datas_json
         if "value" in datas_json.keys():
-            # Create Data
-            data = SankeyData(value=datas_json['value'])
-            # Add data tags
-            for datatag in datatags_list:
-                data.add_tag(datatag)
-            # Add data to flux
+            # Get corresponding data / datatags
+            data = flux.get_corresponding_datas_from_tags(datatags_list)[0]
+            # Get all fluxtags
+            fluxtags_list = []
+            for fluxtagg_id in datas_json['tags'].keys():
+                # Get all tags related to this taggroup and to this flux
+                for fluxtag_id in datas_json['tags'][fluxtagg_id]:
+                    fluxtags_list.append(self._fluxtags_corresp[fluxtagg_id][fluxtag_id])
+            # Check if data is result or not
             data_is_computed = False
             if 'flux_types' in datas_json['tags'].keys():
                 if 'computed_data' in datas_json['tags']['flux_types']:
                     data_is_computed = True
+            # Update data OR result
             if data_is_computed:
-                flux.add_result(data)
+                # Create result
+                result = SankeyData(value=datas_json['value'])
+                # Update result value
+                flux.add_result(result)
+                # Link with data
+                result.alterego = data
+                # Apply tags
+                for tag in (datatags_list + fluxtags_list):
+                    result.add_tag(tag)
             else:
-                flux.add_data(data)
-            # Add flux tags
-            for fluxtagg_name, fluxtags_names in datas_json['tags'].items():
-                # Get tag group
-                fluxtagg = self.sankey.get_tagg_from_name_and_type(
-                    fluxtagg_name,
-                    CONST_IO_XL.TAG_TYPE_FLUX)
-                if fluxtagg is None:
-                    continue
-                # Get all tags related to this taggroup and to this flux
-                for fluxtag_name in fluxtags_names:
-                    fluxtag = fluxtagg.get_tag_from_name(fluxtag_name)
-                    data.add_tag(fluxtag)
+                # Update value
+                data.value = datas_json['value']
+                # Apply only flux-tags
+                for tag in (fluxtags_list):
+                    data.add_tag(tag)
             return
         # Otherwise we have to go deeper
         # Find the corresponding dataTagGroup from dataTags names
-        set_datatags_names = set(datas_json.keys())
-        for tags_names_list in self._tags2taggroup_corresp.keys():
-            if len(set_datatags_names & set(tags_names_list)) > 0:
-                tagg = self._tags2taggroup_corresp[tags_names_list]
-                # Recursive calls on all datatags
-                for datatag_name in set_datatags_names:
-                    datatag = tagg.get_tag_from_name(datatag_name)
-                    # Temporary copy of datatags_list
-                    new_datatags_list = datatags_list.copy()
-                    new_datatags_list.append(datatag)
-                    # Recurse
-                    self._extract_data(
-                        datas_json[datatag_name],
-                        flux,
-                        new_datatags_list)
-                return
+        if datataggs_list is None:
+            datataggs_list = list(self._datatags_corresp.keys())
+        # TODO protection ici
+        curr_datatagg = datataggs_list.pop(0)  # Tagg group are ordered
+        # # TODO protection check with taht
+        # curr_datatags_ids = list(datas_json.keys())
+        # Recursive calls on all datatags
+        for datatag_id, datatag in self._datatags_corresp[curr_datatagg].items():
+            # Temporary copy of datatags_list
+            new_datatags_list = datatags_list.copy()
+            new_datatags_list.append(datatag)
+            # Recurse
+            self._extract_data(
+                datas_json[datatag_id],
+                flux,
+                new_datatags_list,
+                datataggs_list.copy())
+        return
