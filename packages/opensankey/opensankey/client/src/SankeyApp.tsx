@@ -311,6 +311,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     [],
     [],
     [],
+    [],
     //dict_variable_elements_selected.set_tags_selected,
     convert_data,
     setDiagram,
