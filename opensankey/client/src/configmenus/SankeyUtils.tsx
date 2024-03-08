@@ -667,7 +667,7 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
   const node_style_prod=DefaultNodeProductStyle()
   const default_data = {
     ...data,
-    style_node: { 'default' : DefaultNodeStyle(),'NodeSectorStyle':node_style_prod,'NodeProductStyle':node_style_sect },
+    style_node: { 'default' : DefaultNodeStyle(),'NodeSectorStyle':node_style_sect,'NodeProductStyle':node_style_prod },
     style_link: { 'default' : DefaultLinkStyle() }
   }
   return (default_data as unknown as SankeyData)
