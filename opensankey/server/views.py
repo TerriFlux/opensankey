@@ -7,6 +7,14 @@ import tempfile
 import os
 import json
 
+from flask import current_app
+from flask import abort
+from PIL import Image
+
+import imgkit
+import pdfkit
+import re
+import pathlib
 import pandas as pd
 try:
     import pythoncom
@@ -631,3 +639,220 @@ def load_process():
             json.dumps({'output':  'ERROR:load_process: le fichier tmp_log ne peut pas être ouvert.'}),
             status=500,
             mimetype='application/json')
+    
+
+def _html_to_image(
+    html_file,
+    output_filename,
+    output_format,
+    output_height_px=None,
+    output_width_px=None
+):
+    # print(pathlib.Path().resolve())
+    # print(os.listdir('.'))
+    # Get html page as str
+    html_as_str = '<meta charset="utf-8">' + html_file.read().decode('UTF-8')
+    # Deal with Textpaths
+    for match in re.finditer(r"<textPath[ A-zÀ-ú0-9\"\'\(\)\-=#%_]*", html_as_str):
+        match_str = match[0]
+        new_str = match_str.replace('href', 'xlink:href')
+        html_as_str = html_as_str.replace(match_str, new_str)
+    # Keep css style when exporting
+    css = [
+        'OpenSankey/opensankey/client/src/css/colors/red.css',
+        'OpenSankey/opensankey/client/src/css/main.css',
+        'SankeySuite/client/src/css/react-quill.css',
+        'OpenSankey/opensankey/client/src/css/bootstrap.css'
+        ]
+    # Common options for conversions
+    options = {
+        'enable-local-file-access': ''}
+    if output_height_px is not None:
+        options['page-height'] = output_height_px + 'px'
+    if output_width_px is not None:
+        options['page-width'] = output_width_px + 'px'
+    # Convert as png
+    if output_format == "png":
+        imgkit.from_string(
+            html_as_str,
+            output_filename,
+            css=css,
+            options=options)
+    else:
+        # Options for pdf / svg conversions
+        options.update({
+            'margin-top': '1cm',
+            'margin-right': '1cm',
+            'margin-bottom': '1cm',
+            'margin-left': '1cm',
+            'orientation': 'Landscape',
+            'disable-smart-shrinking': ''})
+        if output_height_px is not None:
+            options['page-height'] = output_height_px + 'px'
+        if output_width_px is not None:
+            options['page-width'] = output_width_px + 'px'
+        if output_format == "pdf":
+            pdfkit.from_string(
+                html_as_str,
+                output_filename,
+                css=css,
+                options=options)
+        else:
+            pdfkit.from_string(
+                html_as_str,
+                output_filename+'.pdf',
+                css=css,
+                options=options)
+            os.system(
+                'inkscape ' +
+                '--export-filename={0} {1}'.format(
+                    output_filename,
+                    output_filename+'.pdf'))
+            os.remove(output_filename+'.pdf')
+
+
+
+
+@opensankey.route('/sankey/save_svg', methods=['POST'])
+def save_svg():
+    '''
+    HTTP POST request to save current sankey as PNG
+
+    Input : Data as html (current page)
+
+    Output : Send png file
+    '''
+    # Launch conversion
+    filename = "tutu.svg"
+    try:
+        _html_to_image(
+            request.files['html'],
+            filename,
+            "svg")
+    except Exception as e:
+        current_app.logger.error('SAVE_SVG | {0}'.format(e))
+        abort(500)
+    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
+
+
+@opensankey.route('/sankey/save_png', methods=['POST'])
+def save_png():
+    '''
+    HTTP POST request to save current sankey as PNG
+
+    Input : Data as html (current page)
+
+    Output : Send png file
+    '''
+    # Launch conversion
+    filename = "tutu.png"
+    try:
+        # Export
+        _html_to_image(
+            request.files['html'],
+            filename,
+            "png")
+        # Resize
+        size_str = request.form['size']
+        size_int = []
+        if (len(size_str.split()) == 2):
+            size_int = list(map(lambda num: int(num), size_str.split()))
+        if (len(size_int) == 2):
+            im = Image.open(filename)
+            im_resized = im.resize(size_int)
+            im_resized.save(filename, "PNG")
+    except Exception as e:
+        current_app.logger.error('SAVE_PNG | {0}'.format(e))
+        abort(500)
+    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
+
+
+# Create opensanker app routes
+@opensankey.route('/sankey/save_pdf', methods=['POST'])
+def save_pdf():
+    '''
+    HTTP POST request to save current sankey as PDF
+
+    Input : Data as html (current page)
+
+    Output : Send pdf file
+    '''
+    # Launch conversion with pdfkit
+    filename = "tutu.pdf"
+    try:
+        _html_to_image(
+            request.files['html'],
+            filename,
+            "pdf",
+            output_height_px=request.form['height'],
+            output_width_px=request.form['width'])
+    except Exception as e:
+        current_app.logger.error('SAVE_PDF | {0}'.format(e))
+        abort(500)
+    return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
+
+
+@opensankey.route('/sankey/clean_svg', methods=['POST'])
+def clean_svg():
+    '''
+    HTTP POST request to remove remaining generated png image
+
+    Input : None
+
+    Output :
+        - Response 200 : OK
+        - Response 500 : Unknown exception
+    '''
+    return clean_file("tutu.svg", "CLEAN_SVG")
+
+
+@opensankey.route('/sankey/clean_png', methods=['POST'])
+def clean_png():
+    '''
+    HTTP POST request to remove remaining generated png image
+
+    Input : None
+
+    Output :
+        - Response 200 : OK
+        - Response 500 : Unknown exception
+    '''
+    return clean_file("tutu.png", "CLEAN_PNG")
+
+
+@opensankey.route('/sankey/clean_pdf', methods=['POST'])
+def clean_pdf():
+    '''
+    HTTP POST request to remove remaining generated pdf image
+
+    Input : None
+
+    Output :
+        - Response 200 : OK
+        - Response 500 : Unknown exception
+    '''
+    return clean_file("tutu.pdf", "CLEAN_PDF")
+
+
+def clean_file(filename, fctname):
+    '''
+    Delete a given file from server.
+
+    Input :
+        - filename (String) : File to be delete
+        - fctname (String) : Name of the calling function for error logging
+
+    Output :
+        - 200 : OK
+        - 500 : Unknown exception
+    '''
+    # Try to remove file
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        current_app.logger.debug("{0} | No file {1} found".format(fctname, filename))
+    except Exception as e:
+        current_app.logger.error("{0} | Error : {1}".format(fctname, e))
+        abort(500)
+    # Everything is fine
+    return Response(status=200)
