@@ -802,6 +802,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         UploadExcelImpl={UploadExcelImpl}
         url_prefix={applicationContext.url_prefix}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+        Reinitialization={Reinitialization}
       />
 
       <SankeyLoad
