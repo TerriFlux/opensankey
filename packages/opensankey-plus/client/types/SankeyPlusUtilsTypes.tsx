@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle, SankeyPlusNode } from './Types'
+import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 export type DefaultSankeyPlusStyleLinkFType = () => SankeyPlusLinkStyle
@@ -48,3 +48,15 @@ export type OSPIsAllNodeNotLocalAttrSameValueFType = (
   m_s_n:SankeyPlusNode[],
   k_list:(keyof SankeyPlusNode)[]
 ) => { [x: string]: [ValueOf<SankeyPlusNode>|boolean, boolean]; }
+
+
+export type Modale_resolution_pngFType=(
+  t:TFunction,
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
+  )=> JSX.Element
+
+export type clickSaveSVGFType = () => void
+  
+export type PlusItemExportFType=(
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
+)=>JSX.Element
