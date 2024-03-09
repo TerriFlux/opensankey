@@ -471,7 +471,7 @@ export const ToPrecision:ToPrecisionFuncType = (
 ): string | number=> {
   if(!isNaN(v)) {
     if (v > Math.pow(10,nb_scientific)){
-      return v.toExponential(nb_scientific)
+      return v.toPrecision(nb_scientific)
     }
     return String(parseFloat(v.toPrecision(nb_scientific))).replace('.',t('sep_decimal'))
   }
