@@ -479,7 +479,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
     convert_data,
     elementToDispose,
     apply_transformation_additional_elements,
-    DiagramSelector
+    DiagramSelector,
+    callback
   }
 ) => {
   const {ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
@@ -817,6 +818,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         processFunctions={processFunctions}
         convert_data={convert_data}
+        callback={callback}
       />
 
       {
