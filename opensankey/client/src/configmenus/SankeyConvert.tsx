@@ -1529,9 +1529,9 @@ export const convert_data:ConvertDataFuncType = (
 
   if(data.linkZIndex===undefined || (data.linkZIndex.length!=Object.keys(data.links).length)){
     data.linkZIndex=Object.values(data.links).map(l=>l.idLink)
-    if((data as SankeyData & layout_type).layout){
-      data.linkZIndex=Object.values((data as SankeyData & layout_type).layout.links).map(l=>l.idLink)
-    }
+    // if((data as SankeyData & layout_type).layout){
+    //   data.linkZIndex=Object.values((data as SankeyData & layout_type).layout.links).map(l=>l.idLink)
+    // }
   }
 
   // const tmp1 : SankeyLinkStyle = {
