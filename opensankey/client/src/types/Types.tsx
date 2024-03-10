@@ -445,7 +445,8 @@ export type MenuTypes = {
   apply_transformation_additional_elements: JSX.Element[],
   additional_nav_item:JSX.Element[],
   example_menu: JSX.Element,
-  formations_menu: object
+  formations_menu: object,
+  callback:callbackFuncType
 }
 
 export type callbackFuncType = (server_data: SankeyData) => void
