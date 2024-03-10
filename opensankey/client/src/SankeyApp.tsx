@@ -713,6 +713,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             elementToDispose={elementToDispose}
             apply_transformation_additional_elements={[]}
             DiagramSelector={OpenSankeyDiagramSelector}
+            callback={()=>null}
           />
         </>
         <ApplySaveJSONDialog
