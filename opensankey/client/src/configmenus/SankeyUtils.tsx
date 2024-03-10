@@ -211,8 +211,6 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   const top_flux: string[] = []
   const bottom_flux: string[] = []
 
-  const special_data_cast=data as unknown as {free_null_link_visible:boolean}
-
   node.outputLinksId.filter(lid=>display_links[lid]).forEach(
     (idLink) => {
       const link = links[idLink]
@@ -341,9 +339,8 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       }
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
-                      data.show_structure !== 'free_value' &&
-                      !special_data_cast.free_null_link_visible
-      if (extension.display_thin || is_free) {
+                      data.show_structure !== 'free_value'
+      if (extension.display_thin || is_free ) {
         // if flux is displayed thin
         offset_width_top += inv_scale(5)
       } else {
@@ -375,8 +372,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       }
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
-                      data.show_structure !== 'free_value' &&
-                      !special_data_cast.free_null_link_visible
+                      data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_width_bottom += inv_scale(5)
@@ -410,8 +406,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       }
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
-                      data.show_structure !== 'free_value' &&
-                      !special_data_cast.free_null_link_visible
+                      data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_left += inv_scale(5)
@@ -445,8 +440,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       }
       const is_free = extension.free_mini !== undefined &&
                       data.show_structure !== 'free_interval' &&
-                      data.show_structure !== 'free_value' &&
-                      !special_data_cast.free_null_link_visible
+                      data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
         offset_height_right += inv_scale(5)
@@ -833,12 +827,11 @@ export const LinkVisible: LinkVisibleFunctType=(
   const link_values = GetLinkValue(data,l.idLink)
   const is_free = link_values.extension?.free_mini !== undefined &&
                   data.show_structure !== 'free_interval' &&
-                  data.show_structure !== 'free_value' &&
-                  !special_data_cast.free_null_link_visible
-  if (special_data_cast.free_null_link_visible && link_values?.extension.free_mini!==undefined) {
-    return true
-  }
-  if (!is_free && TestLinkValue(data, data.nodes, l,GetLinkValue) === 0) {
+                  data.show_structure !== 'free_value'
+  if (TestLinkValue(data, data.nodes, l,GetLinkValue) === 0) {
+    if (is_free && special_data_cast.free_null_link_visible ) {
+      return true
+    }
     return false
   }
   return true
@@ -1546,7 +1539,7 @@ const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
         }
         if (data.nodes[link.idSource]  && data.nodes[link.idTarget]) {
           const val = GetLinkValue(data, link.idLink)
-          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined) {
+          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined && val.value == 0) {
             total_input +=1
             continue
           }
@@ -1573,7 +1566,7 @@ const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
         }
         if (data.nodes[link.idSource] && data.nodes[link.idTarget]) {
           const val = GetLinkValue(data, link.idLink)
-          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined) {
+          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined && val.value == 0) {
             total_input +=1
             continue
           }
