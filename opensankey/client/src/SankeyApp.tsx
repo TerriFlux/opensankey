@@ -771,8 +771,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 [<></>],
                 [<></>],
                 link_function,
-                ComponentUpdater,
-                node_function
+                ComponentUpdater
               ),
               [<></>],
               false, //TODO

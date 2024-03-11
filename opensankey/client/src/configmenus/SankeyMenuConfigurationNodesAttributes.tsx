@@ -53,7 +53,6 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   const { t } = applicationContext
   const { data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
-  const {GetLinkValue}=link_function
   const [forceUpdate,setForceUpdate]=useState(false)
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[ref_selected_style_node.current]]:multi_selected_nodes.current

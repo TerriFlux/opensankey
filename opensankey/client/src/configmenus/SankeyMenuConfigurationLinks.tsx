@@ -53,9 +53,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   additional_data_element:JSX.Element[],
   additional_link_appearence_items:JSX.Element[],
   link_function,
-  ComponentUpdater,
-  node_function
-) => {
+  ComponentUpdater
+  ) => {
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const [forceUpdate,setForceUpdate]=useState(false)
