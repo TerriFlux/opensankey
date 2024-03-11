@@ -7,6 +7,8 @@ import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { OpenSankeyDiagramSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
 import { LinkTooltipsContentFType, NodeTooltipsContentFType } from '../draw/types/SankeyTooltipTypes'
+import { DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType } from '../draw/types/SankeyDrawLinksTypes'
+import { DrawAllNodesFType, drawNodeShapeFType } from '../draw/types/SankeyDrawNodesTypes'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -456,7 +458,8 @@ export type MenuTypes = {
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,
   NodeTooltipsContent:NodeTooltipsContentFType,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes
 
   
 }
@@ -478,7 +481,18 @@ export type LinkFunctionTypes = {
   LinkStroke : LinkStrokeFType,
   LinkSabotColor:LinkColorFuncType,
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
-  LinkTooltipsContent: LinkTooltipsContentFType
+  LinkTooltipsContent: LinkTooltipsContentFType,
+  DrawAllLinks : DrawAllLinksFType,
+  drawAddLinks:drawAddLinksFType,
+  drawLinkShape:drawLinkShapeFType,
+}
+
+export type RedrawNodesFType=(node_to_update:SankeyNode[])=>void
+
+export type NodeFunctionTypes = {
+  DrawAllNodes : DrawAllNodesFType,
+  drawAddNodes : drawNodeShapeFType,
+  RedrawNodes:RedrawNodesFType
 }
 
 export type ComponentUpdaterType={

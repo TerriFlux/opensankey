@@ -90,20 +90,17 @@ export const EventNodeClick : EventNodeClickFType =(
         d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
       }
     }
-    if ( accordion_ref && accordion_ref.current) {
-      for ( const child in accordion_ref.current.children) {
 
-        if (accordion_ref.current.children[child].id === 'Nodes') {
-          (accordion_ref.current.children[0] as HTMLLabelElement).click()
-          // (accordion_ref.current.children[child] as HTMLLabelElement).click()
-        }
-      }
+    // Open element accordion if not already openend
+    if ( accordion_ref && accordion_ref.current && d3.select(accordion_ref.current).attr('aria-expanded')==='false' ) {
+      accordion_ref.current.click()
     }
-    if ( nodes_accordion_ref && nodes_accordion_ref.current && d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false') {
 
-      (nodes_accordion_ref.current.children[0] as HTMLLabelElement).click()
-      // (nodes_accordion_ref.current.children[1] as HTMLLabelElement).click()
+    // Open node accordion if not already openend
+    if ( nodes_accordion_ref && nodes_accordion_ref.current && d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false' ) {
+      nodes_accordion_ref.current.click()
     }
+    
     d3.select(' .opensankey #ggg_' + d.idNode + ' rect')
       .style('stroke-width', d => {
         const dd = (d as SankeyNode)
@@ -264,7 +261,8 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
   start_point,
   closeAllMenuContext,
   link_function,
-  ComponentUpdater
+  ComponentUpdater,
+  node_function
 ) => {
   // Special cast usefull for when the app is used in SankeySuiteManager
   const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
@@ -319,7 +317,8 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
             link_function,
             NodeTooltipsContent,
             ComponentUpdater,
-            dict_hook_ref_setter_show_dialog_components
+            dict_hook_ref_setter_show_dialog_components,
+            node_function
           )
         }
       }
@@ -429,7 +428,8 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   legend_clicked,
   link_function,
   NodeTooltipsContent,
-  ComponentUpdater
+  ComponentUpdater,
+  node_function
 ) => {
   const { data, set_data,display_links } = dict_variable_application_data
   const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = dict_variable_elements_selected
@@ -510,7 +510,6 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     d3.selectAll('.selection_zone').remove()
     multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
     multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-    // updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
     ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
     ref_set_update_menu_config_node_appearence.current(!ref_get_update_menu_config_node_appearence.current)
     ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
@@ -591,7 +590,8 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         accept_simple_click,
         link_function,
         NodeTooltipsContent,ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components
+        dict_hook_ref_setter_show_dialog_components,
+        node_function
       )
       drawAddLinks(
         contextMenu,
@@ -657,7 +657,8 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
         link_function,
         NodeTooltipsContent,
         ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components
+        dict_hook_ref_setter_show_dialog_components,
+        node_function
       )
       drawAddLinks(
         contextMenu,

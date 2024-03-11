@@ -57,7 +57,8 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   ComponentUpdater,
   contextMenu,
   alt_key_pressed,
-  accept_simple_click
+  accept_simple_click,
+  node_function
 
 ) => {
   // const [subnavitemactive, setsubnavitemactive] = useState('')
@@ -69,14 +70,13 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
 
   const {data}=dict_variable_application_data
   const {t}=applicationContext
-  const {links_accordion_ref, nodes_accordion_ref} = uiElementsRef
+  const {links_accordion_ref, nodes_accordion_ref,accordion_ref} = uiElementsRef
   const {multi_selected_nodes}=dict_variable_elements_selected
   // const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const show_menu_config_tag = (
     (data.accordeonToShow.includes('EN') ||
      data.accordeonToShow.includes('EF') ||
      data.accordeonToShow.includes('ED')))
-
   return [
     data.accordeonToShow.includes('MEP')?
       <AccordionItem>
@@ -105,7 +105,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
         //MENU ITEMS
       }
       <AccordionButton
-        
+        ref={accordion_ref as Ref<HTMLButtonElement>}
       >
         <Box
           as='span'
@@ -149,6 +149,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 accept_simple_click={accept_simple_click}
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
                 applicationContext={applicationContext}
+                node_function={node_function}
               />
             </AccordionPanel>
           </AccordionItem>
@@ -180,7 +181,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 alt_key_pressed={alt_key_pressed}
                 accept_simple_click={accept_simple_click}
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-
+                node_function={node_function}
               />
             </AccordionPanel>
           </AccordionItem>

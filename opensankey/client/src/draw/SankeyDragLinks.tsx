@@ -295,7 +295,6 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
     })
     .on('end',()=>{
       ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
-      // set_data({...data})
     })
 }
 

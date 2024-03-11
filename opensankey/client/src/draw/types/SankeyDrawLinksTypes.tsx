@@ -52,3 +52,21 @@ export type AddDrawLinksEventsFType = (
 
 ) => void
 
+export type drawAddLinksFType=  (contextMenu:contextMenuType,
+dict_variable_application_data:dict_variable_application_dataType,
+uiElementsRef:uiElementsRefType,
+dict_variable_elements_selected:dict_variable_elements_selectedType,
+applicationContext:applicationContextType,
+alt_key_pressed:MutableRefObject<boolean>,
+link_functions : LinkFunctionTypes,
+ComponentUpdater:ComponentUpdaterType,
+dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+link_to_redraw:SankeyLink[])=>void
+
+export type  drawLinkShapeFType  = (
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationContext:applicationContextType,
+  link_functions: LinkFunctionTypes,
+  link_to_redraw:SankeyLink[],
+  ComponentUpdater:ComponentUpdaterType)=>void

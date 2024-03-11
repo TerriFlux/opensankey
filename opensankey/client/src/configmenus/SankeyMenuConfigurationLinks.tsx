@@ -12,6 +12,7 @@ import {
 import {
   ComponentUpdaterType,
   LinkFunctionTypes,
+  NodeFunctionTypes,
   SankeyLink,
   SankeyNode,
   applicationContextType,
@@ -52,7 +53,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   additional_data_element:JSX.Element[],
   additional_link_appearence_items:JSX.Element[],
   link_function,
-  ComponentUpdater
+  ComponentUpdater,
+  node_function
 ) => {
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
@@ -106,6 +108,7 @@ type SankeyMenuConfigurationLinksTypes = {
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
+  node_function:NodeFunctionTypes
 
 }
 
@@ -120,7 +123,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     uiElementsRef,
     alt_key_pressed,
     accept_simple_click,
-    dict_hook_ref_setter_show_dialog_components
+    dict_hook_ref_setter_show_dialog_components,
+    node_function
   }
 ) => {
   const {t}=applicationContext
@@ -134,6 +138,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
   const {ref_set_update_menu_config_link,ref_get_update_menu_config_link}=ComponentUpdater 
+  const {drawLinkShape}=link_function
+  const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
 
@@ -256,9 +262,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     if (Object.keys(nodes).length < 2) {
       if (Object.keys(nodes).length == 0) {
-        AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+        AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
       }
-      AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+      AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
     }
     const link: SankeyLink = DefaultLink(data)
     // Méthode pour incrementer idNode
@@ -306,16 +312,25 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       const link = multi_selected_links.current[0]
       //Causait un problème d'acumulation de la valeur de des differents link sur des noeuds non associé
       const previous_node = data.nodes[link.idSource]
-      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(multi_selected_links.current[0].idLink), 1)
+      previous_node.outputLinksId.splice(previous_node.outputLinksId.indexOf(link.idLink), 1)
 
       const source_node = data.nodes[changeEvent.target.value]
       link.idSource = source_node.idNode
       if (link.idSource === link.idTarget) {
         AssignLinkValueToCorrectVar(link,'recycling',true,false)
       }
-      source_node.outputLinksId.push(multi_selected_links.current[0].idLink)
+      source_node.outputLinksId.push(link.idLink)
 
-      set_data({ ...data })
+      // Create a variable containing all links to update
+      let link_to_update=[]
+      link_to_update.push(link)
+      link_to_update=link_to_update.concat(previous_node.outputLinksId.map(lid=>data.links[lid]))
+      link_to_update=link_to_update.concat(previous_node.inputLinksId.map(lid=>data.links[lid]))
+      link_to_update=link_to_update.concat(source_node.outputLinksId.map(lid=>data.links[lid]))
+      link_to_update=link_to_update.concat(source_node.inputLinksId.map(lid=>data.links[lid]))
+
+      RedrawNodes([source_node,previous_node])
+      drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,link_to_update,ComponentUpdater)
     } else if(Object.keys(data.nodes).length>1){
       set_pre_idSource(changeEvent.target.value)
     }
