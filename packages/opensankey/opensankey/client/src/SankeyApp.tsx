@@ -22,6 +22,7 @@ import {
   dict_variable_application_dataType,
   dict_variable_elements_selectedType,
   LinkFunctionTypes,
+  NodeFunctionTypes,
   processFunctionsType,
   SankeyAppTypes,
   SankeyData,
@@ -85,9 +86,10 @@ import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigura
 import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfigurationNodesTags'
 import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 import { opensankey_theme } from './chakra/Theme'
-import { DrawAllLinks } from './draw/SankeyDrawLinks'
-import { DrawAllNodes } from './draw/SankeyDrawNodes'
+import { drawAddLinks, DrawAllLinks, drawLinkShape } from './draw/SankeyDrawLinks'
+import { drawAddNodes, DrawAllNodes, updateDrawNodeShape } from './draw/SankeyDrawNodes'
 import { package_for_drawLegend_FuncType } from './draw/types/SankeyDrawLegendTypes'
+import { RedrawNodesLabel } from './draw/SankeyDrawNodesLabel'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
@@ -331,8 +333,22 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     LinkStroke,
     LinkSabotColor,
     node_arrow_visible,
-    LinkTooltipsContent  
+    LinkTooltipsContent,
+    DrawAllLinks,
+    drawAddLinks,
+    drawLinkShape,
   }
+  const OpenSankeyRedrawNode=(nodes_to_update:SankeyNode[])=>{
+    updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
+    RedrawNodesLabel(dict_variable_application_data,{current:nodes_to_update},GetLinkValue,applicationContext.t)
+  }
+
+  const node_function:NodeFunctionTypes={
+    DrawAllNodes,
+    drawAddNodes,
+    RedrawNodes:OpenSankeyRedrawNode
+  }
+
   /*************************************************************************************************/
 
   /*******************************************************************************/
@@ -341,7 +357,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   // const package_for_DrawAllNodes:package_for_DrawAllNodes_Type=[contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components]
   /*******************************************************************************/
   const redrawAllNodes=()=>{
-    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
   }
   const redrawAllLinks=()=>{
     DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
@@ -369,7 +385,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     [],
     [],
     link_function,
-    ComponentUpdater
+    ComponentUpdater,
+    node_function
   )
 
   const sankey_menus = OpenSankeyMenus(
@@ -475,7 +492,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       contextMenu,
       e,dict_variable_application_data.data,dict_variable_elements_selected,
       dict_variable_application_data.set_data,closeAllMenu,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,
-      ComponentUpdater,dict_hook_ref_setter_show_dialog_components,applicationContext
+      ComponentUpdater,dict_hook_ref_setter_show_dialog_components,applicationContext,node_function
     )
   }
   document.onkeydown = formatKeyHandler
@@ -501,7 +518,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           start_point,
           contextMenu.closeAllMenuContext,
           link_function,
-          ComponentUpdater
+          ComponentUpdater,node_function
         )
       })
       svgSankey.on('mousemove',evt=>{
@@ -527,7 +544,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           start_point,
           legend_clicked,
           link_function,
-          NodeTooltipsContent,ComponentUpdater
+          NodeTooltipsContent,ComponentUpdater,
+          node_function
         )
       })
     },100)
@@ -591,7 +609,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     //   g_legend.call(drag_legend(data,set_data))
     // }
 
-    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
     DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
       link_function,
       ComponentUpdater,
@@ -753,7 +771,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 [<></>],
                 [<></>],
                 link_function,
-                ComponentUpdater
+                ComponentUpdater,
+                node_function
               ),
               [<></>],
               false, //TODO
@@ -761,7 +780,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               ComponentUpdater,
               contextMenu,
               ref_alt_key_pressed,
-              accept_simple_click
+              accept_simple_click,
+              node_function
             )}
             menus={sankey_menus}
             cardsTemplate={CardsTemplateBuilder(
@@ -822,6 +842,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             link_function={link_function}
             NodeTooltipsContent={NodeTooltipsContent}
             ComponentUpdater={ComponentUpdater}
+            node_function={node_function}
           />
         </>
         <ApplySaveJSONDialog

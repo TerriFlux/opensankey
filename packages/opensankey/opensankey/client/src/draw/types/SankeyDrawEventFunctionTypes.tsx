@@ -1,6 +1,6 @@
 
 import { MutableRefObject, Dispatch, SetStateAction } from 'react'
-import { dict_variable_application_dataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType } from '../../types/Types'
+import { dict_variable_application_dataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType, NodeFunctionTypes } from '../../types/Types'
 import * as d3 from 'd3'
 import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 
@@ -74,7 +74,8 @@ export type EventOnZoneMouseDownFuncType = (
   start_point:{current:number[]},
   closeAllMenuContext: () => void,
   link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes
 
 ) => void
 
@@ -100,7 +101,8 @@ export type EventOnZoneMouseUpFuncType = (
   legend_clicked:MutableRefObject<boolean>,
   link_function:LinkFunctionTypes,
   NodeTooltipsContent:NodeTooltipsContentFType,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes
 
 ) => void
 

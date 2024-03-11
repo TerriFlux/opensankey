@@ -1,4 +1,4 @@
-import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyLinkAttrLocal, LinkFunctionTypes, contextMenuType, uiElementsRefType, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType } from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyLinkAttrLocal, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
 import React, { MutableRefObject } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from '../configmenus/SankeyUtils'
@@ -9,7 +9,7 @@ import { EventLinkContextMenu } from './SankeyDrawEventFunction'
 import {DragLinkEvent} from './SankeyDragLinks'
 import {ValueSelectedParameter,LinkStrokeWidth} from './SankeyDrawFunction'
 import { DrawLinkStartSabot } from './SankeyDrawShapes'
-import { AddDrawLinksEventsFType, DrawAllLinksFType  } from './types/SankeyDrawLinksTypes'
+import { AddDrawLinksEventsFType, DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType  } from './types/SankeyDrawLinksTypes'
 import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
 
 declare const window: Window &
@@ -113,7 +113,7 @@ const eventLinkClick=(
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
 
 )=>{
-  const {multi_selected_links,ref_getter_mode_selection}=dict_variable_elements_selected
+  const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef}=dict_variable_elements_selected
   const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
@@ -144,48 +144,40 @@ const eventLinkClick=(
         )
       }
 
+    }
+    if((event.ctrlKey || event.metaKey)){
+      if ( !ref_getter_show_menu_config.current) {
+        ref_setter_show_menu_config.current(!ref_getter_show_menu_config.current)
       }
-      if((event.ctrlKey || event.metaKey)){
-        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
-          button_ref.current.click()
-        }
         
-        // Open element accordion if not already openend
-        if (
-          accordion_ref &&
-      accordion_ref.current &&
-      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
-        ) {
-          accordion_ref.current.click()
-        }
-
-        // Open link accordion if not already openend
-        if (
-          links_accordion_ref &&
-      links_accordion_ref.current &&
-      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
-        ) {
-          links_accordion_ref.current.click()
-        }
+      // Open element accordion if not already openend
+      if (accordion_ref && accordion_ref.current && d3.select(accordion_ref.current).attr('aria-expanded')==='false') {
+        accordion_ref.current.click()
       }
-      if(multi_selected_links.current.length>0){
-        let new_tags_selected=tags_selected
-        const link_data_ref=multi_selected_links.current[0].idLink
-        // Si le liens sélectionné représente un flux pour une donnée lorsque plusieurs sont représenté sur le diagramme (plusieurs datatags d'un même groupe sélectionné)
-        // alors on cherche quel étiquette de quel groupe il represente
-        // On prend pour référence pour la valeur le premier flux sélectionné
-        if(link_data_ref.includes('_')){
-          const index_grp_tag=link_data_ref.split('_')
-          // Supprime le première élément du tableau qui ne contient que l'id du flux
-          index_grp_tag.shift()
-          new_tags_selected={}
-          // On fabrique un tags_selected pour récupérer la bonne valeur pour ValueSelectedParameter
-          for(const i in index_grp_tag){
-            const key=Object.keys(data.dataTags)[Number(i)]
-            new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
-          }
-          //set_tags_selected(new_tags_selected)
-          displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
+
+      // Open link accordion if not already openend
+      if ( links_accordion_ref && links_accordion_ref.current && d3.select(links_accordion_ref.current).attr('aria-expanded')==='false' ) {
+        links_accordion_ref.current.click()
+      }
+    }
+    if(multi_selected_links.current.length>0){
+      let new_tags_selected=tags_selected
+      const link_data_ref=multi_selected_links.current[0].idLink
+      // Si le liens sélectionné représente un flux pour une donnée lorsque plusieurs sont représenté sur le diagramme (plusieurs datatags d'un même groupe sélectionné)
+      // alors on cherche quel étiquette de quel groupe il represente
+      // On prend pour référence pour la valeur le premier flux sélectionné
+      if(link_data_ref.includes('_')){
+        const index_grp_tag=link_data_ref.split('_')
+        // Supprime le première élément du tableau qui ne contient que l'id du flux
+        index_grp_tag.shift()
+        new_tags_selected={}
+        // On fabrique un tags_selected pour récupérer la bonne valeur pour ValueSelectedParameter
+        for(const i in index_grp_tag){
+          const key=Object.keys(data.dataTags)[Number(i)]
+          new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
+        }
+        //set_tags_selected(new_tags_selected)
+        displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
             ValueSelectedParameter(
               dict_variable_application_data,
               multi_selected_links,
@@ -376,17 +368,17 @@ export const DrawAllLinks : DrawAllLinksFType = (
   )
 }
 
-export const drawAddLinks = (
-  contextMenu:contextMenuType,
-  dict_variable_application_data:dict_variable_application_dataType,
-  uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
-  applicationContext:applicationContextType,
-  alt_key_pressed:MutableRefObject<boolean>,
-  link_functions : LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  link_to_redraw:SankeyLink[]
+export const drawAddLinks:drawAddLinksFType = (
+  contextMenu,
+  dict_variable_application_data,
+  uiElementsRef,
+  dict_variable_elements_selected,
+  applicationContext,
+  alt_key_pressed,
+  link_functions,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components,
+  link_to_redraw
 
 ) => {
   // const default_handle_size = 10
@@ -467,13 +459,13 @@ export const drawAddLinks = (
   )
 }
 
-export const drawLinkShape  = (
-  dict_variable_application_data:dict_variable_application_dataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
-  applicationContext:applicationContextType,
-  link_functions: LinkFunctionTypes,
-  link_to_redraw:SankeyLink[],
-  ComponentUpdater:ComponentUpdaterType
+export const drawLinkShape:drawLinkShapeFType  = (
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  applicationContext,
+  link_functions,
+  link_to_redraw,
+  ComponentUpdater
 
 ) => {
   const { GetLinkValue,LinkStroke,node_arrow_visible,LinkText,DrawArrows,LinkSabotColor } = link_functions
