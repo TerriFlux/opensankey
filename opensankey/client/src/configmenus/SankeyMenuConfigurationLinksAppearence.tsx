@@ -8,7 +8,6 @@ import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,SmoothClasses,TooltipValueSurcharge, StyleTitleSubSectionMenuEditionElements, IsAllLinkNotLocalAttrSameValue} from './SankeyUtils'
 import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
-import { drawLinkShape } from '../draw/SankeyDrawLinks'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
   width="16"
@@ -74,12 +73,13 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   menu_for_modal=false
 )=>{
   const {t}=applicationContext
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const {ref_selected_style_link,multi_selected_links}=dict_variable_elements_selected
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[ref_selected_style_link.current]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
   const [display_link_opacity, set_display_link_opacity] = useState('0')
+  const {drawLinkShape}=link_function
   dict_variable_elements_selected.ref_display_link_opacity.current.push(set_display_link_opacity)
   const {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
 
@@ -593,7 +593,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(
                   d => AssignLinkValueToCorrectVar(d,'opacity',+evt.target.value,menu_for_style)
                 )
-                set_data({...data})
+                drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
               }}
             />
             <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>
@@ -691,7 +692,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 if(!isNaN(value)){
                   const val=isNaN(value) || value<=0?5:Math.round(value)
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'scientific_precision',val,menu_for_style))
-                  set_data({...data})
+                  drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
                 }
               }}/>
           </OverlayTrigger>
@@ -780,7 +781,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   const value=+evt.target.value
                   const val=isNaN(value)
                   Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'nb_digit',value,menu_for_style))
-                  set_data({...data})
+                  drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
                 }}/>
             </OverlayTrigger>
           </Col>
@@ -916,7 +917,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
-                set_data({...data})
+                drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
               }}>
             {data.display_style.font_family.map((d) => {
               return <option

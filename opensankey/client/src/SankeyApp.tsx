@@ -673,7 +673,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             dict_variable_elements_selected,
             applicationContext,
             [<></>],
-            true
+            true,
+            ComponentUpdater,
+            node_function,
+            link_function
           ),
           contextMenu.pointer_pos,
           applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
@@ -771,7 +774,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 [<></>],
                 [<></>],
                 link_function,
-                ComponentUpdater
+                ComponentUpdater,
+                node_function
               ),
               [<></>],
               false, //TODO
