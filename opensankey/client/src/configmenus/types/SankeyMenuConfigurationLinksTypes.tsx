@@ -8,6 +8,7 @@ export type MenuConfigurationLinksFType = (
   additional_data_element:JSX.Element[],
   additional_link_appearence_items:JSX.Element[],
   link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes
   ) => { [s: string]: JSX.Element; }
 

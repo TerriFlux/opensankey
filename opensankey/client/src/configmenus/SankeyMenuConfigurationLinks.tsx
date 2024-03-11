@@ -29,7 +29,8 @@ import {
   ReturnValueLink,
   AssignLinkValueToCorrectVar,
   ReturnCorrectLinkAttributeValue,
-  AddNewNode
+  AddNewNode,
+  windowSankey
 } from './SankeyUtils'
 
 import { MultiSelect } from 'react-multi-select-component'
@@ -53,8 +54,9 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   additional_data_element:JSX.Element[],
   additional_link_appearence_items:JSX.Element[],
   link_function,
-  ComponentUpdater
-  ) => {
+  ComponentUpdater,
+  node_function
+) => {
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const [forceUpdate,setForceUpdate]=useState(false)
@@ -69,7 +71,9 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       dict_variable_elements_selected,
       applicationContext,
       additional_data_element,
-      false
+      false,ComponentUpdater,
+      node_function,
+      link_function
     ),
     'appearence': MenuConfigurationLinksAppearence(
       dict_variable_application_data,
@@ -367,7 +371,19 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
       }
       target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
-      set_data({ ...data })
+      
+      
+
+      // Create a variable containing all links to update
+      let link_to_update=[]
+      link_to_update.push(link)
+      link_to_update=link_to_update.concat(previous_node.outputLinksId.map(lid=>data.links[lid]))
+      link_to_update=link_to_update.concat(previous_node.inputLinksId.map(lid=>data.links[lid]))
+      link_to_update=link_to_update.concat(target_node.outputLinksId.map(lid=>data.links[lid]))
+      link_to_update=link_to_update.concat(target_node.inputLinksId.map(lid=>data.links[lid]))
+
+      RedrawNodes([target_node,previous_node])
+      drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,link_to_update,ComponentUpdater)
     }else if(Object.keys(data.nodes).length>1){
       set_pre_idTarget(changeEvent.target.value)
     }
@@ -390,7 +406,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           onClick={
             () => {
               add_new_link()
-              set_data({ ...data })
+              link_function.DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
             }}>
           <FaPlus/>
         </Button>
