@@ -38,7 +38,7 @@ import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSq
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import {LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType} from './types/SankeyMenuTopTypes'
+import {LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, SankeyMenuFileExportFType} from './types/SankeyMenuTopTypes'
 import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue } from '../configmenus/SankeyUtils'
 import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
@@ -46,6 +46,8 @@ import { UploadExcelImpl } from '../dialogs/SankeyPersistence'
 import { DownloadExamples } from '../dialogs/SankeyPersistence'
 import { RepositionneSidebar } from '../draw/SankeyDrawFunction'
 import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
+import { faFileExport} from '@fortawesome/free-solid-svg-icons'
+import FileSaver from 'file-saver'
 import { AddDrawNodesEvent } from '../draw/SankeyDrawNodes'
 
 declare const window: Window &
@@ -174,6 +176,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   set_data,
   external_edition_item,
   external_file_item,
+  external_file_export_item,
   externale_save_item,
   convert_data,
   setDiagram
@@ -346,6 +349,25 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
             {externale_save_item}
           </Dropdown.Menu>
         </Dropdown></OverlayTrigger>,
+
+      <OverlayTrigger
+        key={'export'}
+        placement={'left'}
+        rootClose
+        overlay={<Tooltip id={'tooltip-export'}>{t('Menu.tooltips.export')} </Tooltip>}>
+        <Dropdown className='buttonSubNav'drop='end'  id='exporter' >
+          <Dropdown.Toggle size='sm' variant='light'>
+            <><Col>
+              <FontAwesomeIcon icon={faFileExport} /></Col>
+            <Col className='textIcon'>{t('Menu.exporter')}</Col>
+            </>
+          </Dropdown.Toggle>
+          <Dropdown.Menu style={{minWidth:'inherit'}}>
+            <Dropdown.Item onClick={()=>clickSavePDF(data)} >PDF</Dropdown.Item>
+            {external_file_export_item}
+          </Dropdown.Menu>
+        </Dropdown></OverlayTrigger>,
+
       <>{external_file_item}</>,
       <OverlayTrigger
         key={'file_setting'}
@@ -460,6 +482,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     elementToDispose,
     apply_transformation_additional_elements,
     DiagramSelector,
+    callback,
     ref_alt_key_pressed,
     accept_simple_click,
     link_function,
@@ -791,6 +814,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         UploadExcelImpl={UploadExcelImpl}
         url_prefix={applicationContext.url_prefix}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+        Reinitialization={Reinitialization}
       />
 
       <SankeyLoad
@@ -805,6 +829,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         processFunctions={processFunctions}
         convert_data={convert_data}
+        callback={callback}
       />
 
       {
@@ -1019,4 +1044,117 @@ export const LastCheckpointTime : LastCheckpointTimeFType =(
   }
   return has_save?<Form.Label style={{marginTop:'auto',marginBottom:'auto',fontSize:'10px'}}>{t('Menu.last_save')+' : ' + l_s_c}</Form.Label>:<></>
 
+}
+
+
+
+export const SankeyMenuFileExport : SankeyMenuFileExportFType =(t,data,additonal_export_item)=>{
+  return <OverlayTrigger
+    key={'export'}
+    placement={'left'}
+    rootClose
+    overlay={<Tooltip id={'tooltip-export'}>{t('Menu.tooltips.export')} </Tooltip>}>
+    <Dropdown className='buttonSubNav'drop='end'  id='exporter' >
+      <Dropdown.Toggle size='sm' variant='light'>
+        <><Col>
+          <Badge pill bg="info" style={{position:'absolute',top:'2.2rem',fontSize:'0.4rem'}}>Dev</Badge>
+          <FontAwesomeIcon icon={faFileExport} /></Col>
+        <Col className='textIcon'>{t('Menu.exporter')}</Col>
+        </>
+      </Dropdown.Toggle>
+      <Dropdown.Menu style={{minWidth:'inherit'}}>
+        <Dropdown.Item onClick={()=>clickSavePDF(data)} >PDF</Dropdown.Item>
+        {additonal_export_item}
+      </Dropdown.Menu>
+    </Dropdown></OverlayTrigger>
+}
+
+
+const clickSavePDF = (data:SankeyData) => {
+  const svg = pre_process_export_svg()
+  const html = ((svg.attr('title', 'test2')
+    .attr('version', 1.1)
+    .attr('xmlns', 'http://www.w3.org/2000/svg')
+    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+
+  const blob = new Blob([html], { type: 'image/svg+xml' })
+  const form_data = new FormData()
+  form_data.append('html', blob)
+  form_data.append('width', data.width.toString())
+  form_data.append('height', data.height.toString())
+
+  post_process_export_svg()
+
+  const path = window.location.href
+  let url = path + '/opensankey/sankey/save_pdf'
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/pdf' })
+    FileSaver.saveAs(newBlob, 'sankey_diagram.pdf')
+  }
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = path + '/opensankey/sankey/clean_pdf'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
+
+
+
+
+
+export const pre_process_export_svg =()=>{
+  // Resize the svg scale to be the scale by default
+  const svg =d3.select(' .opensankey#svg-container svg')
+  // svg.attr('transform','scale(1)')
+  // svg.select('#g_legend').attr('transform','scale(1)')
+
+  // Get size of g elements that contain visual content
+  // const g_nodes=document.getElementById('g_nodes')
+  // const size_nodes = (g_nodes) ? [(g_nodes.getBoundingClientRect().width+g_nodes.getBoundingClientRect().x),(g_nodes.getBoundingClientRect().height+g_nodes.getBoundingClientRect().y)] : [0,0]
+
+  // const g_links=document.getElementById('g_links')
+  // const size_links = (g_links) ? [(g_links.getBoundingClientRect().width+g_links.getBoundingClientRect().x),(g_links.getBoundingClientRect().height+g_links.getBoundingClientRect().y)] : [0,0]
+
+  // const g_label=document.getElementById('g_label')
+  // const size_label = (g_label) ? [(g_label.getBoundingClientRect().width+g_label.getBoundingClientRect().x),(g_label.getBoundingClientRect().height+g_label.getBoundingClientRect().y)] : [0,0]
+
+  // Search the element that go to the most bottom right of the sankey
+  // const export_dim_unscaled=[Math.max(size_nodes[0],size_links[0],size_label[0]),Math.max(size_nodes[1],size_links[1],size_label[1])]
+  // Resize the svg width and height with the minimum value it require to display the elements
+  // svg.style('width',export_dim_unscaled[0]+'px')
+  // svg.style('height',export_dim_unscaled[1]+'px')
+
+  // Hidde non-essential visual elements
+  svg.selectAll('.sankey-tooltip').remove()
+  svg.selectAll('text[visibility=hidden]').remove()
+  svg.style('border','0px')
+  svg.style('background-color','#fff')
+  svg.select('#grid').style('opacity','0')
+  svg.selectAll('.box_width_threshold').remove()
+  d3.selectAll('.gg_nodes .node_shape').style('stroke-width',null)
+  d3.selectAll('.gg_nodes .node_shape').style('stroke',null)
+  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer').attr('stroke-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0').attr('fill-opacity', '0')
+  d3.selectAll('.opensankey .gg_label rect').attr('stroke-width','1')
+  d3.selectAll('.opensankey .fo_input_label').remove()
+  return svg
+}
+
+export const post_process_export_svg=()=>{
+  d3.select(' .opensankey#svg-container svg').style('background-color','inherit')
+  d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity','1')
+  d3.select(' .opensankey#svg-container svg').style('border','2px')
 }

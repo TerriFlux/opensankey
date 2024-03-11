@@ -1286,13 +1286,15 @@ export const convert_links:convert_linksFuncType = (
       label_visible:true,
       label_font_size:0,
       text_color:'',
+
       to_precision:true,
       scientific_precision:0,
+      custom_digit:true,
+      nb_digit:0,
+
       font_family: '',
       label_unit_visible:true,
-      label_unit:'',
-      custom_digit:true,
-      nb_digit:0
+      label_unit:''
     }
 
     // Assign missing variable
@@ -1527,85 +1529,87 @@ export const convert_data:ConvertDataFuncType = (
 
   if(data.linkZIndex===undefined || (data.linkZIndex.length!=Object.keys(data.links).length)){
     data.linkZIndex=Object.values(data.links).map(l=>l.idLink)
-    if((data as SankeyData & layout_type).layout){
-      data.linkZIndex=Object.values((data as SankeyData & layout_type).layout.links).map(l=>l.idLink)
-    }
+    // if((data as SankeyData & layout_type).layout){
+    //   data.linkZIndex=Object.values((data as SankeyData & layout_type).layout.links).map(l=>l.idLink)
+    // }
   }
 
-  const tmp1 : SankeyLinkStyle = {
-    idLink:'',
-    name:'',
+  // const tmp1 : SankeyLinkStyle = {
+  //   idLink:'',
+  //   name:'',
   
-    // Geometry/appearence
-    orientation: '',
-    arrow: true,
-    color: '',
-    opacity: 0,
-    left_horiz_shift: 0,
-    right_horiz_shift: 0,
-    vert_shift: 0,
-    curvature: 0,
-    curved: true,
-    recycling: true,
-    arrow_size:0,
-    dashed: true,
-    // Label
-    label_position: '',
-    orthogonal_label_position: '',
-    label_on_path: true,
-    label_visible: true,
-    label_font_size: 0,
-    text_color: '',
-    to_precision:true,
-    scientific_precision:0,
-    font_family: '',
-    label_unit_visible:true,
-    label_unit:'',
-    custom_digit:true,
-    nb_digit:0,
-  }
-  const tmp2 : SankeyNodeStyle = {
-    idNode: '',
-    name: '',
+  //   // Geometry/appearence
+  //   orientation: '',
+  //   arrow: true,
+  //   color: '',
+  //   opacity: 0,
+  //   left_horiz_shift: 0,
+  //   right_horiz_shift: 0,
+  //   vert_shift: 0,
+  //   curvature: 0,
+  //   curved: true,
+  //   recycling: true,
+  //   arrow_size:0,
+  //   dashed: true,
+  //   // Label
+  //   label_position: '',
+  //   orthogonal_label_position: '',
+  //   label_on_path: true,
+  //   label_visible: true,
+  //   label_font_size: 0,
+  //   text_color: '',
+
+  //   to_precision:true,
+  //   scientific_precision:0,
+  //   custom_digit:true,
+  //   nb_digit:0,
+
+  //   font_family: '',
+  //   label_unit_visible:true,
+  //   label_unit:''
+  // }
+  // const tmp2 : SankeyNodeStyle = {
+  //   idNode: '',
+  //   name: '',
   
-    // Parameter of node shape
-    shape_visible: true,
-    label_visible: true,
-    node_width: 0,
-    node_height: 0,
-    color: '',
-    shape: 'ellipse',
-    node_arrow_angle_factor:0,
-    node_arrow_angle_direction:'',
-    colorSustainable: true,
+  //   // Parameter of node shape
+  //   shape_visible: true,
+  //   label_visible: true,
+  //   node_width: 0,
+  //   node_height: 0,
+  //   color: '',
+  //   shape: 'ellipse',
+  //   node_arrow_angle_factor:0,
+  //   node_arrow_angle_direction:'',
+  //   colorSustainable: true,
   
-    // Parameter of node label
-    font_family: '',
-    font_size: 0,
-    uppercase: true,
-    bold: true,
-    italic: true,
-    label_box_width: 0,
-    label_color: true,
-    label_vert: '',
-    label_horiz: '',
-    label_background:true,
+  //   // Parameter of node label
+  //   font_family: '',
+  //   font_size: 0,
+  //   uppercase: true,
+  //   bold: true,
+  //   italic: true,
+  //   label_box_width: 0,
+  //   label_color: true,
+  //   label_vert: '',
+  //   label_horiz: '',
+  //   label_background:true,
   
-    // Parameter of node value label
-    show_value: true,
-    label_vert_valeur: '',
-    label_horiz_valeur: '',
-    value_font_size: 0,
-  }
+  //   // Parameter of node value label
+  //   show_value: true,
+  //   label_vert_valeur: '',
+  //   label_horiz_valeur: '',
+  //   value_font_size: 0,
+  // }
 
   // Convert style of node and link
   // Previously tehy were object identical to SankeyNode or SankeyLink, now they are like local attribute  
-  if(Object.keys(data_to_convert.style_link['default'])!== Object.keys(tmp1) ){
-    data.style_link['default'] = DefaultLinkStyle()
-  }
-  if(Object.keys(data_to_convert.style_node['default'])!== Object.keys(tmp2) ){
-    data.style_node['default'] = DefaultNodeStyle()
-  }
+  // if(Object.keys(data_to_convert.style_link['default'])!== Object.keys(tmp1) ){
+  //   data.style_link['default'] = DefaultLinkStyle()
+  // }
+  // if(Object.keys(data_to_convert.style_node['default'])!== Object.keys(tmp2) ){
+  //   data.style_node['default'] = DefaultNodeStyle()
+  // }
 
   if(!data.accordeonToShow.includes('EN') && Object.keys(data.nodeTags).length>0){
     data.accordeonToShow.push('EN')

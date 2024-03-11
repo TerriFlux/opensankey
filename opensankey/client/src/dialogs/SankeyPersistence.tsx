@@ -1,7 +1,7 @@
 import React,{ useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 import Spinner  from 'react-bootstrap/Spinner'
-import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType, SankeyData } from '../types/Types'
+import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType, SankeyData, callbackFuncType } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
 import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, DownloadExempleExcelFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
@@ -20,7 +20,8 @@ interface SankeyLoadProdTypes {
   successAction: () => void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   processFunctions:processFunctionsType,
-  convert_data:ConvertDataFuncType
+  convert_data:ConvertDataFuncType,
+  callback:callbackFuncType
 }
 
 const SankeyLoad = ({
@@ -30,7 +31,8 @@ const SankeyLoad = ({
   successAction,
   processFunctions,
   dict_hook_ref_setter_show_dialog_components,
-  convert_data
+  convert_data,
+  callback
 } : SankeyLoadProdTypes) => {
   const { t,url_prefix } = applicationContext
   const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults}=processFunctions
@@ -81,7 +83,7 @@ const SankeyLoad = ({
             text,
             dict_variable_application_data.set_data,
             applicationDraw.updateLayout,
-            ()=>null,
+            callback,
             applicationDraw.GetSankeyMinWidthAndHeight,
             convert_data,
             dict_variable_application_data.get_default_data

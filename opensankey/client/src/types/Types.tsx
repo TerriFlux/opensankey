@@ -451,6 +451,7 @@ export type MenuTypes = {
   additional_nav_item:JSX.Element[],
   example_menu: JSX.Element,
   formations_menu: object,
+  callback:callbackFuncType,
   ref_alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
   link_function:LinkFunctionTypes,

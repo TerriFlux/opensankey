@@ -382,6 +382,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     [],
     [],
     [],
+    [],
     //dict_variable_elements_selected.set_tags_selected,
     convert_data,
     setDiagram,
@@ -815,6 +816,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             elementToDispose={elementToDispose}
             apply_transformation_additional_elements={[]}
             DiagramSelector={OpenSankeyDiagramSelector}
+            callback={()=>null}
             ref_alt_key_pressed={ref_alt_key_pressed}
             accept_simple_click={accept_simple_click}
             link_function={link_function}
