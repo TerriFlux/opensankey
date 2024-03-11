@@ -144,42 +144,48 @@ const eventLinkClick=(
         )
       }
 
-    }
-    if((event.ctrlKey || event.metaKey)){
-      if(ref_getter_show_menu_config.current===false){
-        ref_setter_show_menu_config.current(true)
       }
-      if ( accordion_ref && accordion_ref.current) {
-        for ( const child in accordion_ref.current.children) {
-          if (accordion_ref.current.children[child].id === 'Flux') {
-            (accordion_ref.current.children[0] as HTMLLabelElement).click();
-            (accordion_ref.current.children[child] as HTMLLabelElement).click()
+      if((event.ctrlKey || event.metaKey)){
+        if ( button_ref && button_ref.current && accordion_ref && accordion_ref.current==null) {
+          button_ref.current.click()
+        }
+        
+        // Open element accordion if not already openend
+        if (
+          accordion_ref &&
+      accordion_ref.current &&
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          accordion_ref.current.click()
+        }
+
+        // Open link accordion if not already openend
+        if (
+          links_accordion_ref &&
+      links_accordion_ref.current &&
+      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+        ) {
+          links_accordion_ref.current.click()
+        }
+      }
+      if(multi_selected_links.current.length>0){
+        let new_tags_selected=tags_selected
+        const link_data_ref=multi_selected_links.current[0].idLink
+        // Si le liens sélectionné représente un flux pour une donnée lorsque plusieurs sont représenté sur le diagramme (plusieurs datatags d'un même groupe sélectionné)
+        // alors on cherche quel étiquette de quel groupe il represente
+        // On prend pour référence pour la valeur le premier flux sélectionné
+        if(link_data_ref.includes('_')){
+          const index_grp_tag=link_data_ref.split('_')
+          // Supprime le première élément du tableau qui ne contient que l'id du flux
+          index_grp_tag.shift()
+          new_tags_selected={}
+          // On fabrique un tags_selected pour récupérer la bonne valeur pour ValueSelectedParameter
+          for(const i in index_grp_tag){
+            const key=Object.keys(data.dataTags)[Number(i)]
+            new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
           }
-        }
-      }
-      if ( links_accordion_ref && links_accordion_ref.current && d3.select(links_accordion_ref.current).attr('aria-expanded')==='false' ) {
-        (links_accordion_ref.current.children[0] as HTMLLabelElement).click()
-        // (links_accordion_ref.current.children[1] as HTMLLabelElement).click()
-      }
-    }
-    if(multi_selected_links.current.length>0){
-      let new_tags_selected=tags_selected
-      const link_data_ref=multi_selected_links.current[0].idLink
-      // Si le liens sélectionné représente un flux pour une donnée lorsque plusieurs sont représenté sur le diagramme (plusieurs datatags d'un même groupe sélectionné)
-      // alors on cherche quel étiquette de quel groupe il represente
-      // On prend pour référence pour la valeur le premier flux sélectionné
-      if(link_data_ref.includes('_')){
-        const index_grp_tag=link_data_ref.split('_')
-        // Supprime le première élément du tableau qui ne contient que l'id du flux
-        index_grp_tag.shift()
-        new_tags_selected={}
-        // On fabrique un tags_selected pour récupérer la bonne valeur pour ValueSelectedParameter
-        for(const i in index_grp_tag){
-          const key=Object.keys(data.dataTags)[Number(i)]
-          new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
-        }
-        //set_tags_selected(new_tags_selected)
-        displayedInputLinkValueRef.current.forEach(setter=>setter(
+          //set_tags_selected(new_tags_selected)
+          displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
             ValueSelectedParameter(
               dict_variable_application_data,
               multi_selected_links,
