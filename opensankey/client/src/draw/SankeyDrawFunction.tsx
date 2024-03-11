@@ -975,7 +975,6 @@ const DrawCurve = (
     return ''
   }
   const link_value = TestLinkValue(data, display_nodes, link,GetLinkValue)
-  const val=GetLinkValue(data,link.idLink)
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   const curved=ReturnValueLink(data,link,'curved') as boolean
   const ori=ReturnValueLink(data,link,'orientation')
