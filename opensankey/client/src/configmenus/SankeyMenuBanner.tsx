@@ -449,11 +449,12 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
 
   // ===================Create hooks used in this component========================
 
-  const target_link_threshold=useRef(null)
-  const target_detail_level=useRef(null)
-  const node_tag_filter=useRef(null)
-  const link_tag_filter=useRef(null)
-  const data_tag_filter=useRef(null)
+  const ref_btn_target_link_threshold=useRef(null)
+  const ref_btn_target_detail_level=useRef(null)
+  const ref_btn_node_tag_filter=useRef(null)
+  const ref_btn_link_tag_filter=useRef(null)
+  const ref_btn_data_tag_filter=useRef(null)
+  const ref_btn_data_type=useRef(null)
 
   const [s_show_node_tag_filter,sShowNodeTagFilter]=useState(false)
   const [s_show_link_tag_filter,sShowLinkTagFilter]=useState(false)
@@ -801,14 +802,14 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       placement={'left'}
       rootClose
       overlay={<Tooltip id={'tooltip-nodes-level'}>{t('Banner.hlp_1_txt_2')} </Tooltip>}>
-      <Button ref={target_detail_level} variant='warning' id='button-details-level' onClick={()=>{sShowDetailLevel(!s_show_detail_level)}} >
+      <Button ref={ref_btn_target_detail_level} variant='warning' id='button-details-level' onClick={()=>{sShowDetailLevel(!s_show_detail_level)}} >
         <Col><FontAwesomeIcon icon={faFolderTree} /></Col>
       </Button>
     </OverlayTrigger>
     <Overlay
       key={'popover-nodes-level'}
       placement={'left'}
-      target={target_detail_level}
+      target={ref_btn_target_detail_level}
       rootClose
       show={s_show_detail_level}
       onHide={()=>{sShowDetailLevel(false)}}
@@ -824,7 +825,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     delay={500}
     overlay={<Tooltip id={'tooltip-link-filter2'}>{t('Banner.hlp_1_txt_8')} </Tooltip>}
   >
-    <Button ref={target_link_threshold} variant='danger' id='button-filter-link'
+    <Button ref={ref_btn_target_link_threshold} variant='danger' id='button-filter-link'
       onClick={()=>{
         sShowLinkThreshold(!s_show_link_threshold)
       }}
@@ -836,7 +837,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   <Overlay
     key={'overlay-popover-link-filter'}
     placement={'left'}
-    target={target_link_threshold}
+    target={ref_btn_target_link_threshold}
     rootClose
     show={s_show_link_threshold}
     onHide={()=>{sShowLinkThreshold(false)}}
@@ -851,6 +852,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     rootClose
     overlay={<Tooltip id={'tooltip-datatype'}>{t('Banner.sdr')} </Tooltip>}>
     <Button variant='success'
+      ref={ref_btn_data_type}
       onClick={()=>{
         sShowDataType(!s_show_data_type)
       }}
@@ -863,7 +865,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   <Overlay
     key={'overlay-popover-data-type'}
     placement={'left'}
-    target={target_link_threshold}
+    target={ref_btn_data_type}
     rootClose
     show={s_show_data_type}
     onHide={()=>{sShowDataType(false)}}
@@ -892,7 +894,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       overlay={<Tooltip id={'tooltip-node-tag-filter'}>{t('Banner.hlp_node_tag_filter')} </Tooltip>}
       rootClose
     >
-      <Button ref={node_tag_filter} size='sm' variant='info'
+      <Button ref={ref_btn_node_tag_filter} size='sm' variant='info'
         onClick={()=>{
           sShowNodeTagFilter(!s_show_node_tag_filter)
         }}
@@ -904,7 +906,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     <Overlay
       key={'overlay-popover-node-tag-filter'}
       placement={'left'}
-      target={target_link_threshold}
+      target={ref_btn_node_tag_filter}
       rootClose
       show={s_show_node_tag_filter}
       onHide={()=>{sShowNodeTagFilter(false)}}
@@ -923,7 +925,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       rootClose
       overlay={<Tooltip id={'tooltip-link-tag-filter'}>{t('Banner.hlp_link_tag_filter')} </Tooltip>}>
 
-      <Button ref={link_tag_filter} size='sm' variant='info'
+      <Button ref={ref_btn_link_tag_filter} size='sm' variant='info'
         onClick={()=>{
           sShowLinkTagFilter(!s_show_link_tag_filter)
         }}
@@ -934,7 +936,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     <Overlay
       key={'popover-link-tag-filter'}
       placement={'left'}
-      target={link_tag_filter}
+      target={ref_btn_link_tag_filter}
       rootClose
       show={s_show_link_tag_filter}
       onHide={()=>{sShowLinkTagFilter(false)}}
@@ -950,7 +952,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       placement={'left'}
       rootClose
       overlay={<Tooltip id={'tooltip-data-tag-filter'}>{t('Banner.hlp_data_tag_filter')} </Tooltip>}>
-      <Button ref={data_tag_filter} size='sm' style={{color:'#fff',background:'#B13F06',borderColor:'#B13F06'}}
+      <Button ref={ref_btn_data_tag_filter} size='sm' style={{color:'#fff',background:'#B13F06',borderColor:'#B13F06'}}
         onClick={()=>{
           sShowDataTagFilter(!s_show_data_tag_filter)
         }}
@@ -961,7 +963,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     <Overlay
       key={'popover-data-tag-filter'}
       placement={'left'}
-      target={data_tag_filter}
+      target={ref_btn_data_tag_filter}
       rootClose
       show={s_show_data_tag_filter}
       onHide={()=>{sShowDataTagFilter(false)}}
