@@ -1,9 +1,10 @@
 
-import React, { ChangeEvent, useRef } from 'react'
-import { OverlayTrigger, Tooltip, Form} from 'react-bootstrap'
+import React, { ChangeEvent, useRef, useState } from 'react'
+import { OverlayTrigger, Tooltip, Form, Modal, InputGroup, Dropdown} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FaEye, FaEyeSlash, FaFileImport} from 'react-icons/fa'
 import * as d3 from 'd3'
+import FileSaver from 'file-saver'
 
 import {
   Box,
@@ -24,12 +25,15 @@ import {
   DragLegendPlusFType,
   ImportImageAsSvgBgFType,
   IsAllZdtAttrSameValueFType,
+  Modale_resolution_pngFType,
   OSPIsAllNodeNotLocalAttrSameValueFType,
   PlusAssignLinkValueToCorrectVarFType,
+  PlusItemExportFType,
   PlusLinkSabotColorFType,
   PlusReturnValueLinkFType,
   SetSvgBgFType,
   ValueOf,
+  clickSaveSVGFType,
 } from '../types/SankeyPlusUtilsTypes'
 import { OpposingDragElementsPlus } from './SankeyPlusNodes'
 import {
@@ -43,6 +47,7 @@ import {
 
 import { SankeyLinkAttrLocal, SankeyLinkStyle } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+import {pre_process_export_svg,post_process_export_svg} from 'open-sankey/dist/topmenus/SankeyMenuTop'
 
 
 export const DefaultSankeyPlusStyleLink : DefaultSankeyPlusStyleLinkFType = () => {
@@ -226,4 +231,160 @@ export const PlusLinkSabotColor : PlusLinkSabotColorFType = (
   GetLinkValue:GetLinkValueFuncType
 ) => {
   return PlusReturnValueLink(data,l,'gradient')===true ? NodeColor(data.nodes[l.idSource],data) : LinkColor(l,data,GetLinkValue)
+}
+
+export const Modale_resolution_png : Modale_resolution_pngFType =(
+  t:TFunction,
+  dict_hook_ref_setter_show_dialog_components
+)=>{
+  const [h,set_h]=useState<string>()
+  const [v,set_v]=useState<string>()
+  const show_dialog_resolution=useState(false)
+  const valid_input= (h===undefined && v===undefined) ||  (v!==undefined && h!==undefined && !isNaN(+v) && !isNaN(+h))
+
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current=show_dialog_resolution[1]
+
+  return <Modal size='sm' id='modale_choose_resolution_png' show={show_dialog_resolution[0]} onHide={()=>show_dialog_resolution[1](false)}>
+    <Modal.Header closeButton>
+      {t('Menu.setResolutionPNG')}
+    </Modal.Header>
+    <Modal.Body>
+      <InputGroup>
+        <InputGroup.Text>{t('Menu.larg')}</InputGroup.Text>
+        <Form.Control type='number' value={h}
+          step={1}
+          onChange={(evt)=>{
+            if(evt.target.value===undefined || !isNaN(+evt.target.value)){
+              set_h(evt.target.value)
+            }
+          }}/>
+      </InputGroup>
+      <InputGroup>
+        <InputGroup.Text>{t('Menu.haut')}</InputGroup.Text>
+        <Form.Control type='number' value={v}
+          step={1}
+          onChange={(evt)=>{
+            if(evt.target.value===undefined || !isNaN(+evt.target.value)){
+              set_v(evt.target.value)
+            }
+          }}/>
+      </InputGroup>
+    </Modal.Body>
+    <Modal.Footer><Button variant='primary' disabled={!valid_input} onClick={()=>clickSavePNG(h,v)}>Save</Button></Modal.Footer>
+  </Modal>
+}
+
+const clickSavePNG = (h:string|undefined,v:string|undefined) => {
+  const svg = pre_process_export_svg()
+  const html = ((svg.attr('title', 'test2')
+    .attr('version', 1.1)
+    .attr('xmlns', 'http://www.w3.org/2000/svg')
+    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+
+  const blob = new Blob([html], { type: 'image/svg+xml' })
+  const form_data = new FormData()
+  form_data.append('html', blob)
+  let size_to_send=''
+  if(h!==undefined && v!==undefined){
+    size_to_send=h+' '+v
+  }
+
+  form_data.append('size',size_to_send)
+
+  post_process_export_svg()
+
+  const path = window.location.href
+  let url = path + '/opensankey/sankey/save_png'
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/png' })
+    FileSaver.saveAs(newBlob, 'sankey_diagram.png')
+  }
+
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = path + '/opensankey/sankey/clean_png'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
+
+// Function used before exporting a sankey to svg format
+// It add used attribute from css file in the html tag attribute 'style', because otherwise the foreignObject element doesn't have proper css
+const addStyleInlineSVG=()=>{
+  d3.selectAll('#svg foreignObject *:not(br)').nodes().forEach(el=>{
+    const elements_for_style=getComputedStyle(el as Element)
+    Object.values(elements_for_style).forEach(ks=>{
+      // Get css properties of the element in the navigator
+      const val=elements_for_style.getPropertyValue(ks)
+      if(val!==undefined && val!=='' && !ks.includes('webkit')){
+        // Add the css propertie in the attribute style so it is used in the svg file
+        d3.select(el).style(ks,val)
+      }
+    })
+  })
+}
+
+
+export const clickSaveSVG : clickSaveSVGFType = () => {
+
+  const svg = pre_process_export_svg()
+  addStyleInlineSVG()
+
+  const html = ((svg.attr('title', 'test2')
+    .attr('version', 1.1)
+    .attr('xmlns', 'http://www.w3.org/2000/svg')
+    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+
+  const blob = new Blob([html], { type: 'image/svg+xml' })
+  const form_data = new FormData()
+  form_data.append('html', blob)
+
+  post_process_export_svg()
+
+  const path = window.location.href
+  let url = path + '/opensankey/sankey/save_svg'
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/svg' })
+    FileSaver.saveAs(newBlob, 'sankey_diagram.svg')
+  }
+
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = path + '/opensankey/sankey/clean_svg'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
+
+
+export const PlusItemExport:PlusItemExportFType=(
+  dict_hook_ref_setter_show_dialog_components
+)=>{
+  return <>
+    <Dropdown.Item onClick={clickSaveSVG} >SVG</Dropdown.Item>
+    <Dropdown.Item onClick={()=>dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)} >PNG</Dropdown.Item>
+  </>
+  
 }
