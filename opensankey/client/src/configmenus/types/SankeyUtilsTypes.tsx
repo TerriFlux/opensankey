@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, uiElementsRefType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, uiElementsRefType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 
 export type CutNameFType = (t: string, n: number) => string
@@ -130,7 +130,7 @@ export type  NodeContextHasDesaggregateFuncType = (n: SankeyNode, data: SankeyDa
 export type ApplyStyleToNodesFuncType = (dict_variable_application_data:dict_variable_application_dataType, multi_selected_nodes: {current: SankeyNode[];},
   link_function:LinkFunctionTypes,
   applicationContext:applicationContextType,
-
+  node_fu$:NodeFunctionTypes
     ) => void
 
 export type AddNewNodeFuncType = (dict_variable_application_data:dict_variable_application_dataType, multi_selected_nodes: {current: SankeyNode[];},
@@ -143,7 +143,7 @@ export type AddNewNodeFuncType = (dict_variable_application_data:dict_variable_a
   accept_simple_click:{current:boolean},
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-
+  node_function:NodeFunctionTypes
 
 
 

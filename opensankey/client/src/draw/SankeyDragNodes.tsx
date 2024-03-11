@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { MutableRefObject } from 'react'
 import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { LinkTextFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData } from '../types/Types'
+import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData, SankeyLink } from '../types/Types'
 import { RemoveAnimate, GetSankeyMinWidthAndHeight, DrawArrows, drawCurveFunction, LinkStrokeWidth } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
@@ -37,9 +37,10 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
   ComponentUpdater,
-
+  node_function,
+  link_function
 ) => {
-  const { data, set_data } = dict_variable_application_data
+  const { data } = dict_variable_application_data
   const {ref_getter_mode_selection}=dict_variable_elements_selected
   const node_visible = [] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
@@ -65,9 +66,21 @@ export const DragGNodeEvent: DragGNodeEventFType = (
           )
         }
       }
-    }).on('end', () => {
+    }).on('end', function(_,node){
       if (d3.select(document.activeElement).attr('class') !== 'input_label') {
-        set_data(data)
+        // update all nodes connected to dragged node & all links connected to these nodes
+        const node_to_update:SankeyNode[]=[]
+        node.outputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idTarget]))
+        node.inputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idSource]))
+
+        let link_to_update:SankeyLink[]=[]
+        node_to_update.forEach(node=>{
+          link_to_update=link_to_update.concat(node.outputLinksId.map(lid=>data.links[lid]))
+          link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
+        })
+        node_function.RedrawNodes(node_to_update)
+        link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,link_to_update,ComponentUpdater)
+
       }
     })
 }
@@ -81,7 +94,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
  * @returns {*}
  */
 export const dragNodeTextEventWidthBoxEvent: dragNodeTextEventWidthBoxEventFType = (
-  data: SankeyData, set_data: (d: SankeyData) => void
+  data: SankeyData
 ) => {
   return d3.drag<SVGRectElement, SankeyNode>()
     .subject(Object).on('drag', function (event, node) {
@@ -103,7 +116,7 @@ export const dragNodeTextEventWidthBoxEvent: dragNodeTextEventWidthBoxEventFType
         }
       }
     }).on('end', () => {
-      set_data({ ...data })
+      // set_data({ ...data })
     })
 }
 /**

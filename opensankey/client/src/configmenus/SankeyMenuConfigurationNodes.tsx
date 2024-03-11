@@ -19,7 +19,7 @@ import {
   Input,
 } from '@chakra-ui/react'
 /*************************************************************************************************/
-import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, SankeyNode, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType, uiElementsRefType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType, uiElementsRefType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import {
   add_childrenFType,
@@ -56,6 +56,7 @@ type SankeyEditionTypes = {
   accept_simple_click:{current:boolean},
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   applicationContext:applicationContextType,
+  node_function:NodeFunctionTypes
 }
 
 export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
@@ -114,7 +115,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     alt_key_pressed,
     accept_simple_click,
     dict_hook_ref_setter_show_dialog_components,
-    applicationContext
+    applicationContext,
+    node_function
   }
 ) => {
   const {data,set_data}=dict_variable_application_data
@@ -142,12 +144,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     .map(d => {
       return { 'label': d.name, 'value': d.idNode }
     })
-  // const target_node_selector=useRef(null)
-  // const [show_node_selector,set_show_node_selector]=useState(false)
-
-  // const has_node_type=Object.values(data.nodeTags).filter(t=>t.group_name==='Type de noeud').length>0
-  // const pre_filter_node=(has_node_type)?Object.keys(data.nodeTags['Type de noeud'].tags):[]
-  // const [filter_node_selector,set_filter_node_selector]=useState<string[]>(pre_filter_node)
 
   // const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
@@ -313,7 +309,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
             Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
-            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
             SelectVisualyNodes(multi_selected_nodes.current[0])
             setForceUpdate(!forceUpdate)
           }}>

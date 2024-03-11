@@ -37,9 +37,8 @@ import {
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
-import { drawAddNodes, updateDrawNodeShape } from '../draw/SankeyDrawNodes'
+import { drawAddNodes } from '../draw/SankeyDrawNodes'
 import { NodeTooltipsContent } from '../draw/SankeyTooltip'
-import { RedrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1755,14 +1754,14 @@ export const NodeContextHasDesaggregate:NodeContextHasDesaggregateFuncType = (n:
 export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (dict_variable_application_data:dict_variable_application_dataType,
   multi_selected_nodes:{current:SankeyNode[]},
   link_function:LinkFunctionTypes,
-  applicationContext
+  applicationContext,
+  node_function
 ) => {
   multi_selected_nodes.current.map(d => {
     // Delete local value so the used value come from the style
     delete d.local
   })
-  updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
-  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,applicationContext.t)
+  node_function.RedrawNodes(multi_selected_nodes.current)
 
 }
 
@@ -1776,7 +1775,8 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   alt_key_pressed,
   accept_simple_click,
   ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components
+  dict_hook_ref_setter_show_dialog_components,
+  node_function
 ) => {
   const {data}=dict_variable_application_data
   const { nodes } = data
@@ -1800,9 +1800,9 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   }
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
-  ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes,link_function,applicationContext)
+  ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes,link_function,applicationContext,node_function)
   dict_variable_application_data.display_nodes[node.idNode]=node
-  drawAddNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elementsselected,applicationContext,alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+  drawAddNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elementsselected,applicationContext,alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
 }
 
 // Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link

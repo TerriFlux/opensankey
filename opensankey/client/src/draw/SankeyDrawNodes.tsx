@@ -1,8 +1,8 @@
 import React from 'react'
 import * as d3 from 'd3'
 
-import { LinkFunctionTypes, SankeyNode, dict_variable_application_dataType} from '../types/Types'
-import { AddDrawNodesFType, DrawAllNodesFType, drawNodeShapeFType } from './types/SankeyDrawNodesTypes'
+import { SankeyNode} from '../types/Types'
+import { AddDrawNodesFType, DrawAllNodesFType, drawNodeShapeFType, updateDrawNodeShapeFType } from './types/SankeyDrawNodesTypes'
 
 import { GetLinkValue, NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
@@ -239,7 +239,8 @@ export const DrawAllNodes : DrawAllNodesFType = (
   link_function,
   NodeTooltipsContent,
   ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components
+  dict_hook_ref_setter_show_dialog_components,
+  node_function
 ) => {
   const {display_nodes}=dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
@@ -250,7 +251,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
   d3.selectAll(' .opensankey .gg_nodes').remove()
   drawAddNodes(
     contextMenu, dict_variable_application_data, uiElementsRef, dict_variable_elements_selected,applicationContext,
-    alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components
+    alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function
   )
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
   updateDrawAllNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,t)
@@ -269,7 +270,8 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   link_function,
   NodeTooltipsContent,
   ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components
+  dict_hook_ref_setter_show_dialog_components,
+  node_function
 ) => {
   const { LinkText, GetLinkValue } = link_function
   const { data, display_nodes } = dict_variable_application_data
@@ -337,7 +339,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
       ggg_nodes.call(
         DragGNodeEvent(
           dict_variable_application_data,dict_variable_elements_selected,applicationContext,
-          alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater
+          alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater,node_function,link_function
         )
       )
     }
@@ -384,11 +386,11 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
         
 }
 
-export const updateDrawNodeShape  = (
-  dict_variable_application_data:dict_variable_application_dataType,
-  link_function:LinkFunctionTypes,
-  multi_selected_nodes : { current : SankeyNode[] },
-  node_to_update:SankeyNode[]
+export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
+  dict_variable_application_data,
+  link_function,
+  multi_selected_nodes,
+  node_to_update
 ) =>{
   const {data,display_nodes,display_links}=dict_variable_application_data
   const {GetLinkValue}=link_function
@@ -475,7 +477,8 @@ export const drawAddNodes : drawNodeShapeFType = (
   link_function,
   NodeTooltipsContent,
   ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components
+  dict_hook_ref_setter_show_dialog_components,
+  node_function
 ) => {
   const {multi_selected_nodes } = dict_variable_elements_selected
   const { data,display_nodes, display_links } = dict_variable_application_data
@@ -518,7 +521,8 @@ export const drawAddNodes : drawNodeShapeFType = (
     link_function,
     NodeTooltipsContent,
     ComponentUpdater,
-    dict_hook_ref_setter_show_dialog_components
+    dict_hook_ref_setter_show_dialog_components,
+    node_function
   )
 }
 

@@ -487,7 +487,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
     accept_simple_click,
     link_function,
     NodeTooltipsContent,
-    ComponentUpdater
+    ComponentUpdater,
+    node_function
   }
 ) => {
   const {ref_getter_show_menu_config,ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
@@ -719,7 +720,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         contextMenu.showContextZDDRef.current![1](false)
         contextMenu.tagContext.current![0][1](undefined)
         ref_setter_mode_selection.current('s')
-        AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+        AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>

@@ -1,6 +1,6 @@
 import { DragBehavior, SubjectPosition } from 'd3'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
-import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType } from '../../types/Types'
+import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes } from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from '../../configmenus/types/SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
 
@@ -215,7 +215,9 @@ export type DragGNodeEventFType=(
   GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes
 
 )=>DragBehavior<SVGGElement, SankeyNode, SankeyNode | SubjectPosition>
 
@@ -230,7 +232,6 @@ export type DragGNodeEventFType=(
  */
 export type dragNodeTextEventWidthBoxEventFType = (
   data:SankeyData,
-  set_data:(d:SankeyData)=>void
 ) => DragBehavior<SVGRectElement, SankeyNode, SankeyNode | SubjectPosition>
 
 /**

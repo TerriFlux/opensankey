@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 
 export type OpenSankeyConfigurationNodesAttributesFType = (
@@ -12,7 +12,8 @@ export type OpenSankeyConfigurationNodesAttributesFType = (
   advanced_label_content:JSX.Element[],
   advanced_label_value_content:JSX.Element[],
   link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes
 ) => JSX.Element[]
 
 export type SankeyMenuConfigurationNodesAttributesFType = (

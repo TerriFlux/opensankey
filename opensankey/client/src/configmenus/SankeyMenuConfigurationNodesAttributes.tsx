@@ -35,8 +35,6 @@ import { FaAlignLeft,
   FaEyeSlash} from 'react-icons/fa'
 import { Checkbox } from '@chakra-ui/react'
 import { OpenSankeyConfigurationNodesAttributesFType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
-import { updateDrawNodeShape } from '../draw/SankeyDrawNodes'
-import { RedrawNodesLabel } from '../draw/SankeyDrawNodesLabel'
 import { drawLinkShape } from '../draw/SankeyDrawLinks'
 
 export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNodesAttributesFType = (
@@ -49,7 +47,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   advanced_label_content,
   advanced_label_value_content,
   link_function,
-  ComponentUpdater
+  ComponentUpdater,
+  node_function
 ) => {
   const { t } = applicationContext
   const { data } = dict_variable_application_data
@@ -59,15 +58,13 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[ref_selected_style_node.current]]:multi_selected_nodes.current
   const {ref_get_update_menu_config_node,ref_set_update_menu_config_node,ref_get_update_menu_config_node_appearence,ref_set_update_menu_config_node_appearence}= ComponentUpdater
-  
+  const {RedrawNodes}=node_function
   ref_get_update_menu_config_node_appearence.current=forceUpdate
   ref_set_update_menu_config_node_appearence.current=setForceUpdate
   
   
   const updateMenuConfigNode=()=>{
-    updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
-    RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,t)
-    // UpdateDrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue)
+    RedrawNodes(multi_selected_nodes.current)
     if(!menu_for_style){
       ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
     }
@@ -998,7 +995,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 multi_selected_nodes.current.map(n => {
                   n.style = d
                 })
-                ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function,applicationContext)
+                ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function,applicationContext,node_function)
                 
               }}
             >{data.style_node[d].name}</Dropdown.Item>)
@@ -1017,7 +1014,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           variant='outline-primary'
          
           onClick={() => {
-            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function,applicationContext)
+            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function,applicationContext,node_function)
           }}>
           {t('Noeud.AS')}
         </Button>
