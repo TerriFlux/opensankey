@@ -145,7 +145,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
-
+  const [forceUpdate,setForceUpdate]=useState(false)
   if ((tags_group_key == '' && Object.keys(fluxTags).length > 0) || (!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length > 0)) {
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
@@ -450,7 +450,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           onClick={
             () => {
               data.displayed_link_selector=!data.displayed_link_selector
-              set_data({...data})
+              setForceUpdate(!forceUpdate)
             }}>
           {data.displayed_link_selector?<FaEye/>:<FaEyeSlash/>}
         </Button>
@@ -549,7 +549,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               nodes_to_reorganize.forEach(n => {
                 reorganize_inputLinksId(data,n, true, true, data.nodes, data.links)
               })
-              set_data({ ...data })
+
+              node_function.RedrawNodes(nodes_to_reorganize)
+              link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
             }}
           >
             <FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/>

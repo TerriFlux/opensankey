@@ -133,6 +133,9 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
 
     ref_get_update_menu_config_link:useRef(forceUpdate),
     ref_set_update_menu_config_link:useRef(setForceUpdate),
+
+    ref_get_update_toolbar:useRef(),
+    ref_set_update_toolbar:useRef(()=>null),
   }
   if(selected_style_link !== 'default'){
     set_selected_style_link('default')
