@@ -1119,8 +1119,9 @@ class JsonToSankey(object):
             for tagg_id in node_json['tags'].keys():
                 # Get corresponding tags
                 for tag_id in node_json['tags'][tagg_id]:
-                    tag = self._nodetags_corresp[tagg_id][tag_id]
-                    node.add_tag(tag)
+                    if tagg_id in self._nodetags_corresp:
+                        tag = self._nodetags_corresp[tagg_id][tag_id]
+                        node.add_tag(tag)
             # Apply level tags
             # But, save parenthood relations for latter
             # We need to create all nodes and knowing all ids
