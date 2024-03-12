@@ -2,7 +2,7 @@ import React from 'react'
 import * as d3 from 'd3'
 
 import { SankeyNode} from '../types/Types'
-import { AddDrawNodesFType, DrawAllNodesFType, drawNodeShapeFType, updateDrawNodeShapeFType } from './types/SankeyDrawNodesTypes'
+import { AddDrawNodesFType, DeleteGNodesFType, DrawAllNodesFType, drawNodeShapeFType, updateDrawNodeShapeFType } from './types/SankeyDrawNodesTypes'
 
 import { GetLinkValue, NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
@@ -526,3 +526,6 @@ export const drawAddNodes : drawNodeShapeFType = (
   )
 }
 
+export const DeleteGNodes:DeleteGNodesFType=(node_to_delete)=>{
+  (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>).filter(n=>node_to_delete.includes(n.idNode)).remove()
+}
