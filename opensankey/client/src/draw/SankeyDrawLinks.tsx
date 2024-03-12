@@ -595,3 +595,9 @@ export const drawLinkShape:drawLinkShapeFType  = (
     alert(error_msg.text)
   }
 }
+
+export const DeleteGLinks=(links_to_delete:string[])=>{
+  (d3
+    .select('.opensankey #g_links')
+    .selectAll('.gg_links')  as d3.Selection<SVGGElement, SankeyLink, d3.BaseType, unknown>).filter(l=>links_to_delete.includes(l.idLink)).remove()
+}

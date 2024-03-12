@@ -30,7 +30,7 @@ import {
 } from './types/SankeyMenuConfigurationNodesTypes'
 /*************************************************************************************************/
 import { 
-  DeleteNode,ReturnValueNode,AddNewNode} from './SankeyUtils'
+  DeleteNode,ReturnValueNode,AddNewNode, windowSankey} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
@@ -38,6 +38,8 @@ import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNo
 import { DeselectVisualyNodes, NodeVisibleOnsSvg, SelectVisualyNodes } from '../draw/SankeyDrawFunction'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from '../topmenus/SankeyMenuTop'
+import { DeleteGNodes } from '../draw/SankeyDrawNodes'
+import { DeleteGLinks } from '../draw/SankeyDrawLinks'
 /*************************************************************************************************/
 
 
@@ -65,7 +67,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   dict_variable_elements_selected,
   contextMenu,
   menu_configuration_nodes_attributes,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
 ) => {
   const { data } = dict_variable_application_data
 
@@ -350,7 +352,24 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             () => {
               multi_selected_nodes.current.map(d => DeleteNode(data, d))
               multi_selected_nodes.current = []
-              set_data({ ...data })
+              const tmp_node=Object.keys(data.nodes)
+              Object.entries(dict_variable_application_data.display_nodes).filter(n=>{
+                return !tmp_node.includes(n[0])
+              }).forEach(n=>{
+                DeleteGNodes([n[0]])
+                delete dict_variable_application_data.display_nodes[n[0]]
+              })
+
+              const tmp_link=Object.keys(data.links)
+              Object.entries(dict_variable_application_data.display_links).filter(l=>{
+                return !tmp_link.includes(l[0])
+              }).forEach(l=>{
+                DeleteGLinks([l[0]])
+                delete dict_variable_application_data.display_links[l[0]]
+              })
+
+              node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              link_function.DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
             }}>
           <FaMinus />
         </Button>

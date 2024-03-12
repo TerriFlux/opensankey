@@ -9,12 +9,15 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
   dict_variable_application_data,
   dict_variable_elements_selected,
   applicationContext,
-  menu_for_modal
+  menu_for_modal,
+  ComponentUpdater,
+  node_function,
+  link_function
 )=>{
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const {t}=applicationContext
-
+  const [forceUpdate,setForceUpdate]=useState(false)
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -125,7 +128,9 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
                 Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                   updateLinkTagValue(d,data_tags_selected,tags_group_key,tag_key,visible)
                 })
-                set_data({ ...data })
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                setForceUpdate(!forceUpdate)
               }}>
               {tag.name}
             </Checkbox>

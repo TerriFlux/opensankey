@@ -59,3 +59,5 @@ export type updateDrawNodeShapeFType  = (
     link_function:LinkFunctionTypes,
     multi_selected_nodes : { current : SankeyNode[] },
     node_to_update:SankeyNode[])=>void
+
+export type DeleteGNodesFType =(node_to_delete:string[])=>void
