@@ -12,7 +12,7 @@ export type OpenSankeyMenuConfigurationNodesFType = (
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType,
   menu_configuration_nodes_attributes:JSX.Element[],
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
 ) => { [s: string]: JSX.Element; }
  
 export type tree_data_nodesFType=(t:TFunction<'translation', undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],

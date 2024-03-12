@@ -436,7 +436,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   )
 
   // MENU DRAGGABLE Link tag selection
-  const menu_link_tags = MenuConfigurationLinksTags(dict_variable_application_data,dict_variable_elements_selected,applicationContext,true)
+  const menu_link_tags = MenuConfigurationLinksTags(dict_variable_application_data,dict_variable_elements_selected,applicationContext,true,ComponentUpdater,node_function,link_function)
 
   const menuLinkTags= MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
