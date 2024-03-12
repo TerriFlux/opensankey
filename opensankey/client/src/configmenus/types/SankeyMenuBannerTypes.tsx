@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, SankeyNode, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, SankeyData, SankeyNode, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
@@ -57,7 +57,8 @@ export type ToolbarBuilderFType = (
   drawLegend_needed_var:package_for_drawLegend_FuncType,
   redrawAllNodes:()=>void,
   redrawAllLinks:()=>void,
-  recomputeDisplayedElement:()=>void
+  recomputeDisplayedElement:()=>void,
+  ComponentUpdater:ComponentUpdaterType
 
 
 ) => JSX.Element

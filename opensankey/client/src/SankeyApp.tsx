@@ -241,6 +241,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
     ref_get_update_menu_config_link:useRef(),
     ref_set_update_menu_config_link:useRef(()=>null),
+
+    ref_get_update_toolbar:useRef(),
+    ref_set_update_toolbar:useRef(()=>null),
   }
   /*************************************************************************************************/
   const agregation : agregationType = {
@@ -325,7 +328,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   
   // Color for the sabot when the source node is an arrow
   const LinkSabotColor=LinkColor
-
+  const RedrawLinks=(links_to_update:SankeyLink[])=>{
+    drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,links_to_update,ComponentUpdater)
+  }
   const link_function:LinkFunctionTypes = {
     GetLinkValue,
     LinkText,
@@ -337,6 +342,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     DrawAllLinks,
     drawAddLinks,
     drawLinkShape,
+    RedrawLinks
   }
   const OpenSankeyRedrawNode=(nodes_to_update:SankeyNode[])=>{
     updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
@@ -414,7 +420,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
 
   // MENU DRAGGABLE NODE Tooltip editor
-  const menu_node_tooltip = SankeyMenuConfigurationNodesTooltip(applicationContext,dict_variable_application_data,dict_variable_elements_selected,true)
+  const menu_node_tooltip = SankeyMenuConfigurationNodesTooltip(applicationContext,dict_variable_elements_selected,true)
 
   const menuNodeTooltip= MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
@@ -425,7 +431,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   )
 
   // MENU DRAGGABLE NODE tag selection
-  const menu_node_tags = SankeyMenuConfigurationNodesTags(applicationContext,dict_variable_application_data,dict_variable_elements_selected,true)
+  const menu_node_tags = SankeyMenuConfigurationNodesTags(applicationContext,dict_variable_application_data,dict_variable_elements_selected,node_function,true)
 
   const menuNodeTags= MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
@@ -480,7 +486,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     [],
     package_for_draw_legend,
     redrawAllNodes,redrawAllLinks,
-    recomputeDisplayedElement
+    recomputeDisplayedElement,ComponentUpdater
   )
 
   sankey_menus['toolbar']=toolbar
@@ -659,6 +665,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             dict_variable_application_data,
             dict_variable_elements_selected,
             GetLinkValue,
+            node_function,link_function,
             true
           ),
           contextMenu.pointer_pos,
@@ -740,24 +747,30 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               menu_configuration_layout,
               <SankeySettingsEditionElementTags
                 t={applicationContext.t}
-                data={dict_variable_application_data.data}
-                set_data={dict_variable_application_data.set_data}
+                dict_variable_application_data={dict_variable_application_data}
                 elementTagNameProp='nodeTags'
                 elementNameProp='nodes'
+                node_function={node_function}
+                link_function={link_function}
+                ComponentUpdater={ComponentUpdater}
               />,
               <SankeySettingsEditionElementTags
                 t={applicationContext.t}
-                data={dict_variable_application_data.data}
-                set_data={dict_variable_application_data.set_data}
+                dict_variable_application_data={dict_variable_application_data}
                 elementTagNameProp='fluxTags'
                 elementNameProp='links'
+                node_function={node_function}
+                link_function={link_function}
+                ComponentUpdater={ComponentUpdater}
               />,
               <SankeySettingsEditionElementTags
                 t={applicationContext.t}
-                data={dict_variable_application_data.data}
-                set_data={dict_variable_application_data.set_data}
+                dict_variable_application_data={dict_variable_application_data}
                 elementTagNameProp='dataTags'
                 elementNameProp='links'
+                node_function={node_function}
+                link_function={link_function}
+                ComponentUpdater={ComponentUpdater}
               />,
               OpenSankeyMenuConfigurationNodes(
                 applicationContext,
@@ -766,6 +779,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 contextMenu,
                 menu_configuration_nodes_attributes,
                 GetLinkValue,
+                node_function,link_function,
+
               ),
               MenuConfigurationLinks(
                 dict_variable_application_data,

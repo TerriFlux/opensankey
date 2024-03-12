@@ -14,11 +14,14 @@ const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateB
   d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
 
 const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionElementTagsTypes> = ({ 
-  t,data, set_data,elementTagNameProp,elementNameProp 
+  t,dict_variable_application_data,elementTagNameProp,elementNameProp,node_function,link_function,ComponentUpdater
 }) => {
+  const {data}=dict_variable_application_data
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
   const type_tag_name=elementTagNameProp === 'dataTags' ? 'dataTags' : isNodeTags
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data[type_tag_name]).length > 0 ? Object.keys(data[type_tag_name])[0] : '')
+  const {ref_get_update_toolbar,ref_set_update_toolbar}= ComponentUpdater
+  const [forceUpdate,setForceUpdate]=useState(false)
   const colormaps = [
     'custom',
     'jet', 'hsv', 'hot', 'cool', 'spring', 'summer', 'autumn', 'winter', 'bone',
@@ -31,7 +34,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   //Permet de modifier le type de bannier pour le groupTag (si ce non Aucun)
   const handleBanner = (tags_group_key: string, evt: React.ChangeEvent<HTMLSelectElement>) => {
     data[type_tag_name][tags_group_key].banner = evt.target.value
-    set_data({ ...data })
+    setForceUpdate(!forceUpdate)
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
   }
   // Couleur issu de : https://github.com/d3/d3-scale-chromatic
 
@@ -49,21 +55,30 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   //add a tags to the selected groupTag
   const handleAddTagButton = () => {
     AddTag(data,type_tag_name,tags_group_key)
-    set_data({ ...data })
+    setForceUpdate(!forceUpdate)
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
   }
 
   //add a groupTag
   const handleAddTagGrpButton = () => {
     const k=AddGroupTag(data,type_tag_name,tags_group_key,elementNameProp)
     set_tags_group_key(k)
-    set_data({ ...data })
+    setForceUpdate(!forceUpdate)
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
   }
 
   // Delete a tag
   const handleDelTag = (n: string) => {
     
     delete data[type_tag_name][tags_group_key].tags[n]
-    set_data({ ...data })
+    setForceUpdate(!forceUpdate)
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
   }
 
 
@@ -89,7 +104,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     if(type_tag_name==='dataTags'){
       resetLinkValueAfterDeleteDTGrp(data)
     }
-    set_data({ ...data })
+    setForceUpdate(!forceUpdate)
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
   }
 
   // Switch the position of the groupTag with the one before him on the list of grouptag
@@ -105,7 +123,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     })
     for (const member in data[type_tag_name]) delete data[type_tag_name][member]
     Object.assign(data[type_tag_name], new_cat)
-    set_data({ ...data })
+    setForceUpdate(!forceUpdate)
   }
 
   // Switch the position of the groupTag with the one after him on the list of grouptag
@@ -121,7 +139,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     })
     for (const member in data[type_tag_name]) delete data[type_tag_name][member]
     Object.assign(data[type_tag_name], new_cat)
-    set_data({ ...data })
+    setForceUpdate(!forceUpdate)
+
   }
 
   const tagSetting = (<>
@@ -134,7 +153,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
         onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
             set_tags_group_key(evt.target.value)
-            set_data({ ...data })
+            setForceUpdate(!forceUpdate)
           }}
         value={tags_group_key}>
         {Object.keys(data[type_tag_name]).map(
@@ -164,7 +183,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               for(const i in d3.range(size_color)){
                 data[type_tag_name][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
               }
-              set_data({...data})
+              node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              setForceUpdate(!forceUpdate)
             }}>
             <FaPalette/>
           </Button>
@@ -191,7 +212,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                   data[type_tag_name][tags_group_key].tags[element_tags[i]].color=v
                 }
               }
-              set_data({...data})
+              node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              setForceUpdate(!forceUpdate)
             }}>
             <FaRandom/>
           </Button>
@@ -226,7 +249,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               Object.keys(data[type_tag_name][tags_group_key].tags).forEach(
                 (tag_key, i) => data[type_tag_name][tags_group_key].tags[tag_key].color = colors[i * step]
               )
-              set_data({ ...data })
+              node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              setForceUpdate(!forceUpdate)
             }}
           value={(Object.keys(data[type_tag_name]).length>0 && data[type_tag_name][tags_group_key] &&  tags_group_key!='')? data[type_tag_name][tags_group_key].color_map:''}
         >
@@ -311,7 +336,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           const new_nb_element = evt.target as HTMLInputElement
                           const name = new_nb_element.value
                           data[type_tag_name][tags_group_key].tags[tag_key].name = name
-                          set_data({ ...data })
+                          node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                          link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                          setForceUpdate(!forceUpdate)
                         }
                       }/>
                   </OverlayTrigger>
@@ -332,7 +359,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           () => {
                             const visible = !tag_visible
                             data[type_tag_name][tags_group_key].tags[tag_key].selected = visible
-                            set_data({ ...data })
+                            node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                            link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                            setForceUpdate(!forceUpdate)
                           }}>{tag_visible?<FaEye/>:<FaEyeSlash/>}</Button>
                     </OverlayTrigger>
                   </td>:<></>
@@ -350,7 +379,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                       onChange={
                         evt => {
                           data[type_tag_name][tags_group_key].tags[tag_key].color = evt.target.value
-                          set_data({ ...data })
+                          node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                          link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                          setForceUpdate(!forceUpdate)
                         }}/>
                   </OverlayTrigger>
                 </td>
@@ -365,7 +396,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                       <Form.Select
                         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                           data[type_tag_name][tags_group_key].tags[tag_key].shape = evt.target.value
-                          set_data({ ...data })
+                          node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                          link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                          setForceUpdate(!forceUpdate)
                         }}
                         value={data[type_tag_name][tags_group_key].tags[tag_key].shape as string}
                       >
@@ -444,7 +477,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             (evt: React.ChangeEvent) => {
                               const new_name = (evt.target as HTMLInputElement).value
                               data[type_tag_name][tags_group_key].group_name = new_name
-                              set_data({ ...data })
+                              setForceUpdate(!forceUpdate)
                             }}/>
                       </OverlayTrigger>
                     </td>
