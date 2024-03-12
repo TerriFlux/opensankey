@@ -487,13 +487,14 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   drawLegend_needed_var,
   redrawAllNodes,
   redrawAllLinks,
-  recomputeDisplayedElement
+  recomputeDisplayedElement,
+  ComponentUpdater
 ) => {
 
   const {data,set_data}=dict_variable_application_data
   const { ref_getter_mode_selection,ref_setter_mode_selection } = dict_variable_elements_selected
   const [,applicationContext,contextMenu,GetLinkValue,legend_clicked]=drawLegend_needed_var
-
+  const {ref_get_update_toolbar,ref_set_update_toolbar} =ComponentUpdater
   // ===================Create hooks used in this component========================
 
   const target_link_threshold=useRef(null)
@@ -511,7 +512,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
 
   const [s_is_data_type_reconcilied,sIsDataTypeReconcilied]=useState(['reconciled', 'free_value','free_interval'].includes(data.show_structure))
   const [s_force_update,sforceUpdate]=useState(false)
-
+  ref_get_update_toolbar.current=s_force_update
+  ref_set_update_toolbar.current=sforceUpdate
 
   const data_type_not_reconcilied= ['data', 'structure', 'free_value', 'free_interval'].includes(data.show_structure)
   const [s_type_value,sTypeValue]=useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied?(data.show_structure as 'data' | 'structure' | 'reconciled') :'reconciled')

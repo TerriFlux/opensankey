@@ -29,7 +29,7 @@ export const MenuConfigurationLinksTooltip : MenuConfigurationLinksTooltipFType 
             value={multi_selected_links.current.length>0 && multi_selected_links.current[0].tooltip_text ? multi_selected_links.current[0].tooltip_text : ''}
             onChange={evt => {
               multi_selected_links.current.forEach(l=>l.tooltip_text = evt.target.value)
-              set_data({ ...data })
+              // set_data({ ...data })
             }}/>
         </OverlayTrigger>
       </Col>

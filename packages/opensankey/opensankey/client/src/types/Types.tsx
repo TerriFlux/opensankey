@@ -474,6 +474,8 @@ export type SankeyAppTypes = {
   logo_terriflux: string,
 }
 
+export type RedrawLinksFType=(links_to_update:SankeyLink[])=>void
+
 export type LinkFunctionTypes = {
   GetLinkValue : GetLinkValueFuncType,
   LinkText : LinkTextFuncType
@@ -485,6 +487,8 @@ export type LinkFunctionTypes = {
   DrawAllLinks : DrawAllLinksFType,
   drawAddLinks:drawAddLinksFType,
   drawLinkShape:drawLinkShapeFType,
+  RedrawLinks:RedrawLinksFType
+  
 }
 
 export type RedrawNodesFType=(node_to_update:SankeyNode[])=>void
@@ -503,5 +507,7 @@ export type ComponentUpdaterType={
 
   ref_set_update_menu_config_link:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_get_update_menu_config_link:MutableRefObject<boolean| undefined>,
-
+  
+  ref_set_update_toolbar:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_get_update_toolbar:MutableRefObject<boolean| undefined>,
 }

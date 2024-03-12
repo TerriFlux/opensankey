@@ -68,6 +68,8 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   contextMenu,
   menu_configuration_nodes_attributes,
   GetLinkValue:GetLinkValueFuncType,
+  node_function,link_function,
+
 ) => {
   const { data } = dict_variable_application_data
 
@@ -79,7 +81,6 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     ),
     'Tooltip'         : SankeyMenuConfigurationNodesTooltip(
       applicationContext,
-      dict_variable_application_data,
       dict_variable_elements_selected,
       false
     )
@@ -88,6 +89,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
+    node_function,
     false
   )
 
@@ -99,7 +101,9 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
-    GetLinkValue
+    GetLinkValue,
+    node_function,link_function,
+
   )
 
   return ui
@@ -121,7 +125,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     node_function
   }
 ) => {
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
   const {ref_get_update_menu_config_node,ref_set_update_menu_config_node}=ComponentUpdater
@@ -386,7 +390,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           onClick={
             () => {
               data.displayed_node_selector=!data.displayed_node_selector
-              set_data({...data})
+              setForceUpdate(!forceUpdate)
             }}>
           <FaEye />
         </Button>

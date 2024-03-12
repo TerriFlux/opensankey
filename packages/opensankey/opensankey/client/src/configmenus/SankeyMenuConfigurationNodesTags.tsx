@@ -15,10 +15,11 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
+  node_function,
   menu_for_modal=false
 )=> {
   const { t } = applicationContext
-  const { data, set_data } = dict_variable_application_data
+  const { data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
 
@@ -93,7 +94,7 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
                     }
                   }
                 })
-                set_data({ ...data })
+                node_function.RedrawNodes(multi_selected_nodes.current)
               }}>
               {tags[1].name}
             </Checkbox>
