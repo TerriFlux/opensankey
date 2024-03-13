@@ -1119,8 +1119,9 @@ class JsonToSankey(object):
             for tagg_id in node_json['tags'].keys():
                 # Get corresponding tags
                 for tag_id in node_json['tags'][tagg_id]:
-                    tag = self._nodetags_corresp[tagg_id][tag_id]
-                    node.add_tag(tag)
+                    if tagg_id in self._nodetags_corresp:
+                        tag = self._nodetags_corresp[tagg_id][tag_id]
+                        node.add_tag(tag)
             # Apply level tags
             # But, save parenthood relations for latter
             # We need to create all nodes and knowing all ids
@@ -1283,6 +1284,8 @@ class JsonToSankey(object):
             for fluxtagg_id in datas_json['tags'].keys():
                 # Get all tags related to this taggroup and to this flux
                 for fluxtag_id in datas_json['tags'][fluxtagg_id]:
+                    if fluxtag_id == 'initial_data' or fluxtag_id == 'computed_data':
+                        continue
                     fluxtags_list.append(self._fluxtags_corresp[fluxtagg_id][fluxtag_id])
             # Check if data is result or not
             data_is_computed = False
