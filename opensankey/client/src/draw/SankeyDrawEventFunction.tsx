@@ -72,7 +72,7 @@ export const EventNodeClick : EventNodeClickFType =(
   const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const {ref_getter_mode_selection, multi_selected_nodes}=dict_variable_elements_selected
   const {nodes_accordion_ref,accordion_ref}=uiElementsRef
-  const {ref_get_update_menu_config_node,ref_set_update_menu_config_node,ref_get_update_menu_config_node_appearence,ref_set_update_menu_config_node_appearence}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,}=ComponentUpdater
   multi_selected_nodes.current.forEach(n=>DeselectVisualyNodes(n))
   if (  (event.ctrlKey || event.metaKey)) {
     ref_getter_mode_selection.current='s'
@@ -123,9 +123,8 @@ export const EventNodeClick : EventNodeClickFType =(
       })
     multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
   }
-  ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
-  ref_set_update_menu_config_node_appearence.current(!ref_get_update_menu_config_node_appearence.current)
-
+  updateComponentMenuConfigNode.current()
+  updateComponentMenuConfigNodeAppearence.current()
 }
 
 export const EventNodeContextMenu: EventNodeContextMenuFType = (
@@ -431,10 +430,10 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   ComponentUpdater,
   node_function
 ) => {
-  const { data, set_data,display_links } = dict_variable_application_data
+  const { data, display_links } = dict_variable_application_data
   const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = dict_variable_elements_selected
   const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
-  const {ref_get_update_menu_config_node,ref_set_update_menu_config_node,ref_get_update_menu_config_link,ref_set_update_menu_config_link,ref_get_update_menu_config_node_appearence,ref_set_update_menu_config_node_appearence}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
   // Special cast usefull for when the app is used in SankeySuiteManager
   const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
 
@@ -442,7 +441,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray', () => '')
   let h = document.getElementById('g_legend')?.getBoundingClientRect().height
   h = h ? h : 50
-  draw_legend_handles(data, set_data, legend_clicked.current, h)
+  draw_legend_handles(data, legend_clicked.current, h,ComponentUpdater)
 
   const OpenLinksMenu = () => {
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
@@ -472,7 +471,6 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   if (ref_getter_mode_selection.current == 's' && d3.selectAll('.selection_zone').nodes().length > 0) {
     NodeVisibleOnsSvg().forEach(k => DeselectVisualyNodes(data.nodes[k]))
     Object.keys(display_links).forEach(k => DeselectVisualyLinks(data.links[k]))
-
     const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
     const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
     const z_x = Number(d3.select('.selection_zone rect').attr('x'))
@@ -510,9 +508,9 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     d3.selectAll('.selection_zone').remove()
     multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
     multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-    ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
-    ref_set_update_menu_config_node_appearence.current(!ref_get_update_menu_config_node_appearence.current)
-    ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+    updateComponentMenuConfigNode.current()
+    updateComponentMenuConfigNodeAppearence.current()
+    updateComponentMenuConfigLink.current()
 
   }
   // si le token de connexion est à false alors ne crée pas de second noeud
@@ -693,16 +691,15 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   dict_hook_ref_setter_show_dialog_components
 ) => {
   const { data,display_links } = dict_variable_application_data
-  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef} = dict_variable_elements_selected
+  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,ref_getter_mode_selection} = dict_variable_elements_selected
   const { accordion_ref, links_accordion_ref } = uiElementsRef
   const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const {GetLinkValue}=link_function
-  if ((!event.ctrlKey && !event.metaKey) && first_selected_node.current) {
-
+  if ((!event.ctrlKey && !event.metaKey) && first_selected_node.current && ref_getter_mode_selection.current=='ln') {
     if (d.name.includes('_tmp')) {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       d.name = d.idNode
-      RedrawNodesLabel(dict_variable_application_data,{current:[d]},GetLinkValue,applicationContext.t)
+      RedrawNodesLabel(dict_variable_application_data,[d],GetLinkValue,applicationContext.t)
     } else {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       const n_link = DefaultLink(data)

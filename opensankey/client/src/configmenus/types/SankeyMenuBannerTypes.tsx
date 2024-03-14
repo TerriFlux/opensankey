@@ -3,7 +3,6 @@ import { ComponentUpdaterType, SankeyData, SankeyNode, dict_hook_ref_setter_show
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
-import { package_for_drawLegend_FuncType } from '../../draw/types/SankeyDrawLegendTypes'
 
 export type setDiagramFuncType = (
   the_diagram: string, 
@@ -14,7 +13,7 @@ export type setDiagramFuncType = (
 
 export type addSimpleLevelDropDownFType = (
   dict_variable_application_data:dict_variable_application_dataType,
-  drawLegend_needed_var:package_for_drawLegend_FuncType,
+  reDrawLegend:()=>void,
   redrawAllNodes:()=>void,
   redrawAllLinks:()=>void,
   recomputeDisplayedElement:()=>void
@@ -31,7 +30,7 @@ export type addAllDropDownNodeFType = (
   data:SankeyData,
   set_data:(d:SankeyData)=>void,
   level:boolean,
-  drawLegend_needed_var:package_for_drawLegend_FuncType,
+  reDrawLegend:()=>void,
   redrawAllNodes:()=>void,
   redrawAllLinks:()=>void,
   recomputeDisplayedElement:()=>void
@@ -54,7 +53,7 @@ export type ToolbarBuilderFType = (
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again: MutableRefObject<boolean>,
   additional_link_visual_filter_content:JSX.Element[],
-  drawLegend_needed_var:package_for_drawLegend_FuncType,
+  reDrawLegend:()=>void,
   redrawAllNodes:()=>void,
   redrawAllLinks:()=>void,
   recomputeDisplayedElement:()=>void,

@@ -20,7 +20,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
   const type_tag_name=elementTagNameProp === 'dataTags' ? 'dataTags' : isNodeTags
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data[type_tag_name]).length > 0 ? Object.keys(data[type_tag_name])[0] : '')
-  const {ref_get_update_toolbar,ref_set_update_toolbar}= ComponentUpdater
+  const {updateComponentToolbar}= ComponentUpdater
   const [forceUpdate,setForceUpdate]=useState(false)
   const colormaps = [
     'custom',
@@ -37,7 +37,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     setForceUpdate(!forceUpdate)
     node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
+    updateComponentToolbar.current()
   }
   // Couleur issu de : https://github.com/d3/d3-scale-chromatic
 
@@ -58,7 +58,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     setForceUpdate(!forceUpdate)
     node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
+    updateComponentToolbar.current()
   }
 
   //add a groupTag
@@ -68,7 +68,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     setForceUpdate(!forceUpdate)
     node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
+    updateComponentToolbar.current()
   }
 
   // Delete a tag
@@ -78,7 +78,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     setForceUpdate(!forceUpdate)
     node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
+    updateComponentToolbar.current()
   }
 
 
@@ -107,7 +107,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     setForceUpdate(!forceUpdate)
     node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-    ref_set_update_toolbar.current(!ref_get_update_toolbar.current)
+    updateComponentToolbar.current()
   }
 
   // Switch the position of the groupTag with the one before him on the list of grouptag

@@ -15,12 +15,12 @@ export const updateDrawAllNodesLabel : DrawAllNodesLabelFType = (
   GetLinkValue,
   t
 ) => {
-  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes,GetLinkValue,t)
+  RedrawNodesLabel(dict_variable_application_data,[],GetLinkValue,t)
 }
 
 export const RedrawNodesLabel : DrawAddNodesFtype = (
   dict_variable_application_data,
-  multi_selected_nodes,
+  nodes_to_redraw,
   GetLinkValue,t
 ) => {        
   const { data,display_nodes,display_links } = dict_variable_application_data
@@ -28,7 +28,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
   // Add node label and apply parameter
   const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)
   const filtered_gggnodes = ggg_nodes.filter(
-    n=> multi_selected_nodes.current.length>0 ? multi_selected_nodes.current.includes(n) : true
+    n=>nodes_to_redraw.length>0 ? nodes_to_redraw.includes(n) : true
   )
   filtered_gggnodes.selectAll('.label_background,.node_text,.fo_input_label').remove()
 
@@ -216,7 +216,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .attr('stroke','grey')
     .attr('stroke-width','2px')
     .attr('cursor','ew-resize')
-    .attr('visibility',n=>(multi_selected_nodes.current.length==1 && multi_selected_nodes.current.includes(n as SankeyNode)?'visible':'hidden'))
+    .attr('visibility',n=>(nodes_to_redraw.length==1 && nodes_to_redraw.includes(n as SankeyNode)?'visible':'hidden'))
   // .filter(()=>windowSankey.SankeyToolsStatic!==true)
   // .call(dragNodeTextEventWidthBoxEvent(data,set_data))
 }

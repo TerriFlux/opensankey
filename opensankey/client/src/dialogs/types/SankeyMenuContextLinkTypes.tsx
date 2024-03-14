@@ -1,5 +1,5 @@
 import { MutableRefObject } from 'react'
-import { applicationContextType, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType, LinkFunctionTypes, uiElementsRefType, ComponentUpdaterType } from '../../types/Types'
+import { applicationContextType, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType, LinkFunctionTypes, uiElementsRefType, ComponentUpdaterType, NodeFunctionTypes } from '../../types/Types'
 
 export type ContextMenuLinkFType = {
   applicationContext : applicationContextType,
@@ -7,6 +7,7 @@ export type ContextMenuLinkFType = {
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
+  node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   uiElementsRef:uiElementsRefType,
   alt_key_pressed:MutableRefObject<boolean>,

@@ -60,10 +60,8 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   const {data,set_data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const [forceUpdate,setForceUpdate]=useState(false)
-  const {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
-  ref_get_update_menu_config_link.current=forceUpdate
-  ref_set_update_menu_config_link.current=setForceUpdate
-
+  const {updateComponentMenuConfigLink}=ComponentUpdater
+  updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
     'data'      : MenuConfigurationLinksData(
@@ -140,7 +138,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
-  const {ref_set_update_menu_config_link,ref_get_update_menu_config_link}=ComponentUpdater 
+  const {updateComponentMenuConfigLink}=ComponentUpdater 
   const {drawLinkShape}=link_function
   const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
@@ -251,7 +249,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               }
               Object.values(dict_variable_application_data.display_links).forEach(l=>DeselectVisualyLinks(l))
               multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
-              ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+              updateComponentMenuConfigLink.current()
             }}
           />
         </Box>

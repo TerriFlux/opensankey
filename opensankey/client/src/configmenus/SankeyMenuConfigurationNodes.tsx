@@ -128,9 +128,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const {data}=dict_variable_application_data
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
-  const {ref_get_update_menu_config_node,ref_set_update_menu_config_node}=ComponentUpdater
-  ref_get_update_menu_config_node.current=forceUpdate
-  ref_set_update_menu_config_node.current=setForceUpdate
+  const {updateComponentMenuConfigNode}=ComponentUpdater
+  updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
   const tmpNodes = Object
     .fromEntries(
       Object.entries(data.nodes)

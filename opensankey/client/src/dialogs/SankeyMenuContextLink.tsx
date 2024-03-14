@@ -21,6 +21,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   dict_variable_elements_selected,
   contextMenu,
   dict_hook_ref_setter_show_dialog_components,
+  node_function,
   link_function,
   uiElementsRef,
   alt_key_pressed,
@@ -31,16 +32,17 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   const [forceUpdate,setForceUpdate]=useState(false)
   const { pointer_pos } = contextMenu
   const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef } = dict_variable_elements_selected
-  const { data, set_data } = dict_variable_application_data
+  const { data } = dict_variable_application_data
   const { t } = applicationContext
-
+  const {RedrawNodes} = node_function
+  const {RedrawLinks} = link_function
   const redraw_selected_links=()=>{
     d3.selectAll('.gg_links').filter((g_l)=>{
       const cast_l=g_l as SankeyLink
       return multi_selected_links.current.includes(cast_l)
     }).remove()
     drawAddLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,multi_selected_links.current)
-    ComponentUpdater.ref_set_update_menu_config_link.current(!ComponentUpdater.ref_get_update_menu_config_link.current)
+    ComponentUpdater.updateComponentMenuConfigLink.current()
     setForceUpdate(!forceUpdate)
   }
 
@@ -287,6 +289,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
             if(formatedValue!=='' && !isNaN(+formatedValue )){
               const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
               let val = Object(multi_selected_links.current[0].value)
+              const impacted_node:SankeyNode[]=[]
+
               multi_selected_links.current.map(d => {
                 const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
                 AssignLinkLocalAttribute(d,'dashed',(was_empty)?false:dashed)
@@ -299,6 +303,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
                   val = val[tag]
                 })
                 val.value = +formatedValue
+                impacted_node.push(data.nodes[d.idSource])
+                impacted_node.push(data.nodes[d.idTarget])
               })
               const scale = d3.scaleLinear()
                 .domain([0, data.user_scale])
@@ -306,9 +312,19 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
               if (scale(+formatedValue) > 500) {
                 data.user_scale = +formatedValue
               }
-              set_data({ ...data })
+              
+              
+              let link_to_update=multi_selected_links.current
+              impacted_node.forEach(n=>{
+                link_to_update=link_to_update.concat(n.outputLinksId.map(lid=>data.links[lid]))
+                link_to_update=link_to_update.concat(n.inputLinksId.map(lid=>data.links[lid]))
+              })
+              RedrawNodes(impacted_node)
+              RedrawLinks(link_to_update)
+
             }
             else if(formatedValue=='') {
+              const impacted_node:SankeyNode[]=[]
               let val = Object(multi_selected_links.current[0].value)
               multi_selected_links.current.map(d => {
                 val = d.value
@@ -320,8 +336,19 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
                   val = val[tag]
                 })
                 val.value = ''
+                impacted_node.push(data.nodes[d.idSource])
+                impacted_node.push(data.nodes[d.idTarget])
               })
-              set_data({ ...data })
+
+              let link_to_update=multi_selected_links.current
+              impacted_node.forEach(n=>{
+                link_to_update=link_to_update.concat(n.outputLinksId.map(lid=>data.links[lid]))
+                link_to_update=link_to_update.concat(n.inputLinksId.map(lid=>data.links[lid]))
+              })
+              
+              
+              RedrawNodes(impacted_node)
+              RedrawLinks(link_to_update)
             }
           }}
 

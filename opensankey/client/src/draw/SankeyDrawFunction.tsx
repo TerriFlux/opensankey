@@ -35,7 +35,7 @@ import {
   TextLinkSideFType, 
   TextNodeValueFType, 
   TextNodeWrapFType, 
-  ValueSelectedParameterFuncType, clipFType, nodeTransformFType, update_scaleFType
+  ValueSelectedParameterFuncType, clipFType, nodeTransformFType
 } from './types/SankeyDrawFunctionTypes'
 import { 
   DeselectVisualyNodesFuncType,
@@ -272,7 +272,7 @@ export const SetNodeHeight:SetNodeHeightFuncType = (
   }else if(shape==='arrow'){
     const k_angle = ReturnValueNode(data, n, 'node_arrow_angle_factor') as number
     const angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
-    const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction)
+    const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction,scale)
     d3.select(' .opensankey #shape_' + n.idNode).attr('d',path)
   }
 }
@@ -508,24 +508,18 @@ export const SortOutputLinksIdByYPos : SortOutputLinksIdByYPosFType = (
     )
 }
 
-export const scale = d3.scaleLinear()
-  .domain([0, 100])
-  .range([0, 100])
-
-export const inv_scale = d3.scaleLinear()
-  .domain([0, 100])
-  .range([0, 100])
 
 
 
 export const SetNodesHeight : SetNodesHeightFType = (
-  data:SankeyData,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [link_id: string]: SankeyLink },
+  dict_variable_application_data,
   d: SankeyLink,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  scale,
+  inv_scale
 
 ) => {
+  const {data,display_links,display_nodes}=dict_variable_application_data
   let source_node = display_nodes[d.idSource]
   let target_node = display_nodes[d.idTarget]
   if (target_node === undefined) {
@@ -535,6 +529,8 @@ export const SetNodesHeight : SetNodesHeightFType = (
     const filter_idSource = d.idSource
     source_node = display_nodes[filter_idSource]
   }
+
+
 
   const res_source = ComputeTotalOffsets(inv_scale,source_node, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
@@ -579,7 +575,8 @@ export const SetNodesHeight : SetNodesHeightFType = (
   }
   if(source_shape==='arrow'){
     const k_angle=ReturnValueNode(data,source_node,'node_arrow_angle_factor') as number
-    const path_s=PathNodeArrowShape(node_size_s_width,node_size_s_height,k_angle,source_angle_direction)
+    const path_s=PathNodeArrowShape(node_size_s_width,node_size_s_height,k_angle,source_angle_direction,
+      scale)
     d3.select(' .opensankey #shape_' + source_node.idNode).attr('d', path_s)
   }
 
@@ -599,7 +596,7 @@ export const SetNodesHeight : SetNodesHeightFType = (
   
   if(target_shape==='arrow'){
     const k_angle=ReturnValueNode(data,target_node,'node_arrow_angle_factor') as number
-    const path_t=PathNodeArrowShape(node_size_t_width,node_size_t_height,k_angle,target_angle_direction)
+    const path_t=PathNodeArrowShape(node_size_t_width,node_size_t_height,k_angle,target_angle_direction,scale)
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('d', path_t)
   }
 }
@@ -608,8 +605,8 @@ export const PathNodeArrowShape : PathNodeArrowShapeFType = (
   node_width:number,
   node_height:number,
   k_angle:number,
-  direction:string
-  
+  direction:string,
+  scale
 )=>{
   let path=''
   if(direction==='right'){
@@ -671,7 +668,9 @@ const DrawLinkText = (
   yt: number,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  t:TFunction
+  t:TFunction,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 ) => {
 
   const lab_pos=ReturnValueLink(data,link,'label_position') as string
@@ -699,7 +698,7 @@ const DrawLinkText = (
       x_pos = xs 
       y_pos=ys
     } else if (lab_pos === 'middle' || lab_pos==='frozen') {
-      const handles = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue)
+      const handles = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
       if (handles.length >= 2) {
         // pos x
         const left_xpos = +handles[0].split(',')[0].substring(10)
@@ -780,8 +779,9 @@ const AddCenterHandle=(
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  ComponentUpdater:ComponentUpdaterType
-
+  ComponentUpdater:ComponentUpdaterType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 )=>{
   const {data,display_nodes,display_links}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
@@ -815,7 +815,7 @@ const AddCenterHandle=(
     if (data.show_structure == 'structure') {
       [xs, yt] = [source_node.x + (ReturnValueNode(data,source_node,'node_height') as number) / 2, target_node.y + (ReturnValueNode(data,target_node,'node_height') as number) / 2]
     }
-    const pos_d=CenterHandlePosition(data,link,xs,ys,xt,yt,GetLinkValue)
+    const pos_d=CenterHandlePosition(data,link,xs,ys,xt,yt,GetLinkValue,scale,inv_scale)
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('circle')
       .attr('id', 'center_handle_' + link.idLink)
@@ -843,12 +843,13 @@ const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
   ys: number,
   xt: number,
   yt: number,
-  GetLinkValue:GetLinkValueFuncType
-
+  GetLinkValue:GetLinkValueFuncType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 )=>{
   const center_handle = 1/2
   
-  const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue)
+  const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
   const ori=ReturnValueLink(data,link,'orientation')
 
   if((ori=='hh' || ori=='vv')){
@@ -895,8 +896,9 @@ const AddShiftHandle = (
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  ComponentUpdater:ComponentUpdaterType
-
+  ComponentUpdater:ComponentUpdaterType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 
 ) => {
   const {data}=dict_variable_application_data
@@ -916,11 +918,7 @@ const AddShiftHandle = (
 
 }
 
-// Function that change the scale of the graph
-export const update_scale : update_scaleFType  = (user_scale: number) => {
-  scale.domain([0, user_scale])
-  inv_scale.range([0, user_scale])
-}
+
 
 // Function that call AddShiftHandle for the shift handle of each side of the links
 const add_shift_handles = (
@@ -937,8 +935,9 @@ const add_shift_handles = (
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  ComponentUpdater:ComponentUpdaterType
-
+  ComponentUpdater:ComponentUpdaterType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 
 ) => {
   const {data}=dict_variable_application_data
@@ -960,7 +959,7 @@ const add_shift_handles = (
   for (let i = 0; i < shift_handles.length; i++) {
     const selection = d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
     if (selection.empty()) { // if the handle do not exist, create it
-      AddShiftHandle(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater
+      AddShiftHandle(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale
       )
     }
   }
@@ -968,7 +967,7 @@ const add_shift_handles = (
     // Draw handle at the correct position
     d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
       .attr('transform', () => {
-        const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue)
+        const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
         return handle_pos[i] // 0 => vertical handle
       })
   }
@@ -989,8 +988,9 @@ const DrawCurve = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
-  ComponentUpdater:ComponentUpdaterType
-
+  ComponentUpdater:ComponentUpdaterType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 ): string => {
   const {data,display_nodes,display_links}=dict_variable_application_data
   if (!LinkVisible(link, data, display_nodes,GetLinkValue)) {
@@ -1029,14 +1029,14 @@ const DrawCurve = (
 
   let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, display_nodes, display_links, nodeTags,data,scale,inv_scale,GetLinkValue)
   if(ori=='vv' ||ori=='hh'){
-    add_shift_handles(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater)
+    add_shift_handles(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
     AddDragLinkZone(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows,ComponentUpdater)
-    AddCenterHandle(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater)
+    AddCenterHandle(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
   }
 
 
   if (label_visible && (+link_value > display_style.filter_label ) ) {
-    DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t)
+    DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t,scale,inv_scale)
   }
 
   if (ori === 'vh' && !recy) {
@@ -1138,8 +1138,9 @@ const HandlesPositions = (
   ys: number,
   xt: number,
   yt: number,
-  GetLinkValue:GetLinkValueFuncType
-
+  GetLinkValue:GetLinkValueFuncType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 ) => {
   let tmp=GetLinkValue(data, link.idLink).value as number
   tmp=(tmp)?tmp:0
