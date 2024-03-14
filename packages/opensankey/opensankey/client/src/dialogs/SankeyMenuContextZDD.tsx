@@ -6,6 +6,7 @@ import { ComputeAutoSankey, arrangeNodes } from '../draw/SankeyDrawLayout'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { GetRandomInt, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
+import { DrawGrid } from '../draw/SankeyDrawFunction'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -15,7 +16,10 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   applicationContext,
   dict_variable_application_data,
   contextMenu,
-  dict_hook_ref_setter_show_dialog_components
+  dict_hook_ref_setter_show_dialog_components,
+  node_function,
+  link_function,
+  reDrawLegend
 }) => {
 
   const [ show_context_zdd, set_show_context_zdd ] = useState(false)
@@ -23,10 +27,11 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   const { data, set_data } = dict_variable_application_data
   const { t } = applicationContext
   const { pointer_pos } = contextMenu
-
+  const {RedrawNodes} =node_function
+  const {RedrawLinks} =link_function
   const [node_hspace,set_node_hspace] = useState(data.h_space)
   const [node_vspace,set_node_vspace] = useState(data.v_space) 
-
+  const [forceUpdate,setForceUpdate]=useState(false)
   const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
     d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
     d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
@@ -47,7 +52,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
 
   const button_bg_grid=<><Button variant='light' onClick={()=>{
     data.grid_visible = !data.grid_visible
-    set_data({...data})
+    setForceUpdate(!forceUpdate)
+    DrawGrid(data)
   }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
   </>
   const button_assgn_rand_node_color=<><Button variant='light' onClick={()=>{
@@ -59,7 +65,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
       AssignNodeLocalAttribute(data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
     }
-    set_data({...data})
+    RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
   }}>{t('Menu.rand_node_color')}</Button>
   </>
 
@@ -76,7 +82,9 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
           value={data.user_scale}
           onChange={evt => {
             data.user_scale = +evt.target.value
-            set_data({ ...data })
+            setForceUpdate(!forceUpdate)
+            RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+            RedrawLinks(Object.values(dict_variable_application_data.display_links))
           }}
         />
       </Dropdown.Item>
@@ -128,7 +136,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
 
       <Dropdown.Item as={Button} variant='light' onClick={() => {
         ComputeAutoSankey(data, node_hspace)
-        set_data({ ...data })
+        RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+        RedrawLinks(Object.values(dict_variable_application_data.display_links))
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>
@@ -137,7 +146,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   const button_mask_leg=<Button variant='light'
     onClick={() => {
       data.mask_legend=!data.mask_legend
-      set_data({ ...data })
+      reDrawLegend()
     }}>
     {data.mask_legend?t('MEP.hide_leg'):t('MEP.show_leg')}
   </Button>
@@ -145,7 +154,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   const button_an=<Button variant='light'
     onClick={() => {
       arrangeNodes(data)
-      set_data({ ...data })
+      RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+      RedrawLinks(Object.values(dict_variable_application_data.display_links))
     }}>
     {t('MEP.AN')}
   </Button>

@@ -35,7 +35,6 @@ import { FaAlignLeft,
   FaEyeSlash} from 'react-icons/fa'
 import { Checkbox } from '@chakra-ui/react'
 import { OpenSankeyConfigurationNodesAttributesFType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
-import { drawLinkShape } from '../draw/SankeyDrawLinks'
 
 export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNodesAttributesFType = (
   applicationContext,
@@ -56,16 +55,15 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   const [forceUpdate,setForceUpdate]=useState(false)
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[ref_selected_style_node.current]]:multi_selected_nodes.current
-  const {ref_get_update_menu_config_node,ref_set_update_menu_config_node,ref_get_update_menu_config_node_appearence,ref_set_update_menu_config_node_appearence}= ComponentUpdater
+  const {updateComponentMenuConfigNodeAppearence,updateComponentMenuConfigNode}= ComponentUpdater
   const {RedrawNodes}=node_function
-  ref_get_update_menu_config_node_appearence.current=forceUpdate
-  ref_set_update_menu_config_node_appearence.current=setForceUpdate
-  
+  const {RedrawLinks}=link_function
+  updateComponentMenuConfigNodeAppearence.current=()=>setForceUpdate(!forceUpdate)
   
   const updateMenuConfigNode=()=>{
     RedrawNodes(multi_selected_nodes.current)
     if(!menu_for_style){
-      ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
+      updateComponentMenuConfigNode.current()
     }
     setForceUpdate(!forceUpdate)
   }
@@ -387,7 +385,9 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   })
                   link_to_update=[...new Set(link_to_update)]
                   const list_links=link_to_update.map(lid=>data.links[lid])
-                  drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,list_links,ComponentUpdater)
+                  RedrawLinks(list_links)
+                }else{
+                  RedrawLinks(Object.values(dict_variable_application_data.display_links))
                 }
                 
               }}/>
@@ -438,7 +438,10 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   })
                   link_to_update=[...new Set(link_to_update)]
                   const list_links=link_to_update.map(lid=>data.links[lid])
-                  drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,list_links,ComponentUpdater)
+                  RedrawLinks(list_links)
+                }else{
+                  RedrawLinks(Object.values(dict_variable_application_data.display_links))
+
                 }
               }}/>
         </Col>

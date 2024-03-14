@@ -80,7 +80,8 @@ export const DragLinkEvent : DragLinkEventFType =(
                   display_style,
                   data.nodeTags, link,
                   error_msg,
-                  LinkText,GetSankeyMinWidthAndHeight,GetLinkValue, DrawArrows,ComponentUpdater
+                  LinkText,GetSankeyMinWidthAndHeight,GetLinkValue, DrawArrows,ComponentUpdater,
+                  scale,inv_scale
                 )
               }
             )
@@ -182,7 +183,7 @@ export const DragLinkIOPosition : DragLinkIOPositionFType =(
                 error_msg,LinkText,
                 GetSankeyMinWidthAndHeight,GetLinkValue,
                 DrawArrows,
-                ComponentUpdater
+                ComponentUpdater,scale,inv_scale
               )
             }
             )
@@ -227,7 +228,7 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
 )=>{
   const {data}= dict_variable_application_data
   const {multi_selected_links}= dict_variable_elements_selected
-  const  {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
+  const  {updateComponentMenuConfigLink}=ComponentUpdater
 
   const l_ori=ReturnValueLink(data,link,'orientation')
   return d3.drag<SVGCircleElement, unknown>()
@@ -240,7 +241,7 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
       }            
     })
     .on('end',()=>{
-      ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+      updateComponentMenuConfigLink.current()
     })
 }
 /**
@@ -283,7 +284,7 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
 
 )=>{
   const {multi_selected_links}=dict_variable_elements_selected
-  const  {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
+  const  {updateComponentMenuConfigLink}=ComponentUpdater
   return d3.drag<SVGRectElement, unknown>()
     .subject(Object).on('drag', function (event) {
       if(multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
@@ -294,7 +295,7 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
         
     })
     .on('end',()=>{
-      ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+      updateComponentMenuConfigLink.current()
     })
 }
 
@@ -627,7 +628,8 @@ export const DragHandle : DragHandleFType = (
       GetSankeyMinWidthAndHeight,
       GetLinkValue,
       DrawArrows,
-      ComponentUpdater
+      ComponentUpdater,
+      scale,inv_scale
     )
   })
 }

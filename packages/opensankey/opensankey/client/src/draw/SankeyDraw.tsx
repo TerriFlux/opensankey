@@ -2,12 +2,11 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyData } from '../types/Types'
-import {  DeleteLink,DeleteNode,windowSankey} from '../configmenus/SankeyUtils'
+import {  AdjustSankeyZone, DeleteLink,DeleteNode,windowSankey} from '../configmenus/SankeyUtils'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
 import { RemoveAnimate,
   DrawGrid,
-  update_scale,
   SelectVisualyLinks,
   DeselectVisualyLinks,
   DeselectVisualyNodes,
@@ -117,7 +116,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           SvgDragMiddleMouseMove(event,data)
         })
         .on('end',()=>{
-          set_data({...data})
+          
+          AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)
+          svgSankey.style('width', data.width + 'px')
+          svgSankey.style('height', data.height + 'px')
+          DrawGrid(data)
         })
 
       )
@@ -127,7 +130,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     DrawGrid(data)
 
-    update_scale(data.user_scale)
     const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
 
     d3.select('#svg-container').style('margin-top',shift_top+'px')
@@ -205,7 +207,7 @@ export const keyHandler : keyHandlerFType = (
   node_function
 ) => {
   const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
-  const{ref_get_update_menu_config_node,ref_set_update_menu_config_node,ref_get_update_menu_config_link,ref_set_update_menu_config_link,ref_get_update_menu_config_node_appearence,ref_set_update_menu_config_node_appearence}=ComponentUpdater
+  const{updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true && (!document.activeElement?.className.includes('ql-editor')))) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
@@ -282,7 +284,7 @@ export const keyHandler : keyHandlerFType = (
         }
       })
     }
-    set_data({ ...data })
+    node_function.RedrawNodes(multi_selected_nodes.current)
   } else if (e.key == 'Escape') {
     ref_setter_mode_selection.current('s')
     d3.select(' .opensankey #svg').attr('class','mode_selection')
@@ -301,10 +303,9 @@ export const keyHandler : keyHandlerFType = (
 
     closeAllMenu()
     AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,  dict_hook_ref_setter_show_dialog_components,node_function)
-    ref_set_update_menu_config_node.current(!ref_get_update_menu_config_node.current)
-    ref_set_update_menu_config_node_appearence.current(!ref_get_update_menu_config_node_appearence.current)
-
-    ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+    updateComponentMenuConfigNode.current()
+    updateComponentMenuConfigNodeAppearence.current()
+    updateComponentMenuConfigLink.current()
   }else if(e.key=='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
@@ -343,10 +344,8 @@ export const keyHandler : keyHandlerFType = (
     const time_save=new Date()
     const parsed_time_save=time_save.toLocaleDateString() +' - ' + time_save.toLocaleTimeString()
     localStorage.setItem('last_save', parsed_time_save)
-    set_data({...data})
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
-    set_data({...data})
     ClickSaveDiagram(data)
   }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
     if((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??true)){

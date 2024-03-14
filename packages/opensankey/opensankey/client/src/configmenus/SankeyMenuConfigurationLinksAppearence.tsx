@@ -81,7 +81,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   const [display_link_opacity, set_display_link_opacity] = useState('0')
   const {drawLinkShape}=link_function
   dict_variable_elements_selected.ref_display_link_opacity.current.push(set_display_link_opacity)
-  const {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
+  const {updateComponentMenuConfigLink}=ComponentUpdater
 
   const updateMenuConfigLink=()=>{
     drawLinkShape(
@@ -92,7 +92,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       multi_selected_links.current,
       ComponentUpdater
     )
-    ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+    updateComponentMenuConfigLink.current()
   }
   const list_key=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible',
     'label_visible','font_family','recycling','arrow','curved','nb_digit','scientific_precision',
@@ -594,7 +594,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   d => AssignLinkValueToCorrectVar(d,'opacity',+evt.target.value,menu_for_style)
                 )
                 drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
-                ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+                updateComponentMenuConfigLink.current()
               }}
             />
             <FormControl.Feedback type='invalid'>{t('MEP.onBlur')}</FormControl.Feedback>

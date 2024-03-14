@@ -14,27 +14,34 @@ import {
 } from '@chakra-ui/react'
 
 import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
-import { DrawLegend } from '../draw/SankeyDrawLegend'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import { DrawGrid } from '../draw/SankeyDrawFunction'
 
 export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
   applicationContext,
   dict_variable_application_data,
   dict_variable_elements_selected,
   extra_background_element,
-  package_for_draw_legend
+  node_function,
+  link_function,
+  reDrawLegend,
+  ComponentUpdater
 ) => {
   const { t } = applicationContext
   const { data, set_data} = dict_variable_application_data
   const { userScaleRef } = dict_variable_elements_selected
-  const [,,contextMenu,GetLinkValue,legend_clicked]=package_for_draw_legend
+  const {RedrawNodes} = node_function
+  const {RedrawLinks} = link_function
 
+  const {updateComponentMenuConfigLayout}=ComponentUpdater
   const [legend_position,set_legend_position] = useState(data.legend_position)
   const [current_legend_bg_opacity,set_current_legend_bg_opacity]=useState(data.legend_bg_opacity)
   const [,set_user_scale]=useState(data.user_scale)
   const [minimum_flux,set_minimum_flux] = useState(data.minimum_flux)
   const [maximum_flux,set_maximum_flux] = useState(data.maximum_flux)
   const [forceUpdate,setForceUpdate]=useState(false)
+
+  updateComponentMenuConfigLayout.current=()=>setForceUpdate(!forceUpdate)
   const right_addon_pixel = (val: number) => {
     if (val === 1) {
       return 'pixel'
@@ -96,7 +103,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           icon={data.grid_visible?<FaEye/>:<FaEyeSlash/>}
           onChange={(evt) => {
             data.grid_visible = evt.target.checked
-            set_data({ ...data })
+            DrawGrid(data)
           }}
         >
           {t('MEP.TCG')}
@@ -130,7 +137,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               value={data.grid_square_size}
               onChange={value => {
                 data.grid_square_size = Number(value)
-                set_data({ ...data })
+                DrawGrid(data)
               }}
             >
               <NumberInputField/>
@@ -179,7 +186,10 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             }}
             onBlur={() => {
               data.user_scale = userScaleRef.current
-              set_data({ ...data })
+              setForceUpdate(!forceUpdate)
+              reDrawLegend()
+              RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              RedrawLinks(Object.values(dict_variable_application_data.display_links))
             }}
           >
             <NumberInputField/>
@@ -252,7 +262,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               }}
               onBlur={() => {
                 data.minimum_flux = isNaN(Number(minimum_flux))?undefined:minimum_flux
-                set_data({ ...data })
+                setForceUpdate(!forceUpdate)
+                RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                RedrawLinks(Object.values(dict_variable_application_data.display_links))
               }}
             >
               <NumberInputField/>
@@ -288,7 +300,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               }}
               onBlur={() => {
                 data.maximum_flux = maximum_flux
-                set_data({ ...data })
+                setForceUpdate(!forceUpdate)
+                RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                RedrawLinks(Object.values(dict_variable_application_data.display_links))
               }}
             >
               <NumberInputField/>
@@ -313,7 +327,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         isChecked={data.mask_legend}
         onChange={(evt) => {
           data.mask_legend = evt.target.checked
-          set_data({ ...data })
+          setForceUpdate(!forceUpdate)
+          reDrawLegend()
         }}
       >
         {t('Menu.Leg')}
@@ -359,7 +374,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             inputMode='numeric'
             onChange={value =>{
               data.legend_police = Number(value)
-              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              reDrawLegend()
               setForceUpdate(!forceUpdate)
             }}
           >
@@ -398,7 +413,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             value={data.legend_bg_color}
             onChange={evt => {
               data.legend_bg_color = evt.target.value
-              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              reDrawLegend()
               setForceUpdate(!forceUpdate)
             }}
           />
@@ -430,7 +445,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             onChange={value => set_current_legend_bg_opacity(Number(value))}
             onBlur={() => {
               data.legend_bg_opacity = current_legend_bg_opacity
-              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              reDrawLegend()
               setForceUpdate(!forceUpdate)
             }}
           >
@@ -456,7 +471,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             isChecked={data.legend_bg_border}
             onChange={(evt) => {
               data.legend_bg_border = evt.target.checked
-              DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+              reDrawLegend()
               setForceUpdate(!forceUpdate)
             }}
           >
@@ -497,7 +512,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               onChange={value => set_legend_position([Number(value), legend_position[1]])}
               onBlur={() => {
                 data.legend_position = legend_position
-                DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+                reDrawLegend()
                 setForceUpdate(!forceUpdate)
               }}
             >
@@ -541,12 +556,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               onChange={value => set_legend_position([legend_position[0], Number(value)])}
               onBlur={() => {
                 data.legend_position = legend_position
-                DrawLegend(
-                  dict_variable_application_data,
-                  applicationContext,
-                  contextMenu,
-                  GetLinkValue,
-                  legend_clicked)
+                reDrawLegend()
                 setForceUpdate(!forceUpdate)
               }}
             >
@@ -589,7 +599,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               inputMode='numeric'
               onChange={value =>{
                 data.legend_width = Number(value)
-                DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+                reDrawLegend()
                 setForceUpdate(!forceUpdate)
               }}
             >
@@ -620,7 +630,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           checked={data.display_legend_scale}
           onChange={(evt) => {
             data.display_legend_scale = evt.target.checked
-            DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+            reDrawLegend()
             setForceUpdate(!forceUpdate)
           }}
         >
@@ -635,7 +645,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         checked={data.legend_show_dataTags}
         onChange={(evt) => {
           data.legend_show_dataTags = evt.target.checked
-          DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked)
+          reDrawLegend()
           setForceUpdate(!forceUpdate)
         }}
       >

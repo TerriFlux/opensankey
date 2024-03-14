@@ -95,18 +95,19 @@ export type SortOutputLinksIdByYPosFType = (
 )=> string[]
 
 export type SetNodesHeightFType = (
-  data:SankeyData,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [link_id: string]: SankeyLink },
+  dict_variable_application_data:dict_variable_application_dataType,
   d: SankeyLink,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
 ) => void
  
 export type PathNodeArrowShapeFType = (
   node_width:number,
   node_height:number,
   k_angle:number,
-  direction:string
+  direction:string,
+  scale:(t:number)=>number,
   
 )=> string
 

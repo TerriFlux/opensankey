@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useState } from 'react'
 import { Dropdown, ButtonGroup, Button, Popover } from 'react-bootstrap'
-import { SelectVisualyLinks } from '../draw/SankeyDrawFunction'
+import { SelectVisualyLinks, nodeTransform } from '../draw/SankeyDrawFunction'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { 
@@ -14,6 +14,8 @@ import { reorganize_node_outputLinksId } from '../draw/SankeyDrawLayout'
 import { reorganize_node_inputLinksId } from '../draw/SankeyDrawLayout'
 import { ContextMenuNodeFType } from './types/SankeyMenuContextNodeTypes'
 import { SankeyNode } from '../types/Types'
+import { DeleteGLinks } from '../draw/SankeyDrawLinks'
+import { DeleteGNodes } from '../draw/SankeyDrawNodes'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -26,6 +28,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   contextMenu,
   dict_hook_ref_setter_show_dialog_components,
   agregation,
+  node_function,
+  link_function,
   additional_context_element_menu,
   additional_context_element_other
 }) => {
@@ -36,7 +40,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   const { data, set_data, display_nodes, display_links } = dict_variable_application_data
   const { multi_selected_nodes,multi_selected_links } = dict_variable_elements_selected
   const { pointer_pos } = contextMenu
-
+  const {RedrawNodes}=node_function
+  const {RedrawLinks} = link_function
   let style_c_n='0px 0px auto auto'
   if(contextualised_node){
     style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
@@ -74,9 +79,18 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         n[attr]=pos_ref
       }else if(pos==='a'){
         n[attr]=(pos_ref+wORh_ref)-wORh_to_shift
-
       }
     })
+
+    multi_selected_nodes.current.forEach(n=>{
+      d3.select('#ggg_' + n.idNode).attr('transform',nodeTransform(n,dict_variable_application_data.display_nodes,dict_variable_application_data.display_links))})
+    let link_to_update:string[]=[]
+    multi_selected_nodes.current.forEach(n=>{
+      link_to_update=link_to_update.concat(n.outputLinksId)
+      link_to_update=link_to_update.concat(n.inputLinksId)
+    })
+    link_to_update=[...new Set(link_to_update)]
+    RedrawLinks(link_to_update.map(lid=>data.links[lid]))
   }
 
   // Dropdown to change some pararmeter concerning the appearence of the node
@@ -114,8 +128,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
                     n.tags[nt[0]].splice(n.tags[nt[0]].indexOf(t))
                   }
                 })
-
-                set_data({...data})
+                RedrawNodes(multi_selected_nodes.current)
               }}>
                 {nt[1].tags[t].name}{checked(contextualised_node.tags[nt[0]] &&contextualised_node.tags[nt[0]].includes(t))}
               </Dropdown.Item>
@@ -151,7 +164,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
             contextualised_node!.style=sn.idNode
             multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>n.style=sn.idNode)
 
-            set_data({...data})
+            RedrawNodes(multi_selected_nodes.current)
           }}>{sn.name}</Dropdown.Item>
         })
       }
@@ -166,7 +179,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       <Dropdown.Item  as={Button} variant='light' onClick={()=>{
         delete contextualised_node!.local
         multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>delete n.local)
-        set_data({...data})
+        RedrawNodes(multi_selected_nodes.current)
       }}>{t('Noeud.AS')}</Dropdown.Item>
       {dropdown_c_n_style_select}
     </Dropdown.Menu>
@@ -184,17 +197,14 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     <Dropdown.Menu variant='light'>
       <Dropdown.Item onClick={()=>{
         align_node('min','x','b')
-        set_data({...data})
       }}>{t('Noeud.align_horiz_left')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
         align_node('min','x','m')
-        set_data({...data})
       }}>{t('Noeud.align_horiz_center')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
         align_node('min','x','a')
-        set_data({...data})
       }}>{t('Noeud.align_horiz_right')}
       </Dropdown.Item>
     </Dropdown.Menu>
@@ -207,17 +217,14 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     <Dropdown.Menu variant='light'>
       <Dropdown.Item onClick={()=>{
         align_node('max','x','b')
-        set_data({...data})
       }}>{t('Noeud.align_horiz_left')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
         align_node('max','x','m')
-        set_data({...data})
       }}>{t('Noeud.align_horiz_center')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
         align_node('max','x','a')
-        set_data({...data})
       }}>{t('Noeud.align_horiz_right')}
       </Dropdown.Item>
     </Dropdown.Menu>
@@ -244,17 +251,14 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     <Dropdown.Menu variant='light'>
       <Dropdown.Item onClick={()=>{
         align_node('min','y','b')
-        set_data({...data})
       }}>{t('Noeud.align_vert_top')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
         align_node('min','y','m')
-        set_data({...data})
       }}>{t('Noeud.align_horiz_center')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
         align_node('min','y','a')
-        set_data({...data})
       }}>{t('Noeud.align_vert_bottom')}
       </Dropdown.Item>
     </Dropdown.Menu>
@@ -267,17 +271,14 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     <Dropdown.Menu variant='light'>
       <Dropdown.Item onClick={()=>{
         align_node('max','y','b')
-        set_data({...data})
       }}>{t('Noeud.align_vert_top')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
         align_node('max','y','m')
-        set_data({...data})
       }}>{t('Noeud.align_horiz_center')}
       </Dropdown.Item>
       <Dropdown.Item onClick={()=>{
         align_node('max','y','a')
-        set_data({...data})
       }}>{t('Noeud.align_vert_bottom')}
       </Dropdown.Item>
     </Dropdown.Menu>
@@ -370,7 +371,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       })
       set_contextualised_node(undefined)
       contextMenu.ref_contextualised_node.current = undefined
-      set_data({ ...data })
+      RedrawNodes(multi_selected_nodes.current)
     }}>
     {t('Noeud.Reorg')}
   </Button>
@@ -396,7 +397,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       multi_selected_nodes.current.forEach(n=>{
         AssignNodeLocalAttribute(n,'shape_visible',!contextualised_node_shape_visible)
       })
-      set_data({...data})
+      RedrawNodes(multi_selected_nodes.current)
     }}
   >
     {contextualised_node_shape_visible?t('Noeud.apparence.hide_shape'):t('Noeud.apparence.display_shape')}
@@ -407,7 +408,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       multi_selected_nodes.current.forEach(n=>{
         AssignNodeLocalAttribute(n,'label_visible',!contextualised_node_label_visible)
       })
-      set_data({...data})
+      RedrawNodes(multi_selected_nodes.current)
     }}
   >
     {contextualised_node_label_visible?t('Noeud.apparence.hide_label'):t('Noeud.apparence.display_label')}
@@ -418,7 +419,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       multi_selected_nodes.current.forEach(n=>{
         AssignNodeLocalAttribute(n,'show_value',!contextualised_node_value_visible)
       })
-      set_data({...data})
+      RedrawNodes(multi_selected_nodes.current)
     }}
   >
     {contextualised_node_value_visible?t('Noeud.apparence.hide_value'):t('Noeud.apparence.display_value')}
@@ -456,8 +457,25 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
             multi_selected_nodes.current = []
             set_contextualised_node(undefined)
             contextMenu.ref_contextualised_node.current = undefined
-            set_data({ ...data })
 
+            const tmp_node=Object.keys(data.nodes)
+            Object.entries(dict_variable_application_data.display_nodes).filter(n=>{
+              return !tmp_node.includes(n[0])
+            }).forEach(n=>{
+              DeleteGNodes([n[0]])
+              delete dict_variable_application_data.display_nodes[n[0]]
+            })
+
+            const tmp_link=Object.keys(data.links)
+            Object.entries(dict_variable_application_data.display_links).filter(l=>{
+              return !tmp_link.includes(l[0])
+            }).forEach(l=>{
+              DeleteGLinks([l[0]])
+              delete dict_variable_application_data.display_links[l[0]]
+            })
+
+            RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+            RedrawLinks(Object.values(dict_variable_application_data.display_links))
           }}>
           {t('Menu.suppr')}
         </Button>
