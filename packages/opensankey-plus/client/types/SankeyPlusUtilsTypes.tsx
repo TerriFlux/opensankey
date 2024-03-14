@@ -14,7 +14,8 @@ export  type DragLegendPlusFType = (data:SankeyPlusData,
 export type ImportImageAsSvgBgFType = (
   t:TFunction,
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
-  has_open_sankey_plus:boolean)=> JSX.Element
+  has_open_sankey_plus:boolean
+  )=> JSX.Element
 
 export type SetSvgBgFType = (
   data:SankeyPlusData

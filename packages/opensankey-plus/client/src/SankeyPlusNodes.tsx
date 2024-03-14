@@ -8,7 +8,7 @@ import * as d3 from 'd3'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, Badge, Col, Row, ButtonGroup} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
-import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusShowMenuComponentsType, PlusApplicationContextType} from '../types/Types'
+import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusShowMenuComponentsType, PlusApplicationContextType, PlusNodeFuntionType, PlusLinkFuntionType} from '../types/Types'
 import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import {RemoveAnimate,
   DrawArrows,
@@ -28,10 +28,10 @@ import {RemoveAnimate,
 } from './import/OpenSankey'
 
 import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { ComponentUpdaterType, SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { 
-  SankeyPlusDrawNodesIconFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, PlusNodeDragEventFType, 
+  SankeyPlusDrawNodesIllustrationFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, PlusNodeDragEventFType, 
   SankeyPlusNodeIconFType, ContextNodeIconFType, PlusDragElementsFType, node_icon_fill_colorFType, 
   node_icon_pathFType, OpposingDragElementsPlusFType, PlusReturnOutOfBoundElementsFType
 } from '../types/SankeyPlusNodesTypes'
@@ -46,16 +46,16 @@ typeof globalThis & {
 export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   t:TFunction,
   data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
   menu_for_modal=false,
   // set_ref_setter_show_modal_import_icons:(b:boolean)=>void,
-  dict_hook_ref_setter_show_dialog_components
+  dict_hook_ref_setter_show_dialog_components,
+  node_function
 )=> {
   const [show_menu_node_icon,set_show_menu_node_icon] = useState(false)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
-
+  const [forceUpdate,setForceUpdate]=useState(false)
   const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
   const data_plus=data as SankeyPlusData
   data_plus.icon_catalog=(data_plus.icon_catalog)?data_plus.icon_catalog:{}
@@ -94,7 +94,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
                   d.iconVisible = evt.target.checked
                   d.is_image=false
                 })
-              set_data({ ...data })
+              node_function.reDrawIllustration(multi_selected_nodes.current)
+              setForceUpdate(!forceUpdate)
             }}>
             {t('Noeud.icon.Visibilité')}
           </Checkbox>
@@ -152,7 +153,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
               onChange={evt => {
                 const color = evt.target.value
                 Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
-                set_data({ ...data })
+                node_function.reDrawIllustration(multi_selected_nodes.current)
+                setForceUpdate(!forceUpdate)
               }}
             /></Col>
         </Row>
@@ -185,7 +187,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
                   d.iconVisible = evt.target.checked
                   d.is_image=false
                 })
-              set_data({ ...data })
+              node_function.reDrawIllustration(multi_selected_nodes.current)
+              setForceUpdate(!forceUpdate)
             }}>
             {t('Noeud.img_visibility')}
           </Checkbox>
@@ -228,7 +231,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
               onClick={()=>{
                 Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                   .forEach(n=>n.image_src='')
-                set_data({...data})
+                node_function.reDrawIllustration(multi_selected_nodes.current)
+                setForceUpdate(!forceUpdate)
               }}
             ><FontAwesomeIcon icon={faDeleteLeft}/></Button>
           </ButtonGroup>
@@ -249,7 +253,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
                 Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                   .forEach(n=>n.image_src=(res as string))
 
-                set_data({...data})
+                node_function.reDrawIllustration(multi_selected_nodes.current)
+                setForceUpdate(!forceUpdate)
 
               }
             })()
@@ -280,7 +285,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
               Object.values(data.nodes)
                 .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                 .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,false))
-              set_data({ ...data })
+              node_function.reDrawIllustration(multi_selected_nodes.current)
+              setForceUpdate(!forceUpdate)
             }}>
             {t('Noeud.apparence.Visibilité')}
             {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',false)?TooltipValueSurcharge('node_plus_var',t):<></>)}
@@ -308,7 +314,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
                 })
 
               set_button_icon_or_image('icon')
-              set_data({...data})
+              node_function.reDrawIllustration(multi_selected_nodes.current)
+              setForceUpdate(!forceUpdate)
             }}>{t('Noeud.icon.icon')}</Button>
 
           <Button
@@ -321,7 +328,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
                   d.iconVisible = false
                 })
               set_button_icon_or_image('image')
-              set_data({...data})
+              node_function.reDrawIllustration(multi_selected_nodes.current)
+              setForceUpdate(!forceUpdate)
             }}>Image</Button>
         </ButtonGroup>
       </Col>
@@ -367,9 +375,10 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
 export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
   t:TFunction,
   data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean)=>{
+  is_activated:boolean,
+  node_function
+)=>{
   
   const multi_selected_nodes_plus=multi_selected_nodes as {current:SankeyPlusNode[]}
 
@@ -401,7 +410,7 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
         <Col>
           <Form.Control value={node_hyperlink} type='text' onChange={(evt)=>{
             Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
-            set_data({ ...data })
+            node_function.reDrawPlusNodeEvent(multi_selected_nodes.current)
           }}/>
         </Col>
       </Row>
@@ -662,8 +671,9 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
   GetLinkValue,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
+  nodes_to_update
 )=>{
-  d3.selectAll(' .opensankey .ggg_nodes')
+  (d3.selectAll(' .opensankey .ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>).filter(n=>nodes_to_update.length>0?nodes_to_update.includes(n):true)
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
       node_mouse_click(
@@ -705,7 +715,7 @@ export const node_icon_path : node_icon_pathFType =(
   return ''
 }
 
-export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
+export const SankeyPlusDrawNodesIllustration : SankeyPlusDrawNodesIllustrationFType = (
   data:SankeyPlusData,
   node_to_update :  SankeyPlusNode[],
   dict_variable_elements_selected,
@@ -757,10 +767,14 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
     const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>).filter(n=>node_to_update.length>0?node_to_update.includes(n):true)
+    ggg_nodes.selectAll('.icon_node').remove()
+    ggg_nodes.selectAll('.image_node').remove()
 
     ggg_nodes
       .filter(d => d.iconName !== 'none' && d.iconVisible)
       .append('svg')
+      .attr('id',n=>'icon_node_'+n.idNode)
+      .attr('class','icon_node')
       .attr('viewBox',d=> d.iconViewBox?d.iconViewBox:'0 0 1000 1000')
       .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height'))
       .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width'))
@@ -791,10 +805,14 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
   
     const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>).filter(n=>node_to_update.length>0?node_to_update.includes(n):true)
+    ggg_nodes.filter(d => d.is_image).selectAll('.icon_node').remove()
+    ggg_nodes.filter(d => d.is_image).selectAll('.image_node').remove()
   
     ggg_nodes
       .filter(d => d.is_image)
       .append('image')
+      .attr('id',n=>'image_node_'+n.idNode)
+      .attr('class','image_node')
       .attr('href',n=>n.image_src)
       .attr('height', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('height') )
       .attr('width', n => +d3.select(' .opensankey #shape_' + n.idNode).attr('width') )
@@ -882,7 +900,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   node_function,
   link_function
 )=>{
-  const {data,set_data}=applicaTionData
+  const {data}=applicaTionData
   const {ref_getter_mode_selection}=dict_variable_elements_selected
   
   const inv_scale = d3.scaleLinear()
@@ -919,8 +937,22 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
         lb.y = new_pos_y
         d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
       })
-    }).on('end',()=>
-      set_data({...data})
+    }).on('end',function(_,n){
+      const node =n as SankeyPlusNode
+      // update all nodes connected to dragged node & all links connected to these nodes
+      const node_to_update:SankeyNode[]=[node]
+      node.outputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idTarget]))
+      node.inputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idSource]))
+
+      let link_to_update:SankeyPlusLink[]=[]
+      node_to_update.forEach(node=>{
+        link_to_update=link_to_update.concat(node.outputLinksId.map(lid=>data.links[lid]))
+        link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
+      })
+      node_function.RedrawNodes(node_to_update)
+      link_function.drawLinkShape(applicaTionData,dict_variable_elements_selected,applicationContext,link_function,link_to_update,ComponentUpdater)
+      
+    }
     )
 
   )
@@ -938,8 +970,8 @@ const SankeyPlusDragGNodeEvent = (
   inv_scale:(t:number)=>number,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   ComponentUpdater:ComponentUpdaterType,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes
+  node_function:PlusNodeFuntionType,
+  link_function:PlusLinkFuntionType
 
 )=>{
   const {data}=dict_variable_application_data

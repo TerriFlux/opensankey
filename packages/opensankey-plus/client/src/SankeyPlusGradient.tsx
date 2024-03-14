@@ -18,7 +18,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   t:TFunction,
   multi_selected_links:{current:SankeyPlusLink[]},
   data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
+  link_function,
   is_activated:boolean,
   menu_for_style:boolean,
   selected_style_link,
@@ -57,7 +57,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
           Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
             PlusAssignLinkValueToCorrectVar(d,'gradient',evt.target.checked,menu_for_style)
           })
-          set_data({ ...data })
+          link_function.RedrawLinks(multi_selected_links.current)
         }}>
         {t('Flux.apparence.grad')}
         {(!is_activated)?<Badge pill bg="info" style={{marginLeft:'auto'}}>{t('Menu.featureLocked')}</Badge>:<></>}

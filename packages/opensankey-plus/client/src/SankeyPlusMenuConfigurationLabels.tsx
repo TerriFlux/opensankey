@@ -59,7 +59,7 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
 export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFType = (
   t:TFunction,
   data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void
+  set_data:(_:SankeyPlusData)=>void,
 )=>{
   return <InputGroup>
     <Checkbox
@@ -90,7 +90,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   t,
   is_activated,
   d_setter_input_value,
-  r_editor_ZDT
+  r_editor_ZDT,
+  ComponentUpdater,
+  reDrawPlusLabels
 }) => {
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
@@ -98,7 +100,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   const selected_label = multi_selected_label.current.map((d) => { return { 'label': d.title, 'value': d.idLabel } })
   const [button_icon_or_image,set_button_icon_or_image]=useState<'zdt'|'image'>(zdt_or_image)
   const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
-
+  const [forceUpdate,setForceUpdate]=useState(false)
+  const {updateComponentMenuConfigZdt} = ComponentUpdater
+  updateComponentMenuConfigZdt.current=()=>setForceUpdate(!forceUpdate)
   d_setter_input_value.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
 
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
@@ -115,7 +119,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     })
     for (const member in labels) delete labels[member]
     Object.assign(labels, new_cat)
-    set_data({ ...data })
+    reDrawPlusLabels(Object.values(data.labels))
+    setForceUpdate(!forceUpdate)
   }
 
 
@@ -133,7 +138,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     })
     for (const member in labels) delete labels[member]
     Object.assign(labels, new_cat)
-    set_data({ ...data })
+    reDrawPlusLabels(Object.values(data.labels))
+    setForceUpdate(!forceUpdate)
   }
 
   //Renvoie le menue déroulant pour la sélection des labels libres
@@ -262,7 +268,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
         d.content = s_editor_content_fo_zdt
       })
-      set_data({...data})
+      reDrawPlusLabels(multi_selected_label.current)
+      setForceUpdate(!forceUpdate)
     }}
 
     theme="snow"
@@ -279,14 +286,6 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       <Form.Group>
         {editor_fo}
       </Form.Group>
-      {/* <Button
-        onClick={()=>{
-          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
-            d.content = s_editor_content_fo_zdt
-          })
-          set_data({...data})
-        }}
-      >{t('Menu.updateFOZdd')}</Button> */}
       <Form.Control type='text' isInvalid={isQuill_invalid} style={{display:'none'}}/>
       <FormControl.Feedback type='invalid'>{t('MEP.onBlurNoEnter')}</FormControl.Feedback>
 
@@ -325,7 +324,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
                 Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
                   .forEach(n=>n.image_src=(res as string))
 
-                set_data({...data})
+                reDrawPlusLabels(multi_selected_label.current)
+                setForceUpdate(!forceUpdate)
 
               }
             })()
@@ -370,7 +370,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             }
             data.labels[new_label.idLabel] = new_label
             multi_selected_label.current = [new_label]
-            set_data({ ...data })
+            
+            reDrawPlusLabels(multi_selected_label.current)
+            setForceUpdate(!forceUpdate)
           }
           }><FaPlus /></Button>
 
@@ -434,7 +436,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         onChange={evt => {
           const value=evt.target.value
           multi_selected_label.current.map(d => d.title = value)
-          set_data({ ...data })
+          setForceUpdate(!forceUpdate)
         }}
       />
     </InputGroup>
@@ -455,7 +457,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
             .forEach(n=>n.is_image=false)
           set_button_icon_or_image('zdt')
-          set_data({...data})
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
         }}>Texte</Button>
 
       <Button
@@ -469,7 +472,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             .forEach(n=>n.is_image=true)
 
           set_button_icon_or_image('image')
-          set_data({...data})
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
 
         }}>Image</Button>
     </InputGroup>
@@ -495,7 +499,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         value={allLabelHeight()}
         onChange={evt => {
           multi_selected_label.current.map(d => d.label_height = +evt.target.value)
-          set_data({ ...data })
+          
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
         }}
       />
 
@@ -518,7 +524,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         value={allLabelWidth()}
         onChange={evt => {
           multi_selected_label.current.map(d => d.label_width = +evt.target.value)
-          set_data({ ...data })
+          
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
         }}
       />
     </InputGroup>
@@ -548,7 +556,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         onChange={evt => {
           const val = evt.target.value
           multi_selected_label.current.map(d => d.color = val)
-          set_data({ ...data })
+          
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
         }}
       />
 
@@ -573,7 +583,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         onChange={evt => {
           const value=+evt.target.value
           multi_selected_label.current.map(d => d.opacity = value)
-          set_data({ ...data })
+          
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
         }}
       />
     </InputGroup>
@@ -603,7 +615,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         onChange={evt => {
           const val = evt.target.value
           multi_selected_label.current.map(d => d.color_border = val)
-          set_data({ ...data })
+          
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
         }}
       />
 
@@ -616,7 +630,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         isChecked={valAllLabelBorderTransparent[0]}
         onChange={(evt) => {
           multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
-          set_data({ ...data })
+          
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
         }}>
         {t('LL.bt')}
       </Checkbox>
@@ -632,12 +648,15 @@ export const context_zdt : context_zdtFType =(
   t:TFunction,
   dict_variable_application_data,
   dict_hook_ref_setter_show_dialog_components,
-  dict_variable_elements_selected
+  dict_variable_elements_selected,
+  ComponentUpdater,
+  reDrawPlusLabels
 )=>{
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const {pointer_pos,contextualised_zdt}=(contextMenu as SankeyPlusContextMenuType)
   const {multi_selected_label}=dict_variable_elements_selected
   const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<SankeyPlusLabel>()
+  const {updateComponentMenuConfigZdt} = ComponentUpdater
   contextualised_zdt.current=set_zdt_to_contextualise
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
   let style_c_zdd='0px 0px auto auto'
@@ -650,8 +669,8 @@ export const context_zdt : context_zdtFType =(
   const btn_mask_border=<Button onClick={()=>{
     multi_selected_label.current.forEach(zdt=>zdt.transparent_border=!valAllLabelBorderTransparent[0])
     set_zdt_to_contextualise(undefined)
-    set_data({...data})
-
+    reDrawPlusLabels(multi_selected_label.current)
+    updateComponentMenuConfigZdt.current()
   }} variant='light'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
 
 
@@ -669,7 +688,8 @@ export const context_zdt : context_zdtFType =(
       onChange={evt => {
         const val = evt.target.value
         multi_selected_label.current.map(d => d.color = val)
-        set_data({ ...data })
+        reDrawPlusLabels(multi_selected_label.current)
+        updateComponentMenuConfigZdt.current()
       }}
     />
   </>
@@ -722,20 +742,7 @@ export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
   // const {ref_nav_item_active,ref_setter_sub_nav_item_active,zdt_accordion_ref}=uiElementsRef
   const {t,has_open_sankey_plus} = applicationContext
   return <AccordionItem
-    // key='9'
-    // id="LL"
-    // eventKey="ZDT"
-    //
     style={{ 'display': (data.accordeonToShow.includes('LL')) ? 'initial' : 'none' }}
-    // onClick={evt => {
-    //   if (((evt.target as unknown) as { className: string }).className === 'accordion-button' && ref_nav_item_active.current === 'ZDT') {
-    //     ref_setter_sub_nav_item_active.current!('')
-    //     // ref_setter_show_menu_config.current(true)
-    //   } else {
-    //     ref_setter_sub_nav_item_active.current!('ZDT')
-    //     // ref_setter_show_menu_config.current(true)
-    //   }
-    // }}
   >
     <AccordionButton
       ref={uiElementsRef.zdt_accordion_ref as Ref<HTMLButtonElement>}

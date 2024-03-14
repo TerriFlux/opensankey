@@ -1,5 +1,5 @@
-import { ComponentUpdaterType, SankeyData } from 'open-sankey/src/types/Types'
-import { DictSetterInputValueType, PlusApplicationContextType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode } from './Types'
+import { SankeyData } from 'open-sankey/src/types/Types'
+import { DictSetterInputValueType, PlusApplicationContextType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, reDrawPlusLabelsFType } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
@@ -18,7 +18,9 @@ export type PlusDrawLabelsFType = (
   DrawArrows:DrawArrowsType,
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:PlusComponentUpdaterType,
+  object_to_update:SankeyPlusLabel[],
+  reDrawPlusLabels:reDrawPlusLabelsFType
 
   ) => void
 
@@ -33,6 +35,8 @@ export type eventLabelClickFType=(
   set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
+  ComponentUpdater:PlusComponentUpdaterType,
+  reDrawPlusLabels:reDrawPlusLabelsFType
 )=> void
 
 // Function used to drag the free label
@@ -44,7 +48,8 @@ export type sankey_plus_min_width_and_heightFType = (
 
 export type zone_selection_labelFType=(data:SankeyPlusData,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  evt:MouseEvent
+  evt:MouseEvent,
+  reDrawPlusLabels:reDrawPlusLabelsFType
 ) => void
 
 export type sankey_plus_zoom_text_zoneFType = (

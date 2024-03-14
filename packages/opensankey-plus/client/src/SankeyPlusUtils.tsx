@@ -75,10 +75,10 @@ export  const DragLegendPlus : DragLegendPlusFType = (data:SankeyPlusData,
 
 export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
   t:TFunction,
-  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
-  has_open_sankey_plus:boolean)=>{
+  data,set_data,
+  has_open_sankey_plus,
+)=>{
   const _load_image = useRef<HTMLInputElement>(null)
-
 
   const content_image=<>
     {/* Import image */}

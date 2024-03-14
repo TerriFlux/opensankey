@@ -6,7 +6,10 @@ import {
   dict_variable_elements_selectedType,
   contextMenuType,
   applicationContextType,
-  uiElementsRefType
+  uiElementsRefType,
+  NodeFunctionTypes,
+  LinkFunctionTypes,
+  ComponentUpdaterType
 } from 'open-sankey/src/types/Types'
 import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 
@@ -147,3 +150,18 @@ export interface PlusUiElementsRefType extends uiElementsRefType{
 export interface SankeyUnitData extends SankeyPlusData{
   unitary_node: string[],
 }
+
+export interface PlusComponentUpdaterType extends ComponentUpdaterType{
+  updateComponentMenuConfigZdt:MutableRefObject<()=>void>
+}
+
+export type reDrawIllustrationFType=(node_to_update:SankeyPlusNode[])=>void
+export type reDrawPlusNodeEventFType=(node_to_update:SankeyPlusNode[])=>void
+export type reDrawPlusLabelsFType=(labels_to_update:SankeyPlusLabel[])=>void
+export interface PlusNodeFuntionType extends NodeFunctionTypes {
+  reDrawIllustration:reDrawIllustrationFType,
+  reDrawPlusNodeEvent:reDrawPlusNodeEventFType,
+}
+
+
+export type PlusLinkFuntionType= LinkFunctionTypes
