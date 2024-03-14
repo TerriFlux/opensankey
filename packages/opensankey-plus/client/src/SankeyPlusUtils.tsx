@@ -58,7 +58,9 @@ export const DefaultSankeyPlusStyleLink : DefaultSankeyPlusStyleLinkFType = () =
 
 export  const DragLegendPlus : DragLegendPlusFType = (data:SankeyPlusData,
   set_data:(d:SankeyPlusData)=>void,
-  multi_selected_label:{current:SankeyPlusLabel[]}
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  ComponentUpdater
+
 ) => d3.drag<SVGGElement, unknown>()
   .subject(Object).on('drag', function (event) {
 
@@ -68,7 +70,7 @@ export  const DragLegendPlus : DragLegendPlusFType = (data:SankeyPlusData,
         OpposingDragElementsPlus([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],event,({} as SankeyPlusNode),data,{current:[]},multi_selected_label)
       }
     }
-  }).on('end',()=>set_data({...data}))
+  }).on('end',()=>ComponentUpdater.updateComponentMenuConfigLayout.current())
 
 
 export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (

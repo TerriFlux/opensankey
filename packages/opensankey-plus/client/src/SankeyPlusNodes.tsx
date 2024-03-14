@@ -756,7 +756,7 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
     // then apply selected parameter
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
-    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>).filter(n=>node_to_update.includes(n))
+    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>).filter(n=>node_to_update.length>0?node_to_update.includes(n):true)
 
     ggg_nodes
       .filter(d => d.iconName !== 'none' && d.iconVisible)
@@ -790,7 +790,7 @@ export const SankeyPlusDrawNodesIcon : SankeyPlusDrawNodesIconFType = (
     // then apply selected parameter
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
   
-    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>)
+    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>).filter(n=>node_to_update.length>0?node_to_update.includes(n):true)
   
     ggg_nodes
       .filter(d => d.is_image)
