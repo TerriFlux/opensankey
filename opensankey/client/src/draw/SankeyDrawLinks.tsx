@@ -3,7 +3,7 @@ import React, { MutableRefObject } from 'react'
 import * as d3 from 'd3'
 import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
-  drawCurveFunction, scale, inv_scale, SetNodesHeight, StrokeDasharray,
+  drawCurveFunction, SetNodesHeight, StrokeDasharray,
   GetSankeyMinWidthAndHeight, DeselectVisualyLinks, SelectVisualyLinks} from './SankeyDrawFunction'
 import { EventLinkContextMenu } from './SankeyDrawEventFunction'
 import {DragLinkEvent} from './SankeyDragLinks'
@@ -115,7 +115,7 @@ const eventLinkClick=(
 )=>{
   const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef}=dict_variable_elements_selected
   const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
-  const {ref_get_update_menu_config_link,ref_set_update_menu_config_link}=ComponentUpdater
+  const {updateComponentMenuConfigLink}=ComponentUpdater
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -211,7 +211,7 @@ const eventLinkClick=(
     }else{
       displayedInputLinkValueRef.current.forEach(setter=>setter(''))
     }
-    ref_set_update_menu_config_link.current(!ref_get_update_menu_config_link.current)
+    updateComponentMenuConfigLink.current()
   }
 }
 
@@ -233,7 +233,12 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   const { multi_selected_links, displayedInputLinkValueSetterRef} = dict_variable_elements_selected
   const {t}=applicationContext
   const min_thickness=2
-
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -386,6 +391,12 @@ export const drawAddLinks:drawAddLinksFType = (
   const {LinkText,GetLinkValue,DrawArrows } = link_functions
   const min_thickness=2
   const { data} = dict_variable_application_data
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const filtered_data =link_to_redraw
   // const node_visible=NodeVisibleOnsSvg()
   filtered_data.forEach(l=>{
@@ -472,7 +483,12 @@ export const drawLinkShape:drawLinkShapeFType  = (
   const { multi_selected_links } = dict_variable_elements_selected
   const{ data, display_nodes, display_links} = dict_variable_application_data
   const { ref_getter_mode_selection} = dict_variable_elements_selected
-
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+  const scale = d3.scaleLinear()
+    .range([0, 100])
+    .domain([0, data.user_scale])
   const min_thickness=2
   const { display_style } = data
   const gg_links = d3
@@ -580,14 +596,14 @@ export const drawLinkShape:drawLinkShapeFType  = (
     })
 
   paths.attr('d', d => {
-    SetNodesHeight(data,display_nodes,display_links, d, GetLinkValue)
+    SetNodesHeight(dict_variable_application_data, d, GetLinkValue,scale,inv_scale)
     return drawCurveFunction.curve(
       dict_variable_application_data,dict_variable_elements_selected,
       applicationContext,
       display_style,
       data.nodeTags, d, error_msg,
       LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,
-      DrawArrows,ComponentUpdater
+      DrawArrows,ComponentUpdater,scale,inv_scale
     )
   })
 

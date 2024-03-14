@@ -69,7 +69,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
     }).on('end', function(_,node){
       if (d3.select(document.activeElement).attr('class') !== 'input_label') {
         // update all nodes connected to dragged node & all links connected to these nodes
-        const node_to_update:SankeyNode[]=[]
+        const node_to_update:SankeyNode[]=[node]
         node.outputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idTarget]))
         node.inputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idSource]))
 
@@ -115,8 +115,6 @@ export const dragNodeTextEventWidthBoxEvent: dragNodeTextEventWidthBoxEventFType
           AssignNodeLocalAttribute(data.nodes[node.idNode], 'label_box_width', tmp + event.dx)
         }
       }
-    }).on('end', () => {
-      // set_data({ ...data })
     })
 }
 /**
@@ -317,7 +315,7 @@ export const DragElements: DragElementsFuncType = (
             applicationContext,
             data.display_style,
             data.nodeTags, l, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
-            DrawArrows,ComponentUpdater
+            DrawArrows,ComponentUpdater,scale,inv_scale
           )
         )
       })
@@ -333,7 +331,7 @@ export const DragElements: DragElementsFuncType = (
           applicationContext,
           data.display_style,
           data.nodeTags, l, error_msg, LinkText,
-          GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows,ComponentUpdater
+          GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows,ComponentUpdater,scale,inv_scale
         )
       )
       d3.select(' .opensankey #path_' + l.idLink).attr('stroke-width', LinkStrokeWidth(l, data, scale, inv_scale, 2, data.nodes, GetLinkValue))

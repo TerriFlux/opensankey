@@ -318,8 +318,9 @@ export type SankeyDrawCurve={
     GetSankeyMinWidthAndHeight : GetSankeyMinWidthAndHeightFuncType,
     GetLinkValue : GetLinkValueFuncType,
     DrawArrows:DrawArrowsType,
-    ComponentUpdater:ComponentUpdaterType
-
+    ComponentUpdater:ComponentUpdaterType,
+    scale:(t:number)=>number,
+    inv_scale:(t:number)=>number,
   ) => string | number | boolean | readonly (string | number)[] | null
 }
 
@@ -496,18 +497,16 @@ export type RedrawNodesFType=(node_to_update:SankeyNode[])=>void
 export type NodeFunctionTypes = {
   DrawAllNodes : DrawAllNodesFType,
   drawAddNodes : drawNodeShapeFType,
-  RedrawNodes:RedrawNodesFType
+  RedrawNodes:RedrawNodesFType,
+  recomputeDisplayedElement:()=>void
 }
 
 export type ComponentUpdaterType={
-  ref_set_update_menu_config_node:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_get_update_menu_config_node:MutableRefObject<boolean| undefined>,
-  ref_set_update_menu_config_node_appearence:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_get_update_menu_config_node_appearence:MutableRefObject<boolean| undefined>,
-
-  ref_set_update_menu_config_link:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_get_update_menu_config_link:MutableRefObject<boolean| undefined>,
-  
-  ref_set_update_toolbar:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_get_update_toolbar:MutableRefObject<boolean| undefined>,
+  updateComponentMenuConfigNode:MutableRefObject<()=>void>
+  updateComponentMenuConfigNodeAppearence:MutableRefObject<()=>void>
+  updateComponentMenuConfigLink:MutableRefObject<()=>void>
+  updateComponentToolbar:MutableRefObject<()=>void>
+  updateComponentMenuConfig:MutableRefObject<()=>void>
+  updateComponentMenuConfigLayout:MutableRefObject<()=>void>
+  updateComponentMenu:MutableRefObject<()=>void>
 }

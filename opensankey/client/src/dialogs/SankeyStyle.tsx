@@ -14,13 +14,18 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
   dict_variable_application_data,
   ref_show_style_node,
   ref_selected_style_node,
+  ComponentUpdater,
+  node_function,
   node_attribute_tab
 ) => {
   const { t } = applicationContext
-  const { data, set_data } = dict_variable_application_data
+  const { data } = dict_variable_application_data
+  const {updateComponentMenuConfigNodeAppearence}=ComponentUpdater
+  const {RedrawNodes}=node_function
   const [ selected_style_node,set_selected_style_node] = useState('default')
   ref_selected_style_node.current = selected_style_node
   const [ show_style_node, set_show_style_node ] = useState(false)
+  const [forceUpdate,setForceUpdate]=useState(false)
   ref_show_style_node.current = set_show_style_node
   if(data.style_node && !Object.keys(data.style_node).includes(selected_style_node)){
     set_selected_style_node('default')
@@ -46,7 +51,8 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                 const new_id = 'style_node_' + String(new Date().getTime())
                 new_style.idNode=new_id
                 data.style_node[new_id] = new_style
-                set_data({ ...data })
+                setForceUpdate(!forceUpdate)
+                updateComponentMenuConfigNodeAppearence.current()
                 ref_selected_style_node.current = new_style.idNode
                 set_selected_style_node(new_style.idNode)
               }}><FaPlus /></Button>
@@ -79,7 +85,10 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                   const new_style=(Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : ''
                   set_selected_style_node(new_style)
                   ref_selected_style_node.current=new_style
-                  set_data({...data})
+                  setForceUpdate(!forceUpdate)
+                  updateComponentMenuConfigNodeAppearence.current()
+                  RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                
                 }
               }
             ><FaMinus /></Button>
@@ -95,7 +104,8 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
 
               onChange={evt => {
                 data.style_node[selected_style_node].name = evt.target.value
-                set_data({ ...data })
+                setForceUpdate(!forceUpdate)
+                updateComponentMenuConfigNodeAppearence.current()
               }}
             />
           </InputGroup>
@@ -114,28 +124,27 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   ref_show_style_link: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   additional_link_appearence_items:JSX.Element[],
-  link_function
+  link_function,
+  ComponentUpdater
 ) => {
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const {t}=applicationContext
   const {ref_selected_style_link}=dict_variable_elements_selected
+  const {updateComponentMenuConfigLink}=ComponentUpdater
+
   const [selected_style_link,set_selected_style_link] = useState('default')
   const [forceUpdate,setForceUpdate]=useState(false)
   ref_selected_style_link.current = selected_style_link
   const [show_style_link, set_show_style_link] = useState(false)
   ref_show_style_link.current = set_show_style_link
-
   const ComponentUpdaterForStyle:ComponentUpdaterType={
-    ref_get_update_menu_config_node:useRef(),
-    ref_set_update_menu_config_node:useRef(()=>null),
-    ref_get_update_menu_config_node_appearence:useRef(),
-    ref_set_update_menu_config_node_appearence:useRef(()=>null),
-
-    ref_get_update_menu_config_link:useRef(forceUpdate),
-    ref_set_update_menu_config_link:useRef(setForceUpdate),
-
-    ref_get_update_toolbar:useRef(),
-    ref_set_update_toolbar:useRef(()=>null),
+    updateComponentMenuConfigNode:useRef(()=>null),
+    updateComponentMenuConfigNodeAppearence:useRef(()=>null),
+    updateComponentMenuConfigLink:useRef(()=>setForceUpdate(!forceUpdate)),
+    updateComponentToolbar:useRef(()=>null),
+    updateComponentMenuConfig:useRef(()=>null),
+    updateComponentMenuConfigLayout:useRef(()=>null),
+    updateComponentMenu:useRef(()=>null)
   }
   if(selected_style_link !== 'default'){
     set_selected_style_link('default')
@@ -157,7 +166,8 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
               const new_id = 'style_link_' + String(new Date().getTime())
               new_style.idLink = new_id
               data.style_link[new_id] = new_style
-              set_data({ ...data })
+              setForceUpdate(!forceUpdate)
+              updateComponentMenuConfigLink.current()
               set_selected_style_link(new_style.idLink)
 
             }}><FaPlus /></Button>
@@ -178,7 +188,9 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
                   delete data.style_link[selected_style_link]
                   set_selected_style_link('default')
                   ref_selected_style_link.current='default'
-                  set_data({...data})
+                  setForceUpdate(!forceUpdate)
+                  updateComponentMenuConfigLink.current()
+                  link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                 }
               }
             ><FaMinus /></Button>
@@ -195,7 +207,8 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
               }
               onChange={evt => {
                 data.style_link[selected_style_link].name = evt.target.value
-                set_data({ ...data })
+                setForceUpdate(!forceUpdate)
+                updateComponentMenuConfigLink.current()              
               }}
             />
           </Col>

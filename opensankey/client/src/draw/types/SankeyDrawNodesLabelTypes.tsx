@@ -19,7 +19,7 @@ export type DrawAllNodesLabelFType = (
 
 export type DrawAddNodesFtype = (
   dict_variable_application_data:dict_variable_application_dataType,
-  multi_selected_nodes:{current: SankeyNode[] },
+  nodes_to_redraw:SankeyNode[],
   GetLinkValue:GetLinkValueFuncType,
   t:TFunction
 ) => void

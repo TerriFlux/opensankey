@@ -1,7 +1,8 @@
 // Standard libs
 import React, {
   FunctionComponent,
-  Ref
+  Ref,
+  useState
 } from 'react'
 import { ReactElementLike } from 'prop-types'
 
@@ -67,7 +68,8 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   // ref_setter_nav_item_active.current = setNavIndex
   // ref_setter_sub_nav_item_active.current = setsubnavitemactive
   // ref_nav_item_active.current = nav_index
-
+  const [forceUpdate,setForceUpdate]=useState(false)
+  ComponentUpdater.updateComponentMenuConfig.current=()=>setForceUpdate(!forceUpdate)
   const {data}=dict_variable_application_data
   const {t}=applicationContext
   const {links_accordion_ref, nodes_accordion_ref,accordion_ref} = uiElementsRef
