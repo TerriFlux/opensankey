@@ -1046,8 +1046,11 @@ export const OpenSankeySaveButton : OpenSankeySaveButtonFType = (
       }}  ><FontAwesomeIcon style={{width:'2rem',height:'2rem'}} icon={faFloppyDisk} /></Button></OverlayTrigger></>
 }
 export const LastCheckpointTime : LastCheckpointTimeFType =(
-  t:TFunction
+  t:TFunction,
+  ComponentUpdater
 )=>{
+  const [forceUpdate,setForceUpdate]=useState(false)
+  ComponentUpdater.updateComponenTimeCheckpoint.current=()=>setForceUpdate(!forceUpdate)
   const last_save=localStorage.getItem('last_save')
   let l_s_c=''
   const has_save=last_save!==undefined && last_save!==null

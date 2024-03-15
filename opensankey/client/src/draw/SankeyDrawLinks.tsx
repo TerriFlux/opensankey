@@ -279,7 +279,6 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   // }
   //let error_msg: { text?: string | undefined } | undefined
   const paths = gg_links.selectAll('path') as d3.Selection<d3.BaseType, SankeyLink, SVGGElement, SankeyLink>
-  const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
   paths
     .on('mouseover', function (event, d) {
       // Quand on survole des flux petit : aggrandi la taille du flux pour être plus facile sélectionnable
@@ -292,6 +291,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
       if (!window.SankeyToolsStatic && !event.shiftKey) {
         return
       }
+      const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
       sankeyTooltip
         .html(LinkTooltipsContent(data, d,GetLinkValue,t))
 
@@ -306,6 +306,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
       if (!window.SankeyToolsStatic && !event.shiftKey) {
         return
       }
+      const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
       sankeyTooltip
         .style('opacity', 1)
         .style('top', Math.max(50, event.pageY - 10) + 'px')
@@ -319,6 +320,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
           d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 2')
         }
       }
+      const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
       sankeyTooltip.style('opacity', 0)
       let tmp=GetLinkValue(data, d.idLink).value as number
       tmp=(tmp)?tmp:0
@@ -329,6 +331,8 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
       }
     })
 
+
+  const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
   paths.on('click', (event, d) =>eventLinkClick(
     event,d,sankeyTooltip,
     accordion_ref,button_ref,
@@ -372,7 +376,9 @@ export const DrawAllLinks : DrawAllLinksFType = (
   </>
   )
 }
-
+/**
+ * Add Visual element to represent 
+ */
 export const drawAddLinks:drawAddLinksFType = (
   contextMenu,
   dict_variable_application_data,
@@ -470,6 +476,9 @@ export const drawAddLinks:drawAddLinksFType = (
   )
 }
 
+/**
+ * Redraw links that are in parameter link_to_redraw
+ */
 export const drawLinkShape:drawLinkShapeFType  = (
   dict_variable_application_data,
   dict_variable_elements_selected,
@@ -612,8 +621,17 @@ export const drawLinkShape:drawLinkShapeFType  = (
   }
 }
 
+/**
+ * Function used to delete visual elements of links
+ * @param links_to_delete List of links id 
+ */
 export const DeleteGLinks=(links_to_delete:string[])=>{
   (d3
     .select('.opensankey #g_links')
     .selectAll('.gg_links')  as d3.Selection<SVGGElement, SankeyLink, d3.BaseType, unknown>).filter(l=>links_to_delete.includes(l.idLink)).remove()
+
+  links_to_delete.forEach(lid=>{
+    d3.selectAll(' .opensankey #gg_link_handle_'+lid).remove()
+  })
+  
 }

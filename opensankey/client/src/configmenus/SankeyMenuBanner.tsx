@@ -11,7 +11,7 @@ import { Row,
   Popover,
   FormControl,
   Overlay } from 'react-bootstrap'
-import {  SankeyData, SankeyLink, TagsCatalog, TagsGroup, dict_variable_application_dataType} from '../types/Types'
+import {  LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, dict_variable_application_dataType} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import {
   FindMaxLinkValue,
@@ -144,15 +144,15 @@ export const col_title_level_filter : col_title_level_filterFType = (
 
 export const addAllDropDownNode : addAllDropDownNodeFType = (
   t:TFunction,
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void,
+  dict_variable_application_data,
   level:boolean,
   reDrawLegend,
-  redrawAllNodes,
-  redrawAllLinks,
+  node_function,
+  link_function,
   recomputeDisplayedElement
 ) => {
   const color = 'black'
+  const {data,display_nodes,display_links}=dict_variable_application_data
   const {nodeTags,levelTags} = data
   const [forceUpdate,setForceUpdate]=useState(false)
   let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
@@ -191,8 +191,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                     handleSimpleDropdown(evt, tags_group) 
                     recomputeDisplayedElement()
                     setForceUpdate(!forceUpdate)
-                    redrawAllNodes()
-                    redrawAllLinks()    
+                    node_function.RedrawNodes(Object.values(display_nodes))
+                    link_function.RedrawLinks(Object.values(display_links))
                     reDrawLegend()
                   
                   }}>{
@@ -236,8 +236,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                       data['nodeTags'][tags_selected[0]].show_legend = true
                     }
                     setForceUpdate(!forceUpdate)
-                    redrawAllNodes()
-                    redrawAllLinks()
+                    node_function.RedrawNodes(Object.values(display_nodes))
+                    link_function.RedrawLinks(Object.values(display_links))
                     reDrawLegend()
 
                   }}
@@ -270,8 +270,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
 
                   recomputeDisplayedElement()
                   setForceUpdate(!forceUpdate)
-                  redrawAllNodes()
-                  redrawAllLinks()    
+                  node_function.RedrawNodes(Object.values(display_nodes))
+                  link_function.RedrawLinks(Object.values(display_links))   
                   reDrawLegend()
 
                 }}>{
@@ -294,8 +294,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                     // Opposed to current tag group
                     tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = !tags_group.activated)
                     setForceUpdate(!forceUpdate)
-                    redrawAllNodes()
-                    redrawAllLinks()
+                    node_function.RedrawNodes(Object.values(display_nodes))
+                    link_function.RedrawLinks(Object.values(display_links))
                     reDrawLegend()
                   }}
                 />
@@ -338,8 +338,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                   onChange={(selected: [{ label: string, value: string }]) => {
                     HandleMultiDropdown(selected, tags_group, data)
                     setForceUpdate(!forceUpdate)
-                    redrawAllNodes()
-                    redrawAllLinks()
+                    node_function.RedrawNodes(Object.values(display_nodes))
+                    link_function.RedrawLinks(Object.values(display_links))
                     reDrawLegend()
                   }}
                 />
@@ -379,8 +379,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                       data['nodeTags'][tags_selected[0]].show_legend = true
                     }
                     setForceUpdate(!forceUpdate)
-                    redrawAllNodes()
-                    redrawAllLinks()
+                    node_function.RedrawNodes(Object.values(display_nodes))
+                    link_function.RedrawLinks(Object.values(display_links))
                     reDrawLegend()
 
                   }}
@@ -481,13 +481,13 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   never_see_again,
   additional_link_visual_filter_content,
   reDrawLegend,
-  redrawAllNodes,
-  redrawAllLinks,
+  node_function,
+  link_function,
   recomputeDisplayedElement,
   ComponentUpdater
 ) => {
 
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const { ref_getter_mode_selection,ref_setter_mode_selection } = dict_variable_elements_selected
   const {updateComponentToolbar} =ComponentUpdater
   // ===================Create hooks used in this component========================
@@ -589,9 +589,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
                   d[1].label_pos_auto=evt.target.checked
                 })
                 setForceUpdate(!forceUpdate)
-
-                redrawAllNodes()
-                redrawAllLinks()
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                 reDrawLegend()              }}>{t('Flux.ajust_label')}</Checkbox></Col>
       </Form.Group></OverlayTrigger>
   </>
@@ -645,8 +644,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
                 data.display_style.filter_label = +evt.target.value
                 setForceUpdate(!forceUpdate)
 
-                redrawAllNodes()
-                redrawAllLinks()
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                 reDrawLegend()              }}
             />
           </Col>
@@ -665,8 +664,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
                 data.display_style.filter_label = tmp
                 setForceUpdate(!forceUpdate)
 
-                redrawAllNodes()
-                redrawAllLinks()
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                 reDrawLegend()
               }}
             />
@@ -699,8 +698,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
               sIsDataTypeReconcilied(false)
             }
             setForceUpdate(!forceUpdate)
-            redrawAllNodes()
-            redrawAllLinks()
+            node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+            link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
             reDrawLegend()
           }}>
           <option key='structure'  value='structure' >{t('Banner.t_v_s')}</option>
@@ -718,8 +717,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             data.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
             setForceUpdate(!forceUpdate)
-            redrawAllNodes()
-            redrawAllLinks()
+            node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+            link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
             reDrawLegend()
           }}>
           <option key='none'  value='reconciled' >{t('Banner.t_v_s')}</option>
@@ -729,7 +728,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       </Form.Group>
     </Popover.Body>
   </Popover>
-  const node_tag_filter_content=addAllDropDownNode(t,data,set_data,false,reDrawLegend,redrawAllNodes,redrawAllLinks,recomputeDisplayedElement)
+  const node_tag_filter_content=addAllDropDownNode(t,dict_variable_application_data,false,reDrawLegend,node_function,link_function,recomputeDisplayedElement)
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
   const filter_color_node=<Popover id='tooltip-link-color-filter' style={{minWidth:'350px'}}>
@@ -751,7 +750,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       {legend_filter}
       <FormGroup as={Row}>
         <Col xs={10}>
-          {addAllDropDownLinks(dict_variable_application_data,reDrawLegend,redrawAllNodes,redrawAllLinks,recomputeDisplayedElement)}
+          {addAllDropDownLinks(dict_variable_application_data,reDrawLegend,node_function,link_function,recomputeDisplayedElement)}
         </Col>
         <Col xs={2}>
           <FormCheck
@@ -789,8 +788,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
               }
 
               setForceUpdate(!forceUpdate)
-              redrawAllNodes()
-              redrawAllLinks()
+              node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
               reDrawLegend()
             }}
           />
@@ -804,7 +803,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px'}}>
       {legend_filter}
-      {AddAllDropDownFlux(t, data.fluxTags, data, set_data,reDrawLegend,redrawAllNodes,redrawAllLinks,recomputeDisplayedElement)}
+      {AddAllDropDownFlux(t, data.fluxTags, dict_variable_application_data,reDrawLegend,node_function,link_function,recomputeDisplayedElement)}
     </Popover.Body>
   </Popover>
 
@@ -943,8 +942,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       <Button variant={'success'} onClick={() => {
         data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
         setForceUpdate(!forceUpdate)
-        redrawAllNodes()
-        redrawAllLinks()
+        node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+        link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
         reDrawLegend()
         
       }} >
@@ -1110,15 +1109,14 @@ export const stretchButtons : stretchButtonsFType =(
 export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
   t:TFunction,
   fluxTags: TagsCatalog,
-  data: SankeyData,
-  set_data: (data: SankeyData) => void,
+  dict_variable_application_data,
   reDrawLegend,
-  redrawAllNodes,redrawAllLinks,
+  node_function,link_function,
   recomputeDisplayedElement
 ) =>
 {
   const [forceUpdate,setForceUpdate]=useState(false)
-
+  const {data}=dict_variable_application_data
   const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
   const allDD = banner_grouptag.map(tags_group => {
     const the_tags_group = tags_group as TagsGroup
@@ -1145,8 +1143,9 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                     handleSimpleDropdown(evt, the_tags_group) 
                     recomputeDisplayedElement()
                     setForceUpdate(!forceUpdate)
-                    redrawAllNodes()
-                    redrawAllLinks()    
+
+                    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))            
                     reDrawLegend()                  
                   }}>{
                     Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
@@ -1191,8 +1190,8 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                       data.colorMap = tags_selected[0]
                       data.fluxTags[tags_selected[0]].show_legend = true
                     }
-                    redrawAllNodes()
-                    redrawAllLinks()
+                    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                   }}
                 />
               </OverlayTrigger>
@@ -1235,8 +1234,9 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                   onChange={(selected: [{ label: string, value: string }]) => {
                     HandleMultiDropdown(selected, the_tags_group, data)
                     setForceUpdate(!forceUpdate)
-                    redrawAllNodes()
-                    redrawAllLinks()
+
+                    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                     reDrawLegend()
                   }}
                 />
@@ -1280,8 +1280,9 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                       data['fluxTags'][tags_selected[0]].show_legend = true
                     }
                     setForceUpdate(!forceUpdate)
-                    redrawAllNodes()
-                    redrawAllLinks()
+
+                    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                     reDrawLegend()
                   }}
                 />
@@ -1299,8 +1300,8 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
 const addAllDropDownLinks = (
   dict_variable_application_data:dict_variable_application_dataType,
   reDrawLegend:()=>void,
-  redrawAllNodes:()=>void,
-  redrawAllLinks:()=>void,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes,
   recomputeDisplayedElement:()=>void
 
 ) => {
@@ -1351,8 +1352,8 @@ const addAllDropDownLinks = (
                 handleSimpleDropdown(evt, tags_group)
                 recomputeDisplayedElement()
                 setForceUpdate(!forceUpdate)
-                redrawAllNodes()
-                redrawAllLinks()    
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))        
                 reDrawLegend()
               }}>
                 {
@@ -1409,8 +1410,8 @@ const addAllDropDownLinks = (
                 
                 setForceUpdate(!forceUpdate)
 
-                redrawAllNodes()
-                redrawAllLinks()
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))    
                 reDrawLegend()
               }
             }} />

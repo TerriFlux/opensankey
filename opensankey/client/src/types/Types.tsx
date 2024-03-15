@@ -508,5 +508,7 @@ export type ComponentUpdaterType={
   updateComponentToolbar:MutableRefObject<()=>void>
   updateComponentMenuConfig:MutableRefObject<()=>void>
   updateComponentMenuConfigLayout:MutableRefObject<()=>void>
-  updateComponentMenu:MutableRefObject<()=>void>
+  updateComponentMenu:MutableRefObject<()=>void>,
+  updateComponenTimeCheckpoint:MutableRefObject<()=>void>
+
 }

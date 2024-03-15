@@ -14,7 +14,8 @@ import { RemoveAnimate,
 import LZString from 'lz-string'
 import { SankeyDrawTypes, keyHandlerFType } from './types/SankeyDrawTypes'
 import { SvgDragMiddleMouseStart, SvgDragMiddleMouseMove, EventZDDContextMenu } from './SankeyDrawEventFunction'
-import { AddDrawNodesEvent } from './SankeyDrawNodes'
+import { AddDrawNodesEvent, DeleteGNodes } from './SankeyDrawNodes'
+import { DeleteGLinks } from './SankeyDrawLinks'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -284,7 +285,15 @@ export const keyHandler : keyHandlerFType = (
         }
       })
     }
-    node_function.RedrawNodes(multi_selected_nodes.current)
+    let link_to_update:string[]=[]
+    multi_selected_nodes.current.forEach(n=>{
+      link_to_update=link_to_update.concat(n.outputLinksId)
+      link_to_update=link_to_update.concat(n.inputLinksId)
+      d3.selectAll('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
+    })                  
+    link_to_update=[...new Set(link_to_update)]
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+
   } else if (e.key == 'Escape') {
     ref_setter_mode_selection.current('s')
     d3.select(' .opensankey #svg').attr('class','mode_selection')
@@ -310,15 +319,25 @@ export const keyHandler : keyHandlerFType = (
     
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {
+      DeleteGLinks(multi_selected_links.current.map(l=>l.idLink))
       multi_selected_links.current.forEach(el=>{
         DeleteLink(data,el)
       })
+
+      DeleteGNodes(multi_selected_nodes.current.map(n=>n.idNode))
       multi_selected_nodes.current.forEach(el=>{
         DeleteNode(data,el)
       })
       multi_selected_nodes.current=[]
       multi_selected_links.current=[]
-      set_data({...data})
+      
+      node_function.recomputeDisplayedElement()
+      node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+      link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+      updateComponentMenuConfigNode.current()
+      updateComponentMenuConfigLink.current()
+
+
     }
   }else if(e.key=='a' && e.ctrlKey){
     e.preventDefault()
@@ -344,6 +363,7 @@ export const keyHandler : keyHandlerFType = (
     const time_save=new Date()
     const parsed_time_save=time_save.toLocaleDateString() +' - ' + time_save.toLocaleTimeString()
     localStorage.setItem('last_save', parsed_time_save)
+    ComponentUpdater.updateComponenTimeCheckpoint.current()
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
     ClickSaveDiagram(data)
