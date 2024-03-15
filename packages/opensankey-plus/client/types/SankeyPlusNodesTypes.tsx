@@ -1,27 +1,28 @@
 import { TFunction } from 'i18next'
-import { PlusApplicationContextType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
+import { PlusApplicationContextType, PlusElementsSelectedType, PlusLinkFuntionType, PlusNodeFuntionType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
-import { dict_variable_application_dataType, contextMenuType, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { dict_variable_application_dataType, contextMenuType, uiElementsRefType, ComponentUpdaterType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
 
 
 export type SankeyPlusNodeIconFType = (
   t:TFunction,
   data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
   menu_for_modal:boolean,
-  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
+  node_function:PlusNodeFuntionType
 )=> JSX.Element
 
 export type SankeyPlusHyperLinkFType=( 
   t:TFunction,
-  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
+  data:SankeyPlusData,
   multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean
+  is_activated:boolean,
+  node_function:PlusNodeFuntionType
 ) => JSX.Element
 
 export type PlusNodeClickEventFType=(
@@ -30,7 +31,10 @@ export type PlusNodeClickEventFType=(
   uiElementsRef:uiElementsRefType,
   animating:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: SankeyPlusShowMenuComponentsType,
+  nodes_to_update:SankeyPlusNode[]
 )=> void
 
 
@@ -43,9 +47,9 @@ export type node_icon_pathFType=(
   data:SankeyPlusData,n:SankeyPlusNode
 ) => string
 
-export type SankeyPlusDrawNodesIconFType = (
+export type SankeyPlusDrawNodesIllustrationFType = (
   data:SankeyPlusData,
-  display_nodes : { [node_id: string]: SankeyPlusNode },
+  nodes_to_update:SankeyPlusNode[],
   dict_variable_elements_selected:PlusElementsSelectedType,
   NodeTooltipsContent: NodeTooltipsContentFType,
   GetLinkValue:GetLinkValueFuncType,
@@ -74,7 +78,11 @@ export type PlusNodeDragEventFType = (
   alt_key_pressed:boolean,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:PlusNodeFuntionType,
+  link_function:PlusLinkFuntionType
+
 )=> void
 
 export type PlusDragElementsFType = (
@@ -88,7 +96,9 @@ export type PlusDragElementsFType = (
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
-  inv_scale:(t:number)=>number
+  inv_scale:(t:number)=>number,
+  ComponentUpdater:ComponentUpdaterType
+
 )=> void
 
 

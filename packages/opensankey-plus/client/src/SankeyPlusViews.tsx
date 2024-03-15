@@ -61,7 +61,6 @@ import {
 
 import {
   SankeyPlusData,
-  SankeyPlusLabel,
   differenceType,
   DiffType,
   ViewType,
@@ -72,7 +71,7 @@ import {
   updateLayoutOSTyped,
   AdjustSankeyZone
 } from './import/OpenSankey'
-import { sankey_plus_min_width_and_height } from './SankeyPlusLabels'
+import { deleteGLabel, sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 
 /* eslint-disable */
 // @ts-ignore
@@ -236,36 +235,24 @@ export const RecomputeViews : RecomputeViewsFType = (
 export const keyHandler : keyHandlerFType = (
   t:TFunction,
   e: KeyboardEvent,
-  master:boolean,
-  master_data:SankeyPlusData| undefined,
-  set_master_data:(d:SankeyPlusData| undefined)=>void,
-  data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void,
-  view:string,
-  set_view:(_:string)=>void,
-  multi_selected_labels:{current:SankeyPlusLabel[]},
+  master,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
-  // set_show_toast_updated_view:(_:boolean)=>void,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
+  reDrawPlusLabels,
+  ComponentUpdater,
+  d_setter_input_value
 ) => {
   const {show_toast_new_view}=dict_hook_ref_setter_show_dialog_components
-  // Applique le control de touche issu de opensankey (pour eviter de copier/coller et avoir de potentiel différence)
-  // Apply keyHandling from opensankey (to avoid copy/paste that can generate error)
-  // OpenSankey_keyHandler(
-  //   e, data,
-  //   multi_selected_nodes,
-  //   multi_selected_links,
-  //   set_data,
-  //   accordion_ref,
-  //   button_ref,
-  //   set_show_nav,
-  //   mode_selection,set_ref_setter_show_menu_node_apparence,set_show_menu_node_label,set_ref_setter_show_menu_node_io,set_ref_setter_show_menu_link_data,set_ref_setter_show_menu_link_appearence,set_show_menu_link_label,set_contextualised_node,set_contextualised_link,set_show_context_zdd)
+  const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
+  const {multi_selected_label}=dict_variable_elements_selected
   if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
-    multi_selected_labels.current=Object.values(data.labels)
-    set_data({...data})
-
+    multi_selected_label.current=Object.values(data.labels)
+    reDrawPlusLabels(multi_selected_label.current)
+    ComponentUpdater.updateComponentMenuConfigZdt.current()
   }
   // Clone current data,if its a view clone the view
   if (connected && e.key === 'x' && (e.ctrlKey||e.metaKey)) {
@@ -346,7 +333,6 @@ export const keyHandler : keyHandlerFType = (
       // Save master_data data in localStorage
       localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
 
-      // set_data({...data})
       dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(true)
       setTimeout(function () {
         dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(false)
@@ -469,7 +455,7 @@ export const keyHandler : keyHandlerFType = (
     // (exemples : le input de la largeur minimal d'un noeud)
     e.preventDefault()
     if (e.key === 'ArrowUp') {
-      Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
+      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
         if (d !== undefined) {
           return d.idLabel
         }
@@ -487,7 +473,7 @@ export const keyHandler : keyHandlerFType = (
         }
       })
     } else if (e.key === 'ArrowDown') {
-      Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
+      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
         if (d !== undefined) {
           return d.idLabel
         }
@@ -502,7 +488,7 @@ export const keyHandler : keyHandlerFType = (
         }
       })
     } else if (e.key === 'ArrowLeft') {
-      Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
+      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
         if (d !== undefined) {
           return d.idLabel
         }
@@ -517,7 +503,7 @@ export const keyHandler : keyHandlerFType = (
         }
       })
     } else if (e.key === 'ArrowRight') {
-      Object.values(data.labels).filter(f => multi_selected_labels.current.map(d => {
+      Object.values(data.labels).filter(f => multi_selected_label.current.map(d => {
         if (d !== undefined) {
           return d.idLabel
         }
@@ -532,26 +518,26 @@ export const keyHandler : keyHandlerFType = (
         }
       })
     }
-    set_data({ ...data })
+    reDrawPlusLabels(multi_selected_label.current)
   }
 
   // Add deselection of all selected zdt
   if (e.key === 'Escape') {
 
-    multi_selected_labels.current.forEach(l=>{
+    multi_selected_label.current.forEach(l=>{
       d3.select('#'+l.idLabel+ ' rect').attr('stroke-width',1)
     })
-    multi_selected_labels.current=[]
+    multi_selected_label.current=[]
 
   }
 
   if(e.key==='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')==='menuConfigButton')
     {
-
-      data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_labels.current.map(l => l.idLabel).includes(d[0])))
-      multi_selected_labels.current=[]
-      set_data({...data})
+      deleteGLabel(multi_selected_label.current,d_setter_input_value)
+      data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
+      multi_selected_label.current=[]
+      ComponentUpdater.updateComponentMenuConfigZdt.current()
     }
   }
 }

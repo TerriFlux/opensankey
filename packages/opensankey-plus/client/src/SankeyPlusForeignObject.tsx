@@ -26,10 +26,10 @@ typeof globalThis & {
 export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   t:TFunction,
   data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
-  d_setter_input_value
+  d_setter_input_value,
+  node_function
 
 )=> {
   const [s_editor_content_fo_node,sEditorContentFoNode]= useState('')
@@ -81,7 +81,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
         Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
           d.FO_content = s_editor_content_fo_node
         })
-        set_data({...data})
+        node_function.RedrawNodes(multi_selected_nodes.current)
       }}
       theme="snow"
       modules={modules}
@@ -108,7 +108,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
       Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
         d.FO_content = evt.target.value
       })
-      set_data({ ...data })
+      node_function.RedrawNodes(multi_selected_nodes.current)
     }}
   />
 
@@ -153,7 +153,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
                 .forEach(d => {
                   d.has_FO = evt.target.checked
                 })
-              set_data({ ...data })
+              node_function.RedrawNodes(multi_selected_nodes.current)
             }}>
             {t('Noeud.foreign_object.Visibilité')}
           </Checkbox>
@@ -180,7 +180,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
                 .forEach(d => {
                   d.is_FO_raw = evt.target.checked
                 })
-              set_data({ ...data })
+              node_function.RedrawNodes(multi_selected_nodes.current)
             }}>
             {t('Noeud.foreign_object.raw')}
           </Checkbox>
