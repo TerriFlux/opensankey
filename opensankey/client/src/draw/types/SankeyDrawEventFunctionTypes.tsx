@@ -1,19 +1,23 @@
 
 import { MutableRefObject, Dispatch, SetStateAction } from 'react'
-import { dict_variable_application_dataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData } from '../../types/Types'
+import { dict_variable_application_dataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType, NodeFunctionTypes } from '../../types/Types'
 import * as d3 from 'd3'
+import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 
 // Function triggerd on click on nodes
 
 // Add or delete visual element to show that the node is selected like a thickker border
 export type EventNodeClickFType = (
-  dict_variable_application_data: dict_variable_application_dataType,
-  uiElementsRef: uiElementsRefType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
-  event: React.MouseEvent<HTMLButtonElement>,
-  d: SankeyNode,
-  sankeyTooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>
-) => void
+  //dict_variable_application_data:dict_variable_application_dataType,
+  uiElementsRef:uiElementsRefType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  event:React.MouseEvent<HTMLButtonElement>,
+  d:SankeyNode,
+  sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+
+)=> void
 
 export type EventNodeContextMenuFType = (
   ev: React.MouseEvent<HTMLButtonElement>,
@@ -42,20 +46,37 @@ export type EventZDDContextMenuFType = (
 // or creating a nodes at first click then linking it to a already existing one or the opposite
 
 export type EventOnMouseUpAddNodesAndLinkFType = (
-  event: React.MouseEvent<HTMLButtonElement>,
-  d: SankeyNode,
-  dict_variable_application_data: dict_variable_application_dataType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
-  uiElementsRef: uiElementsRefType
-) => void
-export type EventOnZoneMouseDownFuncType = (
-  dict_variable_application_data: dict_variable_application_dataType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
-  token: boolean,
+  event:React.MouseEvent<HTMLButtonElement>,
+  d:SankeyNode,
+  dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
+  uiElementsRef : uiElementsRefType,
+  applicationContext:applicationContextType,
+  contextMenu:contextMenuType,
+  link_function: LinkFunctionTypes,
+  alt_key_pressed:MutableRefObject<boolean>,
+  ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  evt2: unknown,
-  start_point: { current: number[]} ,
-  closeAllMenuContext: () => void
+
+)=> void
+export type EventOnZoneMouseDownFuncType = (
+  contextMenu:contextMenuType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  uiElementsRef:uiElementsRefType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
+  applicationContext:applicationContextType,
+  alt_key_pressed:MutableRefObject<boolean>,
+  NodeTooltipsContent: NodeTooltipsContentFType,
+  accept_simple_click:{current:boolean},
+  token:boolean,
+  evt:MouseEvent,
+  start_point:{current:number[]},
+  closeAllMenuContext: () => void,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes
+
 ) => void
 
 export type EventOnZoneMouseMoveFuncType = (
@@ -66,14 +87,23 @@ export type EventOnZoneMouseMoveFuncType = (
 ) => void
 
 export type EventOnZoneMouseUpFuncType = (
-  dict_variable_application_data: dict_variable_application_dataType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
-  uiElementsRef: uiElementsRefType,
-  token: boolean,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  evt: MouseEvent,
-  start_point: { current: number[]} ,
-  legend_clicked: MutableRefObject<boolean>
+  contextMenu:contextMenuType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  uiElementsRef:uiElementsRefType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
+  applicationContext:applicationContextType,
+  alt_key_pressed:MutableRefObject<boolean>,
+  accept_simple_click:{current:boolean},
+  token:boolean,
+  evt:MouseEvent,
+  start_point:{current:number[]},
+  legend_clicked:MutableRefObject<boolean>,
+  link_function:LinkFunctionTypes,
+  NodeTooltipsContent:NodeTooltipsContentFType,
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes
+
 ) => void
 
 export type SvgDragMiddleMouseStartFuncType = () => void
@@ -86,7 +116,10 @@ export type SimpleGNodeClickFuncType = (
   dict_variable_elements_selected: dict_variable_elements_selectedType,
   event: React.MouseEvent<HTMLButtonElement>,
   d: SankeyNode,
-  accept_simple_click: { current: boolean} 
+  accept_simple_click: { current: boolean} ,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+
 ) => void
 
 export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => void

@@ -2,12 +2,11 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyData } from '../types/Types'
-import {  DeleteLink,DeleteNode,windowSankey} from '../configmenus/SankeyUtils'
+import {  AdjustSankeyZone, DeleteLink,DeleteNode,windowSankey} from '../configmenus/SankeyUtils'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
 import { RemoveAnimate,
   DrawGrid,
-  update_scale,
   SelectVisualyLinks,
   DeselectVisualyLinks,
   DeselectVisualyNodes,
@@ -15,6 +14,8 @@ import { RemoveAnimate,
 import LZString from 'lz-string'
 import { SankeyDrawTypes, keyHandlerFType } from './types/SankeyDrawTypes'
 import { SvgDragMiddleMouseStart, SvgDragMiddleMouseMove, EventZDDContextMenu } from './SankeyDrawEventFunction'
+import { AddDrawNodesEvent, DeleteGNodes } from './SankeyDrawNodes'
+import { DeleteGLinks } from './SankeyDrawLinks'
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
@@ -116,7 +117,11 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           SvgDragMiddleMouseMove(event,data)
         })
         .on('end',()=>{
-          set_data({...data})
+          
+          AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)
+          svgSankey.style('width', data.width + 'px')
+          svgSankey.style('height', data.height + 'px')
+          DrawGrid(data)
         })
 
       )
@@ -126,7 +131,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     DrawGrid(data)
 
-    update_scale(data.user_scale)
     const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
 
     d3.select('#svg-container').style('margin-top',shift_top+'px')
@@ -187,13 +191,24 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // ctrl + s save a view of the data
 // Delete key allow us to delete selected elments (nodes,links, free label)
 export const keyHandler : keyHandlerFType = (
+  dict_variable_application_data,
+  uiElementsRef,
+  contextMenu,
   e: KeyboardEvent,data:SankeyData,
   dict_variable_elements_selected,
   set_data:(d:SankeyData)=>void,
-  closeAllMenu:()=>void
-
+  closeAllMenu:()=>void,
+  ref_alt_key_pressed,
+  accept_simple_click,
+  link_function,
+  NodeTooltipsContent,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components,
+  applicationContext,
+  node_function
 ) => {
   const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
+  const{updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true && (!document.activeElement?.className.includes('ql-editor')))) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
@@ -270,7 +285,15 @@ export const keyHandler : keyHandlerFType = (
         }
       })
     }
-    set_data({ ...data })
+    let link_to_update:string[]=[]
+    multi_selected_nodes.current.forEach(n=>{
+      link_to_update=link_to_update.concat(n.outputLinksId)
+      link_to_update=link_to_update.concat(n.inputLinksId)
+      d3.selectAll('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
+    })                  
+    link_to_update=[...new Set(link_to_update)]
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+
   } else if (e.key == 'Escape') {
     ref_setter_mode_selection.current('s')
     d3.select(' .opensankey #svg').attr('class','mode_selection')
@@ -288,21 +311,33 @@ export const keyHandler : keyHandlerFType = (
     multi_selected_links.current=[]
 
     closeAllMenu()
-
-
+    AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,  dict_hook_ref_setter_show_dialog_components,node_function)
+    updateComponentMenuConfigNode.current()
+    updateComponentMenuConfigNodeAppearence.current()
+    updateComponentMenuConfigLink.current()
   }else if(e.key=='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {
+      DeleteGLinks(multi_selected_links.current.map(l=>l.idLink))
       multi_selected_links.current.forEach(el=>{
         DeleteLink(data,el)
       })
+
+      DeleteGNodes(multi_selected_nodes.current.map(n=>n.idNode))
       multi_selected_nodes.current.forEach(el=>{
         DeleteNode(data,el)
       })
       multi_selected_nodes.current=[]
       multi_selected_links.current=[]
-      set_data({...data})
+      
+      node_function.recomputeDisplayedElement()
+      node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+      link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+      updateComponentMenuConfigNode.current()
+      updateComponentMenuConfigLink.current()
+
+
     }
   }else if(e.key=='a' && e.ctrlKey){
     e.preventDefault()
@@ -328,10 +363,9 @@ export const keyHandler : keyHandlerFType = (
     const time_save=new Date()
     const parsed_time_save=time_save.toLocaleDateString() +' - ' + time_save.toLocaleTimeString()
     localStorage.setItem('last_save', parsed_time_save)
-    set_data({...data})
+    ComponentUpdater.updateComponenTimeCheckpoint.current()
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
-    set_data({...data})
     ClickSaveDiagram(data)
   }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
     if((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??true)){

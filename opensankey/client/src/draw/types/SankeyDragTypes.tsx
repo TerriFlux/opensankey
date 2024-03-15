@@ -1,6 +1,6 @@
 import { DragBehavior, SubjectPosition } from 'd3'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
-import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, applicationContextType } from '../../types/Types'
+import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes } from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from '../../configmenus/types/SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
 
@@ -28,7 +28,9 @@ export type DragElementsFuncType = (
   GetLinkValue: GetLinkValueFuncType,
   DrawArrows: DrawArrowsType,
   scale: (t: number) => number,
-  inv_scale: (t: number) => number
+  inv_scale: (t: number) => number,
+  ComponentUpdater:ComponentUpdaterType
+
 ) => void
 
 export type drag_node_textFuncType = (node: SankeyNode, event: d3.D3DragEvent<Element, unknown, unknown>) => void
@@ -61,7 +63,9 @@ export type DragLinkEventFType=(
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType
+  DrawArrows:DrawArrowsType,
+  ComponentUpdater:ComponentUpdaterType
+
 )=> DragBehavior<SVGPathElement, SankeyLink, unknown>
  
 /**
@@ -101,7 +105,9 @@ export type DragLinkIOPositionFType=(
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType
+  DrawArrows:DrawArrowsType,
+  ComponentUpdater:ComponentUpdaterType
+
 )=> DragBehavior<SVGRectElement, unknown, unknown>
 
 
@@ -134,7 +140,9 @@ export type DragLinkCenterHandleEventFType=(
   inv_scale:(t:number)=>number,
   drawCurveFunction : SankeyDrawCurve,
   LinkText:LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  ComponentUpdater:ComponentUpdaterType
+
 )=> (selection: d3.Selection<SVGCircleElement, unknown, HTMLElement, unknown>, ...args: unknown[]) => void
 
 /**
@@ -172,7 +180,8 @@ export type DragLinkShiftHandleEventFType=(
   inv_scale:(t:number)=>number,
   drawCurveFunction : SankeyDrawCurve,
   LinkText:LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  ComponentUpdater:ComponentUpdaterType
 )=> DragBehavior<SVGRectElement, unknown, unknown>
 
 /**
@@ -206,6 +215,10 @@ export type DragGNodeEventFType=(
   GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes
+
 )=>DragBehavior<SVGGElement, SankeyNode, SankeyNode | SubjectPosition>
 
 /**
@@ -219,7 +232,6 @@ export type DragGNodeEventFType=(
  */
 export type dragNodeTextEventWidthBoxEventFType = (
   data:SankeyData,
-  set_data:(d:SankeyData)=>void
 ) => DragBehavior<SVGRectElement, SankeyNode, SankeyNode | SubjectPosition>
 
 /**
@@ -254,7 +266,9 @@ export type DragNodesFType = (
   DrawArrows:DrawArrowsType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  node_visible:string[]
+  node_visible:string[],
+  ComponentUpdater:ComponentUpdaterType
+
 ) => void
 
 /**
@@ -294,7 +308,9 @@ export type DragHandleFType = (
   inv_scale:(t:number)=>number,
   drawCurveFunction:SankeyDrawCurve,
   LinkText:LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  ComponentUpdater:ComponentUpdaterType
+
 ) => void
 
 /**
@@ -328,5 +344,7 @@ export type AddDragLinkZoneFType=(
   drawCurveFunction:SankeyDrawCurve,
   LinkText:LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType
+  DrawArrows:DrawArrowsType,
+  ComponentUpdater:ComponentUpdaterType
+
 )=> void

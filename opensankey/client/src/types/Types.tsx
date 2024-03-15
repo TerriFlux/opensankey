@@ -1,11 +1,14 @@
 import { TFunction } from 'i18next'
 
-import { DrawArrowsType } from '../draw/types/SankeyDrawFunctionTypes'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
+import { DrawArrowsType, LinkStrokeFType } from '../draw/types/SankeyDrawFunctionTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkColorFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
 import { RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistenceTypes'
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { OpenSankeyDiagramSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
+import { LinkTooltipsContentFType, NodeTooltipsContentFType } from '../draw/types/SankeyTooltipTypes'
+import { DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType } from '../draw/types/SankeyDrawLinksTypes'
+import { DrawAllNodesFType, drawNodeShapeFType } from '../draw/types/SankeyDrawNodesTypes'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -314,7 +317,10 @@ export type SankeyDrawCurve={
     LinkText : LinkTextFuncType,
     GetSankeyMinWidthAndHeight : GetSankeyMinWidthAndHeightFuncType,
     GetLinkValue : GetLinkValueFuncType,
-    DrawArrows:DrawArrowsType
+    DrawArrows:DrawArrowsType,
+    ComponentUpdater:ComponentUpdaterType,
+    scale:(t:number)=>number,
+    inv_scale:(t:number)=>number,
   ) => string | number | boolean | readonly (string | number)[] | null
 }
 
@@ -345,6 +351,7 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_modal_template : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_getter_show_menu_config :  MutableRefObject<boolean|undefined>,
   ref_show_style_node : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>
 }
@@ -429,6 +436,7 @@ export type agregationType = {
 export type MenuTypes = {
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
+  dict_variable_elements_selected : dict_variable_elements_selectedType,
   uiElementsRef : uiElementsRefType,
   contextMenu : contextMenuType,
   processFunctions : processFunctionsType,
@@ -446,7 +454,15 @@ export type MenuTypes = {
   additional_nav_item:JSX.Element[],
   example_menu: JSX.Element,
   formations_menu: object,
-  callback:callbackFuncType
+  callback:callbackFuncType,
+  ref_alt_key_pressed:MutableRefObject<boolean>,
+  accept_simple_click:{current:boolean},
+  link_function:LinkFunctionTypes,
+  NodeTooltipsContent:NodeTooltipsContentFType,
+  ComponentUpdater:ComponentUpdaterType,
+  node_function:NodeFunctionTypes
+
+  
 }
 
 export type callbackFuncType = (server_data: SankeyData) => void
@@ -457,4 +473,42 @@ export type SankeyAppTypes = {
   formations_menu      : object
   logo: string,
   logo_terriflux: string,
+}
+
+export type RedrawLinksFType=(links_to_update:SankeyLink[])=>void
+
+export type LinkFunctionTypes = {
+  GetLinkValue : GetLinkValueFuncType,
+  LinkText : LinkTextFuncType
+  DrawArrows : DrawArrowsType,
+  LinkStroke : LinkStrokeFType,
+  LinkSabotColor:LinkColorFuncType,
+  node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
+  LinkTooltipsContent: LinkTooltipsContentFType,
+  DrawAllLinks : DrawAllLinksFType,
+  drawAddLinks:drawAddLinksFType,
+  drawLinkShape:drawLinkShapeFType,
+  RedrawLinks:RedrawLinksFType
+  
+}
+
+export type RedrawNodesFType=(node_to_update:SankeyNode[])=>void
+
+export type NodeFunctionTypes = {
+  DrawAllNodes : DrawAllNodesFType,
+  drawAddNodes : drawNodeShapeFType,
+  RedrawNodes:RedrawNodesFType,
+  recomputeDisplayedElement:()=>void
+}
+
+export type ComponentUpdaterType={
+  updateComponentMenuConfigNode:MutableRefObject<()=>void>
+  updateComponentMenuConfigNodeAppearence:MutableRefObject<()=>void>
+  updateComponentMenuConfigLink:MutableRefObject<()=>void>
+  updateComponentToolbar:MutableRefObject<()=>void>
+  updateComponentMenuConfig:MutableRefObject<()=>void>
+  updateComponentMenuConfigLayout:MutableRefObject<()=>void>
+  updateComponentMenu:MutableRefObject<()=>void>,
+  updateComponenTimeCheckpoint:MutableRefObject<()=>void>
+
 }

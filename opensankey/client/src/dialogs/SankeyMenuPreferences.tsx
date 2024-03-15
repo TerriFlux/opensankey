@@ -18,8 +18,8 @@ typeof globalThis & {
 export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
   t:TFunction,
   data:SankeyData,
-  set_data:(d:SankeyData)=>void,
-  trad:i18n
+  trad:i18n,
+  ComponentUpdater
 )=>{
   const ui={
     'lang':<InputGroup key={'1'}>
@@ -29,7 +29,6 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         value={trad.language}
         onChange={(evt)=>{
           trad.changeLanguage((evt.target.value))
-          set_data({...data})
         }}
       >
         <option key={'francais'} value={'fr'}>Français</option>
@@ -46,7 +45,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           onClick={() => {
             sessionStorage.removeItem('modepref')
             data.accordeonToShow = ['MEP']
-            set_data({ ...data })
+            ComponentUpdater.updateComponentMenuConfig.current()
 
           }}
         >Mode Simple</Button>
@@ -55,7 +54,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           onClick={() => {
             sessionStorage.setItem('modepref','expert')
             data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
-            set_data({ ...data })
+            ComponentUpdater.updateComponentMenuConfig.current()
           }}
         >Mode Expert</Button>
       
@@ -67,7 +66,8 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           isChecked={data.accordeonToShow.includes('MEP')}
           onChange={() => {
             preferenceCheck('MEP',data)
-            set_data({ ...data })
+            ComponentUpdater.updateComponentMenuConfig.current()
+
           }}>
           {t('Menu.MEP')}
         </Checkbox>
@@ -91,7 +91,8 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           isChecked={data.accordeonToShow.includes('EN')}
           onChange={() => {
             preferenceCheck('EN',data)
-            set_data({ ...data })
+            ComponentUpdater.updateComponentMenuConfig.current()
+
           }}>
           {t('Menu.EN')}
         </Checkbox>
@@ -115,7 +116,8 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           isChecked={data.accordeonToShow.includes('EF')}
           onChange={() => {
             preferenceCheck('EF',data)
-            set_data({ ...data })
+            ComponentUpdater.updateComponentMenuConfig.current()
+
           }}>
           {t('Menu.EF')}
         </Checkbox>
@@ -128,7 +130,8 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           isChecked={data.accordeonToShow.includes('ED')}
           onChange={() => {
             preferenceCheck('ED',data)
-            set_data({ ...data })
+            ComponentUpdater.updateComponentMenuConfig.current()
+
           }}>
           {t('Menu.ED')}
         </Checkbox>
@@ -142,7 +145,9 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         <InputGroup.Text>{t('Menu.node_label_sep')}</InputGroup.Text>
         <Form.Control type='text' value={data.node_label_separator} onChange={(evt)=>{
           data.node_label_separator=evt.target.value
-          set_data({...data})
+          ComponentUpdater.updateComponentMenuConfig.current()
+            
+
         }}></Form.Control>
       </InputGroup></OverlayTrigger>,
 
