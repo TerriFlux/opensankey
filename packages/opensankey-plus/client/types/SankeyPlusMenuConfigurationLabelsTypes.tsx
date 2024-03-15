@@ -6,14 +6,13 @@ import { contextMenuType } from 'open-sankey/src/types/Types'
 export type SankeyPlusMenuPreferenceLabelsFType=(
   t:TFunction,
   data:SankeyPlusData,
-  set_data:(data:SankeyPlusData)=>void,
+  ComponentUpdater:PlusComponentUpdaterType
 ) => JSX.Element
 
 export interface selected_type  {'label':string;'value':string}
 
 export type SankeyPlusMenuConfigurationFreeLabelsFType = {
   data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]},
   t: TFunction,
   is_activated:boolean,

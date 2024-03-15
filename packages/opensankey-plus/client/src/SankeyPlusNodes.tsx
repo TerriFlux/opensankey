@@ -697,8 +697,6 @@ export const node_icon_fill_color : node_icon_fill_colorFType = (
     const tag = data.nodeTags[n.colorTag].tags[selected_tag]
     if (tag && !ReturnValueNode(data,n,'shape_visible')) {
       return tag.color as string
-    } else {
-      //console.log('tutu')
     }
   }
   return (n as SankeyPlusNode).iconColor

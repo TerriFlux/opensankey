@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 
 import { SankeyData } from 'open-sankey/src/types/Types'
-import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, PlusApplicationContextType, PlusComponentUpdaterType, reDrawPlusLabelsFType} from '../types/Types'
+import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, PlusApplicationContextType, PlusComponentUpdaterType, reDrawPlusLabelsFType, DictSetterInputValueType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {
   PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType,
@@ -48,7 +48,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
     .range([0, 100])
     .domain([0, data.user_scale])
   const data_plus=data as SankeyPlusData
-  d3.selectAll('.gg_zdt_handles').remove()
+  d3.selectAll('#g_label_handles *').remove()
 
   const add_labels = () => {
     const g_label = d3.select(' .opensankey #svg #g_label')
@@ -56,6 +56,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
       .filter(zdt=>object_to_update.includes(zdt))
       .map(d => {
         g_label.select('#'+d.idLabel).remove()
+
         const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y)
           .attr('id', d.idLabel)
           .attr('class', 'gg_label')
@@ -71,7 +72,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
           .attr('stroke-width', ((multi_selected_label.current.includes(d))?3:1))
           .attr('rx', 5)
 
-        draw_text_zone_handles(data_plus,d,multi_selected_label,set_data)
+        draw_text_zone_handles(data_plus,d,multi_selected_label,ComponentUpdater)
 
         gg_label.on('click', (event) => eventLabelClick(event,d,data_plus,uiElementsRef,d_setter_input_value,multi_selected_label,set_data,multi_selected_nodes,multi_selected_links,ComponentUpdater,reDrawPlusLabels))
         gg_label.on('mousedown',()=>closeAllMenuContext())
@@ -362,8 +363,7 @@ export const zone_selection_label : zone_selection_labelFType = (
   data:SankeyPlusData,
   multi_selected_label:{current:SankeyPlusLabel[]},
   evt:MouseEvent,
-  reDrawPlusLabels
-)=>{
+  reDrawPlusLabels)=>{
 
   if( d3.selectAll('.selection_zone').nodes().length>0){
     const z_x=Number(d3.select('.selection_zone rect').attr('x'))
@@ -392,14 +392,14 @@ export const zone_selection_label : zone_selection_labelFType = (
   }
 }
 
-const draw_text_zone_handles=(data:SankeyPlusData,zdt:SankeyPlusLabel,multi_selected_label:{current:SankeyPlusLabel[]},set_data:(d:SankeyPlusData)=>void)=>{
+const draw_text_zone_handles=(data:SankeyPlusData,zdt:SankeyPlusLabel,multi_selected_label:{current:SankeyPlusLabel[]},ComponentUpdater:PlusComponentUpdaterType)=>{
   d3.select('.opensankey #g_label_handles').append('g').attr('id','gg_zdt_handles_'+zdt.idLabel);
   ['top','bottom','left','right'].forEach(pos=>{
-    add_zdt_handle(zdt,pos,multi_selected_label,data,set_data)
+    add_zdt_handle(zdt,pos,multi_selected_label,data,ComponentUpdater)
   })
 }
 const size_zdt_handle=10
-const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{current:SankeyPlusLabel[]},data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void)=>{
+const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{current:SankeyPlusLabel[]},data:SankeyPlusData,ComponentUpdater:PlusComponentUpdaterType)=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
   if(d3.select('.opensankey #svg').nodes().length>0){
@@ -418,7 +418,7 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{curre
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
-    .call(drag_text_zone_hande(zdt,pos,data,set_data))
+    .call(drag_text_zone_hande(zdt,pos,data,ComponentUpdater))
   // Position the handle
   switch (pos){
   case 'top':
@@ -447,7 +447,7 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{curre
   }
 }
 
-const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void)=>{
+const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,ComponentUpdater:PlusComponentUpdaterType)=>{
   const g_zdt_h=d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_'+pos)
   const text_zone_shape=d3.select('#'+zdt.idLabel+' rect')
   const g_text_zone=d3.select('#'+zdt.idLabel)
@@ -503,7 +503,7 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,s
         break
       }
     })
-    .on('end',()=>set_data(data))
+    .on('end',()=>ComponentUpdater.updateComponentMenuConfigZdt.current())
 
 
 }
@@ -522,4 +522,14 @@ const select_visualy_zdt=(zdt:SankeyPlusLabel)=>{
 const deselect_visualy_zdt=(zdt:SankeyPlusLabel)=>{
   d3.select('#'+zdt.idLabel+ ' rect').attr('stroke-width',1)
   d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display','none')
+}
+
+export const deleteGLabel=(zdt_to_delete:SankeyPlusLabel[],d_setter_input_value:DictSetterInputValueType)=>{
+  zdt_to_delete.forEach(zdt=>{
+    d3.select('#'+zdt.idLabel).remove()
+    d3.selectAll('#gg_zdt_handles_'+zdt.idLabel).remove()
+  })
+  
+  d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+
 }

@@ -45,6 +45,7 @@ import {
 // OpenSankey libs
 import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
 import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
+import { deleteGLabel } from './SankeyPlusLabels'
 
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
@@ -59,7 +60,7 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
 export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFType = (
   t:TFunction,
   data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void,
+  ComponentUpdater
 )=>{
   return <InputGroup>
     <Checkbox
@@ -68,7 +69,7 @@ export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFTyp
       isChecked={data.accordeonToShow.includes('LL')}
       onChange={() => {
         preferenceCheck('LL',data)
-        set_data({ ...data })
+        ComponentUpdater.updateComponentMenuConfig.current()
       }}>
       {t('Menu.LL')}
     </Checkbox>
@@ -85,7 +86,6 @@ export interface selected_type  {'label':string;'value':string}
 
 export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlusMenuConfigurationFreeLabelsFType> = ({
   data,
-  set_data,
   multi_selected_label,
   t,
   is_activated,
@@ -104,6 +104,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   const {updateComponentMenuConfigZdt} = ComponentUpdater
   updateComponentMenuConfigZdt.current=()=>setForceUpdate(!forceUpdate)
   d_setter_input_value.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
+
 
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
@@ -164,7 +165,14 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             const new_sel = selected.map(d => d.value)
             const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
             multi_selected_label.current = m_s
-            set_data({...data})
+            reDrawPlusLabels(multi_selected_label.current)
+            if(multi_selected_label.current.length>0){
+              const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
+              d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(tmp))
+            }else{
+              d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+            }
+            updateComponentMenuConfigZdt.current()
           }}
           labelledBy={'hello'}
         />
@@ -384,9 +392,10 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           variant={disable_options?'outline-primary':'primary'}
           disabled={disable_options}
           onClick={() => {
+            deleteGLabel(multi_selected_label.current,d_setter_input_value)
             data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
             multi_selected_label.current = []
-            set_data({ ...data })
+            updateComponentMenuConfigZdt.current()
           }
           }><FaMinus /></Button>
 

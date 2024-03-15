@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { DictSetterInputValueType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusShowMenuComponentsType, ViewType } from './Types'
+import { DictSetterInputValueType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusShowMenuComponentsType, ViewType, reDrawPlusLabelsFType } from './Types'
 import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { setDiagramFuncType } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
 
@@ -39,17 +39,16 @@ export type keyHandlerFType = (
   t:TFunction,
   e: KeyboardEvent,
   master:boolean,
-  master_data:SankeyPlusData| undefined,
-  set_master_data:(d:SankeyPlusData| undefined)=>void,
-  data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void,
-  view:string,
-  set_view:(_:string)=>void,
-  multi_selected_labels:{current:SankeyPlusLabel[]},
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   // set_show_toast_updated_view:(_:boolean)=>void,
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
+  reDrawPlusLabels:reDrawPlusLabelsFType,
+  ComponentUpdater:PlusComponentUpdaterType,
+  d_setter_input_value:DictSetterInputValueType,
+
 ) => void
 
 export type SelecteurViewFType = (
