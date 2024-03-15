@@ -30,7 +30,7 @@ import {
 } from './types/SankeyMenuConfigurationNodesTypes'
 /*************************************************************************************************/
 import { 
-  DeleteNode,ReturnValueNode,AddNewNode, windowSankey} from './SankeyUtils'
+  DeleteNode,ReturnValueNode,AddNewNode} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
@@ -372,7 +372,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               })
 
               node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-              link_function.DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+              link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              
             }}>
           <FaMinus />
         </Button>

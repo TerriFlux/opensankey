@@ -53,6 +53,9 @@ export const DrawAllNodes : DrawAllNodesFType = (
 
 }
 
+/**
+ * Add/update nodes event   
+ */
 export const AddDrawNodesEvent : AddDrawNodesFType = (
   contextMenu,
   dict_variable_application_data,
@@ -179,7 +182,9 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   })
         
 }
-
+/**
+ * Update visual elements linked to the shape of nodes  
+ */
 export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
   dict_variable_application_data,
   link_function,
@@ -259,7 +264,9 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
   node_to_update.forEach(n=>SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue))
 }
 
-
+/**
+ * Create <g> elements for each node that we draw that will contain all visual element linked to nodes
+ */
 export const drawAddNodes : drawNodeShapeFType = (
   contextMenu,
   dict_variable_application_data,
@@ -320,6 +327,10 @@ export const drawAddNodes : drawNodeShapeFType = (
   )
 }
 
+/**
+ * Function used to delete visual elements of nodes
+ * @param node_to_delete List of nodes id 
+ */
 export const DeleteGNodes:DeleteGNodesFType=(node_to_delete)=>{
   (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>).filter(n=>node_to_delete.includes(n.idNode)).remove()
 }
