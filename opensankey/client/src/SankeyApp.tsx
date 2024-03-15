@@ -239,7 +239,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     updateComponentToolbar:useRef(()=>null),
     updateComponentMenuConfig:useRef(()=>null),
     updateComponentMenuConfigLayout:useRef(()=>null),
-    updateComponentMenu:useRef(()=>null)
+    updateComponentMenu:useRef(()=>null),
+    updateComponenTimeCheckpoint:useRef(()=>null),
 
   }
   /*************************************************************************************************/
@@ -486,7 +487,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     never_see_again,
     [],
     reDrawLegend,
-    redrawAllNodes,redrawAllLinks,
+    node_function,link_function,
     recomputeDisplayedElement,ComponentUpdater
   )
 
@@ -850,7 +851,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             Reinitialization={Reinitialization}
             formations_menu={formations_menu}
             additional_nav_item={[
-              LastCheckpointTime(applicationContext.t),
+              LastCheckpointTime(applicationContext.t,ComponentUpdater),
               OpenSankeySaveButton(applicationContext.t)
             ]}
             convert_data={convert_data}
