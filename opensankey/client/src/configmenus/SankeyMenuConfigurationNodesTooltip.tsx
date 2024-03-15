@@ -1,18 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Row, Form, Col, Tab, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { SankeyMenuConfigurationNodesTooltipFType } from './types/SankeyMenuConfigurationNodesTooltipTypes'
 import { StyleTitleSubSectionMenuEditionElements } from './SankeyUtils'
 
 export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesTooltipFType = (
   applicationContext,
-  dict_variable_application_data,
   dict_variable_elements_selected,
   menu_for_modal
 ) => {
   const { t } = applicationContext
-  const { data, set_data} = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
-
+  const [forceUpdate,setForceUpdate]=useState(false)
   const content =<Form >
     <h4 style={StyleTitleSubSectionMenuEditionElements({underline:true})}>{t('Noeud.IB')}</h4>
 
@@ -30,7 +28,7 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
             onChange={
               (evt) => {
                 multi_selected_nodes.current.map(node => node.tooltip_text = evt.target.value)
-                set_data({ ...data })
+                setForceUpdate(!forceUpdate)
               }}/>
         </OverlayTrigger>
       </Col>

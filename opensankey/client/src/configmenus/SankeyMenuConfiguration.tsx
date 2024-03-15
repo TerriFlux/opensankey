@@ -1,7 +1,8 @@
 // Standard libs
 import React, {
   FunctionComponent,
-  Ref
+  Ref,
+  useState
 } from 'react'
 import { ReactElementLike } from 'prop-types'
 
@@ -52,7 +53,14 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   menu_configuration_nodes,
   menu_configuration_links,
   additional_accordion_edition_elements,
-  token
+  token,
+  link_function,
+  ComponentUpdater,
+  contextMenu,
+  alt_key_pressed,
+  accept_simple_click,
+  node_function
+
 ) => {
   // const [subnavitemactive, setsubnavitemactive] = useState('')
   // const [nav_index, setNavIndex] = useState(-1)
@@ -60,17 +68,17 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   // ref_setter_nav_item_active.current = setNavIndex
   // ref_setter_sub_nav_item_active.current = setsubnavitemactive
   // ref_nav_item_active.current = nav_index
-
-  const {data,set_data}=dict_variable_application_data
+  const [forceUpdate,setForceUpdate]=useState(false)
+  ComponentUpdater.updateComponentMenuConfig.current=()=>setForceUpdate(!forceUpdate)
+  const {data}=dict_variable_application_data
   const {t}=applicationContext
-  const {links_accordion_ref, nodes_accordion_ref, accordion_ref} = uiElementsRef
+  const {links_accordion_ref, nodes_accordion_ref,accordion_ref} = uiElementsRef
   const {multi_selected_nodes}=dict_variable_elements_selected
   // const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const show_menu_config_tag = (
     (data.accordeonToShow.includes('EN') ||
      data.accordeonToShow.includes('EF') ||
      data.accordeonToShow.includes('ED')))
-
   return [
     data.accordeonToShow.includes('MEP')?
       <AccordionItem>
@@ -130,11 +138,20 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             <AccordionPanel>
               <SankeyNodeEdition
                 t={t}
-                data={data}
-                set_data={set_data}
+                dict_variable_application_data={dict_variable_application_data}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
                 token={token}
+                link_function={link_function}
+                ComponentUpdater={ComponentUpdater}
+                contextMenu={contextMenu}
+                uiElementsRef={uiElementsRef}
+                dict_variable_elements_selected={dict_variable_elements_selected}
+                alt_key_pressed={alt_key_pressed}
+                accept_simple_click={accept_simple_click}
+                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+                applicationContext={applicationContext}
+                node_function={node_function}
               />
             </AccordionPanel>
           </AccordionItem>
@@ -159,6 +176,14 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 applicationContext={applicationContext}
                 dict_variable_elements_selected={dict_variable_elements_selected}
                 menu_configuration_links={Object.values(menu_configuration_links)}
+                link_function={link_function}
+                ComponentUpdater={ComponentUpdater}
+                contextMenu={contextMenu}
+                uiElementsRef={uiElementsRef}
+                alt_key_pressed={alt_key_pressed}
+                accept_simple_click={accept_simple_click}
+                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+                node_function={node_function}
               />
             </AccordionPanel>
           </AccordionItem>

@@ -6,6 +6,7 @@ import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfiguration
 
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
 import { ReturnValueLink,AssignLinkLocalAttribute } from './SankeyUtils'
+import { SankeyNode } from '../types/Types'
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
@@ -13,14 +14,17 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   dict_variable_elements_selected,
   applicationContext,
   additional_data_element,
-  menu_for_modal
+  menu_for_modal,
+  ComponentUpdater,
+  node_function,
+  link_function
 ) => {
   const { t } = applicationContext
-
-  const { data, set_data } = dict_variable_application_data
+  const [forceUpdate,setForceUpdate]=useState(false)
+  const { data } = dict_variable_application_data
   const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef  } = dict_variable_elements_selected
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
-
+  
   displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)
   displayedInputLinkValueRef.current=displayed_input_link_value
 
@@ -128,7 +132,11 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
               if(formatedValue!=='' && !isNaN(+formatedValue )){
                 const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
                 let val = Object(multi_selected_links.current[0].value)
+                const node_to_update:SankeyNode[]=[]
+
                 multi_selected_links.current.map(d => {
+                  node_to_update.push(data.nodes[d.idSource])
+                  node_to_update.push(data.nodes[d.idTarget])
                   const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
                   AssignLinkLocalAttribute(d,'dashed',(was_empty)?false:dashed)
 
@@ -147,11 +155,15 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                 if (scale(+formatedValue) > 500) {
                   data.user_scale = +formatedValue
                 }
-                set_data({ ...data })
+                node_function.RedrawNodes(node_to_update)
+                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
               }
               else if(formatedValue=='') {
                 let val = Object(multi_selected_links.current[0].value)
+                const node_to_update:SankeyNode[]=[]
                 multi_selected_links.current.map(d => {
+                  node_to_update.push(data.nodes[d.idSource])
+                  node_to_update.push(data.nodes[d.idTarget])
                   val = d.value
                   AssignLinkLocalAttribute(d,'dashed',true)
                   Object.values(tags_selected).forEach(tag => {
@@ -162,7 +174,8 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                   })
                   val.value = ''
                 })
-                set_data({ ...data })
+                node_function.RedrawNodes(node_to_update)
+                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
               }
             }}/>
         </OverlayTrigger>
@@ -202,7 +215,9 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                   })
                   val.display_value = evt.target.value
                 })
-                set_data({ ...data })
+                setForceUpdate(!forceUpdate)
+                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+
               }}/>
         </OverlayTrigger>
       </Col>

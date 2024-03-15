@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Tab, Table, Button, ButtonGroup, OverlayTrigger, Tooltip, Form, Row, Col } from 'react-bootstrap'
-import { SankeyData, SankeyNode } from '../types/Types'
+import { LinkFunctionTypes, SankeyData, SankeyNode } from '../types/Types'
 import { LinkVisible,LinkColor,ReturnValueLink, SmoothClasses} from './SankeyUtils'
 import { reorganize_node_outputLinksId,reorganize_node_inputLinksId } from '../draw/SankeyDrawLayout'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
@@ -130,13 +130,15 @@ const getIOLink=(
    */
 const handleUpLinkIOPos=(
   data:SankeyData,
-  set_data:(d:SankeyData)=>void,
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   k_link:string,
   pos:string,
   io:string,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  link_function:LinkFunctionTypes,
+  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
+  forceUpdate:boolean
 )=>{
   const n=multi_selected_nodes.current[0]
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
@@ -239,8 +241,9 @@ const handleUpLinkIOPos=(
 
     }
   }
+  link_function.RedrawLinks(link_io.map(lid=>data.links[lid]))
+  setForceUpdate(!forceUpdate)
 
-  set_data({...data})
 }
 
 /**
@@ -258,7 +261,12 @@ const handleDownLinkIOPos=(
   k_link:string,
   pos:string,
   io:string,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  link_function:LinkFunctionTypes,
+  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
+  forceUpdate:boolean
+
+  
 )=>{
   const n=multi_selected_nodes.current[0]
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
@@ -357,7 +365,9 @@ const handleDownLinkIOPos=(
     }
   }
 
-  set_data({...data})
+  link_function.RedrawLinks(link_io.map(lid=>data.links[lid]))
+  setForceUpdate(!forceUpdate)
+
 }
 /**
    * Check if the selected node has links coming from/going to(io) from a face of it (pos)
@@ -394,7 +404,10 @@ const tab_pos_link=(
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,io:string,tab_colored:boolean,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  link_function:LinkFunctionTypes,
+  setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
+  forceUpdate:boolean
 )=>{
   const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
   return (
@@ -421,8 +434,8 @@ const tab_pos_link=(
                     <td style={bc}>{n_s.name+'===>'+n_t.name}</td>
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
-                        <Button variant="info" onClick={() => handleUpLinkIOPos(data,set_data,display_nodes,multi_selected_nodes,k,pos,io,GetLinkValue)}><FaArrowAltCircleUp /></Button>
-                        <Button variant="info" onClick={() => handleDownLinkIOPos(data,set_data,display_nodes,multi_selected_nodes,k,pos,io,GetLinkValue)}><FaArrowAltCircleDown /></Button>
+                        <Button variant="info" onClick={() => handleUpLinkIOPos(data,display_nodes,multi_selected_nodes,k,pos,io,GetLinkValue,link_function,setForceUpdate,forceUpdate)}><FaArrowAltCircleUp /></Button>
+                        <Button variant="info" onClick={() => handleDownLinkIOPos(data,set_data,display_nodes,multi_selected_nodes,k,pos,io,GetLinkValue,link_function,setForceUpdate,forceUpdate)}><FaArrowAltCircleDown /></Button>
                       </ButtonGroup>
                     </td>
 
@@ -441,6 +454,8 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
   dict_variable_application_data,
   dict_variable_elements_selected,
   GetLinkValue:GetLinkValueFuncType,
+  node_function,
+  link_function,
   menu_for_modal=false
 ) => {
   const { t } = applicationContext
@@ -450,6 +465,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
   const [link_io,set_link_io] = useState('output')
   const [link_pos,set_link_pos] = useState('right')
   const [tab_colored,set_tab_colored] = useState(false)
+  const [forceUpdate,setForceUpdate]=useState(false)
 
   const logo_enter=<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512 512" width="15" height="15">
     <g>
@@ -481,7 +497,9 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
             reorganize_node_inputLinksId(data,d, data.nodes, data.links)
             reorganize_node_outputLinksId(data,d, data.nodes, data.links)
           })
-          set_data({ ...data })
+          node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+          link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+          setForceUpdate(!forceUpdate)
         }}>
         {t('Noeud.Reorg')}
       </Button>
@@ -638,7 +656,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
     </Row>
 
     {/* Table montrant les noeuds selectionnés  */}
-    {tab_pos_link(t,data,set_data,display_nodes,multi_selected_nodes,link_pos,link_io,tab_colored,GetLinkValue)}
+    {tab_pos_link(t,data,set_data,display_nodes,multi_selected_nodes,link_pos,link_io,tab_colored,GetLinkValue,link_function,setForceUpdate,forceUpdate)}
 
   </>:<></>
 

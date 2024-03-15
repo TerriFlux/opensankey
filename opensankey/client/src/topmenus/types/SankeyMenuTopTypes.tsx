@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, TagsCatalog, dict_hook_ref_setter_show_dialog_componentsType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
 
@@ -14,8 +14,12 @@ import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerType
 export type AddAllDropDownFluxFType = (
   t:TFunction,
   fluxTags: TagsCatalog,
-  data: SankeyData,
-  set_data: (data: SankeyData) => void
+  dict_variable_application_data:dict_variable_application_dataType,
+  reDrawLegend:()=>void,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes,
+  recomputeDisplayedElement:()=>void
+
 ) => JSX.Element
 
 export type OpenSankeyMenusFType = (
@@ -69,7 +73,7 @@ export type MenuDraggableFType = (
 
 export type OpenSankeySaveButtonFType = (t:TFunction) => JSX.Element
  
-export type LastCheckpointTimeFType = (t:TFunction) => JSX.Element
+export type LastCheckpointTimeFType = (t:TFunction,ComponentUpdater:ComponentUpdaterType) => JSX.Element
 export type SankeyMenuFileExportFType=(
   t:TFunction,
   data:SankeyData,

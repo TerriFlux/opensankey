@@ -1,4 +1,4 @@
-import { SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { NodeFunctionTypes, SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
@@ -11,6 +11,7 @@ export type SankeyMenuConfigurationNodesTagsFType = (
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
+  node_funtion:NodeFunctionTypes,
   menu_for_modal:boolean
 )=> JSX.Element
 

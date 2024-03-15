@@ -24,7 +24,11 @@ import {
   SankeyData,
   SankeyLink,
   TagsGroup,
-  MenuTypes
+  MenuTypes,
+  NodeFunctionTypes,
+  LinkFunctionTypes,
+  dict_variable_application_dataType,
+  ComponentUpdaterType
 } from '../types/Types'
 
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
@@ -48,6 +52,7 @@ import { RepositionneSidebar } from '../draw/SankeyDrawFunction'
 import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
 import { faFileExport} from '@fortawesome/free-solid-svg-icons'
 import FileSaver from 'file-saver'
+import { AddDrawNodesEvent } from '../draw/SankeyDrawNodes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -99,10 +104,9 @@ const GoToUserDoc = () => {
  * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => void}
  */
-const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
+const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_group: TagsGroup) => {
   const val = evt.target.value
   Object.entries(tags_group.tags).forEach(tag => tag[1].selected = val === tag[0])
-  set_data({ ...data })
 }
 
 /**
@@ -111,10 +115,9 @@ const handleSimpleDropdown = (evt: React.ChangeEvent<HTMLSelectElement>, tags_gr
  * @param {[{ label: string, value: string }]} selected
  * @param {TagsGroup} tags_group
  * @param {SankeyData} data
- * @param {(data: SankeyData) => void} set_data
  * @returns {(void) => void}
  */
-const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData, set_data: (data: SankeyData) => void) => {
+const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_group: TagsGroup, data: SankeyData) => {
   const tab_sel = selected.map((d) => {
     return d.value
   })
@@ -123,7 +126,6 @@ const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_
   if(tab_sel.length==0 && Object.values(data.dataTags).map(dt=>dt.group_name).includes(tags_group.group_name)){
     Object.entries(tags_group.tags)[0][1].selected=true
   }
-  set_data({ ...data })
 }
 
 
@@ -465,6 +467,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   {
     applicationContext,
     dict_variable_application_data,
+    dict_variable_elements_selected,
     uiElementsRef,
     contextMenu,
     processFunctions,
@@ -480,19 +483,31 @@ export const Menu: FunctionComponent<MenuTypes> = (
     elementToDispose,
     apply_transformation_additional_elements,
     DiagramSelector,
-    callback
+    callback,
+    ref_alt_key_pressed,
+    accept_simple_click,
+    link_function,
+    NodeTooltipsContent,
+    ComponentUpdater,
+    node_function
   }
 ) => {
-  const {ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
+  const {ref_getter_show_menu_config,ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
+  const {ref_setter_mode_selection} = dict_variable_elements_selected
   const [show_nav,set_show_nav] = useState(false)
   const [show_tuto,set_show_tuto]=useState(false)
   const [show_support,set_show_support]=useState(false)
   const [show_template,set_show_template]=useState(false)
-
+  const [forceUpdate,setForceUpdate]=useState(false)
+  ref_getter_show_menu_config.current=show_nav
   ref_setter_show_menu_config.current=set_show_nav
   ref_setter_show_modale_tuto.current=set_show_tuto
   ref_setter_show_modale_support.current=set_show_support
   ref_setter_show_modal_template.current=set_show_template
+
+  const {updateComponentMenu} = ComponentUpdater
+
+  updateComponentMenu.current=()=>setForceUpdate(!forceUpdate)
   RepositionneSidebar(show_nav)
 
   const [menu_acivated,set_menu_activated]=useState(Object.keys(menus)[0])
@@ -693,9 +708,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   let DDDT=[] as (JSX.Element|undefined)[]
   if(show_data){
     DDDT=DataTagsDDNavBar(
-      dict_variable_application_data.data,
-      dict_variable_application_data.set_data,
-      // dict_variable_elements_selected.set_tags_selected
+      dict_variable_application_data,node_function,link_function,ComponentUpdater
     )
   }
 
@@ -709,6 +722,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
         contextMenu.ref_setter_contextualised_link.current!(undefined)
         contextMenu.showContextZDDRef.current![1](false)
         contextMenu.tagContext.current![0][1](undefined)
+        ref_setter_mode_selection.current('s')
+        AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>
@@ -886,10 +901,14 @@ export const MenuDraggable : MenuDraggableFType=(
 }
 
 const  DataTagsDDNavBar = (
-  data:SankeyData,
-  set_data:(d:SankeyData)=>void
+  dict_variable_application_data:dict_variable_application_dataType,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType
   // set_tags_selected:(o:{[x:string]:string})=>void
 ) => {
+  const {updateComponentMenu}=ComponentUpdater
+  const {data,set_data}=dict_variable_application_data
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     if (tags_group.banner == 'one') {
@@ -936,7 +955,11 @@ const  DataTagsDDNavBar = (
                 }
 
                 data.links=pureLinks
-                handleSimpleDropdown(evt, tags_group,data,set_data)
+                handleSimpleDropdown(evt, tags_group)
+                node_function.recomputeDisplayedElement()
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                updateComponentMenu.current()
                 // const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
                 //   return (Object.keys(dataTag.tags).length > 0) ? [
                 //     dataTagKey,
@@ -971,7 +994,7 @@ const  DataTagsDDNavBar = (
               value={selected}
               options={options}
               onChange={(selected: [{ label: string, value: string }]) => {
-                HandleMultiDropdown(selected, tags_group, data, set_data)
+                HandleMultiDropdown(selected, tags_group, data)
 
                 //Multiplie les flux par le nombre de dataTags Sélectionné ( et si le lien à une valeur pour ce dataTags)
                 if(Object.keys(data.dataTags).length>0){
@@ -1023,8 +1046,11 @@ export const OpenSankeySaveButton : OpenSankeySaveButtonFType = (
       }}  ><FontAwesomeIcon style={{width:'2rem',height:'2rem'}} icon={faFloppyDisk} /></Button></OverlayTrigger></>
 }
 export const LastCheckpointTime : LastCheckpointTimeFType =(
-  t:TFunction
+  t:TFunction,
+  ComponentUpdater
 )=>{
+  const [forceUpdate,setForceUpdate]=useState(false)
+  ComponentUpdater.updateComponenTimeCheckpoint.current=()=>setForceUpdate(!forceUpdate)
   const last_save=localStorage.getItem('last_save')
   let l_s_c=''
   const has_save=last_save!==undefined && last_save!==null
