@@ -206,7 +206,7 @@ export const CardsTemplateBuilder = (
       return(
         <Col key={idx}>
           <Card>
-            <Card.Img className='img-card' variant="top" src={'/fm/userfiles/OpenSankey/image_preview/'+title+'.png'} style={{'objectFit':'contain','minHeight':'350px','maxHeight':'500px'}} />
+            <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/Demos/OpenSankey/image_preview/'+title+'.png'} style={{'objectFit':'contain','minHeight':'350px','maxHeight':'500px'}} />
             <Card.Body>
               <Card.Title>{title.replaceAll('_',' ')}</Card.Title>
               <Card.Text>
@@ -267,7 +267,7 @@ export const welcomeModalBuilder = (
     carousel_img.map((_) => {
       const title=_.split('.').splice(0,1).join('')
       return (<Carousel.Item>
-        <img alt={title} src={'/fm/userfiles/OpenSankey/image_carousel/'+_}   style={{'objectFit':'contain','width':'100%','height':'650px',display:'inline-block'}}   />
+        <img alt={title} src={'/fm/userfiles/Formations/Demos/OpenSankey/image_carousel/'+_}   style={{'objectFit':'contain','width':'100%','height':'650px',display:'inline-block'}}   />
       </Carousel.Item>)
     })
   }</Carousel>

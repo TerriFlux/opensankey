@@ -593,7 +593,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     tuto_sub_nav[d[0]]=<>
       {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
         return <Card >
-          <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'} style={{'objectFit':'contain'}} />
+          <Card.Img className='img-card' variant="top" src={'/fm/userfiles/Formations/Tutoriels'+(d[0])+'/images/'+(dd.replace('_layout.json',''))+'.png'} style={{'objectFit':'contain'}} />
           <Card.Body>
             <Card.Title>{dd.replace('_layout.json','').replaceAll('_',' ')}</Card.Title>
             <Card.Text>
