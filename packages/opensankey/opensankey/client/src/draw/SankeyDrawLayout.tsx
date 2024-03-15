@@ -1559,9 +1559,6 @@ export const updateLayout: updateLayoutFuncType = (
       if (data.links[linkId]) {
         newInputLinksId.push(linkId)
       }
-      // } else {
-      //   console.log('tutu1')
-      // }
     })
     n.inputLinksId = newInputLinksId
     const newOutputLinksId: string[] = []
@@ -1569,9 +1566,6 @@ export const updateLayout: updateLayoutFuncType = (
       if (data.links[linkId]) {
         newOutputLinksId.push(linkId)
       }
-      // } else {
-      //   console.log('tutu2')
-      // }
     })
     n.outputLinksId = newOutputLinksId
   })

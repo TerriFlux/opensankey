@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useState } from 'react'
 import {
   Tabs,
   OverlayTrigger,
@@ -19,7 +19,7 @@ import {
   Input,
 } from '@chakra-ui/react'
 /*************************************************************************************************/
-import { SankeyData, SankeyNode, treeFolderType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType, uiElementsRefType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import {
   add_childrenFType,
@@ -29,29 +29,36 @@ import {
   tree_data_nodesFType,
 } from './types/SankeyMenuConfigurationNodesTypes'
 /*************************************************************************************************/
-import {
-  AddNewNode,
-  ApplyStyleToNodes,
-  DeleteNode,
-  ReturnValueNode,
-} from './SankeyUtils'
+import { 
+  DeleteNode,ReturnValueNode,AddNewNode} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
-import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
+import { DeselectVisualyNodes, NodeVisibleOnsSvg, SelectVisualyNodes } from '../draw/SankeyDrawFunction'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from '../topmenus/SankeyMenuTop'
+import { DeleteGNodes } from '../draw/SankeyDrawNodes'
+import { DeleteGLinks } from '../draw/SankeyDrawLinks'
 /*************************************************************************************************/
 
 
 type SankeyEditionTypes = {
   t : TFunction,
-  data : SankeyData,
-  set_data : (_:SankeyData)=>void,
+  dict_variable_application_data:dict_variable_application_dataType,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes : JSX.Element[],
-  token : boolean
+  token : boolean,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType,
+  contextMenu:contextMenuType,
+  uiElementsRef:uiElementsRefType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  alt_key_pressed:MutableRefObject<boolean>,
+  accept_simple_click:{current:boolean},
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
+  applicationContext:applicationContextType,
+  node_function:NodeFunctionTypes
 }
 
 export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
@@ -60,7 +67,9 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   dict_variable_elements_selected,
   contextMenu,
   menu_configuration_nodes_attributes,
-  GetLinkValue:GetLinkValueFuncType
+  GetLinkValue:GetLinkValueFuncType,
+  node_function,link_function,
+
 ) => {
   const { data } = dict_variable_application_data
 
@@ -72,7 +81,6 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     ),
     'Tooltip'         : SankeyMenuConfigurationNodesTooltip(
       applicationContext,
-      dict_variable_application_data,
       dict_variable_elements_selected,
       false
     )
@@ -81,6 +89,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
+    node_function,
     false
   )
 
@@ -92,18 +101,35 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
-    GetLinkValue
+    GetLinkValue,
+    node_function,link_function,
+
   )
 
   return ui
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,data, set_data, multi_selected_nodes, menu_configuration_nodes,token }
+  {t,
+    dict_variable_application_data,
+    multi_selected_nodes,
+    menu_configuration_nodes,token,
+    link_function,ComponentUpdater,
+    contextMenu,
+    uiElementsRef,
+    dict_variable_elements_selected,
+    alt_key_pressed,
+    accept_simple_click,
+    dict_hook_ref_setter_show_dialog_components,
+    applicationContext,
+    node_function
+  }
 ) => {
+  const {data}=dict_variable_application_data
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
-
+  const {updateComponentMenuConfigNode}=ComponentUpdater
+  updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
   const tmpNodes = Object
     .fromEntries(
       Object.entries(data.nodes)
@@ -123,12 +149,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     .map(d => {
       return { 'label': d.name, 'value': d.idNode }
     })
-  // const target_node_selector=useRef(null)
-  // const [show_node_selector,set_show_node_selector]=useState(false)
-
-  // const has_node_type=Object.values(data.nodeTags).filter(t=>t.group_name==='Type de noeud').length>0
-  // const pre_filter_node=(has_node_type)?Object.keys(data.nodeTags['Type de noeud'].tags):[]
-  // const [filter_node_selector,set_filter_node_selector]=useState<string[]>(pre_filter_node)
 
   // const tree_of_nodes=tree_data_nodes(t as TFunction<'translation', undefined>,data,multi_selected_nodes,NodeVisibleOnsSvg(),filter_node_selector)
 
@@ -160,7 +180,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 d3.select(' .opensankey #shape_' + n.idNode).attr('stroke-width',2)
               )
               setForceUpdate(!forceUpdate)
-              set_data({...data})
+              multi_selected_nodes.current.forEach(d=>SelectVisualyNodes(d))
             }}
             valueRenderer={(selected: selected_type[]) => {
               return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
@@ -293,8 +313,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           variant='menuconfigpanel_add_button'
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
-            AddNewNode(data,set_data,multi_selected_nodes)
-            ApplyStyleToNodes(data,set_data,multi_selected_nodes)
+            Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
+            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
+            SelectVisualyNodes(multi_selected_nodes.current[0])
+            setForceUpdate(!forceUpdate)
           }}>
           <FaPlus/>
         </Button>
@@ -333,7 +355,25 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             () => {
               multi_selected_nodes.current.map(d => DeleteNode(data, d))
               multi_selected_nodes.current = []
-              set_data({ ...data })
+              const tmp_node=Object.keys(data.nodes)
+              Object.entries(dict_variable_application_data.display_nodes).filter(n=>{
+                return !tmp_node.includes(n[0])
+              }).forEach(n=>{
+                DeleteGNodes([n[0]])
+                delete dict_variable_application_data.display_nodes[n[0]]
+              })
+
+              const tmp_link=Object.keys(data.links)
+              Object.entries(dict_variable_application_data.display_links).filter(l=>{
+                return !tmp_link.includes(l[0])
+              }).forEach(l=>{
+                DeleteGLinks([l[0]])
+                delete dict_variable_application_data.display_links[l[0]]
+              })
+
+              node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              
             }}>
           <FaMinus />
         </Button>
@@ -350,7 +390,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           onClick={
             () => {
               data.displayed_node_selector=!data.displayed_node_selector
-              set_data({...data})
+              setForceUpdate(!forceUpdate)
             }}>
           <FaEye />
         </Button>

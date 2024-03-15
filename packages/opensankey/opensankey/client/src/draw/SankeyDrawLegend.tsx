@@ -1,11 +1,11 @@
-import { SankeyData, SankeyNode } from '../types/Types'
+import { ComponentUpdaterType, SankeyData, SankeyNode } from '../types/Types'
 import React, { FunctionComponent, useState } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
 import { LinkVisible} from '../configmenus/SankeyUtils'
 import { OpposingDragElements } from './SankeyDragNodes'
-import { NodeVisibleOnsSvg } from './SankeyDrawFunction'
+import { NodeVisibleOnsSvg, SelectVisualyLinks } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 import { DrawLegendFType, ContextLegendTagsFType, drag_legendFType, drag_legend_g_elementFuncType} from './types/SankeyDrawLegendTypes'
 
@@ -19,9 +19,10 @@ export const DrawLegend : DrawLegendFType= (
   applicationContext,
   contextMenu,
   GetLinkValue,
-  legend_clicked
+  legend_clicked,
+  ComponentUpdater
 ) => {
-  const {data,set_data,display_nodes}=dict_variable_application_data
+  const {data,display_nodes}=dict_variable_application_data
   const {t}=applicationContext
   const {pointer_pos,tagContext}=contextMenu
   // Function that add legend of tags
@@ -68,7 +69,8 @@ export const DrawLegend : DrawLegendFType= (
         d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray',()=>'6,6')
         let h=document.getElementById('g_legend')?.getBoundingClientRect().height
         h=h?h:50
-        draw_legend_handles(data,set_data,legend_clicked.current ,h)
+        
+        draw_legend_handles(data,legend_clicked.current ,h,ComponentUpdater)
       })
 
 
@@ -237,10 +239,8 @@ export const DrawLegend : DrawLegendFType= (
       dx = dx + pas
 
     })
-    console.log(data.legend_show_dataTags)
 
     if(data.legend_show_dataTags){
-      console.log('draw dataTags')
       dy+=(dy==0)?-30:30
     
       const data_tags = Object.assign({},data.dataTags)
@@ -362,7 +362,7 @@ export const DrawLegend : DrawLegendFType= (
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
   
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
-    draw_legend_handles(data,set_data,legend_clicked.current,h)
+    draw_legend_handles(data,legend_clicked.current,h,ComponentUpdater)
   }
   if(data.mask_legend){
     drawLegend()
@@ -377,7 +377,7 @@ export const DrawLegend : DrawLegendFType= (
 
 export const drag_legend : drag_legendFType = (
   data:SankeyData,
-  set_data:(d:SankeyData)=>void
+  reDrawLegend
 )=>d3.drag<SVGGElement, unknown>()
   .subject(Object).on('drag', function (event) {
 
@@ -387,7 +387,7 @@ export const drag_legend : drag_legendFType = (
         OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
       }
     }
-  }).on('end',()=>set_data({...data}))
+  }).on('end',()=>reDrawLegend())
 
 export const DragLegendGElement:drag_legend_g_elementFuncType=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
   let scale_for_legend=1
@@ -424,10 +424,11 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
   dict_variable_application_data,
   dict_variable_elements_selected,
   contextMenu,
-  GetLinkValue
+  GetLinkValue,
+  ComponentUpdater
 })=>{
   const [ tag_contextualised, set_tag_contextualised] = useState<string>()
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const {t}=applicationContext
   const {pointer_pos,tagContext}=contextMenu
   if (tagContext.current!.length === 0) {
@@ -464,7 +465,10 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
         return tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes((tag_contextualised)?tag_contextualised:'')
       })
     }
-    set_data({...data})
+    multi_selected_links.current.forEach(d=>{
+      SelectVisualyLinks(d)
+    })
+    ComponentUpdater.updateComponentMenuConfigLink.current()
     tagContext.current?.forEach(tag_ref=>tag_ref[1](undefined))
   }}
   variant='light'>{text_button_select_element_by_tag} {}</Button>:<></>
@@ -483,17 +487,18 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
 
 export const draw_legend_handles =(
   data:SankeyData,
-  set_data:(d:SankeyData)=>void,
   legend_clicked:boolean,
-  h:number
+  h:number,
+  ComponentUpdater:ComponentUpdaterType
 )=>{
+  d3.select('.opensankey #g_legend_handles').selectAll('*').remove();
   ['left','right'].forEach(pos=>{
-    add_legend_handle(pos,data,set_data,legend_clicked,h)
+    add_legend_handle(pos,data,legend_clicked,h,ComponentUpdater)
   })
 }
 const size_zdt_handle=10
 
-const add_legend_handle=(pos:string,data:SankeyData,set_data:(d:SankeyData)=>void,legend_clicked:boolean,h:number)=>{
+const add_legend_handle=(pos:string,data:SankeyData,legend_clicked:boolean,h:number,ComponentUpdater:ComponentUpdaterType)=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
   if(d3.select('.opensankey #svg').nodes().length>0){
@@ -515,7 +520,7 @@ const add_legend_handle=(pos:string,data:SankeyData,set_data:(d:SankeyData)=>voi
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
-    .call(drag_legend_handle(pos,data,set_data,svg_k_factor))
+    .call(drag_legend_handle(pos,data,svg_k_factor,ComponentUpdater))
   // Position the handle 
   switch (pos){
 
@@ -533,7 +538,7 @@ const add_legend_handle=(pos:string,data:SankeyData,set_data:(d:SankeyData)=>voi
   }
 }
 
-const drag_legend_handle=(pos:string,data:SankeyData,set_data:(d:SankeyData)=>void,svg_k_factor:number)=>{
+const drag_legend_handle=(pos:string,data:SankeyData,svg_k_factor:number,ComponentUpdater:ComponentUpdaterType)=>{
   const g_zdt_h=d3.select('.opensankey #g_legend_handles .legend_handle'+pos)
   const text_zone_shape=d3.select('.g_drag_zone_leg rect')
   const g_text_zone=d3.select('#g_legend')
@@ -564,7 +569,7 @@ const drag_legend_handle=(pos:string,data:SankeyData,set_data:(d:SankeyData)=>vo
         break
       }
     })
-    .on('end',()=>set_data(data))
+    .on('end',()=>ComponentUpdater.updateComponentMenuConfigLayout.current())
 
         
 }
