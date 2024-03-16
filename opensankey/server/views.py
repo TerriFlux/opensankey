@@ -551,7 +551,8 @@ def menus_examples():
     try:
         current_folder = os.environ.get('MFAData')
         list_in_folder = os.listdir(current_folder)
-        if ('MFAData' in list_in_folder and 'image_preview' in os.listdir(current_folder+'\\MFAData\\Formations\\Démos\\OpenSankey\\')):
+        if ('MFAData' in list_in_folder and 'image_preview' in
+                os.listdir(current_folder+'\\MFAData\\Formations\\Démos\\OpenSankey\\')):
             folder_image = current_folder + '\\MFAData\\Formations\\Démos\\OpenSankey\\image_preview'
             for i in os.listdir(folder_image):
                 if (i not in os.listdir(image_template_folder)):
