@@ -603,7 +603,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
               <Button variant='primary'
                 onClick={() => {
                   UploadExemple(
-                    ('Formations/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
+                    ('Formations/Tutoriels/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
                   )
                   dict_variable_application_data.set_data({...dict_variable_application_data.data})
                   set_show_tuto(false)
@@ -614,10 +614,10 @@ export const Menu: FunctionComponent<MenuTypes> = (
                   onClick={() => {
 
 
-                    processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
+                    processFunctions.launch('Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
 
                     UploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
+                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
                     )
                     set_show_tuto(false)
 
@@ -633,7 +633,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
 
                     UploadExemple(
-                      'Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
+                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
                     )
                     set_show_tuto(false)
 

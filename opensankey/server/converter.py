@@ -1286,6 +1286,9 @@ class JsonToSankey(object):
                 for fluxtag_id in datas_json['tags'][fluxtagg_id]:
                     if fluxtag_id == 'initial_data' or fluxtag_id == 'computed_data':
                         continue
+                    if fluxtag_id not in self._fluxtags_corresp[fluxtagg_id]:
+                        # sanity check 
+                        continue
                     fluxtags_list.append(self._fluxtags_corresp[fluxtagg_id][fluxtag_id])
             # Check if data is result or not
             data_is_computed = False
