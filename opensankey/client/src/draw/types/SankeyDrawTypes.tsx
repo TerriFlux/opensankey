@@ -24,8 +24,7 @@ export type keyHandlerFType = (
 
 export type SankeyDrawTypes = {
     contextMenu:contextMenuType,
-    data: SankeyData,
-    set_data: (_:SankeyData) => void,
+    dict_variable_application_data : dict_variable_application_dataType,
     display_nodes : { [node_id: string]: SankeyNode },
     display_links : { [node_id: string]: SankeyLink },
     animation: MutableRefObject<boolean>,

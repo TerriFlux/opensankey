@@ -73,9 +73,9 @@ export type NodeColorFuncType = (n: SankeyNode,data:SankeyData)=> string
 
 export type GetVerticalMarginForSankeyZoneFuncType = ()=>number
 
-export type AdjustSankeyZoneFuncType = (data:SankeyData,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,show_nav?:boolean,vertical?:boolean)=>void
+export type AdjustSankeyZoneFuncType = (dict_variable_application_data : dict_variable_application_dataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,show_nav?:boolean,vertical?:boolean)=>void
 
-export type GetSankeyMinWidthAndHeightFuncType = (data:SankeyData)=>number[]
+export type GetSankeyMinWidthAndHeightFuncType = (dict_variable_application_data:dict_variable_application_dataType)=>number[]
 
 export type ToPrecisionFuncType = (v: number,t:TFunction,nb_scientific?:number)=> string | number
 

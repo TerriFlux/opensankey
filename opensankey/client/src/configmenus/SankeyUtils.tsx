@@ -1164,11 +1164,12 @@ export const GetVerticalMarginForSankeyZone:GetVerticalMarginForSankeyZoneFuncTy
   return shift_top+footer_size
 }
 export const AdjustSankeyZone:AdjustSankeyZoneFuncType =(
-  data:SankeyData,
-  GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
+  dict_variable_application_data,
+  GetSankeyMinWidthAndHeight,
   show_nav=false,vertical=false
 ): void=>{
-  [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
+  const {data}=dict_variable_application_data;
+  [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
   let size_menu=0
   if(show_nav){
     size_menu=menu_config_width

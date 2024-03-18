@@ -62,7 +62,7 @@ export type ToolbarBuilderFType = (
 ) => JSX.Element
 
 export type stretchButtonsFType=(
-  data:SankeyData,
+  dict_variable_application_data : dict_variable_application_dataType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   t:TFunction
 )=>JSX.Element

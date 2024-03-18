@@ -613,7 +613,11 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
               min="0"
               max={max_link_value}
               value={filter}
-              onChange={evt => set_current_filter(Number(evt.target.value))} />
+              onChange={evt => {
+                set_current_filter(Number(evt.target.value))
+                setForceUpdate(!forceUpdate)
+              }
+              } />
           </Col>
           <Col>
             <FormControl
@@ -628,6 +632,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
                   tmp=max_link_value
                 }
                 set_current_filter(tmp)
+                setForceUpdate(!forceUpdate)
               }}
             />
           </Col>
@@ -642,12 +647,11 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
               max={max_link_value}
               value={data.display_style.filter_label}
               onChange={evt => {
-                data.display_style.filter_label = +evt.target.value
+                dict_variable_application_data.data.display_style.filter_label = +evt.target.value
                 setForceUpdate(!forceUpdate)
-
-                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
                 link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-                reDrawLegend()              }}
+                reDrawLegend()              
+              }}
             />
           </Col>
           <Col>
@@ -662,10 +666,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
                 if(tmp>max_link_value){
                   tmp=max_link_value
                 }
-                data.display_style.filter_label = tmp
+                dict_variable_application_data.data.display_style.filter_label = tmp
                 setForceUpdate(!forceUpdate)
-
-                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
                 link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                 reDrawLegend()
               }}
@@ -1068,7 +1070,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     {btn_show_data_filter}
     { btn_show_data_type}
 
-    {stretchButtons(data,GetSankeyMinWidthAndHeight,t)}
+    {stretchButtons(dict_variable_application_data,GetSankeyMinWidthAndHeight,t)}
 
     {btn_show_help_in_static}
 
@@ -1081,7 +1083,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
 
 
 export const stretchButtons : stretchButtonsFType =(
-  data:SankeyData,
+  dict_variable_application_data,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   t:TFunction
 )=>{
@@ -1090,7 +1092,7 @@ export const stretchButtons : stretchButtonsFType =(
     placement={'left'}
     delay={500}
     overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjustH')} </Tooltip>}>
-    <Button variant='dark' onClick={() => {AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)}} >
+    <Button variant='dark' onClick={() => {AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)}} >
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
     </Button>
   </OverlayTrigger>
@@ -1099,7 +1101,7 @@ export const stretchButtons : stretchButtonsFType =(
     placement={'left'}
     delay={500}
     overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjustV')} </Tooltip>}>
-    <Button variant='dark' onClick={() => {AdjustSankeyZone(data,GetSankeyMinWidthAndHeight,false,true)}} >
+    <Button variant='dark' onClick={() => {AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight,false,true)}} >
       <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
     </Button>
   </OverlayTrigger></>
