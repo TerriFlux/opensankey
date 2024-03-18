@@ -111,7 +111,9 @@ export type SankeyPlusMenuPreferenceViewFType = (
 
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
-export type modal_view_not_savedFType = (view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
+export type modal_view_not_savedFType = (
+  dict_variable_application_data:dict_variable_application_dataType,
+  view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
   master_data:SankeyPlusData | undefined,
   set_master_data:(d:SankeyPlusData | undefined)=>void,
   data:SankeyPlusData,

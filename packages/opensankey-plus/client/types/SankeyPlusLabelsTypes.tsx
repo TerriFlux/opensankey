@@ -1,7 +1,7 @@
-import { SankeyData } from 'open-sankey/src/types/Types'
+import { SankeyData, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { DictSetterInputValueType, PlusApplicationContextType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, reDrawPlusLabelsFType } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
-import { GetLinkValueFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
 
@@ -12,7 +12,7 @@ export type PlusDrawLabelsFType = (
   contextMenu:SankeyPlusContextMenuType,
   applicationContext:PlusApplicationContextType,
   d_setter_input_value:DictSetterInputValueType,
-  GetSankeyMinWidthAndHeight:(data:SankeyData)=>number[],
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
@@ -43,7 +43,7 @@ export type eventLabelClickFType=(
 // To be dragged you need to select the free label
 
 export type sankey_plus_min_width_and_heightFType = (
-  data:SankeyData
+  dict_variable_application_data:dict_variable_application_dataType
 ) => [number,number]
 
 export type zone_selection_labelFType=(data:SankeyPlusData,

@@ -72,6 +72,7 @@ import {
   AdjustSankeyZone
 } from './import/OpenSankey'
 import { deleteGLabel, sankey_plus_min_width_and_height } from './SankeyPlusLabels'
+import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 /* eslint-disable */
 // @ts-ignore
@@ -364,7 +365,7 @@ export const keyHandler : keyHandlerFType = (
       set_view('none')
       set_data(JSON.parse(JSON.stringify(master_data)))
       setTimeout(()=>{
-        AdjustSankeyZone(master_data!,sankey_plus_min_width_and_height)
+        AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
       },100)
 
     }
@@ -401,7 +402,7 @@ export const keyHandler : keyHandlerFType = (
         set_view(master_data!.view[ind-1].id)
         // AdjustSankeyZone(master_data.view[ind-1].view_data as SankeyPlusData,GetSankeyMinWidthAndHeight)
         setTimeout(()=>{
-          AdjustSankeyZone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+          AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
         },100)
       }
 
@@ -444,7 +445,7 @@ export const keyHandler : keyHandlerFType = (
         set_data(data_view)
         set_view(new_master_data!.view[ind+1].id)
         setTimeout(()=>{
-          AdjustSankeyZone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+          AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
         },100)
       }
       //}
@@ -607,14 +608,14 @@ export const SelecteurView : SelecteurViewFType =(
             set_master_data(new_master_data)
 
             setTimeout(()=>{
-              AdjustSankeyZone({...data_view as SankeyPlusData},sankey_plus_min_width_and_height)
+              AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
             },100)
 
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
             set_data(JSON.parse(JSON.stringify(master_data)))
             setTimeout(()=>{
-              AdjustSankeyZone(master_data!,sankey_plus_min_width_and_height)
+              AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
             },100)
           }
         }
@@ -1369,6 +1370,7 @@ export const SankeyPlusMenuPreferenceView : SankeyPlusMenuPreferenceViewFType =(
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
 export const modal_view_not_saved : modal_view_not_savedFType =(
+  dict_variable_application_data,
   view_not_saved:string,
   set_view_not_saved:(s:string)=>void,
   t:TFunction,
@@ -1398,12 +1400,12 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
               const data_view=GetDataFromView(master_data,view) as SankeyPlusData
               set_data(data_view)
               setTimeout(()=>{
-                AdjustSankeyZone(data_view,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
               },100)
             } else if(view === 'none'){
               set_data({...master_data!})
               setTimeout(()=>{
-                AdjustSankeyZone(master_data!,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
               },100)
             }
             set_view_not_saved('')
@@ -1423,13 +1425,13 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
               set_master_data({...JSON.parse(JSON.stringify(master_data))})
               set_data(data_view)
               setTimeout(()=>{
-                AdjustSankeyZone(data_view,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
               },100)
 
             } else if(view === 'none'){
               set_data({...JSON.parse(JSON.stringify(master_data))})
               setTimeout(()=>{
-                AdjustSankeyZone(master_data!,sankey_plus_min_width_and_height)
+                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
               },100)
             }
             set_view_not_saved('')
