@@ -80,8 +80,8 @@ const SankeyLoad = ({
       response.text().then(text => {
         try {
           RetrieveExcelResults(
+            dict_variable_application_data,
             text,
-            dict_variable_application_data.set_data,
             applicationDraw.updateLayout,
             callback,
             applicationDraw.GetSankeyMinWidthAndHeight,
@@ -255,14 +255,15 @@ export const Counter = ({
 export default SankeyLoad
 
 export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
+  dict_variable_application_data,
   text: string,
-  set_data: (d: SankeyData) => void,
   updateLayout: updateLayoutFuncType,
   callback: (server_data: SankeyData) => void,
-  GetSankeyMinWidthAndHeight: (data: SankeyData) => number[],
+  GetSankeyMinWidthAndHeight,
   convert_data: ConvertDataFuncType,
   defaultData: () => SankeyData
 ) => {
+  const {set_data}=dict_variable_application_data
   const default_data = defaultData()
   const server_data = JSON.parse(text)
   let default_nstyle = default_data.style_node['default']
@@ -301,7 +302,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   }
   set_data({ ...new_data })
   setTimeout(() => {
-    AdjustSankeyZone(new_data, GetSankeyMinWidthAndHeight)
+    AdjustSankeyZone(dict_variable_application_data, GetSankeyMinWidthAndHeight)
   }, 100)
 }
 export const ClickSaveDiagram: ClickSaveDiagramFuncType = (data: SankeyData, name = 'sankey_diagram'): void => {
