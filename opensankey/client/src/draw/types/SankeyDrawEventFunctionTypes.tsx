@@ -2,7 +2,6 @@
 import { MutableRefObject, Dispatch, SetStateAction } from 'react'
 import { dict_variable_application_dataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType, NodeFunctionTypes } from '../../types/Types'
 import * as d3 from 'd3'
-import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 
 // Function triggerd on click on nodes
 
@@ -52,29 +51,18 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   uiElementsRef : uiElementsRefType,
   applicationContext:applicationContextType,
-  contextMenu:contextMenuType,
   link_function: LinkFunctionTypes,
-  alt_key_pressed:MutableRefObject<boolean>,
-  ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
 
 )=> void
 export type EventOnZoneMouseDownFuncType = (
-  contextMenu:contextMenuType,
   dict_variable_application_data:dict_variable_application_dataType,
-  uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
-  applicationContext:applicationContextType,
-  alt_key_pressed:MutableRefObject<boolean>,
-  NodeTooltipsContent: NodeTooltipsContentFType,
-  accept_simple_click:{current:boolean},
   token:boolean,
   evt:MouseEvent,
   start_point:{current:number[]},
   closeAllMenuContext: () => void,
-  link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
 
 ) => void
@@ -87,20 +75,15 @@ export type EventOnZoneMouseMoveFuncType = (
 ) => void
 
 export type EventOnZoneMouseUpFuncType = (
-  contextMenu:contextMenuType,
   dict_variable_application_data:dict_variable_application_dataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
-  applicationContext:applicationContextType,
-  alt_key_pressed:MutableRefObject<boolean>,
-  accept_simple_click:{current:boolean},
   token:boolean,
   evt:MouseEvent,
   start_point:{current:number[]},
   legend_clicked:MutableRefObject<boolean>,
   link_function:LinkFunctionTypes,
-  NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
 

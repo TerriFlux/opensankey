@@ -44,6 +44,8 @@ import { GetSankeyMinWidthAndHeightFuncType } from './types/SankeyUtilsTypes'
 import { AddAllDropDownFluxFType } from '../topmenus/types/SankeyMenuTopTypes'
 import { Checkbox } from '@chakra-ui/react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import { DeleteGNodes } from '../draw/SankeyDrawNodes'
+import { DeleteGLinks } from '../draw/SankeyDrawLinks'
 
 
 
@@ -188,11 +190,11 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                   style={{ width: '200px', color: 'black' }}
                   key={tags_group.group_name}
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    handleSimpleDropdown(evt, tags_group) 
+                    handleSimpleDropdown(evt, tags_group)
                     recomputeDisplayedElement()
                     setForceUpdate(!forceUpdate)
-                    node_function.RedrawNodes(Object.values(display_nodes))
-                    link_function.RedrawLinks(Object.values(display_links))
+                    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
                     reDrawLegend()
                   
                   }}>{
@@ -268,12 +270,28 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                   delete_local_aggregation(data)
                   handleSimpleDropdown(evt, tags_group)
 
+                  const old_displayed_nodes=Object.values(dict_variable_application_data.display_nodes).map(n=>n.idNode)
+                  const old_displayed_links=Object.values(dict_variable_application_data.display_links).map(l=>l.idLink)
+
                   recomputeDisplayedElement()
-                  setForceUpdate(!forceUpdate)
-                  node_function.RedrawNodes(Object.values(display_nodes))
-                  link_function.RedrawLinks(Object.values(display_links))   
+
+                  const new_displayed_nodes=Object.values(dict_variable_application_data.display_nodes).map(n=>n.idNode)
+                  const new_displayed_links=Object.values(dict_variable_application_data.display_links).map(l=>l.idLink)
+
+                  // Delete Nodes/Links no longer in displayed elements
+                  DeleteGNodes(old_displayed_nodes.filter(nid=>!new_displayed_nodes.includes(nid)).map(id=>id))
+                  DeleteGLinks(old_displayed_links.filter(lid=>!new_displayed_links.includes(lid)).map(id=>id))
+
+                  // Create Nodes/Links that are now visually present with the new aggregation levels
+                  node_function.CreateNodesOnSVG(new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>data.nodes[id]))
+                  link_function.CreateLinksOnSVG(new_displayed_links.filter(lid=>!old_displayed_links.includes(lid)).map(id=>data.links[id]))
+
+                  // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
+                  node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                  link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))   
                   reDrawLegend()
 
+                  setForceUpdate(!forceUpdate)
                 }}>{
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
                     return (<option key={i} value={tag_key}>{tag.name}</option>)

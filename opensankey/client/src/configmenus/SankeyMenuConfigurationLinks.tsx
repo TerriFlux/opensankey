@@ -107,7 +107,6 @@ type SankeyMenuConfigurationLinksTypes = {
   contextMenu:contextMenuType,
   uiElementsRef:uiElementsRefType,
   alt_key_pressed:MutableRefObject<boolean>,
-  accept_simple_click:{current:boolean},
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes
 
@@ -123,7 +122,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     contextMenu,
     uiElementsRef,
     alt_key_pressed,
-    accept_simple_click,
     dict_hook_ref_setter_show_dialog_components,
     node_function
   }
@@ -263,9 +261,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     if (Object.keys(nodes).length < 2) {
       if (Object.keys(nodes).length == 0) {
-        AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
+        AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
       }
-      AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
+      AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
     }
     const link: SankeyLink = DefaultLink(data)
     // Méthode pour incrementer idNode

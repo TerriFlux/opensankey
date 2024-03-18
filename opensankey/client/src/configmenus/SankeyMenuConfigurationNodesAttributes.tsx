@@ -997,7 +997,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 multi_selected_nodes.current.map(n => {
                   n.style = d
                 })
-                ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function,applicationContext,node_function)
+                ApplyStyleToNodes(multi_selected_nodes,node_function)
                 
               }}
             >{data.style_node[d].name}</Dropdown.Item>)
@@ -1016,7 +1016,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           variant='outline-primary'
          
           onClick={() => {
-            ApplyStyleToNodes(dict_variable_application_data,multi_selected_nodes,link_function,applicationContext,node_function)
+            ApplyStyleToNodes(multi_selected_nodes,node_function)
           }}>
           {t('Noeud.AS')}
         </Button>

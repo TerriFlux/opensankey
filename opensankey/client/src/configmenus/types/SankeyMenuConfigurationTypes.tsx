@@ -27,7 +27,6 @@ export type OpenSankeyConfigurationsMenusFType = (
   ComponentUpdater:ComponentUpdaterType,
   contextMenu:contextMenuType,
   alt_key_pressed:MutableRefObject<boolean>,
-  accept_simple_click:{current:boolean},
   node_function:NodeFunctionTypes
 
 ) => JSX.Element[]
