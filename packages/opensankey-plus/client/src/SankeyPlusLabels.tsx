@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
 
-import { SankeyData } from 'open-sankey/src/types/Types'
 import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, PlusApplicationContextType, PlusComponentUpdaterType, reDrawPlusLabelsFType, DictSetterInputValueType} from '../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {
@@ -27,7 +26,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   contextMenu,
   applicationContext,
   d_setter_input_value,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  GetSankeyMinWidthAndHeight,
   LinkText: LinkTextFuncType,
   GetLinkValue:GetLinkValueFuncType,
   DrawArrows:DrawArrowsType,
@@ -342,9 +341,10 @@ const dragLabelEvent = (
 
 
 export const sankey_plus_min_width_and_height : sankey_plus_min_width_and_heightFType = (
-  data:SankeyData
+  dict_variable_application_data
 ) => {
-  let [width,height]=GetSankeyMinWidthAndHeight(data)
+  const {data}=dict_variable_application_data
+  let [width,height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
   const data_plus=data as SankeyPlusData
   Object.values(data_plus.labels).forEach(n => {
     height =  Math.max(height, n.y+n.label_height)
@@ -353,8 +353,6 @@ export const sankey_plus_min_width_and_height : sankey_plus_min_width_and_height
 
   height = height + (data_plus.grid_square_size * 2 )
   width = width + (data_plus.grid_square_size * 2 )
-
-
 
   return [width,height]
 }
