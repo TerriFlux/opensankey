@@ -22,8 +22,7 @@ typeof globalThis & {
 }
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   contextMenu,
-  data,
-  set_data,
+  dict_variable_application_data, 
   display_nodes,
   display_links,
   animation,
@@ -32,7 +31,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   ref_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
-
+  const {data,set_data}=dict_variable_application_data
   const {ref_getter_mode_selection,ref_setter_mode_selection}=dict_variable_elements_selected
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
@@ -63,7 +62,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (animation.current) {
       return
     }
-    [data.width, data.height] = GetSankeyMinWidthAndHeight(data)
     RemoveAnimate()
     d3.select('body').style('background-color',data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
@@ -118,7 +116,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         .on('end',()=>{
           
-          AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)
+          AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
           svgSankey.style('width', data.width + 'px')
           svgSankey.style('height', data.height + 'px')
           DrawGrid(data)

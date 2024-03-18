@@ -2,7 +2,7 @@ import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTy
 
 import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
-import { SankeyData, callbackFuncType } from '../../types/Types'
+import { SankeyData, callbackFuncType, dict_variable_application_dataType } from '../../types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 /**
@@ -22,8 +22,8 @@ export type ProcessExampleFuncType = (
     DefaultSankeyData: DefaultSankeyDataFuncType
 ) => SankeyData
 export type RetrieveExcelResultsFuncType = (
+    dict_variable_application_data : dict_variable_application_dataType,
     text: string,
-    set_data: (d: SankeyData) => void,
     updateLayout: updateLayoutFuncType,
     callback: callbackFuncType,
     GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,

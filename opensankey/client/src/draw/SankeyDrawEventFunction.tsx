@@ -8,7 +8,6 @@ import {
   AssignLinkLocalAttribute
 } from '../configmenus/SankeyUtils'
 import {
-  dict_variable_application_dataType,
   SankeyData,
   SankeyLink,
   SankeyLinkValue,
@@ -39,7 +38,8 @@ import {
   SimpleGNodeClickFuncType,
   SvgDragMiddleMouseMoveFuncType,
   SvgDragMiddleMouseStartFuncType,
-  ZoomFunctionFuncType
+  ZoomFunctionFuncType,
+  actualizeDrawAreaFrameFType
 } from './types/SankeyDrawEventFunctionTypes'
 import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
 
@@ -718,10 +718,11 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
 
   }
 }
-export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => {
+export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, dict_variable_application_data) => {
 
   const t = 'translate(0,0) scale(' + evt.transform.k + ')'
   const svgSankey = d3.select('.opensankey #svg')
+  const {data}=dict_variable_application_data
   svgSankey
     .attr('transform', t)
   // Change the width of scrollable zone if the menu is open so we can scroll until the menu is not on the sankey zone
@@ -734,9 +735,8 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
     .style('border', Math.max(1, Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
   d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale(' + (scale_legend) + ')')
   d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale / 2) * scale_legend)))
-  actualizeDrawAreaFrame({data} as dict_variable_application_dataType)
+  actualizeDrawAreaFrame(dict_variable_application_data)
 
-  // RepositionneSidebar()
 }
 
 export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
@@ -850,8 +850,8 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
 
 }
 
-export const actualizeDrawAreaFrame=(dict_variable_application_data:dict_variable_application_dataType)=>{
-  [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data.data)
+export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(dict_variable_application_data)=>{
+  [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
   const transform=d3.select('.opensankey #svg').attr('transform')
   let scale_svg=1
   if(transform!==undefined && transform!==null){
