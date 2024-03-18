@@ -9,7 +9,7 @@ import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { AssignLinkLocalAttribute, ReturnValueLink, updateLinkTagValue } from '../configmenus/SankeyUtils'
 import * as d3 from 'd3'
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction'
-import { drawAddLinks, drawLinkShape } from '../draw/SankeyDrawLinks'
+import { drawLinkShape } from '../draw/SankeyDrawLinks'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -23,8 +23,6 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   link_function,
-  uiElementsRef,
-  alt_key_pressed,
   ComponentUpdater
 })=>{
   const [ contextualised_link, set_contextualised_link] = useState<SankeyLink>()
@@ -41,7 +39,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
       const cast_l=g_l as SankeyLink
       return multi_selected_links.current.includes(cast_l)
     }).remove()
-    drawAddLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,multi_selected_links.current)
+    link_function.CreateLinksOnSVG(multi_selected_links.current)
     ComponentUpdater.updateComponentMenuConfigLink.current()
     setForceUpdate(!forceUpdate)
   }

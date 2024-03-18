@@ -41,8 +41,6 @@ import {
   SvgDragMiddleMouseStartFuncType,
   ZoomFunctionFuncType
 } from './types/SankeyDrawEventFunctionTypes'
-import { drawAddNodes } from './SankeyDrawNodes'
-import { drawAddLinks } from './SankeyDrawLinks'
 import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
 
 
@@ -246,21 +244,13 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
 }
 
 export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
-  contextMenu,
   dict_variable_application_data,
-  uiElementsRef,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
-  applicationContext,
-  alt_key_pressed,
-  NodeTooltipsContent,
-  accept_simple_click,
   token,
   evt,
   start_point,
   closeAllMenuContext,
-  link_function,
-  ComponentUpdater,
   node_function
 ) => {
   // Special cast usefull for when the app is used in SankeySuiteManager
@@ -305,20 +295,8 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
           first_selected_node.current = new_node1
           dict_variable_application_data.display_nodes[new_node1.idNode]=new_node1
 
-          drawAddNodes(  
-            contextMenu,
-            dict_variable_application_data,
-            uiElementsRef,
-            dict_variable_elements_selected,
-            applicationContext,
-            alt_key_pressed,
-            accept_simple_click,
-            link_function,
-            NodeTooltipsContent,
-            ComponentUpdater,
-            dict_hook_ref_setter_show_dialog_components,
-            node_function
-          )
+          node_function.CreateNodesOnSVG([new_node1])
+
         }
       }
     } else if (d3.select(evt2.target).attr('class') != 'node node_shape' &&  ref_getter_mode_selection.current == 's' && !evt.ctrlKey) {
@@ -413,20 +391,15 @@ export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
   }
 }
 export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
-  contextMenu,
   dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
-  applicationContext,
-  alt_key_pressed,
-  accept_simple_click,
   token,
   evt,
   start_point,
   legend_clicked,
   link_function,
-  NodeTooltipsContent,
   ComponentUpdater,
   node_function
 ) => {
@@ -578,31 +551,10 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 
       dict_variable_application_data.display_nodes[new_node1.idNode]=new_node1
       dict_variable_application_data.display_links[new_link.idLink]=new_link
-      drawAddNodes(
-        contextMenu,
-        dict_variable_application_data,
-        uiElementsRef,
-        dict_variable_elements_selected,
-        applicationContext,
-        alt_key_pressed,
-        accept_simple_click,
-        link_function,
-        NodeTooltipsContent,ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components,
-        node_function
-      )
-      drawAddLinks(
-        contextMenu,
-        dict_variable_application_data,
-        uiElementsRef,
-        dict_variable_elements_selected,
-        applicationContext,
-        alt_key_pressed,
-        link_function,
-        ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components,
-        [new_link]
-      )
+
+      node_function.CreateNodesOnSVG([new_node1])
+      link_function.CreateLinksOnSVG([new_link])
+
     } else if ((!evt.ctrlKey && !evt.metaKey) && first_selected_node.current && d3.select(evt_recast).attr('class') != 'node node_shape') {
 
       const n_link = DefaultLink(data)
@@ -644,33 +596,10 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       first_selected_node.current = undefined
       dict_variable_application_data.display_nodes[n_node.idNode]=n_node
       dict_variable_application_data.display_links[n_link.idLink]=n_link
-      drawAddNodes(  
-        contextMenu,
-        dict_variable_application_data,
-        uiElementsRef,
-        dict_variable_elements_selected,
-        applicationContext,
-        alt_key_pressed,
-        accept_simple_click,
-        link_function,
-        NodeTooltipsContent,
-        ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components,
-        node_function
-      )
-      drawAddLinks(
-        contextMenu,
-        dict_variable_application_data,
-        uiElementsRef,
-        dict_variable_elements_selected,
-        applicationContext,
-        alt_key_pressed,
-        link_function,
-        ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components,
-        [n_link]
 
-      )
+      node_function.CreateNodesOnSVG([n_node])
+      link_function.CreateLinksOnSVG([n_link])
+
     }
   }
 }
@@ -684,10 +613,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   dict_variable_elements_selected,
   uiElementsRef,
   applicationContext,
-  contextMenu,
   link_function,
-  alt_key_pressed,
-  ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components
 ) => {
   const { data,display_links } = dict_variable_application_data
@@ -727,20 +653,9 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
 
       first_selected_node.current = undefined
-      // dict_variable_application_data.display_nodes[n_node.idNode]=n_node
       dict_variable_application_data.display_links[n_link.idLink]=n_link
-      drawAddLinks(
-        contextMenu,
-        dict_variable_application_data,
-        uiElementsRef,
-        dict_variable_elements_selected,
-        applicationContext,
-        alt_key_pressed,
-        link_function,
-        ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components,
-        [n_link]
-      )
+
+      link_function.CreateLinksOnSVG([n_link])
 
       if(ref_getter_show_menu_config.current===false){
         ref_setter_show_menu_config.current(true)
@@ -786,7 +701,6 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     new_link.idTarget = d.idNode
     if (new_link.idSource === new_link.idTarget) {
       AssignLinkLocalAttribute(new_link, 'recycling', true)
-
     }
     tmp.name = 'node_' + Object.keys(data.nodes).length
     tmp.outputLinksId.push(new_link.idLink)
@@ -795,24 +709,12 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     data.linkZIndex.push(new_link.idLink)
     first_selected_node.current = undefined
 
-
     // Deselect old selected links to then only select the new one
     Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
 
-    // dict_variable_application_data.display_nodes[n_node.idNode]=n_node
     dict_variable_application_data.display_links[new_link.idLink]=new_link
-    drawAddLinks(
-      contextMenu,
-      dict_variable_application_data,
-      uiElementsRef,
-      dict_variable_elements_selected,
-      applicationContext,
-      alt_key_pressed,
-      link_function,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      [new_link]
-    )
+
+    link_function.CreateLinksOnSVG([new_link])
 
   }
 }

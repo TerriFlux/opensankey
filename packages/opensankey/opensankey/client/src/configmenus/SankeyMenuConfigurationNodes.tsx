@@ -1,4 +1,4 @@
-import React, { FunctionComponent, MutableRefObject, useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import {
   Tabs,
   OverlayTrigger,
@@ -19,7 +19,7 @@ import {
   Input,
 } from '@chakra-ui/react'
 /*************************************************************************************************/
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType, uiElementsRefType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, dict_variable_application_dataType, treeFolderType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import {
   add_childrenFType,
@@ -51,13 +51,6 @@ type SankeyEditionTypes = {
   token : boolean,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
-  contextMenu:contextMenuType,
-  uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
-  alt_key_pressed:MutableRefObject<boolean>,
-  accept_simple_click:{current:boolean},
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  applicationContext:applicationContextType,
   node_function:NodeFunctionTypes
 }
 
@@ -115,13 +108,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     multi_selected_nodes,
     menu_configuration_nodes,token,
     link_function,ComponentUpdater,
-    contextMenu,
-    uiElementsRef,
-    dict_variable_elements_selected,
-    alt_key_pressed,
-    accept_simple_click,
-    dict_hook_ref_setter_show_dialog_components,
-    applicationContext,
     node_function
   }
 ) => {
@@ -314,7 +300,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           disabled={token==false && Object.keys(data.nodes).length>15}
           onClick={() => {
             Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
-            AddNewNode(dict_variable_application_data,multi_selected_nodes,link_function,contextMenu,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
+            AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
             SelectVisualyNodes(multi_selected_nodes.current[0])
             setForceUpdate(!forceUpdate)
           }}>
