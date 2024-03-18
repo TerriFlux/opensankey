@@ -6,7 +6,6 @@ import {
   drawCurveFunction, SetNodesHeight, StrokeDasharray,
   GetSankeyMinWidthAndHeight, DeselectVisualyLinks, SelectVisualyLinks} from './SankeyDrawFunction'
 import { EventLinkContextMenu } from './SankeyDrawEventFunction'
-import {DragLinkEvent} from './SankeyDragLinks'
 import {ValueSelectedParameter,LinkStrokeWidth} from './SankeyDrawFunction'
 import { DrawLinkStartSabot } from './SankeyDrawShapes'
 import { AddDrawLinksEventsFType, DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType  } from './types/SankeyDrawLinksTypes'
@@ -394,12 +393,8 @@ export const drawAddLinks:drawAddLinksFType = (
 ) => {
   // const default_handle_size = 10
   // const default_horiz_shift = 50
-  const {LinkText,GetLinkValue,DrawArrows } = link_functions
-  const min_thickness=2
+  const {GetLinkValue } = link_functions
   const { data} = dict_variable_application_data
-  const inv_scale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, data.user_scale])
   const scale = d3.scaleLinear()
     .range([0, 100])
     .domain([0, data.user_scale])
@@ -412,17 +407,6 @@ export const drawAddLinks:drawAddLinksFType = (
       .append('g')
       .attr('id', l => 'gg_' + l.idLink)
       .attr('class', 'gg_links')
-    const paths = gg_links.append('path')
-      .classed('link',true)
-    if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
-      let error_msg: { text: string | undefined } | undefined
-      paths.call(
-        DragLinkEvent(
-          dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,data.display_style,drawCurveFunction,
-          scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater
-        )
-      )
-    }
     gg_links
       .filter(
         l => ReturnValueLink(data,l,'label_position') !== 'frozen' && ReturnValueLink(data,l,'label_on_path') === true
@@ -438,6 +422,7 @@ export const drawAddLinks:drawAddLinksFType = (
       })
       .attr('dy', l =>TextLinkPosDY(l,data,scale,GetLinkValue))
       .append('textPath')
+      
 
     // gg_links
     // .filter(l=>{
@@ -492,6 +477,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
   const { multi_selected_links } = dict_variable_elements_selected
   const{ data, display_nodes, display_links} = dict_variable_application_data
   const { ref_getter_mode_selection} = dict_variable_elements_selected
+  const max_filter_label=Math.max(data.display_style.filter, data.display_style.filter_label)
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, data.user_scale])
@@ -521,15 +507,6 @@ export const drawLinkShape:drawLinkShapeFType  = (
       return StrokeDasharray(d,data,GetLinkValue)
     })
   const paths = filtered_gglinks.selectAll('path.link') as d3.Selection<SVGPathElement, SankeyLink, SVGGElement, SankeyLink>
-  if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
-    let error_msg: { text: string | undefined } | undefined
-    paths.call(
-      DragLinkEvent(
-        dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,display_style,drawCurveFunction,
-        scale,inv_scale,min_thickness,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater
-      )
-    )
-  }
   filtered_gglinks
     .filter(
       d => ReturnValueLink(data,d,'label_position') !== 'frozen' && ReturnValueLink(data,d,'label_on_path') === true
@@ -549,7 +526,11 @@ export const drawLinkShape:drawLinkShapeFType  = (
     .attr('side', link => TextLinkSide(link,data))
     .attr('class', 'link_value')
     .attr('href', d => '#path_' + d.idLink)
-
+    .attr('visibility', d => {
+      let tmp=GetLinkValue(data, d.idLink).value as number
+      tmp=(tmp)?tmp:0
+      return  LinkVisible(d, data,display_nodes,GetLinkValue) && tmp >= max_filter_label? 'visible' : 'hidden'
+    })
 
   const select2 = filtered_gglinks
     .filter(d => ReturnValueLink(data,d,'label_position') === 'frozen' || !ReturnValueLink(data,d,'label_on_path') || ReturnValueLink(data,d,'label_on_path') === undefined)
@@ -571,8 +552,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
     .attr('visibility', d => {
       let tmp=GetLinkValue(data, d.idLink).value as number
       tmp=(tmp)?tmp:0
-
-      return  LinkVisible(d, data,display_nodes,GetLinkValue) && tmp >= Math.max(data.display_style.filter, data.display_style.filter_label) ? 'visible' : 'hidden'
+      return  LinkVisible(d, data,display_nodes,GetLinkValue) && tmp >= max_filter_label ? 'visible' : 'hidden'
     })
 
 

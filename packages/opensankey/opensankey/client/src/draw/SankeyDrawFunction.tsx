@@ -7,7 +7,6 @@ import { ComputeTotalOffsets,
   LinkColor,
   LinkVisible,
   GetVerticalMarginForSankeyZone,
-  NodeDisplayed,
   ReturnValueNode,
   ReturnValueLink,
   AssignLinkLocalAttribute,
@@ -1232,10 +1231,11 @@ const HandlesPositions = (
 }
 
 // Function that compute the size of the snakey zone,it has minimum height and width but can grow if the node or free labels are too close of the border
-export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (data:SankeyData): number[] => {
+export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (dict_variable_application_data): number[] => {
   let height = 0
   let width = 0
-  Object.values(data.nodes).filter(n => NodeDisplayed(data,n)).forEach(n => {
+  const {data,display_nodes,display_links} =dict_variable_application_data
+  Object.values(display_nodes).forEach(n => {
     // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
     let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width??0
     if((ReturnValueNode(data,n,'label_horiz') as string)=='left'){
@@ -1253,19 +1253,22 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (da
     height = (n.y ) ? Math.max(height, n.y + node_height) : height
     width = (n.x ) ? Math.max(width, n.x+node_width+width_label) : width
   })
+  Object.values(display_links).forEach(l => {
+    const recy=ReturnValueLink(data,l,'recycling') as boolean
+    if (recy) {
+      const link_thickness=d3.select('#path_'+l.idLink).attr('stroke-width')
 
+      d3.selectAll('.opensankey #gg_link_handle_'+l.idLink+' .handle').nodes().forEach(element => {
+        const translat=d3.select(element).attr('transform').replace('translate(','').replace(')','').split(',')
+        width=Math.max(width,Number(translat[0])+Number(link_thickness)/2)
+        height=Math.max(height,Number(translat[1])+Number(link_thickness)/2)
+      })
+    }
+  })
 
   height = height + 100
   width = width + 100
-  Object.values(data.links).forEach(l => {
-    const recy=ReturnValueLink(data,l,'recycling') as boolean
-    if (recy) {
-      const v_s=ReturnValueLink(data,l,'vert_shift') as number
-      const r_h_s=ReturnValueLink(data,l,'right_horiz_shift') as number
-      height = (v_s && NodeDisplayed(data,data.nodes[l.idSource]) && NodeDisplayed(data,data.nodes[l.idTarget]) ) ? Math.max(data.nodes[l.idSource].y + v_s + 100, data.nodes[l.idTarget].y + v_s + 100, height) : height
-      width = (data.nodes[l.idTarget].x && NodeDisplayed(data,data.nodes[l.idTarget]) && r_h_s) ? Math.max(width, data.nodes[l.idSource].x + r_h_s + default_horiz_shift + 150) : width
-    }
-  })
+
   const vertical_shift=  GetVerticalMarginForSankeyZone()
   const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
   return [Math.max(width, window.innerWidth - 60 - has_scroll_bar), Math.max(height, window.innerHeight - 20 - (vertical_shift))]
