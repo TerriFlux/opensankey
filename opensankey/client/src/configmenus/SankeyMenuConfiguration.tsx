@@ -58,7 +58,6 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   ComponentUpdater,
   contextMenu,
   alt_key_pressed,
-  accept_simple_click,
   node_function
 
 ) => {
@@ -144,13 +143,6 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 token={token}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
-                contextMenu={contextMenu}
-                uiElementsRef={uiElementsRef}
-                dict_variable_elements_selected={dict_variable_elements_selected}
-                alt_key_pressed={alt_key_pressed}
-                accept_simple_click={accept_simple_click}
-                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-                applicationContext={applicationContext}
                 node_function={node_function}
               />
             </AccordionPanel>
@@ -181,7 +173,6 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 contextMenu={contextMenu}
                 uiElementsRef={uiElementsRef}
                 alt_key_pressed={alt_key_pressed}
-                accept_simple_click={accept_simple_click}
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
                 node_function={node_function}
               />

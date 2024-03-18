@@ -404,7 +404,7 @@ export const drawAddLinks:drawAddLinksFType = (
     .range([0, 100])
     .domain([0, data.user_scale])
   const filtered_data =link_to_redraw
-  // const node_visible=NodeVisibleOnsSvg()
+
   filtered_data.forEach(l=>{
     const gg_links = d3
       .select('.opensankey #g_links')

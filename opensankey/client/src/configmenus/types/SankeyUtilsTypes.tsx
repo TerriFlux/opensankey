@@ -1,6 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, uiElementsRefType } from '../../types/Types'
-import { MutableRefObject } from 'react'
+import { NodeFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, dict_variable_application_dataType } from '../../types/Types'
 
 export type CutNameFType = (t: string, n: number) => string
 
@@ -127,36 +126,14 @@ export type NodeContextHasAggregateFuncType = (n:SankeyNode,data:SankeyData)=>bo
 
 export type  NodeContextHasDesaggregateFuncType = (n: SankeyNode, data: SankeyData) => boolean
 
-export type ApplyStyleToNodesFuncType = (dict_variable_application_data:dict_variable_application_dataType, multi_selected_nodes: {current: SankeyNode[];},
-  link_function:LinkFunctionTypes,
-  applicationContext:applicationContextType,
-  node_fu$:NodeFunctionTypes
+export type ApplyStyleToNodesFuncType = (
+  multi_selected_nodes: {current: SankeyNode[];},
+  node_function:NodeFunctionTypes
     ) => void
 
 export type AddNewNodeFuncType = (dict_variable_application_data:dict_variable_application_dataType, multi_selected_nodes: {current: SankeyNode[];},
-  link_function:LinkFunctionTypes,
-  contextMenu:contextMenuType,
-  uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
-  applicationContext:applicationContextType,
-  alt_key_pressed:MutableRefObject<boolean>,
-  accept_simple_click:{current:boolean},
-  ComponentUpdater:ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes
-
-
-
-
-
-
-
-
-
-
-
-    
-    ) => void
+  ) => void
 
 export type RecursionDataTagFuncType = (data: SankeyData, DT: TagsCatalog, ind: number, suffix: string, link_to_copy: SankeyLink, new_links: {[link_id: string]: SankeyLink;}) => void
 

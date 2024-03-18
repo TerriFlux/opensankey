@@ -8,9 +8,7 @@ import { SankeyData,
   SankeyNodeStyle,
   SankeyLinkAttrLocal,
   SankeyLinkStyle,
-  TagsCatalog, 
-  dict_variable_application_dataType,
-  LinkFunctionTypes} from '../types/Types'
+  TagsCatalog} from '../types/Types'
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
@@ -37,8 +35,6 @@ import {
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
-import { drawAddNodes } from '../draw/SankeyDrawNodes'
-import { NodeTooltipsContent } from '../draw/SankeyTooltip'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1751,10 +1747,8 @@ export const NodeContextHasDesaggregate:NodeContextHasDesaggregateFuncType = (n:
 
 }
 
-export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (dict_variable_application_data:dict_variable_application_dataType,
+export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (
   multi_selected_nodes:{current:SankeyNode[]},
-  link_function:LinkFunctionTypes,
-  applicationContext,
   node_function
 ) => {
   multi_selected_nodes.current.map(d => {
@@ -1767,15 +1761,6 @@ export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (dict_variable_applic
 
 export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   multi_selected_nodes:{current:SankeyNode[]},
-  link_function,
-  contextMenu,
-  uiElementsRef,
-  dict_variable_elementsselected,
-  applicationContext,
-  alt_key_pressed,
-  accept_simple_click,
-  ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components,
   node_function
 ) => {
   const {data}=dict_variable_application_data
@@ -1800,9 +1785,9 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   }
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
-  ApplyStyleToNodes(dict_variable_application_data ,multi_selected_nodes,link_function,applicationContext,node_function)
+  ApplyStyleToNodes(multi_selected_nodes,node_function)
   dict_variable_application_data.display_nodes[node.idNode]=node
-  drawAddNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elementsselected,applicationContext,alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
+  node_function.CreateNodesOnSVG([node])
 }
 
 // Recursive function to create multiple copy of a link,according to the number of dataTags selected, to display the different value of a same link
