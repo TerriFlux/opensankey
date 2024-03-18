@@ -475,6 +475,7 @@ export type SankeyAppTypes = {
   logo_terriflux: string,
 }
 
+export type CreateLinksOnSVGFType=(links_to_update:SankeyLink[])=>void
 export type RedrawLinksFType=(links_to_update:SankeyLink[])=>void
 
 export type LinkFunctionTypes = {
@@ -489,14 +490,17 @@ export type LinkFunctionTypes = {
   drawAddLinks:drawAddLinksFType,
   drawLinkShape:drawLinkShapeFType,
   RedrawLinks:RedrawLinksFType
+  CreateLinksOnSVG:CreateLinksOnSVGFType,
   
 }
 
 export type RedrawNodesFType=(node_to_update:SankeyNode[])=>void
+export type drawNodesFType=(node_to_update:SankeyNode[])=>void
 
 export type NodeFunctionTypes = {
   DrawAllNodes : DrawAllNodesFType,
   drawAddNodes : drawNodeShapeFType,
+  CreateNodesOnSVG:drawNodesFType,
   RedrawNodes:RedrawNodesFType,
   recomputeDisplayedElement:()=>void
 }
