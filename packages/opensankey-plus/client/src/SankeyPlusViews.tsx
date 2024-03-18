@@ -365,7 +365,7 @@ export const keyHandler : keyHandlerFType = (
       set_view('none')
       set_data(JSON.parse(JSON.stringify(master_data)))
       setTimeout(()=>{
-        AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+        AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
       },100)
 
     }
@@ -402,7 +402,7 @@ export const keyHandler : keyHandlerFType = (
         set_view(master_data!.view[ind-1].id)
         // AdjustSankeyZone(master_data.view[ind-1].view_data as SankeyPlusData,GetSankeyMinWidthAndHeight)
         setTimeout(()=>{
-          AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+          AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
         },100)
       }
 
@@ -445,7 +445,7 @@ export const keyHandler : keyHandlerFType = (
         set_data(data_view)
         set_view(new_master_data!.view[ind+1].id)
         setTimeout(()=>{
-          AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+          AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
         },100)
       }
       //}
@@ -608,14 +608,18 @@ export const SelecteurView : SelecteurViewFType =(
             set_master_data(new_master_data)
 
             setTimeout(()=>{
-              AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+              AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
             },100)
 
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
             set_data(JSON.parse(JSON.stringify(master_data)))
             setTimeout(()=>{
+<<<<<<< HEAD
               AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+=======
+              AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
+>>>>>>> origin/correction-taille-zone-de-dessin-flux-recy
             },100)
           }
         }
@@ -1374,12 +1378,9 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
   view_not_saved:string,
   set_view_not_saved:(s:string)=>void,
   t:TFunction,
-  master_data:SankeyPlusData|undefined,
-  set_master_data:(d:SankeyPlusData|undefined)=>void,
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  view:string
+  dict_variable_application_data
 )=>{
+  const {data,set_data,view,master_data,set_master_data}=dict_variable_application_data
   return (
     <Modal
       size="lg"
@@ -1400,12 +1401,12 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
               const data_view=GetDataFromView(master_data,view) as SankeyPlusData
               set_data(data_view)
               setTimeout(()=>{
-                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
               },100)
             } else if(view === 'none'){
               set_data({...master_data!})
               setTimeout(()=>{
-                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+                AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
               },100)
             }
             set_view_not_saved('')
@@ -1425,13 +1426,13 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
               set_master_data({...JSON.parse(JSON.stringify(master_data))})
               set_data(data_view)
               setTimeout(()=>{
-                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
               },100)
 
             } else if(view === 'none'){
               set_data({...JSON.parse(JSON.stringify(master_data))})
               setTimeout(()=>{
-                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
+                AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
               },100)
             }
             set_view_not_saved('')
