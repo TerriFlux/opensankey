@@ -634,7 +634,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
         })
         .on('zoom', function (evt) {
-          ZoomFunction(evt,data)
+          ZoomFunction(evt,dict_variable_application_data)
         }))
       .on('dblclick.zoom', null)
   },[data])
@@ -643,7 +643,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       set_show_draw(true)
-      AdjustSankeyZone(data,GetSankeyMinWidthAndHeight)
+      AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
     }, 1000)
     return () => clearTimeout(timer)
   }, [])
@@ -920,8 +920,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
       <SankeyDraw
         contextMenu={contextMenu}
-        data={data}
-        set_data={set_data}
+        dict_variable_application_data={dict_variable_application_data}
         display_nodes={display_nodes}
         display_links={display_links}
         animation={useRef(false)}

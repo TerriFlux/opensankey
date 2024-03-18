@@ -122,5 +122,6 @@ export type SimpleGNodeClickFuncType = (
 
 ) => void
 
-export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, data: SankeyData) => void
+export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, dict_variable_application_data:dict_variable_application_dataType) => void
 
+export type actualizeDrawAreaFrameFType=(_:dict_variable_application_dataType)=>void
