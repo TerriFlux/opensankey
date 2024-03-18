@@ -615,11 +615,7 @@ export const SelecteurView : SelecteurViewFType =(
             set_view(evt.target.value)
             set_data(JSON.parse(JSON.stringify(master_data)))
             setTimeout(()=>{
-<<<<<<< HEAD
-              AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height as unknown as GetSankeyMinWidthAndHeightFuncType)
-=======
               AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
->>>>>>> origin/correction-taille-zone-de-dessin-flux-recy
             },100)
           }
         }
@@ -1374,7 +1370,6 @@ export const SankeyPlusMenuPreferenceView : SankeyPlusMenuPreferenceViewFType =(
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
 export const modal_view_not_saved : modal_view_not_savedFType =(
-  dict_variable_application_data,
   view_not_saved:string,
   set_view_not_saved:(s:string)=>void,
   t:TFunction,
