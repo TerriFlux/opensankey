@@ -45,7 +45,8 @@ export const DrawAllNodes : DrawAllNodesFType = (
   d3.selectAll(' .opensankey .gg_nodes').remove()
   drawAddNodes(
     contextMenu, dict_variable_application_data, uiElementsRef, dict_variable_elements_selected,applicationContext,
-    alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function
+    alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
+    Object.values(display_nodes)
   )
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
   RedrawNodesLabel(dict_variable_application_data,Object.values(display_nodes),GetLinkValue,t)
@@ -123,10 +124,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
           dict_variable_elements_selected,
           uiElementsRef,
           applicationContext,
-          contextMenu,
           link_function,
-          alt_key_pressed,
-          ComponentUpdater,
           dict_hook_ref_setter_show_dialog_components
         )
         )
@@ -279,14 +277,14 @@ export const drawAddNodes : drawNodeShapeFType = (
   NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
-  node_function
+  node_function,
+  node_to_draw
 ) => {
   const {multi_selected_nodes } = dict_variable_elements_selected
   const { data,display_nodes, display_links } = dict_variable_application_data
   const {t} = applicationContext
   // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
-  const filtered_data = Object.values(display_nodes)
-  d3.selectAll('.ggg_nodes').remove()
+  const filtered_data = Object.values(display_nodes).filter(n=>node_to_draw.includes(n))
 
   filtered_data.forEach(n=>{
     d3.select(' .opensankey #g_nodes').datum(n).append('g')

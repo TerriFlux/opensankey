@@ -329,6 +329,21 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const RedrawLinks=(links_to_update:SankeyLink[])=>{
     drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,links_to_update,ComponentUpdater)
   }
+
+  const OpenSankeyCreateLinksOnSVG=(links_to_update:SankeyLink[])=>{
+    drawAddLinks(
+      contextMenu,
+      dict_variable_application_data,
+      uiElementsRef,
+      dict_variable_elements_selected,
+      applicationContext,
+      ref_alt_key_pressed,
+      link_function,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components,
+      links_to_update
+    )  }
+  
   const link_function:LinkFunctionTypes = {
     GetLinkValue,
     LinkText,
@@ -340,18 +355,33 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     DrawAllLinks,
     drawAddLinks,
     drawLinkShape,
-    RedrawLinks
+    RedrawLinks,
+    CreateLinksOnSVG:OpenSankeyCreateLinksOnSVG
   }
   const OpenSankeyRedrawNode=(nodes_to_update:SankeyNode[])=>{
     updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
     RedrawNodesLabel(dict_variable_application_data,nodes_to_update,GetLinkValue,applicationContext.t)
+  }
+  const OpenSankeyCreateNodeOnSVG=(nodes_to_update:SankeyNode[])=>{
+    drawAddNodes(contextMenu,
+      dict_variable_application_data,
+      uiElementsRef,
+      dict_variable_elements_selected,
+      applicationContext,
+      ref_alt_key_pressed,accept_simple_click,
+      link_function,
+      NodeTooltipsContent,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components,
+      node_function,nodes_to_update)
   }
 
   const node_function:NodeFunctionTypes={
     DrawAllNodes,
     drawAddNodes,
     RedrawNodes:OpenSankeyRedrawNode,
-    recomputeDisplayedElement
+    recomputeDisplayedElement,
+    CreateNodesOnSVG:OpenSankeyCreateNodeOnSVG
   }
 
   /*************************************************************************************************/
@@ -512,21 +542,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
       svgSankey.on('mousedown',evt=>{
         EventOnZoneMouseDown(
-          contextMenu,
           dict_variable_application_data,
-          uiElementsRef,
           dict_variable_elements_selected,
           dict_hook_ref_setter_show_dialog_components,
-          applicationContext,
-          ref_alt_key_pressed,
-          NodeTooltipsContent,
-          accept_simple_click,
           false,
           evt,
           start_point,
           contextMenu.closeAllMenuContext,
-          link_function,
-          ComponentUpdater,node_function
+          node_function
         )
       })
       svgSankey.on('mousemove',evt=>{
@@ -539,20 +562,16 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       })
       svgSankey.on('mouseup',evt=>{
         EventOnZoneMouseUp(
-          contextMenu,
           dict_variable_application_data,
           uiElementsRef,
           dict_variable_elements_selected,
           dict_hook_ref_setter_show_dialog_components,
-          applicationContext,
-          ref_alt_key_pressed,
-          accept_simple_click,
           false,
           evt,
           start_point,
           legend_clicked,
           link_function,
-          NodeTooltipsContent,ComponentUpdater,
+          ComponentUpdater,
           node_function
         )
       })
@@ -800,7 +819,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               ComponentUpdater,
               contextMenu,
               ref_alt_key_pressed,
-              accept_simple_click,
               node_function
             )}
             menus={sankey_menus}
@@ -895,8 +913,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
         node_function={node_function}
         link_function={link_function}
-        alt_key_pressed={ref_alt_key_pressed}
-        uiElementsRef={uiElementsRef}
         ComponentUpdater={ComponentUpdater}
       />
       <ContextMenuZdd
