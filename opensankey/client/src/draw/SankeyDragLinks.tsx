@@ -582,12 +582,10 @@ export const DragHandle : DragHandleFType = (
       d3.select(' .opensankey #svg').style('height', data.height + 'px')
       DrawGrid(data)
     }
-    const [, min_height] = GetSankeyMinWidthAndHeight(data)
-    if (data.height > min_height) {
-      data.height = min_height
-      d3.select(' .opensankey #svg').style('height', data.height + 'px')
-      DrawGrid(data)
-    }
+    const [, min_height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
+    data.height = min_height
+    d3.select(' .opensankey #svg').style('height', data.height + 'px')
+    DrawGrid(data)
   } else if (handle_type === 'left') {
     const left_horiz_shift = d_l_h_s ? d_l_h_s : 0
     let tmp=GetLinkValue(data, d.idLink).value as number
@@ -607,12 +605,10 @@ export const DragHandle : DragHandleFType = (
         d3.select(' .opensankey #svg').style('width', data.width + 'px')
         DrawGrid(data)
       }
-      const [min_width,] = GetSankeyMinWidthAndHeight(data)
-      if (data.width > min_width) {
-        data.width = min_width
-        d3.select(' .opensankey #svg').style('width', data.width + 'px')
-        DrawGrid(data)
-      }
+      const [min_width,] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
+      data.width = min_width
+      d3.select(' .opensankey #svg').style('width', data.width + 'px')
+      DrawGrid(data)
     } else {
       return
     }
