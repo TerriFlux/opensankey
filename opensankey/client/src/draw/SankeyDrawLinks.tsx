@@ -10,6 +10,7 @@ import {ValueSelectedParameter,LinkStrokeWidth} from './SankeyDrawFunction'
 import { DrawLinkStartSabot } from './SankeyDrawShapes'
 import { AddDrawLinksEventsFType, DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType  } from './types/SankeyDrawLinksTypes'
 import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
+import { DragLinkEvent } from './SankeyDragLinks'
 
 declare const window: Window &
 typeof globalThis & {
@@ -393,11 +394,16 @@ export const drawAddLinks:drawAddLinksFType = (
 ) => {
   // const default_handle_size = 10
   // const default_horiz_shift = 50
-  const {GetLinkValue } = link_functions
+  const {GetLinkValue,LinkText,DrawArrows } = link_functions
   const { data} = dict_variable_application_data
   const scale = d3.scaleLinear()
     .range([0, 100])
     .domain([0, data.user_scale])
+  const inv_scale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, data.user_scale])
+
+
   const filtered_data =link_to_redraw
 
   filtered_data.forEach(l=>{
@@ -407,6 +413,19 @@ export const drawAddLinks:drawAddLinksFType = (
       .append('g')
       .attr('id', l => 'gg_' + l.idLink)
       .attr('class', 'gg_links')
+
+    const paths = gg_links.append('path')
+      .classed('link',true)
+    if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
+      let error_msg: { text: string | undefined } | undefined
+      paths.call(
+        DragLinkEvent(
+          dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,data.display_style,drawCurveFunction,
+          scale,inv_scale,2,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater
+        )
+      )
+    }
+
     gg_links
       .filter(
         l => ReturnValueLink(data,l,'label_position') !== 'frozen' && ReturnValueLink(data,l,'label_on_path') === true
