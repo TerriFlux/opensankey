@@ -492,7 +492,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
   ComponentUpdater
 
 ) => {
-  const { GetLinkValue,LinkStroke,node_arrow_visible,LinkText,DrawArrows,LinkSabotColor } = link_functions
+  const { GetLinkValue,LinkStroke,LinkText,DrawArrows,LinkSabotColor } = link_functions
   const { multi_selected_links } = dict_variable_elements_selected
   const{ data, display_nodes, display_links} = dict_variable_application_data
   const { ref_getter_mode_selection} = dict_variable_elements_selected
@@ -589,7 +589,6 @@ export const drawLinkShape:drawLinkShapeFType  = (
 
   //Creation des Arrows associés au link
   d3.selectAll(' .opensankey .ggg_nodes')
-    .filter((n) => (n as SankeyNode).inputLinksId.length>0?node_arrow_visible(data,(n as SankeyNode)):false)
     .each( (n) => {
       DrawArrows(n as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
     })
