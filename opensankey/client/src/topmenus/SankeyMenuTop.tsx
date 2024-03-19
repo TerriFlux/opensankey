@@ -754,9 +754,9 @@ export const Menu: FunctionComponent<MenuTypes> = (
             {applicationContext.app_name}
           </span>
           <span style={{display:'inline'}}><a href='https://terriflux.com/mentions-legales/'>{applicationContext.t('legal')}</a></span>
-          <span style={{display:'inline'}}><a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a></span>
+          <span style={{display:'inline'}}><a href='mailto:support@open-sankey.fr	'>support@terriflux.fr</a></span>
           <span style={{display:'inline'}}>
-          9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)6 21 83 56 76
+          9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)4 56 47 00 71
           </span>
 
         </Container>
