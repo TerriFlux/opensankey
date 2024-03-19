@@ -436,7 +436,7 @@ export const DrawArrows : DrawArrowsType = (
     }
 
 
-    if (!display_style.filter || link_value >= display_style.filter) {
+    if ((!display_style.filter || link_value >= display_style.filter )&& l_arrow) {
       //selection
       d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
       d3.select('#gg_' + l.idLink)
