@@ -19,7 +19,8 @@ from SankeyExcelParser.sankey import Data as SankeyData
 JSON_TO_IO_XL__TAGG_TYPES = {
     'dataTags': CONST_IO_XL.TAG_TYPE_DATA,
     'nodeTags': CONST_IO_XL.TAG_TYPE_NODE,
-    'fluxTags': CONST_IO_XL.TAG_TYPE_FLUX
+    'fluxTags': CONST_IO_XL.TAG_TYPE_FLUX,
+    'levelTags': CONST_IO_XL.TAG_TYPE_LEVEL
 }
 
 DEFAULT_LEVEL_TAGGS = ['Primaire', 'Echanges']
@@ -1048,7 +1049,8 @@ class JsonToSankey(object):
                 # For latter reference
                 tags_corresp[tag_name] = tag
             # Update correspondance dict
-            if (tagg_type == CONST_IO_XL.TAG_TYPE_NODE):
+            if (tagg_type == CONST_IO_XL.TAG_TYPE_NODE) or \
+               (tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL):
                 self._nodetags_corresp[tagg_id] = tags_corresp
             if (tagg_type == CONST_IO_XL.TAG_TYPE_FLUX):
                 self._fluxtags_corresp[tagg_id] = tags_corresp
