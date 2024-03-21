@@ -9,7 +9,6 @@ import {
   GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,
 } from '../configmenus/types/SankeyUtilsTypes'
 import { DragLinkCenterHandleEventFType, DragLinkShiftHandleEventFType, DragHandleFType} from './types/SankeyDragTypes'
-import { MutableRefObject } from 'react'
 
 declare const window: Window &
 typeof globalThis & {
@@ -805,28 +804,3 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
   }
 }
 
-export const dragLinkTextEvent=(
-  alt_key_pressed:MutableRefObject<boolean>,
-)=>{
-  return d3.drag<SVGTextElement, SankeyLink>()
-    .subject(Object).on('drag', function (event, link) {
-      if (alt_key_pressed.current) {
-        drag_link_text(link, event)
-      }
-    })
-}
-
-export const  drag_link_text = (
-  link: SankeyLink,
-  event: d3.D3DragEvent<Element, unknown, unknown>
-) => {
-  const old_x = +d3.select(' .opensankey #text_' + link.idLink).attr('x'),
-    old_y = +d3.select(' .opensankey #text_' + link.idLink).attr('y'),
-    new_x = old_x + event.dx,
-    new_y = old_y + event.dy
-  d3.select(' .opensankey #text_' + link.idLink).attr('x', new_x)
-  d3.select(' .opensankey #text_' + link.idLink).attr('y', new_y)
-  link.x_label = new_x
-  link.y_label = new_y
-  AssignLinkLocalAttribute(link,'label_position','frozen')
-}

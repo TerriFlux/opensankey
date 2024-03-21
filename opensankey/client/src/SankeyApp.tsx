@@ -86,7 +86,7 @@ import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigura
 import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfigurationNodesTags'
 import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 import { opensankey_theme } from './chakra/Theme'
-import { drawAddLinks, DrawAllLinks, drawLinkShape } from './draw/SankeyDrawLinks'
+import { AddDrawLinksEvent, drawAddLinks, DrawAllLinks, drawLinkShape } from './draw/SankeyDrawLinks'
 import { drawAddNodes, DrawAllNodes, updateDrawNodeShape } from './draw/SankeyDrawNodes'
 import { RedrawNodesLabel } from './draw/SankeyDrawNodesLabel'
 
@@ -328,6 +328,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const LinkSabotColor=LinkColor
   const RedrawLinks=(links_to_update:SankeyLink[])=>{
     drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,links_to_update,ComponentUpdater)
+    AddDrawLinksEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,applicationContext,ref_alt_key_pressed)
+    
   }
 
   const OpenSankeyCreateLinksOnSVG=(links_to_update:SankeyLink[])=>{

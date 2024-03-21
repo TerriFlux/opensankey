@@ -207,6 +207,7 @@ export type SankeyLink = {
   // geometry
   x_label?: number,
   y_label?: number,
+  drag_label_offset?:number
 
   //style
   style:string,
