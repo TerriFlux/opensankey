@@ -72,7 +72,6 @@ import {
   AdjustSankeyZone
 } from './import/OpenSankey'
 import { deleteGLabel, sankey_plus_min_width_and_height } from './SankeyPlusLabels'
-import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 /* eslint-disable */
 // @ts-ignore

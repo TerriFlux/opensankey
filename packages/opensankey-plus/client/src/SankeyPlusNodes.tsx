@@ -948,7 +948,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
         link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
       })
       node_function.RedrawNodes(node_to_update)
-      link_function.drawLinkShape(applicaTionData,dict_variable_elements_selected,applicationContext,link_function,link_to_update,ComponentUpdater)
+      link_function.RedrawLinks(link_to_update)
       
     }
     )
@@ -1010,7 +1010,7 @@ const SankeyPlusDragGNodeEvent = (
           link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
         })
         node_function.RedrawNodes(node_to_update)
-        link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,link_to_update,ComponentUpdater)
+        link_function.RedrawLinks(link_to_update)
 
       }
     })
