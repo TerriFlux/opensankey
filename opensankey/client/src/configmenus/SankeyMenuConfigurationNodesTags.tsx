@@ -22,7 +22,7 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
   const { data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
-
+  const [forceUpdate,setForceUpdate]=useState(false)
   const tags_visible = Object.keys(data.nodeTags).length > 0
   if ((tags_group_key == '' && Object.keys(data.nodeTags).length > 0) || (!Object.keys(data.nodeTags).includes(tags_group_key) && Object.keys(data.nodeTags).length > 0)) {
     set_tags_group_key(Object.keys(data.nodeTags)[0])
@@ -94,6 +94,7 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
                     }
                   }
                 })
+                setForceUpdate(!forceUpdate)
                 node_function.RedrawNodes(multi_selected_nodes.current)
               }}>
               {tags[1].name}
