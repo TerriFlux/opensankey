@@ -79,19 +79,11 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   const selected_parameter=(menu_for_style)?[data.style_link[ref_selected_style_link.current]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
   const [display_link_opacity, set_display_link_opacity] = useState('0')
-  const {drawLinkShape}=link_function
   dict_variable_elements_selected.ref_display_link_opacity.current.push(set_display_link_opacity)
   const {updateComponentMenuConfigLink}=ComponentUpdater
 
   const updateMenuConfigLink=()=>{
-    drawLinkShape(
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      applicationContext,
-      link_function,
-      multi_selected_links.current,
-      ComponentUpdater
-    )
+    link_function.RedrawLinks(multi_selected_links.current)
     updateComponentMenuConfigLink.current()
   }
   const list_key=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible',
@@ -189,20 +181,6 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
     return (display_size) ? size : 11
   }
 
-  const labelLinkFree = () => {
-    if(selected_parameter.length==0){
-      return [false,false]
-    }else{
-      const first_value=(ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_position',menu_for_style) === 'frozen'&& (ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'orthogonal_label_position',menu_for_style)) === 'frozen')
-      let is_indeterminate=false
-      selected_parameter.forEach(l=>{
-        const link_value_param=(ReturnCorrectLinkAttributeValue(data,l,'label_position',menu_for_style) === 'frozen'&& (ReturnCorrectLinkAttributeValue(data,l,'orthogonal_label_position',menu_for_style)) === 'frozen')
-        is_indeterminate=( first_value===link_value_param ? is_indeterminate : true)
-      })
-      return [first_value,is_indeterminate]
-    }
-  }
-  const label_link_free_checked=labelLinkFree() as boolean[]
   const apply_style_to_selected_links = () => {
     multi_selected_links.current.map(d => {
       delete d.local
@@ -593,7 +571,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(
                   d => AssignLinkValueToCorrectVar(d,'opacity',+evt.target.value,menu_for_style)
                 )
-                drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                link_function.RedrawLinks(multi_selected_links.current)
                 updateComponentMenuConfigLink.current()
               }}
             />
@@ -692,7 +670,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 if(!isNaN(value)){
                   const val=isNaN(value) || value<=0?5:Math.round(value)
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'scientific_precision',val,menu_for_style))
-                  drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                  link_function.RedrawLinks(multi_selected_links.current)
                 }
               }}/>
           </OverlayTrigger>
@@ -781,7 +759,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   const value=+evt.target.value
                   const val=isNaN(value)
                   Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'nb_digit',value,menu_for_style))
-                  drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                  link_function.RedrawLinks(multi_selected_links.current)
                 }}/>
             </OverlayTrigger>
           </Col>
@@ -917,7 +895,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             onChange={
               (evt: React.ChangeEvent<HTMLSelectElement>) => {
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'font_family', evt.target.value,menu_for_style))
-                drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                link_function.RedrawLinks(multi_selected_links.current)
               }}>
             {data.display_style.font_family.map((d) => {
               return <option
@@ -982,6 +960,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                       delete d.x_label
                       delete d.y_label
+                      delete d.drag_label_offset
                     })
                     updateMenuConfigLink()
                   }}>
@@ -1006,6 +985,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                       delete d.x_label
                       delete d.y_label
+                      delete d.drag_label_offset
                     })
                     updateMenuConfigLink()
                   }}>
@@ -1030,6 +1010,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
                       delete d.x_label
                       delete d.y_label
+                      delete d.drag_label_offset
                     })
                     updateMenuConfigLink()
                   }}>
@@ -1058,6 +1039,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                       delete d.x_label
                       delete d.y_label
+                      delete d.drag_label_offset
                     })
                     updateMenuConfigLink()
                   }}>
@@ -1083,6 +1065,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                       delete d.x_label
                       delete d.y_label
+                      delete d.drag_label_offset
                     })
                     updateMenuConfigLink()
                   }}>
@@ -1108,6 +1091,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                       AssignLinkValueToCorrectVar(d,'label_position',(lab_pos=='frozen')?'middle':lab_pos,menu_for_style)
                       delete d.x_label
                       delete d.y_label
+                      delete d.drag_label_offset
                     })
                     updateMenuConfigLink()
                   }}>
@@ -1141,6 +1125,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(l_orth_pos=='frozen')?'middle':l_orth_pos,menu_for_style)
                     delete d.x_label
                     delete d.y_label
+                    delete d.drag_label_offset
                   }
                 })
                 updateMenuConfigLink()
@@ -1152,36 +1137,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           </OverlayTrigger>
         </Col>
       </Row>
-
-      {/* Positionnement à la souris  */}
-      <Row className='input_row'>
-        <Col>
-          <OverlayTrigger
-            key={'flux.label.tooltips.12'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'flux.label.tooltips.12'}>{t('Flux.label.tooltips.pls')} </Tooltip>}>
-            <Checkbox
-              sx={SmoothClasses({})}
-              iconColor={label_link_free_checked[1]?'#78C2AD':'white'}
-              isIndeterminate={label_link_free_checked[1]}
-              isChecked={label_link_free_checked[0]}
-              onChange={(evt) => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  const l_o_p=ReturnCorrectLinkAttributeValue(data,d,'label_on_path',menu_for_style)
-                  AssignLinkValueToCorrectVar(d,'label_on_path',((evt.target.checked)?false:l_o_p),menu_for_style)
-                  AssignLinkValueToCorrectVar(d,'label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
-                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(evt.target.checked)?'frozen':'middle',menu_for_style)
-                })
-                updateMenuConfigLink()
-              }}>
-              {t('Flux.label.pls')+' '}
-              {(IsLinkDiplayingValueLocal(multi_selected_links,'label_position',menu_for_style)?
-                TooltipValueSurcharge('link_var_',t):<></>)}
-            </Checkbox>
-          </OverlayTrigger>
-        </Col>
-      </Row></>:<></>}
+    </>:<></>}
   </>
 
   const content_style=(!menu_for_style)?<><Row>
