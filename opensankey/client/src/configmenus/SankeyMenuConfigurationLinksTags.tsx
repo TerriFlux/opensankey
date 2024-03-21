@@ -70,7 +70,9 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
     <InputGroup>
       <Form.Select
         style={{width:'60%'}}
-        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {set_tags_group_key(evt.target.value)
+          setForceUpdate(!forceUpdate)
+        }}
         value={tags_group_key}
       >
         {Object.entries(fluxTags).map(
@@ -103,6 +105,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
                       ...prevState,
                       [name]: value
                     }))
+                    setForceUpdate(!forceUpdate)
                   }}>
                 {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
                   return (
@@ -129,7 +132,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
                   updateLinkTagValue(d,data_tags_selected,tags_group_key,tag_key,visible)
                 })
                 node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                link_function.RedrawLinks(multi_selected_links.current)
                 setForceUpdate(!forceUpdate)
               }}>
               {tag.name}

@@ -9,7 +9,6 @@ import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { AssignLinkLocalAttribute, ReturnValueLink, updateLinkTagValue } from '../configmenus/SankeyUtils'
 import * as d3 from 'd3'
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction'
-import { drawLinkShape } from '../draw/SankeyDrawLinks'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -386,7 +385,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           })
           link_to_update=[...new Set(link_to_update)]
           const list_links=link_to_update.map(lid=>data.links[lid])
-          drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,list_links,ComponentUpdater)
+          link_function.RedrawLinks(list_links)
         }}>{t('Flux.if')}</Button>
 
         {sep}

@@ -49,7 +49,7 @@ export type AddDrawLinksEventsFType = (
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   applicationContext:applicationContextType,
-
+  alt_key_pressed:MutableRefObject<boolean>
 ) => void
 
 export type drawAddLinksFType=  (contextMenu:contextMenuType,

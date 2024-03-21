@@ -1,13 +1,13 @@
-import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyLinkAttrLocal, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
 import React, { MutableRefObject } from 'react'
 import * as d3 from 'd3'
-import {  LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode} from '../configmenus/SankeyUtils'
+import {  AssignLinkLocalAttribute, LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode, TestLinkValue} from '../configmenus/SankeyUtils'
 import { 
   drawCurveFunction, SetNodesHeight, StrokeDasharray,
-  GetSankeyMinWidthAndHeight, DeselectVisualyLinks, SelectVisualyLinks} from './SankeyDrawFunction'
+  GetSankeyMinWidthAndHeight, DeselectVisualyLinks, SelectVisualyLinks, DrawLinkText} from './SankeyDrawFunction'
 import { EventLinkContextMenu } from './SankeyDrawEventFunction'
 import {ValueSelectedParameter,LinkStrokeWidth} from './SankeyDrawFunction'
-import { DrawLinkStartSabot } from './SankeyDrawShapes'
+import { ComputeEndPoints, DrawLinkStartSabot } from './SankeyDrawShapes'
 import { AddDrawLinksEventsFType, DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType  } from './types/SankeyDrawLinksTypes'
 import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { DragLinkEvent } from './SankeyDragLinks'
@@ -66,16 +66,6 @@ const TextLinkPosDY=(
  * @param {boolean} alt_key_pressed
  * @returns {*}
  */
-const dragLinkTextEvent=(
-  alt_key_pressed:MutableRefObject<boolean>,
-)=>{
-  return d3.drag<SVGTextElement, SankeyLink>()
-    .subject(Object).on('drag', function (event, link) {
-      if (alt_key_pressed.current) {
-        drag_link_text(link, event)
-      }
-    })
-}
 
 /**
   *
@@ -83,19 +73,29 @@ const dragLinkTextEvent=(
   * @param {d3.D3DragEvent<Element, unknown, unknown>} event
   */
 const  drag_link_text = (
+  data:SankeyData,
   link: SankeyLink,
   event: d3.D3DragEvent<Element, unknown, unknown>
 ) => {
-  const old_x = +d3.select(' .opensankey #text_' + link.idLink).attr('x'),
-    old_y = +d3.select(' .opensankey #text_' + link.idLink).attr('y'),
-    new_x = old_x + event.dx,
-    new_y = old_y + event.dy
-  d3.select(' .opensankey #text_' + link.idLink).attr('x', new_x)
-  d3.select(' .opensankey #text_' + link.idLink).attr('y', new_y)
-  link.x_label = new_x
-  link.y_label = new_y
-  link.local=(link.local!==undefined && link.local!==null)?link.local:{} as SankeyLinkAttrLocal
-  link.local.label_position = 'frozen'
+  const is_on_path=ReturnValueLink(data,link,'label_on_path')
+  if(is_on_path){
+    const textPathOffSet=+d3.select(' .opensankey #text_' + link.idLink).attr('startOffset').replace('%','')
+    let newOffset=textPathOffSet+event.dx
+    newOffset=newOffset<0?0:newOffset
+    newOffset=newOffset>100?100:newOffset
+    link.drag_label_offset=newOffset
+    d3.select(' .opensankey #text_' + link.idLink).attr('startOffset',newOffset+'%')
+  }else{
+    const old_x = +d3.select(' .opensankey #draggable_text_' + link.idLink).attr('x'),
+      old_y = +d3.select(' .opensankey #draggable_text_' + link.idLink).attr('y'),
+      new_x = old_x + event.dx,
+      new_y = old_y + event.dy
+    d3.select(' .opensankey #draggable_text_' + link.idLink).attr('x', new_x)
+    d3.select(' .opensankey #draggable_text_' + link.idLink).attr('y', new_y)
+    link.x_label = new_x
+    link.y_label = new_y
+  }
+
 }
 
 const eventLinkClick=(
@@ -223,9 +223,10 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   link_functions,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
-  applicationContext
+  applicationContext,
+  alt_key_pressed
 ) => {
-  const { GetLinkValue,LinkTooltipsContent } = link_functions
+  const { GetLinkValue,LinkTooltipsContent,LinkText } = link_functions
   const{ pointer_pos, ref_setter_contextualised_link} = contextMenu
   const{ button_ref, accordion_ref, links_accordion_ref} = uiElementsRef
   const{ data,display_nodes } = dict_variable_application_data
@@ -239,6 +240,44 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   const scale = d3.scaleLinear()
     .range([0, 100])
     .domain([0, data.user_scale])
+
+
+  const dragLinkTextEvent=(
+    alt_key_pressed:MutableRefObject<boolean>,
+  )=>{
+    return d3.drag<SVGTextElement, SankeyLink>()
+      .subject(Object)
+      .on('start',(event,link)=>{
+        if (alt_key_pressed.current) {
+          // AssignLinkLocalAttribute(link,'label_on_path',false)
+          AssignLinkLocalAttribute(link,'label_position','frozen')
+          AssignLinkLocalAttribute(link,'orthogonal_label_position','frozen')
+          if(!(link.x_label && link.y_label)){
+            const link_value = TestLinkValue(data, display_nodes, link,GetLinkValue)
+            const source_node=data.nodes[link.idSource]
+            const target_node=data.nodes[link.idTarget]
+            const [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, display_nodes, dict_variable_application_data.display_links, data.nodeTags,data,scale,inv_scale,GetLinkValue)
+            DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t,scale,inv_scale)
+          }
+
+    
+        }
+      })
+      .on('drag', function (event, link) {
+        if (alt_key_pressed.current) {
+          drag_link_text(data,link, event)
+        }
+      })
+  }
+    
+
+
+
+
+
+
+
+
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -258,12 +297,11 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   )
 
   const select2 = gg_links
-    .filter(d => ReturnValueLink(data,d,'label_position') === 'frozen' || !ReturnValueLink(data,d,'label_on_path') || ReturnValueLink(data,d,'label_on_path') === undefined)
     .selectAll('text') as d3.Selection<SVGTextElement, SankeyLink, d3.BaseType, unknown>
 
   if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
     // A voir avec Julien
-    //select2.call(dragLinkTextEvent(alt_key_pressed))
+    select2.call(dragLinkTextEvent(alt_key_pressed))
     select2.on('click', (event, d) => {
       const source_node = display_nodes[d.idSource]
       const target_node = display_nodes[d.idTarget]
@@ -425,43 +463,7 @@ export const drawAddLinks:drawAddLinksFType = (
         )
       )
     }
-
-    gg_links
-      .filter(
-        l => ReturnValueLink(data,l,'label_position') !== 'frozen' && ReturnValueLink(data,l,'label_on_path') === true
-      )
-      .append('text')
-      .attr('pointer-events', 'none')
-      .attr('style',l=> 'font-weight: bold; font-size:' + ReturnValueLink(data,l,'label_font_size') + 'px;'+'font-family:'+ReturnValueLink(data,l,'font_family'))
-      .attr('fill', l => {
-        if (ReturnValueLink(data,l,'text_color') === ReturnValueLink(data,l,'color')) {
-          return LinkColor(l,data,GetLinkValue) as string
-        }
-        return ReturnValueLink(data,l,'text_color')
-      })
-      .attr('dy', l =>TextLinkPosDY(l,data,scale,GetLinkValue))
-      .append('textPath')
-      
-
-    // gg_links
-    // .filter(l=>{
-    //   return Number(d3.select(' .opensankey #path_'+(l as SankeyLink).idLink).attr('stroke-opacity'))!=0
-    // })
-    // .each(function (l) {
-    //   if(ReturnValueLink(data,(l as SankeyLink),'orientation')=='vv' ||ReturnValueLink(data,(l as SankeyLink),'orientation')=='hh'){
-    //     AddDragLinkZone((l as SankeyLink),dict_variable_application_data,
-    //       dict_variable_elements_selected,default_handle_size,default_horiz_shift,scale,inv_scale,
-    //       min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows)
-    //   }
-    // })
-
-    const select2 = gg_links
-      .filter(d => ReturnValueLink(data,d,'label_position') === 'frozen' || !ReturnValueLink(data,d,'label_on_path') || ReturnValueLink(data,d,'label_on_path') === undefined).select('text') as d3.Selection<SVGTextElement, SankeyLink, d3.BaseType, unknown>
-
-    if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ) {
-    // A voir avec Julien
-      select2.call(dragLinkTextEvent(alt_key_pressed))
-    }})
+  })
   
   drawLinkShape(
     dict_variable_application_data,
@@ -476,7 +478,7 @@ export const drawAddLinks:drawAddLinksFType = (
     uiElementsRef,
     dict_variable_elements_selected,
     link_functions,ComponentUpdater,
-    dict_hook_ref_setter_show_dialog_components,applicationContext
+    dict_hook_ref_setter_show_dialog_components,applicationContext,alt_key_pressed
   )
 }
 
@@ -492,7 +494,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
   ComponentUpdater
 
 ) => {
-  const { GetLinkValue,LinkStroke,node_arrow_visible,LinkText,DrawArrows,LinkSabotColor } = link_functions
+  const { GetLinkValue,LinkStroke,LinkText,DrawArrows,LinkSabotColor } = link_functions
   const { multi_selected_links } = dict_variable_elements_selected
   const{ data, display_nodes, display_links} = dict_variable_application_data
   const { ref_getter_mode_selection} = dict_variable_elements_selected
@@ -515,6 +517,8 @@ export const drawLinkShape:drawLinkShapeFType  = (
   if(multi_selected_links.current.length>0){
     filtered_gglinks.selectAll('.arrow').remove()
   }
+  filtered_gglinks.selectAll('text').remove()
+  // filtered_gglinks.selectAll('.link_value').attr('x',null).attr('y',null)
   filtered_gglinks.style('display', (d) => {
     let display: string
     if (LinkVisible(d, data,display_nodes,GetLinkValue)) { display = 'inline' } else { display = 'none' }
@@ -526,53 +530,38 @@ export const drawLinkShape:drawLinkShapeFType  = (
       return StrokeDasharray(d,data,GetLinkValue)
     })
   const paths = filtered_gglinks.selectAll('path.link') as d3.Selection<SVGPathElement, SankeyLink, SVGGElement, SankeyLink>
+
+  // Add text html element to link to redraw
   filtered_gglinks
-    .filter(
-      d => ReturnValueLink(data,d,'label_position') !== 'frozen' && ReturnValueLink(data,d,'label_on_path') === true
-    )
-    .select('text')
-    .attr('pointer-events', 'none')
-    .attr('style',d=> 'font-weight: bold; font-size:' + ReturnValueLink(data,d,'label_font_size') + 'px;'+'font-family:'+ReturnValueLink(data,d,'font_family'))
+    .append('text')
+    .attr('id', d => 'draggable_text_' + d.idLink)
+    .attr('style',l=> 'font-weight: bold; font-size:' + ReturnValueLink(data,l,'label_font_size') + 'px;'+'font-family:'+ReturnValueLink(data,l,'font_family'))
     .attr('fill', l => {
       if (ReturnValueLink(data,l,'text_color') === ReturnValueLink(data,l,'color')) {
         return LinkColor(l,data,GetLinkValue) as string
       }
       return ReturnValueLink(data,l,'text_color')
     })
-    .attr('dy', l =>TextLinkPosDY(l,data,scale,GetLinkValue))
-    .select('textPath')
-    .attr('id', d => 'text_' + d.idLink)
-    .attr('side', link => TextLinkSide(link,data))
-    .attr('class', 'link_value')
-    .attr('href', d => '#path_' + d.idLink)
     .attr('visibility', d => {
       let tmp=GetLinkValue(data, d.idLink).value as number
       tmp=(tmp)?tmp:0
       return  LinkVisible(d, data,display_nodes,GetLinkValue) && tmp >= max_filter_label? 'visible' : 'hidden'
     })
 
-  const select2 = filtered_gglinks
-    .filter(d => ReturnValueLink(data,d,'label_position') === 'frozen' || !ReturnValueLink(data,d,'label_on_path') || ReturnValueLink(data,d,'label_on_path') === undefined)
+
+  // if the text follow the link path then add another html element : textPath
+  filtered_gglinks
+    .filter(
+      d =>ReturnValueLink(data,d,'label_on_path') === true
+    )
     .select('text')
-
-
-  select2
-    .attr('href', d => '#path_' + d.idLink)
+    .attr('dy', l =>TextLinkPosDY(l,data,scale,GetLinkValue))
+    .append('textPath')
     .attr('id', d => 'text_' + d.idLink)
-    .attr('pointer-events',d=>(ReturnValueLink(data,d,'label_position')!=='frozen')?'none':'auto')
+    .attr('side', link => TextLinkSide(link,data))
     .attr('class', 'link_value')
-    .attr('style',d=> 'font-weight: bold;font-size:' + ReturnValueLink(data,d,'label_font_size') + 'px;'+'font-family:'+ReturnValueLink(data,d,'font_family'))
-    .attr('fill', l => {
-      if (ReturnValueLink(data,l,'text_color') === ReturnValueLink(data,l,'color') && ReturnValueLink(data,l,'orthogonal_label_position') === 'middle') {
-        return 'white'
-      }
-      return ReturnValueLink(data,l,'text_color')
-    })
-    .attr('visibility', d => {
-      let tmp=GetLinkValue(data, d.idLink).value as number
-      tmp=(tmp)?tmp:0
-      return  LinkVisible(d, data,display_nodes,GetLinkValue) && tmp >= max_filter_label ? 'visible' : 'hidden'
-    })
+    .attr('href', d => '#path_' + d.idLink)
+    
 
 
   let error_msg: { text?: string | undefined } | undefined
@@ -589,7 +578,6 @@ export const drawLinkShape:drawLinkShapeFType  = (
 
   //Creation des Arrows associés au link
   d3.selectAll(' .opensankey .ggg_nodes')
-    .filter((n) => (n as SankeyNode).inputLinksId.length>0?node_arrow_visible(data,(n as SankeyNode)):false)
     .each( (n) => {
       DrawArrows(n as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
     })

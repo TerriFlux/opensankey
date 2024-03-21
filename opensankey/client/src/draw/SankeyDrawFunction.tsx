@@ -436,7 +436,7 @@ export const DrawArrows : DrawArrowsType = (
     }
 
 
-    if (!display_style.filter || link_value >= display_style.filter) {
+    if ((!display_style.filter || link_value >= display_style.filter )&& l_arrow) {
       //selection
       d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
       d3.select('#gg_' + l.idLink)
@@ -657,7 +657,7 @@ export const PathNodeArrowShape : PathNodeArrowShapeFType = (
 // DrawLinkText
 // Affichage de la valeur du flux dans le link en fonction des options
 // Position latérale ; middle, beginning, end et frozen
-const DrawLinkText = (
+export const DrawLinkText = (
   data: SankeyData,
   link: SankeyLink,
   link_value: number,
@@ -684,7 +684,7 @@ const DrawLinkText = (
   // If the label position is  either by the mouse when we drag it
   // or when it doesn't follow the link path
   // It is handled by link attribut that we have to process
-  if (lab_pos === 'frozen' && link.x_label || !label_on_path || label_on_path === undefined) {
+  if (!label_on_path || label_on_path === undefined) {
 
     const label_size=ReturnValueLink(data,link,'label_font_size') as number
     const orth_lab_pos=ReturnValueLink(data,link,'orthogonal_label_position')
@@ -738,13 +738,8 @@ const DrawLinkText = (
       x_pos-=(label_size*label_text.length)/4
     }
 
-    // If the label is draggable & the var are undefined then we place the label at the middle (horizontally and vertically) of the link 
-    if(lab_pos==='frozen' && ((link.x_label && link.x_label<=0)|| !link.x_label) ){
-      link.x_label=x_pos
-      link.y_label=y_pos
-    }
 
-    (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
+    (d3.select(' .opensankey #draggable_text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('x', () => lab_pos === 'frozen' && link.x_label ? link.x_label : x_pos)
       .attr('y', () => lab_pos === 'frozen' && link.y_label ? link.y_label : y_pos)
       .text(()=> label_text)
@@ -753,12 +748,11 @@ const DrawLinkText = (
     // If the label follow the link path then it's not handles by absolute attr (x,y)
     // but by relative attr (startOffset)
     const positions: { [label_position: string]: string[] } = {
-      'frozen': ['50%', 'start'],
+      'frozen': [link.drag_label_offset?(link.drag_label_offset+'%'):'50%', 'start'],
       'beginning': ['10px', 'start'],
       'middle': ['50%', 'middle'],
       'end': ['100%', 'end']
     };
-
     (d3.select(' .opensankey #text_' + link.idLink) as d3.Selection<SVGSVGElement, SankeyLink, HTMLElement, SankeyLink>)
       .attr('startOffset', positions[lab_pos][0])
       .attr('text-anchor', positions[lab_pos][1])
