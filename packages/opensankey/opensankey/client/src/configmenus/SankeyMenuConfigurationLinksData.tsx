@@ -156,7 +156,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                   data.user_scale = +formatedValue
                 }
                 node_function.RedrawNodes(node_to_update)
-                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                link_function.RedrawLinks(multi_selected_links.current)
               }
               else if(formatedValue=='') {
                 let val = Object(multi_selected_links.current[0].value)
@@ -175,7 +175,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                   val.value = ''
                 })
                 node_function.RedrawNodes(node_to_update)
-                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                link_function.RedrawLinks(multi_selected_links.current)
               }
             }}/>
         </OverlayTrigger>
@@ -216,7 +216,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                   val.display_value = evt.target.value
                 })
                 setForceUpdate(!forceUpdate)
-                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                link_function.RedrawLinks(multi_selected_links.current)
 
               }}/>
         </OverlayTrigger>
