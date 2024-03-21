@@ -137,7 +137,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
   const {updateComponentMenuConfigLink}=ComponentUpdater 
-  const {drawLinkShape}=link_function
   const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
@@ -329,7 +328,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       link_to_update=link_to_update.concat(source_node.inputLinksId.map(lid=>data.links[lid]))
 
       RedrawNodes([source_node,previous_node])
-      drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,link_to_update,ComponentUpdater)
+      link_function.RedrawLinks(link_to_update)
     } else if(Object.keys(data.nodes).length>1){
       set_pre_idSource(changeEvent.target.value)
     }
@@ -379,7 +378,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       link_to_update=link_to_update.concat(target_node.inputLinksId.map(lid=>data.links[lid]))
 
       RedrawNodes([target_node,previous_node])
-      drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,link_to_update,ComponentUpdater)
+      link_function.RedrawLinks(link_to_update)
     }else if(Object.keys(data.nodes).length>1){
       set_pre_idTarget(changeEvent.target.value)
     }
@@ -547,7 +546,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               })
 
               node_function.RedrawNodes(nodes_to_reorganize)
-              link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+              link_function.RedrawLinks(multi_selected_links.current)
             }}
           >
             <FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/>

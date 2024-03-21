@@ -132,7 +132,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
                   updateLinkTagValue(d,data_tags_selected,tags_group_key,tag_key,visible)
                 })
                 node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-                link_function.drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,multi_selected_links.current,ComponentUpdater)
+                link_function.RedrawLinks(multi_selected_links.current)
                 setForceUpdate(!forceUpdate)
               }}>
               {tag.name}
