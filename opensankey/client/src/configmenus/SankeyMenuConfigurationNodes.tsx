@@ -62,6 +62,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   menu_configuration_nodes_attributes,
   GetLinkValue:GetLinkValueFuncType,
   node_function,link_function,
+  ComponentUpdater
 
 ) => {
   const { data } = dict_variable_application_data
@@ -95,7 +96,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     dict_variable_application_data,
     dict_variable_elements_selected,
     GetLinkValue,
-    node_function,link_function,
+    node_function,link_function,ComponentUpdater
 
   )
 
@@ -114,7 +115,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const {data}=dict_variable_application_data
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
-  const {updateComponentMenuConfigNode}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
   updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
   const tmpNodes = Object
     .fromEntries(
@@ -167,6 +168,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               )
               setForceUpdate(!forceUpdate)
               multi_selected_nodes.current.forEach(d=>SelectVisualyNodes(d))
+              updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+
             }}
             valueRenderer={(selected: selected_type[]) => {
               return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
