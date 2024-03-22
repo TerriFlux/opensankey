@@ -145,7 +145,8 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
     updateComponentMenuConfig:useRef(()=>null),
     updateComponentMenuConfigLayout:useRef(()=>null),
     updateComponentMenu:useRef(()=>null),
-    updateComponenTimeCheckpoint:useRef(()=>null)
+    updateComponenTimeCheckpoint:useRef(()=>null),
+    updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[])
   }
   if(selected_style_link !== 'default'){
     set_selected_style_link('default')

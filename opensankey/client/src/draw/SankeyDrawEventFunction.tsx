@@ -70,7 +70,7 @@ export const EventNodeClick : EventNodeClickFType =(
   const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const {ref_getter_mode_selection, multi_selected_nodes}=dict_variable_elements_selected
   const {nodes_accordion_ref,accordion_ref}=uiElementsRef
-  const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
   multi_selected_nodes.current.forEach(n=>DeselectVisualyNodes(n))
   if (  (event.ctrlKey || event.metaKey)) {
     ref_getter_mode_selection.current='s'
@@ -123,6 +123,7 @@ export const EventNodeClick : EventNodeClickFType =(
   }
   updateComponentMenuConfigNode.current()
   updateComponentMenuConfigNodeAppearence.current()
+  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
 }
 
 export const EventNodeContextMenu: EventNodeContextMenuFType = (
@@ -406,7 +407,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   const { data, display_links } = dict_variable_application_data
   const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = dict_variable_elements_selected
   const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
-  const {updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
   // Special cast usefull for when the app is used in SankeySuiteManager
   const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
 
@@ -484,6 +485,8 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
     updateComponentMenuConfigNode.current()
     updateComponentMenuConfigNodeAppearence.current()
     updateComponentMenuConfigLink.current()
+    updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+
 
   }
   // si le token de connexion est à false alors ne crée pas de second noeud
