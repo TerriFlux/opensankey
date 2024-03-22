@@ -241,6 +241,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     updateComponentMenuConfigLayout:useRef(()=>null),
     updateComponentMenu:useRef(()=>null),
     updateComponenTimeCheckpoint:useRef(()=>null),
+    updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[])
 
   }
   /*************************************************************************************************/
@@ -689,6 +690,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             dict_variable_elements_selected,
             GetLinkValue,
             node_function,link_function,
+            ComponentUpdater,
             true
           ),
           contextMenu.pointer_pos,
@@ -803,6 +805,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 menu_configuration_nodes_attributes,
                 GetLinkValue,
                 node_function,link_function,
+                ComponentUpdater
 
               ),
               MenuConfigurationLinks(
