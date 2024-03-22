@@ -255,7 +255,6 @@ const handleUpLinkIOPos=(
    */
 const handleDownLinkIOPos=(
   data:SankeyData,
-  set_data:(d:SankeyData)=>void,
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   k_link:string,
@@ -378,7 +377,6 @@ const handleDownLinkIOPos=(
    */
 const has_link_come_from=(
   data:SankeyData,
-  set_data:(d:SankeyData)=>void,
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   io:string,
@@ -400,7 +398,6 @@ const has_link_come_from=(
 const tab_pos_link=(
   t:TFunction,
   data:SankeyData,
-  set_data:(d:SankeyData)=>void,
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,io:string,tab_colored:boolean,
@@ -435,7 +432,7 @@ const tab_pos_link=(
                     <td style={{ 'width': '10%' }}>
                       <ButtonGroup className="button_position" size="sm">
                         <Button variant="info" onClick={() => handleUpLinkIOPos(data,display_nodes,multi_selected_nodes,k,pos,io,GetLinkValue,link_function,setForceUpdate,forceUpdate)}><FaArrowAltCircleUp /></Button>
-                        <Button variant="info" onClick={() => handleDownLinkIOPos(data,set_data,display_nodes,multi_selected_nodes,k,pos,io,GetLinkValue,link_function,setForceUpdate,forceUpdate)}><FaArrowAltCircleDown /></Button>
+                        <Button variant="info" onClick={() => handleDownLinkIOPos(data,display_nodes,multi_selected_nodes,k,pos,io,GetLinkValue,link_function,setForceUpdate,forceUpdate)}><FaArrowAltCircleDown /></Button>
                       </ButtonGroup>
                     </td>
 
@@ -456,16 +453,67 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
   GetLinkValue:GetLinkValueFuncType,
   node_function,
   link_function,
+  ComponentUpdater,
   menu_for_modal=false
+  
 ) => {
   const { t } = applicationContext
-  const { data, set_data, display_nodes } = dict_variable_application_data
+  const { data,  display_nodes,display_links } = dict_variable_application_data
   const { multi_selected_nodes, multi_selected_links } = dict_variable_elements_selected
-
+  const {updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
   const [link_io,set_link_io] = useState('output')
   const [link_pos,set_link_pos] = useState('right')
   const [tab_colored,set_tab_colored] = useState(false)
   const [forceUpdate,setForceUpdate]=useState(false)
+
+
+
+
+
+  const updateDefaultNodeIO=()=>{
+    if(multi_selected_nodes.current.length===1){
+      const k_display_link=Object.values(display_links).map(l=>l.idLink)
+      if(multi_selected_nodes.current[0].inputLinksId.filter(lid=>k_display_link.includes(lid)).length>multi_selected_nodes.current[0].outputLinksId.filter(lid=>k_display_link.includes(lid)).length){
+        const obj_list_link={
+          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','input',GetLinkValue).length,
+          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','input',GetLinkValue).length,
+          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','input',GetLinkValue).length,
+          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','input',GetLinkValue).length,
+        }
+        const side_with_most_link=Object.entries(obj_list_link)
+          .sort(([,a],[,b]) => b-a)[0][0]
+        
+  
+        if(link_io!=='input'){
+          set_link_io('input')
+        }
+        if(link_pos!==side_with_most_link){
+          set_link_pos(side_with_most_link)
+        }
+      }else{
+        const obj_list_link={
+          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','output',GetLinkValue).length,
+          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','output',GetLinkValue).length,
+          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','output',GetLinkValue).length,
+          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','output',GetLinkValue).length,
+        }
+        const side_with_most_link=Object.entries(obj_list_link)
+          .sort(([,a],[,b]) => b-a)[0][0]
+  
+
+
+        if(link_io!=='output'){
+          set_link_io('output')
+        }
+        if(link_pos!==side_with_most_link){
+          set_link_pos(side_with_most_link)
+        }
+      }
+  
+    }
+  }
+  updateComponentMenuNodeIOSelectSideNode.current.push(updateDefaultNodeIO)
+
 
   const logo_enter=<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512 512" width="15" height="15">
     <g>
@@ -569,7 +617,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           overlay={<Tooltip id={'noeud.pf.tooltips.3'}>{t('Noeud.PF.tooltips.gauche')} </Tooltip>}>
           <Button
             className='btn_menu_config_node_io'
-            disabled={has_link_come_from(data,set_data,display_nodes,multi_selected_nodes,link_io,'left',GetLinkValue)}
+            disabled={has_link_come_from(data,display_nodes,multi_selected_nodes,link_io,'left',GetLinkValue)}
             variant={(link_pos=='left')?'primary':'outline-primary'}
             onClick={() => {
               set_link_pos('left')
@@ -586,7 +634,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           overlay={<Tooltip id={'noeud.pf.tooltips.4'}>{t('Noeud.PF.tooltips.droite')}</Tooltip>}>
           <Button
             className='btn_menu_config_node_io'
-            disabled={has_link_come_from(data,set_data,display_nodes,multi_selected_nodes,link_io,'right',GetLinkValue)}
+            disabled={has_link_come_from(data,display_nodes,multi_selected_nodes,link_io,'right',GetLinkValue)}
             variant={(link_pos=='right')?'primary':'outline-primary'}
             onClick={() => {
               set_link_pos('right')
@@ -603,7 +651,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           overlay={<Tooltip id={'noeud.pf.tooltips.5'}>{t('Noeud.PF.tooltips.ades')}</Tooltip>}>
           <Button
             className='btn_menu_config_node_io'
-            disabled={has_link_come_from(data,set_data,display_nodes,multi_selected_nodes,link_io,'top',GetLinkValue)}
+            disabled={has_link_come_from(data,display_nodes,multi_selected_nodes,link_io,'top',GetLinkValue)}
             variant={(link_pos=='top')?'primary':'outline-primary'}
             onClick={() => {
               set_link_pos('top')
@@ -620,7 +668,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           overlay={<Tooltip id={'noeud.pf.tooltips.6'}>{t('Noeud.PF.tooltips.edes')}</Tooltip>}>
           <Button
             className='btn_menu_config_node_io'
-            disabled={has_link_come_from(data,set_data,display_nodes,multi_selected_nodes,link_io,'bottom',GetLinkValue)}
+            disabled={has_link_come_from(data,display_nodes,multi_selected_nodes,link_io,'bottom',GetLinkValue)}
             variant={(link_pos=='bottom')?'primary':'outline-primary'}
             onClick={() => {
               set_link_pos('bottom')
@@ -656,7 +704,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
     </Row>
 
     {/* Table montrant les noeuds selectionnés  */}
-    {tab_pos_link(t,data,set_data,display_nodes,multi_selected_nodes,link_pos,link_io,tab_colored,GetLinkValue,link_function,setForceUpdate,forceUpdate)}
+    {tab_pos_link(t,data,display_nodes,multi_selected_nodes,link_pos,link_io,tab_colored,GetLinkValue,link_function,setForceUpdate,forceUpdate)}
 
   </>:<></>
 
