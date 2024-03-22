@@ -1,5 +1,6 @@
 import { TFunction } from 'i18next'
 import { 
+  ComponentUpdaterType,
   LinkFunctionTypes,
   NodeFunctionTypes,
   SankeyData, SankeyNode, applicationContextType, contextMenuType, 
@@ -17,6 +18,7 @@ export type OpenSankeyMenuConfigurationNodesFType = (
   GetLinkValue:GetLinkValueFuncType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType
 ) => { [s: string]: JSX.Element; }
  
 export type tree_data_nodesFType=(t:TFunction<'translation', undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
