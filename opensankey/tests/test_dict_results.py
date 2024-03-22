@@ -48,6 +48,7 @@ DIRS_TO_EXCLUDE = [
     'OptimSankey',
     'not_tested',
     'artefacts',
+    'Formations',
     'Recherche',
     'Etudes',
     XLPARSER_TESTS_REFS_DIR,
