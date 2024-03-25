@@ -8,7 +8,9 @@ export type DrawLegendFType = (
   contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
   legend_clicked:MutableRefObject<boolean>,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  reDrawLegend:()=>void
+
 ) => JSX.Element
 
 export type drag_legendFType=(
