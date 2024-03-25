@@ -331,7 +331,7 @@ export const ProcessExample: ProcessExampleFuncType = (
   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
   convert_data(data, DefaultSankeyData)
   if ((data as SankeyData & layout_type).layout === undefined) {
-    ComputeAutoSankey(data, data.h_space ? data.h_space : 200)
+    ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
     callback(data)
     compute_default_input_outputLinksId(data.nodes, data.links)
     // Set sector/product style to node only when it come from an excel file and without a layout 
