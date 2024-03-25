@@ -492,15 +492,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
     node_function
   }
 ) => {
-  const {ref_getter_show_menu_config,ref_setter_show_menu_config,ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
+  const {ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
   const {ref_setter_mode_selection} = dict_variable_elements_selected
   const [show_nav,set_show_nav] = useState(false)
   const [show_tuto,set_show_tuto]=useState(false)
   const [show_support,set_show_support]=useState(false)
   const [show_template,set_show_template]=useState(false)
   const [forceUpdate,setForceUpdate]=useState(false)
-  ref_getter_show_menu_config.current=show_nav
-  ref_setter_show_menu_config.current=set_show_nav
   ref_setter_show_modale_tuto.current=set_show_tuto
   ref_setter_show_modale_support.current=set_show_support
   ref_setter_show_modal_template.current=set_show_template
@@ -523,14 +521,18 @@ export const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
+  console.trace('render menu',show_nav)
 
 
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
+    console.log('hello click',show_nav)
     set_show_nav(!show_nav)
     if(!show_nav){
+      console.log('not show nav')
       actualizeDrawAreaFrame(dict_variable_application_data)
     }else{
+      console.log('show nav')
       d3.select('.scroll_zone').style('width',null)
     }
     setUpdate(!update)

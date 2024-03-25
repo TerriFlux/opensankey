@@ -351,8 +351,6 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_modal_preference : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_modal_template : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_show_menu_config :  MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_getter_show_menu_config :  MutableRefObject<boolean|undefined>,
   ref_show_style_node : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>
 }
