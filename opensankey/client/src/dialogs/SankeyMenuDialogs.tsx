@@ -709,12 +709,12 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
       onHide={()=>set_show_excel_dialog(false)}
     >
       <Modal.Header closeButton>
-        <Modal.Title>Ouvrir Fichier Excel</Modal.Title>
+        <Modal.Title>{t('Menu.open_excel_file')}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
           <Form.Group as={Row}>
-            <Form.Label>Fichier d&apos;entrée excel</Form.Label>
+            <Form.Label>{t('Menu.input_file_excel')}</Form.Label>
             <Form.Control
               type="file"
               onChange={(evt: ChangeEvent) => {
@@ -736,7 +736,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
               )
             }
           }
-        >Ouvrir</Button>
+        >{t('Menu.ouvrir')}</Button>
         <Button
           variant="secondary"
           onClick={()=>set_show_excel_dialog(false)}
