@@ -8,7 +8,7 @@ import * as d3 from 'd3'
 import { Form, Tab, OverlayTrigger,Tooltip, Button, Badge, Col, Row, ButtonGroup} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
-import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusShowMenuComponentsType, PlusApplicationContextType, PlusNodeFuntionType, PlusLinkFuntionType} from '../types/Types'
+import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType, PlusApplicationContextType, PlusNodeFuntionType, PlusLinkFuntionType} from '../types/Types'
 import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
 import {RemoveAnimate,
   DrawArrows,
@@ -509,7 +509,6 @@ const node_mouse_click=(
   accept_simple_click:{current:boolean},
   GetLinkValue:GetLinkValueFuncType,
   ComponentUpdater:ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: SankeyPlusShowMenuComponentsType,
 )=>{
   const {data,display_links,display_nodes}=dict_variable_application_data
 
@@ -555,9 +554,8 @@ const node_mouse_click=(
       window.open(n.hyperlink)
     }
   }else{
-    SimpleGNodeClick(dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components)
+    SimpleGNodeClick(uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click,
+      ComponentUpdater)
 
   }
 }
@@ -670,7 +668,6 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
   accept_simple_click,
   GetLinkValue,
   ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components,
   nodes_to_update
 )=>{
   (d3.selectAll(' .opensankey .ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>).filter(n=>nodes_to_update.length>0?nodes_to_update.includes(n):true)
@@ -684,7 +681,6 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
         accept_simple_click,
         GetLinkValue,
         ComponentUpdater,
-        dict_hook_ref_setter_show_dialog_components
       )
     })
 }
