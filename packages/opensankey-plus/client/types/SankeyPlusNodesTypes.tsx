@@ -33,7 +33,6 @@ export type PlusNodeClickEventFType=(
   accept_simple_click:{current:boolean},
   GetLinkValue:GetLinkValueFuncType,
   ComponentUpdater:ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: SankeyPlusShowMenuComponentsType,
   nodes_to_update:SankeyPlusNode[]
 )=> void
 
