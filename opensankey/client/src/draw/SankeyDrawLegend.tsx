@@ -20,7 +20,9 @@ export const DrawLegend : DrawLegendFType= (
   contextMenu,
   GetLinkValue,
   legend_clicked,
-  ComponentUpdater
+  ComponentUpdater,
+  reDrawLegend
+  
 ) => {
   const {data,display_nodes}=dict_variable_application_data
   const {t}=applicationContext
@@ -70,7 +72,7 @@ export const DrawLegend : DrawLegendFType= (
         let h=document.getElementById('g_legend')?.getBoundingClientRect().height
         h=h?h:50
         
-        draw_legend_handles(data,legend_clicked.current ,h,ComponentUpdater)
+        draw_legend_handles(data,legend_clicked.current ,h,ComponentUpdater,reDrawLegend)
       })
 
 
@@ -89,159 +91,168 @@ export const DrawLegend : DrawLegendFType= (
       .method('tspans')
 
     const all_tags = Object.assign({},data.nodeTags,data.fluxTags)
+    let vert_shift=0
+
     Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
         
       // Ajout du tagGroup.name  
       legend.append('text')
+        .attr('id','GrpTag_title_'+tag_group[0])
         .attr('transform', function () {
           return 'translate(' + dx + ', 0 )'
         })
         .attr('x', 0)
-        .attr('y', 20)
+        .attr('y', 5+data.legend_police)
         .text(tag_group[1].group_name)
         .attr('style', 'font-weight:bold;font-size:'+data.legend_police+'px')
         .call(wrap)
 
-      const legendElements = legend.append('g')
-        .selectAll('g')
-        // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
-        .data(Object.entries(tag_group[1].tags)
-          .filter(tag=>{
-            if(Object.keys(data.fluxTags).includes(data.colorMap)){
-              const t=Object.values(data.links).filter(l=>{
-                const tmp=GetLinkValue(data,l.idLink)
-                return LinkVisible(l,data,display_nodes,GetLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag[0])
-              }).length
-              return t>0
-            }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
-              const node_visible=NodeVisibleOnsSvg()
-              const t2=Object.values(data.nodes).filter(n=>{
-                return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && node_visible.includes(n.idNode) && n.position !== 'relative'
-              }).length
-              return t2>0
-            }else if(data.colorMap && data.colorMap.includes('dataTags_')){
-              return true
-            }
-            return  false
-          })
-        )
-        .enter()
-        .append('svg:g')
-        // on filtre les tags avec selected à true (Visible)
-        .filter(function (d) { return d[1].selected })
-        .attr('id',d=>{
-          return 'tag_'+d[1].name.replaceAll(' ','__')
-        })
-        .attr('transform', function (d, i) {
-          dy=(i * 30 + 30)
-          return 'translate(' + dx + ',' + dy + ')'
-        })
-        .on('mouseover',(event,d)=>{
+      if(document.getElementById('GrpTag_title_'+tag_group[0])?.getElementsByTagName('tspan')[0].innerHTML===''){
+        document.getElementById('GrpTag_title_'+tag_group[0])?.setAttribute('y','5')
+      }
 
-          //Recherche les noeuds liés à des flux dont on survole la légende d'étiquette
-          const nodes_tied_to_link_hovered=([] as string [])
-          Object.values(data.links).filter(l=>{
-            const tmp=GetLinkValue(data,l.idLink)
-            return tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(d[0])
-          }).forEach(el=>{
-            nodes_tied_to_link_hovered.push(el.idSource)
-            nodes_tied_to_link_hovered.push(el.idTarget)
-          })
-          //Reduit l'opacité de tous les flux qui n'ont pas l'étiquette survolé
-          Object.values(data.links).filter(l=>{
-            const tmp=GetLinkValue(data,l.idLink)
-            return !(tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(d[0]))
-          }).forEach(el=>{
-            d3.selectAll(' .opensankey #path_'+el.idLink).attr('stroke-opacity',0.1)
-            d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',0.1)
-            d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('stroke-opacity',0.1)
-            d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('opacity',0.1)
-          })
+      const title_size=document.getElementById('GrpTag_title_'+tag_group[0])?.getBoundingClientRect().height??0
 
-          //Recupère le groupTag actif, si il existe, en régardant lequel a sa légende d'afficher (pour le moment il ne peut y avoir que un groupTag de sélectionné à a fois)
-          const tmp=Object.entries(data.nodeTags).filter(n=>{
-            return n[1].show_legend
-          })
+      vert_shift=0
+      const legendElements2 = legend.append('g')
 
-          let link_tied_to_node_hovered=([] as string[])
-          const tmp2=(tmp.length>0)?tmp[0][0]:''
-
-          if(tmp.length>0){
-            //Récupère les flux entrant/sortant  des noeuds dont on survole l'étiquette
-            Object.values(data.nodes).filter(n=>{
-              return (n.tags[tmp2] && n.tags[tmp2].includes(d[0]))
-            }).forEach(el=>{
-              link_tied_to_node_hovered=link_tied_to_node_hovered.concat(el.outputLinksId)
-              link_tied_to_node_hovered=link_tied_to_node_hovered.concat(el.inputLinksId)
-            })
-
-            //Reduit l'opacité de tous les flux qui ne sont pas rattaché à un noeuds survolé par l'étiquette
-            Object.values(data.links).filter(l=>{
-              return link_tied_to_node_hovered.includes(l.idLink)
-            }).forEach(el=>{
-              d3.selectAll(' .opensankey #path_'+el.idLink).attr('stroke-opacity',0.85)
-              d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('stroke-opacity',0.85)
-              d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('opacity',0.85)
-              d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',1)
-
-            })
-
-            //Reduit l'opacité de tous les noeuds qui n'ont pas l'étiquette
-            Object.values(data.nodes).filter(n=>{
-              return ((n.tags[tmp2] && !n.tags[tmp2].includes(d[0]) && !nodes_tied_to_link_hovered.includes(n.idNode))||(!n.tags[tmp2]))
-            }).forEach(el=>{
-              d3.selectAll(' .opensankey #ggg_'+el.idNode).attr('opacity',0.1)
-
-            })
-          }else{
-            Object.values(data.nodes)
-              .filter(n=>!nodes_tied_to_link_hovered.includes(n.idNode))
-              .forEach(el=>{
-
-                d3.selectAll(' .opensankey #ggg_'+el.idNode).attr('opacity',0.1)
-              })
+      Object.entries(tag_group[1].tags)
+        .filter((d)=>d[1].selected )
+        .filter(tag=>{
+          if(Object.keys(data.fluxTags).includes(data.colorMap)){
+            const t=Object.values(data.links).filter(l=>{
+              const tmp=GetLinkValue(data,l.idLink)
+              return LinkVisible(l,data,display_nodes,GetLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag[0])
+            }).length
+            return t>0
+          }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
+            const node_visible=NodeVisibleOnsSvg()
+            const t2=Object.values(data.nodes).filter(n=>{
+              return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && node_visible.includes(n.idNode) && n.position !== 'relative'
+            }).length
+            return t2>0
+          }else if(data.colorMap && data.colorMap.includes('dataTags_')){
+            return true
           }
-            
-        })
-        .on('mouseout',()=>{
-          d3.selectAll(' .opensankey .link').attr('stroke-opacity',0.85)
-          d3.selectAll(' .opensankey .arrow').attr('stroke-opacity',0.85)
-          d3.selectAll(' .opensankey .arrow').attr('opacity',0.85)
-          d3.selectAll(' .opensankey .gg_links text').style('opacity',1)
-          d3.selectAll(' .opensankey .ggg_nodes').attr('opacity',1)
-        }).on('contextmenu',(evt,d)=>{
-          if(!window.SankeyToolsStatic){
-            evt.preventDefault()
-            pointer_pos.current=[evt.pageX,evt.pageY]
-            tagContext.current![0][1](d[0])  
-          }
+          return  false
+        }).forEach((tag,i)=>{
           
+          const tagElement=legendElements2.append('g')
+            .attr('id','tag_'+tag[1].name.replaceAll(' ','__')
+            )
+            .attr('transform', ()=>{
+              dy=(i * (data.legend_police/2) + title_size+vert_shift)
+              return 'translate(' + dx + ',' + dy + ')'
+            })
+            .on('mouseover',()=>{
+  
+              //Recherche les noeuds liés à des flux dont on survole la légende d'étiquette
+              const nodes_tied_to_link_hovered=([] as string [])
+              Object.values(data.links).filter(l=>{
+                const tmp=GetLinkValue(data,l.idLink)
+                return tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(tag[0])
+              }).forEach(el=>{
+                nodes_tied_to_link_hovered.push(el.idSource)
+                nodes_tied_to_link_hovered.push(el.idTarget)
+              })
+              //Reduit l'opacité de tous les flux qui n'ont pas l'étiquette survolé
+              Object.values(data.links).filter(l=>{
+                const tmp=GetLinkValue(data,l.idLink)
+                return !(tmp.tags[tag_group[0]] && tmp.tags[tag_group[0]].includes(tag[0]))
+              }).forEach(el=>{
+                d3.selectAll(' .opensankey #path_'+el.idLink).attr('stroke-opacity',0.1)
+                d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',0.1)
+                d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('stroke-opacity',0.1)
+                d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('opacity',0.1)
+              })
+  
+              //Recupère le groupTag actif, si il existe, en régardant lequel a sa légende d'afficher (pour le moment il ne peut y avoir que un groupTag de sélectionné à a fois)
+              const tmp=Object.entries(data.nodeTags).filter(n=>{
+                return n[1].show_legend
+              })
+  
+              let link_tied_to_node_hovered=([] as string[])
+              const tmp2=(tmp.length>0)?tmp[0][0]:''
+  
+              if(tmp.length>0){
+              //Récupère les flux entrant/sortant  des noeuds dont on survole l'étiquette
+                Object.values(data.nodes).filter(n=>{
+                  return (n.tags[tmp2] && n.tags[tmp2].includes(tag[0]))
+                }).forEach(el=>{
+                  link_tied_to_node_hovered=link_tied_to_node_hovered.concat(el.outputLinksId)
+                  link_tied_to_node_hovered=link_tied_to_node_hovered.concat(el.inputLinksId)
+                })
+  
+                //Reduit l'opacité de tous les flux qui ne sont pas rattaché à un noeuds survolé par l'étiquette
+                Object.values(data.links).filter(l=>{
+                  return link_tied_to_node_hovered.includes(l.idLink)
+                }).forEach(el=>{
+                  d3.selectAll(' .opensankey #path_'+el.idLink).attr('stroke-opacity',0.85)
+                  d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('stroke-opacity',0.85)
+                  d3.selectAll(' .opensankey #path_'+el.idLink+'_arrow').attr('opacity',0.85)
+                  d3.selectAll(' .opensankey #gg_'+el.idLink+' text').style('opacity',1)
+  
+                })
+  
+                //Reduit l'opacité de tous les noeuds qui n'ont pas l'étiquette
+                Object.values(data.nodes).filter(n=>{
+                  return ((n.tags[tmp2] && !n.tags[tmp2].includes(tag[0]) && !nodes_tied_to_link_hovered.includes(n.idNode))||(!n.tags[tmp2]))
+                }).forEach(el=>{
+                  d3.selectAll(' .opensankey #ggg_'+el.idNode).attr('opacity',0.1)
+  
+                })
+              }else{
+                Object.values(data.nodes)
+                  .filter(n=>!nodes_tied_to_link_hovered.includes(n.idNode))
+                  .forEach(el=>{
+  
+                    d3.selectAll(' .opensankey #ggg_'+el.idNode).attr('opacity',0.1)
+                  })
+              }
+              
+            })
+            .on('mouseout',()=>{
+              d3.selectAll(' .opensankey .link').attr('stroke-opacity',0.85)
+              d3.selectAll(' .opensankey .arrow').attr('stroke-opacity',0.85)
+              d3.selectAll(' .opensankey .arrow').attr('opacity',0.85)
+              d3.selectAll(' .opensankey .gg_links text').style('opacity',1)
+              d3.selectAll(' .opensankey .ggg_nodes').attr('opacity',1)
+            }).on('contextmenu',(evt)=>{
+              if(!window.SankeyToolsStatic){
+                evt.preventDefault()
+                pointer_pos.current=[evt.pageX,evt.pageY]
+              tagContext.current![0][1](tag[0])  
+              }
+            })
+        
+          // Ajout du shape  
+          tagElement.append('rect')
+            .attr('width', 20)
+            .attr('height', 20)
+            .attr('x', 0)
+            .attr('y', 2)
+            .attr('rx', 3)
+            .attr('ry', 3)
+            .style('fill', () => (tag as [string, { color: string }])[1].color )
+            .style('fill-opacity', 1)
+
+          // Ajout du label
+          tagElement.append('text')
+            .attr('x', 35)
+            .attr('y', data.legend_police)
+            .attr('font-size',data.legend_police+'px')
+            .text(()=> { return tag[1].name })
+            .call(wrap)
+
+
+          vert_shift=document.getElementById('tag_'+tag[1].name.replaceAll(' ','__'))?.getBoundingClientRect().height??0
+          tagElement.select('rect').attr('y',vert_shift/4)
         })
-
-      // Ajout du shape  
-      legendElements.append('rect')
-        .attr('width', 20)
-        .attr('height', 20)
-        .attr('x', 0)
-        .attr('y', 10)
-        .attr('rx', 3)
-        .attr('ry', 3)
-        .style('fill', (d) => { return (d as [string, { color: string }])[1].color })
-        .style('fill-opacity', 1)
-        // Ajout du label
-      legendElements.append('text')
-        .attr('x', 35)
-        .attr('y', 26)
-        .attr('font-size',data.legend_police+'px')
-        .text(function (d) { return d[1].name })
-        .call(wrap)
-
-      dx = dx + pas
 
     })
 
     if(data.legend_show_dataTags){
-      dy+=(dy==0)?-30:30
+      dy+=30+vert_shift
     
       const data_tags = Object.assign({},data.dataTags)
       const show_data=Object.values(data_tags).filter(d=>d.show_legend).length>0
@@ -249,16 +260,17 @@ export const DrawLegend : DrawLegendFType= (
         const intro_group_data_tags=((!show_data)?(' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')):'')
         // Ajout du tagGroup.name  
         legend.append('text')
-          .attr('transform', function () {
-            dy+=30
-            return 'translate(' + 0 + ', '+dy+' )'
-          })
+          .attr('id','leg_dataTag_'+tag_group[0])
+          .attr('transform', 'translate(' + 0 + ', '+dy+' )')
           .attr('x', 0)
-          .attr('y', 20)
+          .attr('y', 0)
           .text((tag_group[1].group_name+intro_group_data_tags))
           .attr('style', ('font-size:'+data.legend_police+'px;'+((show_data)?'font-weight:bold;':'')))
           .call(wrap)
-      
+
+        vert_shift=document.getElementById('leg_dataTag_'+tag_group[0])?.getBoundingClientRect().height??0
+        dy+=vert_shift
+          
         if(show_data){
           const legendElements = legend.append('g')
             .selectAll('g')
@@ -304,17 +316,13 @@ export const DrawLegend : DrawLegendFType= (
       })
     }
 
-  
-  
-
-
     const sankey_has_interval_value=d3.selectAll('.link_value').nodes().filter(lv=>d3.select(lv).html().includes('*')).length>0
     const sankey_has_dashed_links=d3.selectAll('.gg_links').nodes().filter(lv=> d3.select(lv).attr('stroke-dasharray')!=='').length>0
     // Write information in the legend depending to the diagram representation:
     // - when diagramme type is : data reconciled + indetermined links (values), we explain the meaning of "*" in the link label
     // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
     if(sankey_has_interval_value){
-      dy+=60
+      dy+=vert_shift
       const free_value=legend.append('g').attr('class','g_legend_free_value').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
       
       free_value.append('text').text('*').attr('x','5')
@@ -356,13 +364,12 @@ export const DrawLegend : DrawLegendFType= (
         }))
     }
 
-    
     let h=document.getElementById('g_legend')?.getBoundingClientRect().height
     h=h?h:50
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
   
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
-    draw_legend_handles(data,legend_clicked.current,h,ComponentUpdater)
+    draw_legend_handles(data,legend_clicked.current,h,ComponentUpdater,reDrawLegend)
   }
   if(data.mask_legend){
     drawLegend()
@@ -489,16 +496,23 @@ export const draw_legend_handles =(
   data:SankeyData,
   legend_clicked:boolean,
   h:number,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  reDrawLegend:()=>void
 )=>{
   d3.select('.opensankey #g_legend_handles').selectAll('*').remove();
   ['left','right'].forEach(pos=>{
-    add_legend_handle(pos,data,legend_clicked,h,ComponentUpdater)
+    add_legend_handle(pos,data,legend_clicked,h,ComponentUpdater,reDrawLegend)
   })
 }
 const size_zdt_handle=10
 
-const add_legend_handle=(pos:string,data:SankeyData,legend_clicked:boolean,h:number,ComponentUpdater:ComponentUpdaterType)=>{
+const add_legend_handle=(pos:string,data:SankeyData,
+  legend_clicked:boolean,
+  h:number,
+  ComponentUpdater:ComponentUpdaterType,
+  reDrawLegend:()=>void
+
+)=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
   if(d3.select('.opensankey #svg').nodes().length>0){
@@ -520,7 +534,7 @@ const add_legend_handle=(pos:string,data:SankeyData,legend_clicked:boolean,h:num
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
-    .call(drag_legend_handle(pos,data,svg_k_factor,ComponentUpdater))
+    .call(drag_legend_handle(pos,data,svg_k_factor,ComponentUpdater,reDrawLegend))
   // Position the handle 
   switch (pos){
 
@@ -538,7 +552,10 @@ const add_legend_handle=(pos:string,data:SankeyData,legend_clicked:boolean,h:num
   }
 }
 
-const drag_legend_handle=(pos:string,data:SankeyData,svg_k_factor:number,ComponentUpdater:ComponentUpdaterType)=>{
+const drag_legend_handle=(pos:string,data:SankeyData,svg_k_factor:number,ComponentUpdater:ComponentUpdaterType,
+  reDrawLegend:()=>void
+  
+)=>{
   const g_zdt_h=d3.select('.opensankey #g_legend_handles .legend_handle'+pos)
   const text_zone_shape=d3.select('.g_drag_zone_leg rect')
   const g_text_zone=d3.select('#g_legend')
@@ -569,7 +586,10 @@ const drag_legend_handle=(pos:string,data:SankeyData,svg_k_factor:number,Compone
         break
       }
     })
-    .on('end',()=>ComponentUpdater.updateComponentMenuConfigLayout.current())
+    .on('end',()=>{
+      ComponentUpdater.updateComponentMenuConfigLayout.current()
+      reDrawLegend()
+    })
 
         
 }

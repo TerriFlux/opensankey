@@ -85,7 +85,9 @@ export type EventOnZoneMouseUpFuncType = (
   legend_clicked:MutableRefObject<boolean>,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
-  node_function:NodeFunctionTypes
+  node_function:NodeFunctionTypes,
+  reDrawLegend:()=>void
+
 
 ) => void
 
