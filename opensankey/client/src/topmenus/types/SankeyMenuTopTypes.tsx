@@ -64,7 +64,7 @@ export type MenuDraggableFType = (
   'ref_setter_show_menu_link_tooltip' |'ref_setter_show_menu_layout' |
     'ref_setter_show_modal_welcome' | 'ref_setter_show_modale_tuto' | 'ref_setter_show_modale_support' | 'ref_setter_show_excel_dialog' |
     'ref_setter_show_save_json' | 'ref_getter_show_save_json' | 'ref_setter_show_apply_layout' |'ref_setter_show_modal_preference' |
-    'ref_setter_show_modal_template' |'ref_setter_show_load' |'ref_setter_show_menu_config' ,
+    'ref_setter_show_modal_template' |'ref_setter_show_load' ,
   content:JSX.Element|JSX.Element[],
   pointer_pos:{current:number[]},
   title:string,
