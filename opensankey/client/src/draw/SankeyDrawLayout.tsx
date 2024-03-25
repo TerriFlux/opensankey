@@ -353,6 +353,7 @@ export const nodeHeight : nodeHeightFType = (
 export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   data: SankeyData,
   h_space : number,
+  reset_scale
 ) => {
   const display_nodes = Object.keys(data.nodes)
     .filter((key) => NodeDisplayed(data,data.nodes[key]))
@@ -385,7 +386,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   max_link_value += 1 // Protection if all values are at 0
 
   // Get scale from max value
-  if (max_link_value !== 1) {
+  if (reset_scale) {
     data.user_scale = data.maximum_flux ? Math.min(data.maximum_flux, max_link_value): max_link_value
   }
 
