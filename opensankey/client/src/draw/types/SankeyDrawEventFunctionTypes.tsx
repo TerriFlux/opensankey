@@ -14,7 +14,6 @@ export type EventNodeClickFType = (
   d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
   ComponentUpdater:ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
 
 )=> void
 
@@ -94,14 +93,12 @@ export type SvgDragMiddleMouseStartFuncType = () => void
 export type SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unknown, unknown>, data: SankeyData) => void
 
 export type SimpleGNodeClickFuncType = (
-  dict_variable_application_data: dict_variable_application_dataType,
   uiElementsRef: uiElementsRefType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
   event: React.MouseEvent<HTMLButtonElement>,
   d: SankeyNode,
   accept_simple_click: { current: boolean} ,
   ComponentUpdater:ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
 
 ) => void
 

@@ -106,7 +106,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     ggg_nodes
       .filter(()=>!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))
       .on('click', (event, d) => SimpleGNodeClick(
-        dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click,ComponentUpdater,dict_hook_ref_setter_show_dialog_components
+        uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click,ComponentUpdater
       )
       )
       .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))

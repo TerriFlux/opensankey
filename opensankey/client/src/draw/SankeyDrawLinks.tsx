@@ -1,4 +1,4 @@
-import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType } from '../types/Types'
+import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, ComponentUpdaterType } from '../types/Types'
 import React, { MutableRefObject } from 'react'
 import * as d3 from 'd3'
 import {  AssignLinkLocalAttribute, LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode, TestLinkValue} from '../configmenus/SankeyUtils'
@@ -110,11 +110,9 @@ const eventLinkClick=(
   data: SankeyData,
   displayedInputLinkValueRef : MutableRefObject<React.Dispatch<React.SetStateAction<string>>[]>,
   ComponentUpdater:ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
 
 )=>{
   const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef}=dict_variable_elements_selected
-  const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const {updateComponentMenuConfigLink}=ComponentUpdater
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
@@ -145,20 +143,26 @@ const eventLinkClick=(
       }
 
     }
-    if((event.ctrlKey || event.metaKey)){
-      if ( !ref_getter_show_menu_config.current) {
-        ref_setter_show_menu_config.current(!ref_getter_show_menu_config.current)
-      }
-        
-      // Open element accordion if not already openend
-      if (accordion_ref && accordion_ref.current && d3.select(accordion_ref.current).attr('aria-expanded')==='false') {
-        accordion_ref.current.click()
-      }
 
-      // Open link accordion if not already openend
-      if ( links_accordion_ref && links_accordion_ref.current && d3.select(links_accordion_ref.current).attr('aria-expanded')==='false' ) {
-        links_accordion_ref.current.click()
-      }
+    if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
+      button_ref.current.click()
+    }
+    // Open element accordion if not already openend
+    if (
+      accordion_ref &&
+      accordion_ref.current &&
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
+      accordion_ref.current.click()
+    }
+
+    // Open link accordion if not already openend
+    if (
+      links_accordion_ref &&
+      links_accordion_ref.current &&
+      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
+      links_accordion_ref.current.click()
     }
     if(multi_selected_links.current.length>0){
       let new_tags_selected=tags_selected
@@ -375,7 +379,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
     event,d,sankeyTooltip,
     accordion_ref,button_ref,
     links_accordion_ref,dict_variable_application_data,dict_variable_elements_selected,data,displayedInputLinkValueSetterRef,
-    ComponentUpdater,dict_hook_ref_setter_show_dialog_components
+    ComponentUpdater
   )
   )
 }

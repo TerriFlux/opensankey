@@ -211,8 +211,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_modal_preference : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_modal_template : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    ref_setter_show_menu_config : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    ref_getter_show_menu_config : useRef<boolean>(),
     ref_show_style_node : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_show_style_link : useRef<Dispatch<SetStateAction<boolean>>>(()=>null)
   }
@@ -309,7 +307,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
 
   const closeAllMenu=()=>{
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_config.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_io.current(false)
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_tooltip.current(false)
