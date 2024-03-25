@@ -161,7 +161,9 @@ export const open_resources = {
         LegBgOpacity:'Opacity',
         LegBgBorder:'Border',
         LegBgColor:'Color',
-
+        open_excel_file:'Open an excel file',
+        input_file_excel:'Input file',
+        no_input_file_detected:'No file has been selected',
         Transformation : {
           amp_short:'Layout',
           amp:'Change the layout',
@@ -836,6 +838,9 @@ export const open_resources = {
         LegBgOpacity:'Opacité',
         LegBgBorder:'Bordure',
         LegBgColor:'Couleur',
+        open_excel_file:'Ouvrir fichier excel',
+        input_file_excel:'Fichier d\'entrée excel',
+        no_input_file_detected:'Aucun fichier n\'a été sélectionné',
         Transformation : {
           amp_short:'M.E.P',
           amp:'Modifier la mise en page',
