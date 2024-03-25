@@ -65,20 +65,15 @@ export const EventNodeClick : EventNodeClickFType =(
   d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
   ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components
 )=>{
-  const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const {ref_getter_mode_selection, multi_selected_nodes}=dict_variable_elements_selected
-  const {nodes_accordion_ref,accordion_ref}=uiElementsRef
+  const {nodes_accordion_ref,accordion_ref,button_ref}=uiElementsRef
   const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
   multi_selected_nodes.current.forEach(n=>DeselectVisualyNodes(n))
   if (  (event.ctrlKey || event.metaKey)) {
     ref_getter_mode_selection.current='s'
     d3.select(' .opensankey #svg').attr('class','mode_selection')
     sankeyTooltip.style('opacity', 0)
-    if(ref_getter_show_menu_config.current===false){
-      ref_setter_show_menu_config.current(true)
-    }
     multi_selected_nodes.current = multi_selected_nodes.current.filter(d => (d != null && d.name != ''))
     if (multi_selected_nodes.current.includes(d)) {
       multi_selected_nodes.current.splice(multi_selected_nodes.current.indexOf(d), 1)
@@ -88,14 +83,26 @@ export const EventNodeClick : EventNodeClickFType =(
         d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
       }
     }
+    console.log('node',button_ref,accordion_ref)
 
+    if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
+      button_ref.current.click()
+    }
     // Open element accordion if not already openend
-    if ( accordion_ref && accordion_ref.current && d3.select(accordion_ref.current).attr('aria-expanded')==='false' ) {
+    if (
+      accordion_ref &&
+      accordion_ref.current &&
+      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
       accordion_ref.current.click()
     }
 
     // Open node accordion if not already openend
-    if ( nodes_accordion_ref && nodes_accordion_ref.current && d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false' ) {
+    if (
+      nodes_accordion_ref &&
+      nodes_accordion_ref.current &&
+      d3.select(nodes_accordion_ref.current).attr('aria-expanded')==='false'
+    ) {
       nodes_accordion_ref.current.click()
     }
     
@@ -419,6 +426,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 
   const OpenLinksMenu = () => {
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
+      console.log('here to')
       button_ref.current.click()
     }
     // Open element accordion if not already openend
@@ -617,12 +625,10 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   uiElementsRef,
   applicationContext,
   link_function,
-  dict_hook_ref_setter_show_dialog_components
 ) => {
   const { data,display_links } = dict_variable_application_data
   const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,ref_getter_mode_selection} = dict_variable_elements_selected
-  const { accordion_ref, links_accordion_ref } = uiElementsRef
-  const {ref_getter_show_menu_config,ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
+  const { accordion_ref, links_accordion_ref,button_ref } = uiElementsRef
   const {GetLinkValue}=link_function
   if ((!event.ctrlKey && !event.metaKey) && first_selected_node.current && ref_getter_mode_selection.current=='ln') {
     if (d.name.includes('_tmp')) {
@@ -660,10 +666,9 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
 
       link_function.CreateLinksOnSVG([n_link])
 
-      if(ref_getter_show_menu_config.current===false){
-        ref_setter_show_menu_config.current(true)
+      if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
+        button_ref.current.click()
       }
-      
       // Open element accordion if not already openend
       if (
         accordion_ref &&
@@ -743,24 +748,25 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
 }
 
 export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
-  dict_variable_application_data,
   uiElementsRef,
   dict_variable_elements_selected,
   event,
   d,
   accept_simple_click,
   ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components
 ) => {
   const sankeyTooltip = (d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
   if ((event.target as HTMLSpanElement).tagName === 'tspan') {
     setTimeout(() => {
       if (accept_simple_click.current) {
-        EventNodeClick( uiElementsRef, dict_variable_elements_selected, event, d, sankeyTooltip,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+        console.log('no timout')
+        EventNodeClick( uiElementsRef, dict_variable_elements_selected, event, d, sankeyTooltip,ComponentUpdater)
       }
     }, 200)
   } else {
-    EventNodeClick(uiElementsRef, dict_variable_elements_selected, event, d, sankeyTooltip,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+    console.log('out of')
+
+    EventNodeClick(uiElementsRef, dict_variable_elements_selected, event, d, sankeyTooltip,ComponentUpdater)
   }
 }
 export const SvgDragMiddleMouseStart: SvgDragMiddleMouseStartFuncType = () => {
