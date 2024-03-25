@@ -79,7 +79,6 @@ import {
 import {
   OpenSankeyMenus, MenuDraggable, LastCheckpointTime, OpenSankeySaveButton, Menu
 } from './topmenus/SankeyMenuTop'
-import { CardsTemplateBuilder, welcomeModalBuilder } from './dialogs/SankeyModalWelcome'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuConfigurationNodesTooltip'
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
@@ -773,14 +772,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               node_function
             )}
             menus={sankey_menus}
-            cardsTemplate={CardsTemplateBuilder(
-              exemple_menu,
-              dict_variable_elements_selected,
-              dict_variable_application_data,
-              applicationContext,
-              Reinitialization,
-              convert_data
-            )}
+            cardsTemplate={<></>}
             external_modal={[
               <React.Fragment key={'modale_style_link'}>{SankeyModalStyleLink(
                 applicationContext,
@@ -809,13 +801,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 })}
                 t={applicationContext.t}
               /></React.Fragment> ,
-              welcomeModalBuilder(
-                applicationContext.t,
-                exemple_menu,
-                dict_hook_ref_setter_show_dialog_components,
-                never_see_again,
-                active_page
-              )
+              <></>
             ]}
             Reinitialization={Reinitialization}
             formations_menu={formations_menu}
