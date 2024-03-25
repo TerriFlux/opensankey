@@ -43,7 +43,7 @@ import {
   EventOnZoneMouseMove,
   EventOnZoneMouseUp
 } from './draw/SankeyDrawEventFunction'
-import { ContextLegendTags, DrawLegend } from './draw/SankeyDrawLegend'
+import { ContextLegendTags, drag_legend, DrawLegend } from './draw/SankeyDrawLegend'
 import { NodeTooltipsContent, LinkTooltipsContent } from './draw/SankeyTooltip'
 import {
   AdjustSankeyZone,
@@ -388,7 +388,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*******************************************************************************/
   const reDrawLegend=()=>{
-    DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked,ComponentUpdater)
+    DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked,ComponentUpdater,reDrawLegend)
+    if(!windowSankey.SankeyToolsStatic){
+      const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
+      g_legend.call(drag_legend(dict_variable_application_data.data,reDrawLegend))
+    }
   }
   /*******************************************************************************/
   const redrawAllNodes=()=>{
@@ -572,69 +576,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           legend_clicked,
           link_function,
           ComponentUpdater,
-          node_function
+          node_function,
+          reDrawLegend
         )
       })
     },100)
   }
   /*************************************************************************************************/
   useEffect(() => {
-    // Call the function that add nodes to the sankey
-    // DrawNodes(
-    //   contextMenu,
-    //   dict_variable_application_data,
-    //   uiElementsRef,
-    //   dict_variable_elements_selected,
-    //   ref_alt_key_pressed,
-    //   NodeTooltipsContent,
-    //   LinkText,
-    //   GetLinkValue,
-    //   accept_simple_click
-    // )
-    // OpenSankeyDrawNodesLabel(
-    //   data,
-    //   set_data as (d:SankeyData)=>void,
-    //   dict_variable_elements_selected.multi_selected_nodes,
-    //   GetLinkValue
-    // )
-
-    // // const suiteDrawArrows= DrawArrows
-    // d3.selectAll(' .opensankey #svg #sankey_def').remove()
-
-    // // const suiteLinkStroke= LinkStroke
-    // // const suiteDrawArrows= OpenSankeyDrawFunction.DrawArrows
-
-    // // Call the function that add links to the sankey
-    // d3.select(' .opensankey #svg #sankey_def').remove()
-    // d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
-    // DrawLinks(
-    //   contextMenu,
-    //   dict_variable_application_data,
-    //   uiElementsRef,
-    //   dict_variable_elements_selected,
-    //   ref_alt_key_pressed,
-    //   (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
-    //   (data:SankeyData,n: SankeyNode) => !NodeDisplayed(data,n) || (n.inputLinksId.length === 0) || (!ReturnValueLink(data,data.links[n.inputLinksId[0]],'arrow')) ? false : true,
-    //   LinkTooltipsContent,
-    //   LinkText,
-    //   GetLinkValue,
-    //   LinkStroke,
-    //   DrawArrows,
-    //   LinkColor
-    // )
-    // // Create traduction function
-    // DrawLegend(
-    //   dict_variable_application_data,
-    //   applicationContext,
-    //   contextMenu,
-    //   GetLinkValue,
-    //   legend_clicked
-    // )
-
-    // const g_legend=d3.select(' .opensankey #g_legend .drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
-    // if(!windowSankey.SankeyToolsStatic){
-    //   g_legend.call(drag_legend(data,set_data))
-    // }
 
     DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
     DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
