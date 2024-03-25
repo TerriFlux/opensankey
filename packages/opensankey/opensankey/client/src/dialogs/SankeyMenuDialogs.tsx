@@ -529,7 +529,7 @@ export const ApplyLayoutDialog = ({
           <Button
             size="sm"
             onClick={() => {
-              ComputeAutoSankey(sankey_data, node_hspace)
+              ComputeAutoSankey(sankey_data, node_hspace,false)
               set_sankey_data({ ...sankey_data })
             }}>
             {t('MEP.PA')}
