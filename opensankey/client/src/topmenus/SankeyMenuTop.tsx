@@ -521,18 +521,14 @@ export const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-  console.trace('render menu',show_nav)
 
 
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
-    console.log('hello click',show_nav)
     set_show_nav(!show_nav)
     if(!show_nav){
-      console.log('not show nav')
       actualizeDrawAreaFrame(dict_variable_application_data)
     }else{
-      console.log('show nav')
       d3.select('.scroll_zone').style('width',null)
     }
     setUpdate(!update)
