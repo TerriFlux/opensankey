@@ -83,7 +83,6 @@ export const EventNodeClick : EventNodeClickFType =(
         d3.select(' .opensankey #ggg_' + d.idNode+' .box_width_threshold').attr('visibility','visible')
       }
     }
-    console.log('node',button_ref,accordion_ref)
 
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
       button_ref.current.click()
@@ -427,7 +426,6 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 
   const OpenLinksMenu = () => {
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
-      console.log('here to')
       button_ref.current.click()
     }
     // Open element accordion if not already openend
@@ -760,12 +758,10 @@ export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
   if ((event.target as HTMLSpanElement).tagName === 'tspan') {
     setTimeout(() => {
       if (accept_simple_click.current) {
-        console.log('no timout')
         EventNodeClick( uiElementsRef, dict_variable_elements_selected, event, d, sankeyTooltip,ComponentUpdater)
       }
     }, 200)
   } else {
-    console.log('out of')
 
     EventNodeClick(uiElementsRef, dict_variable_elements_selected, event, d, sankeyTooltip,ComponentUpdater)
   }

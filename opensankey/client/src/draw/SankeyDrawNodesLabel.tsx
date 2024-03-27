@@ -32,17 +32,14 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
   )
   filtered_gggnodes.selectAll('.label_background,.node_text,.fo_input_label').remove()
 
-  const bg_text_node = ggg_nodes
-    .filter(n=>(ReturnValueNode(data,n,'label_visible') as boolean) && (ReturnValueNode(data,n,'label_background') as boolean))
-    .select('.label_background')
-    .attr('fill','white')
-    .attr('fill-opacity',0.55)
-    .attr('rx',4)
-
-  filtered_gggnodes
+  const bg_text_node = filtered_gggnodes
     .filter(n=>(ReturnValueNode(data,n,'label_visible') as boolean) && (ReturnValueNode(data,n,'label_background') as boolean))
     .append('rect')
     .attr('class','label_background')
+    .attr('id',n=>'label_bg_for_'+n.idNode)
+    .attr('fill','white')
+    .attr('fill-opacity',0.55)
+    .attr('rx',4)
     .attr('fill','white')
     .attr('fill-opacity',0.55)
     .attr('rx',4)
@@ -118,31 +115,37 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
   if(d3.select('.opensankey #svg').node()){
     const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
     const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-
     bg_text_node.attr('x',n=>{
       const box_zdd=document.getElementById('ggg_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0,width:0}
+      const size_shape=+d3.select('#shape_'+n.idNode).attr('width')
       const box_text=document.getElementById('text_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0,width:0}
       let horiz_shift=0
-      if(ReturnValueNode(data,n,'label_horiz')=='left'){
+      const pos_h=ReturnValueNode(data,n,'label_horiz')
+      if(pos_h=='left'){
         horiz_shift=box_text.width
-      }else if (ReturnValueNode(data,n,'label_horiz') == 'middle') {
-        return -(ReturnValueNode(data,n,'label_box_width')as number)/2
+      }else if (pos_h == 'middle' && size_shape<box_text.width) {
+        horiz_shift= (box_text.width-size_shape)/2
       }
-
+      
       return ((box_text.x)-box_zdd.x-horiz_shift)/scale_svg
     })
       .attr('y',n=>{
-        const box_zdd=document.getElementById('ggg_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0}
-
-        //Nombre de tspan dans la balise text
+        const pos_y=ReturnValueNode(data,n,'label_vert')
+        const org_text_pos= NodeLabelPosY(data,n as SankeyNode)
+        let shift_y=0
         const nb_tspan = d3.selectAll(' .opensankey #ggg_' + n.idNode + ' text tspan').nodes().length
-        const shift_if_above=ReturnValueNode(data,n,'label_vert')=='top'?(nb_tspan*(ReturnValueNode(data,n,'font_size') as number)):0
-        return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().y??0)-box_zdd.y)/scale_svg-shift_if_above
+        if(pos_y==='top'){
+          shift_y=(nb_tspan*(ReturnValueNode(data,n,'font_size') as number))
+        }else if(pos_y==='middle'){
+          if(nb_tspan===1){
+            shift_y=(ReturnValueNode(data,n,'font_size') as number)
+          }else{
+            shift_y=(nb_tspan-1)*(ReturnValueNode(data,n,'font_size') as number)
+          }
+        }
+        return org_text_pos-shift_y
       })
       .attr('width',n=>{
-        if (ReturnValueNode(data,n,'label_horiz') == 'middle') {
-          return ReturnValueNode(data,n,'label_box_width')as number
-        }
         return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0))/scale_svg+4
       })
       .attr('height',n=>{
