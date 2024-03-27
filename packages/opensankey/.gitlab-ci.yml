@@ -16,7 +16,7 @@ cache:
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   EIGEN_INCLUDE: /home/ubuntu/dev_opensankey/sankeysuitemanager/eigen
-  MFAData: /home/ubuntu/dev_opensankey/MFAData
+  TESTS_DIR: /home/ubuntu/dev_opensankey/Tests
   SankeyExcelParser: /home/ubuntu/dev_opensankey/SankeyExcelParser
 
 build:
@@ -26,7 +26,7 @@ build:
   script:
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
-    - echo $MFAData
+    - echo $TESTS_DIR
     - echo $SankeyExcelParser
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - pip install $SankeyExcelParser
@@ -43,7 +43,7 @@ test:
   script:
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
-    - echo $MFAData
+    - echo $TESTS_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - bash test.sh
   dependencies:
