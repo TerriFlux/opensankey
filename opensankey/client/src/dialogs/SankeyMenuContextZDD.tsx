@@ -135,8 +135,10 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       </Dropdown>
 
       <Dropdown.Item as={Button} variant='light' onClick={() => {
-        ComputeAutoSankey(data, node_hspace,false)
-        RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+        ComputeAutoSankey(dict_variable_application_data.data, node_hspace,false)
+        Object.values(dict_variable_application_data.display_nodes).forEach(n=>{
+          d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
+        })
         RedrawLinks(Object.values(dict_variable_application_data.display_links))
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>
