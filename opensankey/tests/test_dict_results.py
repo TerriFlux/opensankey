@@ -31,7 +31,7 @@ from opensankey.server import converter
 
 
 # Constants -------------------------------------------------------------------
-MFA_DATA_DIR = os.environ.get('MFAData')
+TESTS_DIR = os.environ.get('TESTS_DIR')
 XLPARSER_TESTS_REFS_DIR = 'ref_tests__SankeyExcelParser'
 SCMFA_TESTS_REFS_DIR = 'ref_tests__SCMFA'
 OPENSANKEY_TESTS_REFS_DIR = 'ref_tests__OpenSankey'
@@ -98,7 +98,7 @@ def parse_folder(current_dir):
                 # Get file name
                 file_relpath = os.path.relpath(
                     os.path.join(current_dir, file_or_folder),
-                    MFA_DATA_DIR)
+                    TESTS_DIR)
                 test_name = os.path.splitext(file_relpath)[0]
                 test_dir, test_subname = os.path.split(test_name)
                 # Update expected results
@@ -127,7 +127,7 @@ def parse_folder(current_dir):
 
 
 # Fill constants values
-parse_folder(MFA_DATA_DIR)
+parse_folder(TESTS_DIR)
 
 
 # Class -----------------------------------------------------------------------
@@ -191,7 +191,7 @@ class DictResultTest(unittest.TestCase):
         # Read sankey struct
         sankey = Sankey()
         load_sankey_from_excel_file(
-            os.path.join(MFA_DATA_DIR, file_name),
+            os.path.join(TESTS_DIR, file_name),
             sankey)
         # Convert in json format
         sankey_json = converter.extract_json_from_sankey(sankey)
@@ -211,7 +211,7 @@ class DictResultTest(unittest.TestCase):
                 test_ref = json.dumps(cls.new_results[test_name], indent=2)
                 test_dir, test_subname = os.path.split(test_name)
                 test_ref_dir = os.path.join(
-                    MFA_DATA_DIR,
+                    TESTS_DIR,
                     test_dir,
                     OPENSANKEY_TESTS_REFS_DIR)
                 # Write file
