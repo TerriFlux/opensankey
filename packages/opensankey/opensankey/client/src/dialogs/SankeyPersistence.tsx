@@ -331,7 +331,37 @@ export const ProcessExample: ProcessExampleFuncType = (
   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
   convert_data(data, DefaultSankeyData)
   if ((data as SankeyData & layout_type).layout === undefined) {
-    ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+    // Compute node position of all node according to their level tags
+    const lvl_tag_keys=Object.keys(data.levelTags)
+    // If data only have level Tag 'Primaire' then compute node position at each levle
+    if( (lvl_tag_keys.length == 1) && lvl_tag_keys[0]==='Primaire' ){
+      const prim=lvl_tag_keys[0]
+      Object.values(data.levelTags[prim].tags).reverse().forEach(tag_prim=>{
+      // Deselect all Primaire tags
+        Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
+        // Select current tag to compute position
+        tag_prim.selected=true
+        ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+      })
+    }else if((lvl_tag_keys.length > 1)){
+    // If data have multiple level Tag 
+    // then compute node position at each level of each level tag group
+    // except 'Primaire'
+
+      lvl_tag_keys.filter(kt=>kt!=='Primaire').forEach(kt=>{
+        Object.values(data.levelTags[kt].tags).reverse().forEach(tag_prim=>{
+        // Deselect all tags of the current grp tag
+          Object.values(data.levelTags[kt].tags).forEach(t=>t.selected=false)
+          // Select current tag to compute position
+          tag_prim.selected=true
+          ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+        })
+      })
+    
+    }else{
+      ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+
+    }
     callback(data)
     compute_default_input_outputLinksId(data.nodes, data.links)
     // Set sector/product style to node only when it come from an excel file and without a layout 
