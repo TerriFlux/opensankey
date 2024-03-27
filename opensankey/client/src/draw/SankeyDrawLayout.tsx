@@ -711,25 +711,6 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
     }
   }
 
-  // Propagate node position to sub-levels
-  // --> This can slighty change y-positions of node (node's y = mean value of desagregated nodes' y)
-  Object.values(data.nodes)
-    .filter(n => NodeDisplayed(data,n))
-    .forEach(n =>
-      desagregation(
-        data,
-        display_nodes,
-        display_links,
-        n.idNode,
-        (Object.keys(n.dimensions).length == 1 ?
-          'Primaire' :
-          Object
-            .keys(n.dimensions)
-            .filter(dim => dim !== 'Primaire')[0]),
-        true
-      )
-    )
-
   data.width = h_left_margin + max_horizontal_index * h_space + h_right_margin
   data.height = v_margin*2 + max_height_cumul
 
