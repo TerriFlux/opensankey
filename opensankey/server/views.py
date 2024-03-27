@@ -477,48 +477,6 @@ def parse_folder(current_dir, menus, key=None):
                 menus[key]['Files'].append(file_name)
                 menus[key]['Files'].sort()
                 exemple_found = True
-            # Save name of image in menu dict
-            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'image_preview' in folder_content):
-                file_names = os.listdir(os.path.join(current_dir, 'image_preview'))
-                for file_name in file_names:
-                    if key not in menus:
-                        menus[key] = {}
-                    if 'Image' not in menus[key]:
-                        menus[key]['Image'] = []
-                    # blob=send_file(file_name,mimetype='image/png')
-                    menus[key]['Image'].append(file_name)
-                    menus[key]['Image'].sort()
-            # Save name of image for carousel welcome in menu dict
-            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'image_carousel' in folder_content):
-                file_names = os.listdir(os.path.join(current_dir, 'image_carousel'))
-                for file_name in file_names:
-                    if key not in menus:
-                        menus[key] = {}
-                    if 'carousel_img' not in menus[key]:
-                        menus[key]['carousel_img'] = []
-                    # blob=send_file(file_name,mimetype='image/png')
-                    menus[key]['carousel_img'].append(file_name)
-                    menus[key]['carousel_img'].sort()
-            # Save template sorted in difficulty
-            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'easy_template' in folder_content):
-                file_names = os.listdir(os.path.join(current_dir, 'easy_template'))
-                for file_name in file_names:
-                    if key not in menus:
-                        menus[key] = {}
-                    if 'easy_template' not in menus[key]:
-                        menus[key]['easy_template'] = []
-                    menus[key]['easy_template'].append(file_name)
-                    menus[key]['easy_template'].sort()
-
-            if (os.path.split(current_dir)[1] == 'OpenSankey' and 'expert_template' in folder_content):
-                file_names = os.listdir(os.path.join(current_dir, 'expert_template'))
-                for file_name in file_names:
-                    if key not in menus:
-                        menus[key] = {}
-                    if 'expert_template' not in menus[key]:
-                        menus[key]['expert_template'] = []
-                    menus[key]['expert_template'].append(file_name)
-                    menus[key]['expert_template'].sort()
     if not exemple_found and key in menus:
         del menus[key]
     #  if not artefact_found and key in artefacts:
