@@ -19,7 +19,7 @@ import {
   Input,
 } from '@chakra-ui/react'
 /*************************************************************************************************/
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, dict_variable_application_dataType, treeFolderType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, dict_variable_application_dataType, treeFolderType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import {
   add_childrenFType,
@@ -44,7 +44,7 @@ import { DeleteGLinks } from '../draw/SankeyDrawLinks'
 
 
 type SankeyEditionTypes = {
-  t : TFunction,
+  applicationContext:applicationContextType,
   dict_variable_application_data:dict_variable_application_dataType,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes : JSX.Element[],
@@ -84,6 +84,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     dict_variable_application_data,
     dict_variable_elements_selected,
     node_function,
+    ComponentUpdater,
     false
   )
 
@@ -104,7 +105,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {t,
+  {applicationContext,
     dict_variable_application_data,
     multi_selected_nodes,
     menu_configuration_nodes,token,
@@ -113,6 +114,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }
 ) => {
   const {data}=dict_variable_application_data
+  const {t}=applicationContext
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
   const {updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
@@ -304,6 +306,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           onClick={() => {
             Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
             AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
+            ComponentUpdater.updateComponenSaveInCache.current(false)
             SelectVisualyNodes(multi_selected_nodes.current[0])
             setForceUpdate(!forceUpdate)
           }}>
@@ -362,6 +365,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
 
               node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
               link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              ComponentUpdater.updateComponenSaveInCache.current(false)
               
             }}>
           <FaMinus />

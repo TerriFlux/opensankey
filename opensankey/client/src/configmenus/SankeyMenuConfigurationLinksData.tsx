@@ -155,8 +155,8 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                 if (scale(+formatedValue) > 500) {
                   data.user_scale = +formatedValue
                 }
-                node_function.RedrawNodes(node_to_update)
-                link_function.RedrawLinks(multi_selected_links.current)
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
               }
               else if(formatedValue=='') {
                 let val = Object(multi_selected_links.current[0].value)
@@ -176,6 +176,8 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                 })
                 node_function.RedrawNodes(node_to_update)
                 link_function.RedrawLinks(multi_selected_links.current)
+                ComponentUpdater.updateComponenSaveInCache.current(false)
+                
               }
             }}/>
         </OverlayTrigger>

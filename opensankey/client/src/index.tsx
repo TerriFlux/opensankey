@@ -86,21 +86,18 @@ if (!window.SankeyToolsStatic) {
     method: 'POST'
   }
   // Search if can find example located on a server
-  let exemple_menu = {}
   let formations_menu = {}
   const path = window.location.origin
   const url = path + '/opensankey/sankey/menu_examples'
   fetch(url, fetchData).then(response => {
     response.text().then(text => {
       const json_data = JSON.parse(text)
-      exemple_menu = json_data.exemples_menu
       formations_menu = {...Object.fromEntries(Object.entries(json_data.exemples_menu['Formations']).filter(m=>m[0]=='0_OpenSankey'))}
       delete json_data.exemples_menu['Formations']
       render(
         <>
           <SankeyApp
             initial_sankey_data={data}
-            exemple_menu={exemple_menu}
             formations_menu={formations_menu}
             logo={logo}
             logo_terriflux={logo_terriflux}
@@ -113,7 +110,6 @@ if (!window.SankeyToolsStatic) {
         <>
           <SankeyApp
             initial_sankey_data={data}
-            exemple_menu={{}}
             formations_menu={{}}
             logo={logo}
             logo_terriflux={logo_terriflux}
@@ -140,7 +136,6 @@ if (!window.SankeyToolsStatic) {
     <>
       <SankeyApp
         initial_sankey_data={data}
-        exemple_menu={{}}
         formations_menu={{}}
         logo={logo}
         logo_terriflux={logo_terriflux}

@@ -1,6 +1,6 @@
 import { 
   dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, 
-  dict_variable_application_dataType, contextMenuType, NodeFunctionTypes, LinkFunctionTypes 
+  dict_variable_application_dataType, contextMenuType, NodeFunctionTypes, LinkFunctionTypes, ComponentUpdaterType 
 } from '../../types/Types'
 
 export type ContextMenuZddFType = {
@@ -10,5 +10,6 @@ export type ContextMenuZddFType = {
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  reDrawLegend:()=>void
+  reDrawLegend:()=>void,
+  ComponentUpdater:ComponentUpdaterType
 }

@@ -19,7 +19,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   link_function,
-  reDrawLegend
+  reDrawLegend,
+  ComponentUpdater
 }) => {
 
   const [ show_context_zdd, set_show_context_zdd ] = useState(false)
@@ -53,6 +54,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   const button_bg_grid=<><Button variant='light' onClick={()=>{
     data.grid_visible = !data.grid_visible
     setForceUpdate(!forceUpdate)
+    ComponentUpdater.updateComponenSaveInCache.current(false)
     DrawGrid(data)
   }}>{t('MEP.TCG')}{checked(data.grid_visible)}</Button>
   </>
@@ -66,6 +68,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       AssignNodeLocalAttribute(data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
     }
     RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    ComponentUpdater.updateComponenSaveInCache.current(false)
   }}>{t('Menu.rand_node_color')}</Button>
   </>
 
@@ -85,6 +88,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
             setForceUpdate(!forceUpdate)
             RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
             RedrawLinks(Object.values(dict_variable_application_data.display_links))
+            ComponentUpdater.updateComponenSaveInCache.current(false)
+
           }}
         />
       </Dropdown.Item>
@@ -111,6 +116,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
               onChange={evt => {
                 set_node_hspace(+evt.target.value)
                 data.h_space = +evt.target.value
+                ComponentUpdater.updateComponenSaveInCache.current(false)
               }}
             /></Dropdown.Item>
         </Dropdown.Menu>
@@ -129,6 +135,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
               onChange={evt => {
                 set_node_vspace(+evt.target.value)
                 data.h_space = +evt.target.value
+                ComponentUpdater.updateComponenSaveInCache.current(false)
               }}
             /></Dropdown.Item>
         </Dropdown.Menu>
@@ -140,6 +147,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
           d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
         })
         RedrawLinks(Object.values(dict_variable_application_data.display_links))
+  ComponentUpdater.updateComponenSaveInCache.current(false)
+
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown>
@@ -149,6 +158,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
     onClick={() => {
       data.mask_legend=!data.mask_legend
       reDrawLegend()
+  ComponentUpdater.updateComponenSaveInCache.current(false)
+
     }}>
     {data.mask_legend?t('MEP.hide_leg'):t('MEP.show_leg')}
   </Button>
@@ -158,6 +169,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       arrangeNodes(data)
       RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
       RedrawLinks(Object.values(dict_variable_application_data.display_links))
+  ComponentUpdater.updateComponenSaveInCache.current(false)
+
     }}>
     {t('MEP.AN')}
   </Button>
