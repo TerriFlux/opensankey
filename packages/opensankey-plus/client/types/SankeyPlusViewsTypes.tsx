@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { DictSetterInputValueType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusShowMenuComponentsType, ViewType, reDrawPlusLabelsFType } from './Types'
+import { DictSetterInputValueType, PlusApplicationContextType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusShowMenuComponentsType, ViewType, reDrawPlusLabelsFType } from './Types'
 import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { setDiagramFuncType } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
 

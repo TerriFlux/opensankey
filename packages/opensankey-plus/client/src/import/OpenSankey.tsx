@@ -17,7 +17,9 @@ import { complete_sankey_dataFunctType, ConvertDataFuncType, convert_nodesFuncTy
 import { 
   DrawArrowsType, NodeVisibleOnsSvgFuncType, 
   LinkVisibleOnsSvgFuncType, DeselectVisualyNodesFuncType, RemoveAnimateFuncType, 
-  DrawGridFType 
+  DrawGridFType, 
+  SelectVisualyNodesFType,
+  SelectVisualyLinksFType
 } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { LinkStrokeFuncType } from 'open-sankey/src/draw/types/SankeyDrawLinksTypes'
 import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
@@ -48,6 +50,10 @@ export const NodeVisibleOnsSvg = OpenSankeyDrawFunc.NodeVisibleOnsSvg as NodeVis
 export const LinkVisibleOnSvg = OpenSankeyDrawFunc.LinkVisibleOnSvg as LinkVisibleOnsSvgFuncType
 
 export const DeselectVisualyNodes = OpenSankeyDrawFunc.DeselectVisualyNodes as DeselectVisualyNodesFuncType
+
+export const SelectVisualyNodes = OpenSankeyDrawFunc.SelectVisualyNodes as SelectVisualyNodesFType
+
+export const SelectVisualyLinks = OpenSankeyDrawFunc.SelectVisualyLinks as SelectVisualyLinksFType
 
 export const RemoveAnimate = OpenSankeyDrawFunc.RemoveAnimate as RemoveAnimateFuncType
 

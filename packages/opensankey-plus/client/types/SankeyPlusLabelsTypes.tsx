@@ -1,4 +1,4 @@
-import { dict_variable_application_dataType } from 'open-sankey/src/types/Types'
+import { LinkFunctionTypes, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { DictSetterInputValueType, PlusApplicationContextType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, reDrawPlusLabelsFType } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
@@ -13,14 +13,12 @@ export type PlusDrawLabelsFType = (
   applicationContext:PlusApplicationContextType,
   d_setter_input_value:DictSetterInputValueType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  LinkText: LinkTextFuncType,
-  GetLinkValue:GetLinkValueFuncType,
-  DrawArrows:DrawArrowsType,
   start_point:{current:number[]},
   closeAllMenuContext:()=>void,
   ComponentUpdater:PlusComponentUpdaterType,
   object_to_update:SankeyPlusLabel[],
-  reDrawPlusLabels:reDrawPlusLabelsFType
+  reDrawPlusLabels:reDrawPlusLabelsFType,
+  link_function:LinkFunctionTypes
 
   ) => void
 
@@ -28,15 +26,12 @@ export type PlusDrawLabelsFType = (
 export type eventLabelClickFType=(
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyPlusLabel,
-  data:SankeyPlusData,
   uiElementsRef:PlusUiElementsRefType,
   d_setter_input_value:DictSetterInputValueType,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  set_data:(d:SankeyPlusData)=>void,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},
   ComponentUpdater:PlusComponentUpdaterType,
-  reDrawPlusLabels:reDrawPlusLabelsFType
 )=> void
 
 // Function used to drag the free label
@@ -49,7 +44,7 @@ export type sankey_plus_min_width_and_heightFType = (
 export type zone_selection_labelFType=(data:SankeyPlusData,
   multi_selected_label:{current:SankeyPlusLabel[]},
   evt:MouseEvent,
-  reDrawPlusLabels:reDrawPlusLabelsFType
+  ComponentUpdater:PlusComponentUpdaterType
 ) => void
 
 export type sankey_plus_zoom_text_zoneFType = (
