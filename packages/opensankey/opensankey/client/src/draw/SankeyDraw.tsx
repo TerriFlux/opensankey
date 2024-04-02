@@ -358,10 +358,9 @@ export const keyHandler : keyHandlerFType = (
   }else if(e.key=='s' && e.ctrlKey && !e.shiftKey){
     e.preventDefault()
     localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-    const time_save=new Date()
-    const parsed_time_save=time_save.toLocaleDateString() +' - ' + time_save.toLocaleTimeString()
-    localStorage.setItem('last_save', parsed_time_save)
-    ComponentUpdater.updateComponenTimeCheckpoint.current()
+    localStorage.setItem('last_save', 'true')
+    
+    ComponentUpdater.updateComponenSaveInCache.current(true)
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
     ClickSaveDiagram(data)

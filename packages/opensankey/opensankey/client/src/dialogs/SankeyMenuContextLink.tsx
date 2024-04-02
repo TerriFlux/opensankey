@@ -318,7 +318,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
               })
               RedrawNodes(impacted_node)
               RedrawLinks(link_to_update)
-
+              ComponentUpdater.updateComponenSaveInCache.current(false)
             }
             else if(formatedValue=='') {
               const impacted_node:SankeyNode[]=[]
@@ -346,6 +346,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
               
               RedrawNodes(impacted_node)
               RedrawLinks(link_to_update)
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+
             }
           }}
 
@@ -386,6 +388,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           link_to_update=[...new Set(link_to_update)]
           const list_links=link_to_update.map(lid=>data.links[lid])
           link_function.RedrawLinks(list_links)
+          ComponentUpdater.updateComponenSaveInCache.current(false)
+
         }}>{t('Flux.if')}</Button>
 
         {sep}
