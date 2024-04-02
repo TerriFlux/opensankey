@@ -1,8 +1,7 @@
-import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, dict_variable_application_dataType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, dict_variable_application_dataType } from '../../types/Types'
 
 export type SankeySettingsEditionElementTagsTypes = {
-    t:TFunction,
+    applicationContext:applicationContextType,
     dict_variable_application_data : dict_variable_application_dataType,
     elementTagNameProp: 'nodeTags' | 'fluxTags' | 'dataTags',
     elementNameProp: 'nodes' | 'links' | 'none',

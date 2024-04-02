@@ -88,6 +88,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                   setForceUpdate(!forceUpdate)
                   updateComponentMenuConfigNodeAppearence.current()
                   RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+  ComponentUpdater.updateComponenSaveInCache.current(false)
                 
                 }
               }
@@ -106,6 +107,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                 data.style_node[selected_style_node].name = evt.target.value
                 setForceUpdate(!forceUpdate)
                 updateComponentMenuConfigNodeAppearence.current()
+                ComponentUpdater.updateComponenSaveInCache.current(false)
               }}
             />
           </InputGroup>
@@ -145,7 +147,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
     updateComponentMenuConfig:useRef(()=>null),
     updateComponentMenuConfigLayout:useRef(()=>null),
     updateComponentMenu:useRef(()=>null),
-    updateComponenTimeCheckpoint:useRef(()=>null),
+    updateComponenSaveInCache:useRef(()=>null),
     updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[])
   }
   if(selected_style_link !== 'default'){

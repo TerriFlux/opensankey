@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
+import { ComponentUpdaterType, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
 
@@ -15,9 +15,7 @@ export type AddAllDropDownFluxFType = (
   t:TFunction,
   fluxTags: TagsCatalog,
   dict_variable_application_data:dict_variable_application_dataType,
-  reDrawLegend:()=>void,
-  node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes,
+  redrawNodeLinkLegend:()=>void,
   recomputeDisplayedElement:()=>void
 
 ) => JSX.Element
@@ -53,8 +51,7 @@ export type SankeyModalWelcomeFType = (
     rc: JSX.Element;
     licence?: JSX.Element;
     news: JSX.Element;
-  },
-  exemple_menu: object
+  }
 )=> JSX.Element
 
 export type MenuDraggableFType = (
@@ -71,7 +68,7 @@ export type MenuDraggableFType = (
   width_menu?:number
 )=> JSX.Element
 
-export type OpenSankeySaveButtonFType = (t:TFunction) => JSX.Element
+export type OpenSankeySaveButtonFType = (ComponentUpdater:ComponentUpdaterType,applicationContext:applicationContextType) => JSX.Element
  
 export type LastCheckpointTimeFType = (t:TFunction,ComponentUpdater:ComponentUpdaterType) => JSX.Element
 export type SankeyMenuFileExportFType=(
