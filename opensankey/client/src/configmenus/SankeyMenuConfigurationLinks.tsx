@@ -297,8 +297,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(
       ReturnCorrectLinkAttributeValue(data,link,'opacity',false) as string)
     )
-    data.linkZIndex.push(
-      link.idLink)
+    data.linkZIndex.push(link.idLink)
+    ComponentUpdater.updateComponenSaveInCache.current(false)
     set_data({ ...data })
     set_show_link(true)
   }
@@ -329,6 +329,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
       RedrawNodes([source_node,previous_node])
       link_function.RedrawLinks(link_to_update)
+      ComponentUpdater.updateComponenSaveInCache.current(false)
+      
     } else if(Object.keys(data.nodes).length>1){
       set_pre_idSource(changeEvent.target.value)
     }
@@ -379,6 +381,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
       RedrawNodes([target_node,previous_node])
       link_function.RedrawLinks(link_to_update)
+      ComponentUpdater.updateComponenSaveInCache.current(false)
+      
     }else if(Object.keys(data.nodes).length>1){
       set_pre_idTarget(changeEvent.target.value)
     }
@@ -547,6 +551,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
               node_function.RedrawNodes(nodes_to_reorganize)
               link_function.RedrawLinks(multi_selected_links.current)
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+              
             }}
           >
             <FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/>

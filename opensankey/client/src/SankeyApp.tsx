@@ -77,7 +77,7 @@ import {
   ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
 import {
-  OpenSankeyMenus, MenuDraggable, LastCheckpointTime, OpenSankeySaveButton, Menu
+  OpenSankeyMenus, MenuDraggable, OpenSankeySaveButton, Menu
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuConfigurationNodesTooltip'
@@ -92,7 +92,6 @@ import { RedrawNodesLabel } from './draw/SankeyDrawNodesLabel'
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   initial_sankey_data,
-  exemple_menu,
   formations_menu,
   logo,
   logo_terriflux
@@ -105,7 +104,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     app_name : 'SankeySuite',//TODO
     url_prefix : '/opensankey/',
     logo : logo,
-    logo_terriflux : logo_terriflux,
+    logo_terriflux : logo_terriflux
   }
   /*************************************************************************************************/
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
@@ -237,7 +236,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     updateComponentMenuConfig:useRef(()=>null),
     updateComponentMenuConfigLayout:useRef(()=>null),
     updateComponentMenu:useRef(()=>null),
-    updateComponenTimeCheckpoint:useRef(()=>null),
+    updateComponenSaveInCache:useRef(()=>null),
     updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[])
 
   }
@@ -276,7 +275,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const accept_simple_click=useRef(true)
   const elementToDispose = useRef([''])
   const never_see_again = useRef((localStorage.getItem('dontSeeAggainWelcome')==='1'))
-  const active_page = useRef<Dispatch<SetStateAction<string>>>(()=>null)
   const ref_alt_key_pressed = useRef(false)
   /*************************************************************************************************/
   const mode_pref=sessionStorage.getItem('modepref')
@@ -466,7 +464,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   )
 
   // MENU DRAGGABLE NODE tag selection
-  const menu_node_tags = SankeyMenuConfigurationNodesTags(applicationContext,dict_variable_application_data,dict_variable_elements_selected,node_function,true)
+  const menu_node_tags = SankeyMenuConfigurationNodesTags(applicationContext,dict_variable_application_data,dict_variable_elements_selected,node_function,ComponentUpdater,true)
 
   const menuNodeTags= MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
@@ -494,7 +492,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const {filter}=dict_variable_application_data.data.display_style
   const toolbar = ToolbarBuilder(
-    applicationContext.t,
+    applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
     filter,
@@ -716,7 +714,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               dict_hook_ref_setter_show_dialog_components,
               menu_configuration_layout,
               <SankeySettingsEditionElementTags
-                t={applicationContext.t}
+                applicationContext={applicationContext}
                 dict_variable_application_data={dict_variable_application_data}
                 elementTagNameProp='nodeTags'
                 elementNameProp='nodes'
@@ -725,7 +723,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 ComponentUpdater={ComponentUpdater}
               />,
               <SankeySettingsEditionElementTags
-                t={applicationContext.t}
+                applicationContext={applicationContext}
                 dict_variable_application_data={dict_variable_application_data}
                 elementTagNameProp='fluxTags'
                 elementNameProp='links'
@@ -734,7 +732,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 ComponentUpdater={ComponentUpdater}
               />,
               <SankeySettingsEditionElementTags
-                t={applicationContext.t}
+                applicationContext={applicationContext}
                 dict_variable_application_data={dict_variable_application_data}
                 elementTagNameProp='dataTags'
                 elementNameProp='links'
@@ -806,8 +804,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             Reinitialization={Reinitialization}
             formations_menu={formations_menu}
             additional_nav_item={[
-              LastCheckpointTime(applicationContext.t,ComponentUpdater),
-              OpenSankeySaveButton(applicationContext.t)
+              OpenSankeySaveButton(ComponentUpdater,applicationContext)
             ]}
             convert_data={convert_data}
             elementToDispose={elementToDispose}
@@ -839,6 +836,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         agregation = {agregation}
         node_function={node_function}
         link_function={link_function}
+        ComponentUpdater={ComponentUpdater}
         additional_context_element_menu = {[<></>]}
         additional_context_element_other = {[<></>]}
       />
@@ -860,6 +858,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         node_function={node_function}
         link_function={link_function}
         reDrawLegend={reDrawLegend}
+        ComponentUpdater={ComponentUpdater}
 
       />
       <ContextLegendTags

@@ -30,6 +30,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   agregation,
   node_function,
   link_function,
+  ComponentUpdater,
   additional_context_element_menu,
   additional_context_element_other
 }) => {
@@ -91,6 +92,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     })
     link_to_update=[...new Set(link_to_update)]
     RedrawLinks(link_to_update.map(lid=>data.links[lid]))
+    ComponentUpdater.updateComponenSaveInCache.current(false)
+
   }
 
   // Dropdown to change some pararmeter concerning the appearence of the node
@@ -129,6 +132,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
                   }
                 })
                 RedrawNodes(multi_selected_nodes.current)
+                ComponentUpdater.updateComponenSaveInCache.current(false)
+
               }}>
                 {nt[1].tags[t].name}{checked(contextualised_node.tags[nt[0]] &&contextualised_node.tags[nt[0]].includes(t))}
               </Dropdown.Item>
@@ -165,6 +170,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
             multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>n.style=sn.idNode)
 
             RedrawNodes(multi_selected_nodes.current)
+            ComponentUpdater.updateComponenSaveInCache.current(false)
+
           }}>{sn.name}</Dropdown.Item>
         })
       }
@@ -180,6 +187,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         delete contextualised_node!.local
         multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>delete n.local)
         RedrawNodes(multi_selected_nodes.current)
+        ComponentUpdater.updateComponenSaveInCache.current(false)
+
       }}>{t('Noeud.AS')}</Dropdown.Item>
       {dropdown_c_n_style_select}
     </Dropdown.Menu>
@@ -372,6 +381,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       set_contextualised_node(undefined)
       contextMenu.ref_contextualised_node.current = undefined
       RedrawNodes(multi_selected_nodes.current)
+      ComponentUpdater.updateComponenSaveInCache.current(false)
+
     }}>
     {t('Noeud.Reorg')}
   </Button>
@@ -382,6 +393,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     set_data({...data})
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
+    ComponentUpdater.updateComponenSaveInCache.current(false)
+
   }}>{t('Noeud.context_agregate')}</Button>:<></>
 
   const btn_desagregate=multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node &&NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
@@ -390,6 +403,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     set_data({...data})
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
+    ComponentUpdater.updateComponenSaveInCache.current(false)
+
   }}>{t('Noeud.context_desagregate')}</Button>:<></>
 
   const btn_mask_shape=<Button variant='light'
@@ -398,6 +413,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         AssignNodeLocalAttribute(n,'shape_visible',!contextualised_node_shape_visible)
       })
       RedrawNodes(multi_selected_nodes.current)
+      ComponentUpdater.updateComponenSaveInCache.current(false)
+
     }}
   >
     {contextualised_node_shape_visible?t('Noeud.apparence.hide_shape'):t('Noeud.apparence.display_shape')}
@@ -409,6 +426,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         AssignNodeLocalAttribute(n,'label_visible',!contextualised_node_label_visible)
       })
       RedrawNodes(multi_selected_nodes.current)
+      ComponentUpdater.updateComponenSaveInCache.current(false)
+
     }}
   >
     {contextualised_node_label_visible?t('Noeud.apparence.hide_label'):t('Noeud.apparence.display_label')}
@@ -420,6 +439,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         AssignNodeLocalAttribute(n,'show_value',!contextualised_node_value_visible)
       })
       RedrawNodes(multi_selected_nodes.current)
+      ComponentUpdater.updateComponenSaveInCache.current(false)
+
     }}
   >
     {contextualised_node_value_visible?t('Noeud.apparence.hide_value'):t('Noeud.apparence.display_value')}
@@ -476,6 +497,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 
             RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
             RedrawLinks(Object.values(dict_variable_application_data.display_links))
+            ComponentUpdater.updateComponenSaveInCache.current(false)
+
           }}>
           {t('Menu.suppr')}
         </Button>

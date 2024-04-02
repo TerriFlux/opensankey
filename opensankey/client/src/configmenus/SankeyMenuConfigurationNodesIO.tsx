@@ -547,6 +547,8 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           })
           node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
           link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+          ComponentUpdater.updateComponenSaveInCache.current(false)
+          
           setForceUpdate(!forceUpdate)
         }}>
         {t('Noeud.Reorg')}

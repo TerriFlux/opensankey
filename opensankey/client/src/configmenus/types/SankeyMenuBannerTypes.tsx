@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
@@ -26,7 +26,8 @@ export type col_title_level_filterFType=(
 
 
 export type addAllDropDownNodeFType = (
-  t:TFunction,
+  applicationContext:applicationContextType,
+  ComponentUpdater:ComponentUpdaterType,
   dict_variable_application_data:dict_variable_application_dataType,
   level:boolean,
   reDrawLegend:()=>void,
@@ -40,7 +41,7 @@ export type addAllDropDownNodeFType = (
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
  */
 export type ToolbarBuilderFType = (
-  t:TFunction,
+  applicationContext:applicationContextType,
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   filter:number,

@@ -468,7 +468,6 @@ export type callbackFuncType = (server_data: SankeyData) => void
 
 export type SankeyAppTypes = {
   initial_sankey_data : SankeyData
-  exemple_menu        : object
   formations_menu      : object
   logo: string,
   logo_terriflux: string,
@@ -512,7 +511,7 @@ export type ComponentUpdaterType={
   updateComponentMenuConfig:MutableRefObject<()=>void>
   updateComponentMenuConfigLayout:MutableRefObject<()=>void>
   updateComponentMenu:MutableRefObject<()=>void>
-  updateComponenTimeCheckpoint:MutableRefObject<()=>void>
+  updateComponenSaveInCache:MutableRefObject<(b:boolean)=>void>
   updateComponentMenuNodeIOSelectSideNode:MutableRefObject<(()=>void)[]>
 
 

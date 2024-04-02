@@ -38,11 +38,11 @@ import { SankeyConfigurationMenu } from '../configmenus/SankeyMenuConfiguration'
 import { ExcelModal,ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { TFunction } from 'i18next'
 import { MultiSelect } from 'react-multi-select-component'
-import { faFloppyDisk,faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,faPlus} from '@fortawesome/free-solid-svg-icons'
+import { faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,faPlus, faCloudArrowUp, faExclamation, faCheck} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import {LastCheckpointTimeFType, MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, SankeyMenuFileExportFType} from './types/SankeyMenuTopTypes'
+import {MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, SankeyMenuFileExportFType} from './types/SankeyMenuTopTypes'
 import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue } from '../configmenus/SankeyUtils'
 import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
@@ -1028,36 +1028,36 @@ const  DataTagsDDNavBar = (
   return allDD
 }
 export const OpenSankeySaveButton : OpenSankeySaveButtonFType = (
-  t:TFunction
+  ComponentUpdater,
+  applicationContext
 )=>{
+  const last_save=localStorage.getItem('last_save')
+  const has_save_in_cache=last_save!==undefined && last_save!==null
+
+  const [forceUpdate,setForceUpdate]=useState(true)
+  ComponentUpdater.updateComponenSaveInCache.current=(b:boolean)=>setForceUpdate(b)
+  let indicator_saved_data=<></>
+  if(has_save_in_cache){
+    const color_icon=forceUpdate?'success':'danger'
+    indicator_saved_data=<FontAwesomeIcon icon={forceUpdate?faCheck:faExclamation} style={{ position:'relative',right:'0.5em', width:'1em', fontSize:'1em', color: 'rgba(var(--bs-'+color_icon+'-rgb), var(--bs-bg-opacity))'}} />
+    
+  }
   return <>
     <OverlayTrigger
       key={'buttonCheckpoint'}
       placement={'left'}
       delay={500}
-      overlay={(<Tooltip id={'buttonCheckpoint'}>{t('Menu.tooltips.checkpoint')} </Tooltip>)}
+      overlay={(<Tooltip id={'buttonCheckpoint'}>{applicationContext.t('Menu.tooltips.checkpoint')} </Tooltip>)}
     >
       <Button variant='light' onClick={() => {const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
         if (ev.onkeydown) {
           ev.onkeydown(tmp)
         }
-      }}  ><FontAwesomeIcon style={{width:'2rem',height:'2rem'}} icon={faFloppyDisk} /></Button></OverlayTrigger></>
+      }}  ><FontAwesomeIcon style={{width:'2.5rem',height:'2.5rem'}} icon={faCloudArrowUp} />
+        {indicator_saved_data}
+      </Button></OverlayTrigger></>
 }
-export const LastCheckpointTime : LastCheckpointTimeFType =(
-  t:TFunction,
-  ComponentUpdater
-)=>{
-  const [forceUpdate,setForceUpdate]=useState(false)
-  ComponentUpdater.updateComponenTimeCheckpoint.current=()=>setForceUpdate(!forceUpdate)
-  const last_save=localStorage.getItem('last_save')
-  let l_s_c=''
-  const has_save=last_save!==undefined && last_save!==null
-  if(last_save!==undefined && last_save!==null){
-    l_s_c=last_save
-  }
-  return has_save?<Form.Label style={{marginTop:'auto',marginBottom:'auto',fontSize:'10px'}}>{t('Menu.last_save')+' : ' + l_s_c}</Form.Label>:<></>
 
-}
 
 
 
