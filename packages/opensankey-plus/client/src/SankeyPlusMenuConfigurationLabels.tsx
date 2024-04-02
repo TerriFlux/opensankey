@@ -102,10 +102,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   const [s_editor_content_fo_zdt,sEditorContentFOZdt]= useState('')
   const [forceUpdate,setForceUpdate]=useState(false)
   const {updateComponentMenuConfigZdt} = ComponentUpdater
-  updateComponentMenuConfigZdt.current=()=>setForceUpdate(!forceUpdate)
+  updateComponentMenuConfigZdt.current.push(()=>setForceUpdate(!forceUpdate))
   d_setter_input_value.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
-
-
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
@@ -123,8 +121,6 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     reDrawPlusLabels(Object.values(data.labels))
     setForceUpdate(!forceUpdate)
   }
-
-
   //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleDownlabel = (i: string) => {
@@ -172,7 +168,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             }else{
               d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
             }
-            updateComponentMenuConfigZdt.current()
+            updateComponentMenuConfigZdt.current.forEach(f=>f())
           }}
           labelledBy={'hello'}
         />
@@ -395,7 +391,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             deleteGLabel(multi_selected_label.current,d_setter_input_value)
             data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
             multi_selected_label.current = []
-            updateComponentMenuConfigZdt.current()
+            updateComponentMenuConfigZdt.current.forEach(f=>f())
           }
           }><FaMinus /></Button>
 
@@ -679,7 +675,7 @@ export const context_zdt : context_zdtFType =(
     multi_selected_label.current.forEach(zdt=>zdt.transparent_border=!valAllLabelBorderTransparent[0])
     set_zdt_to_contextualise(undefined)
     reDrawPlusLabels(multi_selected_label.current)
-    updateComponentMenuConfigZdt.current()
+    updateComponentMenuConfigZdt.current.forEach(f=>f())
   }} variant='light'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
 
 
@@ -698,7 +694,7 @@ export const context_zdt : context_zdtFType =(
         const val = evt.target.value
         multi_selected_label.current.map(d => d.color = val)
         reDrawPlusLabels(multi_selected_label.current)
-        updateComponentMenuConfigZdt.current()
+        updateComponentMenuConfigZdt.current.forEach(f=>f())
       }}
     />
   </>

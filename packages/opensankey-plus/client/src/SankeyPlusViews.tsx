@@ -252,7 +252,7 @@ export const keyHandler : keyHandlerFType = (
     e.preventDefault()
     multi_selected_label.current=Object.values(data.labels)
     reDrawPlusLabels(multi_selected_label.current)
-    ComponentUpdater.updateComponentMenuConfigZdt.current()
+    ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
   }
   // Clone current data,if its a view clone the view
   if (connected && e.key === 'x' && (e.ctrlKey||e.metaKey)) {
@@ -340,6 +340,8 @@ export const keyHandler : keyHandlerFType = (
     }else{
       // Save current data (wich is master_data)
       localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+      localStorage.setItem('last_save', 'true')
+      ComponentUpdater.updateComponenSaveInCache.current(true)
     }
 
 
@@ -537,7 +539,7 @@ export const keyHandler : keyHandlerFType = (
       deleteGLabel(multi_selected_label.current,d_setter_input_value)
       data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
       multi_selected_label.current=[]
-      ComponentUpdater.updateComponentMenuConfigZdt.current()
+      ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
     }
   }
 }

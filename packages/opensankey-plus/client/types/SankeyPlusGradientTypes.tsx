@@ -1,11 +1,11 @@
-import { TFunction } from 'i18next'
-import { PlusLinkFuntionType, SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from './Types'
+import { PlusApplicationContextType, PlusComponentUpdaterType, PlusLinkFuntionType, SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { SankeyData, SankeyLink, SankeyNode, display_styleType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
 
 export type menu_conf_link_apparence_gradientFType=(
-  t:TFunction,
+  applicationContext:PlusApplicationContextType,
+  ComponentUpdater:PlusComponentUpdaterType,
   multi_selected_links:{current:SankeyPlusLink[]},
   data:SankeyPlusData,
   link_function:PlusLinkFuntionType,

@@ -152,7 +152,7 @@ export interface SankeyUnitData extends SankeyPlusData{
 }
 
 export interface PlusComponentUpdaterType extends ComponentUpdaterType{
-  updateComponentMenuConfigZdt:MutableRefObject<()=>void>
+  updateComponentMenuConfigZdt:MutableRefObject<(()=>void)[]>
 }
 
 export type reDrawIllustrationFType=(node_to_update:SankeyPlusNode[])=>void

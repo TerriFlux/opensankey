@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { OverlayTrigger, Tooltip, Badge} from 'react-bootstrap'
-import { TFunction } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplayingValueLocal, NodeColor, LinkStrokeOSTyped, DrawArrows } from './import/OpenSankey'
@@ -15,7 +14,8 @@ import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/configmenus/
 
 
 export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradientFType =(
-  t:TFunction,
+  applicationContext,
+  ComponentUpdater,
   multi_selected_links:{current:SankeyPlusLink[]},
   data:SankeyPlusData,
   link_function,
@@ -23,6 +23,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   menu_for_style:boolean,
   selected_style_link,
 )=>{
+  const {t}=applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
   // I have to do this because when we change selected_style_link it only re-render SankeyModalStyleLink 
   // who re-render MenuConfigurationLinksAppearence 
@@ -58,6 +59,8 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
             PlusAssignLinkValueToCorrectVar(d,'gradient',evt.target.checked,menu_for_style)
           })
           link_function.RedrawLinks(multi_selected_links.current)
+          ComponentUpdater.updateComponenSaveInCache.current(false)
+          
           setForceUpdate(!forceUpdate)
         }}>
         {t('Flux.apparence.grad')}
