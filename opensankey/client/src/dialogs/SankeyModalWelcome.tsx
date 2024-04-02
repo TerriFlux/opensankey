@@ -30,8 +30,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   never_see_again,
   additional_shortcut_item,
   external_pagination,
-  external_content,
-  exemple_menu: object
+  external_content
 )=>{
   const [show_wecome,set_show_welcome]=useState(!never_see_again.current)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current=set_show_welcome

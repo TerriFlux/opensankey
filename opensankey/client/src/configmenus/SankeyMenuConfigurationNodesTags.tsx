@@ -16,6 +16,7 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   node_function,
+  ComponentUpdater,
   menu_for_modal=false
 )=> {
   const { t } = applicationContext
@@ -96,6 +97,8 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
                 })
                 setForceUpdate(!forceUpdate)
                 node_function.RedrawNodes(multi_selected_nodes.current)
+                ComponentUpdater.updateComponenSaveInCache.current(false)
+                
               }}>
               {tags[1].name}
             </Checkbox>

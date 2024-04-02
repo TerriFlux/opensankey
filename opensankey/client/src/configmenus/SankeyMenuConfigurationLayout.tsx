@@ -190,6 +190,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               reDrawLegend()
               RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
               RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+              
             }}
           >
             <NumberInputField/>
@@ -265,6 +267,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
                 setForceUpdate(!forceUpdate)
                 RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
                 RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                ComponentUpdater.updateComponenSaveInCache.current(false)
+                
               }}
             >
               <NumberInputField/>
@@ -303,6 +307,8 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
                 setForceUpdate(!forceUpdate)
                 RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
                 RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                ComponentUpdater.updateComponenSaveInCache.current(false)
+                
               }}
             >
               <NumberInputField/>
