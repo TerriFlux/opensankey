@@ -136,7 +136,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             </AccordionButton>
             <AccordionPanel>
               <SankeyNodeEdition
-                t={t}
+                applicationContext={applicationContext}
                 dict_variable_application_data={dict_variable_application_data}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}

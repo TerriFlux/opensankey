@@ -65,6 +65,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     if(!menu_for_style){
       updateComponentMenuConfigNode.current()
     }
+    ComponentUpdater.updateComponenSaveInCache.current(false)
     setForceUpdate(!forceUpdate)
   }
   const getBrowserName = () => {
@@ -998,6 +999,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   n.style = d
                 })
                 ApplyStyleToNodes(multi_selected_nodes,node_function)
+                ComponentUpdater.updateComponenSaveInCache.current(false)
                 
               }}
             >{data.style_node[d].name}</Dropdown.Item>)
@@ -1017,6 +1019,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
          
           onClick={() => {
             ApplyStyleToNodes(multi_selected_nodes,node_function)
+            ComponentUpdater.updateComponenSaveInCache.current(false)
+
           }}>
           {t('Noeud.AS')}
         </Button>

@@ -83,6 +83,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   const {updateComponentMenuConfigLink}=ComponentUpdater
 
   const updateMenuConfigLink=()=>{
+    ComponentUpdater.updateComponenSaveInCache.current(false)
+    
     link_function.RedrawLinks(multi_selected_links.current)
     updateComponentMenuConfigLink.current()
   }

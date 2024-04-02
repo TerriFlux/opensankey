@@ -1,6 +1,6 @@
 import { 
   agregationType, applicationContextType, dict_variable_application_dataType, 
-  contextMenuType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType, NodeFunctionTypes, LinkFunctionTypes 
+  contextMenuType, dict_variable_elements_selectedType, dict_hook_ref_setter_show_dialog_componentsType, NodeFunctionTypes, LinkFunctionTypes, ComponentUpdaterType 
 } from '../../types/Types'
 
 export type ContextMenuNodeFType = {
@@ -12,6 +12,7 @@ export type ContextMenuNodeFType = {
   agregation: agregationType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType,
   additional_context_element_menu:JSX.Element[],
   additional_context_element_other:JSX.Element[],
  }
