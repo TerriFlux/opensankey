@@ -3,7 +3,6 @@ import { defineStyle } from '@chakra-ui/react'
 export const button_base_style = defineStyle({
   width: '100%',
   margin: '0',
-  padding: '0',
   border: 'solid 1px ',
   borderRadius: '6px',
   borderColor: 'grey.50',
@@ -22,15 +21,22 @@ export const button_base_style = defineStyle({
 })
 
 export const menuconfigpanel_option_button = defineStyle({
-  size: 'xs',
   height: '2rem',
   minWidth: '4.5rem',
   textStyle: 'h4',
   fontSize: '12px',
 })
 
+export const menuconfigpanel_option_button_activated = defineStyle({
+  height: '2rem',
+  minWidth: '4.5rem',
+  textStyle: 'h4',
+  fontSize: '12px',
+  bg: 'openSankey.200',
+  bgColor: 'openSankey.200',
+})
+
 export const menuconfigpanel_add_button = defineStyle({
-  size: 'xs',
   height: '2rem',
   textStyle: 'h4',
   fontSize: '12px',
@@ -43,7 +49,6 @@ export const menuconfigpanel_add_button = defineStyle({
 })
 
 export const menuconfigpanel_del_button = defineStyle({
-  size: 'xs',
   height: '2rem',
   textStyle: 'h4',
   fontSize: '12px',
