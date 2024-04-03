@@ -1,5 +1,6 @@
 import React,{useState} from 'react'
 import { OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import {
   Box,
   Checkbox,
@@ -14,7 +15,6 @@ import {
 } from '@chakra-ui/react'
 
 import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { DrawGrid } from '../draw/SankeyDrawFunction'
 
 export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
