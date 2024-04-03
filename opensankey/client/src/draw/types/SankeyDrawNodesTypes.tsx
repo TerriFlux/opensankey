@@ -19,7 +19,6 @@ export type DrawAllNodesFType = (
   node_function:NodeFunctionTypes
 ) => void
 
-export type package_for_DrawAllNodes_Type=Parameters<DrawAllNodesFType>
   
 
 export type AddDrawNodesFType = (

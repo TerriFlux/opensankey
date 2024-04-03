@@ -263,8 +263,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     multi_selected_links.current.forEach(l=>{
       AssignLinkLocalAttribute(l,'label_visible',!context_link_label_visible)
     })
-
-
+    setForceUpdate(!forceUpdate)
   }} variant='light'>{context_link_label_visible?t('Flux.apparence.hide_link_lab'):t('Flux.apparence.display_link_lab')}</Button>:<></>
 
   const button_open_link_tooltip=contextualised_link!==undefined?<Button onClick={()=>{
