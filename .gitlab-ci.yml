@@ -16,7 +16,7 @@ cache:
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   EIGEN_INCLUDE: /home/ubuntu/dev_opensankey/sankeysuitemanager/eigen
-  TESTS_DIR: /home/ubuntu/dev_opensankey/Tests
+  TESTS_DIR: /home/ubuntu/dev_opensankey/sankeysuitemanager/Tests
   SankeyExcelParser: /home/ubuntu/dev_opensankey/SankeyExcelParser
 
 build:
