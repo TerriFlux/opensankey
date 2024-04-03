@@ -266,6 +266,11 @@ export const ApplyLayoutDialog = ({
             onClick={() => {
               if(!elementToDispose.current.includes('Values')){
                 elementToDispose.current.push('Values')
+                // Also need dataTags because we can't only import values without the structur of dataTags
+                // (but we can import dataTags without values)
+                if(!elementToDispose.current.includes('tagData')){
+                  elementToDispose.current.push('tagData')
+                }
                 setForceUpdate(!forceUpdate)
               }else{
                 elementToDispose.current.splice(elementToDispose.current.indexOf('Values'),1)
@@ -358,7 +363,7 @@ export const ApplyLayoutDialog = ({
               if(!elementToDispose.current.includes('tagData')){
                 elementToDispose.current.push('tagData')
                 setForceUpdate(!forceUpdate)
-              }else{
+              }else if(!elementToDispose.current.includes('Values')){
                 elementToDispose.current.splice(elementToDispose.current.indexOf('tagData'),1)
                 setForceUpdate(!forceUpdate)
               }}
