@@ -113,8 +113,8 @@ export const DrawLegend : DrawLegendFType= (
 
       const title_size=document.getElementById('GrpTag_title_'+tag_group[0])?.getBoundingClientRect().height??0
 
-      vert_shift=0
-      const legendElements2 = legend.append('g')
+      vert_shift=5
+      const legendElements2 = legend.append('g').attr('transform','translate(0,5)')
 
       Object.entries(tag_group[1].tags)
         .filter((d)=>d[1].selected )
@@ -135,14 +135,13 @@ export const DrawLegend : DrawLegendFType= (
             return true
           }
           return  false
-        }).forEach((tag,i)=>{
-          
+        }).forEach((tag)=>{
           const tagElement=legendElements2.append('g')
             .attr('id','tag_'+tag[1].name.replaceAll(' ','__')
             )
             .attr('transform', ()=>{
-              dy=(i * (data.legend_police/2) + title_size+vert_shift)
-              return 'translate(' + dx + ',' + dy + ')'
+              dy+=((data.legend_police*0.9) + title_size)
+              return 'translate(' + dx + ',' + (dy) + ')'
             })
             .on('mouseover',()=>{
   
@@ -239,20 +238,19 @@ export const DrawLegend : DrawLegendFType= (
           // Ajout du label
           tagElement.append('text')
             .attr('x', 35)
-            .attr('y', data.legend_police)
+            .attr('y', 0)
             .attr('font-size',data.legend_police+'px')
             .text(()=> { return tag[1].name })
             .call(wrap)
 
 
           vert_shift=document.getElementById('tag_'+tag[1].name.replaceAll(' ','__'))?.getBoundingClientRect().height??0
-          tagElement.select('rect').attr('y',vert_shift/4)
+          tagElement.select('rect').attr('y',-10-data.legend_police/4)
         })
-
     })
 
     if(data.legend_show_dataTags){
-      dy+=30+vert_shift
+      dy+=vert_shift
     
       const data_tags = Object.assign({},data.dataTags)
       const show_data=Object.values(data_tags).filter(d=>d.show_legend).length>0
@@ -268,8 +266,8 @@ export const DrawLegend : DrawLegendFType= (
           .attr('style', ('font-size:'+data.legend_police+'px;'+((show_data)?'font-weight:bold;':'')))
           .call(wrap)
 
-        vert_shift=document.getElementById('leg_dataTag_'+tag_group[0])?.getBoundingClientRect().height??0
-        dy+=vert_shift
+        // vert_shift=document.getElementById('leg_dataTag_'+tag_group[0])?.getBoundingClientRect().height??0
+        // dy+=vert_shift
           
         if(show_data){
           const legendElements = legend.append('g')
@@ -310,9 +308,7 @@ export const DrawLegend : DrawLegendFType= (
             .text((d)=>d[1].name)
             .call(wrap)
         } 
-
         dx = dx + pas
-
       })
     }
 
@@ -322,7 +318,7 @@ export const DrawLegend : DrawLegendFType= (
     // - when diagramme type is : data reconciled + indetermined links (values), we explain the meaning of "*" in the link label
     // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
     if(sankey_has_interval_value){
-      dy+=vert_shift
+      dy+=vert_shift+5
       const free_value=legend.append('g').attr('class','g_legend_free_value').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
       
       free_value.append('text').text('*').attr('x','5')
