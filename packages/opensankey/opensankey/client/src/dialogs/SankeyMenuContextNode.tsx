@@ -37,7 +37,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 }) => {
   const [ contextualised_node, set_contextualised_node] = useState<SankeyNode>()
   contextMenu.ref_setter_contextualised_node.current=set_contextualised_node
-
+  const [forceUpdate,setForceUpdate]=useState(false)
   const { t } = applicationContext
   const { data, set_data, display_nodes, display_links } = dict_variable_application_data
   const { multi_selected_nodes,multi_selected_links } = dict_variable_elements_selected
@@ -126,7 +126,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
           </Dropdown.Toggle>
           <Dropdown.Menu  variant='light'>
             {Object.keys(nt[1].tags).map(t=>{
-              return <Dropdown.Item as={Button} variant='light' onClick={()=>{
+              return <Dropdown.Item onClick={()=>{
                 // Contextualised node
                 if(!Object.keys(contextualised_node.tags).includes(nt[0])){
                   contextualised_node.tags[nt[0]]=[]
@@ -148,6 +148,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
                   }
                 })
                 RedrawNodes(multi_selected_nodes.current)
+                setForceUpdate(!forceUpdate)
                 ComponentUpdater.updateComponenSaveInCache.current(false)
 
               }}>
@@ -429,6 +430,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         AssignNodeLocalAttribute(n,'shape_visible',!contextualised_node_shape_visible)
       })
       RedrawNodes(multi_selected_nodes.current)
+      setForceUpdate(!forceUpdate)
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
     }}
@@ -442,6 +444,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         AssignNodeLocalAttribute(n,'label_visible',!contextualised_node_label_visible)
       })
       RedrawNodes(multi_selected_nodes.current)
+      setForceUpdate(!forceUpdate)
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
     }}
@@ -455,6 +458,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         AssignNodeLocalAttribute(n,'show_value',!contextualised_node_value_visible)
       })
       RedrawNodes(multi_selected_nodes.current)
+      setForceUpdate(!forceUpdate)
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
     }}
