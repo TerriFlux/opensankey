@@ -9,6 +9,7 @@ import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { AssignLinkLocalAttribute, ReturnValueLink, updateLinkTagValue } from '../configmenus/SankeyUtils'
 import * as d3 from 'd3'
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction'
+import { Placement } from 'react-bootstrap/esm/types'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -51,8 +52,24 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   const tags_selected = Object.fromEntries(newEntries)
 
   let style_c_l='0px 0px auto auto'
+  let placement='end' as Placement
+  let is_top=true
+  let pos_x=pointer_pos.current[0]+10
+  let pos_y=pointer_pos.current[1]-20
+
+  // The limit value of the mouse position that engages the shift of the context menu 
+  // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if(contextualised_link){
-    style_c_l=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
+    if(pointer_pos.current[0]+240>window.innerWidth){
+      pos_x=pointer_pos.current[0]-245
+      placement=('start' as Placement)
+    }
+
+    if(pointer_pos.current[1]+360>window.innerHeight){
+      pos_y=pointer_pos.current[1]-340
+      is_top=false
+    }
+    style_c_l=pos_y+'px auto auto '+pos_x+'px'
   }
 
   const invert_flux=(l:SankeyLink,nodes_to_reorganize: SankeyNode[])=>{
@@ -358,7 +375,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
 
 
   // Pop over that serve as context menu
-  return contextualised_link!==undefined?<Popover id="context_link_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
+  return contextualised_link!==undefined?<Popover id="context_link_pop_over" placement={placement} className={'context_popover '+(is_top?'':'at_bot')} style={{maxWidth:'100%',position:'absolute',inset:style_c_l}}>
     <Popover.Body >
       <ButtonGroup vertical>
         <Button variant='light' onClick={()=>{
