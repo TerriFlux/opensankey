@@ -104,6 +104,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           onChange={(evt) => {
             data.grid_visible = evt.target.checked
             DrawGrid(data)
+            setForceUpdate(!forceUpdate)
           }}
         >
           {t('MEP.TCG')}
