@@ -88,7 +88,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                   setForceUpdate(!forceUpdate)
                   updateComponentMenuConfigNodeAppearence.current()
                   RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-  ComponentUpdater.updateComponenSaveInCache.current(false)
+                  ComponentUpdater.updateComponenSaveInCache.current(false)
                 
                 }
               }
