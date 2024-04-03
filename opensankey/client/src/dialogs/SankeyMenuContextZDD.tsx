@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { GetRandomInt, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { DrawGrid } from '../draw/SankeyDrawFunction'
+import { Placement } from 'react-bootstrap/esm/types'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -40,10 +41,25 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
 
 
   let style_c_zdd='0px 0px auto auto'
+  let placement='end' as Placement
+  let is_top=true
+  let pos_x=pointer_pos.current[0]+10
+  let pos_y=pointer_pos.current[1]-20
+  
+  // The limit value of the mouse position that engages the shift of the context menu 
+  // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if(show_context_zdd){
-    style_c_zdd=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
-  }
+    if(pointer_pos.current[0]+450>window.innerWidth){
+      pos_x=pointer_pos.current[0]-455
+      placement=('start' as Placement)
+    }
 
+    if(pointer_pos.current[1]+330>window.innerHeight){
+      pos_y=pointer_pos.current[1]-310
+      is_top=false
+    }
+    style_c_zdd=pos_y+'px auto auto '+pos_x+'px'
+  }
   const button_bg_color=<Form as={Button} variant='light'><Form.Control hidden type='color' id='color_bg_zdd' name='color_bg_zdd' onChange={(evt)=>{
     data.couleur_fond_sankey=evt.target.value
     d3.select('body').style('background-color',data.couleur_fond_sankey)
@@ -200,7 +216,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
     set_show_context_zdd(false)
 
   }} variant='light'>{t('Menu.MEP')} {icon_open_modal}</Button>
-  return show_context_zdd?<Popover id="context_zdd_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
+  return show_context_zdd?<Popover id="context_zdd_pop_over" className={'context_popover '+(is_top?'':'at_bot')} placement={placement} style={{maxWidth:'100%',position:'absolute',inset:style_c_zdd}}>
     <Popover.Body >
       <ButtonGroup vertical>
         {button_pa}
