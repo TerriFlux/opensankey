@@ -16,6 +16,7 @@ import { ContextMenuNodeFType } from './types/SankeyMenuContextNodeTypes'
 import { SankeyNode } from '../types/Types'
 import { DeleteGLinks } from '../draw/SankeyDrawLinks'
 import { DeleteGNodes } from '../draw/SankeyDrawNodes'
+import { Placement } from 'react-bootstrap/esm/types'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
@@ -44,10 +45,25 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   const {RedrawNodes}=node_function
   const {RedrawLinks} = link_function
   let style_c_n='0px 0px auto auto'
-  if(contextualised_node){
-    style_c_n=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'
-  }
+  let placement='end' as Placement
+  let is_top=true
+  let pos_x=pointer_pos.current[0]+10
+  let pos_y=pointer_pos.current[1]-20
   
+  // The limit value of the mouse position that engages the shift of the context menu 
+  // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
+  if(contextualised_node){
+    if(pointer_pos.current[0]+410>window.innerWidth){
+      pos_x=pointer_pos.current[0]-400
+      placement=('start' as Placement)
+    }
+
+    if(pointer_pos.current[1]+490>window.innerHeight){
+      pos_y=pointer_pos.current[1]-470
+      is_top=false
+    }
+    style_c_n=pos_y+'px auto auto '+pos_x+'px'
+  }
   const contextualised_node_shape_visible=contextualised_node!==undefined?ReturnValueNode(data,contextualised_node,'shape_visible'):false
   const contextualised_node_label_visible=contextualised_node!==undefined?ReturnValueNode(data,contextualised_node,'label_visible'):false
   const contextualised_node_value_visible=contextualised_node!==undefined?ReturnValueNode(data,contextualised_node,'show_value'):false
@@ -455,7 +471,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   }} variant='light'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
 
   // Pop over that serve as context menu
-  return contextualised_node!==undefined?<Popover id="context_node_pop_over" style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
+  return contextualised_node!==undefined?<Popover id="context_node_pop_over" placement={placement} className={'context_popover '+(is_top?'':'at_bot')} style={{maxWidth:'100%',position:'absolute',inset:style_c_n}}>
     <Popover.Body>
       <ButtonGroup vertical>
         {btn_aggregate}
