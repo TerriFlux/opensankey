@@ -147,7 +147,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
           d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
         })
         RedrawLinks(Object.values(dict_variable_application_data.display_links))
-  ComponentUpdater.updateComponenSaveInCache.current(false)
+        ComponentUpdater.updateComponenSaveInCache.current(false)
 
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>
@@ -158,7 +158,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
     onClick={() => {
       data.mask_legend=!data.mask_legend
       reDrawLegend()
-  ComponentUpdater.updateComponenSaveInCache.current(false)
+      ComponentUpdater.updateComponenSaveInCache.current(false)
 
     }}>
     {data.mask_legend?t('MEP.hide_leg'):t('MEP.show_leg')}
@@ -169,7 +169,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       arrangeNodes(data)
       RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
       RedrawLinks(Object.values(dict_variable_application_data.display_links))
-  ComponentUpdater.updateComponenSaveInCache.current(false)
+      ComponentUpdater.updateComponenSaveInCache.current(false)
 
     }}>
     {t('MEP.AN')}
