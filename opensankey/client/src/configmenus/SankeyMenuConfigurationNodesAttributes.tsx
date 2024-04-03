@@ -178,7 +178,19 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             onChange={evt=>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
               updateMenuConfigNode()
-              
+              if(!menu_for_style){
+                // Redraw link attached to modified node that are 'produit' because we specified a user case where 'produit' nodes control link color 
+                let link_to_update:string[]=[]
+                multi_selected_nodes.current.filter(n=>n.tags&&n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('produit')).forEach(n=>{
+                  link_to_update=link_to_update.concat(n.outputLinksId)
+                  link_to_update=link_to_update.concat(n.inputLinksId)
+                })
+                link_to_update=[...new Set(link_to_update)]
+                const list_links=link_to_update.map(lid=>data.links[lid])
+                RedrawLinks(list_links)
+              }else{
+                RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              }
             }}
           />:<Form.Control
             type='color'
@@ -191,7 +203,19 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             }}
             onBlurCapture={()=>{
               updateMenuConfigNode()
-              
+              if(!menu_for_style){
+                // Redraw link attached to modified node that are 'produit' because we specified a user case where 'produit' nodes control link color 
+                let link_to_update:string[]=[]
+                multi_selected_nodes.current.filter(n=>n.tags&&n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('produit')).forEach(n=>{
+                  link_to_update=link_to_update.concat(n.outputLinksId)
+                  link_to_update=link_to_update.concat(n.inputLinksId)
+                })
+                link_to_update=[...new Set(link_to_update)]
+                const list_links=link_to_update.map(lid=>data.links[lid])
+                RedrawLinks(list_links)
+              }else{
+                RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              }
             }}
           />}</Col>
         <Col>
