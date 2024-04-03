@@ -123,7 +123,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
             applicationContext,
             d,
             GetSankeyMinWidthAndHeight
-          ,scale,inv_scale,start_point,ComponentUpdater,reDrawPlusLabels,link_function
+            ,scale,inv_scale,start_point,ComponentUpdater,reDrawPlusLabels,link_function
           )
         )
         gg_label.append('rect')

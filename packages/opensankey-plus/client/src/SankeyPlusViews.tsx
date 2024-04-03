@@ -68,10 +68,9 @@ import {
   SankeyUnitData
 } from '../types/Types'
 import {
-  updateLayoutOSTyped,
-  AdjustSankeyZone
+  updateLayoutOSTyped
 } from './import/OpenSankey'
-import { deleteGLabel, sankey_plus_min_width_and_height } from './SankeyPlusLabels'
+import { deleteGLabel } from './SankeyPlusLabels'
 
 /* eslint-disable */
 // @ts-ignore
@@ -365,10 +364,6 @@ export const keyHandler : keyHandlerFType = (
     if(saved){
       set_view('none')
       set_data(JSON.parse(JSON.stringify(master_data)))
-      setTimeout(()=>{
-        AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
-      },100)
-
     }
   }
   // Changing view to next or previous
@@ -401,10 +396,6 @@ export const keyHandler : keyHandlerFType = (
       if(saved){
         set_data({...data_view as SankeyPlusData})
         set_view(master_data!.view[ind-1].id)
-        // AdjustSankeyZone(master_data.view[ind-1].view_data as SankeyPlusData,GetSankeyMinWidthAndHeight)
-        setTimeout(()=>{
-          AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
-        },100)
       }
 
     } else if (e.key === 'F9') {
@@ -445,9 +436,6 @@ export const keyHandler : keyHandlerFType = (
       if(saved){
         set_data(data_view)
         set_view(new_master_data!.view[ind+1].id)
-        setTimeout(()=>{
-          AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
-        },100)
       }
       //}
     }
@@ -608,16 +596,10 @@ export const SelecteurView : SelecteurViewFType =(
             new_master_data.current_view=evt.target.value
             set_master_data(new_master_data)
 
-            setTimeout(()=>{
-              AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
-            },100)
 
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
             set_data(JSON.parse(JSON.stringify(master_data)))
-            setTimeout(()=>{
-              AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
-            },100)
           }
         }
       }
@@ -1396,14 +1378,8 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
             if(view !== 'none'){
               const data_view=GetDataFromView(master_data,view) as SankeyPlusData
               set_data(data_view)
-              setTimeout(()=>{
-                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
-              },100)
             } else if(view === 'none'){
               set_data({...master_data!})
-              setTimeout(()=>{
-                AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
-              },100)
             }
             set_view_not_saved('')
           }}
@@ -1421,15 +1397,9 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
               const data_view=GetDataFromView(master_data,view) as SankeyPlusData
               set_master_data({...JSON.parse(JSON.stringify(master_data))})
               set_data(data_view)
-              setTimeout(()=>{
-                AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
-              },100)
 
             } else if(view === 'none'){
               set_data({...JSON.parse(JSON.stringify(master_data))})
-              setTimeout(()=>{
-                AdjustSankeyZone(dict_variable_application_data!,sankey_plus_min_width_and_height)
-              },100)
             }
             set_view_not_saved('')
           }}
