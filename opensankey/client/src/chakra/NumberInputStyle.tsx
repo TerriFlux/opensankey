@@ -4,7 +4,11 @@ import { createMultiStyleConfigHelpers } from '@chakra-ui/react'
 const { definePartsStyle } = createMultiStyleConfigHelpers(numberInputAnatomy.keys)
 
 export const numberinput_base_style = definePartsStyle({
+  root: {
+    width: '100%'
+  },
   field: {
+    width: '100%',
     height: '2rem',
     border: 'solid 1px ',
     borderRadius: '6px',
