@@ -7,7 +7,8 @@ import {
   button_base_style,
   menuconfigpanel_add_button,
   menuconfigpanel_del_button,
-  menuconfigpanel_option_button
+  menuconfigpanel_option_button,
+  menuconfigpanel_option_button_activated
 } from './Button'
 import {
   checkbox_base_style,
@@ -26,8 +27,10 @@ import {
 } from './NumberInputStyle'
 import {
   select_base_style,
-  select_custom_style
+  select_custom_style,
+  select_police_style
 } from './SelectStyle'
+import { slider_base_style } from './Slider'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -39,6 +42,7 @@ export const opensankey_theme = extendTheme({
       baseStyle: button_base_style,
       variants: {
         menuconfigpanel_option_button,
+        menuconfigpanel_option_button_activated,
         menuconfigpanel_add_button,
         menuconfigpanel_del_button
       }
@@ -66,8 +70,12 @@ export const opensankey_theme = extendTheme({
     Select: {
       baseStyle: select_base_style,
       variants: {
-        select_custom_style
+        select_custom_style,
+        select_police_style
       }
+    },
+    Slider: {
+      baseStyle: slider_base_style
     }
   },
   layerStyles: {
@@ -135,6 +143,12 @@ export const opensankey_theme = extendTheme({
       gridColumnGap: '0.25rem',
       height: '2rem'
     },
+    menuconfigpanel_row_stylechoice: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 6fr 1fr',
+      gridColumnGap: '0.25rem',
+      height: '2rem'
+    },
     menuconfigpanel_row_2cols: {
       display: 'grid',
       gridTemplateColumns: '2fr 3fr',
@@ -148,6 +162,30 @@ export const opensankey_theme = extendTheme({
       gridColumnGap: '0.25rem',
       gridRowGap: '0',
       height: '3rem'
+    },
+    option_with_activation: {
+      display: 'grid',
+      gridTemplateColumns: '2fr 1fr',
+      gridColumnGap: '0.12rem',
+      height: '2rem'
+    },
+    options_2cols: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gridColumnGap: '0.12rem',
+      height: '2rem'
+    },
+    options_3cols: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr',
+      gridColumnGap: '0.12rem',
+      height: '2rem'
+    },
+    options_4cols: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr 1fr',
+      gridColumnGap: '0.12rem',
+      height: '2rem'
     }
   },
   textStyles: {
