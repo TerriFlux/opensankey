@@ -25,25 +25,27 @@ import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/
  * @returns {*}
  */
 export const ApplyLayoutDialog = ({ 
-  t,dict_hook_ref_setter_show_dialog_components, sankey_data, set_sankey_data,
+  t,dict_hook_ref_setter_show_dialog_components, 
+  dict_variable_application_data,
   updateLayout,convert_data,
   diagramSelector,
   elementToDispose,
   apply_transformation_additional_elements,
   DefaultSankeyData
 }: ApplyLayoutDialogTypes) => {
-  const [prev_sankey_data,set_prev_sankey_data] = useState(sankey_data)
+  const {data,set_data}=dict_variable_application_data
+  const [prev_sankey_data,set_prev_sankey_data] = useState(data)
   const [forceUpdate,setForceUpdate] = useState(true)
   const [stretchFactorH,set_stretchFactorH]=useState(1)
   const [stretchFactorV,set_stretchFactorV]=useState(1)
   const [mode_trans,set_mode_trans]=useState('simple')
-  const [node_hspace,set_node_hspace] = useState(sankey_data.h_space)
-  const [node_vspace,set_node_vspace] = useState(sankey_data.v_space)
-  if ( node_hspace !== sankey_data.h_space) {
-    set_node_hspace(sankey_data.h_space)
+  const [node_hspace,set_node_hspace] = useState(data.h_space)
+  const [node_vspace,set_node_vspace] = useState(data.v_space)
+  if ( node_hspace !== data.h_space) {
+    set_node_hspace(data.h_space)
   }
-  if ( node_vspace !== sankey_data.v_space) {
-    set_node_vspace(sankey_data.v_space)
+  if ( node_vspace !== data.v_space) {
+    set_node_vspace(data.v_space)
   }
   const node_visible=NodeVisibleOnsSvg()
   const all_element_to_transform = [
@@ -75,19 +77,19 @@ export const ApplyLayoutDialog = ({
   const applyStretch=(param:string)=>{
     const attr=param=='h'?'x':'y'
     const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
-    let min=Object.values(sankey_data.nodes)[0][attr]
+    let min=Object.values(data.nodes)[0][attr]
     // Cheche la position en y du noeud le plus en haut à gauche
-    Object.values(sankey_data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
+    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
       min=(n[attr]<min)?n[attr]:min
     })
 
     // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
     // applique le delta mutiplié par le facteur au noeud
-    Object.values(sankey_data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
+    Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && n.position!='relative').forEach(n=>{
       const delta=n[attr]-min
       n[attr]=min+(delta*stretchFactor)
     })
-    set_sankey_data({...sankey_data})
+    set_data({...data})
   }
   const content_modal_layout=  <Tabs defaultActiveKey={'import'} >
 
@@ -102,7 +104,7 @@ export const ApplyLayoutDialog = ({
       
 
       {diagramSelector(
-        t, convert_data, sankey_data,set_sankey_data, prev_sankey_data, set_prev_sankey_data, 
+        t, convert_data, data,set_data, prev_sankey_data, set_prev_sankey_data, 
         updateLayout, elementToDispose,DefaultSankeyData
       )}
       <OverlayTrigger
@@ -435,7 +437,7 @@ export const ApplyLayoutDialog = ({
             value={node_hspace}
             onChange={evt => {
               set_node_hspace(+evt.target.value)
-              sankey_data.h_space = +evt.target.value
+              data.h_space = +evt.target.value
             }}/>
         </OverlayTrigger>
         
@@ -453,7 +455,7 @@ export const ApplyLayoutDialog = ({
             value={node_vspace}
             onChange={evt => {
               set_node_vspace(+evt.target.value)
-              sankey_data.v_space = +evt.target.value
+              data.v_space = +evt.target.value
             }}/>
         </OverlayTrigger>
         
@@ -533,9 +535,13 @@ export const ApplyLayoutDialog = ({
           overlay={<Tooltip id={'MEP.tooltips.PA'}>{t('MEP.tooltips.PA')} </Tooltip>}>
           <Button
             size="sm"
-            onClick={() => {
-              ComputeAutoSankey(sankey_data, node_hspace,false)
-              set_sankey_data({ ...sankey_data })
+            onClick={() => {              
+              dict_variable_application_data.function_on_wait.current=()=>{
+                ComputeAutoSankey(data, node_hspace,false)
+                set_data({ ...data })
+              }
+              dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
+      
             }}>
             {t('MEP.PA')}
           </Button>
@@ -548,8 +554,8 @@ export const ApplyLayoutDialog = ({
           <Button
             size="sm"
             onClick={() => {
-              arrangeNodes(sankey_data)
-              set_sankey_data({ ...sankey_data })
+              arrangeNodes(data)
+              set_data({ ...data })
             }}>
             {t('MEP.AN')}
           </Button>
