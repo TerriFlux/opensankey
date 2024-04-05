@@ -7,7 +7,7 @@ import {
   sankey_plus_zoom_text_zoneFType, zone_selection_labelFType
 } from '../types/SankeyPlusLabelsTypes'
 
-import { GetSankeyMinWidthAndHeight,NodeVisibleOnsSvg,LinkVisibleOnSvg,DeselectVisualyNodes, SelectVisualyNodes, SelectVisualyLinks} from './import/OpenSankey'
+import { GetSankeyMinWidthAndHeight,selectOpensankeyElementsInSelectionZone} from './import/OpenSankey'
 
 import { PlusDragElements,PlusReturnOutOfBoundElements,OpposingDragElementsPlus } from './SankeyPlusNodes'
 import { LinkFunctionTypes } from 'open-sankey/src/types/Types'
@@ -232,8 +232,8 @@ const dragLabelEvent = (
 )=>{
   const { LinkText,GetLinkValue,DrawArrows,RedrawLinks}=link_function
   const {data}=dict_variable_application_data
-  const {multi_selected_links,multi_selected_label,multi_selected_nodes,ref_getter_mode_selection}=dict_variable_elements_selected
-  const {updateComponentMenuConfigZdt,updateComponenSaveInCache,updateComponentMenuConfigNode,updateComponentMenuConfigLink}= ComponentUpdater
+  const {multi_selected_label,multi_selected_nodes,ref_getter_mode_selection}=dict_variable_elements_selected
+  const {updateComponenSaveInCache}= ComponentUpdater
   const node_visible=[] as string[]
   const data_plus = data as SankeyPlusData
   return (d3.drag<SVGGElement, unknown>()
@@ -287,45 +287,7 @@ const dragLabelEvent = (
     .on('end',(evt)=>{
       if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
         zone_selection_label(data_plus,multi_selected_label,evt,ComponentUpdater)
-
-        NodeVisibleOnsSvg().forEach((k : string)=>DeselectVisualyNodes(data.nodes[k]))
-        const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-        const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
-        const z_x=Number(d3.select('.selection_zone rect').attr('x'))
-        const z_y=Number(d3.select('.selection_zone rect').attr('y'))
-        const z_w=Number(d3.select('.selection_zone rect').attr('width'))
-        const z_h=Number(d3.select('.selection_zone rect').attr('height'))
-        const node_visible=NodeVisibleOnsSvg()
-        const link_visible_svg=LinkVisibleOnSvg()
-        if(evt.shiftKey){
-          Object.values(data_plus.nodes).filter(n=>{
-            const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
-            const height_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
-            return !multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
-          }
-          ).forEach(n=>multi_selected_nodes.current.push(n))
-          const id_node_selected=multi_selected_nodes.current.map(n=>n.idNode)
-          const id_link_selected=multi_selected_links.current.map(l=>l.idLink)
-          // Select links who have both nodeSource and nodeTarget selected
-          link_visible_svg.filter((lid:string)=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget) && !id_link_selected.includes(lid)).forEach((lid:string)=>multi_selected_links.current.push(data.links[lid]))
-        }else{
-          multi_selected_nodes.current=Object.values(data_plus.nodes).filter(n=>{
-            const width_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().width??0)/scale_svg
-            const height_n=(document.getElementById('shape_'+n.idNode)?.getBoundingClientRect().height??0)/scale_svg
-            return node_visible.includes(n.idNode) && n.x>=z_x && n.x<=(z_x+z_w) && n.y>=z_y && n.y<=(z_y+z_h) && n.x+width_n>=z_x && n.x+width_n<=(z_x+z_w) && n.y+height_n>=z_y && n.y+height_n<=(z_y+z_h)
-          })
-          const id_node_selected=multi_selected_nodes.current.map(n=>n.idNode)
-          // Select links who have both nodeSource and nodeTarget selected
-          multi_selected_links.current=link_visible_svg.filter((lid:string)=>id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget)).map((lid:string)=>data.links[lid])
-        }
-        multi_selected_nodes.current.forEach(d=>SelectVisualyNodes(d))
-        multi_selected_links.current.forEach(d=>SelectVisualyLinks(d))
-        start_point.current=[0,0]
-
-        d3.selectAll('.selection_zone').remove()
-        updateComponentMenuConfigNode.current()
-        updateComponentMenuConfigLink.current()
-        updateComponentMenuConfigZdt.current.forEach(f=>f())
+        selectOpensankeyElementsInSelectionZone(dict_variable_application_data,dict_variable_elements_selected,ComponentUpdater,evt,start_point)
 
       }else if (multi_selected_label.current.length>0){
         RedrawLinks(Object.values(dict_variable_application_data.display_links))
