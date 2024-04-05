@@ -310,38 +310,44 @@ export const keyHandler : keyHandlerFType = (
   }
 
   if(e.key==='s' && e.ctrlKey && !e.shiftKey){
-
     e.preventDefault()
-    if(view!=='none'){
-      // If we do a control+S while we are on a view, we save the difference between the data we are handling
-      // and the master data. These difference are the saved the view we are currently on
 
+    dict_variable_application_data.function_on_wait.current=()=>{
+      ComponentUpdater.updateComponenSaveInCache.current(false)
 
-      // Get difference between master_data and the current data then save it in view
-      let difference = deep_diff.diff(master_data, data)
-      difference=(difference !== undefined)?difference:[]
-      difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-      difference=FilterView(difference)
-
-      // Check wich format of the view is better optimized for memory storage
-      const raw_is_smaller_than_diff=JSON.stringify(data).length<JSON.stringify(difference).length
-      master_data!.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff?JSON.parse(JSON.stringify(data)):{diff:difference}
-
-      // Save master data with the view we are currently working on updated
-      set_master_data({...master_data!})
-      // Save master_data data in localStorage
-      localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
-
-      dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(true)
-      setTimeout(function () {
+      if(view!=='none'){
+        // If we do a control+S while we are on a view, we save the difference between the data we are handling
+        // and the master data. These difference are the saved the view we are currently on
+        // Get difference between master_data and the current data then save it in view
+        let difference = deep_diff.diff(master_data, data)
+        difference=(difference !== undefined)?difference:[]
+        difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+        difference=FilterView(difference)
+  
+        // Check wich format of the view is better optimized for memory storage
+        const raw_is_smaller_than_diff=JSON.stringify(data).length<JSON.stringify(difference).length
+        master_data!.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff?JSON.parse(JSON.stringify(data)):{diff:difference}
+  
+        // Save master data with the view we are currently working on updated
+        set_master_data({...master_data!})
+        // Save master_data data in localStorage
+        localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
         dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(false)
-      }, 3000)
-    }else{
-      // Save current data (wich is master_data)
-      localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-      localStorage.setItem('last_save', 'true')
+
+      }else{
+        // Save current data (wich is master_data)
+        localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+        localStorage.setItem('last_save', 'true')
+      }
       ComponentUpdater.updateComponenSaveInCache.current(true)
+
     }
+
+    if(view!=='none'){
+      dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(true)
+    }
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)  
+
 
 
 

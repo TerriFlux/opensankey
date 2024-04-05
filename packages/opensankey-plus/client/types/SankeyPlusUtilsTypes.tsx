@@ -58,7 +58,8 @@ export type OSPIsAllNodeNotLocalAttrSameValueFType = (
 
 export type Modale_resolution_pngFType=(
   t:TFunction,
-  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
+  dict_variable_application_data:SankeyPlusApplicationDataType
   )=> JSX.Element
 
 export type clickSaveSVGFType = () => void
