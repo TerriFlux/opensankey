@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { MutableRefObject } from 'react'
 import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { LinkTextFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData, SankeyLink } from '../types/Types'
+import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData } from '../types/Types'
 import { RemoveAnimate, GetSankeyMinWidthAndHeight, DrawArrows, drawCurveFunction, LinkStrokeWidth } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
@@ -40,7 +40,6 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   node_function,
   link_function
 ) => {
-  const { data } = dict_variable_application_data
   const {ref_getter_mode_selection}=dict_variable_elements_selected
   const node_visible = [] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
@@ -66,22 +65,12 @@ export const DragGNodeEvent: DragGNodeEventFType = (
           )
         }
       }
-    }).on('end', function(_,node){
+    }).on('end', function(){
       if (d3.select(document.activeElement).attr('class') !== 'input_label') {
-        // update all nodes connected to dragged node & all links connected to these nodes
-        const node_to_update:SankeyNode[]=[node]
-        node.outputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idTarget]))
-        node.inputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idSource]))
-
-        let link_to_update:SankeyLink[]=[]
-        node_to_update.forEach(node=>{
-          link_to_update=link_to_update.concat(node.outputLinksId.map(lid=>data.links[lid]))
-          link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
-        })
-        node_function.RedrawNodes(node_to_update)
-        link_function.RedrawLinks(link_to_update)
-
+        node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+        link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
       }
+
     })
 }
 /**
@@ -234,7 +223,6 @@ export const OpposingDragElements: opposing_DragElementsFuncType = (out_of_zone_
     const scale_for_legend = (scale_svg < 1 ? (1 / scale_svg) : 1)
     data.legend_position[0] += 5
     d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale(' + scale_for_legend + ')')
-
   }
 
 

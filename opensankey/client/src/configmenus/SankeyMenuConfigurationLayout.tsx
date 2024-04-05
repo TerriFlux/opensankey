@@ -442,26 +442,45 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           delay={500}
           rootClose
           overlay={<Tooltip id={'Menu.tooltips.LegBgOpacity'}>{t('Menu.tooltips.LegBgOpacity')} </Tooltip>}>
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput'
-            min={0}
-            max={100}
-            step={1}
-            value={current_legend_bg_opacity}
-            inputMode='numeric'
-            onChange={value => set_current_legend_bg_opacity(Number(value))}
-            onBlur={() => {
-              data.legend_bg_opacity = current_legend_bg_opacity
-              reDrawLegend()
-              setForceUpdate(!forceUpdate)
-            }}
+          <InputGroup
+            variant='menuconfigpanel_option_input'
           >
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
-          </NumberInput>
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              min={0}
+              max={100}
+              step={1}
+              value={current_legend_bg_opacity}
+              inputMode='numeric'
+              onChange={value => set_current_legend_bg_opacity(Number(value))}
+              onBlur={() => {
+                let value=0
+                if(isNaN(current_legend_bg_opacity)){
+                  value=0
+                }else if(current_legend_bg_opacity>100){
+                  set_current_legend_bg_opacity(100)
+                  value=100
+                }else if(current_legend_bg_opacity<0){
+                  set_current_legend_bg_opacity(0)
+                  value=0
+                }else{
+                  value=current_legend_bg_opacity
+                }
+                data.legend_bg_opacity = value
+                reDrawLegend()
+                setForceUpdate(!forceUpdate)
+              }}
+            >
+              <NumberInputField/>
+              <NumberInputStepper>
+                <NumberIncrementStepper/>
+                <NumberDecrementStepper/>
+              </NumberInputStepper>
+            </NumberInput>
+            <InputRightAddon>
+              %
+            </InputRightAddon>
+          </InputGroup>
         </OverlayTrigger>
       </Box>
 
