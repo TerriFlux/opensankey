@@ -644,6 +644,8 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
     levelTags: {},
 
     colorMap: 'no_colormap',
+    nodesColorMap: 'no_colormap',
+    linksColorMap: 'no_colormap',
 
     legend_width:180,
     legend_position: [0,0],
@@ -678,9 +680,9 @@ export const LinkColor:LinkColorFuncType = (l: SankeyLink,data:SankeyData,
 ): string => {
   let colorLink=''
 
-  if(Object.keys(data.dataTags).map(d=>'dataTags_'+d).includes(data.colorMap)){
+  if(Object.keys(data.dataTags).map(d=>'dataTags_'+d).includes(data.linksColorMap)){
     const idDt=l.idLink.split('_')
-    const colorMapFilterd=data.colorMap.slice(9,data.colorMap.length)
+    const colorMapFilterd=data.linksColorMap.slice(9,data.linksColorMap.length)
     const ind_str=(idDt.length>1)?idDt.slice(idDt.length-1,idDt.length)[0]:0
 
     const ind=Number(ind_str)
@@ -692,7 +694,7 @@ export const LinkColor:LinkColorFuncType = (l: SankeyLink,data:SankeyData,
 
 
 
-  if (l.colorTag) {
+  if (data.linksColorMap!=='no_colormap') {
     const tagGroup = l.colorTag
     const v = GetLinkValue(data, l.idLink)
     if (v === undefined) {

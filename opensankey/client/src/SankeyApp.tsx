@@ -385,13 +385,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
 
   /*************************************************************************************************/
-
+  const resizeCanvas=()=>{
+    AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  }
   /*******************************************************************************/
   const reDrawLegend=()=>{
-    DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked,ComponentUpdater,reDrawLegend)
+    DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked,ComponentUpdater,reDrawLegend,resizeCanvas)
     if(!windowSankey.SankeyToolsStatic){
       const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
-      g_legend.call(drag_legend(dict_variable_application_data.data,reDrawLegend))
+      g_legend.call(drag_legend(dict_variable_application_data.data,resizeCanvas,node_function,link_function,dict_variable_application_data))
     }
   }
   /*******************************************************************************/
@@ -584,7 +586,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           link_function,
           ComponentUpdater,
           node_function,
-          reDrawLegend
+          reDrawLegend,
+          resizeCanvas
         )
       })
     },100)
@@ -731,6 +734,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 node_function={node_function}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
+                reDrawLegend={reDrawLegend}
               />,
               <SankeySettingsEditionElementTags
                 applicationContext={applicationContext}
@@ -740,6 +744,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 node_function={node_function}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
+                reDrawLegend={reDrawLegend}
               />,
               <SankeySettingsEditionElementTags
                 applicationContext={applicationContext}
@@ -749,6 +754,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 node_function={node_function}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
+                reDrawLegend={reDrawLegend}
               />,
               OpenSankeyMenuConfigurationNodes(
                 applicationContext,

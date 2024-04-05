@@ -289,6 +289,8 @@ export type SankeyData = {
   fluxTags: TagsCatalog,
   levelTags:TagsCatalog,
   colorMap: string,
+  nodesColorMap: string,
+  linksColorMap: string,
 
   legend_width:number,
   node_label_separator:string
