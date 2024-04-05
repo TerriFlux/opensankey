@@ -21,8 +21,8 @@ export const DrawLegend : DrawLegendFType= (
   GetLinkValue,
   legend_clicked,
   ComponentUpdater,
-  reDrawLegend
-  
+  reDrawLegend,
+  resizeCanvas
 ) => {
   const {data,display_nodes}=dict_variable_application_data
   const {t}=applicationContext
@@ -34,7 +34,7 @@ export const DrawLegend : DrawLegendFType= (
     // les tagGroup pour lesquelles Legend est à true 
     // le selected du tags à true
     // dx permet de faire en décalage vers la gauche lorsque l'on change de groupTags
-    let dx = 0
+    const dx = 0
     let dy = 0
     const pas = data.legend_width
     if (pas < 50) {
@@ -55,7 +55,7 @@ export const DrawLegend : DrawLegendFType= (
       .attr('stroke-dasharray',()=>'')
       .attr('stroke',data.legend_bg_border?data.legend_bg_color:'none')
       .attr('fill',data.legend_bg_color)
-      .attr('fill-opacity',data.legend_bg_opacity)
+      .attr('fill-opacity',data.legend_bg_opacity/100)
       .on('mouseover',()=>{
         
         d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray','6,6')
@@ -72,7 +72,7 @@ export const DrawLegend : DrawLegendFType= (
         let h=document.getElementById('g_legend')?.getBoundingClientRect().height
         h=h?h:50
         
-        draw_legend_handles(data,legend_clicked.current ,h,ComponentUpdater,reDrawLegend)
+        draw_legend_handles(data,legend_clicked.current ,h,ComponentUpdater,reDrawLegend,resizeCanvas)
       })
 
 
@@ -90,16 +90,14 @@ export const DrawLegend : DrawLegendFType= (
       .bounds({ height: 100, width: pas - 40 })
       .method('tspans')
 
-    const all_tags = Object.assign({},data.nodeTags,data.fluxTags)
-    let vert_shift=0
+    const all_tags = Object.assign({},data.nodeTags,data.fluxTags,data.dataTags)
 
     Object.entries(all_tags).filter(tag_group => tag_group[1].show_legend).forEach(tag_group => {
-        
       // Ajout du tagGroup.name  
       legend.append('text')
         .attr('id','GrpTag_title_'+tag_group[0])
         .attr('transform', function () {
-          return 'translate(' + dx + ', 0 )'
+          return 'translate(' + dx + ','+dy+' )'
         })
         .attr('x', 0)
         .attr('y', 5+data.legend_police)
@@ -111,27 +109,27 @@ export const DrawLegend : DrawLegendFType= (
         document.getElementById('GrpTag_title_'+tag_group[0])?.setAttribute('y','5')
       }
 
-      const title_size=document.getElementById('GrpTag_title_'+tag_group[0])?.getBoundingClientRect().height??0
-
-      vert_shift=5
-      const legendElements2 = legend.append('g').attr('transform','translate(0,5)')
+      dy+=document.getElementById('GrpTag_title_'+tag_group[0])?.getBoundingClientRect().height??0
+      const legendElements2 = legend.append('g').attr('transform','translate(0,'+data.legend_police+')')
 
       Object.entries(tag_group[1].tags)
         .filter((d)=>d[1].selected )
         .filter(tag=>{
-          if(Object.keys(data.fluxTags).includes(data.colorMap)){
+          if(Object.keys(data.fluxTags).includes(data.linksColorMap) && Object.keys(data.fluxTags).includes(tag_group[0])){
             const t=Object.values(data.links).filter(l=>{
               const tmp=GetLinkValue(data,l.idLink)
-              return LinkVisible(l,data,display_nodes,GetLinkValue) && tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes(tag[0])
+              return LinkVisible(l,data,display_nodes,GetLinkValue) && tmp.tags[data.linksColorMap] && tmp.tags[data.linksColorMap].includes(tag[0])
             }).length
             return t>0
-          }else if(Object.keys(data.nodeTags).includes(data.colorMap)){
+          }
+          if(Object.keys(data.nodeTags).includes(data.nodesColorMap) && Object.keys(data.nodeTags).includes(tag_group[0])){
             const node_visible=NodeVisibleOnsSvg()
             const t2=Object.values(data.nodes).filter(n=>{
-              return n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag[0]) && node_visible.includes(n.idNode) && n.position !== 'relative'
+              return n.tags[data.nodesColorMap] && n.tags[data.nodesColorMap].includes(tag[0]) && node_visible.includes(n.idNode) && n.position !== 'relative'
             }).length
             return t2>0
-          }else if(data.colorMap && data.colorMap.includes('dataTags_')){
+          }
+          if(data.linksColorMap && data.linksColorMap.includes('dataTags_')){
             return true
           }
           return  false
@@ -140,7 +138,6 @@ export const DrawLegend : DrawLegendFType= (
             .attr('id','tag_'+tag[1].name.replaceAll(' ','__')
             )
             .attr('transform', ()=>{
-              dy+=((data.legend_police*0.9) + title_size)
               return 'translate(' + dx + ',' + (dy) + ')'
             })
             .on('mouseover',()=>{
@@ -229,7 +226,7 @@ export const DrawLegend : DrawLegendFType= (
             .attr('width', 20)
             .attr('height', 20)
             .attr('x', 0)
-            .attr('y', 2)
+            .attr('y', -10-data.legend_police/4)
             .attr('rx', 3)
             .attr('ry', 3)
             .style('fill', () => (tag as [string, { color: string }])[1].color )
@@ -243,72 +240,27 @@ export const DrawLegend : DrawLegendFType= (
             .text(()=> { return tag[1].name })
             .call(wrap)
 
-
-          vert_shift=document.getElementById('tag_'+tag[1].name.replaceAll(' ','__'))?.getBoundingClientRect().height??0
-          tagElement.select('rect').attr('y',-10-data.legend_police/4)
+          dy+=document.getElementById('tag_'+tag[1].name.replaceAll(' ','__'))?.getBoundingClientRect().height??0
         })
-    })
 
-    if(data.legend_show_dataTags){
-      dy+=vert_shift
-    
-      const data_tags = Object.assign({},data.dataTags)
-      const show_data=Object.values(data_tags).filter(d=>d.show_legend).length>0
-      Object.entries(data_tags).forEach(tag_group => {
-        const intro_group_data_tags=((!show_data)?(' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')):'')
+      // Add shift for next group tag
+    })
+    const show_data=Object.values(data.dataTags).filter(d=>d.show_legend).length==0
+
+    if(data.legend_show_dataTags && show_data){
+      dy+=data.legend_police
+      Object.entries(data.dataTags).forEach(tag_group => {
         // Ajout du tagGroup.name  
         legend.append('text')
           .attr('id','leg_dataTag_'+tag_group[0])
-          .attr('transform', 'translate(' + 0 + ', '+dy+' )')
+          .attr('transform', 'translate(0,'+dy+' )')
           .attr('x', 0)
           .attr('y', 0)
-          .text((tag_group[1].group_name+intro_group_data_tags))
-          .attr('style', ('font-size:'+data.legend_police+'px;'+((show_data)?'font-weight:bold;':'')))
+          .text((tag_group[1].group_name+' : '+Object.values(tag_group[1].tags).filter(t=>t.selected).map(t=>t.name).join(', ')))
+          .attr('style', ('font-size:'+data.legend_police+'px;'))
           .call(wrap)
 
-        // vert_shift=document.getElementById('leg_dataTag_'+tag_group[0])?.getBoundingClientRect().height??0
-        // dy+=vert_shift
-          
-        if(show_data){
-          const legendElements = legend.append('g')
-            .selectAll('g')
-          // je comprends pas trop avant on utilisait d3.entries il semble etre remplacé par Object.entries(), mais ca ne donne pas la même chose
-            .data(Object.entries(tag_group[1].tags)
-              .filter(tag=>{
-                return tag[1].selected
-              }))
-            .enter()
-            .append('svg:g')
-          // on filtre les tags avec selected à true (Visible)
-            .attr('id',d=>{
-              return 'tag_'+d[1].name.replaceAll(' ','__')
-            })
-            .attr('transform', function (d, i) {
-              dy+=(i * 30 + 30)
-              return 'translate(' + 0 + ',' +dy + ')'
-            })
-
-
-          // Ajout du shape  
-          legendElements.append('rect')
-            .attr('width', 20)
-            .attr('height', 20)
-            .attr('x', 0)
-            .attr('y', 10)
-            .attr('rx', 3)
-            .attr('ry', 3)
-            .style('fill', (d) => { return (d as [string, { color: string }])[1].color })
-            .style('fill-opacity', 1)
-          
-          // Ajout du label
-          legendElements.append('text')
-            .attr('x', show_data?35:0)
-            .attr('y', 26)
-            .attr('font-size',data.legend_police+'px')
-            .text((d)=>d[1].name)
-            .call(wrap)
-        } 
-        dx = dx + pas
+        dy+=document.getElementById('leg_dataTag_'+tag_group[0])?.getBoundingClientRect().height??0
       })
     }
 
@@ -318,16 +270,16 @@ export const DrawLegend : DrawLegendFType= (
     // - when diagramme type is : data reconciled + indetermined links (values), we explain the meaning of "*" in the link label
     // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
     if(sankey_has_interval_value){
-      dy+=vert_shift+5
-      const free_value=legend.append('g').attr('class','g_legend_free_value').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
+      dy+=data.legend_police
+      const free_value=legend.append('g').attr('id','g_legend_free_value').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
       
       free_value.append('text').text('*').attr('x','5')
       free_value.append('text').attr('x','35').text(t('MEP.show_legend_free_value')).call(wrap)
     }
 
     if(sankey_has_dashed_links){
-      dy+=sankey_has_interval_value?30:60
-      const dashed_link=legend.append('g').attr('class','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
+      dy+=sankey_has_interval_value?(document.getElementById('g_legend_free_value')?.getBoundingClientRect().height??0):data.legend_police
+      const dashed_link=legend.append('g').attr('id','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
 
       dashed_link.append('path').attr('d','M 0 0 L 25 0  Z')
         .attr('fill','none')
@@ -365,7 +317,7 @@ export const DrawLegend : DrawLegendFType= (
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
   
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
-    draw_legend_handles(data,legend_clicked.current,h,ComponentUpdater,reDrawLegend)
+    draw_legend_handles(data,legend_clicked.current,h,ComponentUpdater,reDrawLegend,resizeCanvas)
   }
   if(data.mask_legend){
     drawLegend()
@@ -380,7 +332,11 @@ export const DrawLegend : DrawLegendFType= (
 
 export const drag_legend : drag_legendFType = (
   data:SankeyData,
-  reDrawLegend
+  resizeCanvas:()=>void,
+  node_function,
+  link_function,
+  dict_variable_application_data
+
 )=>d3.drag<SVGGElement, unknown>()
   .subject(Object).on('drag', function (event) {
 
@@ -390,7 +346,11 @@ export const drag_legend : drag_legendFType = (
         OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
       }
     }
-  }).on('end',()=>reDrawLegend())
+  }).on('end',()=>{
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    resizeCanvas()
+  })
 
 export const DragLegendGElement:drag_legend_g_elementFuncType=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
   let scale_for_legend=1
@@ -461,11 +421,11 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
   }
   const button_select_element_tagged=tag_contextualised &&['nodeTags','fluxTags','dataTags'].includes(NodeOrLinkTag) ?<Button onClick={()=>{
     if(NodeOrLinkTag=='nodeTags'){
-      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(n.tags[data.colorMap] && n.tags[data.colorMap].includes(tag_contextualised?tag_contextualised:'')))
+      multi_selected_nodes.current=Object.values(data.nodes).filter(n=>(n.tags[data.nodesColorMap] && n.tags[data.nodesColorMap].includes(tag_contextualised?tag_contextualised:'')))
     }else if(NodeOrLinkTag=='fluxTags'){
       multi_selected_links.current=Object.values(data.links).filter(l=>{
         const tmp=GetLinkValue(data,l.idLink)
-        return tmp.tags[data.colorMap] && tmp.tags[data.colorMap].includes((tag_contextualised)?tag_contextualised:'')
+        return tmp.tags[data.linksColorMap] && tmp.tags[data.linksColorMap].includes((tag_contextualised)?tag_contextualised:'')
       })
     }
     multi_selected_links.current.forEach(d=>{
@@ -493,11 +453,12 @@ export const draw_legend_handles =(
   legend_clicked:boolean,
   h:number,
   ComponentUpdater:ComponentUpdaterType,
-  reDrawLegend:()=>void
+  reDrawLegend:()=>void,
+  resizeCanvas:()=>void,
 )=>{
   d3.select('.opensankey #g_legend_handles').selectAll('*').remove();
   ['left','right'].forEach(pos=>{
-    add_legend_handle(pos,data,legend_clicked,h,ComponentUpdater,reDrawLegend)
+    add_legend_handle(pos,data,legend_clicked,h,ComponentUpdater,reDrawLegend,resizeCanvas)
   })
 }
 const size_zdt_handle=10
@@ -506,7 +467,8 @@ const add_legend_handle=(pos:string,data:SankeyData,
   legend_clicked:boolean,
   h:number,
   ComponentUpdater:ComponentUpdaterType,
-  reDrawLegend:()=>void
+  reDrawLegend:()=>void,
+  resizeCanvas:()=>void,
 
 )=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
@@ -530,7 +492,7 @@ const add_legend_handle=(pos:string,data:SankeyData,
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
-    .call(drag_legend_handle(pos,data,svg_k_factor,ComponentUpdater,reDrawLegend))
+    .call(drag_legend_handle(pos,data,svg_k_factor,ComponentUpdater,reDrawLegend,resizeCanvas))
   // Position the handle 
   switch (pos){
 
@@ -549,7 +511,8 @@ const add_legend_handle=(pos:string,data:SankeyData,
 }
 
 const drag_legend_handle=(pos:string,data:SankeyData,svg_k_factor:number,ComponentUpdater:ComponentUpdaterType,
-  reDrawLegend:()=>void
+  reDrawLegend:()=>void,
+  resizeCanvas:()=>void,
   
 )=>{
   const g_zdt_h=d3.select('.opensankey #g_legend_handles .legend_handle'+pos)
@@ -585,6 +548,8 @@ const drag_legend_handle=(pos:string,data:SankeyData,svg_k_factor:number,Compone
     .on('end',()=>{
       ComponentUpdater.updateComponentMenuConfigLayout.current()
       reDrawLegend()
+      resizeCanvas()
+      
     })
 
         

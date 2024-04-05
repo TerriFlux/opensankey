@@ -20,7 +20,6 @@ import {
   IsAllLinkNotLocalAttrSameValue,
   SmoothClasses} from './SankeyUtils'
 import * as d3 from 'd3'
-// import { FaNotesMedical } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes,
   faArrowPointer,
@@ -220,28 +219,21 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                 <FormCheck
                   inline
                   type='switch'
-                  checked={data.colorMap==tags_selected[0]}
+                  checked={data.nodesColorMap==tags_selected[0]}
                   onChange={evt => {
                     Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data.nodes).forEach(el => {
                       el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
-                    Object.values(data.links).forEach(el => {
-                      el.colorTag = 'no_colormap'
-                    })
-                    data.colorMap = 'no_colormap'
+                    data.nodesColorMap = 'no_colormap'
                     if(evt.target.checked){
                       Object.values(data.nodes).forEach(el => {
                         el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
-                      Object.values(data.links).forEach(el => {
-                        el.colorTag = 'no_colormap'
-                      })
-                      data.colorMap = tags_selected[0]
+                      data.nodesColorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true
                     }
                     setForceUpdate(!forceUpdate)
@@ -371,28 +363,23 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                 <FormCheck
                   inline
                   type='switch'
-                  checked={data.colorMap==tags_selected[0]}
+                  checked={data.nodesColorMap==tags_selected[0]}
                   onChange={evt => {
                     Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data.nodes).forEach(el => {
                       el.colorParameter = 'local'
                       el.colorTag = 'no_colormap'
                     })
-                    Object.values(data.links).forEach(el => {
-                      el.colorTag = 'no_colormap'
-                    })
-                    data.colorMap = 'no_colormap'
+
+                    data.nodesColorMap = 'no_colormap'
+
                     if(evt.target.checked){
                       Object.values(data.nodes).forEach(el => {
                         el.colorParameter = 'groupTag'
                         el.colorTag = tags_selected[0]
                       })
-                      Object.values(data.links).forEach(el => {
-                        el.colorTag = 'no_colormap'
-                      })
-                      data.colorMap = tags_selected[0]
+                      data.nodesColorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true
                     }
                     setForceUpdate(!forceUpdate)
@@ -724,8 +711,6 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
           <option key='structure'  value='structure' >{t('Banner.t_v_s')}</option>
           <option key='data'       value='data'      >{t('Banner.t_v_c')}</option>
           <option key='reconciled' value='reconciled'>{t('Banner.t_v_r')}</option>
-          {/* <option key='free_interval' value='free_interval' >Données réconciliées+flux indéterminés (intervalles)</option> */}
-          {/* <option key='free_value' value='free_value' >Données réconciliées+flux indéterminés (valeurs)</option> */}
         </Form.Select>
       </FormGroup>
 
@@ -776,31 +761,21 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
             checked={(DT_length>0)?(Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend):false}
             onChange={evt=> {
               //Déselecitonne tous les type de tag
-              Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
               Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
               Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-              Object.values(data.nodes).forEach(el => {
-                el.colorParameter = 'local'
-                el.colorTag = 'no_colormap'
-              })
 
               Object.values(data.links).forEach(el => {
                 el.colorTag = 'no_colormap'
               })
 
-              data.colorMap = 'no_colormap'
+              data.linksColorMap = 'no_colormap'
 
               //Met le dernier dataTag en tant que couleur a suivre pour les flux
               if(evt.target.checked){
-                Object.values(data.nodes).forEach(el => {
-                  el.colorParameter = 'groupTag'
-                  el.colorTag = 'no_colormap'
-                })
                 Object.values(data.links).forEach(el => {
                   el.colorTag = 'no_colormap'
                 })
-                data.colorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
+                data.linksColorMap = 'dataTags_'+Object.keys(data.dataTags).slice(DT_length-1,DT_length)[0]
                 Object.values(data.dataTags).slice(DT_length-1,DT_length)[0].show_legend=evt.target.checked
               }
 
@@ -1174,31 +1149,21 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                 <FormCheck
                   inline
                   type='switch'
-                  checked={data.colorMap==tags_selected[0]}
+                  checked={data.linksColorMap==tags_selected[0]}
                   onChange={evt => {
-                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
                     Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-                    Object.values(data.nodes).forEach(el => {
-                      el.colorParameter = 'local'
-                      el.colorTag = 'no_colormap'
-                    })
 
                     Object.values(data.links).forEach(el => {
                       el.colorTag = 'no_colormap'
                     })
-                    data.colorMap = 'no_colormap'
+                    data.linksColorMap = 'no_colormap'
 
                     if(evt.target.checked){
-                      Object.values(data.nodes).forEach(el => {
-                        el.colorParameter = 'groupTag'
-                        el.colorTag ='no_colormap'
-                      })
                       Object.values(data.links).forEach(el => {
                         el.colorTag = tags_selected[0]
                       })
-                      data.colorMap = tags_selected[0]
+                      data.linksColorMap = tags_selected[0]
                       data.fluxTags[tags_selected[0]].show_legend = true
                     }
                     redrawNodeLinkLegend()
@@ -1261,30 +1226,20 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                 <FormCheck
                   inline
                   type='switch'
-                  checked={data.colorMap==tags_selected[0]}
+                  checked={data.linksColorMap==tags_selected[0]}
                   onChange={evt => {
-                    Object.values(data.nodeTags).forEach(tags_group => tags_group.show_legend = false)
-                    Object.values(data.fluxTags).forEach(tags_group => tags_group.show_legend = false)
+                    Object.values(data.fluxTags).forEach(tags_group =>{ tags_group.show_legend = false})
                     Object.values(data.dataTags).forEach(tags_group => tags_group.show_legend = false)
-
-                    Object.values(data.nodes).forEach(el => {
-                      el.colorParameter = 'local'
-                      el.colorTag = 'no_colormap'
-                    })
 
                     Object.values(data.links).forEach(el => {
                       el.colorTag = 'no_colormap'
                     })
-                    data.colorMap = 'no_colormap'
+                    data.linksColorMap = 'no_colormap'
                     if(evt.target.checked){
-                      Object.values(data.nodes).forEach(el => {
-                        el.colorParameter = 'groupTag'
-                        el.colorTag ='no_colormap'
-                      })
                       Object.values(data['links']).forEach(el => {
                         el.colorTag = tags_selected[0]
                       })
-                      data.colorMap = tags_selected[0]
+                      data.linksColorMap = tags_selected[0]
                       data['fluxTags'][tags_selected[0]].show_legend = true
                     }
                     setForceUpdate(!forceUpdate)
