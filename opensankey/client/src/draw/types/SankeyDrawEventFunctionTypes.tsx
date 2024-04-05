@@ -85,7 +85,8 @@ export type EventOnZoneMouseUpFuncType = (
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes,
-  reDrawLegend:()=>void
+  reDrawLegend:()=>void,
+  resizeCanvas:()=>void
 
 
 ) => void

@@ -7,6 +7,7 @@ export type SankeySettingsEditionElementTagsTypes = {
     elementNameProp: 'nodes' | 'links' | 'none',
     node_function:NodeFunctionTypes,
     link_function:LinkFunctionTypes,
-    ComponentUpdater:ComponentUpdaterType
+    ComponentUpdater:ComponentUpdaterType,
+    reDrawLegend:()=>void
   }
   

@@ -14,7 +14,7 @@ const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateB
   d3.interpolateWarm,d3.interpolateCool,d3.interpolateCubehelixDefault,d3.interpolateRainbow,d3.interpolateSinebow]
 
 const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionElementTagsTypes> = ({ 
-  applicationContext,dict_variable_application_data,elementTagNameProp,elementNameProp,node_function,link_function,ComponentUpdater
+  applicationContext,dict_variable_application_data,elementTagNameProp,elementNameProp,node_function,link_function,ComponentUpdater,reDrawLegend
 }) => {
   const {data}=dict_variable_application_data
   const {t}=applicationContext
@@ -38,6 +38,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
     updateComponentToolbar.current()
     updateComponenSaveInCache.current(false)
+    reDrawLegend()
   }
 
   //Permet de modifier le type de bannier pour le groupTag (si ce non Aucun)
