@@ -246,7 +246,8 @@ export const PlusLinkSabotColor : PlusLinkSabotColorFType = (
 
 export const Modale_resolution_png : Modale_resolution_pngFType =(
   t:TFunction,
-  dict_hook_ref_setter_show_dialog_components
+  dict_hook_ref_setter_show_dialog_components,
+  dict_variable_application_data
 )=>{
   const [h,set_h]=useState<string>()
   const [v,set_v]=useState<string>()
@@ -281,11 +282,19 @@ export const Modale_resolution_png : Modale_resolution_pngFType =(
           }}/>
       </InputGroup>
     </Modal.Body>
-    <Modal.Footer><Button variant='primary' disabled={!valid_input} onClick={()=>clickSavePNG(h,v)}>Save</Button></Modal.Footer>
+    <Modal.Footer><Button variant='primary' disabled={!valid_input} onClick={()=>{
+      dict_variable_application_data.function_on_wait.current=()=>{
+        clickSavePNG(h,v)
+      }
+      dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
+    }}>Save</Button></Modal.Footer>
   </Modal>
 }
 
-const clickSavePNG = (h:string|undefined,v:string|undefined) => {
+const clickSavePNG = (
+  h:string|undefined,
+  v:string|undefined,  
+) => {
   const svg = pre_process_export_svg()
   const html = ((svg.attr('title', 'test2')
     .attr('version', 1.1)

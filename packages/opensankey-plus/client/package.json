@@ -23,6 +23,7 @@
     "d3": "^6.7.0",
     "d3-textwrap": "^3.0.0",
     "deep-diff": "^1.0.2",
+    "file-saver": "^2.0.5",
     "fortawesome": "^0.0.1-security",
     "react": "^18.2.0",
     "react-beforeunload": "^2.5.3",
@@ -41,6 +42,7 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.3",
     "@types/deep-diff": "^1.0.2",
     "@types/react-dom": "^18.2.18",
     "eslint": "^8.6.0",
