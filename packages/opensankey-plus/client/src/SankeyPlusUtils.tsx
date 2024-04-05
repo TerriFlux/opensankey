@@ -56,11 +56,14 @@ export const DefaultSankeyPlusStyleLink : DefaultSankeyPlusStyleLinkFType = () =
   return style
 }
 
-export  const DragLegendPlus : DragLegendPlusFType = (data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
+export  const DragLegendPlus : DragLegendPlusFType = (
+  data:SankeyPlusData,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  ComponentUpdater
-
+  ComponentUpdater,
+  resizeCanvas,
+  node_function,
+  link_function,
+  dict_variable_application_data
 ) => d3.drag<SVGGElement, unknown>()
   .subject(Object).on('drag', function (event) {
 
@@ -70,7 +73,13 @@ export  const DragLegendPlus : DragLegendPlusFType = (data:SankeyPlusData,
         OpposingDragElementsPlus([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],event,({} as SankeyPlusNode),data,{current:[]},multi_selected_label)
       }
     }
-  }).on('end',()=>ComponentUpdater.updateComponentMenuConfigLayout.current())
+  }).on('end',()=>{
+    ComponentUpdater.updateComponentMenuConfigLayout.current()
+    resizeCanvas()
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    resizeCanvas()
+  })
 
 
 export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (

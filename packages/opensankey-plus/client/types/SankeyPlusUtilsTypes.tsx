@@ -1,14 +1,17 @@
 import { TFunction } from 'i18next'
-import { SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
+import { PlusLinkFuntionType, PlusNodeFuntionType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { ComponentUpdaterType } from 'open-sankey/src/types/Types'
 
 export type DefaultSankeyPlusStyleLinkFType = () => SankeyPlusLinkStyle
 
 export  type DragLegendPlusFType = (data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
   multi_selected_label:{current:SankeyPlusLabel[]},
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  resizeCanvas:()=>void,
+  node_function:PlusNodeFuntionType,
+  link_function:PlusLinkFuntionType,
+  dict_variable_application_data:SankeyPlusApplicationDataType
 ) => d3.DragBehavior<SVGGElement, unknown, unknown>
 
 export type ImportImageAsSvgBgFType = (
