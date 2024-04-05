@@ -357,10 +357,13 @@ export const keyHandler : keyHandlerFType = (
     }
   }else if(e.key=='s' && e.ctrlKey && !e.shiftKey){
     e.preventDefault()
-    localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-    localStorage.setItem('last_save', 'true')
+    dict_variable_application_data.function_on_wait.current=()=>{
+      localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+      localStorage.setItem('last_save', 'true')
+      ComponentUpdater.updateComponenSaveInCache.current(true)
+    }
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
     
-    ComponentUpdater.updateComponenSaveInCache.current(true)
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
     ClickSaveDiagram(data)
