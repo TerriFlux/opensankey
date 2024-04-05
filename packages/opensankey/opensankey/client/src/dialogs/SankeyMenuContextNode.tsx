@@ -407,6 +407,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   const btn_aggregate=multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node && NodeContextHasAggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
     Aggregate(contextualised_node,data,agregation)
     multi_selected_nodes.current =[]
+    node_function.recomputeDisplayedElement()
     set_data({...data})
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
@@ -417,6 +418,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   const btn_desagregate=multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node &&NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
     Desaggregate(contextualised_node,data,display_nodes,display_links,agregation)
     multi_selected_nodes.current =[]
+    node_function.recomputeDisplayedElement()
     set_data({...data})
     set_contextualised_node(undefined)
     contextMenu.ref_contextualised_node.current = undefined
