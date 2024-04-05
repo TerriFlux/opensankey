@@ -158,12 +158,15 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       </Dropdown>
 
       <Dropdown.Item as={Button} variant='light' onClick={() => {
-        ComputeAutoSankey(dict_variable_application_data.data, node_hspace,false)
-        Object.values(dict_variable_application_data.display_nodes).forEach(n=>{
-          d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
-        })
-        RedrawLinks(Object.values(dict_variable_application_data.display_links))
-        ComponentUpdater.updateComponenSaveInCache.current(false)
+        dict_variable_application_data.function_on_wait.current=()=>{
+          ComputeAutoSankey(dict_variable_application_data.data, node_hspace,false)
+          Object.values(dict_variable_application_data.display_nodes).forEach(n=>{
+            d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
+          })
+          RedrawLinks(Object.values(dict_variable_application_data.display_links))
+          ComponentUpdater.updateComponenSaveInCache.current(false)
+        }
+        dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
 
       }}>{t('MEP.PA_action')}</Dropdown.Item>
     </Dropdown.Menu>
