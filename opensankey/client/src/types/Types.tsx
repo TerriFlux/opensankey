@@ -352,7 +352,9 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_modal_template : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_show_style_node : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_waiting : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+
 }
 
 export type applicationContextType = {
@@ -370,6 +372,7 @@ export type dict_variable_application_dataType = {
   get_default_data : ()=>SankeyData,
   display_nodes : {[_:string]:SankeyNode},
   display_links : {[_:string]:SankeyLink},
+  function_on_wait:MutableRefObject<()=>void>
 }
 
 export type uiElementsRefType = {
