@@ -17,6 +17,8 @@ import {
   Offcanvas,
   OverlayTrigger,
   Row,
+  Spinner,
+  Toast,
   ToggleButton,
   Tooltip
 } from 'react-bootstrap'
@@ -28,8 +30,7 @@ import {
   NodeFunctionTypes,
   LinkFunctionTypes,
   dict_variable_application_dataType,
-  ComponentUpdaterType
-} from '../types/Types'
+  ComponentUpdaterType} from '../types/Types'
 
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { FaAngleDoubleLeft,FaAngleDoubleRight} from 'react-icons/fa'
@@ -42,7 +43,7 @@ import { faGears,faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import {MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, SankeyMenuFileExportFType} from './types/SankeyMenuTopTypes'
+import {MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, SankeyMenuFileExportFType, ToastWaitFuncFType} from './types/SankeyMenuTopTypes'
 import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue } from '../configmenus/SankeyUtils'
 import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
@@ -502,7 +503,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   ref_setter_show_modale_tuto.current=set_show_tuto
   ref_setter_show_modale_support.current=set_show_support
   ref_setter_show_modal_template.current=set_show_template
-
   const {updateComponentMenu} = ComponentUpdater
 
   updateComponentMenu.current=()=>setForceUpdate(!forceUpdate)
@@ -800,8 +800,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       <ApplyLayoutDialog
         t={applicationContext.t}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-        sankey_data={dict_variable_application_data.data}
-        set_sankey_data={dict_variable_application_data.set_data}
+        dict_variable_application_data={dict_variable_application_data}
         updateLayout={applicationDraw.updateLayout}
         convert_data={convert_data}
         elementToDispose={elementToDispose}
@@ -1170,4 +1169,27 @@ export const post_process_export_svg=()=>{
   d3.select(' .opensankey#svg-container svg').style('background-color','inherit')
   d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity','1')
   d3.select(' .opensankey#svg-container svg').style('border','2px')
+}
+
+
+export const ToastWaitFunc=({
+  dict_variable_application_data,
+  dict_hook_ref_setter_show_dialog_components,
+  applicationContext}:ToastWaitFuncFType
+)=>{
+  const [show_toast_wait,set_show_toast_wait]=useState(false)
+  dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current=set_show_toast_wait
+
+  return     <Toast onEntered={()=>{
+    setTimeout(()=>{
+      dict_variable_application_data.function_on_wait.current()
+      dict_variable_application_data.function_on_wait.current=()=>null
+      set_show_toast_wait(false)
+    },50
+    )
+  }} className='toast_waiting' show={show_toast_wait} onClose={()=>set_show_toast_wait(false)} bg='info' style={{ 'width':'auto', 'position': 'fixed', 'right':'0','top':window.innerHeight-150, 'zIndex': 100000000 }}>
+    <Toast.Body>
+      <Spinner animation="border" role="status"/>
+      {applicationContext.t('Menu.waiting')}</Toast.Body>
+  </Toast>
 }

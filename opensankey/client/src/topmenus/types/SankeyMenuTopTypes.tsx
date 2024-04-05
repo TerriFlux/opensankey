@@ -72,4 +72,8 @@ export type SankeyMenuFileExportFType=(
   additonal_export_item:JSX.Element[]
   )=> JSX.Element
 
-
+export type ToastWaitFuncFType={
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
+  applicationContext:applicationContextType
+}

@@ -77,7 +77,7 @@ import {
   ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
 import {
-  OpenSankeyMenus, MenuDraggable, OpenSankeySaveButton, Menu
+  OpenSankeyMenus, MenuDraggable, OpenSankeySaveButton, Menu, ToastWaitFunc
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuConfigurationNodesTooltip'
@@ -97,6 +97,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   logo_terriflux
 }) => {
   const [, set_show_draw] = useState(false)
+
   /*************************************************************************************************/
   const applicationContext : applicationContextType = {
     t : useTranslation().t,
@@ -130,7 +131,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     set_data : set_data,
     get_default_data : DefaultSankeyData,
     display_nodes : display_nodes,
-    display_links : display_links
+    display_links : display_links,
+    function_on_wait:useRef(()=>null)
   }
 
 
@@ -210,7 +212,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_modal_template : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_show_style_node : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    ref_show_style_link : useRef<Dispatch<SetStateAction<boolean>>>(()=>null)
+    ref_show_style_link : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_waiting : useRef<Dispatch<SetStateAction<boolean>>>(()=>null)
   }
   /*************************************************************************************************/
   const contextMenu : contextMenuType = {
@@ -443,6 +446,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     convert_data,
     setDiagram,
   )
+
+  //TOAST That appeat to heavy processing func
+  const toast_wait_func=<ToastWaitFunc
+    dict_variable_application_data={dict_variable_application_data}
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    applicationContext={applicationContext}
+  />
 
   // MENU DRAGGABLE LINK Tooltip
   const menu_link_tooltip = MenuConfigurationLinksTooltip(
@@ -882,6 +892,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
       />
     </div>
+    {toast_wait_func}
   </ChakraProvider>
 }
 
