@@ -25,7 +25,7 @@ import { LinkStrokeFuncType } from 'open-sankey/src/draw/types/SankeyDrawLinksTy
 import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
 import { drag_legend_g_elementFuncType } from 'open-sankey/src/draw/types/SankeyDrawLegendTypes'
 import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType, synchronizeNodesandLinksIdFuncType, updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
-import {SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType, actualizeDrawAreaFrameFType} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
+import {SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType, actualizeDrawAreaFrameFType, selectOpensankeyElementsInSelectionZoneFType} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
 
 export const ReturnValueLink=OpensankeyUtils.ReturnValueLink as ReturnValueLinkFuncType
 
@@ -112,3 +112,5 @@ export const reorganize_node_outputLinksIdOSTyped:reorganize_node_outputLinksIdF
 export const reorganize_node_inputLinksIdOSTyped:reorganize_node_inputLinksIdFuncType = OpenSankeyLayout.reorganize_node_inputLinksId
 
 export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType = OpenSankeyDrawEventFunc.actualizeDrawAreaFrame
+
+export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInSelectionZoneFType=OpenSankeyDrawEventFunc.selectOpensankeyElementsInSelectionZone
