@@ -1260,6 +1260,19 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (di
     }
   })
 
+  if(data.mask_legend){ 
+    let scale_for_legend=1
+    if(d3.select('.opensankey #svg').nodes().length>0){
+      const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
+      const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+      scale_for_legend=(scale_svg<1?(1/scale_svg):1)
+    }
+    const height_leg=data.legend_position[1]+((document.getElementById('g_legend')?.getBoundingClientRect().height??0)*scale_for_legend)
+    const width_leg=data.legend_position[0]+((document.getElementById('g_legend')?.getBoundingClientRect().width??0)*scale_for_legend)
+    height=height_leg>height?height_leg:height
+    width=width_leg>width?width_leg:width
+  }
+
   height = height + 100
   width = width + 100
 
