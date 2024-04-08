@@ -45,6 +45,7 @@ import { Checkbox } from '@chakra-ui/react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import { DeleteGNodes } from '../draw/SankeyDrawNodes'
 import { DeleteGLinks } from '../draw/SankeyDrawLinks'
+import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
 
 
 
@@ -285,6 +286,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
 
                   // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
                   redrawNodeLinkLegend()
+
+                  actualizeDrawAreaFrame(dict_variable_application_data)
 
                   setForceUpdate(!forceUpdate)
                 }}>{

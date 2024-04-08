@@ -40,6 +40,7 @@ import {
   SvgDragMiddleMouseStartFuncType,
   ZoomFunctionFuncType,
   actualizeDrawAreaFrameFType,
+  applyZoomEventFType,
   selectOpensankeyElementsInSelectionZoneFType
 } from './types/SankeyDrawEventFunctionTypes'
 import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
@@ -882,4 +883,21 @@ export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInS
   updateComponentMenuConfigLink.current()
   updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
   updateComponenSaveInCache.current(true)
+}
+
+export const applyZoomEvent:applyZoomEventFType=(dict_variable_application_data)=>{
+  // Zoom Behavior
+  const svgSankey = d3.select('.opensankey #svg');
+  (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
+    .call(d3.zoom()
+      .filter(ev => { // Permet d'obliger Crtl pour activer le zoom
+        return (ev.ctrlKey || ev.metaKey) && ev.buttons === 0
+      })
+      .wheelDelta(ev => { // Permet de regler la vitesse du zoom
+        return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
+      })
+      .on('zoom', function (evt) {
+        ZoomFunction(evt,dict_variable_application_data)
+      }))
+    .on('dblclick.zoom', null)
 }
