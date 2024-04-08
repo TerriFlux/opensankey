@@ -865,3 +865,81 @@ export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(dict_variable_a
   }
   d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
 }
+
+
+export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInSelectionZoneFType=(
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  ComponentUpdater,
+  evt,
+  start_point
+)=>{
+  const {data,display_links}=dict_variable_application_data
+  const {multi_selected_nodes,multi_selected_links}=dict_variable_elements_selected
+  const {updateComponentMenuConfigNode,
+    updateComponentMenuConfigNodeAppearence,
+    updateComponentMenuConfigLink,
+    updateComponentMenuNodeIOSelectSideNode,
+    updateComponenSaveInCache}=ComponentUpdater
+  NodeVisibleOnsSvg().forEach(k => DeselectVisualyNodes(data.nodes[k]))
+  Object.keys(display_links).forEach(k => DeselectVisualyLinks(data.links[k]))
+  const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
+  const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
+  const z_x = Number(d3.select('.selection_zone rect').attr('x'))
+  const z_y = Number(d3.select('.selection_zone rect').attr('y'))
+  const z_w = Number(d3.select('.selection_zone rect').attr('width'))
+  const z_h = Number(d3.select('.selection_zone rect').attr('height'))
+  const node_visible = NodeVisibleOnsSvg()
+  const link_visible_svg = LinkVisibleOnSvg()
+  if (evt.shiftKey) {
+    Object.values(data.nodes).filter(n => {
+      const width_n = (document.getElementById('shape_' + n.idNode)?.getBoundingClientRect().width ?? 0) / scale_svg
+      const height_n = (document.getElementById('shape_' + n.idNode)?.getBoundingClientRect().height ?? 0) / scale_svg
+
+      return !multi_selected_nodes.current.includes(n) && node_visible.includes(n.idNode) && n.x >= z_x && n.x <= (z_x + z_w) && n.y >= z_y && n.y <= (z_y + z_h) && n.x + width_n >= z_x && n.x + width_n <= (z_x + z_w) && n.y + height_n >= z_y && n.y + height_n <= (z_y + z_h)
+    }
+    ).forEach(n => multi_selected_nodes.current.push(n))
+    const id_node_selected = multi_selected_nodes.current.map(n => n.idNode)
+    const id_link_selected = multi_selected_links.current.map(l => l.idLink)
+    // Select links who have both nodeSource and nodeTarget selected
+    link_visible_svg.filter(lid => id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget) && !id_link_selected.includes(lid)).forEach(lid => multi_selected_links.current.push(data.links[lid]))
+
+  } else {
+    multi_selected_nodes.current = Object.values(data.nodes).filter(n => {
+      const width_n = (document.getElementById('shape_' + n.idNode)?.getBoundingClientRect().width ?? 0) / scale_svg
+      const height_n = (document.getElementById('shape_' + n.idNode)?.getBoundingClientRect().height ?? 0) / scale_svg
+      return node_visible.includes(n.idNode) && n.x >= z_x && n.x <= (z_x + z_w) && n.y >= z_y && n.y <= (z_y + z_h) && n.x + width_n >= z_x && n.x + width_n <= (z_x + z_w) && n.y + height_n >= z_y && n.y + height_n <= (z_y + z_h)
+
+    })
+    const id_node_selected = multi_selected_nodes.current.map(n => n.idNode)
+    // Select links who have both nodeSource and nodeTarget selected
+    multi_selected_links.current = link_visible_svg.filter(lid => id_node_selected.includes(data.links[lid].idSource) && id_node_selected.includes(data.links[lid].idTarget)).map(lid => data.links[lid])
+  }
+  start_point.current = [0, 0]
+
+  d3.selectAll('.selection_zone').remove()
+  multi_selected_nodes.current.forEach(n=>SelectVisualyNodes(n))
+  multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
+  updateComponentMenuConfigNode.current()
+  updateComponentMenuConfigNodeAppearence.current()
+  updateComponentMenuConfigLink.current()
+  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+  updateComponenSaveInCache.current(true)
+}
+
+export const applyZoomEvent:applyZoomEventFType=(dict_variable_application_data)=>{
+  // Zoom Behavior
+  const svgSankey = d3.select('.opensankey #svg');
+  (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
+    .call(d3.zoom()
+      .filter(ev => { // Permet d'obliger Crtl pour activer le zoom
+        return (ev.ctrlKey || ev.metaKey) && ev.buttons === 0
+      })
+      .wheelDelta(ev => { // Permet de regler la vitesse du zoom
+        return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
+      })
+      .on('zoom', function (evt) {
+        ZoomFunction(evt,dict_variable_application_data)
+      }))
+    .on('dblclick.zoom', null)
+}
