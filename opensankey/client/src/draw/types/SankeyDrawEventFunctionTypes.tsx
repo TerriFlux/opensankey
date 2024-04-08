@@ -116,3 +116,5 @@ export type selectOpensankeyElementsInSelectionZoneFType=(
   evt:MouseEvent,
   start_point: {current: number[]}
   )=>void
+
+export type applyZoomEventFType=(dict_variable_application_data:dict_variable_application_dataType)=>void
