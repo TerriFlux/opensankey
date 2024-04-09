@@ -19,7 +19,7 @@ import {
   Input,
 } from '@chakra-ui/react'
 /*************************************************************************************************/
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, dict_variable_application_dataType, treeFolderType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import {
   add_childrenFType,
@@ -30,7 +30,7 @@ import {
 } from './types/SankeyMenuConfigurationNodesTypes'
 /*************************************************************************************************/
 import { 
-  DeleteNode,ReturnValueNode,AddNewNode} from './SankeyUtils'
+  ReturnValueNode,AddNewNode, deleteSelectedNodeFromData} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
@@ -38,14 +38,13 @@ import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNo
 import { DeselectVisualyNodes, NodeVisibleOnsSvg, SelectVisualyNodes } from '../draw/SankeyDrawFunction'
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from '../topmenus/SankeyMenuTop'
-import { DeleteGNodes } from '../draw/SankeyDrawNodes'
-import { DeleteGLinks } from '../draw/SankeyDrawLinks'
 /*************************************************************************************************/
 
 
 type SankeyEditionTypes = {
   applicationContext:applicationContextType,
   dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes : JSX.Element[],
   token : boolean,
@@ -107,6 +106,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {applicationContext,
     dict_variable_application_data,
+    dict_variable_elements_selected,
     multi_selected_nodes,
     menu_configuration_nodes,token,
     link_function,ComponentUpdater,
@@ -117,7 +117,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const {t}=applicationContext
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
-  const {updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode,updateComponentMenuConfigLink}=ComponentUpdater
   updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
   const tmpNodes = Object
     .fromEntries(
@@ -345,26 +345,13 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           disabled={multi_selected_nodes.current.length == 0}
           onClick={
             () => {
-              multi_selected_nodes.current.map(d => DeleteNode(data, d))
-              multi_selected_nodes.current = []
-              const tmp_node=Object.keys(data.nodes)
-              Object.entries(dict_variable_application_data.display_nodes).filter(n=>{
-                return !tmp_node.includes(n[0])
-              }).forEach(n=>{
-                DeleteGNodes([n[0]])
-                delete dict_variable_application_data.display_nodes[n[0]]
-              })
-
-              const tmp_link=Object.keys(data.links)
-              Object.entries(dict_variable_application_data.display_links).filter(l=>{
-                return !tmp_link.includes(l[0])
-              }).forEach(l=>{
-                DeleteGLinks([l[0]])
-                delete dict_variable_application_data.display_links[l[0]]
-              })
-
+              deleteSelectedNodeFromData(dict_variable_application_data,dict_variable_elements_selected)
+              
+              node_function.recomputeDisplayedElement()
               node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
               link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              updateComponentMenuConfigNode.current()
+              updateComponentMenuConfigLink.current()
               ComponentUpdater.updateComponenSaveInCache.current(false)
               
             }}>
