@@ -38,7 +38,7 @@ import {
   DrawArrows,
   NodeVisibleOnsSvg
 } from './draw/SankeyDrawFunction'
-import { ZoomFunction } from './draw/SankeyDrawEventFunction'
+import { applyZoomEvent } from './draw/SankeyDrawEventFunction'
 import {
   EventOnZoneMouseDown,
   EventOnZoneMouseMove,
@@ -163,6 +163,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     const curr_displayed_nodes= Object.keys(dict_variable_application_data.display_nodes)
     const node_to_delete=NodeVisibleOnsSvg().filter(nid=>!curr_displayed_nodes.includes(nid))
     DeleteGNodes(node_to_delete)
+
+    applyZoomEvent(dict_variable_application_data)
+
   }
   /*************************************************************************************************/
   const dict_variable_elements_selected : dict_variable_elements_selectedType = {
@@ -607,19 +610,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       dict_hook_ref_setter_show_dialog_components
     )
     // Zoom Behavior
-    const svgSankey = d3.select('.opensankey #svg');
-    (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
-      .call(d3.zoom()
-        .filter(ev => { // Permet d'obliger Crtl pour activer le zoom
-          return (ev.ctrlKey || ev.metaKey) && ev.buttons === 0
-        })
-        .wheelDelta(ev => { // Permet de regler la vitesse du zoom
-          return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
-        })
-        .on('zoom', function (evt) {
-          ZoomFunction(evt,dict_variable_application_data)
-        }))
-      .on('dblclick.zoom', null)
+    applyZoomEvent(dict_variable_application_data)
   },[data])
   /*************************************************************************************************/
   //Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
