@@ -154,7 +154,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         })
       }, {}) as {[idLink:string]:SankeyLink}
     const pre_link_key=Object.keys(pre_display_links)
-  
+
     dict_variable_application_data.display_links={}
     data.linkZIndex=pre_link_key
     pre_link_key.forEach(lid=>dict_variable_application_data.display_links[lid]=data.links[lid])
@@ -329,13 +329,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   const node_arrow_visible =
   (data:SankeyData,n: SankeyNode) => !NodeDisplayed(data,n) || (n.inputLinksId.length === 0) || (!ReturnValueLink(data,data.links[n.inputLinksId[0]],'arrow')) ? false : true
-  
+
   // Color for the sabot when the source node is an arrow
   const LinkSabotColor=LinkColor
   const RedrawLinks=(links_to_update:SankeyLink[])=>{
     drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,links_to_update,ComponentUpdater)
     AddDrawLinksEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,applicationContext,ref_alt_key_pressed)
-    
+
   }
 
   const OpenSankeyCreateLinksOnSVG=(links_to_update:SankeyLink[])=>{
@@ -351,7 +351,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       dict_hook_ref_setter_show_dialog_components,
       links_to_update
     )  }
-  
+
   const link_function:LinkFunctionTypes = {
     GetLinkValue,
     LinkText,
@@ -625,72 +625,77 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   return <ChakraProvider theme={opensankey_theme}>
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
       <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
-        { MenuDraggable(
-          dict_hook_ref_setter_show_dialog_components,
-          'ref_setter_show_menu_node_apparence',
-          menu_configuration_nodes_attributes,
-          contextMenu.pointer_pos,
-          applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.apparence.apparence'),
-        )
+        {
+          MenuDraggable(
+            dict_hook_ref_setter_show_dialog_components,
+            'ref_setter_show_menu_node_apparence',
+            menu_configuration_nodes_attributes,
+            contextMenu.pointer_pos,
+            applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.apparence.apparence'),
+          )
         }
-        { MenuDraggable(
-          dict_hook_ref_setter_show_dialog_components,
-          'ref_setter_show_menu_node_io',
-          SankeyMenuConfigurationNodesIO(
-            applicationContext,
-            dict_variable_application_data,
-            dict_variable_elements_selected,
-            GetLinkValue,
-            node_function,link_function,
-            ComponentUpdater,
-            true
-          ),
-          contextMenu.pointer_pos,
-          applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.PF.PFM')
-        )
+        {
+          MenuDraggable(
+            dict_hook_ref_setter_show_dialog_components,
+            'ref_setter_show_menu_node_io',
+            SankeyMenuConfigurationNodesIO(
+              applicationContext,
+              dict_variable_application_data,
+              dict_variable_elements_selected,
+              GetLinkValue,
+              node_function,link_function,
+              ComponentUpdater,
+              true
+            )[0],
+            contextMenu.pointer_pos,
+            applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.PF.PFM')
+          )
         }
-        { MenuDraggable(
-          dict_hook_ref_setter_show_dialog_components,
-          'ref_setter_show_menu_link_data',
-          MenuConfigurationLinksData(
-            dict_variable_application_data,
-            dict_variable_elements_selected,
-            applicationContext,
-            [<></>],
-            true,
-            ComponentUpdater,
-            node_function,
-            link_function
-          ),
-          contextMenu.pointer_pos,
-          applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
-        )
+        {
+          MenuDraggable(
+            dict_hook_ref_setter_show_dialog_components,
+            'ref_setter_show_menu_link_data',
+            MenuConfigurationLinksData(
+              dict_variable_application_data,
+              dict_variable_elements_selected,
+              applicationContext,
+              [<></>],
+              true,
+              ComponentUpdater,
+              node_function,
+              link_function
+            ),
+            contextMenu.pointer_pos,
+            applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
+          )
         }
-        { MenuDraggable(
-          dict_hook_ref_setter_show_dialog_components,
-          'ref_setter_show_menu_link_appearence',
-          MenuConfigurationLinksAppearence(
-            dict_variable_application_data,
-            dict_variable_elements_selected,
-            applicationContext,
-            [],
-            false,
-            link_function,
-            ComponentUpdater,
-            true
-          ),
-          contextMenu.pointer_pos,
-          applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')
-        )
+        {
+          MenuDraggable(
+            dict_hook_ref_setter_show_dialog_components,
+            'ref_setter_show_menu_link_appearence',
+            MenuConfigurationLinksAppearence(
+              dict_variable_application_data,
+              dict_variable_elements_selected,
+              applicationContext,
+              [],
+              false,
+              link_function,
+              ComponentUpdater,
+              true
+            ),
+            contextMenu.pointer_pos,
+            applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')
+          )
         }
-        { MenuDraggable(
-          dict_hook_ref_setter_show_dialog_components,
-          'ref_setter_show_menu_layout',
-          menu_configuration_layout,
-          contextMenu.pointer_pos,
-          applicationContext.t('Menu.MEP'),
-          33
-        )
+        {
+          MenuDraggable(
+            dict_hook_ref_setter_show_dialog_components,
+            'ref_setter_show_menu_layout',
+            menu_configuration_layout,
+            contextMenu.pointer_pos,
+            applicationContext.t('Menu.MEP'),
+            33
+          )
         }
         {menuNodeTooltip}
         {menuNodeTags}
@@ -761,7 +766,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 GetLinkValue,
                 node_function,link_function,
                 ComponentUpdater
-
               ),
               MenuConfigurationLinks(
                 dict_variable_application_data,

@@ -1,9 +1,20 @@
 import React, { useState } from 'react'
-import { Row, Form, Tab, InputGroup } from 'react-bootstrap'
-import { SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
-import { Checkbox } from '@chakra-ui/react'
-import { SmoothClasses } from './SankeyUtils'
+import {
+  applicationContextType,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType,
+  SankeyNode,
+} from '../types/Types'
+import {
+  Box,
+  Checkbox,
+  Select,
+  Tab,
+  TabPanel
+} from '@chakra-ui/react'
 import { SankeyMenuConfigurationNodesTagsFType } from './types/SankeyMenuConfigurationNodesTagsTypes'
+
+
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
    * To visaulize nodes according to their tag associated, the groupTags must be at least have it banner in mode one or mutliple
@@ -23,103 +34,132 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
   const { data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
-  const [forceUpdate,setForceUpdate]=useState(false)
+  const [forceUpdate, setForceUpdate]=useState(false)
   const tags_visible = Object.keys(data.nodeTags).length > 0
+
   if ((tags_group_key == '' && Object.keys(data.nodeTags).length > 0) || (!Object.keys(data.nodeTags).includes(tags_group_key) && Object.keys(data.nodeTags).length > 0)) {
     set_tags_group_key(Object.keys(data.nodeTags)[0])
   }
 
-  const content=<>    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.EN')}</h4>
+  const content= <Box
+    layerStyle='menuconfigpanel_grid'
+  >
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_part_title_1'
+    >
+      {t('Menu.EN')}
+    </Box>
 
     {/* Groupe d'étiquettes  */}
-    <InputGroup>
-      <Form.Select
-        style={{width:'60%'}}
-        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
-        value={tags_group_key}
-      >
-        {Object.entries(data.nodeTags).map(
-          (tags_group, i) =>
+    <Select
+      variant='menuconfigpanel_option_select'
+      value={tags_group_key}
+      onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_tags_group_key(evt.target.value)}
+    >
+      {
+        Object
+          .entries(data.nodeTags)
+          .map((tags_group, i) =>
             <option
               key={i}
-              value={tags_group[0]} >
+              value={tags_group[0]}
+            >
               {tags_group[1].group_name}
-            </option>)}
-      </Form.Select>
-    </InputGroup>
-
-    <Form.Group as={Row} style={{margin:'auto'}} >
-  
-      {tags_visible && tags_group_key != '' && Object.keys(data.nodeTags).includes(tags_group_key) ? Object.entries(data.nodeTags[tags_group_key].tags).map(
-        tags => {
-          const allChecked = IsAllNodeTagsSame(multi_selected_nodes.current,tags[0],tags_group_key)
-          return (
-            <Checkbox 
-              sx={SmoothClasses({})}
-              iconColor={allChecked[1]?'#78C2AD':'white'}
-              maxW={'100%'}
-              isIndeterminate={allChecked[1]}
-              isChecked={allChecked[0] as boolean}
-              onChange={(evt) => {
-                const visible = evt.target.checked
-                Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-                  if (visible) {
-                    if (!d.tags[tags_group_key]) {
-                      d.tags[tags_group_key] = []
-                    }
-                    d.tags[tags_group_key].push(tags[0])
-                    // If the groue tage is 'Type de noeud' then we change the style
-                    // to style of product or sector
-                    if(tags_group_key==='Type de noeud'){
-                      if(tags[0]==='secteur'){
-                        d.style='NodeSectorStyle'
-                      }else  if(tags[0]==='produit'){
-                        d.style='NodeProductStyle'
-                      }
-                    }
-                  } else {
-                    // Remove deselected tag from array of selected for the groupe tag tags_group_key of selected nodes
-                    d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[0]),1)
-
-                    // If the groue tage is 'Type de noeud' then we change the style
-                    // to style of product or sector according to tag still affected
-                    // if neither 'produit' or 'secteur' are affected the change style to default
-                    if(tags_group_key==='Type de noeud' && d.tags[tags_group_key].length==0){
-                      d.style='default'
-                    }else if(tags_group_key==='Type de noeud' && d.tags[tags_group_key].includes('secteur') || d.tags[tags_group_key].includes('produit')){
-                      if(tags[0]==='secteur'){
-                        d.style='NodeProductStyle'
-                      }else  if(tags[0]==='produit'){
-                        d.style='NodeSectorStyle'
-                      }
-                    }
-                  }
-                })
-                setForceUpdate(!forceUpdate)
-                node_function.RedrawNodes(multi_selected_nodes.current)
-                ComponentUpdater.updateComponenSaveInCache.current(false)
-                
-              }}>
-              {tags[1].name}
-            </Checkbox>
-
-
-
-          
+            </option>
           )
-        }) : (<></>)}
-    </Form.Group></>
+      }
+    </Select>
 
-  return menu_for_modal?content: <Tab className='content_editon_elements' key="tags" eventKey="tags" title={t('Noeud.tags_node.tags')}>
-    {content}
-  </Tab >
+    <Box
+      layerStyle='menuconfigpanel_grid'
+    >
+      {
+        tags_visible && tags_group_key != '' && Object.keys(data.nodeTags).includes(tags_group_key) ?
+          Object
+            .entries(data.nodeTags[tags_group_key].tags)
+            .map(tags => {
+              const allChecked = IsAllNodeTagsSame(multi_selected_nodes.current,tags[0],tags_group_key)
+              return (
+                <Checkbox
+                  variant='menuconfigpanel_tag_checkbox'
+                  isIndeterminate={allChecked[1]}
+                  isChecked={allChecked[0] as boolean}
+                  onChange={(evt) => {
+                    const visible = evt.target.checked
+                    Object
+                      .values(data.nodes)
+                      .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                      .map(d => {
+                        if (visible) {
+                          if (!d.tags[tags_group_key]) {
+                            d.tags[tags_group_key] = []
+                          }
+                          d.tags[tags_group_key].push(tags[0])
+                          // If the groue tage is 'Type de noeud' then we change the style
+                          // to style of product or sector
+                          if(tags_group_key==='Type de noeud'){
+                            if(tags[0]==='secteur'){
+                              d.style='NodeSectorStyle'
+                            }else  if(tags[0]==='produit'){
+                              d.style='NodeProductStyle'
+                            }
+                          }
+                        } else {
+                          // Remove deselected tag from array of selected for the groupe tag tags_group_key of selected nodes
+                          d.tags[tags_group_key].splice(d.tags[tags_group_key].indexOf(tags[0]),1)
+
+                          // If the groue tage is 'Type de noeud' then we change the style
+                          // to style of product or sector according to tag still affected
+                          // if neither 'produit' or 'secteur' are affected the change style to default
+                          if(tags_group_key==='Type de noeud' && d.tags[tags_group_key].length==0){
+                            d.style='default'
+                          } else if (
+                            (tags_group_key==='Type de noeud') &&
+                            (d.tags[tags_group_key].includes('secteur') || d.tags[tags_group_key].includes('produit'))
+                          ){
+                            if (tags[0]==='secteur') {
+                              d.style='NodeProductStyle'
+                            } else if (tags[0]==='produit'){
+                              d.style='NodeSectorStyle'
+                            }
+                          }
+                        }
+                      })
+                    setForceUpdate(!forceUpdate)
+                    node_function.RedrawNodes(multi_selected_nodes.current)
+                    ComponentUpdater.updateComponenSaveInCache.current(false)
+                  }}
+                >
+                  {tags[1].name}
+                </Checkbox>
+              )}):
+          (<></>)
+      }
+    </Box>
+  </Box>
+
+  return menu_for_modal ?
+    [content]:
+    [
+      <Tab>
+        <Box
+          layerStyle='submenuconfig_tab'
+        >
+          {t('Noeud.tabs.tags')}
+        </Box>
+      </Tab>,
+      <TabPanel>
+        {content}
+      </TabPanel>
+    ]
 }
 
 // Check if all value of the attribute "k" is the same in the selected nodes (or selected style)
 // If the value come from local attribute or the style of the node doesn't matter, we look only the value
 const IsAllNodeTagsSame=(m_s_n:SankeyNode[],key_tag:string,key_grp_tag:string)=>{
   // store_value : variable that contain an array forEach key we are looking for
-  // Each array contain in first position the value of the selected nodes attribute 
+  // Each array contain in first position the value of the selected nodes attribute
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
   let store_value=[false,false]
 
@@ -133,7 +173,7 @@ const IsAllNodeTagsSame=(m_s_n:SankeyNode[],key_tag:string,key_grp_tag:string)=>
       }else{
         store_value[1]=val!==store_value[0]?true:store_value[1]
       }
-      
+
     })
   }else{
     store_value=[false,false]

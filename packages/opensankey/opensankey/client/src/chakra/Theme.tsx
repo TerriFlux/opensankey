@@ -7,30 +7,45 @@ import {
   button_base_style,
   menuconfigpanel_add_button,
   menuconfigpanel_del_button,
+  menuconfigpanel_option_button_activated_center,
+  menuconfigpanel_option_button_activated_left,
+  menuconfigpanel_option_button_activated_right,
+  menuconfigpanel_option_button_activated,
+  menuconfigpanel_option_button_center,
+  menuconfigpanel_option_button_left,
+  menuconfigpanel_option_button_right,
   menuconfigpanel_option_button,
-  menuconfigpanel_option_button_activated
-} from './Button'
+} from './ButtonStyles'
 import {
   checkbox_base_style,
   menuconfigpanel_part_title_1_checkbox,
-  menuconfigpanel_option_checkbox
+  menuconfigpanel_option_checkbox,
+  menuconfigpanel_tag_checkbox
 } from './CheckboxStyles'
 import {
   input_base_style,
   menuconfigpanel_option_input,
   menuconfigpanel_option_input_color,
-} from './InputStyle'
+} from './InputStyles'
 import {
   numberinput_base_style,
   menuconfigpanel_option_numberinput,
   menuconfigpanel_option_numberinput_with_right_addon,
-} from './NumberInputStyle'
+} from './NumberInputStyles'
 import {
   select_base_style,
   select_custom_style,
-  select_police_style
-} from './SelectStyle'
-import { slider_base_style } from './Slider'
+  menuconfigpanel_option_select
+} from './SelectStyles'
+import {
+  slider_base_style
+} from './SliderStyles'
+import {
+  tabs_base_style
+} from './TabStyles'
+import {
+  textarea_base_style
+} from './TextAreaStyles'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -41,17 +56,25 @@ export const opensankey_theme = extendTheme({
     Button: {
       baseStyle: button_base_style,
       variants: {
-        menuconfigpanel_option_button,
-        menuconfigpanel_option_button_activated,
         menuconfigpanel_add_button,
-        menuconfigpanel_del_button
+        menuconfigpanel_del_button,
+        menuconfigpanel_option_button_activated_center,
+        menuconfigpanel_option_button_activated_left,
+        menuconfigpanel_option_button_activated_right,
+        menuconfigpanel_option_button_activated,
+        menuconfigpanel_option_button_center,
+        menuconfigpanel_option_button_left,
+        menuconfigpanel_option_button_right,
+        menuconfigpanel_option_button,
       }
     },
     Checkbox: {
       baseStyle: checkbox_base_style,
       variants: {
         menuconfigpanel_part_title_1_checkbox,
-        menuconfigpanel_option_checkbox }
+        menuconfigpanel_option_checkbox,
+        menuconfigpanel_tag_checkbox
+      }
     },
     Input: {
       baseStyle: input_base_style,
@@ -71,11 +94,17 @@ export const opensankey_theme = extendTheme({
       baseStyle: select_base_style,
       variants: {
         select_custom_style,
-        select_police_style
+        menuconfigpanel_option_select
       }
     },
     Slider: {
       baseStyle: slider_base_style
+    },
+    Tabs: {
+      baseStyle: tabs_base_style,
+    },
+    TextArea: {
+      baseStyle: textarea_base_style
     }
   },
   layerStyles: {
@@ -94,6 +123,26 @@ export const opensankey_theme = extendTheme({
       textAlign: 'left',
       flex: '1',
       height: '2rem'
+    },
+    submenuconfig_tab: {
+      textStyle: 'h3',
+      textAlign: 'center',
+      flex: '1',
+      paddingStart: '0',
+      paddingEnd: '0',
+      color: 'openSankey.400'
+    },
+    submenuconfig_tab_with_badge: {
+      display: 'grid',
+      gridTemplateColumns: '3fr 1fr',
+      gridColumnGap: '0.25rem',
+      height: '2rem',
+      textStyle: 'h3',
+      textAlign: 'center',
+      flex: '1',
+      paddingStart: '0',
+      paddingEnd: '0',
+      color: 'openSankey.400'
     },
     menuconfigpanel_part_title_1: {
       textStyle: 'h2',
@@ -189,8 +238,22 @@ export const opensankey_theme = extendTheme({
     }
   },
   textStyles: {
+    xs: {
+      fontSize: '16px',
+    },
+    sm: {
+      fontSize: '14px',
+    },
+    md:{
+      fontSize: '12px',
+    },
+    lg: {
+      fontSize: '10px',
+    },
+    xl: {
+      fontSize: '8px',
+    },
     h1: {
-      // you can also use responsive styles
       fontFamily: 'Open Sans,sans-serif',
       fontSize: '16px',
     },
