@@ -375,6 +375,12 @@ export const open_resources = {
           SlctInLink:'Allow to select all incoming links to the node(s)',
           IB:'Tooltip : text formatted in HTML and displayed with the tooltip of the node. This tooltip pops on graphic space with SHIFT + MOUSE on the node.',
         },
+        tabs: {
+          apparence:'Appearence',
+          infos:'Additional info.',
+          tags:'Tags',
+          io:'I/O links positions',
+        },
         apparence:{
           apparence:'Appearence',
           Visibilité:'Shape',
@@ -466,12 +472,8 @@ export const open_resources = {
           lti:'Identify the links in the table with their colors',
           col:'Apply',
           tooltips:{
-            ent:'Display in the table below, the incoming links of the selected node(s)',
-            sort:'Display in the table below, the outgoing links of the selected node(s)',
-            droite:'Display in the table below, the links on the right of the selected node(s)',
-            gauche:'Display in the table below, the links on the left of the selected node(s)',
-            ades:'Display in the table below, the feeds above the selected node(s)',
-            edes:'Display in the table below, the feeds below the selected node(s)',
+            io:'Choose either the incoming or outgoing links of the selected node',
+            side:'Choose either the right, left, top or bottom links of the selected node',
             lti:'Display the lines of the links table with their respective colors to better identify them'
           }
         }
@@ -1050,6 +1052,12 @@ export const open_resources = {
           SlctInLink:'Permettre de sélectionner tous les flux entrants vers le/les noeud(s)',
           IB:'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du noeud. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le noeud',
         },
+        tabs: {
+          apparence:'Apparence',
+          infos:'Info sup.',
+          tags:'Étiquettes',
+          io:'Flux E/S',
+        },
         apparence:{
           apparence:'Apparence',
           Visibilité:'Forme',
@@ -1142,12 +1150,8 @@ export const open_resources = {
           lti:'Identifier les flux du tableau avec leurs couleurs',
           col:'Appliquer',
           tooltips:{
-            ent:'Afficher les flux entrants du/des noeud(s) selectionné(s)',
-            sort:'Afficher les flux sortant du/des noeud(s) selectionné(s)',
-            droite:'Afficher les flux se situant à droite du/des noeud(s) selectionné(s)',
-            gauche:'Afficher les flux se situant à gauche du/des noeud(s) selectionné(s)',
-            ades:'Afficher les flux se situant au dessus du/des noeud(s) selectionné(s)',
-            edes:'Afficher les flux se situant en dessous du/des noeud(s) selectionné(s)',
+            io:'Choisir les flux entrants ou sortant du noeud selectionné',
+            side:'Choisir les flux de droite, gauche, bas ou haut du noeud selectionné',
             lti:'Affiche les lignes du tableau des flux avec leur couleurs respectives pour mieux les identifier'
           }
         }

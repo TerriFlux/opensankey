@@ -65,9 +65,9 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
               <Dropdown.Toggle style={{width:'50%'}} variant="success" id="dropdown-basic">{(selected_style_node !== '') ? CutName(data.style_node[selected_style_node].name, 30) : 'Choix Style'}</Dropdown.Toggle>
               <Dropdown.Menu>
                 {Object.keys(data.style_node).map((d,i) => {
-                  return (<Dropdown.Item key={i} onClick={() => { 
+                  return (<Dropdown.Item key={i} onClick={() => {
                     ref_selected_style_node.current = d
-                    set_selected_style_node(d) 
+                    set_selected_style_node(d)
 
                   }}>{data.style_node[d].name}</Dropdown.Item>)
 
@@ -89,7 +89,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                   updateComponentMenuConfigNodeAppearence.current()
                   RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
                   ComponentUpdater.updateComponenSaveInCache.current(false)
-                
+
                 }
               }
             ><FaMinus /></Button>
@@ -112,7 +112,9 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
             />
           </InputGroup>
         </Form.Group>
-        {SankeyMenuConfigurationNodesAttributes(t,node_attribute_tab,true)}
+        {
+          SankeyMenuConfigurationNodesAttributes(t,node_attribute_tab,true)[0]
+        }
       </Modal.Body>
     </Modal>
   )
@@ -202,7 +204,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
               onChange={evt => {
                 data.style_link[selected_style_link].name = evt.target.value
                 setForceUpdate(!forceUpdate)
-                updateComponentMenuConfigLink.current()              
+                updateComponentMenuConfigLink.current()
               }}
             />
           </Col>
