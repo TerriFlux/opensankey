@@ -1325,7 +1325,7 @@ export const updateLayout: updateLayoutFuncType = (
   if (mode.includes('attrGeneral')) {
     let difference = deep_diff.diff(data, new_layout)
     if (difference) {
-      difference = difference.filter((d: { path: string[]; kind: string} ) => d.kind === 'E' && d.path.length === 1)
+      difference = difference.filter((d: { path: string[]; kind: string} ) => d.kind === 'E' && d.path.length === 1 && d.path[0]!=='current_view')
       difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data, {}, diff))
     }
   }
