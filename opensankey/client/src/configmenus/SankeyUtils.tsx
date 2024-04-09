@@ -8,7 +8,9 @@ import { SankeyData,
   SankeyNodeStyle,
   SankeyLinkAttrLocal,
   SankeyLinkStyle,
-  TagsCatalog} from '../types/Types'
+  TagsCatalog,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType} from '../types/Types'
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
@@ -35,6 +37,8 @@ import {
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
+import { DeleteGLinks } from '../draw/SankeyDrawLinks'
+import { DeleteGNodes } from '../draw/SankeyDrawNodes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -2047,4 +2051,29 @@ export const updateLinkTagValue=(d:SankeyLink,
   } else {
     val.tags[tags_group_key].splice(val.tags[tags_group_key].indexOf(tag_key),1)
   }
+}
+
+export const deleteSelectedNodeFromData=(
+  dict_variable_application_data:dict_variable_application_dataType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType
+)=>{
+  const {data} = dict_variable_application_data
+  const {multi_selected_nodes}=dict_variable_elements_selected
+  multi_selected_nodes.current.map(d => DeleteNode(data, d))
+  multi_selected_nodes.current = []
+  const tmp_node=Object.keys(data.nodes)
+  Object.entries(dict_variable_application_data.display_nodes).filter(n=>{
+    return !tmp_node.includes(n[0])
+  }).forEach(n=>{
+    DeleteGNodes([n[0]])
+    delete dict_variable_application_data.display_nodes[n[0]]
+  })
+
+  const tmp_link=Object.keys(data.links)
+  Object.entries(dict_variable_application_data.display_links).filter(l=>{
+    return !tmp_link.includes(l[0])
+  }).forEach(l=>{
+    DeleteGLinks([l[0]])
+    delete dict_variable_application_data.display_links[l[0]]
+  })
 }
