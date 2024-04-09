@@ -15,15 +15,15 @@ export type SankeyPlusNodeIconFType = (
   menu_for_modal:boolean,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   node_function:PlusNodeFuntionType
-)=> JSX.Element
+)=> JSX.Element[]
 
-export type SankeyPlusHyperLinkFType=( 
+export type SankeyPlusHyperLinkFType=(
   t:TFunction,
   data:SankeyPlusData,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
   node_function:PlusNodeFuntionType
-) => JSX.Element
+) => JSX.Element[]
 
 export type PlusNodeClickEventFType=(
   applicaTionData:SankeyPlusApplicationDataType,

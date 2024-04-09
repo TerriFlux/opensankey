@@ -1,16 +1,16 @@
 import React, { useState } from 'react'
-import { Form, Tab, OverlayTrigger, Tooltip, Badge, Col, Row } from 'react-bootstrap'
+import { Badge, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {  faLock } from '@fortawesome/free-solid-svg-icons'
+import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { Quill } from 'react-quill'
-import { Checkbox } from '@chakra-ui/react'
+import { Box, Button, Checkbox, Tab, TabPanel, Textarea } from '@chakra-ui/react'
+import {  } from '@chakra-ui/react'
 import * as d3 from 'd3'
 import ReactQuill from 'react-quill'
 
 import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
 
-import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
 import { NodeDisplayed } from './import/OpenSankey'
 import {PlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
@@ -30,17 +30,27 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   is_activated:boolean,
   d_setter_input_value,
   node_function
-
 )=> {
-  const [s_editor_content_fo_node,sEditorContentFoNode]= useState('')
+  const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
+  const [forceUpdate, setForceUpdate] = useState(false)
 
-  d_setter_input_value.r_setter_editor_content_fo_node.current=sEditorContentFoNode
+  let s_tmp_editor_content_fo_node = s_editor_content_fo_node
+  let s_tmp_editor_content_changed = false
+
+  d_setter_input_value.r_setter_editor_content_fo_node.current = sEditorContentFoNode
+
+  if (multi_selected_nodes.current.length>0) {
+    if (multi_selected_nodes.current[0].FO_content !== s_editor_content_fo_node) {
+      s_tmp_editor_content_changed = true
+    }
+  }
+
   // Create a custom size list of font-size
   const list_size=[]
   for(let i=6;i<=50;i++){
     list_size.push(i+'px')
   }
-  
+
   const Size = Quill.import('attributors/style/size')
   Size.whitelist = list_size
   Quill.register(Size, true)
@@ -62,147 +72,226 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
     'bold', 'italic', 'underline', 'strike','color','background',
     'list', 'bullet','align'
   ]
-  const isQuill_invalid=multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content!==s_editor_content_fo_node:false
-  const value_of_key=OSPIsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
 
-  
+  const value_of_key = OSPIsAllNodeNotLocalAttrSameValue(data,multi_selected_nodes.current,['has_FO','is_FO_raw'])
+
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
-  const editor_fo=<Form className='FO_zdt_editeur'>
-    <Form.Group><ReactQuill
-      value={s_editor_content_fo_node}
+  const editor_fo=<Box as='span' width='calc(20vw - 1.5em)'>
+    <ReactQuill
+      defaultValue={s_tmp_editor_content_fo_node}
       onChange={(evt,_,s) => {
         if(s==='user'){
-          sEditorContentFoNode(evt)
+          s_tmp_editor_content_fo_node = evt
+          if (!s_tmp_editor_content_changed) {
+            sEditorContentFoNode(s_tmp_editor_content_fo_node)
+          }
         }
       }}
       onBlur={()=>{
-        Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-          d.FO_content = s_editor_content_fo_node
-        })
-        node_function.RedrawNodes(multi_selected_nodes.current)
+        sEditorContentFoNode(s_tmp_editor_content_fo_node)
       }}
       theme="snow"
       modules={modules}
       formats={formats}
-      readOnly={!is_activated?true:!value_of_key['has_FO'][0]}
+      readOnly={!is_activated}
       style={{
         color:(!is_activated || !value_of_key['has_FO'][0] )?'#666666':'',
-        backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}}
-    /></Form.Group>
-    <Form.Control type='text' isInvalid={isQuill_invalid} style={{display:'none'}}/>
-    <Form.Control.Feedback type='invalid'>{t('MEP.onBlurNoEnter')}</Form.Control.Feedback>
+        backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''
+      }}
+    />
+  </Box>
 
-  </Form>
-
-  const editor_fo_raw=<Form.Control
-    as="textarea"
+  const editor_fo_raw=<Textarea
     rows={5}
-    style={{
-      color:(!is_activated || !value_of_key['has_FO'][0])?'#666666':'',
-      backgroundColor:(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}}
-    disabled={!is_activated?true:!value_of_key['has_FO'][0]}
-    value={multi_selected_nodes.current.length>0?multi_selected_nodes.current[0].FO_content:''}
+    color={(!is_activated || !value_of_key['has_FO'][0])?'#666666':''}
+    backgroundColor={(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}
+    disabled={!is_activated}
+    defaultValue={s_tmp_editor_content_fo_node}
     onChange={(evt) => {
-      Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
-        d.FO_content = evt.target.value
-      })
-      node_function.RedrawNodes(multi_selected_nodes.current)
+      s_tmp_editor_content_fo_node = evt.target.value
+      if (!s_tmp_editor_content_changed) {
+        sEditorContentFoNode(s_tmp_editor_content_fo_node)
+      }
+    }}
+    onBlur={()=>{
+      sEditorContentFoNode(s_tmp_editor_content_fo_node)
     }}
   />
 
-  return <Tab key="node_fo" eventKey="node_fo" className='content_editon_elements' title={
-    <>
-      {t('Noeud.FO.FO')}
-      {(!is_activated)?
+  return [
+    <Tab>
+      <Box
+        layerStyle='submenuconfig_tab_with_badge'
+      >
+        {t('Noeud.tabs.fo')}
+        {
+          (!is_activated)?
+            <OverlayTrigger
+              key={'textZoneDisabled'}
+              placement={'top'}
+              delay={500}
+              overlay={
+                <Tooltip id={'textZoneDisabled'}>
+                  {t('Menu.sankeyPlusDisabled')}
+                </Tooltip>
+              }
+            >
+              <Badge
+                pill
+                bg="none"
+                style={{fontSize:'1em'}}>
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{color: '#66a593', display: 'inline'}}
+                />
+              </Badge>
+            </OverlayTrigger>:
+            <Badge
+              pill
+              bg="info"
+              style={{fontSize:'0.75em', height:'1.5em',  display: 'inline'}}
+            >
+              Beta
+            </Badge>
+        }
+      </Box>
+    </Tab>,
+    <TabPanel>
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
         <OverlayTrigger
-          key={'textZoneDisabled'}
+          key={'foDisabled'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
+          overlay={
+            (!is_activated)?
+              <Tooltip id={'foDisabled'}>
+                {t('Menu.sankeyPlusDisabled')}
+              </Tooltip>:
+              <></>
+          }
         >
-          <Badge pill
-            bg="white"
-            style={{marginLeft:'5px', fontSize:'1.3em'}}>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Badge>
-        </OverlayTrigger>:
-        <Badge pill bg="info" style={{marginLeft:'5px'}}>Beta</Badge>}
-    </>}
-  >
-    <OverlayTrigger
-      key={'foDisabled'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'foDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
-      <Row>
-        <Col>
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={value_of_key['has_FO'][1]?'#78C2AD':'white'}
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
             isDisabled={!is_activated}
             isIndeterminate={value_of_key['has_FO'][1]}
             isChecked={value_of_key['has_FO'][0] as boolean}
             onChange={(evt) => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              Object
+                .values(data.nodes)
+                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                 .forEach(d => {
                   d.has_FO = evt.target.checked
                 })
               node_function.RedrawNodes(multi_selected_nodes.current)
-            }}>
+              setForceUpdate(!forceUpdate)
+            }}
+          >
             {t('Noeud.foreign_object.Visibilité')}
           </Checkbox>
-        </Col>
-      </Row>
-    </OverlayTrigger>
+        </OverlayTrigger>
 
-    <OverlayTrigger
-      key={'foRawDisabled'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'foRawDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
-      <Row>
-        <Col>
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={value_of_key['is_FO_raw'][1]?'#78C2AD':'white'}
+        <OverlayTrigger
+          key={'foRawDisabled'}
+          placement={'top'}
+          delay={500}
+          overlay={
+            (!is_activated)?
+              <Tooltip id={'foRawDisabled'}>
+                {t('Menu.sankeyPlusDisabled')}
+              </Tooltip>:
+              <></>
+          }
+        >
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
             isDisabled={!is_activated}
             isIndeterminate={value_of_key['is_FO_raw'][1]}
             isChecked={value_of_key['is_FO_raw'][0] as boolean}
             onChange={(evt) => {
-              Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              Object
+                .values(data.nodes)
+                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                 .forEach(d => {
                   d.is_FO_raw = evt.target.checked
                 })
               node_function.RedrawNodes(multi_selected_nodes.current)
-            }}>
+              setForceUpdate(!forceUpdate)
+            }}
+          >
             {t('Noeud.foreign_object.raw')}
           </Checkbox>
-        </Col>
-      </Row>
-    </OverlayTrigger>
+        </OverlayTrigger>
 
-    {(multi_selected_nodes.current.length>0)?
-      <OverlayTrigger
-        key={'foContentDisabled'}
-        placement={'top'}
-        delay={500}
-        overlay={(!is_activated)?
-          (<Tooltip id={'foContentDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-          (!value_of_key['has_FO'][0])?<Tooltip id={'foNotVisible'}>{t('Noeud.foreign_object.not_activated')}</Tooltip>:<></>}
-      >
-        <Form className='FO_node_editeur'>
-          <Form.Group>{multi_selected_nodes.current[0].is_FO_raw?editor_fo_raw:editor_fo}</Form.Group>
-        </Form>
-      </OverlayTrigger>
-      :<></>}
-  </Tab>
+        {
+          (multi_selected_nodes.current.length>0)?
+            <OverlayTrigger
+              key={'foContentDisabled'}
+              placement={'top'}
+              delay={500}
+              overlay={
+                (!is_activated)?
+                  <Tooltip id={'foContentDisabled'}>
+                    {t('Menu.sankeyPlusDisabled')}
+                  </Tooltip>:
+                  (
+                    !value_of_key['has_FO'][0]?
+                      <Tooltip id={'foNotVisible'}>
+                        {t('Noeud.foreign_object.not_activated')}
+                      </Tooltip>:
+                      <></>
+                  )
+              }
+            >
+              {
+                (multi_selected_nodes.current[0].is_FO_raw)?
+                  editor_fo_raw:
+                  editor_fo
+              }
+            </OverlayTrigger>
+            :<></>
+        }
+
+        <Box
+          as='span'
+          layerStyle='options_2cols'
+        >
+          <Button
+            variant='menuconfigpanel_option_button_left'
+            isDisabled={!is_activated || !s_tmp_editor_content_changed}
+            onClick={() => {
+              if (multi_selected_nodes.current.length>0) {
+                if (multi_selected_nodes.current[0].FO_content !== s_tmp_editor_content_fo_node) {
+                  sEditorContentFoNode(multi_selected_nodes.current[0].FO_content)
+                }
+              }
+            }}
+          >
+            {t('Noeud.FO.Cancel')}
+          </Button>
+          <Button
+            variant='menuconfigpanel_option_button_right'
+            isDisabled={!is_activated || !s_tmp_editor_content_changed}
+            onClick={() => {
+              Object
+                .values(data.nodes)
+                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .map(d => {
+                  d.FO_content = s_tmp_editor_content_fo_node
+                })
+              node_function.RedrawNodes(multi_selected_nodes.current)
+              sEditorContentFoNode(s_tmp_editor_content_fo_node)
+            }}
+          >
+            {t('Noeud.FO.Submit')}
+          </Button>
+        </Box>
+      </Box>
+    </TabPanel>
+  ]
 }
 
 

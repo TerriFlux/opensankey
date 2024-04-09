@@ -1,7 +1,10 @@
 import React from 'react'
-import { Row, Form, FormLabel, Col, FormCheck, Tab, Button } from 'react-bootstrap'
+import { Row, Form, FormLabel, Col, FormCheck, Button } from 'react-bootstrap'
 import { TFunction } from 'i18next'
-import { reorganize_node_outputLinksIdOSTyped,reorganize_node_inputLinksIdOSTyped 
+
+import { TabPanel } from '@chakra-ui/react'
+
+import { reorganize_node_outputLinksIdOSTyped,reorganize_node_inputLinksIdOSTyped
 } from './import/OpenSankey'
 import { SankeyPlusMenuConfigurationNodesAgregationFType } from '../types/SankeyPlusNodesAggregationTypes'
 
@@ -24,7 +27,11 @@ export const SankeyPlusMenuConfigurationNodesAgregation : SankeyPlusMenuConfigur
       set_cube_dimension(Object.entries(data.levelTags)[0][0])
     }
   }
-  return<Tab key="agregation" eventKey="agregation" title={t('Noeud.agre.Agré')}>
+  return<TabPanel
+  //  key="agregation"
+  //  eventKey="agregation"
+  //  title={t('Noeud.agre.Agré')}
+  >
     <Form >
       <Form.Group as={Row} >
         <FormLabel column>{t('Noeud.agre.DC')}</FormLabel>
@@ -125,5 +132,5 @@ export const SankeyPlusMenuConfigurationNodesAgregation : SankeyPlusMenuConfigur
         >{t('Noeud.agre.CLE')}</Button>
       </Col>
     </Form>
-  </Tab>
+  </TabPanel>
 }
