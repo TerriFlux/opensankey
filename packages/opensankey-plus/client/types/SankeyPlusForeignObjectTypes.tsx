@@ -11,7 +11,7 @@ export type SankeyPlusNodeFOFType = (
   is_activated:boolean,
   d_setter_input_value:DictSetterInputValueType,
   node_function:PlusNodeFuntionType
-) => JSX.Element
+) => JSX.Element[]
 
 export type PlusDrawNodesFOFType = (
   data:SankeyPlusData,

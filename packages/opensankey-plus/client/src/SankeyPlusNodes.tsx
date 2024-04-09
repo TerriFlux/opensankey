@@ -1,39 +1,74 @@
-import React,{ChangeEvent, useState, useRef, MutableRefObject} from 'react'
-import { FaFileImport} from 'react-icons/fa'
-import { faIcons} from '@fortawesome/free-solid-svg-icons'
+import React, { ChangeEvent, useState, useRef, MutableRefObject } from 'react'
+import {
+  OverlayTrigger,
+  Tooltip,
+  Badge
+} from 'react-bootstrap'
+import {
+  FaEye,
+  FaEyeSlash,
+  FaFileImport
+} from 'react-icons/fa'
+import {
+  Box,
+  Button,
+  Checkbox,
+  Tab,
+  TabPanel,
+  Input,
+  InputGroup
+} from '@chakra-ui/react'
+import { faIcons } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare, faLock,faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
-import { Checkbox } from '@chakra-ui/react'
+import { faUpRightFromSquare, faLock, faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 import * as d3 from 'd3'
-import { Form, Tab, OverlayTrigger,Tooltip, Button, Badge, Col, Row, ButtonGroup} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 
-import { SankeyPlusLabel,SankeyPlusLink, SankeyPlusData,SankeyPlusNode, PlusElementsSelectedType, SankeyPlusApplicationDataType, PlusApplicationContextType, PlusNodeFuntionType, PlusLinkFuntionType} from '../types/Types'
-import  {OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink} from './SankeyPlusUtils'
-import {RemoveAnimate,
-  DrawArrows,
-  SvgDragMiddleMouseStart,
-  SvgDragMiddleMouseMove,
-  SimpleGNodeClick,NodeColor,
-  LinkStrokeOSTyped,
-  ReturnValueNode,
-  ReturnValueLink,
-  IsNodeDisplayingValueLocal,
-  IsAllNodeAttrSameValue,
+import {
+  PlusApplicationContextType,
+  PlusElementsSelectedType,
+  PlusLinkFuntionType,
+  PlusNodeFuntionType,
+  SankeyPlusApplicationDataType,
+  SankeyPlusData,
+  SankeyPlusLabel,
+  SankeyPlusLink,
+  SankeyPlusNode,
+} from '../types/Types'
+import { OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink } from './SankeyPlusUtils'
+import {
   AssignNodeValueToCorrectVar,
-  OpposingDragElements,
-  DragElements,
   drag_node_text,
-  ReturnOutOfBoundElement
+  DragElements,
+  DrawArrows,
+  IsAllNodeAttrSameValue,
+  IsNodeDisplayingValueLocal,
+  LinkStrokeOSTyped,
+  OpposingDragElements,
+  RemoveAnimate,
+  ReturnOutOfBoundElement,
+  ReturnValueLink,
+  ReturnValueNode,
+  SimpleGNodeClick,NodeColor,
+  SvgDragMiddleMouseMove,
+  SvgDragMiddleMouseStart,
 } from './import/OpenSankey'
 
 import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { ComponentUpdaterType, SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-import { 
-  SankeyPlusDrawNodesIllustrationFType, SankeyPlusHyperLinkFType, PlusNodeClickEventFType, PlusNodeDragEventFType, 
-  SankeyPlusNodeIconFType, ContextNodeIconFType, PlusDragElementsFType, node_icon_fill_colorFType, 
-  node_icon_pathFType, OpposingDragElementsPlusFType, PlusReturnOutOfBoundElementsFType
+import {
+  ContextNodeIconFType,
+  node_icon_fill_colorFType,
+  node_icon_pathFType,
+  OpposingDragElementsPlusFType,
+  PlusDragElementsFType,
+  PlusNodeClickEventFType,
+  PlusNodeDragEventFType,
+  PlusReturnOutOfBoundElementsFType,
+  SankeyPlusDrawNodesIllustrationFType,
+  SankeyPlusHyperLinkFType,
+  SankeyPlusNodeIconFType,
 } from '../types/SankeyPlusNodesTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
@@ -53,323 +88,414 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   dict_hook_ref_setter_show_dialog_components,
   node_function
 )=> {
-  const [show_menu_node_icon,set_show_menu_node_icon] = useState(false)
+  const [show_menu_node_icon, set_show_menu_node_icon] = useState(false)
+  const [forceUpdate, setForceUpdate]=useState(false)
+
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
-  const [forceUpdate,setForceUpdate]=useState(false)
-  const [button_icon_or_image,set_button_icon_or_image]=useState<'icon'|'image'>('image')
+
   const data_plus=data as SankeyPlusData
   data_plus.icon_catalog=(data_plus.icon_catalog)?data_plus.icon_catalog:{}
+
   const _load_image = useRef<HTMLInputElement>(null)
   const multi_selected_nodes_plus=multi_selected_nodes as {current:SankeyPlusNode[]}
 
   const isAllNodeVisible=IsAllNodeAttrSameValue(data,multi_selected_nodes.current,['shape_visible'],false)['shape_visible'] as boolean[]
-  const value_of_key=OSPIsAllNodeNotLocalAttrSameValue(data_plus,multi_selected_nodes_plus.current,['is_image','iconVisible'])
 
-  // Change type of illustration if all selected nodes have the same type of illustration 
-  // and the button isn't set to type of illustration of the nodes
-  if(value_of_key['iconVisible'][0] && !value_of_key['iconVisible'][1] && button_icon_or_image==='image'){
-    set_button_icon_or_image('icon')
-  }else if(value_of_key['is_image'][0] && !value_of_key['is_image'][1] && button_icon_or_image==='icon'){
-    set_button_icon_or_image('image')
+  let all_are_icons = (
+    Object
+      .values(data_plus.nodes)
+      .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+      .length > 0)
+  let all_are_images = all_are_icons
+  let all_are_none = all_are_icons
+  Object
+    .values(data_plus.nodes)
+    .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+    .forEach(d => {
+      all_are_icons = (all_are_icons && d.iconVisible)
+      all_are_images = (all_are_images && d.is_image)
+      all_are_none = (all_are_none && (!d.iconVisible && !d.is_image))
+    })
+
+  let button_icon_or_image = 'both'
+  if (all_are_icons) {
+    button_icon_or_image = 'icon'
   }
+  if (all_are_images) {
+    button_icon_or_image = 'image'
+  }
+  if (all_are_none) {
+    button_icon_or_image = 'none'
+  }
+
   // Content if we want to add icon to node
-  const content_icon=<>
-    <OverlayTrigger
-      key={'iconDisabled1'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'iconDisabled1'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
-      <Row className='input_row'>
-        <Col>
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={value_of_key['iconVisible'][1]?'#78C2AD':'white'}
-            isIndeterminate={value_of_key['iconVisible'][1]}
-            isDisabled={!is_activated}
-            isChecked={value_of_key['iconVisible'][0] as boolean}
-            onChange={(evt) => {
-              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => {
-                  d.iconVisible = evt.target.checked
-                  d.is_image=false
-                })
-              node_function.reDrawIllustration(multi_selected_nodes.current)
-              setForceUpdate(!forceUpdate)
-            }}>
-            {t('Noeud.icon.Visibilité')}
-          </Checkbox>
-        </Col>
-      </Row>
-    </OverlayTrigger>
-
-   
-    {value_of_key['iconVisible'][0]?<>
-      <OverlayTrigger
-        key={'iconDisabled2'}
-        placement={'top'}
-        delay={500}
-        overlay={(!is_activated)?(<Tooltip id={'iconDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-      >
-        <Row className='input_row'>
-          <Col>
-            <Form.Label
-              style={{
-                color:(!is_activated)?'#666666':'',
-                backgroundColor:(!is_activated)?'#cccccc':''}}
+  const content_icon = <Box
+    layerStyle='menuconfigpanel_grid'
+  >
+    {
+      button_icon_or_image === 'icon'?
+        <Box
+          layerStyle='menuconfigpanel_grid'
+        >
+          <OverlayTrigger
+            key={'iconDisabled2'}
+            placement={'top'}
+            delay={500}
+            overlay={
+              (!is_activated)?
+                <Tooltip id={'iconDisabled2'}>
+                  {t('Menu.sankeyPlusDisabled')}
+                </Tooltip>:
+                <></>
+            }
+          >
+            <Box
+              as='span'
+              layerStyle='menuconfigpanel_row_2cols'
             >
-              {t('Noeud.icon.icon_catalog')}
-            </Form.Label></Col>
-          <Col>
-            <Button
-              className='btn_menu_config'
-              disabled={!is_activated}
-              variant={'outline-primary'}
-              onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_import_icons.current!(true) }}>{<FontAwesomeIcon icon={faIcons} />}</Button>
-          </Col>
-        </Row>
-      </OverlayTrigger>
-      <OverlayTrigger
-        key={'iconDisabled3'}
-        placement={'top'}
-        delay={500}
-        overlay={(!is_activated)?(<Tooltip id={'iconDisabled3'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-      >
-        <Row className='input_row'>
-          <Col>
-            <Form.Label
-              style={{
-                color:(!is_activated)?'#666666':'',
-                backgroundColor:(!is_activated)?'#cccccc':''}}
+              <Box
+                as='span'
+                layerStyle='menuconfigpanel_option_name'
+              >
+                {t('Noeud.icon.icon_catalog')}
+              </Box>
+              <Button
+                variant='menuconfigpanel_option_button'
+                disabled={!is_activated}
+                onClick={() => {
+                  dict_hook_ref_setter_show_dialog_components
+                    .ref_setter_show_modal_import_icons
+                    .current!(true)
+                }}
+              >
+                <FontAwesomeIcon icon={faIcons} />
+              </Button>
+            </Box>
+          </OverlayTrigger>
+
+          <OverlayTrigger
+            key={'iconDisabled3'}
+            placement={'top'}
+            delay={500}
+            overlay={
+              (!is_activated)?
+                <Tooltip id={'iconDisabled3'}>
+                  {t('Menu.sankeyPlusDisabled')}
+                </Tooltip>:
+                <></>
+            }
+          >
+            <Box
+              as='span'
+              layerStyle='menuconfigpanel_row_2cols'
             >
-              {t('Noeud.apparence.Couleur')}
-            </Form.Label></Col>
-          <Col>
-            <Form.Control
-              type='color'
-              id='form_color_icon'
-              name='form_color_icon'
-              value={(multi_selected_nodes.current.length === 1) ? multi_selected_nodes_plus.current[0].iconColor : '#ffffff'}
-              onChange={evt => {
-                const color = evt.target.value
-                Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => d.iconColor = color)
-                node_function.reDrawIllustration(multi_selected_nodes.current)
-                setForceUpdate(!forceUpdate)
-              }}
-            /></Col>
-        </Row>
-      </OverlayTrigger>
-
-
-    </>:<></>}
-  </>
-
+              <Box
+                as='span'
+                layerStyle='menuconfigpanel_option_name'
+              >
+                {t('Noeud.apparence.Couleur')}
+              </Box>
+              <Input
+                variant='menuconfigpanel_option_input_color'
+                type='color'
+                value={
+                  (multi_selected_nodes.current.length === 1) ?
+                    multi_selected_nodes_plus.current[0].iconColor :
+                    '#ffffff'
+                }
+                onChange={evt => {
+                  const color = evt.target.value
+                  Object
+                    .values(data_plus.nodes)
+                    .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                    .map(d => d.iconColor = color)
+                  node_function.reDrawIllustration(multi_selected_nodes.current)
+                  setForceUpdate(!forceUpdate)
+                }}
+              />
+            </Box>
+          </OverlayTrigger>
+        </Box>:
+        <></>
+    }
+  </Box>
 
   // Content if we want to add image to node
-  const content_image=<>
-    <OverlayTrigger
-      key={'imageDisabled1'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'imageDisabled1'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
-      <Row className='input_row'>
-        <Col>
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={value_of_key['is_image'][1]?'#78C2AD':'white'}
-            isDisabled={!is_activated}
-            isIndeterminate={value_of_key['is_image'][1]}
-            isChecked={value_of_key['is_image'][0] as boolean}
-            onChange={(evt) => {
-              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => {
-                  d.iconVisible = evt.target.checked
-                  d.is_image=false
-                })
-              node_function.reDrawIllustration(multi_selected_nodes.current)
-              setForceUpdate(!forceUpdate)
-            }}>
-            {t('Noeud.img_visibility')}
-          </Checkbox>
-        </Col>
-      </Row>
-    </OverlayTrigger>
-
+  const content_image = <Box
+    layerStyle='menuconfigpanel_grid'
+  >
     {/* Import image */}
-    {value_of_key['is_image'][0]?<OverlayTrigger
-      key={'imageDisabled2'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
-      <Row className='input_row'>
-        <Col>
-          <Form.Label
-            style={{
-              color:(!is_activated)?'#666666':'',
-              backgroundColor:(!is_activated)?'#cccccc':''}}
+    {
+      (button_icon_or_image === 'image')?
+        <OverlayTrigger
+          key={'imageDisabled2'}
+          placement={'top'}
+          delay={500}
+          overlay={
+            (!is_activated)?
+              <Tooltip id={'imageDisabled2'}>
+                {t('Menu.sankeyPlusDisabled')}
+              </Tooltip>:
+              <></>
+          }
+        >
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_row_2cols'
           >
-            {t('Noeud.img_src')}
-          </Form.Label>
-        </Col>
-        <Col>
-          <ButtonGroup>
-            <Button
-              variant='outline-primary'
-              className='btn_menu_config'
-              onClick={()=>{
-                if (_load_image.current) {
-                  _load_image.current.name = ''
-                  _load_image.current.click()
-                }
+            <Box
+              as='span'
+              layerStyle='menuconfigpanel_option_name'
+            >
+              {t('Noeud.img_src')}
+            </Box>
+            <Box
+              as='span'
+              layerStyle='options_2cols'
+            >
+              <Button
+                variant='menuconfigpanel_option_button_left'
+                onClick={()=>{
+                  if (_load_image.current) {
+                    _load_image.current.name = ''
+                    _load_image.current.click()
+                  }
+                }}
+              >
+                <FaFileImport/>
+              </Button>
+              <Button
+                variant='menuconfigpanel_option_button_right'
+                onClick={()=>{
+                  Object
+                    .values(data_plus.nodes)
+                    .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                    .forEach(n=>n.image_src='')
+                  node_function.reDrawIllustration(multi_selected_nodes.current)
+                  setForceUpdate(!forceUpdate)
+                }}
+              >
+                <FontAwesomeIcon icon={faDeleteLeft}/>
+              </Button>
+            </Box>
+            <Input
+              ref={_load_image}
+              style={{display:'none'}}
+              accept='image/*'
+              type="file"
+              disabled={!is_activated}
+              onChange={(evt: ChangeEvent) => {
+                const files = (evt.target as HTMLFormElement).files
+                const reader = new FileReader()
+                reader.onload = (() => {
+                  return (e: ProgressEvent<FileReader>) => {
+                    const resultat = (e.target as FileReader).result
+                    const res = resultat?.toString().replaceAll('=','')
+                    Object
+                      .values(data_plus.nodes)
+                      .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                      .forEach(n=>n.image_src=(res as string))
+                    node_function.reDrawIllustration(multi_selected_nodes.current)
+                    setForceUpdate(!forceUpdate)
+                  }
+                })()
+                reader.readAsDataURL(files[0])
               }}
-            ><FaFileImport/></Button>
-            <Button
-              variant='outline-primary'
-              className='btn_menu_config'
-              onClick={()=>{
-                Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-                  .forEach(n=>n.image_src='')
-                node_function.reDrawIllustration(multi_selected_nodes.current)
-                setForceUpdate(!forceUpdate)
-              }}
-            ><FontAwesomeIcon icon={faDeleteLeft}/></Button>
-          </ButtonGroup>
-        </Col>
-        <Form.Control
-          ref={_load_image}
-          style={{display:'none'}}
-          accept='image/*'
-          type="file"
-          disabled={!is_activated}
-          onChange={(evt: ChangeEvent) => {
-            const files = (evt.target as HTMLFormElement).files
-            const reader = new FileReader()
-            reader.onload = (() => {
-              return (e: ProgressEvent<FileReader>) => {
-                const resultat = (e.target as FileReader).result
-                const res=resultat?.toString().replaceAll('=','')
-                Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-                  .forEach(n=>n.image_src=(res as string))
-
-                node_function.reDrawIllustration(multi_selected_nodes.current)
-                setForceUpdate(!forceUpdate)
-
-              }
-            })()
-            reader.readAsDataURL(files[0])
-          }}
-        />
-      </Row>
-    </OverlayTrigger>:<></>}
-    
-  </>
+            />
+          </Box>
+        </OverlayTrigger>
+        :<></>
+    }
+  </Box>
 
   // Content of the tab that change depending on the illustration we want to make
-  const content_tab=<>
+  const content_tab = <Box
+    layerStyle='menuconfigpanel_grid'
+  >
     {/* Visibilite du noeud */}
     <OverlayTrigger
       key={'noeud.apparence.tooltips.1'}
       placement={'top'}
       delay={500}
-      overlay={<Tooltip id={'noeud.apparence.tooltips.1'}>{t('Noeud.apparence.tooltips.Visibilité')} </Tooltip>}>
-      <Row className='input_row' key={'node_visibility'} >
-        <Col>
-          <Checkbox 
-            sx={SmoothClasses({})}
-            iconColor={isAllNodeVisible[1]?'#78C2AD':'white'}
-            isIndeterminate={isAllNodeVisible[1]}
-            isChecked={isAllNodeVisible[0]}
-            onChange={(evt) => {
-              Object.values(data.nodes)
-                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => AssignNodeValueToCorrectVar(d,'shape_visible',evt.target.checked,false))
-              node_function.reDrawIllustration(multi_selected_nodes.current)
-              setForceUpdate(!forceUpdate)
-            }}>
-            {t('Noeud.apparence.Visibilité')}
-            {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',false)?TooltipValueSurcharge('node_plus_var',t):<></>)}
-          </Checkbox>
-        </Col>
-      </Row>
+      overlay={
+        <Tooltip id={'noeud.apparence.tooltips.1'}>
+          {t('Noeud.apparence.tooltips.Visibilité')}
+        </Tooltip>
+      }
+    >
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isIndeterminate={isAllNodeVisible[1]}
+        isChecked={isAllNodeVisible[0]}
+        onChange={(evt) => {
+          Object.values(data.nodes)
+            .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+            .forEach(d => AssignNodeValueToCorrectVar(d, 'shape_visible', evt.target.checked, false))
+          node_function.reDrawIllustration(multi_selected_nodes.current)
+          setForceUpdate(!forceUpdate)
+        }}
+      >
+        {t('Noeud.apparence.Visibilité')}
+        {
+          IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',false)?
+            TooltipValueSurcharge('node_plus_var',t):
+            <></>
+        }
+      </Checkbox>
     </OverlayTrigger>
 
-    <Row className='input_row' key={'node_illustration_type'} >
-      <Col>
-        <Form.Label>
+    <OverlayTrigger
+      key={'imageDisabled1'}
+      placement={'top'}
+      delay={500}
+      overlay={
+        (!is_activated)?
+          <Tooltip id={'imageDisabled1'}>
+            {t('Menu.sankeyPlusDisabled')}
+          </Tooltip>:
+          <></>
+      }
+    >
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_option_name'
+        >
           {t('Noeud.illustration_type')}
-        </Form.Label>
-      </Col>
-      <Col>
-        <ButtonGroup>
+        </Box>
+        <Box
+          as='span'
+          layerStyle='options_3cols'
+        >
           <Button
-            className='btn_menu_config'
-            variant={button_icon_or_image==='icon'?'primary':'outline-primary'}
+            variant={
+              button_icon_or_image!=='none'?
+                'menuconfigpanel_option_button_left':
+                'menuconfigpanel_option_button_activated_left'
+            }
+            isDisabled={!is_activated}
             onClick={() => {
-              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              Object
+                .values(data_plus.nodes)
+                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => {
+                  d.iconVisible = false
+                  d.is_image = false
+                })
+              node_function.reDrawIllustration(multi_selected_nodes.current)
+              setForceUpdate(!forceUpdate)
+            }}
+          >
+            <FaEyeSlash/>
+          </Button>
+          <Button
+            variant={
+              button_icon_or_image!=='icon'?
+                'menuconfigpanel_option_button_center':
+                'menuconfigpanel_option_button_activated_center'
+            }
+            isDisabled={!is_activated}
+            onClick={() => {
+              Object
+                .values(data_plus.nodes)
+                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                 .forEach(d => {
                   d.is_image = false
-                  d.iconVisible=true
+                  d.iconVisible = true
                 })
-
-              set_button_icon_or_image('icon')
               node_function.reDrawIllustration(multi_selected_nodes.current)
               setForceUpdate(!forceUpdate)
-            }}>{t('Noeud.icon.icon')}</Button>
-
+            }}
+          >
+            {t('Noeud.icon.icon')}
+          </Button>
           <Button
-            className='btn_menu_config'
-            variant={button_icon_or_image==='image'?'primary':'outline-primary'}
+            variant={
+              button_icon_or_image!=='image'?
+                'menuconfigpanel_option_button_right':
+                'menuconfigpanel_option_button_activated_right'
+            }
+            isDisabled={!is_activated}
             onClick={() => {
-              Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              Object
+                .values(data_plus.nodes)
+                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
                 .forEach(d => {
-                  d.is_image=true
+                  d.is_image = true
                   d.iconVisible = false
                 })
-              set_button_icon_or_image('image')
               node_function.reDrawIllustration(multi_selected_nodes.current)
               setForceUpdate(!forceUpdate)
-            }}>Image</Button>
-        </ButtonGroup>
-      </Col>
-    </Row>
-    {button_icon_or_image==='icon'?content_icon:content_image}
-  </>
+            }}
+          >
+            Image
+          </Button>
+        </Box>
+      </Box>
+    </OverlayTrigger>
+
+    {
+      button_icon_or_image==='icon'?
+        content_icon:
+        button_icon_or_image==='image'?
+          content_image:
+          <></>
+    }
+
+  </Box>
 
   if (menu_for_modal && !show_menu_node_icon) {
-    return <></>
+    return [<></>]
   }
   if (menu_for_modal && show_menu_node_icon) {
-    return content_tab
+    return [content_tab]
   }
 
-  return <Tab
-    key="node_icon"
-    eventKey="node_icon"
-    className='content_editon_elements'
-    title={<>
-      {t('Noeud.illustration')}
-      {(!is_activated)?
-        <OverlayTrigger
-          key={'textZoneDisabled'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
-        >
-          <Badge pill
-            bg="white"
-            style={{marginLeft:'5px', fontSize:'1.3em'}}>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Badge>
-        </OverlayTrigger>:<Badge pill bg="info" style={{marginLeft:'5px'}}>Beta</Badge>}
-    </>}
-  >
-    {content_tab}
-  </Tab>
+  return [
+    <Tab>
+      <Box
+        layerStyle='submenuconfig_tab_with_badge'
+      >
+        {t('Noeud.tabs.icon')}
+        {
+          (!is_activated)?
+            <OverlayTrigger
+              key={'textZoneDisabled'}
+              placement={'top'}
+              delay={500}
+              overlay={
+                <Tooltip id={'textZoneDisabled'}>
+                  {t('Menu.sankeyPlusDisabled')}
+                </Tooltip>
+              }
+            >
+              <Badge
+                pill
+                bg="none"
+                style={{fontSize:'1em'}}>
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{color: '#66a593', display: 'inline'}}
+                />
+              </Badge>
+            </OverlayTrigger>:
+            <Badge
+              pill
+              bg="info"
+              style={{fontSize:'0.75em', height:'1.5em', display: 'inline'}}
+            >
+              Beta
+            </Badge>
+        }
+      </Box>
+    </Tab>,
+    <TabPanel>
+      {content_tab}
+    </TabPanel>
+  ]
 }
 
 export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
@@ -379,103 +505,132 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
   is_activated:boolean,
   node_function
 )=>{
-  
-  const multi_selected_nodes_plus=multi_selected_nodes as {current:SankeyPlusNode[]}
-
+  const multi_selected_nodes_plus = multi_selected_nodes as {current:SankeyPlusNode[]}
   const hasHyperLink = () => {
     let visible = ''
     visible=multi_selected_nodes_plus.current[0]?.hyperlink??''
     return visible
   }
-  const node_hyperlink=hasHyperLink()
-  const data_plus =data as SankeyPlusData
-  const content_image_tab=multi_selected_nodes.current.length>0?<>
-
-    <OverlayTrigger
-      key={'imageDisabledHL'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'imageDisabledHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
+  const node_hyperlink = hasHyperLink()
+  const data_plus = data as SankeyPlusData
+  const content_image_tab = multi_selected_nodes.current.length>0 ?
+    <Box
+      layerStyle='menuconfigpanel_grid'
     >
-      <Row className='input_row'>
-        <Col>
-          <Form.Label
-            style={{
-              color:(!is_activated)?'#666666':'',
-              backgroundColor:(!is_activated)?'#cccccc':''}}
+      <OverlayTrigger
+        key={'imageDisabledHL'}
+        placement={'top'}
+        delay={500}
+        overlay={
+          (!is_activated)?
+            <Tooltip id={'imageDisabledHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
+            <></>
+        }
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_option_name'
           >
             {t('Noeud.HL')}
-          </Form.Label>
-        </Col>
-        <Col>
-          <Form.Control value={node_hyperlink} type='text' onChange={(evt)=>{
-            Object.values(data_plus.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).forEach(d => d.hyperlink=evt.target.value)
-            node_function.reDrawPlusNodeEvent(multi_selected_nodes.current)
-          }}/>
-        </Col>
-      </Row>
-    </OverlayTrigger>
+          </Box>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <Input
+              placeholder={node_hyperlink}
+              onChange={(evt)=>{
+                Object
+                  .values(data_plus.nodes)
+                  .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+                  .forEach(d => d.hyperlink=evt.target.value)
+                node_function.reDrawPlusNodeEvent(multi_selected_nodes.current)
+              }}
+            />
+          </InputGroup>
+        </Box>
+      </OverlayTrigger>
 
-    {/* Open Hyperlink */}
-    <OverlayTrigger
-      key={'imageDisabledOHL'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'imageDisabledOHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
-      <Row className='input_row'>
-
-        <Col>
-          <Form.Label
-            style={{
-              color: (!is_activated) ? '#666666' : '',
-              backgroundColor: (!is_activated) ? '#cccccc' : ''
-            }}
+      {/* Open Hyperlink */}
+      <OverlayTrigger
+        key={'imageDisabledOHL'}
+        placement={'top'}
+        delay={500}
+        overlay={
+          (!is_activated)?
+            <Tooltip id={'imageDisabledOHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
+            <></>
+        }
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_option_name'
           >
             {t('Noeud.open_HL')}
-          </Form.Label>
-        </Col>
-        <Col>
-          <Button variant='outline-primary' onClick={()=>{
-            window.open(node_hyperlink)
-          }}>
+          </Box>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={()=>{
+              window.open(node_hyperlink)
+            }}
+          >
             <FontAwesomeIcon icon={faUpRightFromSquare} />
           </Button>
-        </Col>
+        </Box>
+      </OverlayTrigger>
+    </Box>:
+    <></>
 
-
-      </Row>
-    </OverlayTrigger>
-  </>:<></>
-
-  return <Tab
-    key="hyperlink"
-    eventKey="hyperlink"
-    className='content_editon_elements'
-    title={<>
-      {t('Noeud.HL')}
-      {(!is_activated)?
-        <OverlayTrigger
-          key={'textZoneDisabled'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
-        >
-          <Badge pill
-            bg="white"
-            style={{marginLeft:'5px', fontSize:'1.3em'}}>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Badge>
-        </OverlayTrigger>:<Badge pill bg="info" style={{marginLeft:'5px'}}>Beta</Badge>}
-    </>}
-  >
-    {content_image_tab}
-  </Tab>
-  
-
+  return [
+    <Tab>
+      <Box
+        layerStyle='submenuconfig_tab_with_badge'
+      >
+        {t('Noeud.tabs.hl')}
+        {
+          (!is_activated)?
+            <OverlayTrigger
+              key={'textZoneDisabled'}
+              placement={'top'}
+              delay={500}
+              overlay={
+                <Tooltip id={'textZoneDisabled'}>
+                  {t('Menu.sankeyPlusDisabled')}
+                </Tooltip>
+              }
+            >
+              <Badge
+                pill
+                bg="none"
+                style={{fontSize:'1rem'}}
+              >
+                <FontAwesomeIcon
+                  icon={faLock}
+                  style={{color: '#66a593', display: 'inline'}}
+                />
+              </Badge>
+            </OverlayTrigger>:
+            <Badge
+              pill
+              bg="info"
+              style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
+            >
+              Beta
+            </Badge>
+        }
+      </Box>
+    </Tab>,
+    <TabPanel>
+      {content_image_tab}
+    </TabPanel>
+  ]
 }
 
 const calcPath = (
@@ -632,9 +787,13 @@ const branchAnimate = (
     })
 }
 
-const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyNode,deep:number,link_to_avoid:string[],
+const direct_son_as_distant_sibling=(
+  data:SankeyData,
+  n:SankeyNode,
+  target:SankeyNode,
+  deep:number,
+  link_to_avoid:string[],
   display_nodes_id:string[],
-  
 )=>{
   //Cherche à savoir si un noeud qui recoit directement le flux de n ai aussi un path inderectement vers ce meme noeud
   //exemple : n0 -> n1  et n0 -> n2 -> n1
@@ -654,10 +813,7 @@ const direct_son_as_distant_sibling=(data:SankeyData,n:SankeyNode,target:SankeyN
       max=(tmp>max)?tmp:max
     })
   }
-
   return max
-
-
 }
 
 export const PlusNodeClickEvent : PlusNodeClickEventFType =(
@@ -751,11 +907,9 @@ export const SankeyPlusDrawNodesIllustration : SankeyPlusDrawNodesIllustrationFT
     }
   }
 
-
   const add_nodes_icon = (
   ) => {
     //----------------ICON-----------------
-
     // Add icon to node (if there is one associated to it)
     // then apply selected parameter
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
@@ -786,22 +940,19 @@ export const SankeyPlusDrawNodesIllustration : SankeyPlusDrawNodesIllustrationFT
       })
       .style('fill', n =>node_icon_fill_color(data,n))
       .attr('d', n =>node_icon_path(data,n))
-
   }
-
 
   const add_nodes_image = (
   ) => {
     //----------------ICON-----------------
-  
     // Add icon to node (if there is one associated to it)
     // then apply selected parameter
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
-  
+
     const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>).filter(n=>node_to_update.length>0?node_to_update.includes(n):true)
     ggg_nodes.filter(d => d.is_image).selectAll('.icon_node').remove()
     ggg_nodes.filter(d => d.is_image).selectAll('.image_node').remove()
-  
+
     ggg_nodes
       .filter(d => d.is_image)
       .append('image')
@@ -819,15 +970,10 @@ export const SankeyPlusDrawNodesIllustration : SankeyPlusDrawNodesIllustrationFT
       .on('mouseout', function () {
         sankeyTooltip.style('opacity', 0)
       })
-
   }
-
   add_nodes_icon()
   add_nodes_image()
-  
-
 }
-
 
 export const ContextNodeIcon : ContextNodeIconFType = (
   contextMenu,
@@ -835,11 +981,16 @@ export const ContextNodeIcon : ContextNodeIconFType = (
   t:TFunction
 )=>{
   const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
-  return <Button onClick={()=>{
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_icon.current!(true)
-    contextMenu.ref_setter_contextualised_node.current!(undefined)
-  }} variant='light'>{t('Noeud.icon.icon')} {icon_open_modal}</Button>
-
+  return <Button
+    variant='menuconfigpanel_option_button'
+    onClick={()=>{
+      dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_icon.current!(true)
+      contextMenu.ref_setter_contextualised_node.current!(undefined)
+    }}
+  >
+    {t('Noeud.icon.icon')}
+    {icon_open_modal}
+  </Button>
 }
 
 export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
@@ -850,11 +1001,7 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
 )=>{
-
-
   OpposingDragElements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,data,multi_selected_nodes)
-
-  // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
 
   if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
     // Shift not selected zdt to opposing direction
@@ -867,9 +1014,7 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
     })
   }
 
-
   if((out_of_zone_item[0].y<=0 && event.y<0) || (out_of_zone_item[0].y<=0 && event.dy<0)){
-
     // Shift zdt to opposing direction
     Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
       if(!multi_selected_label.current.includes(lb)){
@@ -878,7 +1023,6 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
         d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
       }
     })
-
   }
 }
 
@@ -896,7 +1040,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
 )=>{
   const {data}=applicaTionData
   const {ref_getter_mode_selection}=dict_variable_elements_selected
-  
+
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, data.user_scale])
@@ -931,8 +1075,10 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
         lb.y = new_pos_y
         d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
       })
-    }).on('end',function(_,n){
+    })
+    .on('end',function(_,n){
       const node =n as SankeyPlusNode
+
       // update all nodes connected to dragged node & all links connected to these nodes
       const node_to_update:SankeyNode[]=[node]
       node.outputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idTarget]))
@@ -945,12 +1091,8 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
       })
       node_function.RedrawNodes(node_to_update)
       link_function.RedrawLinks(link_to_update)
-      
-    }
-    )
-
+    })
   )
-
 }
 
 const SankeyPlusDragGNodeEvent = (
@@ -966,7 +1108,6 @@ const SankeyPlusDragGNodeEvent = (
   ComponentUpdater:ComponentUpdaterType,
   node_function:PlusNodeFuntionType,
   link_function:PlusLinkFuntionType
-
 )=>{
   const {data}=dict_variable_application_data
   const {ref_getter_mode_selection}=dict_variable_elements_selected
@@ -993,7 +1134,8 @@ const SankeyPlusDragGNodeEvent = (
           )
         }
       }
-    }).on('end',(_,node)=>{
+    })
+    .on('end',(_,node)=>{
       if(d3.select(document.activeElement).attr('class')!=='input_label'){
         // update all nodes connected to dragged node & all links connected to these nodes
         const node_to_update:SankeyNode[]=[]
@@ -1007,7 +1149,6 @@ const SankeyPlusDragGNodeEvent = (
         })
         node_function.RedrawNodes(node_to_update)
         link_function.RedrawLinks(link_to_update)
-
       }
     })
 }
@@ -1026,23 +1167,22 @@ const PlusDragNodes = (
   inv_scale:(t:number)=>number,
   node_visible:string[],
   ComponentUpdater:ComponentUpdaterType
-
 ) => {
   RemoveAnimate()
   const {data,}=dict_variable_application_data
   const {multi_selected_nodes,multi_selected_label}=dict_variable_elements_selected
+
   // Cherche si des element seront hors zone si on les drag
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
   const out_of_zone_item=PlusReturnOutOfBoundElements(node,data,event,multi_selected_nodes,node_visible)
+
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
     OpposingDragElementsPlus(out_of_zone_item,event,node,data,multi_selected_nodes,multi_selected_label)
   }
-
   PlusDragElements(
     dict_variable_application_data,dict_variable_elements_selected,applicationContext,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
   )
-
 }
 
 export const PlusDragElements : PlusDragElementsFType = (
@@ -1061,13 +1201,11 @@ export const PlusDragElements : PlusDragElementsFType = (
 
 )=>{
   const {multi_selected_label}=dict_variable_elements_selected
-  // const node=Object.keys(dragged).includes('idNode')?dragged as SankeyPlusNode:{} as SankeyPlusNode
-  // const zdt=Object.keys(dragged).includes('idLabel')?dragged as SankeyPlusLabel:{} as SankeyPlusLabel
+
   DragElements(
     dragged as SankeyNode,dict_variable_application_data,dict_variable_elements_selected,applicationContext, event,LinkText,GetSankeyMinWidthAndHeight,
     GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
   )
-
 
   // Drag zdt too
   multi_selected_label.current.map(l=>{
@@ -1083,15 +1221,7 @@ export const PlusDragElements : PlusDragElementsFType = (
       d3.select(el).attr('x',(l.x<=0)?new_cx:(new_cx+event.dx))
       d3.select(el).attr('y',(l.y<=0)?new_cy:(new_cy+event.dy))
     })
-
   })
-  // if(multi_selected_label.current.length===0 && Object.keys(zdt).length>0){
-  //   const new_pos_x = zdt.x + event.dx
-  //   const new_pos_y = zdt.y + event.dy
-  //   zdt.x = (new_pos_x>=0)?new_pos_x:0
-  //   zdt.y = (new_pos_y>0)?new_pos_y:0
-  //   d3.select(' .opensankey #' + zdt.idLabel).attr('transform', 'translate(' + zdt.x + ',' + zdt.y + ')')
-  // }
 }
 
 export const PlusReturnOutOfBoundElements : PlusReturnOutOfBoundElementsFType = (
@@ -1100,21 +1230,15 @@ export const PlusReturnOutOfBoundElements : PlusReturnOutOfBoundElementsFType = 
   event:{ dx: number; dy: number,x:number,y:number },
   multi_selected_nodes:{current:SankeyNode[]},node_visible:string[]
 )=>{
-
   // Cherche si des noeuds seront hors zone si on les drag
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-
-
   const out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[]=ReturnOutOfBoundElement(dragged as SankeyNode,data,event,multi_selected_nodes,node_visible) as (SankeyPlusNode|SankeyPlusLabel)[]
-
 
   Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).filter(lb=>{
     return (lb.x<=0 && event.dx<0) || (lb.y<=0 && event.dy<0) || (lb.x<=0 && event.x<0) || (lb.y<=0 && event.y<0)
   }).forEach(lb=>out_of_zone_item.push(lb))
 
-
   return out_of_zone_item
-
 }
 
 export const scale = d3.scaleLinear()
