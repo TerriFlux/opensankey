@@ -35,7 +35,8 @@ import SankeyDraw, { keyHandler } from './draw/SankeyDraw'
 import {
   GetSankeyMinWidthAndHeight,
   LinkStroke,
-  DrawArrows
+  DrawArrows,
+  NodeVisibleOnsSvg
 } from './draw/SankeyDrawFunction'
 import { ZoomFunction } from './draw/SankeyDrawEventFunction'
 import {
@@ -86,7 +87,7 @@ import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfig
 import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 import { opensankey_theme } from './chakra/Theme'
 import { AddDrawLinksEvent, drawAddLinks, DrawAllLinks, drawLinkShape } from './draw/SankeyDrawLinks'
-import { drawAddNodes, DrawAllNodes, updateDrawNodeShape } from './draw/SankeyDrawNodes'
+import { DeleteGNodes, drawAddNodes, DrawAllNodes, updateDrawNodeShape } from './draw/SankeyDrawNodes'
 import { RedrawNodesLabel } from './draw/SankeyDrawNodesLabel'
 
 /*************************************************************************************************/
@@ -158,6 +159,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     data.linkZIndex=pre_link_key
     pre_link_key.forEach(lid=>dict_variable_application_data.display_links[lid]=data.links[lid])
 
+    // delete element no longer displayed
+    const curr_displayed_nodes= Object.keys(dict_variable_application_data.display_nodes)
+    const node_to_delete=NodeVisibleOnsSvg().filter(nid=>!curr_displayed_nodes.includes(nid))
+    DeleteGNodes(node_to_delete)
   }
   /*************************************************************************************************/
   const dict_variable_elements_selected : dict_variable_elements_selectedType = {
