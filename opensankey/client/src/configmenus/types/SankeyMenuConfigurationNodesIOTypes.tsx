@@ -11,7 +11,7 @@ export type SankeyMenuConfigurationNodesIOFType = (
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   menu_for_modal ? : boolean
-) => JSX.Element
+) => JSX.Element[]
 
 
 

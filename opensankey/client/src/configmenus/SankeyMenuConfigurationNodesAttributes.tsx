@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import {
   OverlayTrigger,
-  Tab,
   Tooltip,
 } from 'react-bootstrap'
 import {
@@ -45,6 +44,8 @@ import {
   SliderMark,
   SliderThumb,
   SliderTrack,
+  Tab,
+  TabPanel,
 } from '@chakra-ui/react'
 
 import { SankeyNodeAttrLocal } from '../types/Types'
@@ -771,12 +772,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               <Button
                 variant={
                   list_value['bold'][0]?
-                    'menuconfigpanel_option_button_activated':
-                    'menuconfigpanel_option_button'
+                    'menuconfigpanel_option_button_activated_left':
+                    'menuconfigpanel_option_button_left'
                 }
                 paddingStart='0'
                 paddingEnd='0'
-                borderRadius='6px 0px 0px 6px'
                 minWidth='0'
                 onClick={() => {
                   Object
@@ -793,12 +793,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               <Button
                 variant={
                   list_value['uppercase'][0]?
-                    'menuconfigpanel_option_button_activated':
-                    'menuconfigpanel_option_button'
+                    'menuconfigpanel_option_button_activated_center':
+                    'menuconfigpanel_option_button_center'
                 }
                 paddingStart='0'
                 paddingEnd='0'
-                borderRadius='0px'
                 minWidth='0'
                 onClick={() => {
                   Object
@@ -815,12 +814,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               <Button
                 variant={
                   list_value['italic'][0]?
-                    'menuconfigpanel_option_button_activated':
-                    'menuconfigpanel_option_button'
+                    'menuconfigpanel_option_button_activated_right':
+                    'menuconfigpanel_option_button_right'
                 }
                 paddingStart='0'
                 paddingEnd='0'
-                borderRadius='0px 6px 6px 0px'
                 minWidth='0'
                 onClick={() => {
                   Object
@@ -835,7 +833,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             </Box>
 
             <Select
-              variant='select_police_style'
+              variant='menuconfigpanel_option_select'
               value={
                 list_value['font_family'][0]?
                   (ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'font_family',menu_for_style) as string):
@@ -1015,11 +1013,10 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_horiz'][0]=== 'left'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'}
+                        'menuconfigpanel_option_button_activated_left':
+                        'menuconfigpanel_option_button_left'}
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='6px 0px 0px 6px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1051,12 +1048,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_horiz'][0]=== 'middle'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_center':
+                        'menuconfigpanel_option_button_center'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='0px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1087,12 +1083,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_horiz'][0]==='right'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_right':
+                        'menuconfigpanel_option_button_right'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='0px 6px 6px 0px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1129,12 +1124,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_vert'][0]==='top'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_left':
+                        'menuconfigpanel_option_button_left'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='6px 0px 0px 6px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1166,12 +1160,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_vert'][0]==='middle'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_center':
+                        'menuconfigpanel_option_button_center'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='0px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1203,12 +1196,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_vert'][0]==='bottom'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_right':
+                        'menuconfigpanel_option_button_right'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='0px 6px 6px 0px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1354,12 +1346,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_horiz_valeur'][0]==='left'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_left':
+                        'menuconfigpanel_option_button_left'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='6px 0px 0px 6px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1387,12 +1378,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_horiz_valeur'][0]==='middle'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_center':
+                        'menuconfigpanel_option_button_center'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='0px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1420,12 +1410,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_horiz_valeur'][0]==='right'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_right':
+                        'menuconfigpanel_option_button_right'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='0px 6px 6px 0px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1457,12 +1446,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_vert_valeur'][0]==='top'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_left':
+                        'menuconfigpanel_option_button_left'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='6px 0px 0px 6px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1490,12 +1478,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_vert_valeur'][0]==='middle'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_center':
+                        'menuconfigpanel_option_button_center'
                     }
                     paddingStart='0'
                     paddingEnd='0'
-                    borderRadius='0px'
                     minWidth='0'
                     onClick={() => {
                       Object
@@ -1523,10 +1510,9 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <Button
                     variant={
                       list_value['label_vert_valeur'][0]==='bottom'?
-                        'menuconfigpanel_option_button_activated':
-                        'menuconfigpanel_option_button'
+                        'menuconfigpanel_option_button_activated_right':
+                        'menuconfigpanel_option_button_right'
                     }
-                    borderRadius='0px 6px 6px 0px'
                     minWidth='0'
                     paddingStart='0'
                     paddingEnd='0'
@@ -1631,23 +1617,30 @@ export const SankeyMenuConfigurationNodesAttributes = (
 ) => {
   //Function that check if all selected nodes have the same value for some parameter
   return for_modal ?
-    <Box
-      layerStyle='menuconfigpanel_grid'
-    >
-      {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
-        return <React.Fragment key={i}>{c}</React.Fragment>
-      })}
-    </Box>:
-    <Tab
-      key='nodes_desc'
-      className='content_editon_elements'
-      eventKey="nodes_desc"
-      title={t('Noeud.apparence.apparence')}
-    >
-      <Box layerStyle='menuconfigpanel_grid'>
+    [
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
         {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
           return <React.Fragment key={i}>{c}</React.Fragment>
         })}
       </Box>
-    </Tab>
+    ]:[
+      <Tab>
+        <Box
+          layerStyle='submenuconfig_tab'
+        >
+          {t('Noeud.tabs.apparence')}
+        </Box>
+      </Tab>,
+      <TabPanel
+        id='nodes_desc'
+      >
+        <Box layerStyle='menuconfigpanel_grid'>
+          {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
+            return <React.Fragment key={i}>{c}</React.Fragment>
+          })}
+        </Box>
+      </TabPanel>
+    ]
 }

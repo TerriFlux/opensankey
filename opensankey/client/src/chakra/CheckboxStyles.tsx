@@ -67,6 +67,21 @@ export const menuconfigpanel_option_checkbox = definePartsStyle({
   }
 })
 
+export const menuconfigpanel_tag_checkbox = definePartsStyle({
+  container: {
+    border: '0px',
+    borderRadius: '6px',
+    borderColor: 'white',
+  },
+  label: {
+    marginLeft: '0.5rem',
+    fontSize: '14px'
+  },
+  control: {
+    marginLeft: '1.25rem',
+  }
+})
+
 export const menuconfigpanel_part_title_1_checkbox = definePartsStyle({
   label: {
     padding: '0 1.5rem 0 0',

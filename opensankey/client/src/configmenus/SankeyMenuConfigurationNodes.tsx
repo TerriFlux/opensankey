@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
 import {
-  Tabs,
   OverlayTrigger,
   Tooltip,
 } from 'react-bootstrap'
@@ -17,6 +16,9 @@ import {
   Button,
   InputGroup,
   Input,
+  Tabs,
+  TabList,
+  TabPanels
 } from '@chakra-ui/react'
 /*************************************************************************************************/
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType } from '../types/Types'
@@ -29,7 +31,7 @@ import {
   tree_data_nodesFType,
 } from './types/SankeyMenuConfigurationNodesTypes'
 /*************************************************************************************************/
-import { 
+import {
   ReturnValueNode,AddNewNode, deleteSelectedNodeFromData} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
@@ -46,7 +48,7 @@ type SankeyEditionTypes = {
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   multi_selected_nodes:{current:SankeyNode[]},
-  menu_configuration_nodes : JSX.Element[],
+  menu_configuration_nodes : {[s:string]: JSX.Element[]},
   token : boolean,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
@@ -62,23 +64,23 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   GetLinkValue:GetLinkValueFuncType,
   node_function,link_function,
   ComponentUpdater
-
 ) => {
   const { data } = dict_variable_application_data
 
-
-  const ui : {[s:string] : JSX.Element}= {
-    'Attributes'      : SankeyMenuConfigurationNodesAttributes(
+  const ui : {[s:string] : JSX.Element[]}= {
+    'apparence': SankeyMenuConfigurationNodesAttributes(
       applicationContext.t,
-      menu_configuration_nodes_attributes
+      menu_configuration_nodes_attributes,
+      false
     ),
-    'Tooltip'         : SankeyMenuConfigurationNodesTooltip(
+    'infos': SankeyMenuConfigurationNodesTooltip(
       applicationContext,
       dict_variable_elements_selected,
       false
     )
   }
-  const node_tags_submenu=SankeyMenuConfigurationNodesTags(
+
+  const node_tags_submenu = SankeyMenuConfigurationNodesTags(
     applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
@@ -88,28 +90,32 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   )
 
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
-    ui['Tags'] = node_tags_submenu
+    ui['tags'] = node_tags_submenu
   }
 
-  ui['Entrées Sorties'] = SankeyMenuConfigurationNodesIO(
+  ui['io'] = SankeyMenuConfigurationNodesIO(
     applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
     GetLinkValue,
-    node_function,link_function,ComponentUpdater
-
+    node_function,link_function,
+    ComponentUpdater,
+    false
   )
 
   return ui
 }
 
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
-  {applicationContext,
+  {
+    applicationContext,
     dict_variable_application_data,
     dict_variable_elements_selected,
     multi_selected_nodes,
-    menu_configuration_nodes,token,
-    link_function,ComponentUpdater,
+    menu_configuration_nodes,
+    token,
+    link_function,
+    ComponentUpdater,
     node_function
   }
 ) => {
@@ -346,14 +352,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           onClick={
             () => {
               deleteSelectedNodeFromData(dict_variable_application_data,dict_variable_elements_selected)
-              
+
               node_function.recomputeDisplayedElement()
               node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
               link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
               updateComponentMenuConfigNode.current()
               updateComponentMenuConfigLink.current()
               ComponentUpdater.updateComponenSaveInCache.current(false)
-              
+
             }}>
           <FaMinus />
         </Button>
@@ -449,13 +455,45 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     </Box>
 
     {/* Declenché si des neouds sont selectionnées */}
-    {(multi_selected_nodes.current.length !== 0) ? (
-      <>
-        <Tabs style={{marginLeft:'-0.6125rem',marginRight:'-0.6125rem'}} defaultActiveKey="nodes_desc" id="node_attributes" fill={true}>
-          {menu_configuration_nodes.map((c: ReactElementLike)=>{
-            return c})}
-        </Tabs>
-      </>) : (<></>)}
+    {
+      (multi_selected_nodes.current.length !== 0) ?
+        <Tabs
+          isLazy
+        >
+          <TabList>
+            {
+              Object
+                .values(menu_configuration_nodes)
+                .map((c: ReactElementLike[]) => {
+                  return c[0]
+                })
+            }
+            {/* {
+              Object
+                .keys(menu_configuration_nodes)
+                .map((n: string)=>{
+                  return <Tab>
+                    <Box
+                      layerStyle='submenuconfig_tab'
+                    >
+                      {t('Noeud.tabs.'+n)}
+                    </Box>
+                  </Tab>
+                })
+            } */}
+          </TabList>
+          <TabPanels>
+            {
+              Object
+                .values(menu_configuration_nodes)
+                .map((c: ReactElementLike[]) => {
+                  return c[1]
+                })
+            }
+          </TabPanels>
+        </Tabs>:
+        <></>
+    }
   </Box>
   )
 }
