@@ -138,6 +138,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               <SankeyNodeEdition
                 applicationContext={applicationContext}
                 dict_variable_application_data={dict_variable_application_data}
+                dict_variable_elements_selected={dict_variable_elements_selected}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={Object.values(menu_configuration_nodes)}
                 token={token}

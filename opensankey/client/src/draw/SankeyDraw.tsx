@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyData } from '../types/Types'
-import {  AdjustSankeyZone, DeleteLink,DeleteNode,windowSankey} from '../configmenus/SankeyUtils'
+import {  AdjustSankeyZone, DeleteLink,deleteSelectedNodeFromData,windowSankey} from '../configmenus/SankeyUtils'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
 import { RemoveAnimate,
@@ -14,7 +14,7 @@ import { RemoveAnimate,
 import LZString from 'lz-string'
 import { SankeyDrawTypes, keyHandlerFType } from './types/SankeyDrawTypes'
 import { SvgDragMiddleMouseStart, SvgDragMiddleMouseMove, EventZDDContextMenu } from './SankeyDrawEventFunction'
-import { AddDrawNodesEvent, DeleteGNodes } from './SankeyDrawNodes'
+import { AddDrawNodesEvent } from './SankeyDrawNodes'
 import { DeleteGLinks } from './SankeyDrawLinks'
 declare const window: Window &
 typeof globalThis & {
@@ -321,11 +321,8 @@ export const keyHandler : keyHandlerFType = (
       multi_selected_links.current.forEach(el=>{
         DeleteLink(data,el)
       })
-
-      DeleteGNodes(multi_selected_nodes.current.map(n=>n.idNode))
-      multi_selected_nodes.current.forEach(el=>{
-        DeleteNode(data,el)
-      })
+      
+      deleteSelectedNodeFromData(dict_variable_application_data,dict_variable_elements_selected)
       multi_selected_nodes.current=[]
       multi_selected_links.current=[]
       
