@@ -1065,6 +1065,7 @@ export const DeleteNode:DeleteNodeFuncType = (
       })
     })
     delete data.links[idLink]
+    DeleteGLinks([idLink])
   })
 
   node.outputLinksId.forEach(idLink => {
@@ -1074,6 +1075,7 @@ export const DeleteNode:DeleteNodeFuncType = (
       })
     })
     delete data.links[idLink]
+    DeleteGLinks([idLink])
   })
   // The case below is not expected. The target and the source of the Links should have the link in inputLinksId  or outputLinksIdµ.
   // However this code avoids the crash
@@ -1100,8 +1102,9 @@ export const DeleteNode:DeleteNodeFuncType = (
         delete n.dimensions[nd[0]]
       })
     })
-
+  DeleteGNodes([node.idNode])
   delete data.nodes[node.idNode]
+
 }
 
 
