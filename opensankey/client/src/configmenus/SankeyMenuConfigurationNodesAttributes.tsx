@@ -960,7 +960,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   max={500}
                   step={5}
                   value={list_value['label_box_width'][0] as number}
-                  placeholder={'110'}
+                  //placeholder={'110'}
                   onChange={value => {
                     if (!isNaN(+Number(value))) {
                       const val = (+Number(value) < 0) ? 0 : +Number(value)
