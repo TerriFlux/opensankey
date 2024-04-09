@@ -30,7 +30,7 @@ export const select_custom_style = definePartsStyle({
   }
 })
 
-export const select_police_style = definePartsStyle({
+export const menuconfigpanel_option_select = definePartsStyle({
   field: {
     height: '2rem',
     border: 'solid 1px',

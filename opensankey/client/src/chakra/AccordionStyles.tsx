@@ -5,6 +5,7 @@ import {
 
 const { definePartsStyle } = createMultiStyleConfigHelpers(accordionAnatomy.keys)
 
+// The styles that all accordion have in common
 export const accordion_base_style = definePartsStyle({
   root: {
     margin: '0',
@@ -74,6 +75,7 @@ export const accordion_base_style = definePartsStyle({
   }
 })
 
+// Variant for sublevel accordion
 export const accordion_sublevel_style = definePartsStyle({
   root: {
     margin: '-0.5rem -1.5rem'

@@ -14,7 +14,7 @@ export type SankeyMenuConfigurationNodesTagsFType = (
   node_funtion:NodeFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   menu_for_modal:boolean
-)=> JSX.Element
+)=> JSX.Element[]
 
 
 // Check if all value of the attribute "k" is the same in the selected nodes (or selected style)

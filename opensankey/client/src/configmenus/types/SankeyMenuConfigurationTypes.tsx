@@ -1,7 +1,7 @@
 import { MutableRefObject } from 'react'
-import { 
+import {
   applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType,
-  dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType, LinkFunctionTypes, ComponentUpdaterType, contextMenuType, NodeFunctionTypes 
+  dict_hook_ref_setter_show_dialog_componentsType, uiElementsRefType, LinkFunctionTypes, ComponentUpdaterType, contextMenuType, NodeFunctionTypes
 } from '../../types/Types'
 
 
@@ -16,7 +16,7 @@ export type OpenSankeyConfigurationsMenusFType = (
   menu_configuration_link_tags:JSX.Element,
   menu_configuration_data_tags:JSX.Element,
   menu_configuration_nodes:{
-    [s: string]: JSX.Element;
+    [s: string]: JSX.Element[];
   },
   menu_configuration_links:{
     [s: string]: JSX.Element;

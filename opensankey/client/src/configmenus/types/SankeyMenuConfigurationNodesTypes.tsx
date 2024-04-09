@@ -1,10 +1,10 @@
 import { TFunction } from 'i18next'
-import { 
+import {
   ComponentUpdaterType,
   LinkFunctionTypes,
   NodeFunctionTypes,
-  SankeyData, SankeyNode, applicationContextType, contextMenuType, 
-  dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType 
+  SankeyData, SankeyNode, applicationContextType, contextMenuType,
+  dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType
 } from '../../types/Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
@@ -19,8 +19,8 @@ export type OpenSankeyMenuConfigurationNodesFType = (
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType
-) => { [s: string]: JSX.Element; }
- 
+) => { [s: string]: JSX.Element[]; }
+
 export type tree_data_nodesFType=(t:TFunction<'translation', undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
   filter_node_selector:string[]
 )=> treeFolderType
