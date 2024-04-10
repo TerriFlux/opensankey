@@ -701,7 +701,8 @@ export type ExcelModalTypes = {
   url_prefix: string,
   launch: (path: string) => void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  Reinitialization:()=>void
+  Reinitialization:()=>void,
+  pointer_pos:{current:number[]}
 }
 
 /**
@@ -710,50 +711,42 @@ export type ExcelModalTypes = {
  * @param {{ UploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; callback: any; launch: any; }} { UploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,callback,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,dict_hook_ref_setter_show_dialog_components,Reinitialization }) => {
+export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,dict_hook_ref_setter_show_dialog_components,Reinitialization,pointer_pos }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
-  const [show_excel_dialog,set_show_excel_dialog]=useState(false)
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current=set_show_excel_dialog
-  return (
-    <Modal
-      show={show_excel_dialog}
-      onHide={()=>set_show_excel_dialog(false)}
-    >
-      <Modal.Header closeButton>
-        <Modal.Title>{t('Menu.open_excel_file')}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Group as={Row}>
-            <Form.Label>{t('Menu.input_file_excel')}</Form.Label>
-            <Form.Control
-              type="file"
-              onChange={(evt: ChangeEvent) => {
-                set_input_file_name((evt.target as HTMLFormElement).files[0])
-              }}
-            />
-          </Form.Group>
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button
-          variant="secondary"
-          onClick={
-            () => {
-              Reinitialization()
-              launch((input_file_name as unknown as {[name:string]:string}).name)
-              UploadExcelImpl(
-                set_show_excel_dialog,input_file_name as Blob,url_prefix
-              )
-            }
+  const content =<>
+    <Form>
+      <Form.Group as={Row}>
+        <Form.Label>{t('Menu.input_file_excel')}</Form.Label>
+        <Form.Control
+          type="file"
+          onChange={(evt: ChangeEvent) => {
+            set_input_file_name((evt.target as HTMLFormElement).files[0])
+          }}
+        />
+      </Form.Group>
+    </Form>
+
+    <Modal.Footer>
+      <Button
+        variant="secondary"
+        onClick={
+          () => {
+            Reinitialization()
+            launch((input_file_name as unknown as {[name:string]:string}).name)
+            UploadExcelImpl(
+              dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current,input_file_name as Blob,url_prefix
+            )
           }
-        >{t('Menu.ouvrir')}</Button>
-        <Button
-          variant="secondary"
-          onClick={()=>set_show_excel_dialog(false)}
-        >{t('Menu.ca')}</Button>
-      </Modal.Footer>
-    </Modal>)
+        }
+      >{t('Menu.ouvrir')}</Button>
+      <Button
+        variant="secondary"
+        onClick={()=>dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current(false)}
+      >{t('Menu.ca')}</Button>
+    </Modal.Footer>
+  </>
+  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_excel_dialog',content,pointer_pos,t('Menu.open_excel_file'))
+
 }
 
 export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
