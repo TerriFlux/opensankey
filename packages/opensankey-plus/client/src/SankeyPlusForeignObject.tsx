@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React, { LegacyRef, MutableRefObject, useRef, useState } from 'react'
 import { Badge, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { Quill } from 'react-quill'
-import { Box, Button, Checkbox, Tab, TabPanel, Textarea } from '@chakra-ui/react'
+import { Box, Button, Checkbox, Tab, TabPanel, Textarea, useForceUpdate } from '@chakra-ui/react'
 import {  } from '@chakra-ui/react'
 import * as d3 from 'd3'
 import ReactQuill from 'react-quill'
@@ -35,10 +35,9 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   const [forceUpdate, setForceUpdate] = useState(false)
 
   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
-  let s_tmp_editor_content_changed = false
-
   d_setter_input_value.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
+  let s_tmp_editor_content_changed = false
   if (multi_selected_nodes.current.length>0) {
     if (multi_selected_nodes.current[0].FO_content !== s_editor_content_fo_node) {
       s_tmp_editor_content_changed = true
@@ -80,8 +79,8 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   // - one with raw html in case the editor can't do exactly what we want
   const editor_fo=<Box as='span' width='calc(20vw - 1.5em)'>
     <ReactQuill
-      defaultValue={s_tmp_editor_content_fo_node}
-      onChange={(evt,_,s) => {
+      value={s_editor_content_fo_node}
+      onChange={(evt, _, s) => {
         if(s==='user'){
           s_tmp_editor_content_fo_node = evt
           if (!s_tmp_editor_content_changed) {
@@ -103,12 +102,14 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
     />
   </Box>
 
+  const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   const editor_fo_raw=<Textarea
     rows={5}
     color={(!is_activated || !value_of_key['has_FO'][0])?'#666666':''}
     backgroundColor={(!is_activated || !value_of_key['has_FO'][0])?'#cccccc':''}
     disabled={!is_activated}
-    defaultValue={s_tmp_editor_content_fo_node}
+    ref={inputRef}
+    defaultValue={s_editor_content_fo_node}
     onChange={(evt) => {
       s_tmp_editor_content_fo_node = evt.target.value
       if (!s_tmp_editor_content_changed) {
@@ -262,15 +263,44 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
           <Button
             variant='menuconfigpanel_option_button_left'
             isDisabled={!is_activated || !s_tmp_editor_content_changed}
+            backgroundColor='red.200'
             onClick={() => {
               if (multi_selected_nodes.current.length>0) {
-                if (multi_selected_nodes.current[0].FO_content !== s_tmp_editor_content_fo_node) {
+                if ( typeof multi_selected_nodes.current[0].FO_content !== "undefined" ) {
+                  // Reset textaera
+                  if ( typeof inputRef.current !== "undefined" ) {
+                    if (inputRef.current !== null) {
+                      inputRef.current.value = multi_selected_nodes.current[0].FO_content
+                    }
+                  }
+                  // Reset state value
                   sEditorContentFoNode(multi_selected_nodes.current[0].FO_content)
                 }
+                else {
+                  // Reset textaera
+                  if (typeof inputRef.current !== "undefined") {
+                    if (inputRef.current !== null) {
+                      inputRef.current.value = ''
+                    }
+                  }
+                  // Reset state value
+                  sEditorContentFoNode('')
+                }
               }
+              else {
+                // Reset textaera
+                if (typeof inputRef.current !== "undefined") {
+                  if (inputRef.current !== null) {
+                    inputRef.current.value = ''
+                  }
+                }
+                // Reset state value
+                sEditorContentFoNode('')
+              }
+              setForceUpdate(!forceUpdate)
             }}
           >
-            {t('Noeud.FO.Cancel')}
+            {t('Noeud.FO.cancel')}
           </Button>
           <Button
             variant='menuconfigpanel_option_button_right'
@@ -286,7 +316,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
               sEditorContentFoNode(s_tmp_editor_content_fo_node)
             }}
           >
-            {t('Noeud.FO.Submit')}
+            {t('Noeud.FO.submit')}
           </Button>
         </Box>
       </Box>
