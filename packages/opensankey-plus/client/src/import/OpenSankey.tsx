@@ -5,6 +5,7 @@ import * as OpenSankeyDrawEventFunc from 'open-sankey/dist/draw/SankeyDrawEventF
 import * as OpensankeyDragNodeFunc from 'open-sankey/dist/draw/SankeyDragNodes'
 import * as OpensankeyConvert from 'open-sankey/dist/configmenus/SankeyConvert'
 import * as OpenSankeyLayout from 'open-sankey/dist/draw/SankeyDrawLayout'
+import * as OpenSankeyMenuTop from 'open-sankey/dist/topmenus/SankeyMenuTop'
 import { DragLegendGElement} from 'open-sankey/dist/draw/SankeyDrawLegend'
 
 import { 
@@ -26,7 +27,9 @@ import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFunc
 import { drag_legend_g_elementFuncType } from 'open-sankey/src/draw/types/SankeyDrawLegendTypes'
 import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType, synchronizeNodesandLinksIdFuncType, updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
 import {SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType, actualizeDrawAreaFrameFType, selectOpensankeyElementsInSelectionZoneFType} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
-
+import {MenuDraggableFType} from 'open-sankey/src/topmenus/types/SankeyMenuTopTypes'
+import { dict_hook_ref_setter_show_dialog_componentsType } from 'open-sankey/src/types/Types'
+import { SankeyPlusShowMenuComponentsType } from '../../types/Types'
 export const ReturnValueLink=OpensankeyUtils.ReturnValueLink as ReturnValueLinkFuncType
 
 export const ReturnValueNode=OpensankeyUtils.ReturnValueNode as ReturnValueNodeFuncType
@@ -114,3 +117,15 @@ export const reorganize_node_inputLinksIdOSTyped:reorganize_node_inputLinksIdFun
 export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType = OpenSankeyDrawEventFunc.actualizeDrawAreaFrame
 
 export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInSelectionZoneFType=OpenSankeyDrawEventFunc.selectOpensankeyElementsInSelectionZone
+
+export const MenuDraggable:MenuDraggableFType=OpenSankeyMenuTop.MenuDraggable
+
+export const PlusMenuDraggable=(
+  dict_hook_ref_setter_show_dialog_components : SankeyPlusShowMenuComponentsType,
+  dialog_name: keyof SankeyPlusShowMenuComponentsType,
+  content:JSX.Element|JSX.Element[],
+  pointer_pos:{current:number[]},
+  title:string,
+  width_menu?:number)=>{
+  return MenuDraggable((dict_hook_ref_setter_show_dialog_components as dict_hook_ref_setter_show_dialog_componentsType),(dialog_name as keyof dict_hook_ref_setter_show_dialog_componentsType),content,pointer_pos,title,width_menu)
+}

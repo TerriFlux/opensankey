@@ -5,7 +5,6 @@ import {
   Badge
 } from 'react-bootstrap'
 import {
-  FaEye,
   FaEyeSlash,
   FaFileImport
 } from 'react-icons/fa'
@@ -35,7 +34,7 @@ import {
   SankeyPlusLink,
   SankeyPlusNode,
 } from '../types/Types'
-import { OSPIsAllNodeNotLocalAttrSameValue, PlusReturnValueLink } from './SankeyPlusUtils'
+import { PlusReturnValueLink } from './SankeyPlusUtils'
 import {
   AssignNodeValueToCorrectVar,
   drag_node_text,
@@ -54,7 +53,7 @@ import {
   SvgDragMiddleMouseStart,
 } from './import/OpenSankey'
 
-import { SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
+import { TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { ComponentUpdaterType, SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {

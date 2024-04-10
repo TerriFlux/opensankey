@@ -1344,7 +1344,6 @@ export const SankeyPlusMenuPreferenceView : SankeyPlusMenuPreferenceViewFType =(
   return <InputGroup>
     <Checkbox
       sx={SmoothClasses({})}
-      maxW={'30%'}
       isChecked={data.accordeonToShow.includes('Vis')}
       onChange={() => {
         preferenceCheck('Vis',data)

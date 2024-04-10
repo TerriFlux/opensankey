@@ -1,6 +1,6 @@
 
 import React, { ChangeEvent, useRef, useState } from 'react'
-import { OverlayTrigger, Tooltip, Form, Modal, InputGroup, Dropdown} from 'react-bootstrap'
+import { OverlayTrigger, Tooltip, Form, InputGroup, Dropdown} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FaEye, FaEyeSlash, FaFileImport} from 'react-icons/fa'
 import * as d3 from 'd3'
@@ -42,6 +42,7 @@ import {
   DragLegendGElementOSTyped,
   LinkColor,
   NodeColor,
+  PlusMenuDraggable,
   ReturnValueLink,
 } from './import/OpenSankey'
 
@@ -247,48 +248,45 @@ export const PlusLinkSabotColor : PlusLinkSabotColorFType = (
 export const Modale_resolution_png : Modale_resolution_pngFType =(
   t:TFunction,
   dict_hook_ref_setter_show_dialog_components,
-  dict_variable_application_data
+  dict_variable_application_data,
+  pointer_pos
 )=>{
   const [h,set_h]=useState<string>()
   const [v,set_v]=useState<string>()
-  const show_dialog_resolution=useState(false)
   const valid_input= (h===undefined && v===undefined) ||  (v!==undefined && h!==undefined && !isNaN(+v) && !isNaN(+h))
 
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current=show_dialog_resolution[1]
 
-  return <Modal size='sm' id='modale_choose_resolution_png' show={show_dialog_resolution[0]} onHide={()=>show_dialog_resolution[1](false)}>
-    <Modal.Header closeButton>
-      {t('Menu.setResolutionPNG')}
-    </Modal.Header>
-    <Modal.Body>
-      <InputGroup>
-        <InputGroup.Text>{t('Menu.larg')}</InputGroup.Text>
-        <Form.Control type='number' value={h}
-          step={1}
-          onChange={(evt)=>{
-            if(evt.target.value===undefined || !isNaN(+evt.target.value)){
-              set_h(evt.target.value)
-            }
-          }}/>
-      </InputGroup>
-      <InputGroup>
-        <InputGroup.Text>{t('Menu.haut')}</InputGroup.Text>
-        <Form.Control type='number' value={v}
-          step={1}
-          onChange={(evt)=>{
-            if(evt.target.value===undefined || !isNaN(+evt.target.value)){
-              set_v(evt.target.value)
-            }
-          }}/>
-      </InputGroup>
-    </Modal.Body>
-    <Modal.Footer><Button variant='primary' disabled={!valid_input} onClick={()=>{
+  const content=<>      
+    <InputGroup>
+      <InputGroup.Text>{t('Menu.larg')}</InputGroup.Text>
+      <Form.Control type='number' value={h}
+        step={1}
+        onChange={(evt)=>{
+          if(evt.target.value===undefined || !isNaN(+evt.target.value)){
+            set_h(evt.target.value)
+          }
+        }}/>
+    </InputGroup>
+    <InputGroup>
+      <InputGroup.Text>{t('Menu.haut')}</InputGroup.Text>
+      <Form.Control type='number' value={v}
+        step={1}
+        onChange={(evt)=>{
+          if(evt.target.value===undefined || !isNaN(+evt.target.value)){
+            set_v(evt.target.value)
+          }
+        }}/>
+    </InputGroup>
+    <Button variant='primary' disabled={!valid_input} onClick={()=>{
       dict_variable_application_data.function_on_wait.current=()=>{
         clickSavePNG(h,v)
       }
       dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
-    }}>Save</Button></Modal.Footer>
-  </Modal>
+    }}>Save</Button>
+  </>
+
+  return PlusMenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_resolution_save_png',content,pointer_pos,t('Menu.setResolutionPNG'))
+
 }
 
 const clickSavePNG = (
