@@ -47,7 +47,6 @@ export type AddDrawLinksEventsFType = (
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   link_functions : LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>
 ) => void
