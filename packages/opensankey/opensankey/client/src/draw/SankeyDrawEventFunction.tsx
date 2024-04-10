@@ -166,12 +166,11 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   l: SankeyLink,
   ref_setter_contextualised_link,
   pointer_pos,
-  multi_selected_links,
-  displayedInputLinkValueSetterRef,
+  dict_variable_elements_selected,
   tags_selected,
-  ref_display_link_opacity
 ) => {
   const { data } = dict_variable_application_data
+  const {displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef,multi_selected_links,ref_display_link_opacity}=dict_variable_elements_selected
   ev.preventDefault()
   pointer_pos.current = [ev.pageX, ev.pageY]
   if (multi_selected_links.current.includes(l)) {
@@ -208,7 +207,10 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
       multi_selected_links,
       tags_selected
     )
-    //set_tags_selected(new_tags_selected)
+    displayedInputLinkDataTagSetterRef.current.forEach(setter => setter(
+      new_tags_selected
+    ))
+
     displayedInputLinkValueSetterRef.current.forEach(setter => setter(
       valueLinkInContext.value as string
     ))
@@ -227,6 +229,10 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
       multi_selected_links,
       n_t_s
     )
+    displayedInputLinkDataTagSetterRef.current.forEach(setter => setter(
+      n_t_s
+    ))
+
     displayedInputLinkValueSetterRef.current.forEach(setter => setter(
       valueLinkInContext.value as string
     ))
