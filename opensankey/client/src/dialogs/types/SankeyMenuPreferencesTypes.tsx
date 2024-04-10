@@ -14,5 +14,6 @@ export type preferenceCheckFType = (str: string,data:SankeyData) => void
 export type modalPreferenceTypes = {
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   ui: (JSX.Element[] | JSX.Element)[],
-  t:TFunction
+  t:TFunction,
+  pointer_pos:{current:number[]}
 }

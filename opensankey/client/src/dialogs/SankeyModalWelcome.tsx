@@ -1,11 +1,15 @@
 // Standard lib
 import React, {
+  CSSProperties,
   useState
 } from 'react'
 import {
+  CloseButton,
+  Col,
   FormCheck,
   Modal,
   Pagination,
+  Row,
 } from 'react-bootstrap'
 
 // Imported libs
@@ -21,6 +25,8 @@ import {
 
 import { windowSankey } from '../configmenus/SankeyUtils'
 import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
+import Draggable from 'react-draggable'
+import * as d3 from 'd3'
 
 export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   t,
@@ -100,34 +106,69 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   </Accordion>
   external_content['rc'] = windowSankey.SankeyToolsStatic?content_rc_static:content_rc_not_static
 
-  return <Modal scrollable size='xl' show={show_wecome && !never_see_again.current} onHide={()=>{
-    set_show_welcome(false)
-  }}>
-    <Modal.Header closeButton>
-      <Modal.Title>{t('welcome.'+active_page)}</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
-    </Modal.Body>
 
-    <Modal.Footer style={{justifyContent:'center'}}>
-      <Pagination >
-        {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
 
-        <Pagination.Item active={active_page==='rc'} key={'rc'} onClick={()=>{
-          set_active_page('rc')
-        }}>
-          {t('welcome.rc')}
-        </Pagination.Item>
 
-      </Pagination>
-      <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again.current} onChange={evt=>{
-        never_see_again.current = evt.target.checked
-        localStorage.setItem('dontSeeAggainWelcome','1')
-        set_show_welcome(false)
-      }}/>
-    </Modal.Footer>
-  </Modal>
+  const content=<div style={  {height:'700px',overflowY:'auto'}}>
+    {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
+  </div>
+
+  const welcome_footer=<Modal.Footer style={{justifyContent:'center'}}>
+    <Pagination >
+      {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
+
+      <Pagination.Item active={active_page==='rc'} key={'rc'} onClick={()=>{
+        set_active_page('rc')
+      }}>
+        {t('welcome.rc')}
+      </Pagination.Item>
+
+    </Pagination>
+    <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again.current} onChange={evt=>{
+      never_see_again.current = evt.target.checked
+      localStorage.setItem('dontSeeAggainWelcome','1')
+      dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current(false)
+    }}/>
+  </Modal.Footer>
+  const class_name=t('welcome.'+active_page).replaceAll('/','').replaceAll('.','').replaceAll('\'','').split(' ').join('_')
+  const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
+  n_style_menu_draggable.width='75%'
+
+  return <Draggable  handle='.title_menu'
+    defaultPosition={{x:25,y:25}}
+    bounds={{left:0,top:0}}
+    onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
+      d3.select('.menu_conf.'+class_name).style('z-index','1031')
+    }}
+  >
+    <div hidden={!show_wecome || never_see_again.current} className={'menu_conf '+class_name}
+      style={n_style_menu_draggable}
+    >
+      <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'3','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
+        <Col><h3>{t('welcome.'+active_page)}</h3></Col>
+        <Col className='text-end'>{<CloseButton onClick={()=>{
+          dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current(false)}}/>}</Col>
+      </Row>
+      <div className='sankey-menu'>
+        {content}
+      </div>
+      {welcome_footer}
+    </div>
+  </Draggable>
+
 }
 
 
+const style_menu_draggable={'display':'flex',
+  width:'25%',
+  'paddingLeft':'0.75rem',
+  'paddingRight':'0.75rem',
+  'position': 'fixed',
+  'flexDirection': 'column',
+  'backgroundColor': '#fff',
+  'backgroundClip': 'padding-box',
+  'border': '1px solid rgba(0, 0, 0, 0.2)',
+  'borderRadius':' 0.6rem',
+  'zIndex':'1031',
+
+} as CSSProperties
