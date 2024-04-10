@@ -30,10 +30,8 @@ export type EventLinkContextMenuFType = (
   l: SankeyLink,
   ref_setter_contextualised_link: MutableRefObject<Dispatch<SetStateAction<SankeyLink | undefined>> | undefined>,
   pointer_pos: { current: number[]} ,
-  multi_selected_links: { current: SankeyLink[]} ,
-  displayedInputLinkValueSetterRef: MutableRefObject<Dispatch<SetStateAction<string>>[]>,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
   tags_selected: { [k: string]: string} ,
-  ref_display_link_opacity: MutableRefObject<Dispatch<SetStateAction<string>>[]>
 ) => void
 
 export type EventZDDContextMenuFType = (
