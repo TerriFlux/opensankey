@@ -485,7 +485,7 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
             <Badge
               pill
               bg="info"
-              style={{fontSize:'0.75em', height:'1.5em', display: 'inline'}}
+              style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
             >
               Beta
             </Badge>
@@ -609,7 +609,7 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
               <Badge
                 pill
                 bg="none"
-                style={{fontSize:'1rem'}}
+                style={{fontSize:'1em'}}
               >
                 <FontAwesomeIcon
                   icon={faLock}

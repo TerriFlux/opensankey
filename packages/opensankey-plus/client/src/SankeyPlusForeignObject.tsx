@@ -152,7 +152,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
             <Badge
               pill
               bg="info"
-              style={{fontSize:'0.75em', height:'1.5em',  display: 'inline'}}
+              style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
             >
               Beta
             </Badge>
