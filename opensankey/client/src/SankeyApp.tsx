@@ -181,11 +181,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
     ref_display_link_opacity : useRef<Dispatch<SetStateAction<string>>[]>([]),
     displayedInputLinkValueSetterRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
+    displayedInputLinkDataTagSetterRef : useRef<Dispatch<SetStateAction<{[k: string]: string;}>>[]>([]),
     displayedInputLinkValueRef : useRef<string>(''),
     userScaleRef : useRef(dict_variable_application_data.data.user_scale)
   }
   // Reset list of setter of input link value
   dict_variable_elements_selected.displayedInputLinkValueSetterRef.current=[]
+  dict_variable_elements_selected.displayedInputLinkDataTagSetterRef.current=[]
   dict_variable_elements_selected.ref_display_link_opacity.current=[]
 
   /*************************************************************************************************/
@@ -341,7 +343,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const LinkSabotColor=LinkColor
   const RedrawLinks=(links_to_update:SankeyLink[])=>{
     drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,links_to_update,ComponentUpdater)
-    AddDrawLinksEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,applicationContext,ref_alt_key_pressed)
+    AddDrawLinksEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,link_function,ComponentUpdater,applicationContext,ref_alt_key_pressed)
 
   }
 
