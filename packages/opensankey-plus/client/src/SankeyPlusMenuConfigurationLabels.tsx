@@ -65,7 +65,6 @@ export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFTyp
   return <InputGroup>
     <Checkbox
       sx={SmoothClasses({})}
-      maxW={'30%'}
       isChecked={data.accordeonToShow.includes('LL')}
       onChange={() => {
         preferenceCheck('LL',data)
