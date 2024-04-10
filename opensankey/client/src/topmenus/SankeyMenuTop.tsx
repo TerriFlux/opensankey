@@ -185,7 +185,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
 
-  const {ref_show_style_node,ref_show_style_link} = dict_hook_ref_setter_show_dialog_components
+  const {ref_setter_show_style_node,ref_setter_show_style_link} = dict_hook_ref_setter_show_dialog_components
 
   const logo_tempalte=<svg xmlns="http://www.w3.org/2000/svg" aria-hidden='false' data-prefix='fas' className='svg-inline--fa' viewBox="0 0 24 24"><path fill='currentColor' d="M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z"/></svg>
 
@@ -400,8 +400,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         <Dropdown className='buttonSubNav' drop='end' id='exporter' >
           <Dropdown.Toggle size='sm' variant='light'><><Col><FontAwesomeIcon icon={faPenToSquare} /></Col><Col className='textIcon'>{t('Menu.style')}</Col></></Dropdown.Toggle>
           <Dropdown.Menu>
-            <Dropdown.Item onClick={()=>{ref_show_style_node.current(true)}}>{t('Menu.esn')}</Dropdown.Item>
-            <Dropdown.Item onClick={()=>{ref_show_style_link.current(true)}}>{t('Menu.esf')}</Dropdown.Item>
+            <Dropdown.Item onClick={()=>{ref_setter_show_style_node.current(true)}}>{t('Menu.esn')}</Dropdown.Item>
+            <Dropdown.Item onClick={()=>{ref_setter_show_style_link.current(true)}}>{t('Menu.esf')}</Dropdown.Item>
           </Dropdown.Menu></Dropdown></OverlayTrigger>,
 
       <>{external_edition_item}</>
@@ -493,15 +493,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
     node_function
   }
 ) => {
-  const {ref_setter_show_modale_tuto,ref_setter_show_modale_support,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
+  const {ref_setter_show_modale_tuto,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
   const {ref_setter_mode_selection} = dict_variable_elements_selected
   const [show_nav,set_show_nav] = useState(false)
   const [show_tuto,set_show_tuto]=useState(false)
-  const [show_support,set_show_support]=useState(false)
   const [show_template,set_show_template]=useState(false)
   const [forceUpdate,setForceUpdate]=useState(false)
   ref_setter_show_modale_tuto.current=set_show_tuto
-  ref_setter_show_modale_support.current=set_show_support
   ref_setter_show_modal_template.current=set_show_template
   const {updateComponentMenu} = ComponentUpdater
 
@@ -693,13 +691,15 @@ export const Menu: FunctionComponent<MenuTypes> = (
   </Col> ): <ButtonGroup> {Object.keys(ordered_menu).map(k=><React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
 
 
-  const modal_support= <Modal size={'lg'} show={show_support} onHide={() =>set_show_support(false)}>
-    <Modal.Header closeButton><h2>{applicationContext.t('Menu.c_support')}</h2></Modal.Header>
-    <Modal.Body>
-      <h3>{applicationContext.t('Menu.rth_support')} :</h3>
-      <p>{applicationContext.t('Menu.support_explication').split('[]')[0]}<a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a>{applicationContext.t('Menu.support_explication').split('[]')[1]}</p>
-    </Modal.Body>
-  </Modal>
+
+  const content_support=<>
+    <h3>{applicationContext.t('Menu.rth_support')} :</h3>
+    <p>{applicationContext.t('Menu.support_explication').split('[]')[0]}<a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a>{applicationContext.t('Menu.support_explication').split('[]')[1]}</p>
+  </>
+
+
+  const modal_support= MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_modale_support',content_support,contextMenu.pointer_pos,applicationContext.t('Menu.c_support'))
+
 
   const data_tags = Object.assign({},dict_variable_application_data.data.dataTags)
   const show_data=Object.values(data_tags).length>0
@@ -816,6 +816,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         url_prefix={applicationContext.url_prefix}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         Reinitialization={Reinitialization}
+        pointer_pos={contextMenu.pointer_pos}
       />
 
       <SankeyLoad
@@ -873,7 +874,7 @@ export const MenuDraggable : MenuDraggableFType=(
   const [display_menu,set_display_menu] = useState(false)
   dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu
 
-  const class_name=title.replaceAll('/','').replaceAll('.','').split(' ').join('_')
+  const class_name=title.replaceAll('/','').replaceAll('.','').replaceAll('\'','').split(' ').join('_')
   const n_style_menu_draggable=JSON.parse(JSON.stringify(style_menu_draggable)) as CSSProperties
   n_style_menu_draggable.width=width_menu+'%'
   return <Draggable  handle='.title_menu'
@@ -887,7 +888,7 @@ export const MenuDraggable : MenuDraggableFType=(
       style={n_style_menu_draggable}
     >
       <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'3','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
-        <Col><h3>{title}</h3></Col>
+        <Col xs={11}><h3>{title}</h3></Col>
         <Col className='text-end'>{<CloseButton onClick={()=>{set_display_menu(false)}}/>}</Col>
       </Row>
       <div className='sankey-menu'>

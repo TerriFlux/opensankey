@@ -1,12 +1,13 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent } from 'react'
 
-import { Form,  Modal, Button, ButtonGroup, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
+import { Form,  Button, ButtonGroup, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
 import { SankeyData } from '../types/Types'
 import { TFunction,i18n } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
 import { SmoothClasses } from '../configmenus/SankeyUtils'
 import { OpenSankeyDefaultModalePreferenceContentFType, modalPreferenceTypes, preferenceCheckFType } from './types/SankeyMenuPreferencesTypes'
+import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 
 declare const window: Window &
@@ -62,7 +63,6 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       <InputGroup>
         <Checkbox 
           sx={SmoothClasses({})}
-          maxW={'30%'}
           isChecked={data.accordeonToShow.includes('MEP')}
           onChange={() => {
             preferenceCheck('MEP',data)
@@ -76,7 +76,6 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       <InputGroup>
         <Checkbox 
           sx={SmoothClasses({})}
-          maxW={'30%'}
           isChecked
           disabled
         >
@@ -87,7 +86,6 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       <InputGroup>
         <Checkbox 
           sx={SmoothClasses({})}
-          maxW={'30%'}
           isChecked={data.accordeonToShow.includes('EN')}
           onChange={() => {
             preferenceCheck('EN',data)
@@ -101,7 +99,6 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       <InputGroup>
         <Checkbox 
           sx={SmoothClasses({})}
-          maxW={'30%'}
           isChecked
           disabled
         >
@@ -112,7 +109,6 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       <InputGroup>
         <Checkbox 
           sx={SmoothClasses({})}
-          maxW={'30%'}
           isChecked={data.accordeonToShow.includes('EF')}
           onChange={() => {
             preferenceCheck('EF',data)
@@ -126,7 +122,6 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       <InputGroup>
         <Checkbox 
           sx={SmoothClasses({})}
-          maxW={'30%'}
           isChecked={data.accordeonToShow.includes('ED')}
           onChange={() => {
             preferenceCheck('ED',data)
@@ -170,19 +165,15 @@ export const preferenceCheck : preferenceCheckFType  = (str: string,data:SankeyD
 }
 
 export const ModalPreference: FunctionComponent<modalPreferenceTypes> = (
-  {dict_hook_ref_setter_show_dialog_components,ui,t
+  {dict_hook_ref_setter_show_dialog_components,ui,t,pointer_pos
   })=>{
-  const [show_pref,set_show_pref]=useState(false)
-  dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_preference.current=set_show_pref
-  return (<Modal show={show_pref} onHide={() => { set_show_pref(false) }}>
-    <Modal.Header closeButton>
-      <Modal.Title>{t('Menu.title_pref')}</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-      {Object.values(ui).map((d,i)=>{
-        return <React.Fragment key={i}>{d}</React.Fragment>
-      })}
-    </Modal.Body>
-  </Modal>)
+  const content=<>
+    {Object.values(ui).map((d,i)=>{
+      return <React.Fragment key={i}>{d}</React.Fragment>
+    })}
+  </>
+
+  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_modal_preference',content,pointer_pos,t('Menu.title_pref'),34)
+
 }
 
