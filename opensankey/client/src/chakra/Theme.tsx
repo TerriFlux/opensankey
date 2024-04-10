@@ -133,16 +133,16 @@ export const opensankey_theme = extendTheme({
       color: 'openSankey.400'
     },
     submenuconfig_tab_with_badge: {
+      alignItems: 'center',
+      color: 'openSankey.400',
       display: 'grid',
-      gridTemplateColumns: '3fr 1fr',
       gridColumnGap: '0.25rem',
+      gridTemplateColumns: '1fr 1fr',
       height: '2rem',
-      textStyle: 'h3',
+      paddingEnd: '0em',
+      paddingStart: '1em',
       textAlign: 'center',
-      flex: '1',
-      paddingStart: '0',
-      paddingEnd: '0',
-      color: 'openSankey.400'
+      textStyle: 'h3',
     },
     menuconfigpanel_part_title_1: {
       textStyle: 'h2',

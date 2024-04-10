@@ -457,9 +457,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     {/* Declenché si des neouds sont selectionnées */}
     {
       (multi_selected_nodes.current.length !== 0) ?
-        <Tabs
-          isLazy
-        >
+        <Tabs>
           <TabList>
             {
               Object
@@ -468,19 +466,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                   return c[0]
                 })
             }
-            {/* {
-              Object
-                .keys(menu_configuration_nodes)
-                .map((n: string)=>{
-                  return <Tab>
-                    <Box
-                      layerStyle='submenuconfig_tab'
-                    >
-                      {t('Noeud.tabs.'+n)}
-                    </Box>
-                  </Tab>
-                })
-            } */}
           </TabList>
           <TabPanels>
             {
