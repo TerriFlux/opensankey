@@ -401,6 +401,10 @@ export type dict_variable_elements_selectedType = {
   ref_display_link_opacity : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
   displayedInputLinkValueSetterRef : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
   displayedInputLinkValueRef : MutableRefObject<string>,
+  displayedInputLinkDataTagSetterRef : MutableRefObject<Dispatch<SetStateAction<{
+    [k: string]: string;
+}>>[]>,
+
   userScaleRef : MutableRefObject<number>,
 }
 

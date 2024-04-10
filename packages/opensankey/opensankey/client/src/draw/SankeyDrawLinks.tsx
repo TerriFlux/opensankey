@@ -108,11 +108,10 @@ const eventLinkClick=(
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
   data: SankeyData,
-  displayedInputLinkValueRef : MutableRefObject<React.Dispatch<React.SetStateAction<string>>[]>,
   ComponentUpdater:ComponentUpdaterType,
 
 )=>{
-  const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef}=dict_variable_elements_selected
+  const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef}=dict_variable_elements_selected
   const {updateComponentMenuConfigLink}=ComponentUpdater
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
@@ -180,7 +179,7 @@ const eventLinkClick=(
           const key=Object.keys(data.dataTags)[Number(i)]
           new_tags_selected[key]=Object.keys(Object.values(data.dataTags)[Number(i)].tags)[Number(index_grp_tag[i])]
         }
-        //set_tags_selected(new_tags_selected)
+        displayedInputLinkDataTagSetterRef.current.forEach(f => f(new_tags_selected))
         displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
             ValueSelectedParameter(
               dict_variable_application_data,
@@ -198,14 +197,16 @@ const eventLinkClick=(
         Object.keys(data.dataTags).forEach((dt,i)=>{
           n_t_s[dt]=tmp[i]
         })
-        displayedInputLinkValueRef.current.forEach(setter=>setter(
+        displayedInputLinkDataTagSetterRef.current.forEach(f => f(n_t_s))
+        displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
             ValueSelectedParameter(
               dict_variable_application_data,
               multi_selected_links,
               n_t_s
             ).value as unknown as string))
       }else{
-        displayedInputLinkValueRef.current.forEach(setter=>setter(
+        displayedInputLinkDataTagSetterRef.current.forEach(f => f(new_tags_selected))
+        displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
             ValueSelectedParameter(
               dict_variable_application_data,
               multi_selected_links,
@@ -213,7 +214,7 @@ const eventLinkClick=(
             ).value as unknown as string))
       }
     }else{
-      displayedInputLinkValueRef.current.forEach(setter=>setter(''))
+      displayedInputLinkValueSetterRef.current.forEach(setter=>setter(''))
     }
     updateComponentMenuConfigLink.current()
   }
@@ -226,7 +227,6 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   dict_variable_elements_selected,
   link_functions,
   ComponentUpdater,
-  dict_hook_ref_setter_show_dialog_components,
   applicationContext,
   alt_key_pressed
 ) => {
@@ -235,7 +235,6 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   const{ button_ref, accordion_ref, links_accordion_ref} = uiElementsRef
   const{ data,display_nodes } = dict_variable_application_data
   const { display_style } = data
-  const { multi_selected_links, displayedInputLinkValueSetterRef} = dict_variable_elements_selected
   const {t}=applicationContext
   const min_thickness=2
   const inv_scale = d3.scaleLinear()
@@ -273,14 +272,6 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
         }
       })
   }
-    
-
-
-
-
-
-
-
 
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
@@ -295,8 +286,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
     if(!window.SankeyToolsStatic){
       return EventLinkContextMenu(
         dict_variable_application_data,ev,l,ref_setter_contextualised_link,pointer_pos,
-        multi_selected_links,displayedInputLinkValueSetterRef,tags_selected,
-        dict_variable_elements_selected.ref_display_link_opacity
+        dict_variable_elements_selected,tags_selected,
       )}}
   )
 
@@ -316,10 +306,6 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
     })
   }
 
-  // if (!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
-  //   select2.call(dragLinkTextEvent(alt_key_pressed))
-  // }
-  //let error_msg: { text?: string | undefined } | undefined
   const paths = gg_links.selectAll('path') as d3.Selection<d3.BaseType, SankeyLink, SVGGElement, SankeyLink>
   paths
     .on('mouseover', function (event, d) {
@@ -378,7 +364,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   paths.on('click', (event, d) =>eventLinkClick(
     event,d,sankeyTooltip,
     accordion_ref,button_ref,
-    links_accordion_ref,dict_variable_application_data,dict_variable_elements_selected,data,displayedInputLinkValueSetterRef,
+    links_accordion_ref,dict_variable_application_data,dict_variable_elements_selected,data,
     ComponentUpdater
   )
   )
@@ -482,7 +468,7 @@ export const drawAddLinks:drawAddLinksFType = (
     uiElementsRef,
     dict_variable_elements_selected,
     link_functions,ComponentUpdater,
-    dict_hook_ref_setter_show_dialog_components,applicationContext,alt_key_pressed
+    applicationContext,alt_key_pressed
   )
 }
 
