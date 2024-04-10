@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
 
@@ -16,7 +16,9 @@ export type AddAllDropDownFluxFType = (
   fluxTags: TagsCatalog,
   dict_variable_application_data:dict_variable_application_dataType,
   redrawNodeLinkLegend:()=>void,
-  recomputeDisplayedElement:()=>void
+  recomputeDisplayedElement:()=>void,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes
 
 ) => JSX.Element
 

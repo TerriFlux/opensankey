@@ -11,7 +11,7 @@ import { Row,
   Popover,
   FormControl,
   Overlay } from 'react-bootstrap'
-import { SankeyData, SankeyLink, TagsCatalog, TagsGroup, dict_variable_application_dataType} from '../types/Types'
+import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, dict_variable_application_dataType} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import {
   FindMaxLinkValue,
@@ -200,9 +200,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                   key={tags_group.group_name}
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                     handleSimpleDropdown(evt, tags_group)
-                    recomputeDisplayedElement()
+                    redrawSankeyWithSelectedTag(dict_variable_application_data,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
-                    redrawNodeLinkLegend()
                   
                   }}>{
                     Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -267,28 +266,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                 onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                   delete_local_aggregation(data)
                   handleSimpleDropdown(evt, tags_group)
-
-                  const old_displayed_nodes=Object.values(dict_variable_application_data.display_nodes).map(n=>n.idNode)
-                  const old_displayed_links=Object.values(dict_variable_application_data.display_links).map(l=>l.idLink)
-
-                  recomputeDisplayedElement()
-
-                  const new_displayed_nodes=Object.values(dict_variable_application_data.display_nodes).map(n=>n.idNode)
-                  const new_displayed_links=Object.values(dict_variable_application_data.display_links).map(l=>l.idLink)
-
-                  // Delete Nodes/Links no longer in displayed elements
-                  DeleteGNodes(old_displayed_nodes.filter(nid=>!new_displayed_nodes.includes(nid)).map(id=>id))
-                  DeleteGLinks(old_displayed_links.filter(lid=>!new_displayed_links.includes(lid)).map(id=>id))
-
-                  // Create Nodes/Links that are now visually present with the new aggregation levels
-                  node_function.CreateNodesOnSVG(new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>data.nodes[id]))
-                  link_function.CreateLinksOnSVG(new_displayed_links.filter(lid=>!old_displayed_links.includes(lid)).map(id=>data.links[id]))
-
-                  // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
-                  redrawNodeLinkLegend()
-
-                  actualizeDrawAreaFrame(dict_variable_application_data)
-
+                  redrawSankeyWithSelectedTag(dict_variable_application_data,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                   setForceUpdate(!forceUpdate)
                 }}>{
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -351,8 +329,8 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
                     HandleMultiDropdown(selected, tags_group, data)
+                    redrawSankeyWithSelectedTag(dict_variable_application_data,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
-                    redrawNodeLinkLegend()
                   }}
                 />
               </Col>
@@ -796,7 +774,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px'}}>
       {legend_filter}
-      {AddAllDropDownFlux(t, data.fluxTags, dict_variable_application_data,redrawNodeLinkLegend,recomputeDisplayedElement)}
+      {AddAllDropDownFlux(t, data.fluxTags, dict_variable_application_data,redrawNodeLinkLegend,recomputeDisplayedElement,node_function,link_function)}
     </Popover.Body>
   </Popover>
 
@@ -1103,7 +1081,9 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
   fluxTags: TagsCatalog,
   dict_variable_application_data,
   redrawNodeLinkLegend,
-  recomputeDisplayedElement
+  recomputeDisplayedElement,
+  node_function,
+  link_function
 ) =>
 {
   const [forceUpdate,setForceUpdate]=useState(false)
@@ -1132,10 +1112,8 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                   key={the_tags_group.group_name}
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                     handleSimpleDropdown(evt, the_tags_group) 
-                    recomputeDisplayedElement()
+                    redrawSankeyWithSelectedTag(dict_variable_application_data,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
-
-                    redrawNodeLinkLegend()               
                   }}>{
                     Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
                       return (<option key={i} value={tag_key}>{tag.name}</option>)
@@ -1211,9 +1189,9 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
                     HandleMultiDropdown(selected, the_tags_group, data)
+                    redrawSankeyWithSelectedTag(dict_variable_application_data,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
 
-                    redrawNodeLinkLegend()
                   }}
                 />
               </Col>
@@ -1376,4 +1354,33 @@ const addAllDropDownLinks = (
     }
   })
   return allDD
+}
+
+const redrawSankeyWithSelectedTag=(dict_variable_application_data:dict_variable_application_dataType,
+  recomputeDisplayedElement:()=>void,
+  redrawNodeLinkLegend:()=>void,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes
+)=>{
+  const {data}=dict_variable_application_data
+  const old_displayed_nodes=Object.values(dict_variable_application_data.display_nodes).map(n=>n.idNode)
+  const old_displayed_links=Object.values(dict_variable_application_data.display_links).map(l=>l.idLink)
+
+  recomputeDisplayedElement()
+
+  const new_displayed_nodes=Object.values(dict_variable_application_data.display_nodes).map(n=>n.idNode)
+  const new_displayed_links=Object.values(dict_variable_application_data.display_links).map(l=>l.idLink)
+
+  // Delete Nodes/Links no longer in displayed elements
+  DeleteGNodes(old_displayed_nodes.filter(nid=>!new_displayed_nodes.includes(nid)).map(id=>id))
+  DeleteGLinks(old_displayed_links.filter(lid=>!new_displayed_links.includes(lid)).map(id=>id))
+
+  // Create Nodes/Links that are now visually present with the new aggregation levels
+  node_function.CreateNodesOnSVG(new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>data.nodes[id]))
+  link_function.CreateLinksOnSVG(new_displayed_links.filter(lid=>!old_displayed_links.includes(lid)).map(id=>data.links[id]))
+
+  // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
+  redrawNodeLinkLegend()
+
+  actualizeDrawAreaFrame(dict_variable_application_data)
 }
