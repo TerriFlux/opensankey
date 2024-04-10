@@ -22,7 +22,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   const { t } = applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
   const { data } = dict_variable_application_data
-  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef  } = dict_variable_elements_selected
+  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef,displayedInputLinkDataTagSetterRef  } = dict_variable_elements_selected
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
   
   displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)
@@ -36,6 +36,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   }))
   const dataTagsSelected = Object.fromEntries(newEntries)
   const [tags_selected, set_tags_selected] = useState(dataTagsSelected)
+  displayedInputLinkDataTagSetterRef.current.push(set_tags_selected)
   if (Object.keys(tags_selected).length !== Object.keys(dataTagsSelected).length) {
     set_tags_selected(dataTagsSelected)
   }
