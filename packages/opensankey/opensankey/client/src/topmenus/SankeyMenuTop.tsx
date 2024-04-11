@@ -450,9 +450,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         </Button>
       </OverlayTrigger>
     ]
-
   }
-
 
   return ui
 }
@@ -519,8 +517,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   })
   max_link_value += 1
 
-
-
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
@@ -545,9 +541,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     } else {
       return <FaAngleDoubleLeft />
     }
-
   }
-
 
   const ordered_menu: {[s: string]: JSX.Element[] | JSX.Element} = {}
   const ordered_key: string[] = [
@@ -579,12 +573,15 @@ export const Menu: FunctionComponent<MenuTypes> = (
       n_a[n_a.length-1]=element[0]
     }
   })
+
   // Return l'objet formations_menu mais trier selon le numéro du groupe (quand il y en a un)
   const new_array_for_exemple=Object.fromEntries(n_a.filter(f=>f).map((d)=>{
     return [d,(formations_menu as {[k:string]:string})[d]]
   }))
+
   let modal_tuto=<></>
   const tuto_sub_nav:{[s:string]:JSX.Element}={}
+
   Object.entries(new_array_for_exemple).forEach(d=>{
     tuto_sub_nav[d[0]]=<>
       {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
@@ -608,15 +605,11 @@ export const Menu: FunctionComponent<MenuTypes> = (
               {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','.xlsx'))?
                 <Button variant='info'
                   onClick={() => {
-
-
                     processFunctions.launch('Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
-
                     UploadExemple(
                       'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
                     )
                     set_show_tuto(false)
-
                   }
                   }
                 >{applicationContext.t('useTutoExcel')}</Button>
@@ -624,15 +617,11 @@ export const Menu: FunctionComponent<MenuTypes> = (
               {(d[1] as {['Files']:string[]})['Files'].includes(dd.replace('_layout.json','_reconciled.xlsx'))?
                 <Button variant='info'
                   onClick={() => {
-
-
                     processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
-
                     UploadExemple(
                       'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
                     )
                     set_show_tuto(false)
-
                   }
                   }
                 >{applicationContext.t('useTutoExcel')}</Button>
@@ -667,6 +656,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       </Row>
     </Modal.Body>
   </Modal>
+
   // Create the menu nav that can be slightly different if it in static
   const menu_nav=(!window.SankeyToolsStatic)?(<Col>
     <Row>
@@ -690,16 +680,12 @@ export const Menu: FunctionComponent<MenuTypes> = (
     </Row>
   </Col> ): <ButtonGroup> {Object.keys(ordered_menu).map(k=><React.Fragment key={k}>{ordered_menu[k]}</React.Fragment>)}</ButtonGroup>
 
-
-
   const content_support=<>
     <h3>{applicationContext.t('Menu.rth_support')} :</h3>
     <p>{applicationContext.t('Menu.support_explication').split('[]')[0]}<a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a>{applicationContext.t('Menu.support_explication').split('[]')[1]}</p>
   </>
 
-
   const modal_support= MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_modale_support',content_support,contextMenu.pointer_pos,applicationContext.t('Menu.c_support'))
-
 
   const data_tags = Object.assign({},dict_variable_application_data.data.dataTags)
   const show_data=Object.values(data_tags).length>0
@@ -788,7 +774,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
           </ToggleButton>
         ) : (<></>)}
       </ButtonGroup>
-
 
       {
         processFunctions.ref_processing.current ? (
@@ -1040,7 +1025,7 @@ export const OpenSankeySaveButton : OpenSankeySaveButtonFType = (
   if(has_save_in_cache){
     const color_icon=forceUpdate?'success':'danger'
     indicator_saved_data=<FontAwesomeIcon icon={forceUpdate?faCheck:faExclamation} style={{ position:'relative',right:'0.5em', width:'1em', fontSize:'1em', color: 'rgba(var(--bs-'+color_icon+'-rgb), var(--bs-bg-opacity))'}} />
-    
+
   }
   return <>
     <OverlayTrigger
