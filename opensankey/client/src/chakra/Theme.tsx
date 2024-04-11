@@ -235,7 +235,13 @@ export const opensankey_theme = extendTheme({
       gridTemplateColumns: '1fr 1fr 1fr 1fr',
       gridColumnGap: '0.12rem',
       height: '2rem'
-    }
+    },
+    menustylepanel_row_droplist: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 6fr 1fr',
+      gridColumnGap: '0.25rem',
+      height: '2rem'
+    },
   },
   textStyles: {
     xs: {
