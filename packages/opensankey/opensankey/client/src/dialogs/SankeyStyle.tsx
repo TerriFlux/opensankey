@@ -132,10 +132,10 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
   const [forceUpdate,setForceUpdate]=useState(false)
   ref_selected_style_link.current = selected_style_link
 
-  if(selected_style_link !== 'default'){
+  if(data.style_link && !Object.keys(data.style_link).includes(selected_style_link)) {
+    // Protection if style is not existing (issue with old files)
     set_selected_style_link('default')
   }
-
 
   const content=<>
     <Form.Group>
