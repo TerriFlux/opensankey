@@ -42,7 +42,6 @@ export type SankeyNodeAttrLocal ={
   value_font_size?: number,
 }
 
-
 // Same as Local node attribute but with required value as now style attributes is the default attributes of node
 export type SankeyNodeStyle ={
   idNode: string,
@@ -333,6 +332,7 @@ export interface treeFolderType{
   children?:treeFolderType[],
   checked?:1|0.5|0
 }
+
 export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_menu_node_apparence : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_menu_node_io : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
@@ -356,7 +356,6 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_style_link : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_waiting : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-
 }
 
 export type applicationContextType = {
@@ -470,7 +469,7 @@ export type MenuTypes = {
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
 
-  
+
 }
 
 export type callbackFuncType = (server_data: SankeyData) => void
@@ -498,7 +497,7 @@ export type LinkFunctionTypes = {
   drawLinkShape:drawLinkShapeFType,
   RedrawLinks:RedrawLinksFType
   CreateLinksOnSVG:CreateLinksOnSVGFType,
-  
+
 }
 
 export type RedrawNodesFType=(node_to_update:SankeyNode[])=>void
