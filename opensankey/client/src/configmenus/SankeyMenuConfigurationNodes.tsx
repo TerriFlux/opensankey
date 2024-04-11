@@ -6,6 +6,7 @@ import {
 import 'react-folder-tree/dist/style.css'
 import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
+import { MultiSelect } from 'react-multi-select-component'
 
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
@@ -20,8 +21,19 @@ import {
   TabList,
   TabPanels
 } from '@chakra-ui/react'
+
 /*************************************************************************************************/
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType, treeFolderType } from '../types/Types'
+import {
+  ComponentUpdaterType,
+  LinkFunctionTypes,
+  NodeFunctionTypes,
+  SankeyData,
+  SankeyNode,
+  applicationContextType,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType,
+  treeFolderType
+} from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import {
   add_childrenFType,
@@ -30,6 +42,7 @@ import {
   OpenSankeyMenuConfigurationNodesFType,
   tree_data_nodesFType,
 } from './types/SankeyMenuConfigurationNodesTypes'
+
 /*************************************************************************************************/
 import {
   ReturnValueNode,AddNewNode, deleteSelectedNodeFromData} from './SankeyUtils'
@@ -38,11 +51,10 @@ import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfiguratio
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
 import { DeselectVisualyNodes, NodeVisibleOnsSvg, SelectVisualyNodes } from '../draw/SankeyDrawFunction'
-import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from '../topmenus/SankeyMenuTop'
+
+
 /*************************************************************************************************/
-
-
 type SankeyEditionTypes = {
   applicationContext:applicationContextType,
   dict_variable_application_data:dict_variable_application_dataType,
@@ -55,6 +67,7 @@ type SankeyEditionTypes = {
   node_function:NodeFunctionTypes
 }
 
+/*************************************************************************************************/
 export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
   applicationContext,
   dict_variable_application_data,
@@ -177,7 +190,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               setForceUpdate(!forceUpdate)
               multi_selected_nodes.current.forEach(d=>SelectVisualyNodes(d))
               updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
-
             }}
             valueRenderer={(selected: selected_type[]) => {
               return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
@@ -283,203 +295,204 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   // </Overlay>
 
 
-  return (<Box layerStyle='menuconfigpanel_grid'>
-    {
-      (token==false && Object.keys(data.nodes).length>15)?
-        <Box
-          as='span'
-          layerStyle='menuconfigpanel_warn_msg'
-        >
-          {t('Menu.warningLimitNode')}
-        </Box>
-        :
-        <></>
-    }
-
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_droplist'
-    >
-      {/* Boutton pour ajouter un noeud */}
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.1'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
-        <Button
-          variant='menuconfigpanel_add_button'
-          disabled={token==false && Object.keys(data.nodes).length>15}
-          onClick={() => {
-            Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
-            AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
-            ComponentUpdater.updateComponenSaveInCache.current(false)
-            SelectVisualyNodes(multi_selected_nodes.current[0])
-            setForceUpdate(!forceUpdate)
-          }}>
-          <FaPlus/>
-        </Button>
-      </OverlayTrigger>
-
-      {/* Liste déroulante pour selectionner un noeud */}
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.2'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
-        {dropdownMultiNode()}
-        {/* <Button
-            style={{width:'70%'}}
-            ref={target_node_selector}
-            variant='outline-primary'
-            className='btn_menu_config'
-            id='button-node_selector'
-            onClick={()=>{set_show_node_selector(!show_node_selector)}}
+  return (
+    <Box layerStyle='menuconfigpanel_grid'>
+      {
+        (token==false && Object.keys(data.nodes).length>15)?
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_warn_msg'
           >
-            {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n => n.name).join(','), 25 ):'None'}
-          </Button> */}
-        {/* {overlayNodeSlector} */}
-      </OverlayTrigger>
+            {t('Menu.warningLimitNode')}
+          </Box>
+          :
+          <></>
+      }
 
-      {/* Boutton pour supprimer le noeud selectionné */}
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.3'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
-        <Button
-          variant='menuconfigpanel_del_button'
-          disabled={multi_selected_nodes.current.length == 0}
-          onClick={
-            () => {
-              deleteSelectedNodeFromData(dict_variable_application_data,dict_variable_elements_selected)
-
-              node_function.recomputeDisplayedElement()
-              node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-              link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-              updateComponentMenuConfigNode.current()
-              updateComponentMenuConfigLink.current()
-              ComponentUpdater.updateComponenSaveInCache.current(false)
-
-            }}>
-          <FaMinus />
-        </Button>
-      </OverlayTrigger>
-
-      {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
-      <OverlayTrigger
-        key={'menu.tooltips.noeud.4'}
-        placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
-        <Button
-          variant='menuconfigpanel_option_button'
-          onClick={
-            () => {
-              data.displayed_node_selector=!data.displayed_node_selector
-              setForceUpdate(!forceUpdate)
-            }}>
-          <FaEye />
-        </Button>
-      </OverlayTrigger>
-    </Box>
-
-    {/* Affichage du nom des noeuds selectionnés */}
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-      gridTemplateColumns='1fr 9fr'
-    >
       <Box
-        layerStyle='menuconfigpanel_option_name'
-        textStyle='h3'
+        as='span'
+        layerStyle='menuconfigpanel_row_droplist'
       >
-        {t('Noeud.Nom')}
-      </Box>
-      <Box>
+        {/* Boutton pour ajouter un noeud */}
         <OverlayTrigger
-          key={'menu.tooltips.noeud.6'}
+          key={'menu.tooltips.noeud.1'}
           placement={'top'}
           delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.6'}>{t('Noeud.tooltips.Nom')} </Tooltip>}>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <Input
+          overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
+          <Button
+            variant='menuconfigpanel_add_button'
+            isDisabled={token==false && Object.keys(data.nodes).length>15}
+            onClick={() => {
+              Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
+              AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+              SelectVisualyNodes(multi_selected_nodes.current[0])
+              setForceUpdate(!forceUpdate)
+            }}>
+            <FaPlus/>
+          </Button>
+        </OverlayTrigger>
+
+        {/* Liste déroulante pour selectionner un noeud */}
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.2'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
+          {dropdownMultiNode()}
+          {/* <Button
+              style={{width:'70%'}}
+              ref={target_node_selector}
+              variant='outline-primary'
+              className='btn_menu_config'
+              id='button-node_selector'
+              onClick={()=>{set_show_node_selector(!show_node_selector)}}
+            >
+              {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n => n.name).join(','), 25 ):'None'}
+            </Button> */}
+          {/* {overlayNodeSlector} */}
+        </OverlayTrigger>
+
+        {/* Boutton pour supprimer le noeud selectionné */}
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.3'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
+          <Button
+            variant='menuconfigpanel_del_button'
+            isDisabled={multi_selected_nodes.current.length == 0}
+            onClick={
+              () => {
+                deleteSelectedNodeFromData(dict_variable_application_data,dict_variable_elements_selected)
+
+                node_function.recomputeDisplayedElement()
+                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                updateComponentMenuConfigNode.current()
+                updateComponentMenuConfigLink.current()
+                ComponentUpdater.updateComponenSaveInCache.current(false)
+
+              }}>
+            <FaMinus />
+          </Button>
+        </OverlayTrigger>
+
+        {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
+        <OverlayTrigger
+          key={'menu.tooltips.noeud.4'}
+          placement={'top'}
+          delay={500}
+          overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={
+              () => {
+                data.displayed_node_selector=!data.displayed_node_selector
+                setForceUpdate(!forceUpdate)
+              }}>
+            <FaEye />
+          </Button>
+        </OverlayTrigger>
+      </Box>
+
+      {/* Affichage du nom des noeuds selectionnés */}
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+        gridTemplateColumns='1fr 9fr'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          textStyle='h3'
+        >
+          {t('Noeud.Nom')}
+        </Box>
+        <Box>
+          <OverlayTrigger
+            key={'menu.tooltips.noeud.6'}
+            placement={'top'}
+            delay={500}
+            overlay={<Tooltip id={'menu.tooltips.noeud.6'}>{t('Noeud.tooltips.Nom')} </Tooltip>}>
+            <InputGroup
               variant='menuconfigpanel_option_input'
-              value={
-                (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
-              }
-              onChange={evt => {
-                if (multi_selected_nodes.current.length != 1) {
-                  return
+            >
+              <Input
+                variant='menuconfigpanel_option_input'
+                value={
+                  (multi_selected_nodes.current.length != 1) ? '' : multi_selected_nodes.current[0].name
                 }
-                multi_selected_nodes.current[0].name = evt.target.value
-                const d = multi_selected_nodes.current[0]
-                d3.select(' .opensankey #text_' + d.idNode).text(evt.target.value)
-                const wrap = textwrap()
-                  .bounds({ height: 100, width: (ReturnValueNode(data,d,'label_box_width') as number != 0) ? ReturnValueNode(data,d,'label_box_width') as number : 110 })
-                  .method('tspans')
-                d3.select(' .opensankey #ggg_' + d.idNode + ' text')
-                  .call(wrap)
-                if (!d.x_label || data.show_structure === 'structure') {
+                onChange={evt => {
+                  if (multi_selected_nodes.current.length != 1) {
+                    return
+                  }
+                  multi_selected_nodes.current[0].name = evt.target.value
+                  const d = multi_selected_nodes.current[0]
+                  d3.select(' .opensankey #text_' + d.idNode).text(evt.target.value)
+                  const wrap = textwrap()
+                    .bounds({ height: 100, width: (ReturnValueNode(data,d,'label_box_width') as number != 0) ? ReturnValueNode(data,d,'label_box_width') as number : 110 })
+                    .method('tspans')
+                  d3.select(' .opensankey #ggg_' + d.idNode + ' text')
+                    .call(wrap)
+                  if (!d.x_label || data.show_structure === 'structure') {
+                    d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
+                      const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
+                      if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
+                        return width / 2
+                      } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
+                        return ReturnValueNode(data,d,'label_vert') == 'middle' ? width : 0
+                      } else {
+                        return 0
+                      }
+                    })
+                  }
                   d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
                     const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
-                    if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
+                    if (d.x_label) {
+                      return d.x_label
+                    } else if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
                       return width / 2
                     } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
-                      return ReturnValueNode(data,d,'label_vert') == 'middle' ? width : 0
+                      return width
                     } else {
                       return 0
                     }
                   })
-                }
-                d3.selectAll(' .opensankey #ggg_' + d.idNode + ' text tspan').attr('dx', 0).attr('x', () => {
-                  const width = +d3.select(' .opensankey #shape_' + d.idNode).attr('width')
-                  if (d.x_label) {
-                    return d.x_label
-                  } else if (ReturnValueNode(data,d,'label_horiz') == 'middle') {
-                    return width / 2
-                  } else if (ReturnValueNode(data,d,'label_horiz') == 'right') {
-                    return width
-                  } else {
-                    return 0
-                  }
-                })
-                setForceUpdate(!forceUpdate)
-              }}
-              disabled={(multi_selected_nodes.current.length == 1) ? false : true}
-            />
-          </InputGroup>
-        </OverlayTrigger>
+                  setForceUpdate(!forceUpdate)
+                }}
+                disabled={(multi_selected_nodes.current.length == 1) ? false : true}
+              />
+            </InputGroup>
+          </OverlayTrigger>
+        </Box>
       </Box>
-    </Box>
 
-    {/* Declenché si des neouds sont selectionnées */}
-    {
-      (multi_selected_nodes.current.length !== 0) ?
-        <Tabs>
-          <TabList>
-            {
-              Object
-                .values(menu_configuration_nodes)
-                .map((c: ReactElementLike[]) => {
-                  return c[0]
-                })
-            }
-          </TabList>
-          <TabPanels>
-            {
-              Object
-                .values(menu_configuration_nodes)
-                .map((c: ReactElementLike[]) => {
-                  return c[1]
-                })
-            }
-          </TabPanels>
-        </Tabs>:
-        <></>
-    }
-  </Box>
+      {/* Declenché si des neouds sont selectionnées */}
+      {
+        (multi_selected_nodes.current.length !== 0) ?
+          <Tabs>
+            <TabList>
+              {
+                Object
+                  .values(menu_configuration_nodes)
+                  .map((c: ReactElementLike[]) => {
+                    return c[0]
+                  })
+              }
+            </TabList>
+            <TabPanels>
+              {
+                Object
+                  .values(menu_configuration_nodes)
+                  .map((c: ReactElementLike[]) => {
+                    return c[1]
+                  })
+              }
+            </TabPanels>
+          </Tabs>:
+          <></>
+      }
+    </Box>
   )
 }
 

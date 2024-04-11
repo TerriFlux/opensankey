@@ -57,7 +57,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   let pos_x=pointer_pos.current[0]+10
   let pos_y=pointer_pos.current[1]-20
 
-  // The limit value of the mouse position that engages the shift of the context menu 
+  // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if(contextualised_link){
     if(pointer_pos.current[0]+240>window.innerWidth){
@@ -87,8 +87,6 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     l.idTarget = target_node.idNode
     target_node.inputLinksId.push(l.idLink)
     nodes_to_reorganize.push(target_node)
-
-
   }
 
   const remake_display_links=()=>{
@@ -96,12 +94,14 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     const new_display_links={} as {[idLink:string]:SankeyLink}
     data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>new_display_links[lk]=dict_variable_application_data.display_links[lk])
     dict_variable_application_data.display_links=new_display_links
-    redraw_selected_links()  
+    redraw_selected_links()
   }
+
   const value_selected_parameter_contextualised_link = (): SankeyLinkValue => {
     if(contextualised_link===undefined){
       return ({} as SankeyLinkValue)
-    }else{
+    }
+    else{
       if ( Object.keys(data.links).length === 0 || !(contextualised_link!.idLink in data.links) ) {
         let val = JSON.parse(JSON.stringify(Object(contextualised_link!.value)))
         Object.values(tags_selected).map(tag_selected => {
@@ -121,7 +121,6 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
       })
       return val
     }
-
   }
   const context_link_label_visible=contextualised_link!==undefined?ReturnValueLink(data,contextualised_link,'label_visible') as boolean:false
 
@@ -141,8 +140,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           <Dropdown.Menu  variant='light'>
             {Object.keys(nt[1].tags).map(t=>{
               const has_tag=value_selected_parameter_contextualised_link().tags[nt[0]]!==undefined
-              const is_selected= value_selected_parameter_contextualised_link().tags[nt[0]] && value_selected_parameter_contextualised_link().tags[nt[0]].includes(t) 
-              
+              const is_selected= value_selected_parameter_contextualised_link().tags[nt[0]] && value_selected_parameter_contextualised_link().tags[nt[0]].includes(t)
+
               return <Dropdown.Item onClick={()=>{
                 // Assign tag to selected links
                 multi_selected_links.current.filter(l=>l!==contextualised_link).forEach(l=>{
@@ -226,8 +225,6 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
         remake_display_links()
       }}>{t('Flux.layoutUp')}</Dropdown.Item>
 
-
-
       <Dropdown.Item onClick={()=>{
         multi_selected_links.current.forEach(n=>handleUpLink(data,n.idLink))
         remake_display_links()
@@ -278,8 +275,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   }} variant='light'>{t('Menu.Etiquettes')} {icon_open_modal}</Button>
 
 
-
-  const btn_edit_value=contextualised_link!==undefined?<Dropdown  autoClose='outside' as={ButtonGroup} variant='light' drop='end'> 
+  const btn_edit_value=contextualised_link!==undefined?<Dropdown  autoClose='outside' as={ButtonGroup} variant='light' drop='end'>
     <Dropdown.Toggle variant="light" id="dropdown-basic">{t('Flux.data.edit_value')}</Dropdown.Toggle>
     <Dropdown.Menu>
       <Dropdown.Item>
@@ -325,8 +321,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
               if (scale(+formatedValue) > 500) {
                 data.user_scale = +formatedValue
               }
-              
-              
+
               let link_to_update=multi_selected_links.current
               impacted_node.forEach(n=>{
                 link_to_update=link_to_update.concat(n.outputLinksId.map(lid=>data.links[lid]))
@@ -358,12 +353,10 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
                 link_to_update=link_to_update.concat(n.outputLinksId.map(lid=>data.links[lid]))
                 link_to_update=link_to_update.concat(n.inputLinksId.map(lid=>data.links[lid]))
               })
-              
-              
+
               RedrawNodes(impacted_node)
               RedrawLinks(link_to_update)
               ComponentUpdater.updateComponenSaveInCache.current(false)
-
             }
           }}
 
@@ -394,7 +387,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           })
           list_node=[...new Set(list_node)]
 
-          // Redraw link attached to modified node when the modification to the node 
+          // Redraw link attached to modified node when the modification to the node
           // modify links path
           let link_to_update:string[]=[]
           list_node.forEach(nid=>{
