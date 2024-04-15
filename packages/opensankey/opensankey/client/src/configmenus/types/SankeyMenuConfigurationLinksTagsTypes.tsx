@@ -8,5 +8,5 @@ export type MenuConfigurationLinksTagsFType = (
  ComponentUpdater:ComponentUpdaterType,
  node_function:NodeFunctionTypes,
  link_function:LinkFunctionTypes
-)=> JSX.Element
+)=> JSX.Element[]
 
