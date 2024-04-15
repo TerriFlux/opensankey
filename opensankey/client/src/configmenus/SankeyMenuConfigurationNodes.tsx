@@ -3,7 +3,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from 'react-bootstrap'
-import 'react-folder-tree/dist/style.css'
+// import 'react-folder-tree/dist/style.css'
 import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
