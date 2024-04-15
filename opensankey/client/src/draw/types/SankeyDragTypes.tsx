@@ -1,6 +1,6 @@
 import { DragBehavior, SubjectPosition } from 'd3'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
-import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes } from '../../types/Types'
+import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes, applicationDrawType } from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from '../../configmenus/types/SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
 
@@ -11,10 +11,20 @@ export type ReturnOutOfBoundElementFuncType = (dragged: SankeyNode,
   node_visible: string[]
  ) => SankeyNode[]
 
-
+/**
+ *Shift all node not selected to the opposing direction of the event
+ *
+ * @param {(SankeyNode)[]} out_of_zone_item
+ * @param {{ dx: number; dy: number; x: number; y: number}} event
+ * @param {SankeyNode} dragged
+ * @param {SankeyData} data
+ * @param {{ current: SankeyNode[]}} multi_selected_nodes
+ */
 export type opposing_DragElementsFuncType = (
   out_of_zone_item: (SankeyNode)[], event: {dx: number;dy: number;x: number;y: number;}, 
-  dragged: SankeyNode, data: SankeyData, multi_selected_nodes: {current: SankeyNode[];}
+  dragged: SankeyNode, 
+  dict_variable_application_data:dict_variable_application_dataType,
+   multi_selected_nodes: {current: SankeyNode[];}
 ) => void
 
 export type DragElementsFuncType = (
@@ -217,8 +227,9 @@ export type DragGNodeEventFType=(
   inv_scale:(t:number)=>number,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes
-
+  link_function:LinkFunctionTypes,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  applicationDraw:applicationDrawType
 )=>DragBehavior<SVGGElement, SankeyNode, SankeyNode | SubjectPosition>
 
 /**

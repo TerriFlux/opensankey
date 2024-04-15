@@ -2,6 +2,7 @@ import { TFunction } from 'i18next'
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
+import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -18,7 +19,8 @@ export type AddAllDropDownFluxFType = (
   redrawNodeLinkLegend:()=>void,
   recomputeDisplayedElement:()=>void,
   node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes
+  link_function:LinkFunctionTypes,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
 
 ) => JSX.Element
 

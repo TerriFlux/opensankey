@@ -521,7 +521,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const toggleShow = () => {
     set_show_nav(!show_nav)
     if(!show_nav){
-      actualizeDrawAreaFrame(dict_variable_application_data)
+      actualizeDrawAreaFrame(dict_variable_application_data,applicationDraw.GetSankeyMinWidthAndHeight)
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
@@ -707,7 +707,21 @@ export const Menu: FunctionComponent<MenuTypes> = (
         contextMenu.showContextZDDRef.current![1](false)
         contextMenu.tagContext.current![0][1](undefined)
         ref_setter_mode_selection.current('s')
-        AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
+        AddDrawNodesEvent(
+          contextMenu,
+          dict_variable_application_data,
+          uiElementsRef,
+          dict_variable_elements_selected,
+          applicationContext,
+          ref_alt_key_pressed,
+          accept_simple_click,
+          link_function,
+          NodeTooltipsContent,
+          ComponentUpdater,
+          dict_hook_ref_setter_show_dialog_components,
+          node_function,
+          applicationDraw.GetSankeyMinWidthAndHeight,
+          applicationDraw)
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>
