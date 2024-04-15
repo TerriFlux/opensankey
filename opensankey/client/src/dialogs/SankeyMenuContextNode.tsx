@@ -20,7 +20,6 @@ import { Placement } from 'react-bootstrap/esm/types'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
-const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   applicationContext,
@@ -111,56 +110,6 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     ComponentUpdater.updateComponenSaveInCache.current(false)
 
   }
-
-  // Dropdown to change some pararmeter concerning the appearence of the node
-  const has_node_tags=Object.values(data.nodeTags).filter(nt=>nt.group_name!=='Type de noeud').length>0
-  const dropdown_c_n_tag=contextualised_node && has_node_tags ? <Dropdown as={ButtonGroup} variant='light' autoClose='outside' drop='end'>
-    <Dropdown.Toggle variant="light" id="dropdown-basic">
-      {t('Menu.Transformation.tagNode_assign')}
-    </Dropdown.Toggle>
-    <Dropdown.Menu  variant='light'>
-      {Object.entries(data.nodeTags).filter(nt=>Object.keys(nt[1].tags).length>0).map(nt=>{
-        return <Dropdown autoClose='outside' drop='end'>
-          <Dropdown.Toggle variant="light" id="dropdown-basic">
-            {nt[1].group_name}
-          </Dropdown.Toggle>
-          <Dropdown.Menu  variant='light'>
-            {Object.keys(nt[1].tags).map(t=>{
-              return <Dropdown.Item onClick={()=>{
-                // Contextualised node
-                if(!Object.keys(contextualised_node.tags).includes(nt[0])){
-                  contextualised_node.tags[nt[0]]=[]
-                }
-                if(!contextualised_node.tags[nt[0]].includes(t)){
-                  contextualised_node.tags[nt[0]].push(t)
-                }else{
-                  contextualised_node.tags[nt[0]].splice(contextualised_node.tags[nt[0]].indexOf(t))
-                }
-                //Selected nodes
-                multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>{
-                  if(!Object.keys(n.tags).includes(nt[0])){
-                    n.tags[nt[0]]=[]
-                  }
-                  if(!n.tags[nt[0]].includes(t)){
-                    n.tags[nt[0]].push(t)
-                  }else{
-                    n.tags[nt[0]].splice(n.tags[nt[0]].indexOf(t))
-                  }
-                })
-                RedrawNodes(multi_selected_nodes.current)
-                setForceUpdate(!forceUpdate)
-                ComponentUpdater.updateComponenSaveInCache.current(false)
-
-              }}>
-                {nt[1].tags[t].name}{checked(contextualised_node.tags[nt[0]] &&contextualised_node.tags[nt[0]].includes(t))}
-              </Dropdown.Item>
-            })}
-          </Dropdown.Menu>
-        </Dropdown>
-      })}
-
-    </Dropdown.Menu>
-  </Dropdown>:<></>
 
   const dropdown_c_n_apparence=<Button onClick={()=>{
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_node_apparence.current(true)
@@ -530,8 +479,6 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
         {btn_mask_shape}
         {btn_mask_label}
         {btn_mask_value}
-        {has_node_tags?sep:<></>}
-        {dropdown_c_n_tag}
         {sep}
 
         {btn_reorganise_link_io}

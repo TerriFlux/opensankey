@@ -5,7 +5,7 @@ import { textwrap } from 'd3-textwrap'
 
 import { LinkVisible} from '../configmenus/SankeyUtils'
 import { OpposingDragElements } from './SankeyDragNodes'
-import { NodeVisibleOnsSvg, SelectVisualyLinks } from './SankeyDrawFunction'
+import { NodeVisibleOnsSvg, SelectVisualyLinks, returnScaleOfDrawArea } from './SankeyDrawFunction'
 import { Popover,Button,ButtonGroup} from 'react-bootstrap'
 import { DrawLegendFType, ContextLegendTagsFType, drag_legendFType, drag_legend_g_elementFuncType} from './types/SankeyDrawLegendTypes'
 
@@ -78,8 +78,7 @@ export const DrawLegend : DrawLegendFType= (
 
     let scale_for_legend=1
     if(d3.select('.opensankey #svg').nodes().length>0){
-      const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-      const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+      const scale_svg=returnScaleOfDrawArea()
       scale_for_legend=(scale_svg<1?(1/scale_svg):1)
     }
     const legend = d3.select(' .opensankey #g_legend')
@@ -343,7 +342,7 @@ export const drag_legend : drag_legendFType = (
     if(d3.select('.opensankey #svg').nodes().length>0){
       DragLegendGElement(data,event)
       if(data.legend_position[0]==0 ||data.legend_position[1]==0){
-        OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),data,{current:[]})
+        OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),dict_variable_application_data,{current:[]})
       }
     }
   }).on('end',()=>{
@@ -354,8 +353,7 @@ export const drag_legend : drag_legendFType = (
 
 export const DragLegendGElement:drag_legend_g_elementFuncType=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
   let scale_for_legend=1
-  const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-  const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+  const scale_svg=returnScaleOfDrawArea()
   scale_for_legend=(scale_svg<1?(1/scale_svg):1)
   const legend_width=data.legend_width*scale_for_legend
   data.legend_position[0]+=(event.sourceEvent.movementX/scale_svg)
@@ -474,8 +472,7 @@ const add_legend_handle=(pos:string,data:SankeyData,
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
   if(d3.select('.opensankey #svg').nodes().length>0){
-    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+    const scale_svg=returnScaleOfDrawArea()
     svg_k_factor=(scale_svg<1?(1/scale_svg):1)
   }
 
