@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Form, Tab, OverlayTrigger, Tooltip, Row, Col } from 'react-bootstrap'
+import {  OverlayTrigger, Tooltip } from 'react-bootstrap'
 import * as d3 from 'd3'
 
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
@@ -7,6 +7,7 @@ import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfiguration
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
 import { ReturnValueLink,AssignLinkLocalAttribute } from './SankeyUtils'
 import { SankeyNode } from '../types/Types'
+import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, Tab, TabPanel } from '@chakra-ui/react'
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
@@ -41,86 +42,81 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
     set_tags_selected(dataTagsSelected)
   }
 
-  let is_link_data_invalid=false
-  if(multi_selected_links.current.length>0){
-    const curr_val=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value
-    if(curr_val==='' && displayed_input_link_value===''){
-      is_link_data_invalid=false
-    }else{
-      is_link_data_invalid=curr_val!==Number(displayed_input_link_value)
-    }
-  }
-
-  const content=<Form >
-    
+  const content=<Box
+    layerStyle='menuconfigpanel_grid'
+  >
     {// Définition des valeurs selon les paramètre dataTags
       Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
         if (Object.keys(dataTag.tags).length != 0) {
-          return (
-            <Row className='input_row'>
-              <Col>
-                <Form.Label>
-                  {dataTag.group_name}
-                </Form.Label>
-              </Col>
-              <Col>
-                <Form.Select
-                  name={dataTagKey}
-                  value={tags_selected[dataTagKey]}
-                  onChange={
-                    (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                      //Modifie les paramètres selectionnés
-                      const { name, value } = evt.target
-                      let tmp={}
-                      // set_tags_selected( prevState => {
-                      tmp= ({...tags_selected,[name]: value})
-                      set_tags_selected(tmp)
-                      //   return ({...prevState,[name]: value}) 
-                      // } )
-                      displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
-                        ValueSelectedParameter(
-                          dict_variable_application_data,
-                          multi_selected_links,
-                          tmp
-                        ).value as string
-                      ))
-                    }}>
-                  {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
-                    return (
-                      <option key={tag.name} value={tag_key}>{tag.name}</option>
-                    )
-                  })}
-                </Form.Select>
-              </Col>
-            </Row>
+          return (<>
+            <Box
+              as='span'
+              layerStyle='menuconfigpanel_part_title_3'
+            >
+              {dataTag.group_name}
+            </Box>
+            <Select
+              name={dataTagKey}
+              variant='menuconfigpanel_option_select'
+              value={
+                tags_selected[dataTagKey]
+              }
+              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                //Modifie les paramètres selectionnés
+                const { name, value } = evt.target
+                let tmp={}
+                // set_tags_selected( prevState => {
+                tmp= ({...tags_selected,[name]: value})
+                set_tags_selected(tmp)
+                //   return ({...prevState,[name]: value}) 
+                // } )
+                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
+                  ValueSelectedParameter(
+                    dict_variable_application_data,
+                    multi_selected_links,
+                    tmp
+                  ).value as string
+                ))
+              }}
+            >
+              {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
+                return (
+                  <option key={tag.name} value={tag_key}>{tag.name}</option>
+                )
+              })}
+            </Select></>
+
           )
         }
       })}
-
     {/* Valeur du flux pour les parametre (flitres) choisi  */}
-    <Row className='input_row' hasValidation>
-      <Col>
-        <Form.Label>
+    {/* Valeur du flux  */}
+    <OverlayTrigger
+      key={'flux.data.tooltips.1'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'flux.data.tooltips.1'}>{t('Flux.data.tooltips.vpp')} </Tooltip>}>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+        >
           {t('Flux.data.vpp')}
-        </Form.Label>
-      </Col>
-
-      <Col>
-        {/* Valeur du flux  */}
-        <OverlayTrigger
-          key={'flux.data.tooltips.1'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.data.tooltips.1'}>{t('Flux.data.tooltips.vpp')} </Tooltip>}>
-          <Form.Control
-            className='inputValueLink'
-            type='text'
+        </Box>
+        <InputGroup
+          variant='menuconfigpanel_option_input'
+        >
+          <NumberInput
+            variant='menuconfigpanel_option_numberinput'
+            min={0}
+            step={1}
             value={displayed_input_link_value}
-            isInvalid={is_link_data_invalid}
             onChange={
               evt => {
-                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(evt.target.value))
-                const formatedValue=evt.target.value.replace(',','.')
+                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(evt))
+                const formatedValue=evt.replace(',','.')
                 if(formatedValue!='' && isNaN(+formatedValue)){
                   d3.select('.inputValueLink').style('border','red 1px solid')
                 }else{
@@ -180,54 +176,77 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
                 ComponentUpdater.updateComponenSaveInCache.current(false)
                 
               }
-            }}/>
-        </OverlayTrigger>
-      </Col>
-    </Row>
-    <Form.Control.Feedback type='invalid'>{t('MEP.onBlur')}</Form.Control.Feedback>
+            }}
+          >
+            <NumberInputField/>
+            <NumberInputStepper>
+              <NumberIncrementStepper/>
+              <NumberDecrementStepper/>
+            </NumberInputStepper>
+          </NumberInput>
+
+        </InputGroup>
+      </Box>
+    </OverlayTrigger>
 
 
     {/* Afficher ou non les donnée sur le Sankey  */}
-    <Row className='input_row'>
 
-      <Col>
-        <Form.Label>
+    <OverlayTrigger
+      key={'flux.data.tooltips.3'}
+      placement={'top'}
+      delay={500}
+      overlay={<Tooltip id={'flux.data.tooltips.3'}>{t('Flux.data.tooltips.affichage')} </Tooltip>}>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+        >
           {t('Flux.data.affichage')}
-        </Form.Label>
-      </Col>
+        </Box>
 
-      <Col>
-        <OverlayTrigger
-          key={'flux.data.tooltips.3'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'flux.data.tooltips.3'}>{t('Flux.data.tooltips.affichage')} </Tooltip>}>
-          <Form.Control
-            type='text'
+        <InputGroup
+          variant='menuconfigpanel_option_input'
+        >
+          <Input
+            variant='menuconfigpanel_option_input'
             value={ ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).display_value}
-            onChange={
-              evt => {
-                let val = Object(multi_selected_links.current[0].value)
-                multi_selected_links.current.map(d => {
-                  val = d.value
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  val.display_value = evt.target.value
+            onChange={evt => {
+              let val = Object(multi_selected_links.current[0].value)
+              multi_selected_links.current.map(d => {
+                val = d.value
+                Object.values(tags_selected).forEach(tag => {
+                  if (val[tag] === undefined) {
+                    val[tag] = {}
+                  }
+                  val = val[tag]
                 })
-                setForceUpdate(!forceUpdate)
-                link_function.RedrawLinks(multi_selected_links.current)
+                val.display_value = evt.target.value
+              })
+              setForceUpdate(!forceUpdate)
+              link_function.RedrawLinks(multi_selected_links.current)
 
-              }}/>
-        </OverlayTrigger>
-      </Col>
-    </Row>
+            }}
+          />
+        </InputGroup>
+      </Box>
+    </OverlayTrigger>
 
     {additional_data_element}
 
-  </Form>
-  return menu_for_modal?content:<Tab key="flux_data" eventKey="flux_data" className='content_editon_elements' title={t('Flux.data.données')}>{content}</Tab>
+  </Box>
+  return menu_for_modal?[content]:
+    [ 
+      <Tab>
+        <Box
+          layerStyle='submenuconfig_tab'
+        >
+          {t('Flux.data.données')}
+        </Box>
+      </Tab>,
+      <TabPanel >
+        {content}
+      </TabPanel>]
 }
