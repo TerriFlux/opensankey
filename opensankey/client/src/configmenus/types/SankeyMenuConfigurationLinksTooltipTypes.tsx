@@ -7,4 +7,4 @@ export type MenuConfigurationLinksTooltipFType = (
   multi_selected_links:{current:SankeyLink[]},
   t:TFunction,
   menu_for_modal:boolean
-) => JSX.Element
+) => JSX.Element[]

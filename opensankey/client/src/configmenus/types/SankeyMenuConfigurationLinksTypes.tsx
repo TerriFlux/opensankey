@@ -10,5 +10,5 @@ export type MenuConfigurationLinksFType = (
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
-  ) => { [s: string]: JSX.Element; }
+  ) => { [s: string]: JSX.Element[]; }
 

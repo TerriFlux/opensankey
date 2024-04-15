@@ -9,7 +9,7 @@ export type MenuConfigurationLinksAppearenceFType = (
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   menu_for_modal? : boolean
-) => JSX.Element
+) => JSX.Element[]
 
 //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
 //Permet donc de les déssiner avant
