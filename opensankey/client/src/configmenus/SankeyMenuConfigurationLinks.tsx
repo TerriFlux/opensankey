@@ -1,13 +1,17 @@
 import React, { FunctionComponent, MutableRefObject, useState } from 'react'
-import { Tabs, OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { OverlayTrigger, Tooltip } from 'react-bootstrap'
 
 import {
   Box,
   Button,
   InputGroup,
   InputLeftAddon,
-  Select
+  Select,
+  TabList,
+  TabPanels,
+  Tabs
 } from '@chakra-ui/react'
+import { ReactElementLike } from 'prop-types'
 
 import {
   ComponentUpdaterType,
@@ -63,7 +67,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   const {updateComponentMenuConfigLink}=ComponentUpdater
   updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
   const { fluxTags } = data
-  const ui : {[s:string] : JSX.Element}= {
+  const ui : {[s:string] : JSX.Element[]}= {
     'data'      : MenuConfigurationLinksData(
       dict_variable_application_data,
       dict_variable_elements_selected,
@@ -101,7 +105,7 @@ type SankeyMenuConfigurationLinksTypes = {
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
-  menu_configuration_links : JSX.Element[],
+  menu_configuration_links : {[s:string]: JSX.Element[]},
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   contextMenu:contextMenuType,
@@ -561,12 +565,31 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       </Box>
     </Box>
 
-
-    { (multi_selected_links.current.length !== 0) ? (
-      <Tabs defaultActiveKey="flux_data" id="settings-layout" fill={true}>
-        {menu_configuration_links as unknown as JSX.Element}
-      </Tabs>
-    ):(<></>)
+    {
+      (multi_selected_links.current.length !== 0) ?
+        <Tabs
+          isLazy
+        >
+          <TabList>
+            {
+              Object
+                .values(menu_configuration_links)
+                .map((c: ReactElementLike[]) => {
+                  return c[0]
+                })
+            }
+          </TabList>
+          <TabPanels>
+            {
+              Object
+                .values(menu_configuration_links)
+                .map((c: ReactElementLike[]) => {
+                  return c[1]
+                })
+            }
+          </TabPanels>
+        </Tabs>:
+        <></>
     }
   </Box>)
 }
