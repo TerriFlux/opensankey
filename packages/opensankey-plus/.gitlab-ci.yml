@@ -19,11 +19,13 @@ build:
   stage: build
   tags:
     - dev, prod, test
+  variables:
+    SANKEYSUITE: "/home/ubuntu/dev_opensankey/sankeysuitemanager/SankeySuite"
   script:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - cd client
-    - ln -s /home/ubuntu/dev_opensankey/sankeysuitemanager/SankeySuite/client/node_modules
+    - ln -s $SANKEYSUITE/client/node_modules
     - npm run build
   except:
     - schedules
