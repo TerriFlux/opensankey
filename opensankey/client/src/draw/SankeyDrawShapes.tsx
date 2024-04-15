@@ -45,7 +45,7 @@ export const draw_arrow : draw_arrowFType = (
   const node_face_size_scaled_by_ratio_cumulative_value=node_face_size * ratio_cum
   const node_face_size_scaled_by_ratio_current_value=node_face_size * ratio_cur
   const arrow_length_oriented=coeff * arrow_length
-  
+
   let d
   if (horizontal) {
     if (ratio_cum + ratio_cur < 1) {
@@ -128,7 +128,7 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
-      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) 
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   } else {
@@ -147,7 +147,7 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
       d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1])
-      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)) 
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   }
@@ -425,7 +425,7 @@ export const bezier_link_classic_recycling = (
   }
 
   const curved_sign = curved ? 1 : 0
-  let x1 = x0 + factor * default_horiz_shift + factor * right_horiz_shift 
+  let x1 = x0 + factor * default_horiz_shift + factor * right_horiz_shift
   const y1 = y0
   let x16 = x17 - factor * default_horiz_shift + factor * left_horiz_shift
   const y16 = y17
@@ -547,7 +547,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
       if (display_free_as_dashed) {
         // Generale settings: free link value are displayed dashed without text without witdh
-        const link_value_is_free = extension?.free_mini !== undefined ?? false
+        const link_value_is_free = (extension?.free_mini !== undefined)
         if (link_value_is_free) {
           // Link value is free should be displayed dashed without text
           link_value = inv_scale(5)
@@ -676,7 +676,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         is_structure = true
       }
     } else if (data.show_structure === 'reconciled') {
-      const link_value_is_free = theLinkValue.extension?.free_mini !== undefined ?? false
+      const link_value_is_free = (theLinkValue.extension?.free_mini !== undefined)
       if (link_value_is_free) {
         // If the link is free we check if data allow indeterminate free null link
         //  to be considerate as visible
