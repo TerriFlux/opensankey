@@ -2,7 +2,7 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyData } from '../types/Types'
-import {  AdjustSankeyZone, DeleteLink,deleteSelectedNodeFromData,windowSankey} from '../configmenus/SankeyUtils'
+import { DeleteLink,deleteSelectedNodeFromData,windowSankey} from '../configmenus/SankeyUtils'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
 import { RemoveAnimate,
@@ -111,14 +111,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         // Cache les handles des liens
           SvgDragMiddleMouseStart()
         })
-        .on('drag', function (event) {
+        .on('drag', event=> {
           SvgDragMiddleMouseMove(event,data)
         })
         .on('end',()=>{
           
-          AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
-          svgSankey.style('width', data.width + 'px')
-          svgSankey.style('height', data.height + 'px')
+          // AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+          [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
+          svgSankey.style('width', dict_variable_application_data.data.width + 'px')
+          svgSankey.style('height', dict_variable_application_data.data.height + 'px')
           DrawGrid(data)
         })
 
@@ -203,7 +204,8 @@ export const keyHandler : keyHandlerFType = (
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   applicationContext,
-  node_function
+  node_function,
+  applicationDraw
 ) => {
   const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
   const{updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
@@ -309,7 +311,22 @@ export const keyHandler : keyHandlerFType = (
     multi_selected_links.current=[]
 
     closeAllMenu()
-    AddDrawNodesEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,  dict_hook_ref_setter_show_dialog_components,node_function)
+    AddDrawNodesEvent(
+      contextMenu,
+      dict_variable_application_data,
+      uiElementsRef,
+      dict_variable_elements_selected,
+      applicationContext, 
+      ref_alt_key_pressed,
+      accept_simple_click,
+      link_function,
+      NodeTooltipsContent,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components,
+      node_function,
+      applicationDraw.GetSankeyMinWidthAndHeight,
+      applicationDraw)
+
     updateComponentMenuConfigNode.current()
     updateComponentMenuConfigNodeAppearence.current()
     updateComponentMenuConfigLink.current()

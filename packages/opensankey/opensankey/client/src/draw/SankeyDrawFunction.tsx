@@ -34,7 +34,8 @@ import {
   TextLinkSideFType, 
   TextNodeValueFType, 
   TextNodeWrapFType, 
-  ValueSelectedParameterFuncType, clipFType, nodeTransformFType
+  ValueSelectedParameterFuncType, clipFType, hideLinkOnDragElementFuncType, nodeTransformFType,
+  resizeDrawingAreaFuncType
 } from './types/SankeyDrawFunctionTypes'
 import { 
   DeselectVisualyNodesFuncType,
@@ -1229,24 +1230,15 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (di
   let height = 0
   let width = 0
   const {data,display_nodes,display_links} =dict_variable_application_data
-  Object.values(display_nodes).forEach(n => {
-    // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
-    let width_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect().width??0
-    if((ReturnValueNode(data,n,'label_horiz') as string)=='left'){
-      width_label/=2
-    }else if((ReturnValueNode(data,n,'label_horiz') as string)=='middle'){
-      width_label=0
-    }
-    let node_height = 0
-    let node_width = 0
-    if (!d3.select(' .opensankey #shape_' + n.idNode).empty()) {
-      node_height = +d3.select(' .opensankey #shape_' + n.idNode).attr('height')
-      node_width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
-    }
 
-    height = (n.y ) ? Math.max(height, n.y + node_height) : height
-    width = (n.x ) ? Math.max(width, n.x+node_width+width_label) : width
+  Object.values(display_nodes).forEach(n => {
+
+    const [curr_n_size_x,curr_n_size_y]=sizeOfNodeInDrawArea(n,dict_variable_application_data)
+
+    height = (n.y ) ? Math.max(height,curr_n_size_y) : height
+    width = (n.x ) ? Math.max(width, curr_n_size_x) : width
   })
+
   Object.values(display_links).forEach(l => {
     const recy=ReturnValueLink(data,l,'recycling') as boolean
     if (recy) {
@@ -1263,8 +1255,7 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (di
   if(data.mask_legend){ 
     let scale_for_legend=1
     if(d3.select('.opensankey #svg').nodes().length>0){
-      const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-      const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+      const scale_svg=returnScaleOfDrawArea()
       scale_for_legend=(scale_svg<1?(1/scale_svg):1)
     }
     const height_leg=data.legend_position[1]+((document.getElementById('g_legend')?.getBoundingClientRect().height??0)*scale_for_legend)
@@ -1273,8 +1264,8 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (di
     width=width_leg>width?width_leg:width
   }
 
-  height = height + 100
-  width = width + 100
+  height = height + (data.grid_square_size*2)
+  width = width + (data.grid_square_size*2)
 
   const vertical_shift=  GetVerticalMarginForSankeyZone()
   const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
@@ -1561,8 +1552,7 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
   const nodes = data.nodes
   //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
   //position noeud source ou target
-  const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-  const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+  const scale_svg=returnScaleOfDrawArea()
   let pos_x_src, pos_y_src
   if (node.idNode == nodes[l.idSource].idNode) {
     pos_x_src = nodes[l.idTarget].x
@@ -1626,3 +1616,89 @@ export const LinkVisibleOnSvg:LinkVisibleOnsSvgFuncType=()=>d3.selectAll('.link'
   return d3.select(element).attr('id').replace('path_','')
 })
 
+
+export const returnScaleOfDrawArea=()=>{
+  const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
+  const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
+  return scale_svg
+}
+/**
+ *
+ *
+ * @param {dict_variable_application_dataType} dict_variable_application_data
+ * @param {GetSankeyMinWidthAndHeightFuncType} GetSankeyMinWidthAndHeight
+ */
+export const resizeDrawingArea:resizeDrawingAreaFuncType=(
+  dict_variable_application_data,
+  GetSankeyMinWidthAndHeight
+)=>{
+  [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
+  const svgSankey = d3.select('.opensankey #svg')
+  
+  svgSankey.style('width', dict_variable_application_data.data.width + 'px')
+  svgSankey.style('height', dict_variable_application_data.data.height + 'px')
+  DrawGrid(dict_variable_application_data.data)
+}
+/** Return the position + area of the g_node element 
+ *
+ * @param {SankeyNode} n
+ * @param {dict_variable_application_dataType} dict_variable_application_data
+ * @return {number[]} return position of node + it size [width,height] 
+ */
+export const sizeOfNodeInDrawArea=(n:SankeyNode,dict_variable_application_data:dict_variable_application_dataType)=>{
+  const {data}=dict_variable_application_data
+  const scale_svg=returnScaleOfDrawArea()
+
+
+  let node_height = 0
+  let node_width = 0
+  if (!d3.select(' .opensankey #shape_' + n.idNode).empty()) {
+    node_height = +d3.select(' .opensankey #shape_' + n.idNode).attr('height')
+    node_width = +d3.select(' .opensankey #shape_' + n.idNode).attr('width')
+  }
+
+  // Get the width of the node's label then proceed to apply a value modification according to the label postion from the node
+  const box_label=(d3.select('#ggg_'+n.idNode+ ' text').node() as SVGTextElement)?.getBoundingClientRect()
+  const width_label=(box_label?.width??0)/scale_svg
+  const height_label=(box_label?.height??0)/scale_svg
+
+  let curr_n_size_x=(n.x??0)+node_width
+  let curr_n_size_y=(n.y??0)+node_height
+    
+  if(n.x_label && n.y_label){
+    curr_n_size_x=Math.max(curr_n_size_x,(n.x??0)+n.x_label+width_label)
+    curr_n_size_y=Math.max(curr_n_size_y,(n.y??0)+n.y_label+height_label)
+  }else{
+    const pos_l_h=(ReturnValueNode(data,n,'label_horiz') as string)
+    const pos_l_v=(ReturnValueNode(data,n,'label_vert') as string)
+    const is_bot=pos_l_v==='bottom'
+    const is_middle_v=pos_l_v==='middle'
+    const is_rigt=pos_l_h==='right'
+    const is_middle_h=pos_l_h==='middle'
+
+    if(is_bot){
+      curr_n_size_y+=height_label
+    }else if(is_middle_v){
+      if(height_label>node_height){
+        curr_n_size_y+=(height_label-node_height)/2
+      }
+    }
+    if(is_rigt){
+      curr_n_size_x+=width_label
+    }else if(is_middle_h){
+      if(width_label>node_width){
+        curr_n_size_x+=(width_label-node_width)/2
+      }
+    }
+  }
+    
+  return [curr_n_size_x,curr_n_size_y]
+}
+
+export const hideLinkOnDragElement:hideLinkOnDragElementFuncType=(dict_variable_application_data)=>{
+  if(Object.keys(dict_variable_application_data.display_links).length>20){
+    Object.values(dict_variable_application_data.display_links).forEach(l=>{
+      d3.select('#gg_'+l.idLink).style('display','none')
+    })
+  }
+}

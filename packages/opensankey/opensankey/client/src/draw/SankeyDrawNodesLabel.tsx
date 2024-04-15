@@ -1,7 +1,7 @@
 import { SankeyNode } from '../types/Types'
 import * as d3 from 'd3'
 
-import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelValuePosY,NodeLabeLText,TextNodeWrap} from './SankeyDrawFunction'
+import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelValuePosY,NodeLabeLText,TextNodeWrap, returnScaleOfDrawArea} from './SankeyDrawFunction'
 import { ReturnValueNode } from '../configmenus/SankeyUtils'
 import { DrawAddNodesFtype, DrawAllNodesLabelFType } from './types/SankeyDrawNodesLabelTypes'
 import { windowSankey } from '../configmenus/SankeyUtils'
@@ -113,8 +113,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
 
    
   if(d3.select('.opensankey #svg').node()){
-    const transform_svg=d3.select('.opensankey #svg')?.attr('transform')??''
-    const scale_svg=(transform_svg)?+transform_svg.split('scale(')[1].replace(')',''):1
+    const scale_svg=returnScaleOfDrawArea()
     bg_text_node.attr('x',n=>{
       const box_zdd=document.getElementById('ggg_'+n.idNode)?.getBoundingClientRect()??{x:0,y:0,width:0}
       const size_shape=+d3.select('#shape_'+n.idNode).attr('width')

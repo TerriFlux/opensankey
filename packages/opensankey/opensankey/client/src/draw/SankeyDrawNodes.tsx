@@ -7,7 +7,7 @@ import { AddDrawNodesFType, DeleteGNodesFType, DrawAllNodesFType, drawNodeShapeF
 import { NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
   SetNodeHeight,
-  nodeTransform,NodeStrokeWidth,PathNodeArrowShape 
+  nodeTransform,NodeStrokeWidth,PathNodeArrowShape, 
 } from './SankeyDrawFunction'
 import { SimpleGNodeClick } from './SankeyDrawEventFunction'
 import { EventOnMouseUpAddNodesAndLink } from './SankeyDrawEventFunction'
@@ -34,7 +34,9 @@ export const DrawAllNodes : DrawAllNodesFType = (
   NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
-  node_function
+  node_function,
+  GetSankeyMinWidthAndHeight,
+  applicationDraw
 ) => {
   const {display_nodes}=dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
@@ -46,7 +48,9 @@ export const DrawAllNodes : DrawAllNodesFType = (
   drawAddNodes(
     contextMenu, dict_variable_application_data, uiElementsRef, dict_variable_elements_selected,applicationContext,
     alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
-    Object.values(display_nodes)
+    Object.values(display_nodes),
+    GetSankeyMinWidthAndHeight,
+    applicationDraw
   )
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
   RedrawNodesLabel(dict_variable_application_data,Object.values(display_nodes),GetLinkValue,t)
@@ -69,7 +73,9 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   NodeTooltipsContent,
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
-  node_function
+  node_function,
+  GetSankeyMinWidthAndHeight,
+  applicationDraw
 ) => {
   const { LinkText, GetLinkValue } = link_function
   const { data, display_nodes } = dict_variable_application_data
@@ -134,7 +140,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
       ggg_nodes.call(
         DragGNodeEvent(
           dict_variable_application_data,dict_variable_elements_selected,applicationContext,
-          alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater,node_function,link_function
+          alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater,node_function,link_function,GetSankeyMinWidthAndHeight,applicationDraw
         )
       )
     }
@@ -278,7 +284,10 @@ export const drawAddNodes : drawNodeShapeFType = (
   ComponentUpdater,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
-  node_to_draw
+  node_to_draw,
+  GetSankeyMinWidthAndHeight,
+  applicationDraw,
+
 ) => {
   const {multi_selected_nodes } = dict_variable_elements_selected
   const { data,display_nodes, display_links } = dict_variable_application_data
@@ -321,7 +330,9 @@ export const drawAddNodes : drawNodeShapeFType = (
     NodeTooltipsContent,
     ComponentUpdater,
     dict_hook_ref_setter_show_dialog_components,
-    node_function
+    node_function,
+    GetSankeyMinWidthAndHeight,
+    applicationDraw
   )
 }
 

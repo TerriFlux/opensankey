@@ -36,7 +36,8 @@ import {
   GetSankeyMinWidthAndHeight,
   LinkStroke,
   DrawArrows,
-  NodeVisibleOnsSvg
+  NodeVisibleOnsSvg,
+  resizeDrawingArea
 } from './draw/SankeyDrawFunction'
 import { applyZoomEvent } from './draw/SankeyDrawEventFunction'
 import {
@@ -164,7 +165,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     const node_to_delete=NodeVisibleOnsSvg().filter(nid=>!curr_displayed_nodes.includes(nid))
     DeleteGNodes(node_to_delete)
 
-    applyZoomEvent(dict_variable_application_data)
+    applyZoomEvent(dict_variable_application_data,GetSankeyMinWidthAndHeight)
 
   }
   /*************************************************************************************************/
@@ -279,9 +280,18 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     RetrieveExcelResults
   }
   /*************************************************************************************************/
+  const reAdjustSankey=()=>{
+    AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  }
+  const resizeCanvas=()=>{
+    resizeDrawingArea(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  }
+  /*************************************************************************************************/
   const applicationDraw : applicationDrawType = {
     GetSankeyMinWidthAndHeight,
-    updateLayout
+    updateLayout,
+    resizeCanvas:resizeCanvas,
+    reAdjustSankey:reAdjustSankey
   }
   /*************************************************************************************************/
   const start_point=useRef([0,0])
@@ -390,7 +400,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       NodeTooltipsContent,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
-      node_function,nodes_to_update)
+      node_function,nodes_to_update,
+      GetSankeyMinWidthAndHeight,
+      applicationDraw
+    )
   }
 
   const node_function:NodeFunctionTypes={
@@ -401,10 +414,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     CreateNodesOnSVG:OpenSankeyCreateNodeOnSVG
   }
 
-  /*************************************************************************************************/
-  const resizeCanvas=()=>{
-    AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
-  }
+
   /*******************************************************************************/
   const reDrawLegend=()=>{
     DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked,ComponentUpdater,reDrawLegend,resizeCanvas)
@@ -415,7 +425,22 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   /*******************************************************************************/
   const redrawAllNodes=()=>{
-    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
+    DrawAllNodes(contextMenu,
+      dict_variable_application_data,
+      uiElementsRef,
+      dict_variable_elements_selected,
+      applicationContext,
+      ref_alt_key_pressed,
+      accept_simple_click,
+      link_function,
+      NodeTooltipsContent,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components,
+      node_function,
+      GetSankeyMinWidthAndHeight,
+      applicationDraw
+
+    )
   }
   const redrawAllLinks=()=>{
     DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
@@ -560,7 +585,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       contextMenu,
       e,dict_variable_application_data.data,dict_variable_elements_selected,
       dict_variable_application_data.set_data,closeAllMenu,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,
-      ComponentUpdater,dict_hook_ref_setter_show_dialog_components,applicationContext,node_function
+      ComponentUpdater,dict_hook_ref_setter_show_dialog_components,applicationContext,node_function,applicationDraw
     )
   }
   document.onkeydown = formatKeyHandler
@@ -612,14 +637,29 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   /*************************************************************************************************/
   useEffect(() => {
 
-    DrawAllNodes(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,accept_simple_click,link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function)
+    DrawAllNodes(contextMenu,
+      dict_variable_application_data,
+      uiElementsRef,
+      dict_variable_elements_selected,
+      applicationContext,
+      ref_alt_key_pressed,
+      accept_simple_click,
+      link_function,
+      NodeTooltipsContent,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components,
+      node_function,
+      GetSankeyMinWidthAndHeight,
+      applicationDraw
+
+    )
     DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
       link_function,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components
     )
     // Zoom Behavior
-    applyZoomEvent(dict_variable_application_data)
+    applyZoomEvent(dict_variable_application_data,GetSankeyMinWidthAndHeight)
   },[data])
   /*************************************************************************************************/
   //Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
