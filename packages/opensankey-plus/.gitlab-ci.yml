@@ -20,12 +20,14 @@ build:
   tags:
     - dev
   variables:
+    # We should create an ad'hoc folder for SankeySuite in /home/gitlab-runner/gitlab_dev/
+    # to have a dedicated node_modules for the gitlab compilations
     SANKEYSUITE: "/home/ubuntu/dev_opensankey/sankeysuitemanager/SankeySuite"
   script:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - cd client
     - ln -s $SANKEYSUITE/client/node_modules
-    - npm run build
+    - CI= npm run build
   except:
     - schedules
