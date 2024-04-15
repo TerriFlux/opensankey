@@ -16,7 +16,6 @@ import {
 import {
   DeselectVisualyLinks,
   DeselectVisualyNodes,
-  GetSankeyMinWidthAndHeight,
   LinkVisibleOnSvg,
   NodeStrokeWidth,
   NodeVisibleOnsSvg,
@@ -24,6 +23,7 @@ import {
   SelectVisualyNodes,
   SortOutputLinksIdByYPos,
   ValueSelectedParameter,
+  returnScaleOfDrawArea,
 } from './SankeyDrawFunction'
 import { draw_legend_handles } from './SankeyDrawLegend'
 import {
@@ -461,8 +461,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   if (ref_getter_mode_selection.current == 's' && d3.selectAll('.selection_zone').nodes().length > 0) {
     NodeVisibleOnsSvg().forEach(k => DeselectVisualyNodes(data.nodes[k]))
     Object.keys(display_links).forEach(k => DeselectVisualyLinks(data.links[k]))
-    const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
-    const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
+    const scale_svg=returnScaleOfDrawArea()
     const z_x = Number(d3.select('.selection_zone rect').attr('x'))
     const z_y = Number(d3.select('.selection_zone rect').attr('y'))
     const z_w = Number(d3.select('.selection_zone rect').attr('width'))
@@ -733,7 +732,10 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
 
   }
 }
-export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, dict_variable_application_data) => {
+export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>,
+  dict_variable_application_data,
+  GetSankeyMinWidthAndHeight
+) => {
 
   const t = 'translate(0,0) scale(' + evt.transform.k + ')'
   const svgSankey = d3.select('.opensankey #svg')
@@ -750,7 +752,7 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
     .style('border', Math.max(1, Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
   d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale(' + (scale_legend) + ')')
   d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale / 2) * scale_legend)))
-  actualizeDrawAreaFrame(dict_variable_application_data)
+  actualizeDrawAreaFrame(dict_variable_application_data,GetSankeyMinWidthAndHeight)
 
 }
 
@@ -790,73 +792,12 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
     n.y += event.dy
     return 'translate(' + n.x + ',' + n.y + ')'
   })
-  d3.selectAll('.link').attr('d', (d) => {
-    const l = d as SankeyLink
-    // Get the path of each displayed link
-    const path = d3.select('#path_' + l.idLink).attr('d').split(' ')
 
-    // Each path is splitted into small part of the path then depending on the small part :
-    //  - If it's a letter then do nothing
-    //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
-    //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
-    //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
-    //
-    // Then once the subpart of the path are modified, we join the array to reform the path
-    const new_path = path.map((p, i) => {
-      // Case when it's a [x,y] coordinates
-      if (p.includes(',')) {
-        const pos = p.split(',')
-        const newPosX = Number(pos[0]) + event.dx
-        const newPosY = Number(pos[1]) + event.dy
-        p = '' + newPosX + ',' + newPosY
-      }
-      // Case when it's a number alone so we search the previous element to know wich shift
-      if (Number(p)) {
-        if (path[i - 1] == 'H') {
-          p = String(Number(p) + event.x)
-        } else if (path[i - 1] == 'V') {
-          p = String(Number(p) + event.y)
-        }
-      }
-      return p
-    })
-    return new_path.join(' ')
-  })
-  d3.selectAll('.arrow').attr('d', (d) => {
-    const l = d as SankeyLink
-    // Get the path of each displayed link
-    const path = d3.select('#path_' + l.idLink + '_arrow').attr('d').split(' ')
+  shiftAllLinkPath(event)
 
-    // Each path is splitted into small part of the path then depending on the small part :
-    //  - If it's a letter then do nothing
-    //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
-    //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
-    //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
-    //
-    // Then once the subpart of the path are modified, we join the array to reform the path
-    const new_path = path.map((p, i) => {
-      // Case when it's a [x,y] coordinates
-      if (p.includes(',')) {
-        const pos = p.split(',')
-        const newPosX = Number(pos[0]) + event.dx
-        const newPosY = Number(pos[1]) + event.dy
-        p = '' + newPosX + ',' + newPosY
-      }
-      // Case when it's a number alone so we search the previous element to know wich shift
-      if (Number(p)) {
-        if (path[i - 1] == 'H') {
-          p = String(Number(p) + event.x)
-        } else if (path[i - 1] == 'V') {
-          p = String(Number(p) + event.y)
-        }
-      }
-      return p
-    })
-    return new_path.join(' ')
-  })
+  shiftAllArrowPath(event)
 
-  const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
-  const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
+  const scale_svg=returnScaleOfDrawArea()
   const scale_for_legend = (scale_svg < 1 ? (1 / scale_svg) : 1)
   data.legend_position[0] += event.dx
   data.legend_position[1] += event.dy
@@ -864,14 +805,12 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
 
 }
 
-export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(dict_variable_application_data)=>{
+export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(dict_variable_application_data,GetSankeyMinWidthAndHeight)=>{
   [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
-  const transform=d3.select('.opensankey #svg').attr('transform')
-  let scale_svg=1
-  if(transform!==undefined && transform!==null){
-    scale_svg=Number(transform.split('scale(')[1].replace(')',''))
-  }
+  const scale_svg=returnScaleOfDrawArea()
+
   d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
+  d3.select('.scroll_zone').style('height',((dict_variable_application_data.data.height+200)*scale_svg-(200*(scale_svg-1.1)))+'px')
 }
 
 
@@ -891,8 +830,7 @@ export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInS
     updateComponenSaveInCache}=ComponentUpdater
   NodeVisibleOnsSvg().forEach(k => DeselectVisualyNodes(data.nodes[k]))
   Object.keys(display_links).forEach(k => DeselectVisualyLinks(data.links[k]))
-  const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
-  const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
+  const scale_svg=returnScaleOfDrawArea()
   const z_x = Number(d3.select('.selection_zone rect').attr('x'))
   const z_y = Number(d3.select('.selection_zone rect').attr('y'))
   const z_w = Number(d3.select('.selection_zone rect').attr('width'))
@@ -935,7 +873,7 @@ export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInS
   updateComponenSaveInCache.current(true)
 }
 
-export const applyZoomEvent:applyZoomEventFType=(dict_variable_application_data)=>{
+export const applyZoomEvent:applyZoomEventFType=(dict_variable_application_data,GetSankeyMinWidthAndHeight)=>{
   // Zoom Behavior
   const svgSankey = d3.select('.opensankey #svg');
   (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
@@ -947,7 +885,88 @@ export const applyZoomEvent:applyZoomEventFType=(dict_variable_application_data)
         return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
       })
       .on('zoom', function (evt) {
-        ZoomFunction(evt,dict_variable_application_data)
+        ZoomFunction(evt,dict_variable_application_data,GetSankeyMinWidthAndHeight)
       }))
     .on('dblclick.zoom', null)
+}
+/**
+ * Shift all link path present on the svg to the direction on the event
+ *
+ * @param {d3.D3DragEvent<Element, unknown, unknown>} event
+ */
+export const shiftAllLinkPath=(event:d3.D3DragEvent<Element, unknown, unknown>)=>{
+  d3.selectAll('.link').attr('d', (d) => {
+    const l=d as SankeyLink
+
+    // Get the path of each displayed link
+    const path = d3.select('#path_' + l.idLink).attr('d').split(' ')
+
+    // Each path is splitted into small part of the path then depending on the small part :
+    //  - If it's a letter then do nothing
+    //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
+    //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
+    //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
+    //
+    // Then once the subpart of the path are modified, we join the array to reform the path
+    const new_path = path.map((p, i) => {
+    // Case when it's a [x,y] coordinates
+      if (p.includes(',')) {
+        const pos = p.split(',')
+        const newPosX = Number(pos[0]) + event.dx
+        const newPosY = Number(pos[1]) + event.dy
+        p = '' + newPosX + ',' + newPosY
+      }
+      // Case when it's a number alone so we search the previous element to know wich shift
+      if (Number(p)) {
+        if (path[i - 1] == 'H') {
+          p = String(Number(p) + event.x)
+        } else if (path[i - 1] == 'V') {
+          p = String(Number(p) + event.y)
+        }
+      }
+      return p
+    })
+    return new_path.join(' ')
+  })
+
+}
+/**
+ * Shift all arrow path present on the svg to the direction on the event
+ *
+ *
+ * @param {d3.D3DragEvent<Element, unknown, unknown>} event
+ */
+export const shiftAllArrowPath=(event:d3.D3DragEvent<Element, unknown, unknown>)=>{
+  d3.selectAll('.arrow').attr('d', (d) => {
+    const l = d as SankeyLink
+    // Get the path of each displayed link
+    const path = d3.select('#path_' + l.idLink + '_arrow').attr('d').split(' ')
+
+    // Each path is splitted into small part of the path then depending on the small part :
+    //  - If it's a letter then do nothing
+    //  - If it's a string that contains ',' then it's a coordinate of a point as [x,y] and we apply the shift to these values
+    //  - If it's a Number alone then it mean that it's either a vertical shift or a horizontale one,
+    //    therefore we search the previous element in the path to see if the shift is vertical 'V' or horizontal 'H'
+    //
+    // Then once the subpart of the path are modified, we join the array to reform the path
+    const new_path = path.map((p, i) => {
+      // Case when it's a [x,y] coordinates
+      if (p.includes(',')) {
+        const pos = p.split(',')
+        const newPosX = Number(pos[0]) + event.dx
+        const newPosY = Number(pos[1]) + event.dy
+        p = '' + newPosX + ',' + newPosY
+      }
+      // Case when it's a number alone so we search the previous element to know wich shift
+      if (Number(p)) {
+        if (path[i - 1] == 'H') {
+          p = String(Number(p) + event.x)
+        } else if (path[i - 1] == 'V') {
+          p = String(Number(p) + event.y)
+        }
+      }
+      return p
+    })
+    return new_path.join(' ')
+  })
 }

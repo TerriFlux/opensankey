@@ -431,7 +431,9 @@ export type processFunctionsType = {
 
 export type applicationDrawType = {
   GetSankeyMinWidthAndHeight :GetSankeyMinWidthAndHeightFuncType,
-  updateLayout:updateLayoutFuncType
+  updateLayout:updateLayoutFuncType,
+  reAdjustSankey:()=>void
+  resizeCanvas:()=>void
 }
 
 export type agregationType = {
