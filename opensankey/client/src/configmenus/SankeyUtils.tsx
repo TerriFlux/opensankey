@@ -1168,6 +1168,14 @@ export const GetVerticalMarginForSankeyZone:GetVerticalMarginForSankeyZoneFuncTy
   const footer_size=document.getElementsByClassName('sankeyFooter')[0]?.getBoundingClientRect().height
   return shift_top+footer_size
 }
+/**
+ *Function used to fit the sankey in the visibiel screen
+ *
+ * @param {*} dict_variable_application_data dict containing var concerning the data of the sankey
+ * @param {*} GetSankeyMinWidthAndHeight return the size of the sankey (max position to the right & bottom)
+ * @param {boolean} [show_nav=false] if the config menu is open then we take it into account
+ * @param {boolean} [vertical=false] Var to fit the sankey vertically instead of horizontally
+ */
 export const AdjustSankeyZone:AdjustSankeyZoneFuncType =(
   dict_variable_application_data,
   GetSankeyMinWidthAndHeight,

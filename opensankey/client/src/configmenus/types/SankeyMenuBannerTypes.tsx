@@ -33,7 +33,8 @@ export type addAllDropDownNodeFType = (
   reDrawLegend:()=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  recomputeDisplayedElement:()=>void
+  recomputeDisplayedElement:()=>void,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
 
 ) => JSX.Element
 
