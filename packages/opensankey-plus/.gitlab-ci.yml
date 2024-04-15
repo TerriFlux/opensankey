@@ -22,6 +22,9 @@ build:
   script:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    - bash build_client.sh
+    - rm node_modules
+    - ln -s /home/ubuntu/dev_opensankey/sankeysuitemanager/OpenSankey/OpenSankey/client/node_modules
+    - cd client
+    - npm run build
   except:
     - schedules
