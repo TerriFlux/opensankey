@@ -18,7 +18,7 @@ variables:
 build:
   stage: build
   tags:
-    - dev, prod, test
+    - dev
   variables:
     SANKEYSUITE: "/home/ubuntu/dev_opensankey/sankeysuitemanager/SankeySuite"
   script:
