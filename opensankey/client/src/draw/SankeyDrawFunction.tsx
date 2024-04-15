@@ -1,7 +1,18 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData,  SankeyLinkValue,SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType } from '../types/Types'
+import {
+  applicationContextType,
+  ComponentUpdaterType,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType,
+  display_styleType,
+  SankeyData,
+  SankeyDrawCurve,
+  SankeyLink,
+  SankeyLinkValue,
+  SankeyNode,
+  TagsCatalog,
+} from '../types/Types'
 import { ComputeTotalOffsets,
   TestLinkValue,
   LinkColor,
@@ -11,40 +22,51 @@ import { ComputeTotalOffsets,
   ReturnValueLink,
   AssignLinkLocalAttribute,
   ToPrecision} from '../configmenus/SankeyUtils'
-import {DragLinkCenterHandleEvent,DragLinkShiftHandleEvent,AddDragLinkZone} from './SankeyDragLinks'
+import {
+  DragLinkCenterHandleEvent,
+  DragLinkShiftHandleEvent,
+  AddDragLinkZone
+} from './SankeyDragLinks'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
 import * as SankeyShapes from './SankeyDrawShapes'
-import { 
+import {
   DeselectVisualyLinksFType,
   DrawGridFType,
-  LinkStrokeFType, 
-  LinkStrokeWidthFType, 
-  NodeLabeLTextFType, 
-  NodeLabelValuePosXFType, 
-  NodeLabelValuePosYFType, 
-  NodeStrokeWidthFType, 
-  PathNodeArrowShapeFType, 
-  RepositionneSidebarFuncType, 
-  SelectVisualyLinksFType, 
-  SelectVisualyNodesFType, 
-  SetNodesHeightFType, 
-  SortOutputLinksIdByYPosFType, 
-  StrokeDasharrayFType, 
-  TextLinkPosDYFType, 
-  TextLinkSideFType, 
-  TextNodeValueFType, 
-  TextNodeWrapFType, 
-  ValueSelectedParameterFuncType, clipFType, hideLinkOnDragElementFuncType, nodeTransformFType,
+  LinkStrokeFType,
+  LinkStrokeWidthFType,
+  NodeLabeLTextFType,
+  NodeLabelValuePosXFType,
+  NodeLabelValuePosYFType,
+  NodeStrokeWidthFType,
+  PathNodeArrowShapeFType,
+  RepositionneSidebarFuncType,
+  SelectVisualyLinksFType,
+  SelectVisualyNodesFType,
+  SetNodesHeightFType,
+  SortOutputLinksIdByYPosFType,
+  StrokeDasharrayFType,
+  TextLinkPosDYFType,
+  TextLinkSideFType,
+  TextNodeValueFType,
+  TextNodeWrapFType,
+  ValueSelectedParameterFuncType,
+  clipFType,
+  hideLinkOnDragElementFuncType,
+  nodeTransformFType,
   resizeDrawingAreaFuncType
 } from './types/SankeyDrawFunctionTypes'
-import { 
+import {
   DeselectVisualyNodesFuncType,
-  LinkVisibleOnsSvgFuncType, NodeVisibleOnsSvgFuncType, RemoveAnimateFuncType,
+  LinkVisibleOnsSvgFuncType,
+  NodeVisibleOnsSvgFuncType,
+  RemoveAnimateFuncType,
   SetNodeHeightFuncType,
-  DrawArrowsType 
+  DrawArrowsType
 } from './types/SankeyDrawFunctionTypes'
 import {
-  GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType
+  GetLinkValueFuncType,
+  GetSankeyMinWidthAndHeightFuncType,
+  LinkTextFuncType
 } from '../configmenus/types/SankeyUtilsTypes'
 import { ComputeEndPoints } from './SankeyDrawShapes'
 import { TFunction } from 'i18next'
@@ -268,7 +290,7 @@ export const SetNodeHeight:SetNodeHeightFuncType = (
       .attr('cy', () =>scale(node_size_s_height)/ 2)
       .attr('rx', () => scale(node_size_s_width) / 2)
       .attr('ry', () => scale(node_size_s_height)/ 2)
-    
+
   }else if(shape==='arrow'){
     const k_angle = ReturnValueNode(data, n, 'node_arrow_angle_factor') as number
     const angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
@@ -395,7 +417,7 @@ export const DrawArrows : DrawArrowsType = (
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
       if (display_free_as_dashed) {
         // Generale settings: free link value are displayed dashed without text without witdh
-        const link_value_is_free = extension?.free_mini !== undefined ??false
+        const link_value_is_free = (extension?.free_mini !== undefined)
         if (link_value_is_free) {
           link_value = inv_scale(5)
         }
@@ -412,7 +434,7 @@ export const DrawArrows : DrawArrowsType = (
       is_v = false
     }
 
-    
+
 
     if(node_shape==='arrow'){
       // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
@@ -433,7 +455,7 @@ export const DrawArrows : DrawArrowsType = (
         node_arrow_shift= scale(Math.tan(node_angle*Math.PI/180)*(node_face_size/2))
         // When the node target is in arrow shape, the link arrow length doesn't contribute to it shape
         arrow_length=0
-      } 
+      }
     }
 
 
@@ -504,7 +526,7 @@ export const SortOutputLinksIdByYPos : SortOutputLinksIdByYPosFType = (
   data:SankeyData,n:SankeyNode
 )=>{
   return n.outputLinksId.filter(idL=>data.nodes[data.links[idL].idTarget].position!=='relative')
-    .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y 
+    .sort((a,b)=>data.nodes[data.links[a].idTarget].y - data.nodes[data.links[b].idTarget].y
     )
 }
 
@@ -593,7 +615,7 @@ export const SetNodesHeight : SetNodesHeightFType = (
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('ry', scale(node_size_t_height / 2))
     d3.select(' .opensankey #shape_' + target_node.idNode).attr('cy', scale(node_size_t_height / 2))
   }
-  
+
   if(target_shape==='arrow'){
     const k_angle=ReturnValueNode(data,target_node,'node_arrow_angle_factor') as number
     const path_t=PathNodeArrowShape(node_size_t_width,node_size_t_height,k_angle,target_angle_direction,scale)
@@ -693,9 +715,9 @@ export const DrawLinkText = (
     let y_pos = 0
 
     // Determinate the position in x and y of the label
-    if (lab_pos === 'beginning') { 
+    if (lab_pos === 'beginning') {
       // pos x
-      x_pos = xs 
+      x_pos = xs
       y_pos=ys
     } else if (lab_pos === 'middle' || lab_pos==='frozen') {
       const handles = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
@@ -704,18 +726,18 @@ export const DrawLinkText = (
         const left_xpos = +handles[0].split(',')[0].substring(10)
         const right_xpos = +handles[1].split(',')[0].substring(10)
         x_pos = (left_xpos + right_xpos) / 2 - 5
-    
+
         // pos y
         const left_y_pos_str = handles[0].split(',')[1]
         const left_y_pos = +left_y_pos_str.substring(0, left_y_pos_str.length - 1)
         const right_y_pos_str = handles[1].split(',')[1]
         const right_y_pos = +right_y_pos_str.substring(0, right_y_pos_str.length - 1)
         y_pos = (left_y_pos + right_y_pos) / 2
-            
+
       } else {
         // pos x
         x_pos = +handles[0].split(',')[0].substring(10)
-        // pos y 
+        // pos y
         const y_pos_str = handles[0].split(',')[1]
         y_pos = +y_pos_str.substring(0, y_pos_str.length - 1)
       }
@@ -723,8 +745,8 @@ export const DrawLinkText = (
       x_pos = xt -(label_size*label_text.length/2) -5
       y_pos = yt
     }
-    
-    
+
+
     // Shift sligthly the label so it's well aligned in the link
     if(orth_lab_pos=='above'){
       y_pos-=scale(link_value)/2
@@ -734,7 +756,7 @@ export const DrawLinkText = (
     }else if(orth_lab_pos=='middle' || lab_pos==='frozen'){
       y_pos+=label_size/2
     }
-    
+
     if(lab_pos==='middle' || lab_pos==='frozen'){
       x_pos-=(label_size*label_text.length)/4
     }
@@ -800,7 +822,7 @@ const AddCenterHandle=(
       target_node.y = 100
     }
     const res = ComputeEndPoints(
-      source_node, target_node, link, display_nodes, display_links, 
+      source_node, target_node, link, display_nodes, display_links,
       data.nodeTags,
       data,scale,inv_scale,GetLinkValue
     )
@@ -842,7 +864,7 @@ const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
   inv_scale:(t:number)=>number,
 )=>{
   const center_handle = 1/2
-  
+
   const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
   const ori=ReturnValueLink(data,link,'orientation')
 
@@ -1252,7 +1274,7 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (di
     }
   })
 
-  if(data.mask_legend){ 
+  if(data.mask_legend){
     let scale_for_legend=1
     if(d3.select('.opensankey #svg').nodes().length>0){
       const scale_svg=returnScaleOfDrawArea()
@@ -1427,7 +1449,7 @@ export const NodeLabelValuePosX : NodeLabelValuePosXFType = (
   } else if (val == 'left') {
     return 0
   } else if (val == 'right') {
-    return width 
+    return width
   } else {
     return 0
   }
@@ -1515,7 +1537,7 @@ export const DeselectVisualyLinks : DeselectVisualyLinksFType = (
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '0')
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '0')
-  
+
 }
 export const SelectVisualyLinks : SelectVisualyLinksFType=(d:SankeyLink)=>{
   d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '1')
@@ -1535,7 +1557,7 @@ export const SelectVisualyNodes : SelectVisualyNodesFType=(
 }
 
 export const RepositionneSidebar:RepositionneSidebarFuncType =(show_nav:boolean)=>{
-  d3.select('.sideBar').style('right',((show_nav?menu_config_width:0))+'px')  
+  d3.select('.sideBar').style('right',((show_nav?menu_config_width:0))+'px')
 }
 
 // Function that compute the link width
@@ -1579,7 +1601,7 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
   link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
   const width_n=(document.getElementById('shape_'+node.idNode)?.getBoundingClientRect().width??0)/scale_svg
   //Zones limite à ne pas êtres
-  // La limite à ne pas être(fixé arbitrairement) ce situe à : largeur/hauteur du noeud + 1/4 de l'épaisseur du flux 
+  // La limite à ne pas être(fixé arbitrairement) ce situe à : largeur/hauteur du noeud + 1/4 de l'épaisseur du flux
   const limit_x = [pos_x_src - scale(link_value / 4), pos_x_src + width_n + scale(link_value / 4)]
   const limit_y = [pos_y_src - scale(link_value / 4), pos_y_src + scale(link_value / 4)]
   let draw_warning = false
@@ -1634,16 +1656,16 @@ export const resizeDrawingArea:resizeDrawingAreaFuncType=(
 )=>{
   [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
   const svgSankey = d3.select('.opensankey #svg')
-  
+
   svgSankey.style('width', dict_variable_application_data.data.width + 'px')
   svgSankey.style('height', dict_variable_application_data.data.height + 'px')
   DrawGrid(dict_variable_application_data.data)
 }
-/** Return the position + area of the g_node element 
+/** Return the position + area of the g_node element
  *
  * @param {SankeyNode} n
  * @param {dict_variable_application_dataType} dict_variable_application_data
- * @return {number[]} return position of node + it size [width,height] 
+ * @return {number[]} return position of node + it size [width,height]
  */
 export const sizeOfNodeInDrawArea=(n:SankeyNode,dict_variable_application_data:dict_variable_application_dataType)=>{
   const {data}=dict_variable_application_data
@@ -1664,7 +1686,7 @@ export const sizeOfNodeInDrawArea=(n:SankeyNode,dict_variable_application_data:d
 
   let curr_n_size_x=(n.x??0)+node_width
   let curr_n_size_y=(n.y??0)+node_height
-    
+
   if(n.x_label && n.y_label){
     curr_n_size_x=Math.max(curr_n_size_x,(n.x??0)+n.x_label+width_label)
     curr_n_size_y=Math.max(curr_n_size_y,(n.y??0)+n.y_label+height_label)
@@ -1691,7 +1713,7 @@ export const sizeOfNodeInDrawArea=(n:SankeyNode,dict_variable_application_data:d
       }
     }
   }
-    
+
   return [curr_n_size_x,curr_n_size_y]
 }
 
