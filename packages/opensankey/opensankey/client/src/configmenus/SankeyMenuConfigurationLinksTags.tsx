@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
-import { Row, Form,  Tab, InputGroup } from 'react-bootstrap'
 import {SankeyLinkValue } from '../types/Types'
-import { Checkbox } from '@chakra-ui/react'
-import { SmoothClasses, updateLinkTagValue } from './SankeyUtils'
+import { Box, Checkbox, Select, Tab, TabPanel } from '@chakra-ui/react'
+import { updateLinkTagValue } from './SankeyUtils'
 import { MenuConfigurationLinksTagsFType } from './types/SankeyMenuConfigurationLinksTagsTypes'
 
 export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
@@ -63,68 +62,75 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
   if(!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length>0){
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
-  const content =<>
-    <h4 style={{fontSize:'14px' ,fontWeight:'bold',textDecoration:'underline'}}>{t('Menu.EF')}</h4>
+  const content =<Box
+    layerStyle='menuconfigpanel_grid'
+  >
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_part_title_1'
+    >
+      {t('Menu.EF')}</Box>
 
     {/* Groupe d'étiquettes  */}
-    <InputGroup>
-      <Form.Select
-        style={{width:'60%'}}
-        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {set_tags_group_key(evt.target.value)
-          setForceUpdate(!forceUpdate)
-        }}
-        value={tags_group_key}
-      >
-        {Object.entries(fluxTags).map(
-          (tags_group, i) =>
-            <option
-              key={i}
-              value={tags_group[0]}>
-              {tags_group[1].group_name}
-            </option>)}
-      </Form.Select>
-    </InputGroup>
+    <Select
+      variant='menuconfigpanel_option_select'
+      onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {set_tags_group_key(evt.target.value)
+        setForceUpdate(!forceUpdate)
+      }}
+      value={tags_group_key}
+    >
+      {Object.entries(fluxTags).map(
+        (tags_group, i) =>
+          <option
+            key={i}
+            value={tags_group[0]}>
+            {tags_group[1].group_name}
+          </option>)}
+    </Select>
 
     {//Définition des valeurs selon les paramètre dataTags
       Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
         if (Object.keys(dataTag.tags).length != 0) {
-          return (
-            <InputGroup>
-              <InputGroup.Text style={{width:'40%'}}>
-                {dataTag.group_name}
-              </InputGroup.Text>
-              <Form.Select
-                name={dataTagKey}
-                style={{width:'60%'}}
-                value={data_tags_selected[dataTagKey]}
-                onChange={
-                  (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    //Modifie les paramètres selectionnés
-                    const { name, value } = evt.target
-                    set_data_tags_selected(prevState => ({
-                      ...prevState,
-                      [name]: value
-                    }))
-                    setForceUpdate(!forceUpdate)
-                  }}>
-                {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
-                  return (
-                    <option key={tag.name} value={tag_key}>{tag.name}</option>
-                  )
-                })}
-              </Form.Select>
-            </InputGroup>
+          return (<>
+            <Box
+              as='span'
+              layerStyle='menuconfigpanel_part_title_3'
+            >
+              {dataTag.group_name}
+            </Box>
+            <Select
+              variant='menuconfigpanel_option_select'
+              name={dataTagKey}
+              value={data_tags_selected[dataTagKey]}
+              onChange={
+                (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                  //Modifie les paramètres selectionnés
+                  const { name, value } = evt.target
+                  set_data_tags_selected(prevState => ({
+                    ...prevState,
+                    [name]: value
+                  }))
+                  setForceUpdate(!forceUpdate)
+                }}>
+              {Object.entries(dataTag.tags).map(([tag_key, tag]) => {
+                return (
+                  <option key={tag.name} value={tag_key}>{tag.name}</option>
+                )
+              })}
+            </Select></>
           )
         }
       })}
 
-    <Form.Group as={Row} style={{margin: 'auto'}} >
+    
+    <Box
+      layerStyle='menuconfigpanel_grid'
+    >
       {tags_visible && tags_group_key != '' && Object.keys(fluxTags).includes(tags_group_key) && multi_selected_links.current.length!=0 ? Object.entries(fluxTags[tags_group_key].tags).map(
         ([tag_key,tag]) => {
           const is_selected= ValueSelectedParameter().tags[tags_group_key] && ValueSelectedParameter().tags[tags_group_key].includes(tag_key) 
           return (
-            <Checkbox 
-              sx={SmoothClasses({})}
+            <Checkbox variant='menuconfigpanel_option_checkbox'
               isChecked={is_selected}
               onChange={(evt) => {
                 const visible = evt.target.checked
@@ -141,9 +147,21 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
             </Checkbox>
           )
         }) : (<></>)}
-    </Form.Group></>
+    </Box>
+  </Box>
     
-  return menu_for_modal?content: <Tab key="tags" eventKey="tags" className='content_editon_elements' title={t('Noeud.tags_node.tags')}>
-    {content}
-  </Tab >
+
+
+  return menu_for_modal?[content]:
+    [ 
+      <Tab>
+        <Box
+          layerStyle='submenuconfig_tab'
+        >
+          {t('Noeud.tags_node.tags')}
+        </Box>
+      </Tab>,
+      <TabPanel >
+        {content}
+      </TabPanel>]
 }

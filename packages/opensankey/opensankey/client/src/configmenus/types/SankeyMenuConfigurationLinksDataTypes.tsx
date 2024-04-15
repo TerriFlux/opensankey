@@ -9,5 +9,5 @@ export type MenuConfigurationLinksDataFType = (
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes
-) => JSX.Element
+) => JSX.Element[]
 
