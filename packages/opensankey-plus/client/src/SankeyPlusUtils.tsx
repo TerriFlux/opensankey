@@ -71,18 +71,15 @@ export  const DragLegendPlus : DragLegendPlusFType = (
     if(d3.select('.opensankey #svg').nodes().length>0){
       DragLegendGElementOSTyped(data,event)
       if(data.legend_position[0]===0 ||data.legend_position[1]===0){
-        OpposingDragElementsPlus([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],event,({} as SankeyPlusNode),data,{current:[]},multi_selected_label)
+        OpposingDragElementsPlus([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],event,({} as SankeyPlusNode),dict_variable_application_data,{current:[]},multi_selected_label)
       }
     }
   }).on('end',()=>{
     ComponentUpdater.updateComponentMenuConfigLayout.current()
-    resizeCanvas()
     node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
     resizeCanvas()
   })
-
-
 export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
   t:TFunction,
   data,set_data,

@@ -7,11 +7,11 @@ import {
   sankey_plus_zoom_text_zoneFType, zone_selection_labelFType
 } from '../types/SankeyPlusLabelsTypes'
 
-import { GetSankeyMinWidthAndHeight,selectOpensankeyElementsInSelectionZone} from './import/OpenSankey'
+import { GetSankeyMinWidthAndHeight,hideLinkOnDragElement,selectOpensankeyElementsInSelectionZone} from './import/OpenSankey'
 
 import { PlusDragElements,PlusReturnOutOfBoundElements,OpposingDragElementsPlus } from './SankeyPlusNodes'
-import { LinkFunctionTypes } from 'open-sankey/src/types/Types'
-
+import { LinkFunctionTypes, applicationDrawType } from 'open-sankey/src/types/Types'
+import { GetVerticalMarginForSankeyZone } from 'open-sankey/dist/configmenus/SankeyUtils'
 
 declare const window: Window &
 typeof globalThis & {
@@ -32,8 +32,8 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   ComponentUpdater,
   object_to_update,
   reDrawPlusLabels,
-  link_function
-
+  link_function,
+  applicationDraw
 ) => {
   const {data}=applicaTionData
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}=dict_variable_elements_selected
@@ -51,7 +51,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
     const g_label = d3.select(' .opensankey #svg #g_label')
     Object.values(data_plus.labels)
       .filter(zdt=>object_to_update.includes(zdt))
-      .map(d => {
+      .forEach(d => {
         g_label.select('#'+d.idLabel).remove()
 
         const gg_label = g_label.append('g').attr('x', d.x).attr('y', d.y)
@@ -70,7 +70,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
           .attr('stroke', d.color_border)
           .attr('rx', 5)
 
-        draw_text_zone_handles(data_plus,d,multi_selected_label,ComponentUpdater)
+        draw_text_zone_handles(applicaTionData,d,multi_selected_label,ComponentUpdater,link_function)
 
         gg_label.on('click', (event) => eventLabelClick(event,d,uiElementsRef,d_setter_input_value,multi_selected_label,multi_selected_nodes,multi_selected_links,ComponentUpdater))
         gg_label.on('mousedown',()=>closeAllMenuContext())
@@ -122,8 +122,14 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
             applicaTionData,dict_variable_elements_selected,
             applicationContext,
             d,
-            GetSankeyMinWidthAndHeight
-            ,scale,inv_scale,start_point,ComponentUpdater,reDrawPlusLabels,link_function
+            GetSankeyMinWidthAndHeight,
+            scale,
+            inv_scale,
+            start_point,
+            ComponentUpdater,
+            reDrawPlusLabels,
+            link_function,
+            applicationDraw
           )
         )
         gg_label.append('rect')
@@ -227,7 +233,8 @@ const dragLabelEvent = (
   start_point:{current:number[]},
   ComponentUpdater:PlusComponentUpdaterType,
   reDrawPlusLabels:reDrawPlusLabelsFType,
-  link_function:LinkFunctionTypes
+  link_function:LinkFunctionTypes,
+  applicationDraw:applicationDrawType
 
 )=>{
   const { LinkText,GetLinkValue,DrawArrows,RedrawLinks}=link_function
@@ -250,7 +257,9 @@ const dragLabelEvent = (
         d3.select('#svg').append('g').attr('class','selection_zone')
           .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
       }
-
+      if(!(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0)){
+        hideLinkOnDragElement(dict_variable_application_data)
+      }
     })
     .subject(Object).on('drag', function (event) {
       if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
@@ -273,7 +282,7 @@ const dragLabelEvent = (
         const out_of_zone_item=PlusReturnOutOfBoundElements(d,data,event,multi_selected_nodes,node_visible)
         // Pousse les element non sélectionnés dans la direction opposé
         if(out_of_zone_item.length>0){
-          OpposingDragElementsPlus(out_of_zone_item,event,d,data,multi_selected_nodes,multi_selected_label)
+          OpposingDragElementsPlus(out_of_zone_item,event,d,dict_variable_application_data,multi_selected_nodes,multi_selected_label)
         }
         PlusDragElements(
           dict_variable_application_data,
@@ -291,10 +300,9 @@ const dragLabelEvent = (
 
       }else if (multi_selected_label.current.length>0){
         RedrawLinks(Object.values(dict_variable_application_data.display_links))
+        applicationDraw.resizeCanvas()
         updateComponenSaveInCache.current(false)
       }
-
-
     })
   )
 }
@@ -304,18 +312,25 @@ const dragLabelEvent = (
 export const sankey_plus_min_width_and_height : sankey_plus_min_width_and_heightFType = (
   dict_variable_application_data
 ) => {
+
   const {data}=dict_variable_application_data
-  let [width,height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
+  const [width,height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
+  let height_plus=0
+  let width_plus=0
   const data_plus=data as SankeyPlusData
   Object.values(data_plus.labels).forEach(n => {
-    height =  Math.max(height, n.y+n.label_height)
-    width = Math.max(width, (n.x+n.label_width))
+    height_plus =  Math.max(height_plus, n.y+n.label_height)
+    width_plus = Math.max(width_plus, (n.x+n.label_width))
   })
 
-  height = height + (data_plus.grid_square_size * 2 )
-  width = width + (data_plus.grid_square_size * 2 )
-
-  return [width,height]
+  height_plus = height_plus + (data_plus.grid_square_size * 2 )
+  width_plus = width_plus + (data_plus.grid_square_size * 2 )
+  const vertical_shift=  GetVerticalMarginForSankeyZone()
+  const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
+  width_plus=Math.max(width_plus, window.innerWidth - 60 - has_scroll_bar)
+  height_plus= Math.max(height_plus, window.innerHeight - 20 - (vertical_shift))
+  
+  return [Math.max(width,width_plus),Math.max(height,height_plus)]
 }
 
 export const zone_selection_label : zone_selection_labelFType = (
@@ -358,14 +373,14 @@ export const zone_selection_label : zone_selection_labelFType = (
   }
 }
 
-const draw_text_zone_handles=(data:SankeyPlusData,zdt:SankeyPlusLabel,multi_selected_label:{current:SankeyPlusLabel[]},ComponentUpdater:PlusComponentUpdaterType)=>{
+const draw_text_zone_handles=(dict_variable_application_data:SankeyPlusApplicationDataType,zdt:SankeyPlusLabel,multi_selected_label:{current:SankeyPlusLabel[]},ComponentUpdater:PlusComponentUpdaterType,link_function:LinkFunctionTypes)=>{
   d3.select('.opensankey #g_label_handles').append('g').attr('id','gg_zdt_handles_'+zdt.idLabel).attr('class','gg_zdt_handles').classed('selected',multi_selected_label.current.includes(zdt));
   ['top','bottom','left','right'].forEach(pos=>{
-    add_zdt_handle(zdt,pos,multi_selected_label,data,ComponentUpdater)
+    add_zdt_handle(zdt,pos,dict_variable_application_data,ComponentUpdater,link_function)
   })
 }
 const size_zdt_handle=10
-const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{current:SankeyPlusLabel[]},data:SankeyPlusData,ComponentUpdater:PlusComponentUpdaterType)=>{
+const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,dict_variable_application_data:SankeyPlusApplicationDataType,ComponentUpdater:PlusComponentUpdaterType,link_function:LinkFunctionTypes)=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
   if(d3.select('.opensankey #svg').nodes().length>0){
@@ -384,7 +399,7 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{curre
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
-    .call(drag_text_zone_hande(zdt,pos,data,ComponentUpdater))
+    .call(drag_text_zone_hande(zdt,pos,dict_variable_application_data,ComponentUpdater,link_function))
   // Position the handle
   switch (pos){
   case 'top':
@@ -413,13 +428,16 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,multi_selected_label:{curre
   }
 }
 
-const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,ComponentUpdater:PlusComponentUpdaterType)=>{
+const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,dict_variable_application_data:SankeyPlusApplicationDataType,ComponentUpdater:PlusComponentUpdaterType,link_function:LinkFunctionTypes)=>{
+  const {data}=dict_variable_application_data
   const g_zdt_h=d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_'+pos)
   const text_zone_shape=d3.select('#'+zdt.idLabel+' rect')
   const g_text_zone=d3.select('#'+zdt.idLabel)
   return d3.drag<SVGRectElement, unknown, HTMLElement>()
     .subject(Object)
-
+    .on('start',()=>{
+      hideLinkOnDragElement(dict_variable_application_data)
+    })
     .on('drag', function (event) {
       // The handles change the width and height of the text_zone
       // The top and left handles also shift the x/y of text zone
@@ -434,6 +452,12 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,C
         // Reposition lateral handles
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_left').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
+
+        if(zdt.y<0){
+          OpposingDragElementsPlus([zdt],event,zdt,dict_variable_application_data,{current:[]},{current:[]})
+          d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('y',zdt.y+ zdt.label_height)
+
+        }
         break
 
       case 'bottom':
@@ -444,6 +468,12 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,C
         // Reposition lateral handles
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_left').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
+
+        if((zdt.y+zdt.label_height+data.grid_square_size*2)>data.height){
+          data.height=(zdt.y+zdt.label_height+data.grid_square_size*2)
+          const svgSankey = d3.select('.opensankey #svg')
+          svgSankey.style('height', (zdt.y+zdt.label_height+data.grid_square_size*2) + 'px')
+        }
         break
 
       case 'left':
@@ -456,6 +486,10 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,C
         // Reposition vertical handles
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
+        if(zdt.x<0){
+          OpposingDragElementsPlus([zdt],event,zdt,dict_variable_application_data,{current:[]},{current:[]})
+          d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('x',zdt.x+ zdt.label_width)
+        }
         break
 
       case 'right':
@@ -466,12 +500,19 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,data:SankeyPlusData,C
         // Reposition vertical handles
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
+
+        if((zdt.x+zdt.label_width+data.grid_square_size*2)>data.width){
+          data.width=(zdt.x+zdt.label_width+data.grid_square_size*2)
+          const svgSankey = d3.select('.opensankey #svg')
+          svgSankey.style('width', (zdt.x+zdt.label_width+data.grid_square_size*2) + 'px')
+        }
         break
       }
     })
     .on('end',()=>{
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
       ComponentUpdater.updateComponenSaveInCache.current(false)
+      link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
     })
 
 

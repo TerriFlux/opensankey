@@ -51,10 +51,12 @@ import {
   SimpleGNodeClick,NodeColor,
   SvgDragMiddleMouseMove,
   SvgDragMiddleMouseStart,
+  actualizeDrawAreaFrame,
+  hideLinkOnDragElement,
 } from './import/OpenSankey'
 
 import { TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
-import { ComponentUpdaterType, SankeyData,  SankeyNode, uiElementsRefType } from 'open-sankey/src/types/Types'
+import { ComponentUpdaterType, SankeyData,  SankeyNode, applicationDrawType, uiElementsRefType } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {
   ContextNodeIconFType,
@@ -991,24 +993,40 @@ export const ContextNodeIcon : ContextNodeIconFType = (
     {icon_open_modal}
   </Button>
 }
-
+/**
+ * Shift all elements (ZDT/Nodes) not selected to the opposing direction of the event
+ *
+ * @param {((SankeyNode|SankeyPlusLabel)[])} out_of_zone_item
+ * @param {{ dx: number; dy: number,x:number,y:number }} event
+ * @param {(SankeyNode|SankeyPlusLabel)} dragged
+ * @param {SankeyData} data
+ * @param {{current:SankeyNode[]}} multi_selected_nodes
+ * @param {{current:SankeyPlusLabel[]}} multi_selected_label
+ */
 export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
   out_of_zone_item:(SankeyNode|SankeyPlusLabel)[],
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:SankeyNode|SankeyPlusLabel,
-  data:SankeyData,
+  dict_variable_application_data,
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
 )=>{
-  OpposingDragElements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,data,multi_selected_nodes)
+  const {data}=dict_variable_application_data
+  OpposingDragElements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,dict_variable_application_data,multi_selected_nodes)
 
   if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
     // Shift not selected zdt to opposing direction
     Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
       if(!multi_selected_label.current.includes(lb)){
-        const new_pos_x = lb.x + 5
+        const new_pos_x = lb.x - event.dx
         lb.x = new_pos_x
         d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
+        // shift handles of non dragged zdt
+        d3.selectAll(' .opensankey #g_label_handles #gg_zdt_handles_' + lb.idLabel+' .zdt_handles').nodes().forEach(g_zdt_h=>{
+          const x=+d3.select(g_zdt_h).attr('x')
+          d3.select(g_zdt_h).attr('x',x-event.dx)
+        })
+
       }
     })
   }
@@ -1017,9 +1035,14 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
     // Shift zdt to opposing direction
     Object.values((data as unknown as {labels:SankeyPlusLabel[]}).labels).forEach(lb=>{
       if(!multi_selected_label.current.includes(lb)){
-        const new_pos_y = lb.y + 5
+        const new_pos_y = lb.y -event.dy
         lb.y = new_pos_y
         d3.select(' .opensankey #' + lb.idLabel).attr('transform', 'translate(' + lb.x + ',' + lb.y + ')')
+        // shift handles of non dragged zdt
+        d3.selectAll(' .opensankey #g_label_handles #gg_zdt_handles_' + lb.idLabel+' .zdt_handles').nodes().forEach(g_zdt_h=>{
+          const y=+d3.select(g_zdt_h).attr('y')
+          d3.select(g_zdt_h).attr('y',y-event.dy)
+        })
       }
     })
   }
@@ -1035,7 +1058,8 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   ComponentUpdater,
   node_function,
-  link_function
+  link_function,
+  applicationDraw
 )=>{
   const {data}=applicaTionData
   const {ref_getter_mode_selection}=dict_variable_elements_selected
@@ -1051,7 +1075,8 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
     (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement,SankeyPlusNode,d3.BaseType, unknown> ).call(
       SankeyPlusDragGNodeEvent(applicaTionData,dict_variable_elements_selected,
         applicationContext,
-        alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight,ComponentUpdater,node_function,link_function
+        alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,GetSankeyMinWidthAndHeight,ComponentUpdater,node_function,link_function,
+        applicationDraw
       )
     )
   }
@@ -1090,6 +1115,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
       })
       node_function.RedrawNodes(node_to_update)
       link_function.RedrawLinks(link_to_update)
+      actualizeDrawAreaFrame(applicaTionData,GetSankeyMinWidthAndHeight)
     })
   )
 }
@@ -1106,9 +1132,9 @@ const SankeyPlusDragGNodeEvent = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   ComponentUpdater:ComponentUpdaterType,
   node_function:PlusNodeFuntionType,
-  link_function:PlusLinkFuntionType
+  link_function:PlusLinkFuntionType,
+  applicationDraw:applicationDrawType
 )=>{
-  const {data}=dict_variable_application_data
   const {ref_getter_mode_selection}=dict_variable_elements_selected
   const node_visible=[] as string[]
   return d3.drag<SVGGElement, SankeyPlusNode>()
@@ -1117,6 +1143,7 @@ const SankeyPlusDragGNodeEvent = (
       d3.selectAll('.node_shape').nodes().forEach(element => {
         node_visible.push(d3.select(element).attr('id'))
       })
+      hideLinkOnDragElement(dict_variable_application_data)
     })
     .on('drag', function (event,node) {
       if(ref_getter_mode_selection.current==='s'){
@@ -1134,21 +1161,12 @@ const SankeyPlusDragGNodeEvent = (
         }
       }
     })
-    .on('end',(_,node)=>{
+    .on('end',()=>{
       if(d3.select(document.activeElement).attr('class')!=='input_label'){
-        // update all nodes connected to dragged node & all links connected to these nodes
-        const node_to_update:SankeyNode[]=[]
-        node.outputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idTarget]))
-        node.inputLinksId.forEach(lid=>node_to_update.push(data.nodes[data.links[lid].idSource]))
-
-        let link_to_update:SankeyPlusLink[]=[]
-        node_to_update.forEach(node=>{
-          link_to_update=link_to_update.concat(node.outputLinksId.map(lid=>data.links[lid]))
-          link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
-        })
-        node_function.RedrawNodes(node_to_update)
-        link_function.RedrawLinks(link_to_update)
+        node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+        link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
       }
+      applicationDraw.resizeCanvas()
     })
 }
 
@@ -1177,7 +1195,7 @@ const PlusDragNodes = (
 
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
-    OpposingDragElementsPlus(out_of_zone_item,event,node,data,multi_selected_nodes,multi_selected_label)
+    OpposingDragElementsPlus(out_of_zone_item,event,node,dict_variable_application_data,multi_selected_nodes,multi_selected_label)
   }
   PlusDragElements(
     dict_variable_application_data,dict_variable_elements_selected,applicationContext,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
@@ -1212,6 +1230,18 @@ export const PlusDragElements : PlusDragElementsFType = (
     const new_pos_y = l.y + event.dy
     l.x = (new_pos_x>=0)?new_pos_x:0
     l.y = (new_pos_y>0)?new_pos_y:0
+
+    const pos_zdt=sizeOfZdtInDrawArea(l)
+    const margin=dict_variable_application_data.data.grid_square_size*2
+    if((pos_zdt[0]+margin)>dict_variable_application_data.data.width){
+      const svgSankey = d3.select('.opensankey #svg')
+      svgSankey.style('width', (pos_zdt[0]+margin) + 'px')
+    }
+    if((pos_zdt[1]+margin)>dict_variable_application_data.data.height){
+      const svgSankey = d3.select('.opensankey #svg')
+      svgSankey.style('height', (pos_zdt[1]+margin) + 'px')
+    }
+
     d3.select(' .opensankey #' + l.idLabel).attr('transform', 'translate(' + l.x + ',' + l.y + ')')
 
     d3.selectAll('.opensankey #gg_zdt_handles_'+l.idLabel+' .zdt_handles').nodes().forEach(el=>{
@@ -1249,3 +1279,6 @@ export const inv_scale = d3.scaleLinear()
   .range([0, 100])
 
 
+export const sizeOfZdtInDrawArea=(n:SankeyPlusLabel)=>{
+  return [(n.x+n.label_width),(n.y+n.label_height)]
+}
