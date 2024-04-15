@@ -1,11 +1,11 @@
 import * as d3 from 'd3'
-import { MutableRefObject } from 'react'
 import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { LinkTextFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData } from '../types/Types'
-import { RemoveAnimate, GetSankeyMinWidthAndHeight, DrawArrows, drawCurveFunction, LinkStrokeWidth } from './SankeyDrawFunction'
+import { RemoveAnimate, DrawArrows, drawCurveFunction, LinkStrokeWidth, returnScaleOfDrawArea, sizeOfNodeInDrawArea, hideLinkOnDragElement } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
+import { shiftAllArrowPath, shiftAllLinkPath } from './SankeyDrawEventFunction'
 
 declare const window: Window &
 typeof globalThis & {
@@ -28,27 +28,31 @@ typeof globalThis & {
 }
 
 export const DragGNodeEvent: DragGNodeEventFType = (
-  dict_variable_application_data: dict_variable_application_dataType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   applicationContext,
-  alt_key_pressed: MutableRefObject<boolean>,
-  LinkText: LinkTextFuncType,
-  GetLinkValue: GetLinkValueFuncType,
-  scale: (t: number) => number,
-  inv_scale: (t: number) => number,
+  alt_key_pressed,
+  LinkText,
+  GetLinkValue,
+  scale,
+  inv_scale,
   ComponentUpdater,
   node_function,
-  link_function
+  link_function,
+  GetSankeyMinWidthAndHeight,
+  applicationDraw
 ) => {
   const {ref_getter_mode_selection}=dict_variable_elements_selected
   const node_visible = [] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
     .subject(Object)
     .on('start', () => {
+
       RemoveAnimate()
       d3.selectAll('.node_shape').nodes().forEach(element => {
         node_visible.push(d3.select(element).attr('id'))
       })
+      hideLinkOnDragElement(dict_variable_application_data)
     })
     .on('drag', function (event, node) {
       if (ref_getter_mode_selection.current == 's') {
@@ -70,7 +74,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
         link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
       }
-
+      applicationDraw.resizeCanvas()
     })
 }
 /**
@@ -134,13 +138,13 @@ export const DragNodes: DragNodesFType = (
   dict_variable_application_data: dict_variable_application_dataType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
   applicationContext,
-  LinkText: LinkTextFuncType,
-  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
-  GetLinkValue: GetLinkValueFuncType,
-  DrawArrows: DrawArrowsType,
-  scale: (t: number) => number,
-  inv_scale: (t: number) => number,
-  node_visible: string[],
+  LinkText,
+  GetSankeyMinWidthAndHeight,
+  GetLinkValue,
+  DrawArrows,
+  scale,
+  inv_scale,
+  node_visible,
   ComponentUpdater
 ) => {
   const { data } = dict_variable_application_data
@@ -150,12 +154,14 @@ export const DragNodes: DragNodesFType = (
   const out_of_zone_item = ReturnOutOfBoundElement(node, data, event, multi_selected_nodes, node_visible)
   // Pousse les element non sélectionnés dans la direction opposé
   if (out_of_zone_item.length > 0) {
-    OpposingDragElements(out_of_zone_item, event, node, data, multi_selected_nodes)
+    OpposingDragElements(out_of_zone_item, event, node, dict_variable_application_data, multi_selected_nodes)
   }
 
   DragElements(node, dict_variable_application_data, dict_variable_elements_selected,applicationContext, event, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale,ComponentUpdater)
 
-}/**
+}
+
+/**
  * Function that shift node text when triggered
  *
  * @param {SankeyNode} node
@@ -172,6 +178,7 @@ export const drag_node_text: drag_node_textFuncType = (
   node.y_label = new_y
   d3.select(' .opensankey #text_' + node.idNode).selectAll('tspan').attr('x', new_x)
 }
+
 export const ReturnOutOfBoundElement: ReturnOutOfBoundElementFuncType = (
   dragged: SankeyNode, data: SankeyData, event: { dx: number; dy: number; x: number; y: number} ,
   multi_selected_nodes: { current: SankeyNode[]} , node_visible: string[]
@@ -200,49 +207,76 @@ export const ReturnOutOfBoundElement: ReturnOutOfBoundElementFuncType = (
   return out_of_zone_item
 
 }
+
+/**
+ * Shift all node not selected to the opposing direction of the event
+ *
+ * @param {(SankeyNode)[]} out_of_zone_item
+ * @param {{ dx: number; dy: number; x: number; y: number}} event
+ * @param {SankeyNode} dragged
+ * @param {SankeyData} data
+ * @param {{ current: SankeyNode[]}} multi_selected_nodes
+ */
 export const OpposingDragElements: opposing_DragElementsFuncType = (out_of_zone_item: (SankeyNode)[],
   event: { dx: number; dy: number; x: number; y: number} ,
   dragged: SankeyNode,
-  data: SankeyData,
+  dict_variable_application_data:dict_variable_application_dataType,
   multi_selected_nodes: { current: SankeyNode[]} 
 ) => {
+  const {data,display_links}=dict_variable_application_data
   const node = Object.keys(dragged).includes('idNode') ? dragged as SankeyNode : {} as SankeyNode
 
   if ((out_of_zone_item[0].x <= 0 && event.x < 0) || (out_of_zone_item[0].x <= 0 && event.dx < 0)) {
     // Shift not selected nodes to opposing direction
     Object.values(data.nodes).filter(nf => (multi_selected_nodes.current.length > 0 ? !multi_selected_nodes.current.includes(nf) : (Object.keys(node).length == 0 || nf !== node)) && nf.position !== 'relative').forEach(n_shift => {
-      n_shift.x += 5
+      n_shift.x -= event.dx
       d3.selectAll('#ggg_' + n_shift.idNode).attr('transform', 'translate(' + n_shift.x + ',' + n_shift.y + ')')
     })
 
+    if(Object.values(dict_variable_application_data.display_links).length<20){
+      const couter_event={x:event.x,y:event.y,dx:-event.dx,dy:0} as d3.D3DragEvent<Element, unknown, unknown>
+      shiftAllLinkPath(couter_event)
+      shiftAllArrowPath(couter_event)
+    }
 
+    // Shift free label of links x_label
+    Object.values(display_links).filter(l=>l.x_label!==undefined).forEach(l=>{
+      (l.x_label as number)-=event.dx
+    })
 
     // Shift legend x 
-    const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
-    const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
+    const scale_svg=returnScaleOfDrawArea()
     const scale_for_legend = (scale_svg < 1 ? (1 / scale_svg) : 1)
-    data.legend_position[0] += 5
+    data.legend_position[0] -= event.dx
     d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale(' + scale_for_legend + ')')
   }
-
 
   if ((out_of_zone_item[0].y <= 0 && event.y < 0) || (out_of_zone_item[0].y <= 0 && event.dy < 0)) {
     // Shift not selected nodes to opposing direction
     Object.values(data.nodes).filter(nf => (multi_selected_nodes.current.length > 0 ? !multi_selected_nodes.current.includes(nf) : (Object.keys(node).length == 0 || nf !== node)) && nf.position !== 'relative').forEach(n_shift => {
-      n_shift.y += 5
+      n_shift.y -= event.dy
       d3.selectAll('#ggg_' + n_shift.idNode).attr('transform', 'translate(' + n_shift.x + ',' + n_shift.y + ')')
     })
 
+    if(Object.values(dict_variable_application_data.display_links).length<20){
+      const couter_event={x:event.x,y:event.y,dx:0,dy:-event.dy} as d3.D3DragEvent<Element, unknown, unknown>
+      shiftAllLinkPath(couter_event)
+      shiftAllArrowPath(couter_event)
+    }
+
+    // Shift free label of links y_label
+    Object.values(display_links).filter(l=>l.y_label!==undefined).forEach(l=>{
+      (l.y_label as number)-=event.dy
+    })
+
     // Shift legend y 
-    const transform_svg = d3.select('.opensankey #svg')?.attr('transform') ?? ''
-    const scale_svg = (transform_svg) ? +transform_svg.split('scale(')[1].replace(')', '') : 1
+    const scale_svg=returnScaleOfDrawArea()
     const scale_for_legend = (scale_svg < 1 ? (1 / scale_svg) : 1)
-    data.legend_position[1] += 5
+    data.legend_position[1] -= event.dy
     d3.select(' .opensankey #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale(' + scale_for_legend + ')')
-
-
-
   }
+
+
 }
 export const DragElements: DragElementsFuncType = (
   dragged: SankeyNode,
@@ -284,6 +318,16 @@ export const DragElements: DragElementsFuncType = (
     if (n.y < 0) {
       n.y = 0
     }
+    const pos_n=sizeOfNodeInDrawArea(n,dict_variable_application_data)
+    const margin=data.grid_square_size*2
+    if((pos_n[0]+margin)>dict_variable_application_data.data.width){
+      const svgSankey = d3.select('.opensankey #svg')
+      svgSankey.style('width', (pos_n[0]+margin) + 'px')
+    }
+    if((pos_n[1]+margin)>dict_variable_application_data.data.height){
+      const svgSankey = d3.select('.opensankey #svg')
+      svgSankey.style('height', (pos_n[1]+margin) + 'px')
+    }
     return 'translate(' + n.x + ',' + n.y + ')'
   })
 
@@ -294,20 +338,20 @@ export const DragElements: DragElementsFuncType = (
       DrawArrows(n as SankeyNode, data, display_nodes, display_links, scale, inv_scale, GetLinkValue, data.display_style)
     ])
     // we redraw link linked to dragged nodes
-    multi_selected_nodes.current.forEach(n => {
-      Object.values(data.links).filter(l => n.outputLinksId.includes(l.idLink) || n.inputLinksId.includes(l.idLink)).forEach(l => {
-        d3.select(' .opensankey #path_' + l.idLink).attr('d',
-          drawCurveFunction.curve(
-            dict_variable_application_data,
-            dict_variable_elements_selected,
-            applicationContext,
-            data.display_style,
-            data.nodeTags, l, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
-            DrawArrows,ComponentUpdater,scale,inv_scale
-          )
-        )
-      })
-    })
+    // multi_selected_nodes.current.forEach(n => {
+    //   Object.values(data.links).filter(l => n.outputLinksId.includes(l.idLink) || n.inputLinksId.includes(l.idLink)).forEach(l => {
+    //     d3.select(' .opensankey #path_' + l.idLink).attr('d',
+    //       drawCurveFunction.curve(
+    //         dict_variable_application_data,
+    //         dict_variable_elements_selected,
+    //         applicationContext,
+    //         data.display_style,
+    //         data.nodeTags, l, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
+    //         DrawArrows,ComponentUpdater,scale,inv_scale
+    //       )
+    //     )
+    //   })
+    // })
   } else if (Object.keys(node).length > 0) {
 
     DrawArrows(node as SankeyNode, data, display_nodes, display_links, scale, inv_scale, GetLinkValue, data.display_style)
@@ -332,4 +376,3 @@ export const DragElements: DragElementsFuncType = (
     })
   }
 }
-

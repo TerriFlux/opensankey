@@ -1,7 +1,8 @@
 import { MutableRefObject} from 'react'
 
-import { dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,LinkFunctionTypes, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, SankeyNode, NodeFunctionTypes } from '../../types/Types'
+import { dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,LinkFunctionTypes, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, SankeyNode, NodeFunctionTypes, applicationDrawType } from '../../types/Types'
 import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
+import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 
 export type DrawAllNodesFType = (
@@ -16,7 +17,10 @@ export type DrawAllNodesFType = (
   NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  node_function:NodeFunctionTypes
+  node_function:NodeFunctionTypes,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  applicationDraw:applicationDrawType,
+
 ) => void
 
   
@@ -33,8 +37,9 @@ export type AddDrawNodesFType = (
   NodeTooltipsContent:NodeTooltipsContentFType,
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  node_function:NodeFunctionTypes
-
+  node_function:NodeFunctionTypes,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  applicationDraw:applicationDrawType,
 ) => void
   
 export type drawNodeShapeFType = (
@@ -50,7 +55,9 @@ export type drawNodeShapeFType = (
   ComponentUpdater:ComponentUpdaterType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
-  node_to_draw:SankeyNode[]
+  node_to_draw:SankeyNode[],
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  applicationDraw:applicationDrawType,
 
   ) => void
 

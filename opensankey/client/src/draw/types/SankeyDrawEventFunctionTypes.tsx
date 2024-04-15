@@ -2,6 +2,7 @@
 import { MutableRefObject, Dispatch, SetStateAction } from 'react'
 import { dict_variable_application_dataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType, NodeFunctionTypes } from '../../types/Types'
 import * as d3 from 'd3'
+import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 // Function triggerd on click on nodes
 
@@ -103,9 +104,9 @@ export type SimpleGNodeClickFuncType = (
 
 ) => void
 
-export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, dict_variable_application_data:dict_variable_application_dataType) => void
+export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, dict_variable_application_data:dict_variable_application_dataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType) => void
 
-export type actualizeDrawAreaFrameFType=(_:dict_variable_application_dataType)=>void
+export type actualizeDrawAreaFrameFType=(_:dict_variable_application_dataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType)=>void
 
 export type selectOpensankeyElementsInSelectionZoneFType=(
   dict_variable_application_data:dict_variable_application_dataType,
@@ -115,4 +116,4 @@ export type selectOpensankeyElementsInSelectionZoneFType=(
   start_point: {current: number[]}
   )=>void
 
-export type applyZoomEventFType=(dict_variable_application_data:dict_variable_application_dataType)=>void
+export type applyZoomEventFType=(dict_variable_application_data:dict_variable_application_dataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType)=>void

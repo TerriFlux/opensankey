@@ -1,5 +1,5 @@
 import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, dict_variable_application_dataType, display_styleType } from '../../types/Types'
-import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
+import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { TFunction } from 'i18next'
 
 
@@ -164,3 +164,9 @@ export type LinkStrokeWidthFType = (l:SankeyLink,
 export type RepositionneSidebarFuncType = (show_nav: boolean) => void
 
 export type clipFType  = (subjectPolygon: number[][], clipPolygon: number[][]) => void  
+
+export type resizeDrawingAreaFuncType=(dict_variable_application_data:dict_variable_application_dataType,
+  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
+)=>void
+
+export type hideLinkOnDragElementFuncType=(dict_variable_application_data:dict_variable_application_dataType)=>void
