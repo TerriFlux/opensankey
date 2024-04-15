@@ -20,7 +20,8 @@ import {
   LinkVisibleOnsSvgFuncType, DeselectVisualyNodesFuncType, RemoveAnimateFuncType, 
   DrawGridFType, 
   SelectVisualyNodesFType,
-  SelectVisualyLinksFType
+  SelectVisualyLinksFType,
+  hideLinkOnDragElementFuncType
 } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { LinkStrokeFuncType } from 'open-sankey/src/draw/types/SankeyDrawLinksTypes'
 import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
@@ -129,3 +130,5 @@ export const PlusMenuDraggable=(
   width_menu?:number)=>{
   return MenuDraggable((dict_hook_ref_setter_show_dialog_components as dict_hook_ref_setter_show_dialog_componentsType),(dialog_name as keyof dict_hook_ref_setter_show_dialog_componentsType),content,pointer_pos,title,width_menu)
 }
+
+export const hideLinkOnDragElement:hideLinkOnDragElementFuncType=OpenSankeyDrawFunc.hideLinkOnDragElement

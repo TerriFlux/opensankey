@@ -3,7 +3,7 @@ import { PlusApplicationContextType, PlusElementsSelectedType, PlusLinkFuntionTy
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
-import { dict_variable_application_dataType, contextMenuType, uiElementsRefType, ComponentUpdaterType } from 'open-sankey/src/types/Types'
+import { dict_variable_application_dataType, contextMenuType, uiElementsRefType, ComponentUpdaterType, applicationDrawType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
 
 
@@ -65,7 +65,7 @@ export type OpposingDragElementsPlusFType = (
   out_of_zone_item:(SankeyPlusNode|SankeyPlusLabel)[],
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:SankeyPlusNode|SankeyPlusLabel,
-  data:SankeyPlusData,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
 )=> void
@@ -80,7 +80,8 @@ export type PlusNodeDragEventFType = (
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   ComponentUpdater:ComponentUpdaterType,
   node_function:PlusNodeFuntionType,
-  link_function:PlusLinkFuntionType
+  link_function:PlusLinkFuntionType,
+  applicationDraw:applicationDrawType
 
 )=> void
 

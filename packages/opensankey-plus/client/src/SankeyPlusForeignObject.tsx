@@ -1,11 +1,10 @@
-import React, { LegacyRef, MutableRefObject, useRef, useState } from 'react'
+import React, { MutableRefObject, useRef, useState } from 'react'
 import { Badge, OverlayTrigger, Tooltip} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { Quill } from 'react-quill'
-import { Box, Button, Checkbox, Tab, TabPanel, Textarea, useForceUpdate } from '@chakra-ui/react'
-import {  } from '@chakra-ui/react'
+import { Box, Button, Checkbox, Tab, TabPanel, Textarea } from '@chakra-ui/react'
 import * as d3 from 'd3'
 import ReactQuill from 'react-quill'
 
@@ -266,9 +265,9 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
             backgroundColor='red.200'
             onClick={() => {
               if (multi_selected_nodes.current.length>0) {
-                if ( typeof multi_selected_nodes.current[0].FO_content !== "undefined" ) {
+                if ( typeof multi_selected_nodes.current[0].FO_content !== 'undefined' ) {
                   // Reset textaera
-                  if ( typeof inputRef.current !== "undefined" ) {
+                  if ( typeof inputRef.current !== 'undefined' ) {
                     if (inputRef.current !== null) {
                       inputRef.current.value = multi_selected_nodes.current[0].FO_content
                     }
@@ -278,7 +277,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
                 }
                 else {
                   // Reset textaera
-                  if (typeof inputRef.current !== "undefined") {
+                  if (typeof inputRef.current !== 'undefined') {
                     if (inputRef.current !== null) {
                       inputRef.current.value = ''
                     }
@@ -289,7 +288,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
               }
               else {
                 // Reset textaera
-                if (typeof inputRef.current !== "undefined") {
+                if (typeof inputRef.current !== 'undefined') {
                   if (inputRef.current !== null) {
                     inputRef.current.value = ''
                   }
