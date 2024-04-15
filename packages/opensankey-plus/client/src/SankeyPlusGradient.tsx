@@ -10,7 +10,7 @@ import { LinkStrokeFType, SankeyPlusDrawArrowsFType, dragNodeRedrawGradientFType
 import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode, display_styleType} from 'open-sankey/src/types/Types'
 import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-import {SmoothClasses,TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
+import {TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
 
 
 export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradientFType =(
@@ -32,14 +32,11 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   if(menu_for_style && !Object.keys(data.style_link).includes(selected_style_link.current)){
     selected_style_link.current=(Object.keys(data.style_link)[0])
   }
-
-
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[selected_style_link.current]]:multi_selected_links.current
 
   const k_list=['gradient'] as unknown as (keyof SankeyLinkAttrLocal)[]
   const gradChecked=IsAllLinkAttrSameValue(data,selected_parameter,k_list,menu_for_style)['gradient'] as boolean[]
-
   return <>
 
     <OverlayTrigger
@@ -49,7 +46,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
       overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
     >
       <Checkbox 
-        sx={SmoothClasses({})}
+        variant='menuconfigpanel_option_checkbox'
         isDisabled={!is_activated}
         isIndeterminate={gradChecked[1]}
         isChecked={gradChecked[0]}
