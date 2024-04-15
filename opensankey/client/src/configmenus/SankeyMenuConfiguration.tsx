@@ -168,7 +168,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 dict_variable_application_data={dict_variable_application_data}
                 applicationContext={applicationContext}
                 dict_variable_elements_selected={dict_variable_elements_selected}
-                menu_configuration_links={Object.values(menu_configuration_links)}
+                menu_configuration_links={menu_configuration_links}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
                 contextMenu={contextMenu}
