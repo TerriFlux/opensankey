@@ -1,5 +1,5 @@
 import React, { useState, FunctionComponent } from 'react'
-import { Button, FormControl, Form, FormLabel, Table, ButtonGroup,  OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap'
+import { OverlayTrigger, Tooltip } from 'react-bootstrap'
 
 import { TagsGroup } from '../types/Types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
@@ -8,6 +8,7 @@ import * as d3 from 'd3'
 import { AddTag,AddGroupTag, GetRandomInt, resetLinkValueAfterDeleteDTGrp } from './SankeyUtils'
 import { FaEye,FaEyeSlash} from 'react-icons/fa'
 import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
+import { TableContainer,Table, Th, Thead, Tr,Button, Tbody, Td, Box, Input,InputGroup, Select } from '@chakra-ui/react'
 const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateBuGn,d3.interpolatePiYG,d3.interpolatePuOr,
   d3.interpolatePuBu,d3.interpolateRdBu,d3.interpolateRdGy,d3.interpolateRdYlBu,d3.interpolateRdYlGn,d3.interpolateSpectral,
   d3.interpolateTurbo,d3.interpolateViridis,d3.interpolateInferno,d3.interpolateMagma,d3.interpolatePlasma,d3.interpolateCividis,
@@ -142,14 +143,15 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
     setForceUpdate(!forceUpdate)
 
   }
-
+  let variant_table_edit_tag='table_edit_tag_node'
+  if(type_tag_name=='fluxTags')variant_table_edit_tag='table_edit_tag_link'
+  if(type_tag_name=='dataTags')variant_table_edit_tag='table_edit_tag_data'
   const tagSetting = (<>
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-    <FormLabel>{t('Tags.GE')}:</FormLabel>
-    <InputGroup>
-
-      <Form.Select
-        style={{width:'50%'}}
+    {t('Tags.GE')}:
+    <Box display='grid' gridTemplateColumns='2fr 1fr 1fr 1fr'>
+      <Select
+        variant='menuconfigpanel_option_select'
         onChange={
           (evt: React.ChangeEvent<HTMLSelectElement>) => {
             set_tags_group_key(evt.target.value)
@@ -165,59 +167,61 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               {data[type_tag_name][key].group_name}
             </option>
         )}
-      </Form.Select>
+      </Select>
 
       {/* Boutons des palettes de couleur  */}
-      <ButtonGroup style={{width:'25%'}}>
-        {/* Palette de couleur aléatoire  */}
-        <OverlayTrigger
-          key={'tags.tooltips.1'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'tags.tooltips.1'}>{t('Tags.tooltips.pal')} </Tooltip>}>
-          <Button variant="secondary" value='rand' 
-            size='sm'
-            onClick={()=>{
-              const color_selected=list_palette_color[GetRandomInt(list_palette_color.length)]
-              const size_color=Object.keys(data[type_tag_name][tags_group_key].tags).length
-              for(const i in d3.range(size_color)){
-                data[type_tag_name][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
+      {/* Palette de couleur aléatoire  */}
+      <OverlayTrigger
+        key={'tags.tooltips.1'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'tags.tooltips.1'}>{t('Tags.tooltips.pal')} </Tooltip>}>
+        <Button
+          backgroundColor='#9E9CFB'
+          value='rand' 
+          size='sm'
+          onClick={()=>{
+            const color_selected=list_palette_color[GetRandomInt(list_palette_color.length)]
+            const size_color=Object.keys(data[type_tag_name][tags_group_key].tags).length
+            for(const i in d3.range(size_color)){
+              data[type_tag_name][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
+            }
+            redrawGenereal()
+            setForceUpdate(!forceUpdate)
+          }}>
+          <FaPalette/>
+        </Button>
+      </OverlayTrigger>
+      {/* Melanger les couleur  */}
+      <OverlayTrigger
+        key={'tags.tooltips.2'}
+        placement={'top'}
+        delay={500}
+        overlay={<Tooltip id={'tags.tooltips.2'}>{t('Tags.tooltips.pal_shuffle')} </Tooltip>}>
+        <Button 
+          backgroundColor='#9CFBC5'
+          value='alea' 
+          size='sm'
+          onClick={()=>{
+            const color=element_tags.map(d=>{
+              return data[type_tag_name][tags_group_key].tags[d].color
+            })
+            let size_color=color.length
+            for(const i in d3.range(size_color)){
+              size_color=color.length
+              const color_to_select=GetRandomInt(size_color)
+              const c=color.splice(color_to_select,1)
+              if(c!=undefined && c!=null){
+                const v=c[0]
+                data[type_tag_name][tags_group_key].tags[element_tags[i]].color=v
               }
-              redrawGenereal()
-              setForceUpdate(!forceUpdate)
-            }}>
-            <FaPalette/>
-          </Button>
-        </OverlayTrigger>
-        {/* Melanger les couleur  */}
-        <OverlayTrigger
-          key={'tags.tooltips.2'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'tags.tooltips.2'}>{t('Tags.tooltips.pal_shuffle')} </Tooltip>}>
-          <Button variant="dark" value='alea' 
-            size='sm'
-            onClick={()=>{
-              const color=element_tags.map(d=>{
-                return data[type_tag_name][tags_group_key].tags[d].color
-              })
-              let size_color=color.length
-              for(const i in d3.range(size_color)){
-                size_color=color.length
-                const color_to_select=GetRandomInt(size_color)
-                const c=color.splice(color_to_select,1)
-                if(c!=undefined && c!=null){
-                  const v=c[0]
-                  data[type_tag_name][tags_group_key].tags[element_tags[i]].color=v
-                }
-              }
-              redrawGenereal()
-              setForceUpdate(!forceUpdate)
-            }}>
-            <FaRandom/>
-          </Button>
-        </OverlayTrigger>
-      </ButtonGroup>
+            }
+            redrawGenereal()
+            setForceUpdate(!forceUpdate)
+          }}>
+          <FaRandom/>
+        </Button>
+      </OverlayTrigger>
 
       {/* Palettes des couleurs standard */}
       <OverlayTrigger
@@ -225,8 +229,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
         placement={'top'}
         delay={500}
         overlay={<Tooltip id={'tags.tooltips.3'}>{t('Tags.tooltips.pal_std')} </Tooltip>}>
-        <Form.Select
-          style={{width:'25%'}}
+        <Select
+          variant='menuconfigpanel_option_select'
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
               data[type_tag_name][tags_group_key].color_map = evt.target.value
@@ -256,251 +260,275 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             (cur_colormap, i) =>
               <option key={i} value={cur_colormap}>{cur_colormap}</option>
           )}
-        </Form.Select>
+        </Select>
       </OverlayTrigger>
-    </InputGroup>
+    </Box>
 
     {/* Entete du Tableau des étiquettes  */}
-    <Table striped bordered hover responsive='sm' size='sm' className='node_tags_definition'>
-      <thead>
-        <tr>
-          <th>
-            {/* Bouton ajout d'une étiquette  */}
-            <OverlayTrigger
-              key={'tags.tooltips.4'}
-              placement={'top'}
-              delay={500}
-              overlay={<Tooltip id={'tags.tooltips.4'}>{t('Tags.tooltips.add')} </Tooltip>}>
-              <Button variant="success" value='+' onClick={handleAddTagButton}>
-                <FaPlus />
-              </Button>
-            </OverlayTrigger>
-          </th>
-          {/* Nom de l'étqiuette  */}
-          <th>
-            {t('Tags.Nom')}
-          </th>
-          {/* Etiquette visible  */}
-          { type_tag_name !== 'dataTags' ?
-            <th>
-              {t('Tags.Visible')}
-            </th>:<></>
-          }
-          <th>
-            {t('Tags.Couleur')}
-          </th>
-          { elementNameProp === 'nodes' ?
-            <th>
-              {t('Tags.Forme')}
-            </th>:<></>
-          }
-        </tr>
-      </thead>
+    <TableContainer>
+      <Table variant={variant_table_edit_tag} >
+        <Thead>
+          <Tr >
+            <Th>
+              {/* Bouton ajout d'une étiquette  */}
+              <OverlayTrigger
+                key={'tags.tooltips.4'}
+                placement={'top'}
+                delay={500}
+                overlay={<Tooltip id={'tags.tooltips.4'}>{t('Tags.tooltips.add')} </Tooltip>}>
+                <Button
+                  variant='menuconfigpanel_add_button'
+                  value='+' onClick={handleAddTagButton}>
+                  <FaPlus />
+                </Button>
+              </OverlayTrigger>
+            </Th>
+            {/* Nom de l'étqiuette  */}
+            <Th>
+              {t('Tags.Nom')}
+            </Th>
+            {/* Etiquette visible  */}
+            { type_tag_name !== 'dataTags' ?
+              <Th>
+                {t('Tags.Visible')}
+              </Th>:<></>
+            }
+            <Th>
+              {t('Tags.Couleur')}
+            </Th>
+            { elementNameProp === 'nodes' ?
+              <Th>
+                {t('Tags.Forme')}
+              </Th>:<></>
+            }
+          </Tr>
+        </Thead>
 
-      {/* Tableau des étqiuettes du groupe  */}
-      <tbody>
-        {element_tags.length > 0 ? element_tags.map(
-          (tag_key, i) => {
-            const tag_visible=data[type_tag_name][tags_group_key].tags[tag_key].selected
-            return (
-              <tr key={i.toString()}>
-                {/* Supprimer une etiquette  */}
-                <td style={{ 'width': '10%' }}>
-                  <OverlayTrigger
-                    key={'tags.tooltips.5'}
-                    placement={'top'}
-                    delay={500}
-                    overlay={<Tooltip id={'tags.tooltips.5'}>{t('Tags.tooltips.rm')} </Tooltip>}>
-                    <Button variant="danger" value='-' onClick={() => { handleDelTag(tag_key) }}>
-                      <FaMinus />
-                    </Button>
-                  </OverlayTrigger>
-                </td>
-                {/* Renommer l'étiquette  */}
-                {/* Met une largeur de cellue plus petite quand c'est les étiquettes de noeud car le tableau contient une colonne de plsu (forme) */}
-                <td style={{ 'width': elementNameProp==='nodes'?'33%':'60%' }}>
-                  <OverlayTrigger
-                    key={'tags.tooltips.6'}
-                    placement={'top'}
-                    delay={500}
-                    overlay={<Tooltip id={'tags.tooltips.6'}>{t('Tags.tooltips.nom')} </Tooltip>}>
-                    <FormControl
-                      id={i.toString()}
-                      type="text"
-                      value={data[type_tag_name][tags_group_key].tags[tag_key].name}
-                      onChange={
-                        (evt: React.ChangeEvent) => {
-                          const new_nb_element = evt.target as HTMLInputElement
-                          const name = new_nb_element.value
-                          data[type_tag_name][tags_group_key].tags[tag_key].name = name
-                          redrawGenereal()
-                          setForceUpdate(!forceUpdate)
-                        }
-                      }/>
-                  </OverlayTrigger>
-                </td>
-                {/* Rendre ou non visible  */}
-                { type_tag_name !== 'dataTags' ?
-                  <td style={{ 'width': '20%' }}>
+        {/* Tableau des étqiuettes du groupe  */}
+        <Tbody>
+          {element_tags.length > 0 ? element_tags.map(
+            (tag_key, i) => {
+              const tag_visible=data[type_tag_name][tags_group_key].tags[tag_key].selected
+              return (
+                <Tr key={i.toString()} > 
+                  {/* Supprimer une etiquette  */}
+                  <Td >
                     <OverlayTrigger
-                      key={'tags.tooltips.7'}
+                      key={'tags.tooltips.5'}
                       placement={'top'}
                       delay={500}
-                      overlay={<Tooltip id={'tags.tooltips.7'}>{t('Tags.tooltips.visible')} </Tooltip>}>
-                      <Button
-                        variant={tag_visible?'primary':'outline-primary'}
-                        name={'element_visible' + tag_key}
-                        id={tag_key}
-                        onClick={
-                          () => {
-                            const visible = !tag_visible
-                            data[type_tag_name][tags_group_key].tags[tag_key].selected = visible
+                      overlay={<Tooltip id={'tags.tooltips.5'}>{t('Tags.tooltips.rm')} </Tooltip>}>
+                      <Button size={'sm'}
+                        variant='menuconfigpanel_del_button_in_table' 
+                        value='-' onClick={() => { handleDelTag(tag_key) }}>
+                        <FaMinus />
+                      </Button>
+                    </OverlayTrigger>
+                  </Td>
+                  {/* Renommer l'étiquette  */}
+                  {/* Met une largeur de cellue plus petite quand c'est les étiquettes de noeud car le tableau contient une colonne de plsu (forme) */}
+                  <Td >
+                    <OverlayTrigger
+                      key={'tags.tooltips.6'}
+                      placement={'top'}
+                      delay={500}
+                      overlay={<Tooltip id={'tags.tooltips.6'}>{t('Tags.tooltips.nom')} </Tooltip>}>
+                      <InputGroup variant='menuconfigpanel_option_input_table' >
+                        <Input
+                          variant='menuconfigpanel_option_input_table'
+                          id={i.toString()}
+                          type="text"
+                          value={data[type_tag_name][tags_group_key].tags[tag_key].name}
+                          onChange={
+                            (evt: React.ChangeEvent) => {
+                              const new_nb_element = evt.target as HTMLInputElement
+                              const name = new_nb_element.value
+                              data[type_tag_name][tags_group_key].tags[tag_key].name = name
+                              redrawGenereal()
+                              setForceUpdate(!forceUpdate)
+                            }
+                          }/>
+                      </InputGroup>
+                    </OverlayTrigger>
+                  </Td>
+                  {/* Rendre ou non visible  */}
+                  { type_tag_name !== 'dataTags' ?
+                    <Td >
+                      <OverlayTrigger
+                        key={'tags.tooltips.7'}
+                        placement={'top'}
+                        delay={500}
+                        overlay={<Tooltip id={'tags.tooltips.7'}>{t('Tags.tooltips.visible')} </Tooltip>}>
+                        <Button
+                          variant='menuconfigpanel_option_btn_in_table'
+                          name={'element_visible' + tag_key}
+                          id={tag_key}
+                          onClick={
+                            () => {
+                              const visible = !tag_visible
+                              data[type_tag_name][tags_group_key].tags[tag_key].selected = visible
+                              redrawGenereal()
+                              setForceUpdate(!forceUpdate)
+                            }}>{tag_visible?<FaEye/>:<FaEyeSlash/>}</Button>
+                      </OverlayTrigger>
+
+                    </Td>:<></>
+                  }
+                  {/* Choix de la couleur*/}
+                  <Td >
+                    <OverlayTrigger
+                      key={'tags.tooltips.8'}
+                      placement={'top'}
+                      delay={500}
+                      overlay={<Tooltip id={'tags.tooltips.8'}>{t('Tags.tooltips.couleur')} </Tooltip>}>
+                      <Input padding= '0.25rem' width='revert' height='revert'
+                        type='color'
+                        value={data[type_tag_name][tags_group_key].tags[tag_key].color as string}
+                        onChange={
+                          evt => {
+                            data[type_tag_name][tags_group_key].tags[tag_key].color = evt.target.value
                             redrawGenereal()
                             setForceUpdate(!forceUpdate)
-                          }}>{tag_visible?<FaEye/>:<FaEyeSlash/>}</Button>
+                          }}/>
                     </OverlayTrigger>
-                  </td>:<></>
-                }
-                {/* Choix de la couleur*/}
-                <td style={{'width':type_tag_name !== 'dataTags'?'10%':'30%'}}>
-                  <OverlayTrigger
-                    key={'tags.tooltips.8'}
-                    placement={'top'}
-                    delay={500}
-                    overlay={<Tooltip id={'tags.tooltips.8'}>{t('Tags.tooltips.couleur')} </Tooltip>}>
-                    <Form.Control
-                      type="color"
-                      value={data[type_tag_name][tags_group_key].tags[tag_key].color as string}
-                      onChange={
-                        evt => {
-                          data[type_tag_name][tags_group_key].tags[tag_key].color = evt.target.value
-                          redrawGenereal()
-                          setForceUpdate(!forceUpdate)
-                        }}/>
-                  </OverlayTrigger>
-                </td>
-                <td>
+                  </Td>
                   {/* Chosir la forme du noeud  */}
                   { elementNameProp === 'nodes' ? (
-                    <OverlayTrigger
-                      key={'tags.tooltips.9'}
-                      placement={'top'}
-                      delay={500}
-                      overlay={<Tooltip id={'tags.tooltips.9'}>{t('Tags.tooltips.forme')} </Tooltip>}>
-                      <Form.Select
-                        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                          data[type_tag_name][tags_group_key].tags[tag_key].shape = evt.target.value
-                          redrawGenereal()
-                          setForceUpdate(!forceUpdate)
-                        }}
-                        value={data[type_tag_name][tags_group_key].tags[tag_key].shape as string}
-                      >
-                        <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
-                        <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
-                      </Form.Select>
-                    </OverlayTrigger>) :
+                    <Td>
+                      <OverlayTrigger
+                        key={'tags.tooltips.9'}
+                        placement={'top'}
+                        delay={500}
+                        overlay={<Tooltip id={'tags.tooltips.9'}>{t('Tags.tooltips.forme')} </Tooltip>}>
+                        <Select variant='menuconfigpanel_option_select_table'
+                          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                            data[type_tag_name][tags_group_key].tags[tag_key].shape = evt.target.value
+                            redrawGenereal()
+                            setForceUpdate(!forceUpdate)
+                          }}
+                          value={data[type_tag_name][tags_group_key].tags[tag_key].shape as string}
+                        >
+                          <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
+                          <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
+                        </Select>
+                      </OverlayTrigger>
+                    </Td>
+                  ) :
                     (<></>)
 
                   }
-                </td>
-              </tr>
-            )
-          }) : (<></>)}
-      </tbody>
-    </Table>
+                </Tr>
+              )
+            }) : (<></>)}
+        </Tbody>
+      </Table>
+    </TableContainer>
   </>
   )
 
   return (
-    <>
+    <Box layerStyle='menuconfigpanel_grid'>
       {/* Groupe d'étiquette  */}
-      <Table striped bordered hover className='node_group_tags_definition'>
-        {/* Entete du tableau de grouep d'etiquette  */}
-        <thead>
-          <tr>
-            {/* Ajouter un groupe */}
-            <th>
-              <OverlayTrigger
-                key={'tags.tooltips.10'}
-                placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tags.tooltips.10'}>{t('Tags.tooltips.add_grp')} </Tooltip>}>
-                <Button variant="success" onClick={handleAddTagGrpButton}>
-                  <FaPlus/>
-                </Button>
-              </OverlayTrigger>
-            </th>
-            {/* Autre entetes  */}
-            <th>{t('Tags.Nom')}</th>
-            <th>{t('Tags.Bannière')}</th>
-            {(type_tag_name!='dataTags')?<th>{t('Tags.Position')}</th>:<></>}
-          </tr>
-        </thead>
-        {/* Liste des groupes d'étiquettes  */}
-        <tbody>
-          {
-            Object.keys(data[type_tag_name]).map(
-              (tags_group_key, i) => {
-                return (
-                  <tr key={i.toString()}>
-                    {/* Suppression d'un groupe  */}
-                    <td style={{ 'width': '10%' }}>
-                      <OverlayTrigger
-                        key={'tags.tooltips.11'}
-                        placement={'top'}
-                        delay={500}
-                        overlay={<Tooltip id={'tags.tooltips.11'}>{t('Tags.tooltips.rm_grp')} </Tooltip>}>
-                        <Button variant="danger" onClick={() => handleDelGroupTag(tags_group_key)}>
-                          <FaMinus />
-                        </Button>
-                      </OverlayTrigger>
-                    </td>
-                    {/* Renommer le groupe d'étiquettes */}
-                    <td>
-                      <OverlayTrigger
-                        key={'tags.tooltips.12'}
-                        placement={'top'}
-                        delay={500}
-                        overlay={<Tooltip id={'tags.tooltips.12'}>{t('Tags.tooltips.nom_grp')} </Tooltip>}>
-                        <FormControl
-                          id={i.toString()}
-                          type="text"
-                          value={data[type_tag_name][tags_group_key].group_name}
-                          onChange={
-                            (evt: React.ChangeEvent) => {
-                              const new_name = (evt.target as HTMLInputElement).value
-                              data[type_tag_name][tags_group_key].group_name = new_name
-                              setForceUpdate(!forceUpdate)
-                            }}/>
-                      </OverlayTrigger>
-                    </td>
-                    {/* Banniere  */}
-                    <td>
-                      <OverlayTrigger
-                        key={'tags.tooltips.14'}
-                        placement={'top'}
-                        delay={500}
-                        overlay={<Tooltip id={'tags.tooltips.14'}>{t('Tags.tooltips.banner')} </Tooltip>}>
-                        <Form.Select onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
-                          value={data[type_tag_name][tags_group_key].banner}
-                        >
-                          {(type_tag_name!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Menu.Aucun')}</option>:<></>}
-                          <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
-                          <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
-                        </Form.Select>
-                      </OverlayTrigger>
-                    </td>
-                    {/* Monter ou descendre groupe d'étiquette  */}
-                    {(type_tag_name!='dataTags')?
-                      <td style={{ 'width': '10%' }}>
-                        <ButtonGroup className="button_position" size="sm">
+      <TableContainer>
+        <Table variant='table_edit_grp_tag_node_link'>
+          {/* Entete du tableau de grouep d'etiquette  */}
+          <Thead>
+            <Tr>
+              {/* Ajouter un groupe */}
+              <Th>
+                <OverlayTrigger
+                  key={'tags.tooltips.10'}
+                  placement={'top'}
+                  delay={500}
+                  overlay={<Tooltip id={'tags.tooltips.10'}>{t('Tags.tooltips.add_grp')} </Tooltip>}>
+                  <Button
+                    variant='menuconfigpanel_add_button'
+                    onClick={handleAddTagGrpButton}>
+                    <FaPlus/>
+                  </Button>
+                </OverlayTrigger>
+              </Th>
+              {/* Autre entetes  */}
+              <Th>{t('Tags.Nom')}</Th>
+              <Th>{t('Tags.Bannière')}</Th>
+              {(type_tag_name!='dataTags')?<Th>{t('Tags.Position')}</Th>:<></>}
+            </Tr>
+          </Thead>
+          {/* Liste des groupes d'étiquettes  */}
+          <Tbody>
+            {
+              Object.keys(data[type_tag_name]).map(
+                (tags_group_key, i) => {
+                  return (
+                    <Tr key={i.toString()}>
+                      {/* Suppression d'un groupe  */}
+                      <Td>
+                        <OverlayTrigger
+                          key={'tags.tooltips.11'}
+                          placement={'top'}
+                          delay={500}
+                          overlay={<Tooltip id={'tags.tooltips.11'}>{t('Tags.tooltips.rm_grp')} </Tooltip>}>
+                          <Button
+                            size={'sm'}
+                            variant='menuconfigpanel_del_button_in_table'
+                            onClick={() => handleDelGroupTag(tags_group_key)}>
+                            <FaMinus />
+                          </Button>
+                        </OverlayTrigger>
+                      </Td>
+                      {/* Renommer le groupe d'étiquettes */}
+                      <Td>
+                        <OverlayTrigger
+                          key={'tags.tooltips.12'}
+                          placement={'top'}
+                          delay={500}
+                          overlay={<Tooltip id={'tags.tooltips.12'}>{t('Tags.tooltips.nom_grp')} </Tooltip>}>
+                          <InputGroup variant='menuconfigpanel_option_input_table' >
+                            <Input
+                              variant='menuconfigpanel_option_input_table'
+                              id={i.toString()}
+                              type="text"
+                              value={data[type_tag_name][tags_group_key].group_name}
+                              onChange={
+                                (evt: React.ChangeEvent) => {
+                                  const new_name = (evt.target as HTMLInputElement).value
+                                  data[type_tag_name][tags_group_key].group_name = new_name
+                                  setForceUpdate(!forceUpdate)
+                                }}/>
+                          </InputGroup>
+                        </OverlayTrigger>
+                      </Td>
+                      {/* Banniere  */}
+                      <Td>
+                        <OverlayTrigger
+                          key={'tags.tooltips.14'}
+                          placement={'top'}
+                          delay={500}
+                          overlay={<Tooltip id={'tags.tooltips.14'}>{t('Tags.tooltips.banner')} </Tooltip>}>
+                          <Select
+                            variant='menuconfigpanel_option_select_table'
+                            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
+                            value={data[type_tag_name][tags_group_key].banner}
+                          >
+                            {(type_tag_name!='dataTags')?<option key={'none' + i} id='NoneBaner' value='none'>{t('Menu.Aucun')}</option>:<></>}
+                            <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
+                            <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
+                          </Select>
+                        </OverlayTrigger>
+                      </Td>
+                      {/* Monter ou descendre groupe d'étiquette  */}
+                      {(type_tag_name!='dataTags')?
+                        <Td>
                           {/* Monter le groupe d'étiquette */}
                           <OverlayTrigger
                             key={'tags.tooltips.15'}
                             placement={'top'}
                             delay={500}
                             overlay={<Tooltip id={'tags.tooltips.15'}>{t('Tags.tooltips.up')} </Tooltip>}>
-                            <Button variant="info" onClick={() => handleUpGrpTag(tags_group_key)}>
+                            <Button
+                              variant='menuconfigpanel_option_btn_in_table'
+                              borderRadius='6px 0px 0px 6px'        
+                              onClick={() => handleUpGrpTag(tags_group_key)}>
                               <FaArrowAltCircleUp />
                             </Button>
                           </OverlayTrigger>
@@ -510,21 +538,23 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             placement={'top'}
                             delay={500}
                             overlay={<Tooltip id={'tags.tooltips.16'}>{t('Tags.tooltips.down')} </Tooltip>}>
-                            <Button variant="info" onClick={() => handleDownGrpTag(tags_group_key)}>
+                            <Button 
+                              variant='menuconfigpanel_option_btn_in_table'
+                              borderRadius='0px 6px 6px 0px'        
+                              onClick={() => handleDownGrpTag(tags_group_key)}>
                               <FaArrowAltCircleDown />
                             </Button>
                           </OverlayTrigger>
-                        </ButtonGroup>
-                      </td>:<></>
-                    }
-                  </tr>
-                )
-              })
-          }
-        </tbody>
-      </Table>
+                        </Td>:<></>
+                      }
+                    </Tr>
+                  )
+                })
+            }
+          </Tbody>
+        </Table></TableContainer>
       {Object.keys(data[type_tag_name]).length > 0 ? tagSetting : <></>}
-    </>
+    </Box>
   )
 }
 

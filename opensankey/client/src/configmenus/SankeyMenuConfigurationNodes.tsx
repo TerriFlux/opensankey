@@ -460,7 +460,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                   })
                   setForceUpdate(!forceUpdate)
                 }}
-                disabled={(multi_selected_nodes.current.length == 1) ? false : true}
+                isDisabled={(multi_selected_nodes.current.length == 1) ? false : true}
               />
             </InputGroup>
           </OverlayTrigger>

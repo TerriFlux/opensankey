@@ -46,6 +46,18 @@ export const menuconfigpanel_option_input = definePartsStyle({
   }
 })
 
+export const menuconfigpanel_option_input_table = definePartsStyle({
+  addon: {
+    bg: 'grey.100',
+    bgColor: 'grey.100',
+  },
+  field: {
+    paddingLeft: '0.25rem',
+    paddingRight: '0.25rem',
+    height:'revert',
+  }
+})
+
 export const menuconfigpanel_option_input_color = definePartsStyle({
   field: {
     padding: '0.25rem'
