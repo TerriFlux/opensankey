@@ -113,3 +113,50 @@ export const menuconfigpanel_del_button = defineStyle({
     bgColor: 'red.200',
   },
 })
+
+// Style for button in table of tags  in config menu
+export const menuconfigpanel_option_btn_in_table = defineStyle({
+  height: '1.5rem',
+  width: '1.5rem',
+  textStyle: 'h4',
+  fontSize: '12px',
+  padding:0
+})
+
+// Style for delete button in table of tags in config menu
+export const menuconfigpanel_del_button_in_table = defineStyle({
+  height: '1.5rem',
+  width: '1.5rem',
+  borderRadius: '6px',
+  textStyle: 'h4',
+  fontSize: '12px',
+  padding:0,
+  bg: 'red.100',
+  bgColor: 'red.100',
+  _hover: {
+    bg: 'red.200',
+    bgColor: 'red.200',
+  },
+})
+
+// Style of button in the subnav (sub elements of file/Formatting/view/help ...) 
+export const submenu_nav_btn = defineStyle({
+  height: '2rem',
+  width: '2rem',
+  borderRadius: '0px',
+  textStyle: 'h4',
+  fontSize: '9px',
+  padding:'0.2rem 0.5rem',
+  border:'0px',
+  bg: 'inherit',
+  bgColor: 'inherit',
+  display: 'grid',
+  gridTemplateColumns: '2fr',
+  gridTemplateRows: '1.5fr 0.5fr',
+  gridColumnGap: '0.25rem',
+  gridRowGap: '0',
+  _hover: {
+    bg: 'inherit',
+    bgColor: 'inherit',
+  },
+})
