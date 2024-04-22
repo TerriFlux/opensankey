@@ -39,6 +39,7 @@
     "@babel/preset-typescript": "^7.16.7",
     "@chakra-ui/react": "^2.8.2",
     "@chakra-ui/anatomy": "^2.2.2",
+    "@chakra-ui/icons": "^2.1.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@fortawesome/fontawesome-svg-core": "^6.1.1",

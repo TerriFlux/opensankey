@@ -160,3 +160,27 @@ export const submenu_nav_btn = defineStyle({
     bgColor: 'inherit',
   },
 })
+
+// Style for menu list in the subnav
+export const submenu_nav_btn_dropdown = defineStyle({
+  height: '2.5rem',
+  width: '3.5rem',
+  borderRadius: '0px',
+  textStyle: 'h4',
+  fontSize: '9px',
+  padding:'0.2rem',
+  border:'0px',
+  bg: 'inherit',
+  bgColor: 'inherit',
+  _hover: {
+    bg: 'inherit',
+    bgColor: 'inherit',
+  },
+  span:{
+    display: 'grid',
+    gridTemplateColumns: '2fr',
+    gridTemplateRows: '1.5fr 0.5fr',
+    gridColumnGap: '0.25rem',
+    gridRowGap: '0',
+  }
+})
