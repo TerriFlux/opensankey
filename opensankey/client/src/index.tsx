@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import './css/bootstrap.css'
 import './css/main.css'
 import './css/colors/red.css'

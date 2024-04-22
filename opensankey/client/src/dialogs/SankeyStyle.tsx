@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { useState } from 'react'
 import {
   FaPlus,
