@@ -135,8 +135,8 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
         )
         )
     }
-    // When the mouse is in mode selection, it allow nodes to be dragged
-    if(ref_getter_mode_selection.current=='s' && window.SankeyToolsStatic!==true){
+    // allow nodes to be dragged
+    if(window.SankeyToolsStatic!==true){
       ggg_nodes.call(
         DragGNodeEvent(
           dict_variable_application_data,dict_variable_elements_selected,applicationContext,
