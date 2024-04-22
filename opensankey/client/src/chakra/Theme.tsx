@@ -17,7 +17,8 @@ import {
   menuconfigpanel_option_button,
   menuconfigpanel_option_btn_in_table,
   menuconfigpanel_del_button_in_table,
-  submenu_nav_btn
+  submenu_nav_btn,
+  submenu_nav_btn_dropdown
 } from './ButtonStyles'
 import {
   checkbox_base_style,
@@ -25,12 +26,20 @@ import {
   menuconfigpanel_option_checkbox,
   menuconfigpanel_tag_checkbox
 } from './CheckboxStyles'
+import { 
+  drawer_base_style, 
+  drawer_menu_config 
+} from './DrawerStyles'
 import {
   input_base_style,
   menuconfigpanel_option_input,
   menuconfigpanel_option_input_color,
   menuconfigpanel_option_input_table
 } from './InputStyles'
+import { 
+  menu_button_base_style, 
+  menu_button_subnav_style 
+} from './MenuStyles'
 import {
   numberinput_base_style,
   menuconfigpanel_option_numberinput,
@@ -51,10 +60,6 @@ import {
 import {
   textarea_base_style
 } from './TextAreaStyles'
-import { 
-  drawer_base_style, 
-  drawer_menu_config 
-} from './DrawerStyles'
 import {
   table_edit_tag_node,
   table_base_style,
@@ -84,7 +89,8 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_button,
         menuconfigpanel_option_btn_in_table,
         menuconfigpanel_del_button_in_table,
-        submenu_nav_btn
+        submenu_nav_btn,
+        submenu_nav_btn_dropdown
       }
     },
     Checkbox: {
@@ -101,6 +107,12 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_input,
         menuconfigpanel_option_input_color,
         menuconfigpanel_option_input_table
+      }
+    },
+    Menu:{
+      baseStyle:menu_button_base_style,
+      variants:{
+        menu_button_subnav_style
       }
     },
     NumberInput: {
