@@ -38,3 +38,14 @@ export const menuconfigpanel_option_select = definePartsStyle({
     borderColor: 'grey.50',
   }
 })
+
+// Style of selector in table of tags
+export const menuconfigpanel_option_select_table = definePartsStyle({
+  field: {
+    paddingLeft:'0.25rem',
+    height: 'revert',
+    border: 'solid 1px',
+    borderRadius: '6px',
+    borderColor: 'grey.50',
+  }
+})

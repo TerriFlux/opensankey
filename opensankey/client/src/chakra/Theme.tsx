@@ -15,6 +15,9 @@ import {
   menuconfigpanel_option_button_left,
   menuconfigpanel_option_button_right,
   menuconfigpanel_option_button,
+  menuconfigpanel_option_btn_in_table,
+  menuconfigpanel_del_button_in_table,
+  submenu_nav_btn
 } from './ButtonStyles'
 import {
   checkbox_base_style,
@@ -26,6 +29,7 @@ import {
   input_base_style,
   menuconfigpanel_option_input,
   menuconfigpanel_option_input_color,
+  menuconfigpanel_option_input_table
 } from './InputStyles'
 import {
   numberinput_base_style,
@@ -35,7 +39,8 @@ import {
 import {
   select_base_style,
   select_custom_style,
-  menuconfigpanel_option_select
+  menuconfigpanel_option_select,
+  menuconfigpanel_option_select_table
 } from './SelectStyles'
 import {
   slider_base_style
@@ -46,7 +51,12 @@ import {
 import {
   textarea_base_style
 } from './TextAreaStyles'
-
+import {table_edit_tag_node,
+  table_base_style,
+  table_edit_tag_link,
+  table_edit_tag_data,
+  table_edit_grp_tag_node_link
+} from './TableStyle'
 export const opensankey_theme = extendTheme({
   components: {
     Accordion: {
@@ -66,6 +76,9 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_button_left,
         menuconfigpanel_option_button_right,
         menuconfigpanel_option_button,
+        menuconfigpanel_option_btn_in_table,
+        menuconfigpanel_del_button_in_table,
+        submenu_nav_btn
       }
     },
     Checkbox: {
@@ -81,6 +94,7 @@ export const opensankey_theme = extendTheme({
       variants: {
         menuconfigpanel_option_input,
         menuconfigpanel_option_input_color,
+        menuconfigpanel_option_input_table
       }
     },
     NumberInput: {
@@ -94,7 +108,8 @@ export const opensankey_theme = extendTheme({
       baseStyle: select_base_style,
       variants: {
         select_custom_style,
-        menuconfigpanel_option_select
+        menuconfigpanel_option_select,
+        menuconfigpanel_option_select_table
       }
     },
     Slider: {
@@ -102,6 +117,14 @@ export const opensankey_theme = extendTheme({
     },
     Tabs: {
       baseStyle: tabs_base_style,
+    },
+    Table:{
+      baseStyle:table_base_style,
+      variants:{table_edit_tag_node,
+        table_edit_tag_link,
+        table_edit_tag_data,
+        table_edit_grp_tag_node_link
+      }
     },
     TextArea: {
       baseStyle: textarea_base_style
