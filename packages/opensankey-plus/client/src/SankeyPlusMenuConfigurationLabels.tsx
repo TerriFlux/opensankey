@@ -1,13 +1,10 @@
 // Standard libs
 import React, { Ref, useState, ChangeEvent, FunctionComponent } from 'react'
 import {
-  Row,
   Form,
   FormControl,
-  Button,
   OverlayTrigger,
   Tooltip,
-  InputGroup,
   Popover,
   ButtonGroup,
   Badge
@@ -26,7 +23,15 @@ import {
   AccordionPanel,
   AccordionIcon,
   Box,
-  Checkbox
+  Checkbox,
+  Button,
+  InputGroup,
+  Input,
+  NumberInput,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInputField,
+  NumberInputStepper
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
@@ -141,37 +146,40 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   //Renvoie le menue déroulant pour la sélection des labels libres
   const dropdownMultiLabel = () => {
     const DD = (
-      <div id='DD_multi_label' style={{
-        color:(!is_activated)?'#666666':'',
-        backgroundColor:(!is_activated)?'#cccccc':'',
-        width:'60%',zIndex:'3'}}
+      <Box
+        layerStyle='submenuconfig_droplist'
       >
-        <MultiSelect
-          disabled={!is_activated}
-          valueRenderer={(selected: selected_type[]) => {
-            return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
-          }}
-          options={INITIAL_OPTIONS_label}
-          value={selected_label}
-          overrideStrings={{
-            'selectAll': 'Tout sélectionner',
-          }}
-          onChange={(selected: [{ label: string, value: string }]) => {
-            const new_sel = selected.map(d => d.value)
-            const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
-            multi_selected_label.current = m_s
-            reDrawPlusLabels(multi_selected_label.current)
-            if(multi_selected_label.current.length>0){
-              const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
-              d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(tmp))
-            }else{
-              d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
-            }
-            updateComponentMenuConfigZdt.current.forEach(f=>f())
-          }}
-          labelledBy={'hello'}
-        />
-      </div>)
+        {/* Position custom pour MultiSelect */}
+        <Box
+          height='2rem'
+          width='10rem'
+        >
+          <MultiSelect
+            disabled={!is_activated}
+            valueRenderer={(selected: selected_type[]) => {
+              return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
+            }}
+            options={INITIAL_OPTIONS_label}
+            value={selected_label}
+            overrideStrings={{
+              'selectAll': 'Tout sélectionner',
+            }}
+            onChange={(selected: [{ label: string, value: string }]) => {
+              const new_sel = selected.map(d => d.value)
+              const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
+              multi_selected_label.current = m_s
+              reDrawPlusLabels(multi_selected_label.current)
+              if(multi_selected_label.current.length>0){
+                const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
+                d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(tmp))
+              }else{
+                d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+              }
+              updateComponentMenuConfigZdt.current.forEach(f=>f())
+            }}
+            labelledBy={'hello'}
+          />
+        </Box></Box>)
     return DD
   }
 
@@ -260,7 +268,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
-  const editor_fo = <ReactQuill
+  const editor_fo = <Box as='span'><ReactQuill
     className='quill_editor'
     value={s_editor_content_fo_zdt}
     ref={r_editor_ZDT}
@@ -282,7 +290,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     style={{
       color:(disable_options)?'#666666':'',
       backgroundColor:(disable_options)?'#cccccc':''}}
-  />
+  /></Box>
 
   const content_wysiwyg = <Form>
     <Form className='FO_zdt_editeur'>
@@ -291,7 +299,6 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       </Form.Group>
       <Form.Control type='text' isInvalid={isQuill_invalid} style={{display:'none'}}/>
       <FormControl.Feedback type='invalid'>{t('MEP.onBlurNoEnter')}</FormControl.Feedback>
-
     </Form>
   </Form>
 
@@ -303,15 +310,13 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       delay={500}
       overlay={(!disable_options)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
     >
-      <InputGroup>
-        <InputGroup.Text
-          style={{
-            color:(disable_options)?'#666666':'',
-            backgroundColor:(disable_options)?'#cccccc':'',
-            width:'40%'}}
-        >
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
           {t('Noeud.img_src')}
-        </InputGroup.Text>
+        </Box>
 
         <Form.Control
           accept='image/*'
@@ -336,312 +341,328 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           }}
         />
 
-      </InputGroup>
+      </Box>
     </OverlayTrigger>
   </>
 
-  const content_menu_zdt=<>
-    <Form.Group as={Row}>
-      <InputGroup>
-        <Button size="sm"
-          style={{width:'10%'}}
-          disabled={!is_activated}
-          className='btn_menu_config'
-          variant={is_activated?'outline-primary':'primary'}
-          onClick={() => {
+  const content_menu_zdt= <Box layerStyle='menuconfigpanel_grid'>
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_zdt_row_droplist'
+    >
+      <Button
+        isDisabled={!is_activated}
+        variant='menuconfigpanel_add_button'
+        onClick={() => {
 
-            let idZdt = Object.keys(data.labels).length
-            const tab_title=Object.values(data.labels).map(zdt=>zdt.title)
-            while (tab_title.includes('Zone de texte '+idZdt) ) {
-              idZdt = idZdt+1
-            }
-            const new_label = {
-              idLabel: 'label_' + String(new Date().getTime()),
-              title:'Zone de texte '+idZdt,
-              content: 'Text Label ...',
-              label_width: 100,
-              label_height: 25,
-              color: 'white',
-              color_border: 'black',
-              opacity: 100,
-              transparent_border: false,
+          let idZdt = Object.keys(data.labels).length
+          const tab_title=Object.values(data.labels).map(zdt=>zdt.title)
+          while (tab_title.includes('Zone de texte '+idZdt) ) {
+            idZdt = idZdt+1
+          }
+          const new_label = {
+            idLabel: 'label_' + String(new Date().getTime()),
+            title:'Zone de texte '+idZdt,
+            content: 'Text Label ...',
+            label_width: 100,
+            label_height: 25,
+            color: 'white',
+            color_border: 'black',
+            opacity: 100,
+            transparent_border: false,
 
-              is_image:false,
-              image_src:'',
-              x: 50,
-              y: 50,
-            }
-            data.labels[new_label.idLabel] = new_label
-            multi_selected_label.current = [new_label]
+            is_image:false,
+            image_src:'',
+            x: 50,
+            y: 50,
+          }
+          data.labels[new_label.idLabel] = new_label
+          multi_selected_label.current = [new_label]
             
+          reDrawPlusLabels(multi_selected_label.current)
+          setForceUpdate(!forceUpdate)
+        }
+        }><FaPlus /></Button>
+
+      {dropdownMultiLabel()}
+
+      <Button
+        variant='menuconfigpanel_del_button'
+        isDisabled={disable_options}
+        onClick={() => {
+          deleteGLabel(multi_selected_label.current,d_setter_input_value)
+          data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
+          multi_selected_label.current = []
+          updateComponentMenuConfigZdt.current.forEach(f=>f())
+        }
+        }><FaMinus /></Button>
+
+      {//Boutton pour monter le label sélctionné
+      }
+
+      <Button
+        variant='menuconfigpanel_option_button'
+        isDisabled={disable_options}
+        onClick={() => {
+          multi_selected_label.current.map(l => {
+            handleDownlabel(l.idLabel)
+          })
+        }}><FaAngleUp /></Button>
+
+      <Button
+        variant='menuconfigpanel_option_button'
+        isDisabled={disable_options}
+        onClick={() => {
+          multi_selected_label.current.map(l => {
+            handleUplabel(l.idLabel)
+          })
+        }}><FaAngleDown /></Button>
+      
+    </Box>
+
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+      gridTemplateColumns='1fr 9fr'
+    >
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        textStyle='h3'
+      >
+        {t('LL.title')}
+      </Box>
+      <InputGroup
+        variant='menuconfigpanel_option_input'
+      >
+        <Input
+          variant='menuconfigpanel_option_input'
+          max={100}
+          disabled={disable_options}
+          style={{
+            color:(disable_options)?'#666666':'',
+            backgroundColor:(disable_options)?'#cccccc':''}}
+          value={allLabelTitle()}
+          onChange={evt => {
+            const value=evt.target.value
+            multi_selected_label.current.map(d => d.title = value)
+            setForceUpdate(!forceUpdate)
+          }}
+        />
+      </InputGroup>
+    </Box>
+
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Noeud.illustration_type')}
+      </Box>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Button
+          isDisabled={disable_options}
+          variant='menuconfigpanel_option_button'
+          onClick={() => {
+            Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
+              .forEach(n=>n.is_image=false)
+            set_button_icon_or_image('zdt')
             reDrawPlusLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
-          }
-          }><FaPlus /></Button>
-
-        {dropdownMultiLabel()}
-
-        <Button size="sm"
-          style={{width:'10%'}}
-          className='btn_menu_config'
-          variant={disable_options?'outline-primary':'primary'}
-          disabled={disable_options}
-          onClick={() => {
-            deleteGLabel(multi_selected_label.current,d_setter_input_value)
-            data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
-            multi_selected_label.current = []
-            updateComponentMenuConfigZdt.current.forEach(f=>f())
-          }
-          }><FaMinus /></Button>
-
-        {//Boutton pour monter le label sélctionné
-        }
+          }}>Texte</Button>
 
         <Button
-          style={{width:'10%'}}
-          className='btn_menu_config'
-          variant={disable_options?'primary':'outline-primary'}
           disabled={disable_options}
+          variant='menuconfigpanel_option_button'
           onClick={() => {
-            multi_selected_label.current.map(l => {
-              handleDownlabel(l.idLabel)
-            })
-          }}><FaAngleUp /></Button>
 
-        <Button
-          style={{width:'10%'}}
-          className='btn_menu_config'
-          variant={disable_options?'primary':'outline-primary'}
-          disabled={disable_options}
-          onClick={() => {
-            multi_selected_label.current.map(l => {
-              handleUplabel(l.idLabel)
-            })
-          }}><FaAngleDown /></Button>
-      </InputGroup>
-    </Form.Group>
+            Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
+              .forEach(n=>n.is_image=true)
 
-    <InputGroup>
-      <InputGroup.Text
-        style={{
-          color:(disable_options)?'#666666':'',
-          backgroundColor:(disable_options)?'#cccccc':'',
-          width:'20%'}}>
-        {t('LL.title')}
-      </InputGroup.Text>
-      <Form.Control
-        type='text'
-        max={100}
-        disabled={disable_options}
-        style={{
-          color:(disable_options)?'#666666':'',
-          backgroundColor:(disable_options)?'#cccccc':''}}
-        value={allLabelTitle()}
-        onChange={evt => {
-          const value=evt.target.value
-          multi_selected_label.current.map(d => d.title = value)
-          setForceUpdate(!forceUpdate)
-        }}
-      />
-    </InputGroup>
+            set_button_icon_or_image('image')
+            reDrawPlusLabels(multi_selected_label.current)
+            setForceUpdate(!forceUpdate)
 
-    <InputGroup key={'node_illustration_type'} >
-      <InputGroup.Text style={{width:'40%',
-        color:(disable_options)?'#666666':'',
-        backgroundColor:(disable_options)?'#cccccc':'',
-      }}>
-        {t('Noeud.illustration_type')}
-      </InputGroup.Text>
-      <Button
-        disabled={disable_options}
-        className='btn_menu_config'
-        style={{width:'30%'}}
-        variant={button_icon_or_image==='zdt'?'primary':'outline-primary'}
-        onClick={() => {
-          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
-            .forEach(n=>n.is_image=false)
-          set_button_icon_or_image('zdt')
-          reDrawPlusLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
-        }}>Texte</Button>
-
-      <Button
-        disabled={disable_options}
-        className='btn_menu_config'
-        style={{width:'30%'}}
-        variant={button_icon_or_image==='image'?'primary':'outline-primary'}
-        onClick={() => {
-
-          Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
-            .forEach(n=>n.is_image=true)
-
-          set_button_icon_or_image('image')
-          reDrawPlusLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
-
-        }}>Image</Button>
-    </InputGroup>
+          }}>Image</Button></Box>
+    </Box>
 
     {button_icon_or_image==='zdt'?content_wysiwyg:content_image}
 
-    <InputGroup>
-      <InputGroup.Text
-        style={{
-          color:(disable_options)?'#666666':'',
-          backgroundColor:(disable_options)?'#cccccc':'',
-          width:'20%'}}>
-        {t('LL.hl')}</InputGroup.Text>
-      <FormControl
-        style={{
-          color:(disable_options)?'#666666':'',
-          backgroundColor:(disable_options)?'#cccccc':'',
-          width:'30%'}}
-        min={0}
-        max={1000}
-        disabled={disable_options}
-        type={'number'}
-        value={allLabelHeight()}
-        onChange={evt => {
-          multi_selected_label.current.map(d => d.label_height = +evt.target.value)
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('LL.hl')}
+        </Box>
+        <InputGroup
+          variant='menuconfigpanel_option_input'
+        >
+          <NumberInput
+            variant='menuconfigpanel_option_numberinput_with_right_addon'
+            min={0}
+            max={1000}
+            isDisabled={disable_options}
+            value={allLabelHeight()}
+            onChange={evt => {
+              multi_selected_label.current.map(d => d.label_height = +evt)
           
-          reDrawPlusLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
-        }}
-      />
-
-      <InputGroup.Text
-        style={{
-          color:(disable_options)?'#666666':'',
-          backgroundColor:(disable_options)?'#cccccc':'',
-          width:'20%'}}>
-        {t('LL.ll')}
-      </InputGroup.Text>
-      <FormControl
-        style={{
-          color:(disable_options)?'#666666':'',
-          backgroundColor:(disable_options)?'#cccccc':'',
-          width:'30%'}}
-        min={0}
-        max={1000}
-        type={'number'}
-        disabled={disable_options}
-        value={allLabelWidth()}
-        onChange={evt => {
-          multi_selected_label.current.map(d => d.label_width = +evt.target.value)
+              reDrawPlusLabels(multi_selected_label.current)
+              setForceUpdate(!forceUpdate)
+            }}
+          >
+            <NumberInputField/>
+            <NumberInputStepper>
+              <NumberIncrementStepper/>
+              <NumberDecrementStepper/>
+            </NumberInputStepper>
+          </NumberInput></InputGroup>
+      </Box>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('LL.ll')}
+        </Box>
+        <InputGroup
+          variant='menuconfigpanel_option_input'
+        >
+          <NumberInput
+            variant='menuconfigpanel_option_numberinput'
+            min={0}
+            max={1000}
+            isDisabled={disable_options}
+            value={allLabelWidth()}
+            onChange={evt => {
+              multi_selected_label.current.map(d => d.label_width = +evt)
           
-          reDrawPlusLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
-        }}
-      />
-    </InputGroup>
+              reDrawPlusLabels(multi_selected_label.current)
+              setForceUpdate(!forceUpdate)
+            }}
+          >
+            <NumberInputField/>
+            <NumberInputStepper>
+              <NumberIncrementStepper/>
+              <NumberDecrementStepper/>
+            </NumberInputStepper>
+          </NumberInput>
+        </InputGroup>
+      </Box>
+    </Box>
 
-    <InputGroup>
-      <InputGroup.Text
-        style={{
-          color:disable_options?'#666666':'',
-          backgroundColor:disable_options?'#cccccc':'',
-          width:'30%'}}>
-        {t('LL.cfl')}
-      </InputGroup.Text>
-      <Form.Label
-        htmlFor="form_color_zdt"
-        style={{
-          width:'20%',
-          background:(is_activated && (multi_selected_label.current.length === 1)) ? multi_selected_label.current[0].color : '#cccccc',
-          border:'1px solid #ced4da',
-        }}/>
-      <FormControl size='sm'
-        type='color'
-        id='form_color_zdt'
-        name='form_color_zdt'
-        disabled={disable_options}
-        style={{display:'none'}}
-        value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
-        onChange={evt => {
-          const val = evt.target.value
-          multi_selected_label.current.map(d => d.color = val)
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('LL.cfl')}
+        </Box>
+        <Input
+          variant='menuconfigpanel_option_input_color'
+          type='color'
+          id='form_color_zdt'
+          name='form_color_zdt'
+          isDisabled={disable_options}
+          value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color : '#ffffff'}
+          onChange={evt => {
+            const val = evt.target.value
+            multi_selected_label.current.map(d => d.color = val)
           
-          reDrawPlusLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
-        }}
-      />
-
-      <InputGroup.Text
-        style={{
-          color:disable_options?'#666666':'',
-          backgroundColor:disable_options?'#cccccc':'',
-          width:'30%'}}>
-        {t('LL.ft')}
-      </InputGroup.Text>
-      <Form.Control
-        style={{
-          color:disable_options?'#666666':'',
-          backgroundColor:disable_options?'#cccccc':'',
-          width:'20%'}}
-        type='number'
-        max={100}
-        min={0}
-        step={1}
-        disabled={disable_options}
-        value={allLabelTransparent()}
-        onChange={evt => {
-          const value=+evt.target.value
-          multi_selected_label.current.map(d => d.opacity = value)
+            reDrawPlusLabels(multi_selected_label.current)
+            setForceUpdate(!forceUpdate)
+          }}
+        />
+      </Box>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('LL.ft')}
+        </Box>
+        <InputGroup
+          variant='menuconfigpanel_option_input'
+        >
+          <NumberInput
+            variant='menuconfigpanel_option_numberinput_with_right_addon'
+            max={100}
+            min={0}
+            step={1}
+            isDisabled={disable_options}
+            value={allLabelTransparent()}
+            onChange={evt => {
+              const value=+evt
+              multi_selected_label.current.map(d => d.opacity = value)
           
-          reDrawPlusLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
-        }}
-      />
-    </InputGroup>
+              reDrawPlusLabels(multi_selected_label.current)
+              setForceUpdate(!forceUpdate)
+            }}
+          >
+            <NumberInputField/>
+            <NumberInputStepper>
+              <NumberIncrementStepper/>
+              <NumberDecrementStepper/>
+            </NumberInputStepper>
+          </NumberInput>
+        </InputGroup>
+      </Box>
+    </Box>
 
-    <InputGroup>
-      <InputGroup.Text
-        style={{
-          color:disable_options?'#666666':'',
-          backgroundColor:disable_options?'#cccccc':'',
-          width:'30%'}}>
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box layerStyle='menuconfigpanel_option_name'>
         {t('LL.cbl')}
-      </InputGroup.Text>
-      <Form.Label
-        htmlFor="form_color_border_zdt"
-        style={{
-          width:'20%',
-          background:(is_activated && (multi_selected_label.current.length === 1)) ? multi_selected_label.current[0].color_border : '#cccccc',
-          border:'1px solid #ced4da',
-        }}/>
-      <FormControl size='sm'
-        type='color'
-        style={{display:'none'}}
-        id='form_color_border_zdt'
-        name='form_color_border_zdt'
-        disabled={!is_activated && !valAllLabelBorderTransparent }
-        value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
-        onChange={evt => {
-          const val = evt.target.value
-          multi_selected_label.current.map(d => d.color_border = val)
+      </Box>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Input
+          variant='menuconfigpanel_option_input_color'
+          type='color'
+          id='form_color_border_zdt'
+          name='form_color_border_zdt'
+          disabled={!is_activated && !valAllLabelBorderTransparent }
+          value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
+          onChange={evt => {
+            const val = evt.target.value
+            multi_selected_label.current.map(d => d.color_border = val)
           
-          reDrawPlusLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
-        }}
-      />
+            reDrawPlusLabels(multi_selected_label.current)
+            setForceUpdate(!forceUpdate)
+          }}
+        />
 
-      <Checkbox
-        sx={SmoothClasses({})}
-        maxW={'50%'}
-        iconColor={valAllLabelBorderTransparent[1]?'#78C2AD':'white'}
-        isDisabled={disable_options}
-        isIndeterminate={valAllLabelBorderTransparent[1]}
-        isChecked={valAllLabelBorderTransparent[0]}
-        onChange={(evt) => {
-          multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
+        <Checkbox
+          variant='menuconfigpanel_part_title_1_checkbox'
+          iconColor={valAllLabelBorderTransparent[1]?'#78C2AD':'white'}
+          isDisabled={disable_options}
+          isIndeterminate={valAllLabelBorderTransparent[1]}
+          isChecked={valAllLabelBorderTransparent[0]}
+          onChange={(evt) => {
+            multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
           
-          reDrawPlusLabels(multi_selected_label.current)
-          setForceUpdate(!forceUpdate)
-        }}>
-        {t('LL.bt')}
-      </Checkbox>
-    </InputGroup>
-  </>
+            reDrawPlusLabels(multi_selected_label.current)
+            setForceUpdate(!forceUpdate)
+          }}>
+          {t('LL.bt')}
+        </Checkbox>
+      </Box>
+    </Box>
+  </Box>
 
   return content_menu_zdt
 }
