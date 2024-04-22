@@ -12,7 +12,7 @@ import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
-import { Checkbox } from '@chakra-ui/react'
+import { Box, Checkbox,Button as ChakraButton } from '@chakra-ui/react'
 import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
@@ -714,21 +714,20 @@ export type ExcelModalTypes = {
 export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,dict_hook_ref_setter_show_dialog_components,Reinitialization,pointer_pos }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
   const content =<>
-    <Form>
-      <Form.Group as={Row}>
-        <Form.Label>{t('Menu.input_file_excel')}</Form.Label>
-        <Form.Control
-          type="file"
-          onChange={(evt: ChangeEvent) => {
-            set_input_file_name((evt.target as HTMLFormElement).files[0])
-          }}
-        />
-      </Form.Group>
-    </Form>
+    <Box>
+      {t('Menu.input_file_excel')}
+      <Form.Control
+        type="file"
+        onChange={(evt: ChangeEvent) => {
+          set_input_file_name((evt.target as HTMLFormElement).files[0])
+        }}
+      />
+    </Box>
 
-    <Modal.Footer>
-      <Button
-        variant="secondary"
+    <Box layerStyle='menuconfigpanel_row_2cols'>
+      <Box></Box>
+      <ChakraButton
+        variant="menuconfigpanel_option_button"
         onClick={
           () => {
             Reinitialization()
@@ -738,12 +737,9 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
             )
           }
         }
-      >{t('Menu.ouvrir')}</Button>
-      <Button
-        variant="secondary"
-        onClick={()=>dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current(false)}
-      >{t('Menu.ca')}</Button>
-    </Modal.Footer>
+      >{t('Menu.ouvrir')}</ChakraButton>
+    
+    </Box>
   </>
   return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_excel_dialog',content,pointer_pos,t('Menu.open_excel_file'))
 
