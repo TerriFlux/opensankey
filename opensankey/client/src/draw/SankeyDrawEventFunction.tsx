@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import {
   ReturnValueLink,
@@ -105,7 +106,7 @@ export const EventNodeClick : EventNodeClickFType =(
     ) {
       nodes_accordion_ref.current.click()
     }
-
+    
     d3.select(' .opensankey #ggg_' + d.idNode + ' rect')
       .style('stroke-width', d => {
         const dd = (d as SankeyNode)
@@ -272,7 +273,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
   const { data } = dict_variable_application_data
   const { ref_getter_mode_selection, first_selected_node } = dict_variable_elements_selected
   closeAllMenuContext()
-  const evt2=evt as unknown as {target:string,ctrlKey:boolean,metaKey:boolean,which:number}
+  const evt2=evt as unknown as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
   if (evt.which == 1) {
@@ -523,7 +524,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       }
     } else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt_recast).attr('class') != 'node node_shape') {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
-      Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
+      Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)  
       //Création second noeud
       const new_node1 = DefaultNode(data)
       let idNode = Object.keys(data.nodes).length
@@ -608,7 +609,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       OpenLinksMenu()
       // Deselect old selected links to then only select the new one
       Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
-
+      
       first_selected_node.current = undefined
       dict_variable_application_data.display_nodes[n_node.idNode]=n_node
       dict_variable_application_data.display_links[n_link.idLink]=n_link

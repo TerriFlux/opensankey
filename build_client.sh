@@ -11,7 +11,9 @@ exit_if_error() {
 
 # Front-end build
 cd opensankey/client
-npm install || exit_if_error $?
+npm install --legacy-peer-deps || exit_if_error $?
+npm link --legacy-peer-deps sankeyanimation || exit_if_error $?
 npm run lint || exit_if_error $?
 CI= npm run build || exit_if_error $?
+rm -rf node_modules
 cd ../..
