@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { FunctionComponent } from 'react'
 
 import { Form,  Button, ButtonGroup, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
@@ -57,10 +58,10 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
             ComponentUpdater.updateComponentMenuConfig.current()
           }}
         >Mode Expert</Button>
-
+      
       </ButtonGroup>,
       <InputGroup>
-        <Checkbox
+        <Checkbox 
           sx={SmoothClasses({})}
           isChecked={data.accordeonToShow.includes('MEP')}
           onChange={() => {
@@ -73,7 +74,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </InputGroup>,
 
       <InputGroup>
-        <Checkbox
+        <Checkbox 
           sx={SmoothClasses({})}
           isChecked
           disabled
@@ -83,7 +84,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </InputGroup>,
 
       <InputGroup>
-        <Checkbox
+        <Checkbox 
           sx={SmoothClasses({})}
           isChecked={data.accordeonToShow.includes('EN')}
           onChange={() => {
@@ -96,7 +97,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </InputGroup>,
 
       <InputGroup>
-        <Checkbox
+        <Checkbox 
           sx={SmoothClasses({})}
           isChecked
           disabled
@@ -106,7 +107,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </InputGroup>,
 
       <InputGroup>
-        <Checkbox
+        <Checkbox 
           sx={SmoothClasses({})}
           isChecked={data.accordeonToShow.includes('EF')}
           onChange={() => {
@@ -119,7 +120,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
       </InputGroup>,
 
       <InputGroup>
-        <Checkbox
+        <Checkbox 
           sx={SmoothClasses({})}
           isChecked={data.accordeonToShow.includes('ED')}
           onChange={() => {
@@ -140,12 +141,12 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         <Form.Control type='text' value={data.node_label_separator} onChange={(evt)=>{
           data.node_label_separator=evt.target.value
           ComponentUpdater.updateComponentMenuConfig.current()
-
+            
 
         }}></Form.Control>
       </InputGroup></OverlayTrigger>,
 
-
+    
 
 
   }
