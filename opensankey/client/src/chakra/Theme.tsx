@@ -51,12 +51,18 @@ import {
 import {
   textarea_base_style
 } from './TextAreaStyles'
-import {table_edit_tag_node,
+import { 
+  drawer_base_style, 
+  drawer_menu_config 
+} from './DrawerStyles'
+import {
+  table_edit_tag_node,
   table_base_style,
   table_edit_tag_link,
   table_edit_tag_data,
   table_edit_grp_tag_node_link
 } from './TableStyle'
+
 export const opensankey_theme = extendTheme({
   components: {
     Accordion: {
@@ -128,6 +134,12 @@ export const opensankey_theme = extendTheme({
     },
     TextArea: {
       baseStyle: textarea_base_style
+    },
+    Drawer:{
+      baseStyle:drawer_base_style,
+      variants:{
+        drawer_menu_config
+      }
     }
   },
   layerStyles: {
