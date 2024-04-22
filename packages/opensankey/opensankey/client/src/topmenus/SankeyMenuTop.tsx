@@ -14,7 +14,6 @@ import {
   Modal,
   Nav,
   Navbar,
-  Offcanvas,
   OverlayTrigger,
   Row,
   Spinner,
@@ -54,6 +53,7 @@ import { actualizeDrawAreaFrame } from '../draw/SankeyDrawEventFunction'
 import { faFileExport} from '@fortawesome/free-solid-svg-icons'
 import FileSaver from 'file-saver'
 import { AddDrawNodesEvent } from '../draw/SankeyDrawNodes'
+import { Drawer, DrawerBody, DrawerContent } from '@chakra-ui/react'
 
 declare const window: Window &
   typeof globalThis & {
@@ -529,12 +529,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
   }
   const setChecked = useState(false)[1]
 
-
-  const props = {
-    scroll: true,
-    backdrop: false,
-  }
-
   const menuButton = () => {
     if (show_nav) {
       return <FaAngleDoubleRight />
@@ -760,13 +754,25 @@ export const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
 
-      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?<Offcanvas className='sankey-menu' show={show_nav} placement='end' {...props} style={{ 'width': menu_config_width+'px', 'marginTop':document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height }}>
-        <Offcanvas.Body style={{ 'padding': '0px 0px 0px 0px' }}>
-          <SankeyConfigurationMenu
-            configuration_menus={configurations_menus}
-          />
-        </Offcanvas.Body>
-      </Offcanvas>
+      {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?
+        <Drawer 
+          blockScrollOnMount={false}
+          isOpen={show_nav} 
+          placement='right' 
+          onClose={()=>set_show_nav(false)}
+          variant='drawer_menu_config'
+        >
+          {/* We have to set the width of the component here (and not in the theme) 
+          because for some reason a style is directly applied to this component 
+          and we cannot override it in the theme */}
+          <DrawerContent style={{width:menu_config_width}}>
+            <DrawerBody>
+              <SankeyConfigurationMenu
+                configuration_menus={configurations_menus}
+              />
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
         : <></>}
 
       <ButtonGroup vertical
