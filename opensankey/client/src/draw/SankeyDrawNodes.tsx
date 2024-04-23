@@ -136,7 +136,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
         )
     }
     // allow nodes to be dragged
-    if(window.SankeyToolsStatic!==true){
+    if(window.SankeyToolsStatic!==true ){
       ggg_nodes.call(
         DragGNodeEvent(
           dict_variable_application_data,dict_variable_elements_selected,applicationContext,

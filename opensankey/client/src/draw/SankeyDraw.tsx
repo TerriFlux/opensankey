@@ -362,13 +362,8 @@ export const keyHandler : keyHandlerFType = (
       SelectVisualyLinks(l)
     })
 
-  }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && (document.activeElement?.className.includes('form-control') || document.activeElement?.className.includes('chakra-numberinput__field'))){
-    for(const item of document.getElementsByTagName('input')){
-
-      if((item.className.includes('form-control') || item.className.includes('chakra-numberinput__field')) && (item.type=='text' || item.type=='number')){
-        item.blur()
-      }
-    }
+  }else if(e.key=='Enter' && document.activeElement?.tagName=='INPUT' && (['form-control','chakra-numberinput__field','chakra-input'].some(r=> document.activeElement?.className.includes(r)))){
+    (document.activeElement as HTMLInputElement).blur()
   }else if(e.key=='s' && e.ctrlKey && !e.shiftKey){
     e.preventDefault()
     dict_variable_application_data.function_on_wait.current=()=>{

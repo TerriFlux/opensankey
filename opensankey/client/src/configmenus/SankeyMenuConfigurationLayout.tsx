@@ -139,6 +139,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               onChange={value => {
                 data.grid_square_size = Number(value)
                 DrawGrid(data)
+                setForceUpdate(!forceUpdate)
               }}
             >
               <NumberInputField/>
