@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
-import { ChevronRightIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
   Badge,
   Button,
@@ -278,8 +278,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-file_new'}>{t('Menu.tooltips.new')} </Tooltip>}>
-        <ChakraMenu variant='menu_button_subnav_style' placement='right' >
-          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronRightIcon />} >
+        <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' >
+          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faPlus} />
             {t('Menu.new')}
           </MenuButton>
@@ -301,8 +301,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         rootClose
         overlay={<Tooltip id={'tooltip-file_open'}>{t('Menu.tooltips.ouvrir')} </Tooltip>}>
         <Box>
-          <ChakraMenu placement='right'  id='ouvrir'  >
-            <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronRightIcon />} >
+          <ChakraMenu placement='bottom-start'  id='ouvrir'  >
+            <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
               <FontAwesomeIcon icon={faFolderOpen} />
               {t('Menu.ouvrir')}
             </MenuButton>
@@ -360,8 +360,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-file_save'}>{t('Menu.tooltips.enregistrer')} </Tooltip>}>
-        <ChakraMenu placement='right' variant='menu_button_subnav_style' id='enregistrer' >
-          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronRightIcon />} >
+        <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='enregistrer' >
+          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faDownload} />
             {t('Menu.enregistrer')}
           </MenuButton>
@@ -379,8 +379,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'left'}
         rootClose
         overlay={<Tooltip id={'tooltip-export'}>{t('Menu.tooltips.export')} </Tooltip>}>
-        <ChakraMenu placement='right' variant='menu_button_subnav_style' id='exporter' >
-          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronRightIcon />}>
+        <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='exporter' >
+          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />}>
             <FontAwesomeIcon icon={faFileExport} />
             {t('Menu.exporter')}
           </MenuButton>
@@ -426,8 +426,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         placement={'bottom'}
         rootClose
         overlay={<Tooltip id={'tooltip-file_style'}>{t('Menu.tooltips.style')} </Tooltip>}>
-        <ChakraMenu variant='menu_button_subnav_style' placement='right' id='exporter' >
-          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronRightIcon />} >
+        <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' id='exporter' >
+          <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faPenToSquare} />
             {t('Menu.style')}
           </MenuButton>
@@ -798,11 +798,15 @@ export const Menu: FunctionComponent<MenuTypes> = (
           placement='right' 
           onClose={()=>set_show_nav(false)}
           variant='drawer_menu_config'
+          trapFocus={false}
         >
           {/* We have to set the width of the component here (and not in the theme) 
           because for some reason a style is directly applied to this component 
           and we cannot override it in the theme */}
-          <DrawerContent style={{width:menu_config_width}}>
+          <DrawerContent style={{width:menu_config_width,
+            // marginTop:document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+
+          }}>
             <DrawerBody>
               <SankeyConfigurationMenu
                 configuration_menus={configurations_menus}

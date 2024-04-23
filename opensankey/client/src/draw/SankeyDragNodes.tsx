@@ -301,9 +301,9 @@ export const DragElements: DragElementsFuncType = (
     const n = d as SankeyNode
     // Filtre les neouds en position fix (géneralement les noeuds qui ne sont pas import/export)
     // Soit applique le changement au neouds sélectionnés si il y en a sinon, applique le changement au noeud draggé
-    if (multi_selected_nodes.current.filter(n => n.position !== 'relative').length > 0) {
+    if (multi_selected_nodes.current.includes(node) && multi_selected_nodes.current.filter(n => n.position !== 'relative').length > 0) {
       return multi_selected_nodes.current.filter(n => n.position !== 'relative').includes(n)
-    } else if (Object.keys(node).length > 0 && node.position !== 'relative') {
+    } else if (multi_selected_nodes.current.length==0 && (Object.keys(node).length > 0 && node.position !== 'relative')) {
       return node == n
     } else {
       return false
@@ -332,28 +332,27 @@ export const DragElements: DragElementsFuncType = (
   })
 
 
-  if (multi_selected_nodes.current.length > 0) {
+  if (multi_selected_nodes.current.length > 1) {
     // We redraw each arrows linked to a selected nodes after shifting it
     multi_selected_nodes.current.filter(n => n.position !== 'relative').forEach(n => [
       DrawArrows(n as SankeyNode, data, display_nodes, display_links, scale, inv_scale, GetLinkValue, data.display_style)
     ])
     // we redraw link linked to dragged nodes
-    // multi_selected_nodes.current.forEach(n => {
-    //   Object.values(data.links).filter(l => n.outputLinksId.includes(l.idLink) || n.inputLinksId.includes(l.idLink)).forEach(l => {
-    //     d3.select(' .opensankey #path_' + l.idLink).attr('d',
-    //       drawCurveFunction.curve(
-    //         dict_variable_application_data,
-    //         dict_variable_elements_selected,
-    //         applicationContext,
-    //         data.display_style,
-    //         data.nodeTags, l, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
-    //         DrawArrows,ComponentUpdater,scale,inv_scale
-    //       )
-    //     )
-    //   })
-    // })
-  } else if (Object.keys(node).length > 0) {
-
+    multi_selected_nodes.current.forEach(n => {
+      Object.values(data.links).filter(l => n.outputLinksId.includes(l.idLink) || n.inputLinksId.includes(l.idLink)).forEach(l => {
+        d3.select(' .opensankey #path_' + l.idLink).attr('d',
+          drawCurveFunction.curve(
+            dict_variable_application_data,
+            dict_variable_elements_selected,
+            applicationContext,
+            data.display_style,
+            data.nodeTags, l, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
+            DrawArrows,ComponentUpdater,scale,inv_scale
+          )
+        )
+      })
+    })
+  } else if (Object.keys(node).length > 0 || (multi_selected_nodes.current.length==1 && multi_selected_nodes.current[0]==node)) {
     DrawArrows(node as SankeyNode, data, display_nodes, display_links, scale, inv_scale, GetLinkValue, data.display_style)
     Object.values(data.links).filter(l => node.outputLinksId.includes(l.idLink) || node.inputLinksId.includes(l.idLink)).forEach(l => {
       d3.select(' .opensankey #path_' + l.idLink).attr('d',
