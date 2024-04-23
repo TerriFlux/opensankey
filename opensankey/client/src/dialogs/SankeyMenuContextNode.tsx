@@ -347,6 +347,15 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       set_contextualised_node(undefined)
       contextMenu.ref_contextualised_node.current = undefined
       RedrawNodes(multi_selected_nodes.current)
+      // Redraw link attached to modified node when the modification to the node
+      let link_to_update:string[]=[]
+      multi_selected_nodes.current.forEach(n=>{
+        link_to_update=link_to_update.concat(n.outputLinksId)
+        link_to_update=link_to_update.concat(n.inputLinksId)
+      })
+      link_to_update=[...new Set(link_to_update)]
+      const list_links=link_to_update.map(lid=>data.links[lid])
+      RedrawLinks(list_links)
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
     }}>
@@ -436,10 +445,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
           {dropdown_c_n_align}
           {sep}</>:<></>
         }
-        
 
         {additional_context_element_other}
-        {sep}
 
         {button_edit_label_node}
         <Button

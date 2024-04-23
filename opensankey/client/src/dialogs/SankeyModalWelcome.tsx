@@ -54,7 +54,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
 
   const content_rc_not_static=<Accordion
     // className='accordion_new_welcome'
-    // defaultActiveKey={'OS'}
+    defaultIndex={0}
     allowToggle
   >
     <AccordionItem
@@ -105,24 +105,17 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
     {additional_shortcut_item}
   </Accordion>
   external_content['rc'] = windowSankey.SankeyToolsStatic?content_rc_static:content_rc_not_static
+  
 
 
 
-
-  const content=<div style={  {height:'700px',overflowY:'auto'}}>
+  const content=<div style={  {height:window.innerHeight*0.65,overflowY:'auto'}}>
     {external_content[active_page as 'read_me' | 'intro' | 'rc' | 'licence' | 'news']}
   </div>
 
   const welcome_footer=<Modal.Footer style={{justifyContent:'center'}}>
     <Pagination >
       {external_pagination.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
-
-      <Pagination.Item active={active_page==='rc'} key={'rc'} onClick={()=>{
-        set_active_page('rc')
-      }}>
-        {t('welcome.rc')}
-      </Pagination.Item>
-
     </Pagination>
     <FormCheck type='checkbox' label={t('dontSeeAgain')} checked={never_see_again.current} onChange={evt=>{
       never_see_again.current = evt.target.checked
@@ -135,7 +128,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   n_style_menu_draggable.width='75%'
 
   return <Draggable  handle='.title_menu'
-    defaultPosition={{x:25,y:25}}
+    defaultPosition={{x:window.innerWidth/8,y:window.innerHeight*0.12}}
     bounds={{left:0,top:0}}
     onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
       d3.select('.menu_conf.'+class_name).style('z-index','1031')
