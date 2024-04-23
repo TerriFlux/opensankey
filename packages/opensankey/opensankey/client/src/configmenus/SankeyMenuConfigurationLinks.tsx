@@ -338,7 +338,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     } else if(Object.keys(data.nodes).length>1){
       set_pre_idSource(changeEvent.target.value)
     }
-
+    setForceUpdate(!forceUpdate)
   }
 
   const addDropSource = () => {
@@ -390,6 +390,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     }else if(Object.keys(data.nodes).length>1){
       set_pre_idTarget(changeEvent.target.value)
     }
+    setForceUpdate(!forceUpdate)
 
   }
 
@@ -556,6 +557,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               node_function.RedrawNodes(nodes_to_reorganize)
               link_function.RedrawLinks(multi_selected_links.current)
               ComponentUpdater.updateComponenSaveInCache.current(false)
+              setForceUpdate(!forceUpdate)
+
               
             }}
           >
