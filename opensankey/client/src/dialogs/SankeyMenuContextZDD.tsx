@@ -189,7 +189,9 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
       RedrawLinks(Object.values(dict_variable_application_data.display_links))
       ComponentUpdater.updateComponenSaveInCache.current(false)
-
+      Object.values(dict_variable_application_data.display_nodes).filter(n=>n.position!='relative').forEach(n=>{
+        d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
+      })
     }}>
     {t('MEP.AN')}
   </Button>

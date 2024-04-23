@@ -947,7 +947,7 @@ export const convert_nodes:convert_nodesFuncType = (
 
     // Search if nodes reference parent that doesn't exist
     if(n.dimensions){
-      Object.entries(n.dimensions).filter(nd=>nd[1].parent_name && !list_key_nodes.includes(nd[1].parent_name)).forEach(nd=>{
+      Object.entries(n.dimensions).filter(nd=> !nd[1] || (nd[1].parent_name && !list_key_nodes.includes(nd[1].parent_name))).forEach(nd=>{
         delete n.dimensions[nd[0]]
       })
     }
