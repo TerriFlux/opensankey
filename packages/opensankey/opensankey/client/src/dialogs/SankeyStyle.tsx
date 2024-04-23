@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   FaPlus,
   FaMinus,
@@ -48,15 +48,14 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
   const { data } = dict_variable_application_data
   const { updateComponentMenuConfigNodeAppearence } = ComponentUpdater
   const { RedrawNodes } = node_function
-
+  
   const [ forceUpdate, setForceUpdate ] = useState(false)
   const [ selected_style_node, set_selected_style_node ] = useState('default')
-
   ref_selected_style_node.current = selected_style_node
   if (data.style_node && !Object.keys(data.style_node).includes(selected_style_node)) {
     set_selected_style_node('default')
   }
-
+  const ref_input_name= useRef<HTMLInputElement>(null)
   const content = <Box layerStyle='menuconfigpanel_grid'>
     <Box
       as='span'
@@ -71,10 +70,12 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
           const new_id = 'style_node_' + String(new Date().getTime())
           new_style.idNode=new_id
           data.style_node[new_id] = new_style
-          setForceUpdate(!forceUpdate)
           updateComponentMenuConfigNodeAppearence.current()
           ref_selected_style_node.current = new_style.idNode
           set_selected_style_node(new_style.idNode)
+          setForceUpdate(!forceUpdate)
+          ref_input_name.current!.value=data.style_node[new_id].name
+
         }}>
         <FaPlus/>
       </Button>
@@ -102,6 +103,8 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
                     onClick={() => {
                       ref_selected_style_node.current = d
                       set_selected_style_node(d)
+                      ref_input_name.current!.value=data.style_node[d].name
+                      setForceUpdate(!forceUpdate)
                     }}
                   >
                     {data.style_node[d].name}
@@ -121,10 +124,10 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
           const new_style=(Object.keys(data.style_node).length > 0) ? Object.keys(data.style_node)[0] : ''
           set_selected_style_node(new_style)
           ref_selected_style_node.current=new_style
-          setForceUpdate(!forceUpdate)
           updateComponentMenuConfigNodeAppearence.current()
           RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
           ComponentUpdater.updateComponenSaveInCache.current(false)
+          setForceUpdate(!forceUpdate)
         }}
       >
         <FaMinus />
@@ -149,11 +152,10 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
           <Input
             variant='menuconfigpanel_option_input'
             disabled={(selected_style_node === 'default')? true: false}
-            value={
-              (selected_style_node !== '') ? data.style_node[selected_style_node].name : ''
-            }
-            onChange={evt => {
-              data.style_node[selected_style_node].name = evt.target.value
+            ref={ref_input_name}
+            defaultValue={data.style_node[selected_style_node].name}
+            onBlur={() => {
+              data.style_node[selected_style_node].name = ref_input_name.current?.value??''
               setForceUpdate(!forceUpdate)
               updateComponentMenuConfigNodeAppearence.current()
               ComponentUpdater.updateComponenSaveInCache.current(false)
