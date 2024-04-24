@@ -11,17 +11,18 @@ import { windowSankey } from '../configmenus/SankeyUtils'
 
 export const updateDrawAllNodesLabel : DrawAllNodesLabelFType = (
   dict_variable_application_data,
-  multi_selected_nodes,
   GetLinkValue,
-  t
+  t,
+  node_function
 ) => {
-  RedrawNodesLabel(dict_variable_application_data,[],GetLinkValue,t)
+  RedrawNodesLabel(dict_variable_application_data,[],GetLinkValue,t,node_function)
 }
 
 export const RedrawNodesLabel : DrawAddNodesFtype = (
   dict_variable_application_data,
   nodes_to_redraw,
-  GetLinkValue,t
+  GetLinkValue,t,
+  node_function
 ) => {        
   const { data,display_nodes,display_links } = dict_variable_application_data
   //------------------LABEL------------------------
@@ -95,18 +96,15 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       .attr('type','text')
       .attr('value',d=>d.name)
       .style('font-size', n => ReturnValueNode(data,n,'font_size') + 'px')
-      .on('input',(evt,d)=>{
-        d.name=evt.target.value})
-      .on('keypress',(evt)=>{
-        if(evt.keyCode==13){
-        // if 'enter' key pressed, update the label
-        }
-      })
+      .on('input',(evt,d)=>{d.name=evt.target.value})
       .style('background-color','white')
       .style('border','none')
       .style('border-color','transparent')
       .style('height',d=>Number(ReturnValueNode(data,d,'font_size'))+'px')
       .style('outline','none')
+      .on('blur',(evt,n)=>{
+        node_function.RedrawNodes([n])
+      })
 
   }
     
