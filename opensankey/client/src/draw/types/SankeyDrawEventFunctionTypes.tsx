@@ -50,8 +50,7 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   uiElementsRef : uiElementsRefType,
   applicationContext:applicationContextType,
   link_function: LinkFunctionTypes,
-  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-
+  node_function:NodeFunctionTypes
 )=> void
 export type EventOnZoneMouseDownFuncType = (
   dict_variable_application_data:dict_variable_application_dataType,
