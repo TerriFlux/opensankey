@@ -571,7 +571,8 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 
       node_function.CreateNodesOnSVG([new_node1])
       link_function.CreateLinksOnSVG([new_link])
-
+      // update link congig panel
+      updateComponentMenuConfigLink.current()
     } else if ((!evt.ctrlKey && !evt.metaKey) && first_selected_node.current && d3.select(evt_recast).attr('class') != 'node node_shape') {
 
       const n_link = DefaultLink(data)
