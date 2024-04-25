@@ -163,15 +163,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           openDelay={500}
           label={t('Noeud.apparence.tooltips.Visibilité')}
         >
-          <>
-            {t('Noeud.apparence.Visibilité')}
-            {
-              IsNodeDisplayingValueLocal(multi_selected_nodes, 'shape_visible', menu_for_style)?
-                TooltipValueSurcharge('node_var',t):
-                <></>
-            }
-          </>
+          {t('Noeud.apparence.Visibilité')}
         </Tooltip>
+        {
+          IsNodeDisplayingValueLocal(multi_selected_nodes, 'shape_visible', menu_for_style)?
+            TooltipValueSurcharge('node_var',t):
+            <></>
+        }
+
       </Checkbox>
     </Box>
 
