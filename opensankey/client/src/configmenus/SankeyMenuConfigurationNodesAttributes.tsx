@@ -185,83 +185,83 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     </Box>
 
     {/* Couleur du noeud */}
-    <Tooltip
+    {/* <Tooltip
       key={'noeud.apparence.tooltips.2'}
       placement={'top'}
       openDelay={500}
       label={
         t('Noeud.apparence.tooltips.Couleur')
       }
+    > */}
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
     >
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Noeud.apparence.Couleur')}
-          {
-            IsNodeDisplayingValueLocal(multi_selected_nodes,'color',menu_for_style)?(
-              <>{TooltipValueSurcharge('node_var_',t)}</>
-            ):(
-              <></>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Noeud.apparence.Couleur')}
+        {
+          IsNodeDisplayingValueLocal(multi_selected_nodes,'color',menu_for_style)?(
+            <>{TooltipValueSurcharge('node_var_',t)}</>
+          ):(
+            <></>
+          )
+        }
+      </Box>
+      <Box layerStyle='option_with_activation'>
+        <Input
+          variant='menuconfigpanel_option_input_color'
+          type='color'
+          value={
+            (selected_parameter.length == 1) ? (
+                ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string
+            ) : (
+              '#ffffff'
             )
           }
-        </Box>
-        <Box layerStyle='option_with_activation'>
-          <Input
-            variant='menuconfigpanel_option_input_color'
-            type='color'
-            value={
-              (selected_parameter.length == 1) ? (
-                ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string
-              ) : (
-                '#ffffff'
-              )
+          onChange={evt=>{
+            Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
+            updateMenuConfigNode()
+            if(!menu_for_style){
+              // Redraw link attached to modified node that are 'produit' because we specified a user case where 'produit' nodes control link color
+              let link_to_update:string[]=[]
+              multi_selected_nodes.current.filter(n=>n.tags&&n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('produit')).forEach(n=>{
+                link_to_update=link_to_update.concat(n.outputLinksId)
+                link_to_update=link_to_update.concat(n.inputLinksId)
+              })
+              link_to_update=[...new Set(link_to_update)]
+              const list_links=link_to_update.map(lid=>data.links[lid])
+              RedrawLinks(list_links)
+            }else{
+              RedrawLinks(Object.values(dict_variable_application_data.display_links))
             }
-            onChange={evt=>{
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
-              updateMenuConfigNode()
-              if(!menu_for_style){
-                // Redraw link attached to modified node that are 'produit' because we specified a user case where 'produit' nodes control link color
-                let link_to_update:string[]=[]
-                multi_selected_nodes.current.filter(n=>n.tags&&n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('produit')).forEach(n=>{
-                  link_to_update=link_to_update.concat(n.outputLinksId)
-                  link_to_update=link_to_update.concat(n.inputLinksId)
-                })
-                link_to_update=[...new Set(link_to_update)]
-                const list_links=link_to_update.map(lid=>data.links[lid])
-                RedrawLinks(list_links)
-              }else{
-                RedrawLinks(Object.values(dict_variable_application_data.display_links))
-              }
-            }}
-          />
-          <Tooltip
+          }}
+        />
+        {/* <Tooltip
             key={'noeud.apparence.tooltips.3'}
             placement={'top'}
             openDelay={500}
-            label={t('Noeud.apparence.tooltips.CouleurPérenne')}>
-            <Button
-              //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-              variant={
-                list_value['colorSustainable'][0]?
-                  'menuconfigpanel_option_button_activated':
-                  'menuconfigpanel_option_button'}
-              onClick={() => {
-                Object
-                  .values(parameter_to_modify)
-                  .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                  .forEach(d => AssignNodeValueToCorrectVar(d,'colorSustainable',!list_value['colorSustainable'][0],menu_for_style))
-                updateMenuConfigNode()
-                updateMenuConfigNode()
-              }}
-            >
-              {list_value['colorSustainable'][0]?<FaLock/>:<FaLockOpen/>}
-            </Button>
-          </Tooltip>
-        </Box>
+            label={t('Noeud.apparence.tooltips.CouleurPérenne')}> */}
+        <Button
+          //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+          variant={
+            list_value['colorSustainable'][0]?
+              'menuconfigpanel_option_button_activated':
+              'menuconfigpanel_option_button'}
+          onClick={() => {
+            Object
+              .values(parameter_to_modify)
+              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => AssignNodeValueToCorrectVar(d,'colorSustainable',!list_value['colorSustainable'][0],menu_for_style))
+            updateMenuConfigNode()
+            updateMenuConfigNode()
+          }}
+        >
+          {list_value['colorSustainable'][0]?<FaLock/>:<FaLockOpen/>}
+        </Button>
+        {/* </Tooltip> */}
       </Box>
-    </Tooltip>
+    </Box>
+    {/* </Tooltip> */}
 
     {/* Forme du noeud */}
     <Tooltip
