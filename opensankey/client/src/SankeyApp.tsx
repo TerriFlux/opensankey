@@ -387,7 +387,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   const OpenSankeyRedrawNode=(nodes_to_update:SankeyNode[])=>{
     updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
-    RedrawNodesLabel(dict_variable_application_data,nodes_to_update,GetLinkValue,applicationContext.t)
+    RedrawNodesLabel(dict_variable_application_data,nodes_to_update,GetLinkValue,applicationContext.t,node_function)
   }
   const OpenSankeyCreateNodeOnSVG=(nodes_to_update:SankeyNode[])=>{
     drawAddNodes(contextMenu,
