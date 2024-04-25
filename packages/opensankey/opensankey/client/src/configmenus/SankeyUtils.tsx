@@ -204,6 +204,9 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   GetLinkValue:GetLinkValueFuncType
 
 ): number[] => {
+  if (node == undefined) {
+    return [0,0,0,0]
+  }
   const { nodes, links} = data
   let offset_height_left = 0
   let offset_height_right = 0
