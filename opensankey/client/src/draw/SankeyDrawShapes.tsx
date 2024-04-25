@@ -119,16 +119,16 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
       d += ' L ' + String(position_node_face[0] ) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
       d += ' L ' + String(position_node_face[0] -arrow_length_oriented*(1-ratio_cur)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
     } else if (ratio_cum > 1) {
-      d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)*((ratio_cum-ratio_cur)-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
-      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
     } else {
       d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)*(1-ratio_cum)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
-      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) 
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cur-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) 
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   } else {
