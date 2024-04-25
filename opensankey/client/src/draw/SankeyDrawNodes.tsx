@@ -258,13 +258,7 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
     }
     )
 
-  // multi_selected_nodes.current.forEach(n=>{
-  //   const node_size_s_height = inv_scale((ReturnValueNode(data,n,'node_height') as number))
-  //   const node_size_s_width = inv_scale((ReturnValueNode(data,n,'node_width') as number))
-  //   d3.select(' .opensankey #shape_' + n.idNode).attr('width', scale(node_size_s_width))
-  //   d3.select(' .opensankey #shape_' + n.idNode).attr('height', scale(node_size_s_height))    
-  // })
-  // SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue)
+ 
   node_to_update.forEach(n=>SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue))
 }
 
