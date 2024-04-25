@@ -804,7 +804,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           because for some reason a style is directly applied to this component 
           and we cannot override it in the theme */}
           <DrawerContent style={{width:menu_config_width,
-            // marginTop:document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+            marginTop:document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
 
           }}>
             <DrawerBody>
