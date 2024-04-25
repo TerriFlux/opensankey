@@ -1,5 +1,5 @@
 import React, { useState, FunctionComponent } from 'react'
-import { OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Tooltip } from '@chakra-ui/react'
 
 import { TagsGroup } from '../types/Types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
@@ -171,11 +171,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
       {/* Boutons des palettes de couleur  */}
       {/* Palette de couleur aléatoire  */}
-      <OverlayTrigger
+      <Tooltip
         key={'tags.tooltips.1'}
         placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'tags.tooltips.1'}>{t('Tags.tooltips.pal')} </Tooltip>}>
+        openDelay={500}
+        label={t('Tags.tooltips.pal')}>
         <Button
           backgroundColor='#9E9CFB'
           value='rand' 
@@ -191,13 +191,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           }}>
           <FaPalette/>
         </Button>
-      </OverlayTrigger>
+      </Tooltip>
       {/* Melanger les couleur  */}
-      <OverlayTrigger
+      <Tooltip
         key={'tags.tooltips.2'}
         placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'tags.tooltips.2'}>{t('Tags.tooltips.pal_shuffle')} </Tooltip>}>
+        openDelay={500}
+        label={t('Tags.tooltips.pal_shuffle')}>
         <Button 
           backgroundColor='#9CFBC5'
           value='alea' 
@@ -221,14 +221,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           }}>
           <FaRandom/>
         </Button>
-      </OverlayTrigger>
+      </Tooltip>
 
       {/* Palettes des couleurs standard */}
-      <OverlayTrigger
+      <Tooltip
         key={'tags.tooltips.3'}
         placement={'top'}
-        delay={500}
-        overlay={<Tooltip id={'tags.tooltips.3'}>{t('Tags.tooltips.pal_std')} </Tooltip>}>
+        openDelay={500}
+        label={t('Tags.tooltips.pal_std')}>
         <Select
           variant='menuconfigpanel_option_select'
           onChange={
@@ -261,7 +261,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               <option key={i} value={cur_colormap}>{cur_colormap}</option>
           )}
         </Select>
-      </OverlayTrigger>
+      </Tooltip>
     </Box>
 
     {/* Entete du Tableau des étiquettes  */}
@@ -271,17 +271,17 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           <Tr >
             <Th>
               {/* Bouton ajout d'une étiquette  */}
-              <OverlayTrigger
+              <Tooltip
                 key={'tags.tooltips.4'}
                 placement={'top'}
-                delay={500}
-                overlay={<Tooltip id={'tags.tooltips.4'}>{t('Tags.tooltips.add')} </Tooltip>}>
+                openDelay={500}
+                label={t('Tags.tooltips.add')}>
                 <Button
                   variant='menuconfigpanel_add_button'
                   value='+' onClick={handleAddTagButton}>
                   <FaPlus />
                 </Button>
-              </OverlayTrigger>
+              </Tooltip>
             </Th>
             {/* Nom de l'étqiuette  */}
             <Th>
@@ -313,26 +313,26 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                 <Tr key={i.toString()} > 
                   {/* Supprimer une etiquette  */}
                   <Td >
-                    <OverlayTrigger
+                    <Tooltip
                       key={'tags.tooltips.5'}
                       placement={'top'}
-                      delay={500}
-                      overlay={<Tooltip id={'tags.tooltips.5'}>{t('Tags.tooltips.rm')} </Tooltip>}>
+                      openDelay={500}
+                      label={t('Tags.tooltips.rm')}>
                       <Button size={'sm'}
                         variant='menuconfigpanel_del_button_in_table' 
                         value='-' onClick={() => { handleDelTag(tag_key) }}>
                         <FaMinus />
                       </Button>
-                    </OverlayTrigger>
+                    </Tooltip>
                   </Td>
                   {/* Renommer l'étiquette  */}
                   {/* Met une largeur de cellue plus petite quand c'est les étiquettes de noeud car le tableau contient une colonne de plsu (forme) */}
                   <Td >
-                    <OverlayTrigger
+                    <Tooltip
                       key={'tags.tooltips.6'}
                       placement={'top'}
-                      delay={500}
-                      overlay={<Tooltip id={'tags.tooltips.6'}>{t('Tags.tooltips.nom')} </Tooltip>}>
+                      openDelay={500}
+                      label={t('Tags.tooltips.nom')}>
                       <InputGroup variant='menuconfigpanel_option_input_table' >
                         <Input
                           variant='menuconfigpanel_option_input_table'
@@ -349,16 +349,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             }
                           }/>
                       </InputGroup>
-                    </OverlayTrigger>
+                    </Tooltip>
                   </Td>
                   {/* Rendre ou non visible  */}
                   { type_tag_name !== 'dataTags' ?
                     <Td >
-                      <OverlayTrigger
+                      <Tooltip
                         key={'tags.tooltips.7'}
                         placement={'top'}
-                        delay={500}
-                        overlay={<Tooltip id={'tags.tooltips.7'}>{t('Tags.tooltips.visible')} </Tooltip>}>
+                        openDelay={500}
+                        label={t('Tags.tooltips.visible')}>
                         <Button
                           variant='menuconfigpanel_option_btn_in_table'
                           name={'element_visible' + tag_key}
@@ -370,17 +370,17 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                               redrawGenereal()
                               setForceUpdate(!forceUpdate)
                             }}>{tag_visible?<FaEye/>:<FaEyeSlash/>}</Button>
-                      </OverlayTrigger>
+                      </Tooltip>
 
                     </Td>:<></>
                   }
                   {/* Choix de la couleur*/}
                   <Td >
-                    <OverlayTrigger
+                    <Tooltip
                       key={'tags.tooltips.8'}
                       placement={'top'}
-                      delay={500}
-                      overlay={<Tooltip id={'tags.tooltips.8'}>{t('Tags.tooltips.couleur')} </Tooltip>}>
+                      openDelay={500}
+                      label={t('Tags.tooltips.couleur')}>
                       <Input padding= '0.25rem' width='revert' height='revert'
                         type='color'
                         value={data[type_tag_name][tags_group_key].tags[tag_key].color as string}
@@ -390,16 +390,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             redrawGenereal()
                             setForceUpdate(!forceUpdate)
                           }}/>
-                    </OverlayTrigger>
+                    </Tooltip>
                   </Td>
                   {/* Chosir la forme du noeud  */}
                   { elementNameProp === 'nodes' ? (
                     <Td>
-                      <OverlayTrigger
+                      <Tooltip
                         key={'tags.tooltips.9'}
                         placement={'top'}
-                        delay={500}
-                        overlay={<Tooltip id={'tags.tooltips.9'}>{t('Tags.tooltips.forme')} </Tooltip>}>
+                        openDelay={500}
+                        label={t('Tags.tooltips.forme')}>
                         <Select variant='menuconfigpanel_option_select_table'
                           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                             data[type_tag_name][tags_group_key].tags[tag_key].shape = evt.target.value
@@ -411,7 +411,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
                           <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
                         </Select>
-                      </OverlayTrigger>
+                      </Tooltip>
                     </Td>
                   ) :
                     (<></>)
@@ -436,17 +436,17 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             <Tr>
               {/* Ajouter un groupe */}
               <Th>
-                <OverlayTrigger
+                <Tooltip
                   key={'tags.tooltips.10'}
                   placement={'top'}
-                  delay={500}
-                  overlay={<Tooltip id={'tags.tooltips.10'}>{t('Tags.tooltips.add_grp')} </Tooltip>}>
+                  openDelay={500}
+                  label={t('Tags.tooltips.add_grp')}>
                   <Button
                     variant='menuconfigpanel_add_button'
                     onClick={handleAddTagGrpButton}>
                     <FaPlus/>
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
               </Th>
               {/* Autre entetes  */}
               <Th>{t('Tags.Nom')}</Th>
@@ -463,26 +463,26 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                     <Tr key={i.toString()}>
                       {/* Suppression d'un groupe  */}
                       <Td>
-                        <OverlayTrigger
+                        <Tooltip
                           key={'tags.tooltips.11'}
                           placement={'top'}
-                          delay={500}
-                          overlay={<Tooltip id={'tags.tooltips.11'}>{t('Tags.tooltips.rm_grp')} </Tooltip>}>
+                          openDelay={500}
+                          label={t('Tags.tooltips.rm_grp')}>
                           <Button
                             size={'sm'}
                             variant='menuconfigpanel_del_button_in_table'
                             onClick={() => handleDelGroupTag(tags_group_key)}>
                             <FaMinus />
                           </Button>
-                        </OverlayTrigger>
+                        </Tooltip>
                       </Td>
                       {/* Renommer le groupe d'étiquettes */}
                       <Td>
-                        <OverlayTrigger
+                        <Tooltip
                           key={'tags.tooltips.12'}
                           placement={'top'}
-                          delay={500}
-                          overlay={<Tooltip id={'tags.tooltips.12'}>{t('Tags.tooltips.nom_grp')} </Tooltip>}>
+                          openDelay={500}
+                          label={t('Tags.tooltips.nom_grp')}>
                           <InputGroup variant='menuconfigpanel_option_input_table' >
                             <Input
                               variant='menuconfigpanel_option_input_table'
@@ -496,15 +496,15 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                                   setForceUpdate(!forceUpdate)
                                 }}/>
                           </InputGroup>
-                        </OverlayTrigger>
+                        </Tooltip>
                       </Td>
                       {/* Banniere  */}
                       <Td>
-                        <OverlayTrigger
+                        <Tooltip
                           key={'tags.tooltips.14'}
                           placement={'top'}
-                          delay={500}
-                          overlay={<Tooltip id={'tags.tooltips.14'}>{t('Tags.tooltips.banner')} </Tooltip>}>
+                          openDelay={500}
+                          label={t('Tags.tooltips.banner')}>
                           <Select
                             variant='menuconfigpanel_option_select_table'
                             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
@@ -514,37 +514,37 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
                             <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
                           </Select>
-                        </OverlayTrigger>
+                        </Tooltip>
                       </Td>
                       {/* Monter ou descendre groupe d'étiquette  */}
                       {(type_tag_name!='dataTags')?
                         <Td>
                           {/* Monter le groupe d'étiquette */}
-                          <OverlayTrigger
+                          <Tooltip
                             key={'tags.tooltips.15'}
                             placement={'top'}
-                            delay={500}
-                            overlay={<Tooltip id={'tags.tooltips.15'}>{t('Tags.tooltips.up')} </Tooltip>}>
+                            openDelay={500}
+                            label={t('Tags.tooltips.up')}>
                             <Button
                               variant='menuconfigpanel_option_btn_in_table'
                               borderRadius='6px 0px 0px 6px'        
                               onClick={() => handleUpGrpTag(tags_group_key)}>
                               <FaArrowAltCircleUp />
                             </Button>
-                          </OverlayTrigger>
+                          </Tooltip>
                           {/* Descendre le groupe d'étiquettes  */}
-                          <OverlayTrigger
+                          <Tooltip
                             key={'tags.tooltips.16'}
                             placement={'top'}
-                            delay={500}
-                            overlay={<Tooltip id={'tags.tooltips.16'}>{t('Tags.tooltips.down')} </Tooltip>}>
+                            openDelay={500}
+                            label={t('Tags.tooltips.down')}>
                             <Button 
                               variant='menuconfigpanel_option_btn_in_table'
                               borderRadius='0px 6px 6px 0px'        
                               onClick={() => handleDownGrpTag(tags_group_key)}>
                               <FaArrowAltCircleDown />
                             </Button>
-                          </OverlayTrigger>
+                          </Tooltip>
                         </Td>:<></>
                       }
                     </Tr>

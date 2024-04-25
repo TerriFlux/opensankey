@@ -1,8 +1,5 @@
 import React, { useState } from 'react'
-import {
-  OverlayTrigger,
-  Tooltip
-} from 'react-bootstrap'
+import { Tooltip } from '@chakra-ui/react'
 import { SankeyMenuConfigurationNodesTooltipFType } from './types/SankeyMenuConfigurationNodesTooltipTypes'
 import { Box, Tab, TabPanel, Textarea } from '@chakra-ui/react'
 
@@ -24,14 +21,12 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
       {t('Noeud.IB')}
     </Box>
 
-    <OverlayTrigger
+    <Tooltip
       key={'Noeud.tooltips.IB.1'}
       placement={'top'}
-      delay={500}
-      overlay={
-        <Tooltip id={'Noeud.tooltips.IB.1'}>
-          {t('Noeud.tooltips.IB')}
-        </Tooltip>
+      openDelay={500}
+      label={
+        t('Noeud.tooltips.IB')
       }
     >
       <Textarea
@@ -47,7 +42,7 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
             setForceUpdate(!forceUpdate)
           }}
       />
-    </OverlayTrigger>
+    </Tooltip>
   </Box>
 
   return menu_for_modal?

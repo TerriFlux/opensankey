@@ -1,8 +1,5 @@
 import React, { useState } from 'react'
-import {
-  OverlayTrigger,
-  Tooltip,
-} from 'react-bootstrap'
+import { Tooltip } from '@chakra-ui/react'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 
@@ -554,14 +551,12 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
       {t('Noeud.Reorg_title')}
     </Box>
 
-    <OverlayTrigger
+    <Tooltip
       key={'menu.tooltips.noeud.7'}
       placement={'top'}
-      delay={500}
-      overlay={
-        <Tooltip id={'menu.tooltips.noeud.7'}>
-          {t('Noeud.tooltips.Reorg')}
-        </Tooltip>
+      openDelay={500}
+      label={
+        t('Noeud.tooltips.Reorg')
       }
     >
       <Button
@@ -582,7 +577,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
       >
         {t('Noeud.Reorg')}
       </Button>
-    </OverlayTrigger>
+    </Tooltip>
   </Box>
 
   // Content to reorganize the i/o of only 1 node at the time
@@ -595,14 +590,12 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
       >
-        <OverlayTrigger
+        <Tooltip
           key={'noeud.pf.tooltips.1'}
           placement={'top'}
-          delay={500}
-          overlay={
-            <Tooltip id={'noeud.pf.tooltips.1'}>
-              {t('Noeud.PF.tooltips.io')}
-            </Tooltip>
+          openDelay={500}
+          label={
+            t('Noeud.PF.tooltips.io')
           }
         >
           <Box
@@ -611,7 +604,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           >
             {t('Noeud.PF.FES')}
           </Box>
-        </OverlayTrigger>
+        </Tooltip>
         <Select
           variant='menuconfigpanel_option_select'
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -648,14 +641,12 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
       >
-        <OverlayTrigger
+        <Tooltip
           key={'noeud.pf.tooltips.1'}
           placement={'top'}
-          delay={500}
-          overlay={
-            <Tooltip id={'noeud.pf.tooltips.2'}>
-              {t('Noeud.PF.tooltips.side')}
-            </Tooltip>
+          openDelay={500}
+          label={
+            t('Noeud.PF.tooltips.side')
           }
         >
           <Box
@@ -664,7 +655,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           >
             {t('Noeud.PF.FRN')}
           </Box>
-        </OverlayTrigger>
+        </Tooltip>
         <Select
           variant='menuconfigpanel_option_select'
           value={link_pos}
@@ -694,26 +685,23 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
       </Box>
 
       {/* Mettre les couleurs des flux dans le tableau pour les indentifier */}
-      <OverlayTrigger
-        key={'noeud.pf.tooltips.7'}
-        placement={'top'}
-        delay={500}
-        overlay={
-          <Tooltip id={'noeud.pf.tooltips.7'}>
-            {t('Noeud.PF.tooltips.lti')}
-          </Tooltip>
-        }
+
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={tab_colored}
+        onChange={(evt) => {
+          set_tab_colored(evt.target.checked)
+        }}
       >
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={tab_colored}
-          onChange={(evt) => {
-            set_tab_colored(evt.target.checked)
-          }}
-        >
-          {t('Noeud.PF.lti')}
-        </Checkbox>
-      </OverlayTrigger>
+        <Tooltip
+          key={'noeud.pf.tooltips.7'}
+          placement={'top'}
+          openDelay={500}
+          label={
+            t('Noeud.PF.tooltips.lti')
+          }
+        >          {t('Noeud.PF.lti')}</Tooltip>
+      </Checkbox>
 
       {/* Table montrant les noeuds selectionnés  */}
       {
@@ -749,14 +737,12 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
       as='span'
       layerStyle='options_2cols'
     >
-      <OverlayTrigger
+      <Tooltip
         key={'menu.tooltips.noeud.8'}
         placement={'top'}
-        delay={500}
-        overlay={
-          <Tooltip id={'menu.tooltips.noeud.8'}>
-            {t('Noeud.tooltips.SlctOutLink')}
-          </Tooltip>
+        openDelay={500}
+        label={
+          t('Noeud.tooltips.SlctOutLink')
         }
       >
         <Button
@@ -777,16 +763,14 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         >
           {t('Noeud.SlctOutLink')}
         </Button>
-      </OverlayTrigger>
+      </Tooltip>
 
-      <OverlayTrigger
+      <Tooltip
         key={'menu.tooltips.noeud.9'}
         placement={'top'}
-        delay={500}
-        overlay={
-          <Tooltip id={'menu.tooltips.noeud.9'}>
-            {t('Noeud.tooltips.SlctInLink')}
-          </Tooltip>
+        openDelay={500}
+        label={
+          t('Noeud.tooltips.SlctInLink')
         }
       >
         <Button
@@ -807,7 +791,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         >
           {t('Noeud.SlctInLink')}
         </Button>
-      </OverlayTrigger>
+      </Tooltip>
     </Box>
   </Box>
 

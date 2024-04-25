@@ -1,8 +1,5 @@
 import React, { FunctionComponent, useState } from 'react'
-import {
-  OverlayTrigger,
-  Tooltip,
-} from 'react-bootstrap'
+import { Tooltip } from '@chakra-ui/react'
 import 'react-folder-tree/dist/style.css'
 import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
@@ -314,11 +311,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         layerStyle='menuconfigpanel_row_droplist'
       >
         {/* Boutton pour ajouter un noeud */}
-        <OverlayTrigger
+        <Tooltip
           key={'menu.tooltips.noeud.1'}
           placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.1'}>{t('Menu.tooltips.noeud.plus')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
             isDisabled={token==false && Object.keys(data.nodes).length>15}
@@ -331,14 +328,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             }}>
             <FaPlus/>
           </Button>
-        </OverlayTrigger>
+        </Tooltip>
 
         {/* Liste déroulante pour selectionner un noeud */}
-        <OverlayTrigger
+        <Tooltip
           key={'menu.tooltips.noeud.2'}
           placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.2'}>{t('Menu.tooltips.noeud.slct')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.noeud.slct')}>
           {dropdownMultiNode()}
           {/* <Button
               style={{width:'70%'}}
@@ -351,14 +348,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n => n.name).join(','), 25 ):'None'}
             </Button> */}
           {/* {overlayNodeSlector} */}
-        </OverlayTrigger>
+        </Tooltip>
 
         {/* Boutton pour supprimer le noeud selectionné */}
-        <OverlayTrigger
+        <Tooltip
           key={'menu.tooltips.noeud.3'}
           placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.3'}>{t('Menu.tooltips.noeud.rm')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.noeud.rm')}>
           <Button
             variant='menuconfigpanel_del_button'
             isDisabled={multi_selected_nodes.current.length == 0}
@@ -376,14 +373,14 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               }}>
             <FaMinus />
           </Button>
-        </OverlayTrigger>
+        </Tooltip>
 
         {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
-        <OverlayTrigger
+        <Tooltip
           key={'menu.tooltips.noeud.4'}
           placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'menu.tooltips.noeud.4'}>{t('Menu.tooltips.noeud.dns')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.noeud.dns')}>
           <Button
             variant='menuconfigpanel_option_button'
             onClick={
@@ -393,7 +390,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               }}>
             <FaEye />
           </Button>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
 
       {/* Affichage du nom des noeuds selectionnés */}
@@ -409,11 +406,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           {t('Noeud.Nom')}
         </Box>
         <Box>
-          <OverlayTrigger
+          <Tooltip
             key={'menu.tooltips.noeud.6'}
             placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'menu.tooltips.noeud.6'}>{t('Noeud.tooltips.Nom')} </Tooltip>}>
+            openDelay={500}
+            label={t('Noeud.tooltips.Nom')}>
             <InputGroup
               variant='menuconfigpanel_option_input'
             >
@@ -463,7 +460,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 isDisabled={(multi_selected_nodes.current.length == 1) ? false : true}
               />
             </InputGroup>
-          </OverlayTrigger>
+          </Tooltip>
         </Box>
       </Box>
 
