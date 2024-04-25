@@ -53,7 +53,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
     applicationDraw
   )
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
-  RedrawNodesLabel(dict_variable_application_data,Object.values(display_nodes),GetLinkValue,t)
+  RedrawNodesLabel(dict_variable_application_data,Object.values(display_nodes),GetLinkValue,t,node_function)
 
 
 }
@@ -131,7 +131,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
           uiElementsRef,
           applicationContext,
           link_function,
-          dict_hook_ref_setter_show_dialog_components
+          node_function
         )
         )
     }
@@ -317,7 +317,7 @@ export const drawAddNodes : drawNodeShapeFType = (
       .attr('transform', d => nodeTransform(d, display_nodes, display_links))
   })
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,multi_selected_nodes.current)
-  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes.current,link_function.GetLinkValue,t)
+  RedrawNodesLabel(dict_variable_application_data,multi_selected_nodes.current,link_function.GetLinkValue,t,node_function)
   AddDrawNodesEvent(
     contextMenu,
     dict_variable_application_data,
