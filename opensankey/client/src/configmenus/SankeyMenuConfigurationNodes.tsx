@@ -337,17 +337,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           openDelay={500}
           label={t('Menu.tooltips.noeud.slct')}>
           {dropdownMultiNode()}
-          {/* <Button
-              style={{width:'70%'}}
-              ref={target_node_selector}
-              variant='outline-primary'
-              className='btn_menu_config'
-              id='button-node_selector'
-              onClick={()=>{set_show_node_selector(!show_node_selector)}}
-            >
-              {multi_selected_nodes.current.length>0?CutName(multi_selected_nodes.current.map(n => n.name).join(','), 25 ):'None'}
-            </Button> */}
-          {/* {overlayNodeSlector} */}
         </Tooltip>
 
         {/* Boutton pour supprimer le noeud selectionné */}
