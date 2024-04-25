@@ -288,7 +288,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
 
       d3.select('#fo_input_label_'+contextualised_node!.idNode).style('display','inline-block')
       d3.select('#fo_input_label_'+contextualised_node!.idNode).attr('x',(label_x-node_x)).attr('y',label_y-node_y)
-      d3.select('#text_'+contextualised_node!.idNode).style('display','none')
+      d3.select('#text_'+contextualised_node!.idNode).style('visibility','hidden')
       document.getElementById('input_label_'+contextualised_node!.idNode)?.focus()
 
       set_contextualised_node(undefined)
