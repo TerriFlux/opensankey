@@ -693,14 +693,16 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           set_tab_colored(evt.target.checked)
         }}
       >
-        <Tooltip
+        {/* <Tooltip
           key={'noeud.pf.tooltips.7'}
           placement={'top'}
           openDelay={500}
           label={
             t('Noeud.PF.tooltips.lti')
-          }
-        >          {t('Noeud.PF.lti')}</Tooltip>
+          } */}
+        {/* >           */}
+        {t('Noeud.PF.lti')}
+        {/* </Tooltip> */}
       </Checkbox>
 
       {/* Table montrant les noeuds selectionnés  */}

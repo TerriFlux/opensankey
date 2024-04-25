@@ -731,7 +731,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
       {/* Top Navbar with navigation and edition elements */}
-      <Navbar className='bg-light' fixed='top' style={{ 'display': 'block' }} onClick={()=>{
+      <Navbar className='bg-light' fixed='top' style={{ 'display': 'block', zIndex:'1' }} onClick={()=>{
         contextMenu.ref_setter_contextualised_node.current!(undefined)
         contextMenu.ref_contextualised_node.current = undefined
         contextMenu.ref_setter_contextualised_link.current!(undefined)
@@ -897,14 +897,18 @@ export const Menu: FunctionComponent<MenuTypes> = (
   )
 }
 
-const style_menu_draggable={'display':'flex',width:'25%', 'paddingLeft':'0.75rem','paddingRight':'0.75rem',
-  'position': 'fixed',
-  'flexDirection': 'column',
-  'backgroundColor': '#fff',
-  'backgroundClip': 'padding-box',
-  'border': '1px solid rgba(0, 0, 0, 0.2)',
-  'borderRadius':' 0.6rem',
-  'zIndex':'1031',
+const style_menu_draggable={
+  display:'flex',
+  width:'25%', 
+  paddingLeft:'0.75rem',
+  paddingRight:'0.75rem',
+  position: 'fixed',
+  flexDirection: 'column',
+  backgroundColor: '#fff',
+  backgroundClip: 'padding-box',
+  border: '1px solid rgba(0, 0, 0, 0.2)',
+  borderRadius:' 0.6rem',
+  zIndex:'2',
   maxHeight:'700px',
   overflowY:'auto'
 } as CSSProperties
@@ -926,14 +930,11 @@ export const MenuDraggable : MenuDraggableFType=(
   return <Draggable  handle='.title_menu'
     defaultPosition={{x:pointer_pos.current[0],y:pointer_pos.current[1]}}
     bounds={{left:0,top:0}}
-    onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
-      d3.select('.menu_conf.'+class_name).style('z-index','1031')
-    }}
   >
     <div hidden={!display_menu} className={'menu_conf '+class_name}
       style={n_style_menu_draggable}
     >
-      <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','zIndex':'3','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
+      <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
         <Col xs={11}><h3>{title}</h3></Col>
         <Col className='text-end'>{<CloseButton onClick={()=>{set_display_menu(false)}}/>}</Col>
       </Row>
@@ -1209,7 +1210,7 @@ export const ToastWaitFunc=({
       set_show_toast_wait(false)
     },50
     )
-  }} className='toast_waiting' show={show_toast_wait} onClose={()=>set_show_toast_wait(false)} bg='info' style={{ 'width':'auto', 'position': 'fixed', 'right':'0','top':window.innerHeight-150, 'zIndex': 100000000 }}>
+  }} className='toast_waiting' show={show_toast_wait} onClose={()=>set_show_toast_wait(false)} bg='info' style={{ 'width':'auto', 'position': 'fixed', 'right':'0','top':window.innerHeight-150, 'zIndex': 4 }}>
     <Toast.Body>
       <Spinner/>
       {applicationContext.t('Menu.waiting')}</Toast.Body>

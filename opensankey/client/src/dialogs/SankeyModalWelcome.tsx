@@ -26,7 +26,6 @@ import {
 import { windowSankey } from '../configmenus/SankeyUtils'
 import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
 import Draggable from 'react-draggable'
-import * as d3 from 'd3'
 
 export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   t,
@@ -130,9 +129,6 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   return <Draggable  handle='.title_menu'
     defaultPosition={{x:window.innerWidth/8,y:window.innerHeight*0.12}}
     bounds={{left:0,top:0}}
-    onStart={()=>{d3.selectAll('.menu_conf').style('z-index','1')
-      d3.select('.menu_conf.'+class_name).style('z-index','1031')
-    }}
   >
     <div hidden={!show_wecome || never_see_again.current} className={'menu_conf '+class_name}
       style={n_style_menu_draggable}
@@ -162,6 +158,6 @@ const style_menu_draggable={'display':'flex',
   'backgroundClip': 'padding-box',
   'border': '1px solid rgba(0, 0, 0, 0.2)',
   'borderRadius':' 0.6rem',
-  'zIndex':'1031',
+  'zIndex':'2',
 
 } as CSSProperties

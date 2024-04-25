@@ -520,17 +520,14 @@ export const SetNodesHeight : SetNodesHeightFType = (
 
 ) => {
   const {data,display_links,display_nodes}=dict_variable_application_data
-  let source_node = display_nodes[d.idSource]
-  let target_node = display_nodes[d.idTarget]
+  const source_node = display_nodes[d.idSource]
+  const target_node = display_nodes[d.idTarget]
   if (target_node === undefined) {
-    target_node = display_nodes[d.idTarget]
+    return
   }
   if (source_node === undefined) {
-    const filter_idSource = d.idSource
-    source_node = display_nodes[filter_idSource]
+    return
   }
-
-
 
   const res_source = ComputeTotalOffsets(inv_scale,source_node, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
