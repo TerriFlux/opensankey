@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import {  OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Tooltip } from '@chakra-ui/react'
 import * as d3 from 'd3'
 
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
@@ -91,11 +91,11 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
       })}
     {/* Valeur du flux pour les parametre (flitres) choisi  */}
     {/* Valeur du flux  */}
-    <OverlayTrigger
+    <Tooltip
       key={'flux.data.tooltips.1'}
       placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'flux.data.tooltips.1'}>{t('Flux.data.tooltips.vpp')} </Tooltip>}>
+      openDelay={500}
+      label={t('Flux.data.tooltips.vpp')}>
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
@@ -187,16 +187,16 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
 
         </InputGroup>
       </Box>
-    </OverlayTrigger>
+    </Tooltip>
 
 
     {/* Afficher ou non les donnée sur le Sankey  */}
 
-    <OverlayTrigger
+    <Tooltip
       key={'flux.data.tooltips.3'}
       placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'flux.data.tooltips.3'}>{t('Flux.data.tooltips.affichage')} </Tooltip>}>
+      openDelay={500}
+      label={t('Flux.data.tooltips.affichage')}>
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
@@ -232,7 +232,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
           />
         </InputGroup>
       </Box>
-    </OverlayTrigger>
+    </Tooltip>
 
     {additional_data_element}
 
