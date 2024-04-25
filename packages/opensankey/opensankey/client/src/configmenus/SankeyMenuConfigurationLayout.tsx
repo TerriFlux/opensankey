@@ -1,5 +1,5 @@
 import React,{useState} from 'react'
-import { OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Tooltip } from '@chakra-ui/react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import {
   Box,
@@ -68,12 +68,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Menu.BgC')}
       </Box>
-      <OverlayTrigger
+      <Tooltip
         key={'MEP.tooltips.BgC'}
         placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'MEP.tooltips.BgC'}>{t('MEP.tooltips.BgC')} </Tooltip>}>
+        openDelay={500}
+        label={t('MEP.tooltips.BgC')}>
         <Input
           variant='menuconfigpanel_option_input_color'
           type='color'
@@ -83,7 +82,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             set_data({...data})
           }}
         />
-      </OverlayTrigger>
+      </Tooltip>
     </Box>,
 
     extra_background_element,
@@ -91,25 +90,26 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
     /* Quadrillage */
     /* Afficher le quadrillage */
     <Box as='span'>
-      <OverlayTrigger
-        key={'MEP.tooltips.GV'}
-        placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'MEP.tooltips.GV'}>{t('MEP.tooltips.GV')} </Tooltip>}>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={data.grid_visible}
-          icon={data.grid_visible?<FaEye/>:<FaEyeSlash/>}
-          onChange={(evt) => {
-            data.grid_visible = evt.target.checked
-            DrawGrid(data)
-            setForceUpdate(!forceUpdate)
-          }}
-        >
+
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={data.grid_visible}
+        icon={data.grid_visible?<FaEye/>:<FaEyeSlash/>}
+        onChange={(evt) => {
+          data.grid_visible = evt.target.checked
+          DrawGrid(data)
+          setForceUpdate(!forceUpdate)
+        }}
+      >
+        <Tooltip
+          key={'MEP.tooltips.GV'}
+          placement={'top'}
+          openDelay={500}
+          label={t('MEP.tooltips.GV')}>
           {t('MEP.TCG')}
-        </Checkbox>
-      </OverlayTrigger>
+        </Tooltip>
+      </Checkbox>
+
     </Box>,
 
     /* Taille de la grille */
@@ -122,12 +122,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         {t('MEP.TCG_shift')}
       </Box>
       <Box>
-        <OverlayTrigger
+        <Tooltip
           key={'MEP.tooltips.TCG'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.TCG'}>{t('MEP.tooltips.TCG')} </Tooltip>}>
+          openDelay={500}
+          label={t('MEP.tooltips.TCG')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -152,7 +151,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               pixels
             </InputRightAddon>
           </InputGroup>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
     </Box>,
 
@@ -247,12 +246,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         gridRowStart='2'
         gridRowEnd='3'
       >
-        <OverlayTrigger
+        <Tooltip
           key={'MEP.tooltips.MinFlux'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.MinFlux'}>{t('MEP.tooltips.MinFlux')} </Tooltip>}>
+          openDelay={500}
+          label={t('MEP.tooltips.MinFlux')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -279,7 +277,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(minimum_flux!)}
             </InputRightAddon>
           </InputGroup>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
       <Box
         gridColumnStart='3'
@@ -287,12 +285,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         gridRowStart='2'
         gridRowEnd='3'
       >
-        <OverlayTrigger
+        <Tooltip
           key={'MEP.tooltips.MaxFlux'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.MaxFlux'}>{t('MEP.tooltips.MaxFlux')} </Tooltip>}>
+          openDelay={500}
+          label={t('MEP.tooltips.MaxFlux')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -319,7 +316,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(maximum_flux!)}
             </InputRightAddon>
           </InputGroup>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
     </Box>,
 
@@ -368,12 +365,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.fontSize')}
         </Box>
-        <OverlayTrigger
+        <Tooltip
           key={'Menu.tooltips.fontSize'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'Menu.tooltips.fontSize'}>{t('Menu.tooltips.fontSize')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.fontSize')}>
           <NumberInput
             variant='menuconfigpanel_option_numberinput'
             min={1}
@@ -392,7 +388,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               <NumberDecrementStepper/>
             </NumberInputStepper>
           </NumberInput>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
 
       {/* Couleur de fond de la légende */}
@@ -409,12 +405,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.LegBgColor')}
         </Box>
-        <OverlayTrigger
+        <Tooltip
           key={'Menu.tooltips.LegBgColor'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'Menu.tooltips.LegBgColor'}>{t('Menu.tooltips.LegBgColor')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.LegBgColor')}>
           <Input
             variant='menuconfigpanel_option_input_color'
             type='color'
@@ -425,7 +420,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               setForceUpdate(!forceUpdate)
             }}
           />
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
 
       {/* Opacité du fond de la légende */}
@@ -437,12 +432,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.LegBgOpacity')}
         </Box>
-        <OverlayTrigger
+        <Tooltip
           key={'Menu.tooltips.LegBgOpacity'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'Menu.tooltips.LegBgOpacity'}>{t('Menu.tooltips.LegBgOpacity')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.LegBgOpacity')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -482,29 +476,29 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               %
             </InputRightAddon>
           </InputGroup>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
 
       {/* Affichage du bord de la légende */}
       <Box as='span'>
-        <OverlayTrigger
-          key={'Menu.tooltips.LegBgBorder'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'Menu.tooltips.LegBgBorder'}>{t('Menu.tooltips.LegBgBorder')} </Tooltip>}>
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            isChecked={data.legend_bg_border}
-            onChange={(evt) => {
-              data.legend_bg_border = evt.target.checked
-              reDrawLegend()
-              setForceUpdate(!forceUpdate)
-            }}
-          >
+
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={data.legend_bg_border}
+          onChange={(evt) => {
+            data.legend_bg_border = evt.target.checked
+            reDrawLegend()
+            setForceUpdate(!forceUpdate)
+          }}
+        >
+          <Tooltip
+            key={'Menu.tooltips.LegBgBorder'}
+            placement={'top'}
+            openDelay={500}
+            label={t('Menu.tooltips.LegBgBorder')}>
             {t('Menu.LegBgBorder')}
-          </Checkbox>
-        </OverlayTrigger>
+          </Tooltip>
+        </Checkbox>
       </Box>
 
       <Box
@@ -521,12 +515,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegX')}
         </Box>
-        <OverlayTrigger
+        <Tooltip
           key={'Menu.tooltips.LegX'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'Menu.tooltips.LegX'}>{t('Menu.tooltips.LegX')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.LegX')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -553,7 +546,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(Math.round(legend_position[0]))}
             </InputRightAddon>
           </InputGroup>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
 
       {/* Position Y de la legende */}
@@ -565,12 +558,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegY')}
         </Box>
-        <OverlayTrigger
+        <Tooltip
           key={'Menu.tooltips.LegY'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'Menu.tooltips.LegY'}>{t('Menu.tooltips.LegY')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.LegY')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -597,7 +589,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(Math.round(legend_position[1]))}
             </InputRightAddon>
           </InputGroup>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
 
       {/* Largeur de la fenetre de legende */}
@@ -609,12 +601,11 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegWidth')}
         </Box>
-        <OverlayTrigger
+        <Tooltip
           key={'Menu.tooltips.LegWidth'}
           placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'Menu.tooltips.LegWidth'}>{t('Menu.tooltips.LegWidth')} </Tooltip>}>
+          openDelay={500}
+          label={t('Menu.tooltips.LegWidth')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -640,7 +631,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(data.legend_width)}
             </InputRightAddon>
           </InputGroup>
-        </OverlayTrigger>
+        </Tooltip>
       </Box>
 
       <Box

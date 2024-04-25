@@ -1,5 +1,5 @@
 import React from 'react'
-import { OverlayTrigger, Tooltip } from 'react-bootstrap'
+import { Tooltip } from '@chakra-ui/react'
 import { SankeyData, SankeyLink } from '../types/Types'
 import { TFunction } from 'i18next'
 import { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurationLinksTooltipTypes'
@@ -20,18 +20,18 @@ export const MenuConfigurationLinksTooltip : MenuConfigurationLinksTooltipFType 
     >
       {t('Noeud.IB')}
     </Box>   
-    <OverlayTrigger
+    <Tooltip
       key={'Flux.tooltips.IB'}
       placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Flux.tooltips.IB'}>{t('Flux.tooltips.IB')} </Tooltip>}>
+      openDelay={500}
+      label={t('Flux.tooltips.IB')}>
       <Textarea
         rows={10}
         value={multi_selected_links.current.length>0 && multi_selected_links.current[0].tooltip_text ? multi_selected_links.current[0].tooltip_text : ''}
         onChange={evt => {
           multi_selected_links.current.forEach(l=>l.tooltip_text = evt.target.value)
         }}/>
-    </OverlayTrigger>
+    </Tooltip>
   </>
 
   return menu_for_modal?[content]:

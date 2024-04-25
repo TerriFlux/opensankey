@@ -1,8 +1,5 @@
 import React, { useState } from 'react'
-import {
-  OverlayTrigger,
-  Tooltip,
-} from 'react-bootstrap'
+import { Tooltip } from '@chakra-ui/react'
 import {
   FaAlignCenter,
   FaAlignLeft,
@@ -160,14 +157,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           updateMenuConfigNode()
         }}
       >
-        <OverlayTrigger
+        <Tooltip
           key={'noeud.apparence.tooltips.1'}
           placement={'top'}
-          delay={500}
-          overlay={
-            <Tooltip id={'noeud.apparence.tooltips.1'}>
-              {t('Noeud.apparence.tooltips.Visibilité')}
-            </Tooltip>}
+          openDelay={500}
+          label={t('Noeud.apparence.tooltips.Visibilité')}
         >
           <>
             {t('Noeud.apparence.Visibilité')}
@@ -177,7 +171,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 <></>
             }
           </>
-        </OverlayTrigger>
+        </Tooltip>
       </Checkbox>
     </Box>
 
@@ -192,14 +186,12 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     </Box>
 
     {/* Couleur du noeud */}
-    <OverlayTrigger
+    <Tooltip
       key={'noeud.apparence.tooltips.2'}
       placement={'top'}
-      delay={500}
-      overlay={
-        <Tooltip id={'noeud.apparence.tooltips.2'}>
-          {t('Noeud.apparence.tooltips.Couleur')}
-        </Tooltip>
+      openDelay={500}
+      label={
+        t('Noeud.apparence.tooltips.Couleur')
       }
     >
       <Box
@@ -245,11 +237,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               }
             }}
           />
-          <OverlayTrigger
+          <Tooltip
             key={'noeud.apparence.tooltips.3'}
             placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.apparence.tooltips.3'}>{t('Noeud.apparence.tooltips.CouleurPérenne')} </Tooltip>}>
+            openDelay={500}
+            label={t('Noeud.apparence.tooltips.CouleurPérenne')}>
             <Button
               //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
               variant={
@@ -267,20 +259,17 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             >
               {list_value['colorSustainable'][0]?<FaLock/>:<FaLockOpen/>}
             </Button>
-          </OverlayTrigger>
+          </Tooltip>
         </Box>
       </Box>
-    </OverlayTrigger>
+    </Tooltip>
 
     {/* Forme du noeud */}
-    <OverlayTrigger
+    <Tooltip
       key={'noeud.apparence.tooltips.4'}
       placement={'top'}
-      delay={500}
-      overlay={
-        <Tooltip id={'noeud.apparence.tooltips.4'}>
-          {t('Noeud.apparence.tooltips.Forme')}
-        </Tooltip>}
+      openDelay={500}
+      label={t('Noeud.apparence.tooltips.Forme')}
     >
       <Box
         as='span'
@@ -378,22 +367,19 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           </Button>
         </Box>
       </Box>
-    </OverlayTrigger>
+    </Tooltip>
 
     {
       /* Change the angle of the arrow shaped node */
       list_value['shape'][0]==='arrow'?
         <Box layerStyle='menuconfigpanel_grid'>
-          <OverlayTrigger
+          <Tooltip
             key={'noeud.apparence.tooltips.arrow_angle'}
             placement={'top'}
-            delay={500}
-            rootClose
-            overlay={
-              <Tooltip id={'noeud.apparence.tooltips.arrow_angle'}>
-                {t('Noeud.apparence.tooltips.arrow_angle')}
-              </Tooltip>}
-          >
+            openDelay={500}
+            
+            label={
+              t('Noeud.apparence.tooltips.arrow_angle')}>
             <Box
               as='span'
               layerStyle='menuconfigpanel_row_2cols'
@@ -431,7 +417,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 <SliderThumb />
               </Slider>
             </Box>
-          </OverlayTrigger>
+          </Tooltip>
 
           <Box
             as='span'
@@ -527,15 +513,13 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     </Box>
 
     {/* Largeur minimale du noeud */}
-    <OverlayTrigger
+    <Tooltip
       key={'noeud.apparence.tooltips.6'}
       placement={'top'}
-      delay={500}
-      rootClose
-      overlay={
-        <Tooltip id={'noeud.apparence.tooltips.6'}>
-          {t('Noeud.apparence.tooltips.TML')}
-        </Tooltip>
+      openDelay={500}
+      
+      label={
+        t('Noeud.apparence.tooltips.TML')
       }
     >
       <Box
@@ -595,18 +579,15 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           </InputRightAddon>
         </InputGroup>
       </Box>
-    </OverlayTrigger>
+    </Tooltip>
 
     {/* Hauteur minimale du noeud */}
-    <OverlayTrigger
+    <Tooltip
       key={'noeud.apparence.tooltips.7'}
       placement={'top'}
-      delay={500}
-      rootClose
-      overlay={
-        <Tooltip id={'noeud.apparence.tooltips.7'}>
-          {t('Noeud.apparence.tooltips.TMH')}
-        </Tooltip>
+      openDelay={500}
+      label={
+        t('Noeud.apparence.tooltips.TMH')
       }
     >
       <Box
@@ -666,7 +647,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           </InputRightAddon>
         </InputGroup>
       </Box>
-    </OverlayTrigger>
+    </Tooltip>
     {advanced_appearence_content}
   </Box>
 
@@ -679,40 +660,39 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     layerStyle='menuconfigpanel_grid'
   >
     {/* Checkbox visibilité noeud */}
-    <OverlayTrigger
-      key={'noeud.labels.tooltips.1'}
-      placement={'top'}
-      delay={500}
-      overlay={
-        <Tooltip id={'noeud.labels.tooltips.1'}>
-          {t('Noeud.labels.tooltips.vdb')}
-        </Tooltip>
-      }
+
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_part_title_1'
     >
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_part_title_1'
+      <Checkbox
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={(list_value['label_visible'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
+        isIndeterminate={list_value['label_visible'][1]}
+        isChecked={list_value['label_visible'][0] as boolean}
+        onChange={(evt) => {
+          Object.values(parameter_to_modify)
+            .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+            .forEach(d => AssignNodeValueToCorrectVar(d,'label_visible',evt.target.checked,menu_for_style))
+          updateMenuConfigNode()
+        }}
       >
-        <Checkbox
-          variant='menuconfigpanel_part_title_1_checkbox'
-          icon={(list_value['label_visible'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
-          isIndeterminate={list_value['label_visible'][1]}
-          isChecked={list_value['label_visible'][0] as boolean}
-          onChange={(evt) => {
-            Object.values(parameter_to_modify)
-              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => AssignNodeValueToCorrectVar(d,'label_visible',evt.target.checked,menu_for_style))
-            updateMenuConfigNode()
-          }}
+        <Tooltip
+          key={'noeud.labels.tooltips.1'}
+          placement={'top'}
+          openDelay={500}
+          label={
+            t('Noeud.labels.tooltips.vdb')
+          }
         >
           {t('Noeud.labels.vdb')}
-          {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_visible',menu_for_style)?
-            TooltipValueSurcharge('node_var',t):
-            <></>
-          )}
-        </Checkbox>
-      </Box>
-    </OverlayTrigger>
+        </Tooltip>
+        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_visible',menu_for_style)?
+          TooltipValueSurcharge('node_var',t):
+          <></>
+        )}
+      </Checkbox>
+    </Box>
 
     {
       list_value['label_visible'][0] as boolean?
@@ -734,25 +714,26 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           </Box>
 
           {/* Label en blanc ou noir */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.2'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'noeud.labels.tooltips.2'}>{t('Noeud.labels.tooltips.lb')} </Tooltip>}>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isIndeterminate={list_value['label_color'][1]}
-              isChecked={list_value['label_color'][0] as boolean}
-              onChange={(evt) => {
-                Object.values(parameter_to_modify)
-                  .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                  .forEach(d => AssignNodeValueToCorrectVar(d,'label_color',evt.target.checked,menu_for_style))
-                updateMenuConfigNode()
-              }}>
+
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isIndeterminate={list_value['label_color'][1]}
+            isChecked={list_value['label_color'][0] as boolean}
+            onChange={(evt) => {
+              Object.values(parameter_to_modify)
+                .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => AssignNodeValueToCorrectVar(d,'label_color',evt.target.checked,menu_for_style))
+              updateMenuConfigNode()
+            }}>
+            <Tooltip
+              key={'noeud.labels.tooltips.2'}
+              placement={'top'}
+              openDelay={500}
+              label={t('Noeud.labels.tooltips.lb')}>
               {t('Noeud.labels.lb')}
-              {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_color',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
-            </Checkbox>
-          </OverlayTrigger>
+            </Tooltip>
+            {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_color',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
+          </Checkbox>
 
           <Box
             as='span'
@@ -889,34 +870,34 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           </Box>
 
           {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
-          <OverlayTrigger
-            key={'noeud.labels.tooltips.l_bg'}
-            placement={'top'}
-            delay={500}
-            overlay={
-              <Tooltip id={'noeud.labels.tooltips.l_bg'}>
-                {t('Noeud.labels.tooltips.l_bg')}
-              </Tooltip>
-            }
+
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isIndeterminate={list_value['label_background'][1]}
+            isChecked={list_value['label_background'][0] as boolean}
+            onChange={(evt) => {
+              Object
+                .values(parameter_to_modify)
+                .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+                .forEach(d => AssignNodeValueToCorrectVar(d,'label_background',evt.target.checked,menu_for_style))
+              updateMenuConfigNode()
+            }}
           >
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isIndeterminate={list_value['label_background'][1]}
-              isChecked={list_value['label_background'][0] as boolean}
-              onChange={(evt) => {
-                Object
-                  .values(parameter_to_modify)
-                  .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                  .forEach(d => AssignNodeValueToCorrectVar(d,'label_background',evt.target.checked,menu_for_style))
-                updateMenuConfigNode()
-              }}
+            <Tooltip
+              key={'noeud.labels.tooltips.l_bg'}
+              placement={'top'}
+              openDelay={500}
+              label={
+                t('Noeud.labels.tooltips.l_bg')
+              }
             >
               {t('Noeud.labels.l_bg')}
-              {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_background',menu_for_style)?
-                TooltipValueSurcharge('node_var',t):
-                <></>)}
-            </Checkbox>
-          </OverlayTrigger>
+            </Tooltip>
+
+            {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_background',menu_for_style)?
+              TooltipValueSurcharge('node_var',t):
+              <></>)}
+          </Checkbox>
 
           <Box
             as='span'
@@ -926,16 +907,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           </Box>
 
           {/* Largeur de la zone de texte du label */}
-          <OverlayTrigger
+          <Tooltip
             key={'noeud.labels.tooltips.9'}
             placement={'top'}
-            delay={500}
-            rootClose
-            overlay={
-              <Tooltip id={'noeud.labels.tooltips.9'}>
-                {t('Noeud.labels.tooltips.cl')}
-              </Tooltip>
-            }
+            openDelay={500}
+            label={t('Noeud.labels.tooltips.cl')}
           >
             <Box
               as='span'
@@ -981,7 +957,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 </InputRightAddon>
               </InputGroup>
             </Box>
-          </OverlayTrigger>
+          </Tooltip>
 
           {/* Position  du label par rapport au noeud */}
           <Box
@@ -1002,14 +978,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 layerStyle='options_3cols'
               >
                 {/* A gauche  */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.6'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.6'}>
-                      {t('Noeud.labels.tooltips.gauche')}
-                    </Tooltip>}>
+                  openDelay={500}
+                  label={t('Noeud.labels.tooltips.gauche')}>
                   <Button
                     variant={
                       list_value['label_horiz'][0]=== 'left'?
@@ -1032,18 +1005,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     <FaAlignLeft/>
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
 
                 {/* Au milieu */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.7'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.7'}>
-                      {t('Noeud.labels.tooltips.Milieu_ph')}
-                    </Tooltip>
-                  }
+                  openDelay={500}
+                  label={t('Noeud.labels.tooltips.Milieu_ph')}
                 >
                   <Button
                     variant={
@@ -1068,18 +1037,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     <FaAlignCenter/>
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
 
                 {/* A droite */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.8'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.8'}>
-                      {t('Noeud.labels.tooltips.droite')}
-                    </Tooltip>}
-                >
+                  openDelay={500}
+                  label={t('Noeud.labels.tooltips.droite')}>
                   <Button
                     variant={
                       list_value['label_horiz'][0]==='right'?
@@ -1103,7 +1068,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     <FaAlignRight/>
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
               </Box>
 
               {/* Position verticale */}
@@ -1111,14 +1076,12 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 layerStyle='options_3cols'
               >
                 {/* En haut */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.3'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.3'}>
-                      {t('Noeud.labels.tooltips.haut')}
-                    </Tooltip>
+                  openDelay={500}
+                  label={
+                    t('Noeud.labels.tooltips.haut')
                   }
                 >
                   <Button
@@ -1144,17 +1107,15 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     {svg_label_top}
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
 
                 {/* au Milieu */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.4'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.4'}>
-                      {t('Noeud.labels.tooltips.Milieu_pv')}
-                    </Tooltip>
+                  openDelay={500}
+                  label={
+                    t('Noeud.labels.tooltips.Milieu_pv')
                   }
                 >
                   <Button
@@ -1180,17 +1141,15 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     {svg_label_center}
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
 
                 {/* En bas */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.5'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.5'}>
-                      {t('Noeud.labels.tooltips.Bas')}
-                    </Tooltip>
+                  openDelay={500}
+                  label={
+                    t('Noeud.labels.tooltips.Bas')
                   }
                 >
                   <Button
@@ -1216,7 +1175,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     {svg_label_bottom}
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
               </Box>
             </Box>
           </Box>
@@ -1230,40 +1189,39 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   const content_label_value=<Box
     layerStyle='menuconfigpanel_grid'
   >
-    <OverlayTrigger
-      key={'noeud.labels.tooltips.10'}
-      placement={'top'}
-      delay={500}
-      overlay={
-        <Tooltip id={'noeud.labels.tooltips.10'}>
-          {t('Noeud.labels.tooltips.vdv')}
-        </Tooltip>
-      }
+
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_part_title_1'
     >
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_part_title_1'
+      <Checkbox
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={(list_value['show_value'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
+        isIndeterminate={list_value['show_value'][1]}
+        isChecked={list_value['show_value'][0] as boolean}
+        onChange={(evt) => {
+          Object
+            .values(parameter_to_modify)
+            .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+            .forEach(d => AssignNodeValueToCorrectVar(d,'show_value',evt.target.checked,menu_for_style))
+          updateMenuConfigNode()
+        }}
       >
-        <Checkbox
-          variant='menuconfigpanel_part_title_1_checkbox'
-          icon={(list_value['show_value'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
-          isIndeterminate={list_value['show_value'][1]}
-          isChecked={list_value['show_value'][0] as boolean}
-          onChange={(evt) => {
-            Object
-              .values(parameter_to_modify)
-              .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => AssignNodeValueToCorrectVar(d,'show_value',evt.target.checked,menu_for_style))
-            updateMenuConfigNode()
-          }}
+        <Tooltip
+          key={'noeud.labels.tooltips.10'}
+          placement={'top'}
+          openDelay={500}
+          label={
+            t('Noeud.labels.tooltips.vdv')
+          }
         >
           {t('Noeud.labels.vdv')}
-          {(IsNodeDisplayingValueLocal(multi_selected_nodes,'show_value',menu_for_style)?
-            TooltipValueSurcharge('node_var',t):
-            <></>)}
-        </Checkbox>
-      </Box>
-    </OverlayTrigger>
+        </Tooltip>
+        {(IsNodeDisplayingValueLocal(multi_selected_nodes,'show_value',menu_for_style)?
+          TooltipValueSurcharge('node_var',t):
+          <></>)}
+      </Checkbox>
+    </Box>
 
     {
       list_value['show_value'][0] as boolean?
@@ -1333,14 +1291,12 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 layerStyle='options_3cols'
               >
                 {/* A gauche */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.14'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.14'}>
-                      {t('Noeud.labels.tooltips.gauche_val')}
-                    </Tooltip>
+                  openDelay={500}
+                  label={
+                    t('Noeud.labels.tooltips.gauche_val')
                   }
                 >
                   <Button
@@ -1362,17 +1318,15 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     <FaAlignLeft/>
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
 
                 {/* Au milieu */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.15'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.15'}>
-                      {t('Noeud.labels.tooltips.Milieu_ph_val')}
-                    </Tooltip>
+                  openDelay={500}
+                  label={
+                    t('Noeud.labels.tooltips.Milieu_ph_val')
                   }
                 >
                   <Button
@@ -1394,17 +1348,15 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     <FaAlignCenter/>
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
 
                 {/* A droite */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.16'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.16'}>
-                      {t('Noeud.labels.tooltips.droite_val')}
-                    </Tooltip>
+                  openDelay={500}
+                  label={
+                    t('Noeud.labels.tooltips.droite_val')
                   }
                 >
                   <Button
@@ -1426,21 +1378,19 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     <FaAlignRight/>
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
               </Box>
 
               {/* Verticale */}
               <Box
                 layerStyle='options_3cols'
               >{/* en haut */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.11'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.11'}>
-                      {t('Noeud.labels.tooltips.haut_val')}
-                    </Tooltip>
+                  openDelay={500}
+                  label={
+                    t('Noeud.labels.tooltips.haut_val')
                   }
                 >
                   <Button
@@ -1462,18 +1412,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     {svg_label_top}
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
 
                 {/* Au milieu */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.12'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.12'}>
-                      {t('Noeud.labels.tooltips.Milieu_pv_val')}
-                    </Tooltip>
-                  }
+                  openDelay={500}
+                  label={t('Noeud.labels.tooltips.Milieu_pv_val')}
                 >
                   <Button
                     variant={
@@ -1494,18 +1440,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     {svg_label_center}
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
 
                 {/* En bas */}
-                <OverlayTrigger
+                <Tooltip
                   key={'noeud.labels.tooltips.13'}
                   placement={'top'}
-                  delay={500}
-                  overlay={
-                    <Tooltip id={'noeud.labels.tooltips.13'}>
-                      {t('Noeud.labels.tooltips.Bas_val')}
-                    </Tooltip>
-                  }
+                  openDelay={500}
+                  label={t('Noeud.labels.tooltips.Bas_val')}
                 >
                   <Button
                     variant={
@@ -1526,7 +1468,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   >
                     {svg_label_bottom}
                   </Button>
-                </OverlayTrigger>
+                </Tooltip>
               </Box>
             </Box>
             {advanced_label_value_content}
@@ -1572,15 +1514,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         })}
       </MenuList>
     </Menu>
-    <OverlayTrigger
+    <Tooltip
       key={'menu.tooltips.noeud.5'}
       placement={'top'}
-      delay={500}
-      overlay={
-        <Tooltip id={'menu.tooltips.noeud.5'}>
-          {t('Noeud.tooltips.AS')}
-        </Tooltip>
-      }
+      openDelay={500}
+      label={t('Noeud.tooltips.AS')}
     >
       <Button
         variant='menuconfigpanel_option_button'
@@ -1592,7 +1530,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         <FaUndo />
         {/* {t('Noeud.AS')} */}
       </Button>
-    </OverlayTrigger>
+    </Tooltip>
   </Box>:<></>
 
   // Tableau d'elements de sous-menu attribut de noeuds
