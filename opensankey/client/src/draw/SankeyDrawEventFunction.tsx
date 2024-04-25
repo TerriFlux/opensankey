@@ -281,7 +281,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
     // blur all the input of the config menu in case we modify a value from an input (where the value is truly apply on blur)
     // and click on the drawing zone wich normally doesn't count as a blur of the input
     for (const item of document.getElementsByTagName('input')) {
-      if (item.className.includes('form-control') && (item.type == 'text' || item.type == 'number')) {
+      if ((['form-control','chakra-numberinput__field','chakra-input','input_label'].some(r=> item.className.includes(r)))) {
         item.blur()
       }
     }
@@ -631,6 +631,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   uiElementsRef,
   applicationContext,
   link_function,
+  node_function
 ) => {
   const { data,display_links } = dict_variable_application_data
   const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,ref_getter_mode_selection} = dict_variable_elements_selected
@@ -640,7 +641,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     if (d.name.includes('_tmp')) {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       d.name = d.idNode
-      RedrawNodesLabel(dict_variable_application_data,[d],GetLinkValue,applicationContext.t)
+      RedrawNodesLabel(dict_variable_application_data,[d],GetLinkValue,applicationContext.t,node_function)
     } else {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       const n_link = DefaultLink(data)
