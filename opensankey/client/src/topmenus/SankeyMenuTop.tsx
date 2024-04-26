@@ -901,10 +901,10 @@ export const MenuDraggable : MenuDraggableFType=(
     <div hidden={!display_menu} className={'menu_conf '+class_name}
       style={n_style_menu_draggable}
     >
-      <Row className='title_menu' style={{'borderBottom':' 1px solid #eceeef','lineHeight':'1.5rem','backgroundColor':'white','position':'sticky','top':'0','padding':'1rem'}}>
-        <Col xs={11}><h3>{title}</h3></Col>
-        <Col className='text-end'>{<CloseButton onClick={()=>{set_display_menu(false)}}/>}</Col>
-      </Row>
+      <Box as='span' layerStyle='title_menu_draggable' className='title_menu'>
+        <Box><h3>{title}</h3></Box>
+        <Box>{<CloseButton onClick={()=>{set_display_menu(false)}}/>}</Box>
+      </Box>
       <div className='sankey-menu'>
         {content}
       </div>
