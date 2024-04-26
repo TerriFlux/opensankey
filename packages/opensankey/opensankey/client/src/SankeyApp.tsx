@@ -504,6 +504,26 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     setDiagram,
   )
 
+  const config_link_data=
+  MenuConfigurationLinksData(
+    dict_variable_application_data,
+    dict_variable_elements_selected,
+    applicationContext,
+    [<></>],
+    ComponentUpdater,
+    node_function,
+    link_function
+  )
+  const config_link_attr=MenuConfigurationLinksAppearence(
+    dict_variable_application_data,
+    dict_variable_elements_selected,
+    applicationContext,
+    [],
+    false,
+    link_function,
+    ComponentUpdater )
+
+
   //TOAST That appeat to heavy processing func
   const toast_wait_func=<ToastWaitFunc
     dict_variable_application_data={dict_variable_application_data}
@@ -717,16 +737,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           MenuDraggable(
             dict_hook_ref_setter_show_dialog_components,
             'ref_setter_show_menu_link_data',
-            MenuConfigurationLinksData(
-              dict_variable_application_data,
-              dict_variable_elements_selected,
-              applicationContext,
-              [<></>],
-              true,
-              ComponentUpdater,
-              node_function,
-              link_function
-            ),
+            config_link_data,
             contextMenu.pointer_pos,
             applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
           )
@@ -735,16 +746,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           MenuDraggable(
             dict_hook_ref_setter_show_dialog_components,
             'ref_setter_show_menu_link_appearence',
-            MenuConfigurationLinksAppearence(
-              dict_variable_application_data,
-              dict_variable_elements_selected,
-              applicationContext,
-              [],
-              false,
-              link_function,
-              ComponentUpdater,
-              true
-            ),
+            config_link_attr,
             contextMenu.pointer_pos,
             applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')
           )
@@ -833,8 +835,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 dict_variable_application_data,
                 dict_variable_elements_selected,
                 applicationContext,
-                [<></>],
-                [<></>],
+                config_link_data,
+                config_link_attr,
                 link_function,
                 ComponentUpdater,
                 node_function

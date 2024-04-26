@@ -40,8 +40,6 @@ import {
 import { MultiSelect } from 'react-multi-select-component'
 import { selected_type } from '../topmenus/SankeyMenuTop'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { MenuConfigurationLinksData } from './SankeyMenuConfigurationLinksData'
-import { MenuConfigurationLinksAppearence } from './SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
 import { ValueSelectedParameter, NodeVisibleOnsSvg, SelectVisualyLinks, DeselectVisualyLinks } from '../draw/SankeyDrawFunction'
@@ -51,12 +49,13 @@ import { MenuConfigurationLinksFType } from './types/SankeyMenuConfigurationLink
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRotate} from '@fortawesome/free-solid-svg-icons'
 import { reorganize_inputLinksId } from '../draw/SankeyDrawLayout'
+import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
-  additional_data_element:JSX.Element[],
-  additional_link_appearence_items:JSX.Element[],
+  menu_config_link_data,
+  menu_config_link_attr,
   link_function,
   ComponentUpdater,
   node_function
@@ -68,25 +67,22 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element[]}= {
-    'data'      : MenuConfigurationLinksData(
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      applicationContext,
-      additional_data_element,
-      false,ComponentUpdater,
-      node_function,
-      link_function
-    ),
-    'appearence': MenuConfigurationLinksAppearence(
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      applicationContext,
-      additional_link_appearence_items,
+    'data': SankeyWrapperConfigInModalOrMenu(
+      menu_config_link_data,
       false,
-      link_function,
-      ComponentUpdater
-    ),
-    'OSTooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t,false)
+      t('Flux.data.données') as string,
+      'link_data_tab_id'),
+    'appearence': SankeyWrapperConfigInModalOrMenu(
+      menu_config_link_attr,
+      false,
+      t('Flux.apparence.apparence') as string,
+      'link_attr_tab_id'),
+    'tooltip': MenuConfigurationLinksTooltip(
+      data,
+      set_data,
+      multi_selected_links,
+      t,
+      false)
   }
   const pre_tag_menu=MenuConfigurationLinksTags(
     dict_variable_application_data,
@@ -140,7 +136,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
-  const {updateComponentMenuConfigLink}=ComponentUpdater 
+  const {updateComponentMenuConfigLink}=ComponentUpdater
   const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
@@ -334,7 +330,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       RedrawNodes([source_node,previous_node])
       link_function.RedrawLinks(link_to_update)
       ComponentUpdater.updateComponenSaveInCache.current(false)
-      
+
     } else if(Object.keys(data.nodes).length>1){
       set_pre_idSource(changeEvent.target.value)
     }
@@ -372,8 +368,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
       }
       target_node.inputLinksId.push(multi_selected_links.current[0].idLink)
-      
-      
+
+
 
       // Create a variable containing all links to update
       let link_to_update=[]
@@ -386,7 +382,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       RedrawNodes([target_node,previous_node])
       link_function.RedrawLinks(link_to_update)
       ComponentUpdater.updateComponenSaveInCache.current(false)
-      
+
     }else if(Object.keys(data.nodes).length>1){
       set_pre_idTarget(changeEvent.target.value)
     }
@@ -528,7 +524,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               ComponentUpdater.updateComponenSaveInCache.current(false)
               setForceUpdate(!forceUpdate)
 
-              
+
             }}
           >
             <FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/>

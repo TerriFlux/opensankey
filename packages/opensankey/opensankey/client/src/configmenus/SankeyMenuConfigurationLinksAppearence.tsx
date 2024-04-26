@@ -1,9 +1,9 @@
-import React,{useState} from 'react'
-import { SankeyData, SankeyLinkAttrLocal } from '../types/Types'
+import React,{FunctionComponent, MutableRefObject, useRef, useState} from 'react'
+import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle } from '../types/Types'
 import { FaAlignLeft, FaAlignCenter, FaAlignRight, FaEyeSlash, FaEye, FaChevronDown, FaUndo } from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp } from 'react-icons/fa'
 
-import { Box, Button, Checkbox, Input, InputGroup, InputRightAddon, Menu, MenuButton, MenuItem, MenuList, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, Tab, TabPanel } from '@chakra-ui/react'
+import { Box, Button, Checkbox, Input, InputGroup, InputRightAddon, Menu, MenuButton, MenuItem, MenuList, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
 
 import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,TooltipValueSurcharge, IsAllLinkNotLocalAttrSameValue, OSTooltip} from './SankeyUtils'
 import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
@@ -69,7 +69,6 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   menu_for_style:boolean,
   link_function,
   ComponentUpdater,
-  menu_for_modal=false
 )=>{
   const {t}=applicationContext
   const {data}=dict_variable_application_data
@@ -77,18 +76,17 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[ref_selected_style_link.current]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
-  const [display_link_opacity, set_display_link_opacity] = useState('0')
-  dict_variable_elements_selected.ref_display_link_opacity.current.push(set_display_link_opacity)
   const {updateComponentMenuConfigLink}=ComponentUpdater
+
+  const element_to_update=menu_for_style?Object.values(dict_variable_application_data.display_links):multi_selected_links.current
 
   const updateMenuConfigLink=()=>{
     ComponentUpdater.updateComponenSaveInCache.current(false)
-    
-    link_function.RedrawLinks(multi_selected_links.current)
+    link_function.RedrawLinks(element_to_update)
     updateComponentMenuConfigLink.current()
   }
   const list_key=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible',
-    'label_visible','font_family','recycling','arrow','curved','nb_digit','scientific_precision',
+    'label_visible','font_family','recycling','arrow','curved',
     'text_color','label_position','orthogonal_label_position'] as (keyof SankeyLinkAttrLocal)[]
   const list_value=IsAllLinkAttrSameValue(data,selected_parameter,list_key,menu_for_style)
 
@@ -142,44 +140,6 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       return allChecked
       break
     }
-  }
-
-  const courbure = () => {
-    let display_courbe = true
-    let courbe = 0.5
-    if (selected_parameter.length != 0) {
-      courbe=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'curvature',menu_for_style) as number
-    }
-    selected_parameter.map((d) => {
-      display_courbe = (ReturnCorrectLinkAttributeValue(data,d,'curvature',menu_for_style)  == courbe) ? display_courbe : false
-    })
-
-    return (display_courbe) ? courbe : 0
-  }
-
-  const arrow_size = () => {
-    let display_arrow_size = true
-    let courbe = 10
-    if (selected_parameter.length != 0) {
-      courbe=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'arrow_size',menu_for_style) as number
-    }
-    selected_parameter.map((d) => {
-      display_arrow_size = (ReturnCorrectLinkAttributeValue(data,d,'arrow_size',menu_for_style)  == courbe) ? display_arrow_size : false
-    })
-
-    return (display_arrow_size) ? courbe : 0
-  }
-
-  const allNodeLabelFontSize = () => {
-    let display_size = true
-    let size = 11
-    if (selected_parameter.length != 0) {
-      size = ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_font_size',menu_for_style) as number
-    }
-    selected_parameter.map((d) => {
-      display_size = ((ReturnCorrectLinkAttributeValue(data,d,'label_font_size',menu_for_style) as number) == size) ? display_size : false
-    })
-    return (display_size) ? size : 11
   }
 
   const apply_style_to_selected_links = () => {
@@ -337,28 +297,17 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         variant='menuconfigpanel_option_input'
       >
         <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput'
-            inputMode='numeric'
-            min={1}  step={1}
-            value={arrow_size()}
-            onChange={
-              evt => {
-                const val=+evt
-                const value=isNaN(val) || val<=0?10:val
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  AssignLinkValueToCorrectVar(d,'arrow_size',value,menu_for_style)
-
-                })
-                updateMenuConfigLink()
-              }}>
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
-
-          </NumberInput>
+            
+          <ConfigLinkAttributeNumberInput
+            data={dict_variable_application_data.data}
+            local_var_of_node={'arrow_size'}
+            parameter_to_modify={parameter_to_modify}
+            selected_parameter={selected_parameter}
+            menu_for_style={menu_for_style}
+            minimum_value={1}
+            stepper={true}
+            function_onBlur={updateMenuConfigLink}
+          />
         </OSTooltip>
       </InputGroup>
     </Box>
@@ -392,26 +341,19 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         variant='menuconfigpanel_option_input'
       >
         <OSTooltip label={t('Flux.apparence.tooltips.courbure')}>
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput'
-            inputMode='numeric'
-            min={0}
-            max={1}
+            
+          <ConfigLinkAttributeNumberInput
+            data={dict_variable_application_data.data}
+            local_var_of_node={'curvature'}
+            parameter_to_modify={parameter_to_modify}
+            selected_parameter={selected_parameter}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            maximum_value={1}
             step={0.01}
-            value={courbure()}
-            onChange={
-              evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                  AssignLinkValueToCorrectVar(d,'curvature',+evt,menu_for_style)
-                })
-                updateMenuConfigLink()}}>
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
-
-          </NumberInput>
+            stepper={true}
+            function_onBlur={updateMenuConfigLink}
+          />
         </OSTooltip>
       </InputGroup>
     </Box>
@@ -434,8 +376,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             value={Math.round(shiftCenter()*100)}
             isDisabled={(linkOrientation('hv')||linkOrientation('vh'))}
             onChange={
-              evt => {
-                const center = +evt/100
+              (_,val) => {
+                const center = val/100
                 selected_parameter.forEach(d => {
                   let shift_gap = (Number(ReturnCorrectLinkAttributeValue(data,d,'right_horiz_shift',menu_for_style)) - Number(ReturnCorrectLinkAttributeValue(data,d,'left_horiz_shift',menu_for_style)))/2
                   if (center - shift_gap < 0) {
@@ -479,8 +421,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             value={Math.round(shift()*100)}
             isDisabled={(linkOrientation('hv')||linkOrientation('vh'))}
             onChange={
-              evt => {
-                const shift_gap = +evt/100
+              (_,val) => {
+                const shift_gap = val/100
                 if (shift_gap > 0.5 ) {
                   return
                 }
@@ -538,35 +480,19 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       <InputGroup
         variant='menuconfigpanel_option_input'
       >
-        <OSTooltip label={t('Flux.apparence.tooltips.opacity')}><>
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput'
-            inputMode='numeric'
-            max={1}
-            min={0}
+        <OSTooltip label={t('Flux.apparence.tooltips.opacity')}>
+          <ConfigLinkAttributeNumberInput
+            data={dict_variable_application_data.data}
+            local_var_of_node={'opacity'}
+            parameter_to_modify={parameter_to_modify}
+            selected_parameter={selected_parameter}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            maximum_value={1}
             step={0.1}
-            value={display_link_opacity}
-            isInvalid={selected_parameter.length>0?+display_link_opacity!=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'opacity',menu_for_style):false}
-            onChange={
-              evt => {
-                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(evt))
-              }}
-            onBlur={(evt)=>{
-              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(
-                d => AssignLinkValueToCorrectVar(d,'opacity',+evt,menu_for_style)
-              )
-              link_function.RedrawLinks(multi_selected_links.current)
-              updateComponentMenuConfigLink.current()
-            }}
-          >
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
-          </NumberInput>
-           
-        </>
+            stepper={true}
+            function_onBlur={updateMenuConfigLink}
+          />
         </OSTooltip>
       </InputGroup>
     </Box>
@@ -631,27 +557,17 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           {t('Flux.label.NbPrecision')}
         </Box>
         <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput'
-            inputMode='numeric'
-            min={0}
-            step={1}
-            value={list_value['scientific_precision'][0] as number}
-            onChange={evt=>{
-              const value=+evt
-              if(!isNaN(value)){
-                const val=isNaN(value) || value<=0?5:Math.round(value)
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'scientific_precision',val,menu_for_style))
-                link_function.RedrawLinks(multi_selected_links.current)
-              }
-            }}>
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
 
-          </NumberInput>
+          <ConfigLinkAttributeNumberInput
+            data={dict_variable_application_data.data}
+            local_var_of_node={'scientific_precision'}
+            parameter_to_modify={parameter_to_modify}
+            selected_parameter={selected_parameter}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            stepper={true}
+            function_onBlur={updateMenuConfigLink}
+          />
         </OSTooltip>
       </Box>
 
@@ -711,25 +627,17 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           </Box>
 
           <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput'
-              inputMode='numeric'
-              min={0}
-              step={1}
-              isDisabled={!(list_value['custom_digit'][0] as boolean)}
-              value={list_value['nb_digit'][0] as number}
-              onChange={evt=>{
-                const value=+evt
-                const val=isNaN(value)
-                Object.values(parameter_to_modify).filter(f => !val && selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d =>AssignLinkValueToCorrectVar(d,'nb_digit',value,menu_for_style))
-                link_function.RedrawLinks(multi_selected_links.current)
-              }}>
-              <NumberInputField/>
-              <NumberInputStepper>
-                <NumberIncrementStepper/>
-                <NumberDecrementStepper/>
-              </NumberInputStepper>
-            </NumberInput>
+
+            <ConfigLinkAttributeNumberInput
+              data={dict_variable_application_data.data}
+              local_var_of_node={'nb_digit'}
+              parameter_to_modify={parameter_to_modify}
+              selected_parameter={selected_parameter}
+              menu_for_style={menu_for_style}
+              minimum_value={0}
+              stepper={true}
+              function_onBlur={updateMenuConfigLink}
+            />
           </OSTooltip>
         </Box></>:<></>}
 
@@ -849,31 +757,18 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               >{d}</option>
             })}
           </Select>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput_with_right_addon'
-              inputMode='numeric'
-              min={11}
-              isDisabled={!list_value['label_visible'][0]}
-              value={allNodeLabelFontSize()}
-              onChange={evt => {
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d =>{
-                  AssignLinkValueToCorrectVar(d,'label_font_size',+evt,menu_for_style)
-                })
-                updateMenuConfigLink()
-              }}>
-              <NumberInputField/>
-              <NumberInputStepper>
-                <NumberIncrementStepper/>
-                <NumberDecrementStepper/>
-              </NumberInputStepper>
-            </NumberInput>
-            <InputRightAddon>
-            pixels
-            </InputRightAddon>
-          </InputGroup>
+
+          <ConfigLinkAttributeNumberInput
+            data={dict_variable_application_data.data}
+            local_var_of_node={'label_font_size'}
+            parameter_to_modify={parameter_to_modify}
+            selected_parameter={selected_parameter}
+            menu_for_style={menu_for_style}
+            minimum_value={11}
+            stepper={true}
+            unitText='pixels'
+            function_onBlur={updateMenuConfigLink}
+          />
         </Box>
 
         <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
@@ -1241,22 +1136,23 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
   </Box>
 
   /* Formattage de l'affichage du menu attribut de flux */
-  return menu_for_modal?[content]:[
-    <Tab>
-      <Box
-        layerStyle='submenuconfig_tab'
-      >
-        {t('Flux.apparence.apparence')}
-      </Box>
-    </Tab>,<TabPanel 
-      id='links_desc'
-    >
-      <Box layerStyle='menuconfigpanel_grid'>
+  return [content]
+  // :[
+  //   <Tab>
+  //     <Box
+  //       layerStyle='submenuconfig_tab'
+  //     >
+  //       {t('Flux.apparence.apparence')}
+  //     </Box>
+  //   </Tab>,<TabPanel 
+  //     id='links_desc'
+  //   >
+  //     <Box layerStyle='menuconfigpanel_grid'>
       
-        {content}
-      </Box>
-    </TabPanel>
-  ]
+  //       {content}
+  //     </Box>
+  //   </TabPanel>
+  // ]
 
 }
 
@@ -1279,4 +1175,104 @@ export const handleDownLink : handleDownLinkFType = (
   const posElemt = data.linkZIndex.indexOf(i)
   data.linkZIndex.splice(posElemt, 1)
   data.linkZIndex.splice(posElemt+1, 0, i)
+}
+
+
+type ConfigLinkNumberInputType={
+  data:SankeyData
+  local_var_of_node: keyof SankeyLinkAttrLocal
+  parameter_to_modify: {[_: string]: SankeyLinkStyle;} | {[_: string]: SankeyLink;}
+  selected_parameter: SankeyLinkStyle[] | SankeyLink[]
+  menu_for_style:boolean
+  minimum_value?:number
+  maximum_value?:number
+  stepper?:boolean
+  step?:number
+  unitText?:string
+  function_onBlur:()=>void
+}
+/**
+ * Component developped for number input of the nodes attributs config menu
+ * 
+ * @param {dict_variable_application_dataType} dict_variable_application_data
+ * @param {keyof SankeyNodeAttrLocal} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
+ * @param {{[_: string]: SankeyNodeStyle;} | {[_: string]: SankeyNode;}} parameter_to_modify multi_selected_nodes or dict of node style
+ * @param {SankeyNodeStyle[] | SankeyNode[]} selected_parameter either modify node style or selected node depending on if we are in the edition of style or configuration menu
+ * @param {boolean} menu_for_style Modify either the style of node or the multi_selected_nodes
+ * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
+ * @param {number} maximum_value (optional, if not specified it mean the value can be undefined )
+ * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
+ * @param {string} unitText (default:'') text of the addon
+ * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
+ * 
+ * @return {JSX.Elmement}
+ */
+export const ConfigLinkAttributeNumberInput:FunctionComponent<ConfigLinkNumberInputType>=({
+  data,
+  local_var_of_node,
+  parameter_to_modify,
+  selected_parameter,
+  menu_for_style,
+  minimum_value,
+  maximum_value,
+  stepper=false,
+  step=1,
+  unitText,
+  function_onBlur
+})=>{
+  const [update,setUpdate]=useState(false)
+  const ref_input=useRef<HTMLInputElement>(null)
+  const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
+  let val=0
+  const variantOfInput=unitText?'menuconfigpanel_option_numberinput_with_right_addon':'menuconfigpanel_option_numberinput'
+  
+  if(selected_parameter[0]){
+    val=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],local_var_of_node,menu_for_style) as number
+  }
+
+  // Add stepper addon if specified
+  const stepperBtn=stepper?<NumberInputStepper>
+    <NumberIncrementStepper/>
+    <NumberDecrementStepper/>
+  </NumberInputStepper>:<></>
+
+  // Add unit addon if specified
+  const inputUnit=unitText?<InputRightAddon>{unitText}</InputRightAddon>:<></>
+
+  return <InputGroup variant='menuconfigpanel_option_input' >
+    <NumberInput allowMouseWheel variant={variantOfInput} min={minimum_value} max={maximum_value} step={step} 
+      value={val}
+      onChange={(_,value)=>{
+
+        Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+          AssignLinkValueToCorrectVar(d,local_var_of_node,Number(value),menu_for_style)
+        })
+
+        if(!menu_for_style){
+        // reset timeout if exist
+          if(isModifying.current){
+            console.log('clear timout')
+            clearTimeout(isModifying.current)
+          }
+          // launch timeout that automatically blur the input
+          isModifying.current=setTimeout(()=>{
+            function_onBlur()
+            ref_input.current?.blur()
+          },2000)
+        }
+
+        setUpdate(!update)
+      }}
+      onBlur={()=>{
+        if(!menu_for_style){
+          clearTimeout(isModifying.current)
+        }
+        function_onBlur()
+      }}
+    >
+      <NumberInputField ref={ref_input}/>
+      {stepperBtn}
+    </NumberInput>
+    {inputUnit}
+  </InputGroup>
 }

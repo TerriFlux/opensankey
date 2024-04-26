@@ -102,8 +102,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
       return ({} as SankeyLinkValue)
     }
     else{
-      if ( Object.keys(data.links).length === 0 || !(contextualised_link!.idLink in data.links) ) {
-        let val = JSON.parse(JSON.stringify(Object(contextualised_link!.value)))
+      if ( Object.keys(data.links).length === 0 || !((contextualised_link?.idLink in data.links) ?? false) ) {
+        let val = JSON.parse(JSON.stringify(Object(contextualised_link?.value ?? ({} as SankeyLinkValue))))
         Object.values(tags_selected).map(tag_selected => {
           if (val[tag_selected] === undefined) {
             val[tag_selected] = {}
@@ -112,7 +112,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
         })
         return val
       }
-      let val = JSON.parse(JSON.stringify(Object(data.links[contextualised_link!.idLink].value)))
+      let val = JSON.parse(JSON.stringify(Object(data.links[(contextualised_link?.idLink ?? '')]?.value ?? {} as SankeyLinkValue)))
       Object.values(tags_selected).map(tag_selected => {
         if (val[tag_selected] === undefined) {
           val[tag_selected] = {'display_value': '',tags:{},value:0}
@@ -178,7 +178,10 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
             contextualised_link!.style=sn.idLink
             multi_selected_links.current.filter(n=>n!=contextualised_link).forEach(n=>n.style=sn.idLink)
             redraw_selected_links()
-          }}>{sn.name}{checked(contextualised_link!.style==sn.idLink)}</Dropdown.Item>
+          }}>
+            {sn.name}
+            {checked((contextualised_link?.style ?? '')==sn.idLink)}
+          </Dropdown.Item>
         })
       }
     </Dropdown.Menu>
