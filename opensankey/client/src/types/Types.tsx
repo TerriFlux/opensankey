@@ -492,6 +492,7 @@ export type LinkFunctionTypes = {
   DrawArrows : DrawArrowsType,
   LinkStroke : LinkStrokeFType,
   LinkSabotColor:LinkColorFuncType,
+  reDrawLinkStartSabot:RedrawNodesFType,
   node_arrow_visible:(data:SankeyData,n: SankeyNode)=>boolean,
   LinkTooltipsContent: LinkTooltipsContentFType,
   DrawAllLinks : DrawAllLinksFType,
