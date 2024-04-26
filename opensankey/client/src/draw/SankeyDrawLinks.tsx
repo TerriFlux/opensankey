@@ -3,7 +3,8 @@ import React, { MutableRefObject } from 'react'
 import * as d3 from 'd3'
 import {  AssignLinkLocalAttribute, LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode, TestLinkValue} from '../configmenus/SankeyUtils'
 import { 
-  drawCurveFunction, SetNodesHeight, StrokeDasharray,
+  drawCurveFunction, 
+  StrokeDasharray,
   GetSankeyMinWidthAndHeight, DeselectVisualyLinks, SelectVisualyLinks, DrawLinkText} from './SankeyDrawFunction'
 import { EventLinkContextMenu } from './SankeyDrawEventFunction'
 import {ValueSelectedParameter,LinkStrokeWidth} from './SankeyDrawFunction'
@@ -578,11 +579,10 @@ export const drawLinkShape:drawLinkShapeFType  = (
       return ReturnValueNode(data,(n as SankeyNode),'shape')==='arrow'
     })
     .each(n => {
-      DrawLinkStartSabot(data,(n as SankeyNode),display_nodes,display_links,scale,inv_scale,GetLinkValue,LinkSabotColor)
+      DrawLinkStartSabot(dict_variable_application_data,(n as SankeyNode),scale,inv_scale,GetLinkValue,LinkSabotColor)
     })
 
   paths.attr('d', d => {
-    SetNodesHeight(dict_variable_application_data, d, GetLinkValue,scale,inv_scale)
     return drawCurveFunction.curve(
       dict_variable_application_data,dict_variable_elements_selected,
       applicationContext,
