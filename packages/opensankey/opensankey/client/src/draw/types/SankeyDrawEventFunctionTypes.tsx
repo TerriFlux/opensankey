@@ -49,6 +49,7 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   uiElementsRef : uiElementsRefType,
   applicationContext:applicationContextType,
+  ComponentUpdater:ComponentUpdaterType,
   link_function: LinkFunctionTypes,
   node_function:NodeFunctionTypes
 )=> void
