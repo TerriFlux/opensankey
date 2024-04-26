@@ -90,6 +90,7 @@ import { opensankey_theme } from './chakra/Theme'
 import { AddDrawLinksEvent, drawAddLinks, DrawAllLinks, drawLinkShape } from './draw/SankeyDrawLinks'
 import { DeleteGNodes, drawAddNodes, DrawAllNodes, updateDrawNodeShape } from './draw/SankeyDrawNodes'
 import { RedrawNodesLabel } from './draw/SankeyDrawNodesLabel'
+import { DrawLinkStartSabot } from './draw/SankeyDrawShapes'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
@@ -351,11 +352,22 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   // Color for the sabot when the source node is an arrow
   const LinkSabotColor=LinkColor
+  const OSDrawLinkStartSabot=(node_to_update:SankeyNode[])=>{
+    const scale = d3.scaleLinear()
+      .domain([0, data.user_scale])
+      .range([0, 100])
+    const inv_scale = d3.scaleLinear()
+      .domain([0, 100])
+      .range([0, data.user_scale])
+    node_to_update.forEach(n=>{
+      DrawLinkStartSabot(dict_variable_application_data,n,scale,inv_scale,GetLinkValue,LinkSabotColor)
+    })
+  }
   const RedrawLinks=(links_to_update:SankeyLink[])=>{
     drawLinkShape(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link_function,links_to_update,ComponentUpdater)
     AddDrawLinksEvent(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,link_function,ComponentUpdater,applicationContext,ref_alt_key_pressed)
-
   }
+
 
   const OpenSankeyCreateLinksOnSVG=(links_to_update:SankeyLink[])=>{
     drawAddLinks(
@@ -377,6 +389,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     DrawArrows,
     LinkStroke,
     LinkSabotColor,
+    reDrawLinkStartSabot:OSDrawLinkStartSabot,
     node_arrow_visible,
     LinkTooltipsContent,
     DrawAllLinks,
