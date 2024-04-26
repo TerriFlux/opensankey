@@ -1,4 +1,5 @@
 import { extendTheme } from '@chakra-ui/react'
+
 import {
   accordion_base_style,
   accordion_sublevel_style
@@ -67,6 +68,7 @@ import {
   table_edit_tag_data,
   table_edit_grp_tag_node_link
 } from './TableStyle'
+import { heading_base_style, heading_welcome_style } from './HeadingStyles'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -151,6 +153,12 @@ export const opensankey_theme = extendTheme({
       baseStyle:drawer_base_style,
       variants:{
         drawer_menu_config
+      }
+    },
+    Heading:{
+      baseStyle:heading_base_style,
+      variants:{
+        heading_welcome_style
       }
     }
   },

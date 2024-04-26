@@ -19,7 +19,8 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-  Box
+  Box,
+  Heading
 } from '@chakra-ui/react'
 
 
@@ -41,7 +42,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current=set_show_welcome
 
   const content_rc_static=<>
-    <h4 style={{textAlign:'center'}}>{t('Menu.rcc_titre_princ')}</h4>
+    <Heading variant='heading_welcome_style' >{t('Menu.rcc_titre_princ')}</Heading>
     <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
     <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
 
@@ -69,7 +70,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
         <AccordionIcon/>
       </AccordionButton>
       <AccordionPanel>
-        <h5>{t('Menu.rcc_titre_select')}:</h5>
+        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_select')}:</Heading>
         <p><b>{t('Menu.rcc_cn_bold')}</b>{t('Menu.rcc_cn')}</p>
         <p><b>{t('Menu.rcc_ctrl_cn_bold')}</b>{t('Menu.rcc_ctrl_cn')}</p>
         <p><b>{t('Menu.rcc_cf_bold')}</b>{t('Menu.rcc_cf')}</p>
@@ -81,7 +82,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
 
         <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
-        <h5>{t('Menu.rcc_titre_edi')} :</h5>
+        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_edi')} :</Heading>
 
         <p><b>{t('Menu.rcc_e_cn_bold')}</b>{t('Menu.rcc_e_cn')}</p>
         <p><b>{t('Menu.rcc_e_ds_bold')}</b>{t('Menu.rcc_e_ds')}</p>
@@ -89,7 +90,7 @@ export const SankeyModalWelcome : SankeyModalWelcomeFType = (
 
         <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
-        <h5>{t('Menu.rcc_titre_autre')} :</h5>
+        <Heading variant='heading_welcome_style'>{t('Menu.rcc_titre_autre')} :</Heading>
 
         <p><b>{t('Menu.rcc_a_s_bold')}</b>{t('Menu.rcc_a_s')}</p>
         <p><b>{t('Menu.rcc_a_fc_bold')}</b>{t('Menu.rcc_a_fc')}</p>
