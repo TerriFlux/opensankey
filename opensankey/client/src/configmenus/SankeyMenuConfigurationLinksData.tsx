@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
+import React, { FunctionComponent, useRef, useState } from 'react'
 import * as d3 from 'd3'
 
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
 
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
 import { ReturnValueLink,AssignLinkLocalAttribute, OSTooltip } from './SankeyUtils'
-import { SankeyNode } from '../types/Types'
-import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, Tab, TabPanel } from '@chakra-ui/react'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyLink, SankeyNode, dict_variable_application_dataType } from '../types/Types'
+import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
@@ -14,7 +14,6 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   dict_variable_elements_selected,
   applicationContext,
   additional_data_element,
-  menu_for_modal,
   ComponentUpdater,
   node_function,
   link_function
@@ -100,87 +99,15 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
         >
           {t('Flux.data.vpp')}
         </Box>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput'
-            min={0}
-            step={1}
-            value={displayed_input_link_value}
-            onChange={
-              evt => {
-                displayedInputLinkValueSetterRef.current.forEach(setter=>setter(evt))
-                const formatedValue=evt.replace(',','.')
-                if(formatedValue!='' && isNaN(+formatedValue)){
-                  d3.select('.inputValueLink').style('border','red 1px solid')
-                }else{
-                  d3.select('.inputValueLink').style('border','#ced4da 1px solid')
-                }
-              }
-            }
-            onBlur={evt=>{
-              const formatedValue=evt.target.value.replace(',','.')
-              if(formatedValue!=='' && !isNaN(+formatedValue )){
-                const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
-                let val = Object(multi_selected_links.current[0].value)
-                const node_to_update:SankeyNode[]=[]
-
-                multi_selected_links.current.map(d => {
-                  node_to_update.push(data.nodes[d.idSource])
-                  node_to_update.push(data.nodes[d.idTarget])
-                  const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
-                  AssignLinkLocalAttribute(d,'dashed',(was_empty)?false:dashed)
-
-                  val = d.value
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  val.value = +formatedValue
-                })
-                const scale = d3.scaleLinear()
-                  .domain([0, data.user_scale])
-                  .range([0, 100])
-                if (scale(+formatedValue) > 500) {
-                  data.user_scale = +formatedValue
-                }
-                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-              }
-              else if(formatedValue=='') {
-                let val = Object(multi_selected_links.current[0].value)
-                const node_to_update:SankeyNode[]=[]
-                multi_selected_links.current.map(d => {
-                  node_to_update.push(data.nodes[d.idSource])
-                  node_to_update.push(data.nodes[d.idTarget])
-                  val = d.value
-                  AssignLinkLocalAttribute(d,'dashed',true)
-                  Object.values(tags_selected).forEach(tag => {
-                    if (val[tag] === undefined) {
-                      val[tag] = {}
-                    }
-                    val = val[tag]
-                  })
-                  val.value = ''
-                })
-                node_function.RedrawNodes(node_to_update)
-                link_function.RedrawLinks(multi_selected_links.current)
-                ComponentUpdater.updateComponenSaveInCache.current(false)
-                
-              }
-            }}
-          >
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
-          </NumberInput>
-
-        </InputGroup>
+        <ConfigLinkDataNumberInput
+          dict_variable_application_data={dict_variable_application_data}
+          multi_selected_links={multi_selected_links}
+          tags_selected={tags_selected}
+          node_function={node_function}
+          link_function={link_function}
+          ComponentUpdater={ComponentUpdater}
+        
+        />
       </Box>
     </OSTooltip>
 
@@ -228,16 +155,119 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
     {additional_data_element}
 
   </Box>
-  return menu_for_modal?[content]:
-    [ 
-      <Tab>
-        <Box
-          layerStyle='submenuconfig_tab'
-        >
-          {t('Flux.data.données')}
-        </Box>
-      </Tab>,
-      <TabPanel >
-        {content}
-      </TabPanel>]
+  return [content]
+}
+
+
+type ConfigLinkDataNumberInputType={
+  dict_variable_application_data:dict_variable_application_dataType
+  multi_selected_links:{current:SankeyLink[]}
+  tags_selected: {[k: string]: string;}
+  node_function:NodeFunctionTypes
+  link_function:LinkFunctionTypes
+  ComponentUpdater:ComponentUpdaterType
+}
+/**
+ * Component developped for number input of the layout config menu
+ * 
+ * @param {SankeyData} data
+ * @param {keyof SankeyData} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
+ * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
+ * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
+ * @param {boolean} hasUnit (default:false) add an addon after the input
+ * @param {string} unitText (default:'') text of the addon
+ * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
+ * 
+ * @return {JSX.Elmement}
+ */
+export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInputType>=({
+  dict_variable_application_data,
+  multi_selected_links,
+  tags_selected,
+  node_function,
+  link_function,
+  ComponentUpdater,
+})=>{
+  const {data}=dict_variable_application_data
+  const [update,setUpdate]=useState(false)
+  const ref_input=useRef<HTMLInputElement>(null)
+  const variantOfInput='menuconfigpanel_option_numberinput'
+  const val_of_key=ValueSelectedParameter(
+    dict_variable_application_data,
+    multi_selected_links,
+    tags_selected
+  )
+  // Add stepper addon if specified
+  const stepperBtn=<NumberInputStepper>
+    <NumberIncrementStepper/>
+    <NumberDecrementStepper/>
+  </NumberInputStepper>
+
+
+  return <InputGroup variant='menuconfigpanel_option_input' >
+    <NumberInput allowMouseWheel 
+      variant={variantOfInput} 
+      step={1} 
+      value={val_of_key.value}
+      onChange={evt=>{
+        console.trace('here')
+        const formatedValue=evt.replace(',','.')
+        if(formatedValue!=='' && !isNaN(+formatedValue )){
+          const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
+          let val = Object(multi_selected_links.current[0].value)
+          const node_to_update:SankeyNode[]=[]
+
+          multi_selected_links.current.map(d => {
+            node_to_update.push(data.nodes[d.idSource])
+            node_to_update.push(data.nodes[d.idTarget])
+            const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
+            AssignLinkLocalAttribute(d,'dashed',(was_empty)?false:dashed)
+
+            val = d.value
+            Object.values(tags_selected).forEach(tag => {
+              if (val[tag] === undefined) {
+                val[tag] = {}
+              }
+              val = val[tag]
+            })
+            val.value = +formatedValue
+          })
+          const scale = d3.scaleLinear()
+            .domain([0, data.user_scale])
+            .range([0, 100])
+          if (scale(+formatedValue) > 500) {
+            data.user_scale = +formatedValue
+          }
+        }
+        else if(formatedValue=='') {
+          let val = Object(multi_selected_links.current[0].value)
+          const node_to_update:SankeyNode[]=[]
+          multi_selected_links.current.map(d => {
+            node_to_update.push(data.nodes[d.idSource])
+            node_to_update.push(data.nodes[d.idTarget])
+            val = d.value
+            AssignLinkLocalAttribute(d,'dashed',true)
+            Object.values(tags_selected).forEach(tag => {
+              if (val[tag] === undefined) {
+                val[tag] = {}
+              }
+              val = val[tag]
+            })
+            val.value = ''
+          })
+          
+        }
+        setUpdate(!update)
+      }}
+      onBlur={()=>{
+        node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+        link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+        ComponentUpdater.updateComponenSaveInCache.current(false)
+
+      }}
+    >
+      <NumberInputField ref={ref_input}/>
+      {stepperBtn}
+    </NumberInput>
+  </InputGroup>
 }

@@ -23,7 +23,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
   nodes_to_redraw,
   GetLinkValue,t,
   node_function
-) => {        
+) => {
   const { data,display_nodes,display_links } = dict_variable_application_data
   //------------------LABEL------------------------
   // Add node label and apply parameter
@@ -72,10 +72,10 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .style('text-transform', n => (ReturnValueNode(data,n,'uppercase')) ? 'uppercase' : 'none')
     .text(n => NodeLabeLText(data,n as SankeyNode))
     .each(n => TextNodeWrap((n as SankeyNode),data))
-      
-    
+
+
   if(!windowSankey.SankeyToolsStatic){
-    // Add an input to change the name of the node 
+    // Add an input to change the name of the node
     // The input appear when we double click on the label
     filtered_gggnodes
       .append('foreignObject')
@@ -104,9 +104,9 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       })
 
   }
-    
 
-   
+
+
   if(d3.select('.opensankey #svg').node()){
     const scale_svg=returnScaleOfDrawArea()
     bg_text_node.attr('x',n=>{
@@ -120,7 +120,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       } else if (pos_h == 'middle'  && size_shape<box_text.width) {
         horiz_shift = box_text.width / 2
       }
-      
+
       return ((box_text.x)-box_zdd.x-horiz_shift)/scale_svg-2
     })
       .attr('y',n=>{
@@ -154,7 +154,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
         }
       })
   }
-    
+
 
   // Display value of nodes
   // Value of nodes are the maximum between the sum of input links and the sum of output links
@@ -171,7 +171,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .style('font-size', n => ReturnValueNode(data,n,'value_font_size') + 'px')
     .text(n => TextNodeValue((n as SankeyNode),data,display_links,display_nodes,GetLinkValue,t))
 
-        
+
   // Drag zone for changing label box width
   // (if the label length exceed a certian length the text is wrapped, the box visually represent the length to not exceed)
   filtered_gggnodes
@@ -208,13 +208,13 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
         return height
       } else {
         return 0
-      }   
+      }
     })
     .attr('width',n=>ReturnValueNode(data,n,'label_box_width') as number)
     .attr('height',n=>{
       const h=document.getElementById('text_'+(n as SankeyNode).idNode)?.getBoundingClientRect().height
       return (h!=undefined)?h:25
-            
+
     })
     .attr('fill','grey')
     .attr('fill-opacity','0')
