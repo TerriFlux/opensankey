@@ -4,19 +4,11 @@ import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import LZString from 'lz-string'
 import {
-  Button,
-  ButtonGroup,
-  Col,
   Form,
-  FormControl,
-  Table,
   Toast,
-  OverlayTrigger,
-  Tooltip,
   Badge,
   Popover,
   Modal,
-  InputGroup,
   Overlay
 } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
@@ -31,8 +23,17 @@ import {
   AccordionPanel,
   AccordionIcon,
   Box,
-  Checkbox
-} from '@chakra-ui/react'
+  Checkbox,
+  Select,
+  Input,
+  InputGroup,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  Button} from '@chakra-ui/react'
 
 // OpenSankey Libs
 import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
@@ -68,6 +69,7 @@ import {
   SankeyUnitData
 } from '../types/Types'
 import {
+  OSTooltip,
   updateLayoutOSTyped
 } from './import/OpenSankey'
 import { deleteGLabel } from './SankeyPlusLabels'
@@ -561,7 +563,8 @@ export const SelecteurView : SelecteurViewFType =(
   const [s_select_or_edit,sSelectOrEdit]=useState('select')
   d_setter_input_value.r_setter_value_editor_name_view.current=sValueEditorNameView
 
-  const selecteur=<Form.Select id="selectionNode"
+  const selecteur=<Select
+    variant='menuconfigpanel_option_select'
     onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -616,9 +619,10 @@ export const SelecteurView : SelecteurViewFType =(
     {master_data ? master_data.view.map(d => {
       return <option key={d.id} value={d.id}>{d.nom}</option>
     }) : <></>}
-  </Form.Select>
+  </Select>
 
-  const editeur_name=<Form.Control type='text'
+  const editeur_name=<Input
+    variant='menuconfigpanel_option_input'
     value={s_value_editor_name_view}
     onChange={(evt)=>{
       sValueEditorNameView(evt.target.value)
@@ -663,19 +667,11 @@ export const viewsAccordion : viewsAccordionFType = (
       // }
     >
       <AccordionButton>
-        <Box
-          as='span'
-          layerStyle='menuconfig_entry'
-        >
+        <Box as='span' layerStyle='menuconfig_entry'>
           {t('view.storytelling')}
         </Box>
         {(!is_activated)?
-          <OverlayTrigger
-            key={'textZoneDisabled'}
-            placement={'top'}
-            delay={500}
-            overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
-          >
+          <OSTooltip label={t('Menu.sankeyPlusDisabled')}>
             <Badge pill
               bg="white"
               style={{marginLeft:'5px', fontSize:'1.3em'}}>
@@ -684,95 +680,87 @@ export const viewsAccordion : viewsAccordionFType = (
                 style={{
                   color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
             </Badge>
-          </OverlayTrigger>:
+          </OSTooltip>:
           <Badge pill bg='info' style={{marginLeft:'auto'}}>Beta</Badge>}
         <AccordionIcon/>
       </AccordionButton>
       <AccordionPanel>
-        <InputGroup>
-          <InputGroup.Text
-            style={{
-              color:!(is_activated)?'#666666':'',
-              backgroundColor:!(is_activated)?'#cccccc':'',
-              width:'50%'}}>
-            {t('view.select')}
-          </InputGroup.Text>
-          <>{view_selector}</>
-        </InputGroup>
+        <Box layerStyle='menuconfigpanel_grid'>
 
-        <Form>
-          <Table bordered size='sm'
-            style={{
-              color:!(is_activated)?'#666666':'',
-              backgroundColor:!(is_activated)?'#cccccc':''}}>
-            <thead>
-              <tr>
-                <th>{t('view.name')}</th>
-                <th>Position</th>
-                <th>{t('view.delete')}</th>
-                {/* <th>{t('view.copy')}</th>
-                <th>{t('view.import')}</th>
-                <th>{t('view.export')}</th> */}
-              </tr>
-            </thead>
-            <tbody>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name' >
+              {t('view.select')}
+            </Box>
+            <InputGroup
+              variant='menuconfigpanel_option_input'>
+              {view_selector}
+            </InputGroup>
+          </Box>
+          <Table size='sm'>
+            <Thead>
+              <Tr>
+                <Th>{t('view.name')}</Th>
+                <Th>Position</Th>
+                <Th>{t('view.delete')}</Th>
+                {/* <Th>{t('view.copy')}</Th>
+                <Th>{t('view.import')}</Th>
+                <Th>{t('view.export')}</Th> */}
+              </Tr>
+            </Thead>
+            <Tbody>
               {master_data ? Object.values(master_data.view).map(d => {
                 return (
-                  <tr style={{ 'border': (d.id === view) ? '2px solid #5a9282' : 'none' }}>
-                    <td><FormControl size='sm'
-                      value={d.nom}
-                      disabled={!is_activated}
-                      onChange={evt => {
+                  <Tr style={{ 'border': (d.id === view) ? '2px solid #5a9282' : 'none' }}>
+                    <Td>
+                      <Input
+                        variant='menuconfigpanel_option_input'
+                        value={d.nom}
+                        isDisabled={!is_activated}
+                        onChange={evt => {
                         // Change the name of the view
-                        master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
-                        set_master_data({...master_data})
-                      }}
-                    /></td>
-                    <td>
+                          master_data.view.filter(v => v.id === d.id)[0].nom = evt.target.value
+                          set_master_data({...master_data})
+                        }}
+                      />
+                    </Td>
+                    <Td>
                       {/* Change the position of the view in the liste of view from master data */}
-                      <ButtonGroup className="button_position" size="sm">
-                        <Button
-                          size="sm"
-                          variant="light"
-                          disabled={!is_activated}
-                          onClick={
-                            () => {
-                              let ind = -1
-                              master_data.view.map((v, i) => {
-                                ind = (v.id === d.id) ? i : ind
-                              })
-                              const toShift = master_data.view[ind]
-                              master_data.view.splice(ind, 1)
-                              master_data.view.splice(ind - 1, 0, toShift)
-                              set_master_data({...master_data})
-                              set_data({ ...data })
-                            }
+                      <Button variant='menuconfigpanel_option_btn_in_table' isDisabled={!is_activated}
+                        onClick={
+                          () => {
+                            let ind = -1
+                            master_data.view.map((v, i) => {
+                              ind = (v.id === d.id) ? i : ind
+                            })
+                            const toShift = master_data.view[ind]
+                            master_data.view.splice(ind, 1)
+                            master_data.view.splice(ind - 1, 0, toShift)
+                            set_master_data({...master_data})
+                            set_data({ ...data })
                           }
-                        ><FaArrowUp /></Button><Button
-                          size="sm"
-                          variant="light"
-                          disabled={!is_activated}
-                          onClick={
-                            () => {
-                              let ind = -1
-                              master_data.view.map((v, i) => {
-                                ind = (v.id === d.id) ? i : ind
-                              })
-                              const toShift = master_data.view[ind]
-                              master_data.view.splice(ind, 1)
-                              master_data.view.splice(ind + 1, 0, toShift)
-                              set_master_data({...master_data})
-                              set_data({ ...data })
-                            }
+                        }
+                      ><FaArrowUp />
+                      </Button>
+                      <Button variant='menuconfigpanel_option_btn_in_table' isDisabled={!is_activated}
+                        onClick={
+                          () => {
+                            let ind = -1
+                            master_data.view.map((v, i) => {
+                              ind = (v.id === d.id) ? i : ind
+                            })
+                            const toShift = master_data.view[ind]
+                            master_data.view.splice(ind, 1)
+                            master_data.view.splice(ind + 1, 0, toShift)
+                            set_master_data({...master_data})
+                            set_data({ ...data })
                           }
-                        ><FaArrowDown /></Button>
-                      </ButtonGroup>
-
-                    </td>
-                    <td><Button
-                      size="sm"
-                      variant='light'
-                      disabled={!is_activated}
+                        }
+                      ><FaArrowDown />
+                      </Button>
+                    </Td>
+                    <Td><Button
+                      variant='menuconfigpanel_del_button_in_table'
+                      isDisabled={!is_activated}
                       onClick={
                         // Delete the view
                         () => {
@@ -800,13 +788,15 @@ export const viewsAccordion : viewsAccordionFType = (
                           set_master_data({...master_data})
                         }
                       }
-                    ><FaMinus /></Button></td>
-                  </tr>
+                    ><FaMinus /></Button></Td>
+                  </Tr>
                 )
               }) : <></>}
-            </tbody>
+            </Tbody>
           </Table>
-        </Form>
+        </Box>
+  
+
       </AccordionPanel>
     </AccordionItem>
 
@@ -912,19 +902,11 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
   const prev_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')
 
-  const buttonCreateView=<OverlayTrigger
-    key={'buttonCreateViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonCreateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonCreateView'}>{t('view.tooltips.buttonCreateView')} </Tooltip>}
-  >
-    <span>
+  const buttonCreateView=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCreateView')}>
+    <Box>
       <Button
-        size='sm'
-        variant='light'
-        disabled={!connected}
+        variant='submenu_nav_btn'
+        isDisabled={!connected}
         onClick={() => {
           const ev = document
           const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
@@ -933,81 +915,62 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
           }
         }}
       >
-        <Col><FaPlus
+        <FaPlus
           style={{opacity:(!connected)?'0.6':'1'}}/>
-        </Col>
         {!connected?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{
+              fontSize:'1em',
+              position: 'absolute',
+              right: '0.1em',
+              bottom: '0em',
+              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('Menu.addView')}</Col>
+        {t('Menu.addView')}
       </Button>
-    </span>
-  </OverlayTrigger>
+    </Box>
+
+  </OSTooltip>
 
 
   // TO DELETE WHEN UNITARY SANKEY WILL BE MERGE IN SANKEYPLUS
   const special_cast_for_unit_sankey=data as SankeyUnitData
 
-  const button_heredited_attr_from_master=!(special_cast_for_unit_sankey.unitary_node && special_cast_for_unit_sankey.unitary_node.length>0)?<OverlayTrigger
-    key={'buttonCloneMasterAttrViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonCloneMasterAttrViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonCloneMasterAttrView'}>{t('view.tooltips.buttonCloneMasterAttrView')} </Tooltip>}
-  >
-    <span>
+  const button_heredited_attr_from_master=!(special_cast_for_unit_sankey.unitary_node && special_cast_for_unit_sankey.unitary_node.length>0)?<OSTooltip
+    placement='bottom'
+    label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCloneMasterAttrView')}>
+    <Box>
       <Button
-        size='sm'
-        variant='light'
-        disabled={!connected}
+        variant='submenu_nav_btn'
+        isDisabled={!connected}
         onClick={
           () => {
             ref_setter_show_modal_transparent_view_attr.current(true)
           }
         }
       >
-        <Col>
-          <FontAwesomeIcon style={{opacity:(!connected)?'0.6':'1'}} icon={faListCheck} />
-        </Col>
+        <FontAwesomeIcon style={{opacity:(!connected)?'0.6':'1'}} icon={faListCheck} />
         {!connected?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{
+              fontSize:'1em',
+              position: 'absolute',
+              right: '0.1em',
+              bottom: '0em',
+              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           :<></>}
-        <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.keep_master_var')}</Col>
+        {t('view.keep_master_var')}
       </Button>
-    </span>
-  </OverlayTrigger>:<></>
+    </Box>
+  </OSTooltip>:<></>
 
-  const create_data_catalog=<OverlayTrigger
-    key={'buttonCloneViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonCloneViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'catalog_data'}>{t('view.tooltips.catalog_data')} </Tooltip>}>
-    <span>
+  const create_data_catalog=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.catalog_data')}>
+    <Box>
       <Button
-        size='sm'
-        variant= {master_data && master_data.is_catalog?'outline-info':'light'}
-        disabled={!connected}
+        variant= {master_data && master_data.is_catalog?'submenu_nav_btn':'submenu_nav_btn'}
+        isDisabled={!connected}
         onClick={
           () => {
             if (_load_json_catalog.current) {
@@ -1017,37 +980,29 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
           }
         }
       >
-        <Col><FaCopy
+        <FaCopy
           style={{opacity:(!connected)?'0.6':'1'}}/>
-        </Col>
         {!connected?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{
+              fontSize:'1em',
+              position: 'absolute',
+              right: '0.1em',
+              bottom: '0em',
+              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('view.catalog')}</Col>
+        {t('view.catalog')}
       </Button>
-    </span>
-  </OverlayTrigger>
+    </Box>
+  </OSTooltip>
 
 
-  const button_delete_actual_view=<OverlayTrigger
-    key={'button_delete_actual_view'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'disable_button_delete_actual_view'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'button_delete_actual_view'}>{t('view.tooltips.button_delete_actual_view')} </Tooltip>}><span>
+  const button_delete_actual_view=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.button_delete_actual_view')}>
+    <Box>
       <Button
-        variant='light'
-        disabled={!connected}
+        variant='submenu_nav_btn'
+        isDisabled={!connected}
         onClick={
           // Delete the view
           () => {
@@ -1073,21 +1028,23 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             }
             set_master_data({...master_data!})
           }
-        }
-      ><Col><FaMinus/></Col>{!connected?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
+        }>
+
+        <FaMinus/>
+        {!connected?
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{
+              fontSize:'1em',
+              position: 'absolute',
+              right: '0.1em',
+              bottom: '0em',
+              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           :<></>}
-        <Col style={{'fontSize':'9px',whiteSpace:'break-spaces',lineHeight:'0.8'}}>{t('view.delete')}</Col></Button></span>
-  </OverlayTrigger>
+        {t('view.delete')}
+      </Button>
+    </Box>
+  </OSTooltip>
 
 
 
@@ -1198,19 +1155,11 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   </Overlay>
   {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
   {window.SankeyToolsStatic ? <></> : create_data_catalog}
-  {window.SankeyToolsStatic ? <></> : <OverlayTrigger
-    key={'buttonHomeViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected && !has_views)?
-      <Tooltip id={'buttonHomeViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-      <Tooltip id={'buttonHme'}>{t('view.tooltips.home')} </Tooltip>}
-  >
-    <span>
+  {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!connected && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.home')}>
+    <Box>
       <Button
-        size='sm'
-        variant='light'
-        disabled={((!connected && !has_views)||(master_data && master_data.is_catalog))}
+        variant='submenu_nav_btn'
+        isDisabled={((!connected && !has_views)||(master_data && master_data.is_catalog))}
         onClick={() => {
           const ev = document
           const tmp = { key: 'F7' }
@@ -1218,42 +1167,32 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             ev.onkeydown(tmp as KeyboardEvent)
           }
         }}>
-        <Col><FaHome
+
+        <FaHome
           style={{opacity:((connected && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/>
-        </Col>
         {(!connected && !has_views)?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{
+              fontSize:'1em',
+              position: 'absolute',
+              right: '0.1em',
+              bottom: '0em',
+              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('Menu.home')}</Col>
+        {t('Menu.home')}
       </Button>
-    </span>
-  </OverlayTrigger>}
+    </Box>
+  </OSTooltip>}
 
   {window.SankeyToolsStatic ? <></> : buttonCreateView}
 
 
-  <OverlayTrigger
-    key={'buttonPrevViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected && !has_views)?
-      <Tooltip id={'buttonPrevViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-      <Tooltip id={'buttonPrevView'}>{t('view.tooltips.PrevViewButton')} </Tooltip>}
-  >
-    <span>
+  <OSTooltip placement='bottom' label={(!connected && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.PrevViewButton')}>
+    <Box>
       <Button
-        size='sm'
-        variant={'light'}
-        disabled={prev_button_disabled || !has_views}
+        variant='submenu_nav_btn'
+        isDisabled={prev_button_disabled || !has_views}
         onClick={() => {
           const ev = document
           const tmp = { key: 'F8' }
@@ -1261,39 +1200,28 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             ev.onkeydown(tmp as KeyboardEvent)
           }
         }}>
-        <Col><FaCaretSquareLeft
+        <FaCaretSquareLeft
           style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
-        </Col>
         {(!connected && !has_views)?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{
+              fontSize:'1em',
+              position: 'absolute',
+              right: '0.1em',
+              bottom: '0em',
+              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('Menu.precView')}</Col>
+        {t('Menu.precView')}
       </Button>
-    </span>
-  </OverlayTrigger>
+    </Box>
+  </OSTooltip>
 
-  <OverlayTrigger
-    key={'buttonNextViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected && !has_views)?(
-      <Tooltip id={'buttonNextViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonNextView'}>{t('view.tooltips.NextViewButton')} </Tooltip>}
-  >
-    <span>
+  <OSTooltip placement='bottom' label={(!connected && !has_views)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.NextViewButton')}>
+    <Box>
       <Button
-        size='sm'
-        variant={'light'}
-        disabled={next_button_disabled || !has_views}
+        variant='submenu_nav_btn'
+        isDisabled={next_button_disabled || !has_views}
         onClick={() => {
           const ev = document
           const tmp = { key: 'F9'}
@@ -1301,33 +1229,29 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             ev.onkeydown(tmp as KeyboardEvent)
           }
         }}>
-        <Col><FaCaretSquareRight
+
+        <FaCaretSquareRight
           style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}
-        /></Col>
+        />
         {(!connected && !has_views)?
-          <Col>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                fontSize:'1em',
-                position: 'absolute',
-                right: '0.1em',
-                bottom: '0em',
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Col>
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{
+              fontSize:'1em',
+              position: 'absolute',
+              right: '0.1em',
+              bottom: '0em',
+              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
           :<></>}
-        <Col style={{'fontSize':'9px'}}>{t('Menu.nextView')}</Col>
+        {t('Menu.nextView')}
       </Button>
-    </span>
-  </OverlayTrigger>
+    </Box>
+  </OSTooltip>
   {view_selector}
 
   {(master_data?master_data:{view:[] as string[]}).view.length>0 && master_data!.current_view!=='none' && !window.SankeyToolsStatic?<>
     {button_delete_actual_view}
     {master_data && !master_data.is_catalog?button_heredited_attr_from_master:<></>}
-    {/* {button_clone_view} */}
-    {/* {button_import_view}
-      {button_export_view} */}
   </>
     :<></>
 
@@ -1470,277 +1394,240 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
     set_show_modal(false)}}>
     <Modal.Header closeButton>{t('view.setTransparentAttr')}</Modal.Header>
     <Modal.Body>
-      <InputGroup>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.Transformation.Topology')}
+        </Box>
+        <Box layerStyle='options_4cols'>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('addNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('addNode')){
+                current_view.heredited_attr_from_master.push('addNode')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
 
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Topology')}</InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('addNode')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('addNode')){
-              current_view.heredited_attr_from_master.push('addNode')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
-
-          }
-          }
-        >{t('Menu.Transformation.addNode')}</Button>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('removeNode')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('removeNode')){
-              current_view.heredited_attr_from_master.push('removeNode')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
+          >{t('Menu.Transformation.addNode')}</Button>
 
-          }
-          }
-        >{t('Menu.Transformation.removeNode')}</Button>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('removeNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('removeNode')){
+                current_view.heredited_attr_from_master.push('removeNode')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
 
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('addFlux')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('addFlux')){
-              current_view.heredited_attr_from_master.push('addFlux')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
-
-          }
-          }>{t('Menu.Transformation.addFlux')}</Button>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('removeFlux')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('removeFlux')){
-              current_view.heredited_attr_from_master.push('removeFlux')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
+          >{t('Menu.Transformation.removeNode')}</Button>
 
-          }
-          }>{t('Menu.Transformation.removeFlux')}</Button>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('addFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('addFlux')){
+                current_view.heredited_attr_from_master.push('addFlux')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
 
-      </InputGroup>
-      <InputGroup>
-
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('posNode')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('posNode')){
-              current_view.heredited_attr_from_master.push('posNode')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
+            }>{t('Menu.Transformation.addFlux')}</Button>
 
-          }
-          }>{t('Menu.Transformation.PosNoeud')}</Button>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('removeFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('removeFlux')){
+                current_view.heredited_attr_from_master.push('removeFlux')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
 
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('posFlux')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('posFlux')){
-              current_view.heredited_attr_from_master.push('posFlux')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
+            }>{t('Menu.Transformation.removeFlux')}</Button>
+        </Box>
+      </Box>
 
-          }
-          }> {t('Menu.Transformation.posFlux')}</Button>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.Transformation.Geometry')}
+        </Box>
+        <Box layerStyle='options_4cols'>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('posNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('posNode')){
+                current_view.heredited_attr_from_master.push('posNode')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
+            }}>
+            {t('Menu.Transformation.PosNoeud')}
+          </Button>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('posFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('posFlux')){
+                current_view.heredited_attr_from_master.push('posFlux')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
+            }}> 
+            {t('Menu.Transformation.posFlux')}</Button>
+        </Box>
+      </Box>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
 
-      </InputGroup>
-      <InputGroup>
+        <Box as='span' layerStyle='options_4cols'>
+          <Button
+            variant={ current_view.heredited_attr_from_master.includes('Values')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('Values')){
+                current_view.heredited_attr_from_master.push('Values')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
 
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Values')}</InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={ current_view.heredited_attr_from_master.includes('Values')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('Values')){
-              current_view.heredited_attr_from_master.push('Values')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
-
-          }
-          }
-        >{current_view.heredited_attr_from_master.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-
-      </InputGroup>
-      <InputGroup>
-
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('attrNode')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('attrNode')){
-              current_view.heredited_attr_from_master.push('attrNode')
-
-
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
+          >{current_view.heredited_attr_from_master.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+          </Button>
+        </Box>
 
-          }
-          }
-        >{t('Menu.Transformation.attrNode')}</Button>
+      </Box>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
+        <Box as='span' layerStyle='options_4cols'>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('attrNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('attrNode')){
+                current_view.heredited_attr_from_master.push('attrNode')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
+            }}>
+            {t('Menu.Transformation.attrNode')}
+          </Button>
 
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('attrFlux')?'primary':'outline-primary'}
-          onClick={() =>{
-            if(!current_view.heredited_attr_from_master.includes('attrFlux')){
-              current_view.heredited_attr_from_master.push('attrFlux')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'),1)
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('attrFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() =>{
+              if(!current_view.heredited_attr_from_master.includes('attrFlux')){
+                current_view.heredited_attr_from_master.push('attrFlux')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
+            }}>
+            {t('Menu.Transformation.attrFlux')}
+          </Button>
+        </Box>
+      </Box>
+
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
+        <Box layerStyle='options_4cols'>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('tagNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() =>{
+              if(!current_view.heredited_attr_from_master.includes('tagNode')){
+                current_view.heredited_attr_from_master.push('tagNode')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
+            }}>
+            {t('Menu.Transformation.tagNode')}
+          </Button>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('tagFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('tagFlux')){
+                current_view.heredited_attr_from_master.push('tagFlux')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
+            }}>
+            {t('Menu.Transformation.tagFlux')}
+          </Button>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('tagData')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('tagData')){
+                current_view.heredited_attr_from_master.push('tagData')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
             }
-            set_data({...data})
-            set_master_data({...master_data!})
-
-          }
-          }
-        >{t('Menu.Transformation.attrFlux')}</Button>
-
-      </InputGroup>
-      <InputGroup>
-
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Tags')}</InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('tagNode')?'primary':'outline-primary'}
-          onClick={() =>{
-            if(!current_view.heredited_attr_from_master.includes('tagNode')){
-              current_view.heredited_attr_from_master.push('tagNode')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'),1)
             }
-            set_data({...data})
-            set_master_data({...master_data!})
-          }
-          }
-        >{t('Menu.Transformation.tagNode')}</Button>
+          >{t('Menu.Transformation.tagData')}</Button>
+        </Box>
+      </Box>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
+        
+        <Box as='span' layerStyle='options_4cols'>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('tagLevel')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() => {
+              if(!current_view.heredited_attr_from_master.includes('tagLevel')){
+                current_view.heredited_attr_from_master.push('tagLevel')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
+            }}>
+            {current_view.heredited_attr_from_master.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+          </Button>
+        </Box>
+      </Box>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
 
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('tagFlux')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('tagFlux')){
-              current_view.heredited_attr_from_master.push('tagFlux')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'),1)
-            }
-            set_data({...data})
-            set_master_data({...master_data!})
-
-          }
-          }
-        >{t('Menu.Transformation.tagFlux')}</Button>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('tagData')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('tagData')){
-              current_view.heredited_attr_from_master.push('tagData')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'),1)
-            }
-            set_data({...data})
-            set_master_data({...master_data!})
-
-          }
-          }
-        >{t('Menu.Transformation.tagData')}</Button>
-
-      </InputGroup>
-      <InputGroup>
-
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('tagLevel')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!current_view.heredited_attr_from_master.includes('tagLevel')){
-              current_view.heredited_attr_from_master.push('tagLevel')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'),1)
-            }
-            set_data({...data})
-            set_master_data({...master_data!})
-
-          }
-          }
-        >{current_view.heredited_attr_from_master.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-
-      </InputGroup>
-      <InputGroup>
-
-        <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
-
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          variant={current_view.heredited_attr_from_master.includes('attrGeneral')?'primary':'outline-primary'}
-          onClick={() =>{
-            if(!current_view.heredited_attr_from_master.includes('attrGeneral')){
-              current_view.heredited_attr_from_master.push('attrGeneral')
-            }else{
-              current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'),1)
-            }
-            set_data({...data})
-            set_master_data({...master_data!})
-
-          }
-          }
-        >{current_view.heredited_attr_from_master.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-
-      </InputGroup>
-
+        <Box as='span' layerStyle='options_4cols'>
+          <Button
+            variant={current_view.heredited_attr_from_master.includes('attrGeneral')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            onClick={() =>{
+              if(!current_view.heredited_attr_from_master.includes('attrGeneral')){
+                current_view.heredited_attr_from_master.push('attrGeneral')
+              }else{
+                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'),1)
+              }
+              set_data({...data})
+              set_master_data({...master_data!})
+            }}>
+            {current_view.heredited_attr_from_master.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+          </Button>
+        </Box>
+      </Box>
     </Modal.Body>
 
     <Modal.Footer><Button onClick={()=>{
@@ -1758,12 +1645,7 @@ export const MenuEnregistrerView : MenuEnregistrerViewFType = (
   set_save_only_view:(b:boolean)=>void
 )=>{
   return <Form.Group>
-    <OverlayTrigger
-      key={'buttonExportViewDisabled'}
-      placement={'bottom'}
-      delay={500}
-      overlay={<Tooltip id={'buttonExportView'}>{t('view.tooltips.buttonExportView')} </Tooltip>}
-    >
+    <OSTooltip label={t('view.tooltips.buttonExportView')}>
       <Checkbox
         sx={SmoothClasses({})}
         maxW={'40%'}
@@ -1771,7 +1653,7 @@ export const MenuEnregistrerView : MenuEnregistrerViewFType = (
         onChange={() => set_save_only_view(!save_only_view)}>
         {t('view.export')}
       </Checkbox>
-    </OverlayTrigger>
+    </OSTooltip>
   </Form.Group>
 }
 
@@ -1798,16 +1680,10 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
     // }
   }
 
-  return   <OverlayTrigger
-    key={'buttonUpdateViewDisabled'}
-    placement={'bottom'}
-    delay={500}
-    overlay={(!connected)?(
-      <Tooltip id={'buttonUpdateViewDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):
-      <Tooltip id={'buttonSaveView'}>{t('view.tooltips.saveView')} </Tooltip>}
-  >
+  return   <OSTooltip
+    label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.saveView')}>
     <Button
-      disabled={!connected}
+      isDisabled={!connected}
       variant='light'
       onClick={() => {
         const ev = document
@@ -1836,7 +1712,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
           :<></>}</>
       }
     </Button>
-  </OverlayTrigger>
+  </OSTooltip>
 }
 
 

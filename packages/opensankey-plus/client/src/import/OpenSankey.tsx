@@ -12,7 +12,8 @@ import {
   ReturnValueLinkFuncType, ReturnValueNodeFuncType, IsAllLinkAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, 
   NodeColorFuncType, GetSankeyMinWidthAndHeightFuncType, IsNodeDisplayingValueLocalFuncType, IsAllNodeAttrSameValueFuncType, 
   AssignNodeValueToCorrectVarFuncType, LinkColorFuncType, AssignLinkValueToCorrectVarFuncType, DefaultLinkStyleFuncType, 
-  DefaultLinkFuncType, DefaultNodeFuncType, AdjustSankeyZoneFuncType, NodeDisplayedFuncType 
+  DefaultLinkFuncType, DefaultNodeFuncType, AdjustSankeyZoneFuncType, NodeDisplayedFuncType, 
+  OSTooltpFuncType
 } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { complete_sankey_dataFunctType, ConvertDataFuncType, convert_nodesFuncType, convert_linksFuncType, convert_tagsFuncType } from 'open-sankey/src/configmenus/types/SankeyConvertTypes'
 import { 
@@ -31,6 +32,7 @@ import {SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleM
 import {MenuDraggableFType} from 'open-sankey/src/topmenus/types/SankeyMenuTopTypes'
 import { dict_hook_ref_setter_show_dialog_componentsType } from 'open-sankey/src/types/Types'
 import { SankeyPlusShowMenuComponentsType } from '../../types/Types'
+import { FunctionComponent } from 'react'
 export const ReturnValueLink=OpensankeyUtils.ReturnValueLink as ReturnValueLinkFuncType
 
 export const ReturnValueNode=OpensankeyUtils.ReturnValueNode as ReturnValueNodeFuncType
@@ -132,3 +134,5 @@ export const PlusMenuDraggable=(
 }
 
 export const hideLinkOnDragElement:hideLinkOnDragElementFuncType=OpenSankeyDrawFunc.hideLinkOnDragElement
+
+export const OSTooltip:FunctionComponent<OSTooltpFuncType>=OpensankeyUtils.OSTooltip

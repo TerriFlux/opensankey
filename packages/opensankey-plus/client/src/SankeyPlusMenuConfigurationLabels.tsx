@@ -3,8 +3,6 @@ import React, { Ref, useState, ChangeEvent, FunctionComponent } from 'react'
 import {
   Form,
   FormControl,
-  OverlayTrigger,
-  Tooltip,
   Popover,
   ButtonGroup,
   Badge
@@ -51,6 +49,7 @@ import {
 import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
 import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { deleteGLabel } from './SankeyPlusLabels'
+import { OSTooltip } from './import/OpenSankey'
 
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
@@ -304,12 +303,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
 
   const content_image = <>
     {/* Import image */}
-    <OverlayTrigger
-      key={'imageDisabled2'}
-      placement={'top'}
-      delay={500}
-      overlay={(!disable_options)?(<Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>):<></>}
-    >
+    <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
+
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
@@ -340,9 +335,8 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             reader.readAsDataURL(files[0])
           }}
         />
-
       </Box>
-    </OverlayTrigger>
+    </OSTooltip>
   </>
 
   const content_menu_zdt= <Box layerStyle='menuconfigpanel_grid'>
@@ -778,22 +772,16 @@ export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
       >
         {t('Menu.LL')}
       </Box>
-      {(!has_open_sankey_plus)?
-        <OverlayTrigger
-          key={'textZoneDisabled'}
-          placement={'top'}
-          delay={500}
-          overlay={<Tooltip id={'textZoneDisabled'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>}
-        >
-          <Badge pill
-            bg="white"
-            style={{marginLeft:'5px', fontSize:'1.3em'}}>
-            <FontAwesomeIcon
-              icon={faLock}
-              style={{
-                color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-          </Badge>
-        </OverlayTrigger>:<></>}
+      {(!has_open_sankey_plus)?<OSTooltip label={t('Menu.sankeyPlusDisabled')} >
+        <Badge pill
+          bg="white"
+          style={{marginLeft:'5px', fontSize:'1.3em'}}>
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{
+              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+        </Badge>
+      </OSTooltip>:<></>}
       <AccordionIcon/>
     </AccordionButton>
     <AccordionPanel>

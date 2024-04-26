@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import * as d3 from 'd3'
-import { OverlayTrigger, Tooltip, Badge} from 'react-bootstrap'
+import { Badge} from 'react-bootstrap'
 import { Checkbox } from '@chakra-ui/react'
 
-import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplayingValueLocal, NodeColor, LinkStrokeOSTyped, DrawArrows } from './import/OpenSankey'
+import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplayingValueLocal, NodeColor, LinkStrokeOSTyped, DrawArrows, OSTooltip } from './import/OpenSankey'
 import { SankeyPlusData,SankeyPlusNode,SankeyPlusLink } from '../types/Types'
 import { LinkStrokeFType, SankeyPlusDrawArrowsFType, dragNodeRedrawGradientFType, menu_conf_link_apparence_gradientFType } from '../types/SankeyPlusGradientTypes'
 
@@ -39,12 +39,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   const gradChecked=IsAllLinkAttrSameValue(data,selected_parameter,k_list,menu_for_style)['gradient'] as boolean[]
   return <>
 
-    <OverlayTrigger
-      key={'gradiantDisabled'}
-      placement={'top'}
-      delay={500}
-      overlay={(!is_activated)?(<Tooltip id={'gradiantDisabled'}>{t('Menu.sankeyPlusDisabled')}</Tooltip>):<></>}
-    >
+    <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
       <Checkbox 
         variant='menuconfigpanel_option_checkbox'
         isDisabled={!is_activated}
@@ -65,7 +60,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
         {(IsLinkDiplayingValueLocal(multi_selected_links,(('gradient' as unknown) as (keyof SankeyLinkAttrLocal )),menu_for_style)?TooltipValueSurcharge('link_plus_var_',t):<></>)}
 
       </Checkbox>
-    </OverlayTrigger>
+    </OSTooltip>
   </>
 }
 
