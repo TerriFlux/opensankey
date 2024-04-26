@@ -5,8 +5,6 @@ import { Row,
   FormLabel,
   Button,
   FormGroup,
-  OverlayTrigger,
-  Tooltip,
   FormCheck,
   Popover,
   FormControl,
@@ -18,7 +16,8 @@ import {
   AdjustSankeyZone,
   RecursionDataTag,
   IsAllLinkNotLocalAttrSameValue,
-  SmoothClasses} from './SankeyUtils'
+  SmoothClasses,
+  OSTooltip} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faShareNodes,
@@ -190,11 +189,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
             </Col>
           </Row>
           <Row>
-            <OverlayTrigger
-              key={'Banner.ndd_lst.5'}
-              placement={'bottom'}
-              delay={500}
-              overlay={<Tooltip id={'Banner.ndd_lst.5'}>{t('Banner.ndd_lst')} </Tooltip>}>
+            <OSTooltip label={t('Banner.ndd_lst')}>
               <Col xs={10}>
                 {<Form.Select
                   style={{ width: '200px', color: 'black' }}
@@ -210,13 +205,9 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                     })}
                 </Form.Select>}
               </Col>
-            </OverlayTrigger>
+            </OSTooltip>
             <Col xs={2}>
-              <OverlayTrigger
-                key={'Banner.ndd_chk.5'}
-                placement={'bottom'}
-                delay={500}
-                overlay={<Tooltip id={'Banner.ndd_chk.5'}>{t('Banner.ndd_chk')} </Tooltip>}>
+              <OSTooltip label={t('Banner.ndd_chk')} >
                 <FormCheck
                   inline
                   type='switch'
@@ -242,7 +233,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
 
                   }}
                 />
-              </OverlayTrigger>
+              </OSTooltip>
             </Col>
           </Row>
         </FormGroup>)
@@ -310,11 +301,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
             </Col>
           </Row>
           <Row>
-            <OverlayTrigger
-              key={'Banner.ndd_lst.3'}
-              placement={'bottom'}
-              delay={500}
-              overlay={<Tooltip id={'Banner.ndd_lst.3'}>{t('Banner.ndd_lst')} </Tooltip>}>
+            <OSTooltip label={t('Banner.ndd_lst')}>
               <Col xs={10}>
                 <MultiSelect
                   className={'multidropdown_filter_node_link'}
@@ -335,13 +322,9 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                   }}
                 />
               </Col>
-            </OverlayTrigger>
+            </OSTooltip>
             <Col xs={2}>
-              <OverlayTrigger
-                key={'Banner.ndd_chk.3'}
-                placement={'bottom'}
-                delay={500}
-                overlay={<Tooltip id={'Banner.ndd_chk.3'}>{t('Banner.ndd_chk')} </Tooltip>}>
+              <OSTooltip label={t('Banner.ndd_chk')}>
                 <FormCheck
                   inline
                   type='switch'
@@ -369,7 +352,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
 
                   }}
                 />
-              </OverlayTrigger>
+              </OSTooltip>
             </Col>
           </Row>
         </FormGroup>)
@@ -559,11 +542,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   const isAllLinksLabelPosOrthAuto=IsAllLinkNotLocalAttrSameValue(data,Object.values(data.links),['label_pos_auto'])
   const content_adjust_label_pos =<>
     {/* Button to adjust label position in case the label is bigger than the link */}
-    <OverlayTrigger
-      key={'Menu.tooltips.flux.ajust_label'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'Menu.tooltips.flux.if'}>{t('Flux.tooltips.ajust_label')} </Tooltip>}>
+    <OSTooltip label={t('Flux.tooltips.ajust_label')}>
       <Form.Group as={Row}>
         <Col>
           <Checkbox
@@ -582,7 +561,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
                 setForceUpdate(!forceUpdate)
                 redrawNodeLinkLegend()            
               }}>{t('Flux.ajust_label')}</Checkbox></Col>
-      </Form.Group></OverlayTrigger>
+      </Form.Group></OSTooltip>
   </>
   //Popover element to handle filter on links, it contians :
   // - filter on link (if value of link is inferior to filter then the link is not displayed)
@@ -783,12 +762,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   // ===========Creation Button to show popover========================
 
   const button_fullscreen=<>
-    <OverlayTrigger
-      key={'tooltip-fullscreen'}
-      placement={'left'}
-      delay={500}
-      overlay={<Tooltip id={'tooltip-fullscreen'}>{s_force_update?t('Banner.quit_fullscreen'):t('Banner.fullscreen')} </Tooltip>}
-    >
+    <OSTooltip placement='left' label={s_force_update?t('Banner.quit_fullscreen'):t('Banner.fullscreen')}>
       <Button variant='light' id='button-fullscreen'
         onClick={()=>{
           if (!document.fullscreenElement) {
@@ -801,7 +775,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       >
         <Col><FontAwesomeIcon icon={logo_btn_fs} /></Col>
       </Button>
-    </OverlayTrigger>
+    </OSTooltip>
   </>
 
   let btn_mouse_mode_edition=<></>
@@ -810,11 +784,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   if(!window.SankeyToolsStatic){
     btn_mouse_mode_edition=<>
       {/* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */}
-      <OverlayTrigger
-        key={'tooltip-liaison'}
-        placement={'left'}
-        delay={500}
-        overlay={<Tooltip id={'tooltip-liason'}>{(mode_selection == 's')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')} </Tooltip>}>
+      <OSTooltip placement='left' label={(mode_selection == 's')?t('Banner.tooltipLiason'):t('Banner.tooltipSelection')}>
         <Button variant={(!(mode_selection == 'ln')) ? 'secondary' : 'secondary'} onClick={() => {
           if(mode_selection=='ln'){
             setSelectionMode('s')
@@ -824,21 +794,17 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
         }} >
           <Col><FontAwesomeIcon icon={(mode_selection == 's')?faShareNodes:faArrowPointer}/></Col>
         </Button>
-      </OverlayTrigger>
+      </OSTooltip>
     </>
 
   }
 
   const btn_aggrega_level=(level_filter)?<>
-    <OverlayTrigger
-      key={'tooltip-nodes-level'}
-      placement={'left'}
-      rootClose
-      overlay={<Tooltip id={'tooltip-nodes-level'}>{t('Banner.hlp_1_txt_2')} </Tooltip>}>
+    <OSTooltip placement='left' label={t('Banner.hlp_1_txt_2')}>
       <Button ref={ref_btn_target_detail_level} variant='warning' id='button-details-level' onClick={()=>{sShowDetailLevel(!s_show_detail_level)}} >
         <Col><FontAwesomeIcon icon={faFolderTree} /></Col>
       </Button>
-    </OverlayTrigger>
+    </OSTooltip>
     <Overlay
       key={'popover-nodes-level'}
       placement={'left'}
@@ -852,12 +818,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     :
     <></>
 
-  const btn_link_display=<><OverlayTrigger
-    key={'tooltip-link-filter2'}
-    placement={'left'}
-    delay={500}
-    overlay={<Tooltip id={'tooltip-link-filter2'}>{t('Banner.hlp_1_txt_8')} </Tooltip>}
-  >
+  const btn_link_display=<><OSTooltip placement='left' label={t('Banner.hlp_1_txt_8')}>
     <Button ref={ref_btn_target_link_threshold} variant='danger' id='button-filter-link'
       onClick={()=>{
         sShowLinkThreshold(!s_show_link_threshold)
@@ -865,7 +826,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     >
       <Col><FontAwesomeIcon icon={faSliders} /></Col>
     </Button>
-  </OverlayTrigger>
+  </OSTooltip>
   {/* Popover to display the link-filter */}
   <Overlay
     key={'overlay-popover-link-filter'}
@@ -879,11 +840,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   </Overlay></>
 
 
-  const btn_show_data_type=url_prefix !== '' ?<><OverlayTrigger
-    key={'tooltip-structur'}
-    placement={'left'}
-    rootClose
-    overlay={<Tooltip id={'tooltip-datatype'}>{t('Banner.sdr')} </Tooltip>}>
+  const btn_show_data_type=url_prefix !== '' ?<><OSTooltip placement='left' label={t('Banner.sdr')}>
     <Button variant='success'
       ref={ref_btn_data_type}
       onClick={()=>{
@@ -891,9 +848,8 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       }}
     >
       <Col><FontAwesomeIcon icon={faDiagramProject} /></Col>
-
     </Button>
-  </OverlayTrigger>
+  </OSTooltip>
   {/* Popover to display selector of datatype */}
   <Overlay
     key={'overlay-popover-data-type'}
@@ -907,11 +863,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   </Overlay>
   </>
     :
-    <OverlayTrigger
-      key={'tooltip-structur'}
-      placement={'left'}
-      delay={500}
-      overlay={<Tooltip id={'tooltip-structur'}>{t('Banner.tooltipStructure')} </Tooltip>}>
+    <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
       <Button variant={'success'} onClick={() => {
         data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
         setForceUpdate(!forceUpdate)
@@ -920,15 +872,10 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       }} >
         <Col><FontAwesomeIcon icon={faCodeBranch} /></Col>
       </Button>
-    </OverlayTrigger>
+    </OSTooltip>
 
   const btn_show_node_filter=(node_filter)?<>
-    <OverlayTrigger
-      key={'tooltip-node-tag'}
-      placement={'left'}
-      overlay={<Tooltip id={'tooltip-node-tag-filter'}>{t('Banner.hlp_node_tag_filter')} </Tooltip>}
-      rootClose
-    >
+    <OSTooltip placement='left' label={t('Banner.hlp_node_tag_filter')}>
       <Button ref={ref_btn_node_tag_filter} size='sm' variant='info'
         onClick={()=>{
           sShowNodeTagFilter(!s_show_node_tag_filter)
@@ -936,7 +883,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       >
         {logo_btn_node}
       </Button>
-    </OverlayTrigger>
+    </OSTooltip>
     {/* Popover to display the node tag filter */}
     <Overlay
       key={'overlay-popover-node-tag-filter'}
@@ -954,19 +901,14 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
 
   const btn_show_link_filter=(flux_filter)?<>
 
-    <OverlayTrigger
-      key={'tooltip-link-tag'}
-      placement={'left'}
-      rootClose
-      overlay={<Tooltip id={'tooltip-link-tag-filter'}>{t('Banner.hlp_link_tag_filter')} </Tooltip>}>
-
+    <OSTooltip placement='left' label={t('Banner.hlp_link_tag_filter')}>
       <Button ref={ref_btn_link_tag_filter} size='sm' variant='info'
         onClick={()=>{
           sShowLinkTagFilter(!s_show_link_tag_filter)
         }}
       >{logo_btn_filter_link}</Button>
 
-    </OverlayTrigger>
+    </OSTooltip>
 
     <Overlay
       key={'popover-link-tag-filter'}
@@ -982,11 +924,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     <></>
 
   const btn_show_data_filter=(Object.values(data.dataTags).length>0)?<>
-    <OverlayTrigger
-      key={'tooltip-data-filter'}
-      placement={'left'}
-      rootClose
-      overlay={<Tooltip id={'tooltip-data-tag-filter'}>{t('Banner.hlp_data_tag_filter')} </Tooltip>}>
+    <OSTooltip placement='left' label={t('Banner.hlp_data_tag_filter')}>
       <Button ref={ref_btn_data_tag_filter} size='sm' style={{color:'#fff',background:'#B13F06',borderColor:'#B13F06'}}
         onClick={()=>{
           sShowDataTagFilter(!s_show_data_tag_filter)
@@ -994,7 +932,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
       >
         <FontAwesomeIcon icon={faDatabase} />
       </Button>
-    </OverlayTrigger>
+    </OSTooltip>
     <Overlay
       key={'popover-data-tag-filter'}
       placement={'left'}
@@ -1007,17 +945,11 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
     </Overlay></>
     :
     <></>
-  const btn_show_help_in_static=window.SankeyToolsStatic ? <OverlayTrigger
-    key={'tooltip-help'}
-    placement={'left'}
-    delay={500}
-    overlay={<Tooltip id={'tooltip-help'}>{t('Banner.tooltipHelp')}</Tooltip>
-    }
-  >
+  const btn_show_help_in_static=window.SankeyToolsStatic ? <OSTooltip placement='left' label={t('Banner.tooltipHelp')}>
     <Button variant='info' onClick={() => { never_see_again.current = false;localStorage.removeItem('dontSeeAggainWelcome'),dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true) }} >
       <Col> ? </Col>
     </Button>
-  </OverlayTrigger> : <></>
+  </OSTooltip> : <></>
 
 
   // ===================Assemble different item for the toolbar========================
@@ -1054,24 +986,16 @@ export const stretchButtons : stretchButtonsFType =(
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   t:TFunction
 )=>{
-  return <> <OverlayTrigger
-    key={'tooltip-adjust-h'}
-    placement={'left'}
-    delay={500}
-    overlay={<Tooltip id={'tooltip-adjust-h'}>{t('Banner.tooltipAdjustH')} </Tooltip>}>
+  return <> <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
     <Button variant='dark' onClick={() => {AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)}} >
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
     </Button>
-  </OverlayTrigger>
-  <OverlayTrigger
-    key={'tooltip-adjust-v'}
-    placement={'left'}
-    delay={500}
-    overlay={<Tooltip id={'tooltip-adjust-v'}>{t('Banner.tooltipAdjustV')} </Tooltip>}>
+  </OSTooltip>
+  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
     <Button variant='dark' onClick={() => {AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight,false,true)}} >
       <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
     </Button>
-  </OverlayTrigger></>
+  </OSTooltip></>
 }
 
 /**
@@ -1104,11 +1028,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
             </Col>
           </Row>
           <Row>
-            <OverlayTrigger
-              key={'Banner.ndd_lst.1'}
-              placement={'bottom'}
-              delay={500}
-              overlay={<Tooltip id={'Banner.ndd_lst.1'}>{t('Banner.ndd_lst')} </Tooltip>}>
+            <OSTooltip label={t('Banner.ndd_lst')}>
               <Col xs={10}>
                 {<Form.Select
                   key={the_tags_group.group_name}
@@ -1122,13 +1042,9 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                     })}
                 </Form.Select>}
               </Col>
-            </OverlayTrigger>
+            </OSTooltip>
             <Col xs={2} >
-              <OverlayTrigger
-                key={'Banner.ndd_chk.1'}
-                placement={'bottom'}
-                delay={500}
-                overlay={<Tooltip id={'Banner.ndd_chk.1'}>{t('Banner.ndd_chk')} </Tooltip>}>
+              <OSTooltip label={t('Banner.ndd_chk')} >
                 <FormCheck
                   inline
                   type='switch'
@@ -1152,7 +1068,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                     redrawNodeLinkLegend()
                   }}
                 />
-              </OverlayTrigger>
+              </OSTooltip>
             </Col>
           </Row>
         </FormGroup>)
@@ -1171,11 +1087,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
 
           {/* Liste déroulante des groupe de filtre  */}
           <Row>
-            <OverlayTrigger
-              key={'Banner.ndd_lst.2'}
-              placement={'bottom'}
-              delay={500}
-              overlay={<Tooltip id={'Banner.ndd_lst.2'}>{t('Banner.ndd_lst')} </Tooltip>}>
+            <OSTooltip label={t('Banner.ndd_lst')}>
               <Col xs={10}>
                 <MultiSelect
                   className={'multidropdown_filter_node_link'}
@@ -1197,15 +1109,11 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                   }}
                 />
               </Col>
-            </OverlayTrigger>
+            </OSTooltip>
 
             {/* Appliquer le filtrage  */}
             <Col xs={2}>
-              <OverlayTrigger
-                key={'Banner.ndd_chk.2'}
-                placement={'bottom'}
-                delay={500}
-                overlay={<Tooltip id={'Banner.ndd_chk.2'}>{t('Banner.ndd_chk')} </Tooltip>}>
+              <OSTooltip label={t('Banner.ndd_chk')}>
                 <FormCheck
                   inline
                   type='switch'
@@ -1229,7 +1137,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                     redrawNodeLinkLegend()
                   }}
                 />
-              </OverlayTrigger>
+              </OSTooltip>
             </Col>
           </Row>
         </FormGroup>)

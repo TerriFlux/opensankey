@@ -1,5 +1,4 @@
 import React, { FunctionComponent, useState } from 'react'
-import { Tooltip } from '@chakra-ui/react'
 import 'react-folder-tree/dist/style.css'
 import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
@@ -42,7 +41,8 @@ import {
 
 /*************************************************************************************************/
 import {
-  ReturnValueNode,AddNewNode, deleteSelectedNodeFromData} from './SankeyUtils'
+  ReturnValueNode,AddNewNode, deleteSelectedNodeFromData,
+  OSTooltip} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
@@ -311,11 +311,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         layerStyle='menuconfigpanel_row_droplist'
       >
         {/* Boutton pour ajouter un noeud */}
-        <Tooltip
-          key={'menu.tooltips.noeud.1'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.noeud.plus')}>
+        <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
             isDisabled={token==false && Object.keys(data.nodes).length>15}
@@ -328,23 +324,15 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             }}>
             <FaPlus/>
           </Button>
-        </Tooltip>
+        </OSTooltip>
 
         {/* Liste déroulante pour selectionner un noeud */}
-        <Tooltip
-          key={'menu.tooltips.noeud.2'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.noeud.slct')}>
+        <OSTooltip label={t('Menu.tooltips.noeud.slct')}>
           {dropdownMultiNode()}
-        </Tooltip>
+        </OSTooltip>
 
         {/* Boutton pour supprimer le noeud selectionné */}
-        <Tooltip
-          key={'menu.tooltips.noeud.3'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.noeud.rm')}>
+        <OSTooltip label={t('Menu.tooltips.noeud.rm')}>
           <Button
             variant='menuconfigpanel_del_button'
             isDisabled={multi_selected_nodes.current.length == 0}
@@ -362,14 +350,10 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               }}>
             <FaMinus />
           </Button>
-        </Tooltip>
+        </OSTooltip>
 
         {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
-        <Tooltip
-          key={'menu.tooltips.noeud.4'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.noeud.dns')}>
+        <OSTooltip label={t('Menu.tooltips.noeud.dns')}>
           <Button
             variant='menuconfigpanel_option_button'
             onClick={
@@ -379,7 +363,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               }}>
             <FaEye />
           </Button>
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       {/* Affichage du nom des noeuds selectionnés */}
@@ -395,11 +379,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           {t('Noeud.Nom')}
         </Box>
         <Box>
-          <Tooltip
-            key={'menu.tooltips.noeud.6'}
-            placement={'top'}
-            openDelay={500}
-            label={t('Noeud.tooltips.Nom')}>
+          <OSTooltip label={t('Noeud.tooltips.Nom')}>
             <InputGroup
               variant='menuconfigpanel_option_input'
             >
@@ -449,7 +429,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
                 isDisabled={(multi_selected_nodes.current.length == 1) ? false : true}
               />
             </InputGroup>
-          </Tooltip>
+          </OSTooltip>
         </Box>
       </Box>
 

@@ -1,5 +1,4 @@
 import React,{useState} from 'react'
-import { Tooltip } from '@chakra-ui/react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import {
   Box,
@@ -16,6 +15,7 @@ import {
 
 import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
 import { DrawGrid } from '../draw/SankeyDrawFunction'
+import { OSTooltip } from './SankeyUtils'
 
 export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
   applicationContext,
@@ -68,11 +68,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Menu.BgC')}
       </Box>
-      <Tooltip
-        key={'MEP.tooltips.BgC'}
-        placement={'top'}
-        openDelay={500}
-        label={t('MEP.tooltips.BgC')}>
+      <OSTooltip label={t('MEP.tooltips.BgC')}>
         <Input
           variant='menuconfigpanel_option_input_color'
           type='color'
@@ -82,7 +78,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             set_data({...data})
           }}
         />
-      </Tooltip>
+      </OSTooltip>
     </Box>,
 
     extra_background_element,
@@ -101,13 +97,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           setForceUpdate(!forceUpdate)
         }}
       >
-        <Tooltip
-          key={'MEP.tooltips.GV'}
-          placement={'top'}
-          openDelay={500}
-          label={t('MEP.tooltips.GV')}>
+        <OSTooltip label={t('MEP.tooltips.GV')}>
           {t('MEP.TCG')}
-        </Tooltip>
+        </OSTooltip>
       </Checkbox>
 
     </Box>,
@@ -122,11 +114,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         {t('MEP.TCG_shift')}
       </Box>
       <Box>
-        <Tooltip
-          key={'MEP.tooltips.TCG'}
-          placement={'top'}
-          openDelay={500}
-          label={t('MEP.tooltips.TCG')}>
+        <OSTooltip label={t('MEP.tooltips.TCG')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -151,7 +139,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               pixels
             </InputRightAddon>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
       </Box>
     </Box>,
 
@@ -246,11 +234,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         gridRowStart='2'
         gridRowEnd='3'
       >
-        <Tooltip
-          key={'MEP.tooltips.MinFlux'}
-          placement={'top'}
-          openDelay={500}
-          label={t('MEP.tooltips.MinFlux')}>
+        <OSTooltip label={t('MEP.tooltips.MinFlux')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -277,7 +261,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(minimum_flux!)}
             </InputRightAddon>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
       </Box>
       <Box
         gridColumnStart='3'
@@ -285,11 +269,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         gridRowStart='2'
         gridRowEnd='3'
       >
-        <Tooltip
-          key={'MEP.tooltips.MaxFlux'}
-          placement={'top'}
-          openDelay={500}
-          label={t('MEP.tooltips.MaxFlux')}>
+        <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -316,7 +296,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(maximum_flux!)}
             </InputRightAddon>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
       </Box>
     </Box>,
 
@@ -365,11 +345,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.fontSize')}
         </Box>
-        <Tooltip
-          key={'Menu.tooltips.fontSize'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.fontSize')}>
+        <OSTooltip label={t('Menu.tooltips.fontSize')}>
           <NumberInput
             variant='menuconfigpanel_option_numberinput'
             min={1}
@@ -388,7 +364,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               <NumberDecrementStepper/>
             </NumberInputStepper>
           </NumberInput>
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       {/* Couleur de fond de la légende */}
@@ -405,11 +381,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.LegBgColor')}
         </Box>
-        <Tooltip
-          key={'Menu.tooltips.LegBgColor'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.LegBgColor')}>
+        <OSTooltip label={t('Menu.tooltips.LegBgColor')}>
           <Input
             variant='menuconfigpanel_option_input_color'
             type='color'
@@ -420,7 +392,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               setForceUpdate(!forceUpdate)
             }}
           />
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       {/* Opacité du fond de la légende */}
@@ -432,11 +404,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.LegBgOpacity')}
         </Box>
-        <Tooltip
-          key={'Menu.tooltips.LegBgOpacity'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.LegBgOpacity')}>
+        <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -476,7 +444,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               %
             </InputRightAddon>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       {/* Affichage du bord de la légende */}
@@ -491,13 +459,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
             setForceUpdate(!forceUpdate)
           }}
         >
-          <Tooltip
-            key={'Menu.tooltips.LegBgBorder'}
-            placement={'top'}
-            openDelay={500}
-            label={t('Menu.tooltips.LegBgBorder')}>
+          <OSTooltip label={t('Menu.tooltips.LegBgBorder')}>
             {t('Menu.LegBgBorder')}
-          </Tooltip>
+          </OSTooltip>
         </Checkbox>
       </Box>
 
@@ -515,11 +479,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegX')}
         </Box>
-        <Tooltip
-          key={'Menu.tooltips.LegX'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.LegX')}>
+        <OSTooltip label={t('Menu.tooltips.LegX')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -546,7 +506,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(Math.round(legend_position[0]))}
             </InputRightAddon>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       {/* Position Y de la legende */}
@@ -558,11 +518,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegY')}
         </Box>
-        <Tooltip
-          key={'Menu.tooltips.LegY'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.LegY')}>
+        <OSTooltip label={t('Menu.tooltips.LegY')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -589,7 +545,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(Math.round(legend_position[1]))}
             </InputRightAddon>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       {/* Largeur de la fenetre de legende */}
@@ -601,11 +557,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegWidth')}
         </Box>
-        <Tooltip
-          key={'Menu.tooltips.LegWidth'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Menu.tooltips.LegWidth')}>
+        <OSTooltip label={t('Menu.tooltips.LegWidth')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -631,7 +583,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
               {right_addon_pixel(data.legend_width)}
             </InputRightAddon>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       <Box

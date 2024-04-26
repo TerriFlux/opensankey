@@ -1,11 +1,10 @@
 import React, { useState, FunctionComponent } from 'react'
-import { Tooltip } from '@chakra-ui/react'
 
 import { TagsGroup } from '../types/Types'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown, FaPlus, FaMinus,FaPalette,FaRandom } from 'react-icons/fa'
 import colormap from 'colormap'
 import * as d3 from 'd3'
-import { AddTag,AddGroupTag, GetRandomInt, resetLinkValueAfterDeleteDTGrp } from './SankeyUtils'
+import { AddTag,AddGroupTag, GetRandomInt, resetLinkValueAfterDeleteDTGrp, OSTooltip } from './SankeyUtils'
 import { FaEye,FaEyeSlash} from 'react-icons/fa'
 import { SankeySettingsEditionElementTagsTypes } from './types/SankeyMenuConfigurationTagsTypes'
 import { TableContainer,Table, Th, Thead, Tr,Button, Tbody, Td, Box, Input,InputGroup, Select } from '@chakra-ui/react'
@@ -171,11 +170,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
 
       {/* Boutons des palettes de couleur  */}
       {/* Palette de couleur aléatoire  */}
-      <Tooltip
-        key={'tags.tooltips.1'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Tags.tooltips.pal')}>
+      <OSTooltip label={t('Tags.tooltips.pal')}>
         <Button
           backgroundColor='#9E9CFB'
           value='rand' 
@@ -191,13 +186,9 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           }}>
           <FaPalette/>
         </Button>
-      </Tooltip>
+      </OSTooltip>
       {/* Melanger les couleur  */}
-      <Tooltip
-        key={'tags.tooltips.2'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Tags.tooltips.pal_shuffle')}>
+      <OSTooltip label={t('Tags.tooltips.pal_shuffle')}>
         <Button 
           backgroundColor='#9CFBC5'
           value='alea' 
@@ -221,14 +212,10 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           }}>
           <FaRandom/>
         </Button>
-      </Tooltip>
+      </OSTooltip>
 
       {/* Palettes des couleurs standard */}
-      <Tooltip
-        key={'tags.tooltips.3'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Tags.tooltips.pal_std')}>
+      <OSTooltip label={t('Tags.tooltips.pal_std')}>
         <Select
           variant='menuconfigpanel_option_select'
           onChange={
@@ -261,7 +248,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
               <option key={i} value={cur_colormap}>{cur_colormap}</option>
           )}
         </Select>
-      </Tooltip>
+      </OSTooltip>
     </Box>
 
     {/* Entete du Tableau des étiquettes  */}
@@ -271,17 +258,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
           <Tr >
             <Th>
               {/* Bouton ajout d'une étiquette  */}
-              <Tooltip
-                key={'tags.tooltips.4'}
-                placement={'top'}
-                openDelay={500}
-                label={t('Tags.tooltips.add')}>
+              <OSTooltip label={t('Tags.tooltips.add')}>
                 <Button
                   variant='menuconfigpanel_add_button'
                   value='+' onClick={handleAddTagButton}>
                   <FaPlus />
                 </Button>
-              </Tooltip>
+              </OSTooltip>
             </Th>
             {/* Nom de l'étqiuette  */}
             <Th>
@@ -313,26 +296,18 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                 <Tr key={i.toString()} > 
                   {/* Supprimer une etiquette  */}
                   <Td >
-                    <Tooltip
-                      key={'tags.tooltips.5'}
-                      placement={'top'}
-                      openDelay={500}
-                      label={t('Tags.tooltips.rm')}>
+                    <OSTooltip label={t('Tags.tooltips.rm')}>
                       <Button size={'sm'}
                         variant='menuconfigpanel_del_button_in_table' 
                         value='-' onClick={() => { handleDelTag(tag_key) }}>
                         <FaMinus />
                       </Button>
-                    </Tooltip>
+                    </OSTooltip>
                   </Td>
                   {/* Renommer l'étiquette  */}
                   {/* Met une largeur de cellue plus petite quand c'est les étiquettes de noeud car le tableau contient une colonne de plsu (forme) */}
                   <Td >
-                    <Tooltip
-                      key={'tags.tooltips.6'}
-                      placement={'top'}
-                      openDelay={500}
-                      label={t('Tags.tooltips.nom')}>
+                    <OSTooltip label={t('Tags.tooltips.nom')}>
                       <InputGroup variant='menuconfigpanel_option_input_table' >
                         <Input
                           variant='menuconfigpanel_option_input_table'
@@ -349,16 +324,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             }
                           }/>
                       </InputGroup>
-                    </Tooltip>
+                    </OSTooltip>
                   </Td>
                   {/* Rendre ou non visible  */}
                   { type_tag_name !== 'dataTags' ?
                     <Td >
-                      <Tooltip
-                        key={'tags.tooltips.7'}
-                        placement={'top'}
-                        openDelay={500}
-                        label={t('Tags.tooltips.visible')}>
+                      <OSTooltip label={t('Tags.tooltips.visible')}>
                         <Button
                           variant='menuconfigpanel_option_btn_in_table'
                           name={'element_visible' + tag_key}
@@ -370,17 +341,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                               redrawGenereal()
                               setForceUpdate(!forceUpdate)
                             }}>{tag_visible?<FaEye/>:<FaEyeSlash/>}</Button>
-                      </Tooltip>
+                      </OSTooltip>
 
                     </Td>:<></>
                   }
                   {/* Choix de la couleur*/}
                   <Td >
-                    <Tooltip
-                      key={'tags.tooltips.8'}
-                      placement={'top'}
-                      openDelay={500}
-                      label={t('Tags.tooltips.couleur')}>
+                    <OSTooltip label={t('Tags.tooltips.couleur')}>
                       <Input padding= '0.25rem' width='revert' height='revert'
                         type='color'
                         value={data[type_tag_name][tags_group_key].tags[tag_key].color as string}
@@ -390,16 +357,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             redrawGenereal()
                             setForceUpdate(!forceUpdate)
                           }}/>
-                    </Tooltip>
+                    </OSTooltip>
                   </Td>
                   {/* Chosir la forme du noeud  */}
                   { elementNameProp === 'nodes' ? (
                     <Td>
-                      <Tooltip
-                        key={'tags.tooltips.9'}
-                        placement={'top'}
-                        openDelay={500}
-                        label={t('Tags.tooltips.forme')}>
+                      <OSTooltip label={t('Tags.tooltips.forme')}>
                         <Select variant='menuconfigpanel_option_select_table'
                           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                             data[type_tag_name][tags_group_key].tags[tag_key].shape = evt.target.value
@@ -411,7 +374,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                           <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
                           <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
                         </Select>
-                      </Tooltip>
+                      </OSTooltip>
                     </Td>
                   ) :
                     (<></>)
@@ -436,17 +399,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
             <Tr>
               {/* Ajouter un groupe */}
               <Th>
-                <Tooltip
-                  key={'tags.tooltips.10'}
-                  placement={'top'}
-                  openDelay={500}
-                  label={t('Tags.tooltips.add_grp')}>
+                <OSTooltip label={t('Tags.tooltips.add_grp')}>
                   <Button
                     variant='menuconfigpanel_add_button'
                     onClick={handleAddTagGrpButton}>
                     <FaPlus/>
                   </Button>
-                </Tooltip>
+                </OSTooltip>
               </Th>
               {/* Autre entetes  */}
               <Th>{t('Tags.Nom')}</Th>
@@ -463,26 +422,18 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                     <Tr key={i.toString()}>
                       {/* Suppression d'un groupe  */}
                       <Td>
-                        <Tooltip
-                          key={'tags.tooltips.11'}
-                          placement={'top'}
-                          openDelay={500}
-                          label={t('Tags.tooltips.rm_grp')}>
+                        <OSTooltip label={t('Tags.tooltips.rm_grp')}>
                           <Button
                             size={'sm'}
                             variant='menuconfigpanel_del_button_in_table'
                             onClick={() => handleDelGroupTag(tags_group_key)}>
                             <FaMinus />
                           </Button>
-                        </Tooltip>
+                        </OSTooltip>
                       </Td>
                       {/* Renommer le groupe d'étiquettes */}
                       <Td>
-                        <Tooltip
-                          key={'tags.tooltips.12'}
-                          placement={'top'}
-                          openDelay={500}
-                          label={t('Tags.tooltips.nom_grp')}>
+                        <OSTooltip label={t('Tags.tooltips.nom_grp')}>
                           <InputGroup variant='menuconfigpanel_option_input_table' >
                             <Input
                               variant='menuconfigpanel_option_input_table'
@@ -496,15 +447,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                                   setForceUpdate(!forceUpdate)
                                 }}/>
                           </InputGroup>
-                        </Tooltip>
+                        </OSTooltip>
                       </Td>
                       {/* Banniere  */}
                       <Td>
-                        <Tooltip
-                          key={'tags.tooltips.14'}
-                          placement={'top'}
-                          openDelay={500}
-                          label={t('Tags.tooltips.banner')}>
+                        <OSTooltip label={t('Tags.tooltips.banner')}>
                           <Select
                             variant='menuconfigpanel_option_select_table'
                             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => handleBanner(tags_group_key, evt)}
@@ -514,37 +461,29 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
                             <option key={'one' + i} id='OneBaner'  value='one'>{t('Tags.Unique')}</option>
                             <option key={'multi' + i} id='MultipleBaner' value='multi'>{t('Tags.Multiple')}</option>
                           </Select>
-                        </Tooltip>
+                        </OSTooltip>
                       </Td>
                       {/* Monter ou descendre groupe d'étiquette  */}
                       {(type_tag_name!='dataTags')?
                         <Td>
                           {/* Monter le groupe d'étiquette */}
-                          <Tooltip
-                            key={'tags.tooltips.15'}
-                            placement={'top'}
-                            openDelay={500}
-                            label={t('Tags.tooltips.up')}>
+                          <OSTooltip label={t('Tags.tooltips.up')}>
                             <Button
                               variant='menuconfigpanel_option_btn_in_table'
                               borderRadius='6px 0px 0px 6px'        
                               onClick={() => handleUpGrpTag(tags_group_key)}>
                               <FaArrowAltCircleUp />
                             </Button>
-                          </Tooltip>
+                          </OSTooltip>
                           {/* Descendre le groupe d'étiquettes  */}
-                          <Tooltip
-                            key={'tags.tooltips.16'}
-                            placement={'top'}
-                            openDelay={500}
-                            label={t('Tags.tooltips.down')}>
+                          <OSTooltip label={t('Tags.tooltips.down')}>
                             <Button 
                               variant='menuconfigpanel_option_btn_in_table'
                               borderRadius='0px 6px 6px 0px'        
                               onClick={() => handleDownGrpTag(tags_group_key)}>
                               <FaArrowAltCircleDown />
                             </Button>
-                          </Tooltip>
+                          </OSTooltip>
                         </Td>:<></>
                       }
                     </Tr>
