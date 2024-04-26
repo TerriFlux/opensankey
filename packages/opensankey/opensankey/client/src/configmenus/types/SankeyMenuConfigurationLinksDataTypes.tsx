@@ -5,7 +5,6 @@ export type MenuConfigurationLinksDataFType = (
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   additional_data_element:JSX.Element[],
-  menu_for_modal : boolean,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes
