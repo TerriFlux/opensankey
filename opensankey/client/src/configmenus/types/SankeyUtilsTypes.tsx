@@ -1,5 +1,7 @@
 import { TFunction } from 'i18next'
 import { NodeFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, dict_variable_application_dataType } from '../../types/Types'
+import { PlacementWithLogical } from '@chakra-ui/react'
+import { ReactNode } from 'react'
 
 export type CutNameFType = (t: string, n: number) => string
 
@@ -138,3 +140,10 @@ export type AddNewNodeFuncType = (dict_variable_application_data:dict_variable_a
 export type RecursionDataTagFuncType = (data: SankeyData, DT: TagsCatalog, ind: number, suffix: string, link_to_copy: SankeyLink, new_links: {[link_id: string]: SankeyLink;}) => void
 
 export type createDefaultLinkValueForNewDataTagType=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number)=>[string, SankeyLinkValueDict | SankeyLinkValue]
+
+export type OSTooltpFuncType={
+  delay?:number,
+  label:string,
+  placement?:PlacementWithLogical
+  children:ReactNode
+}

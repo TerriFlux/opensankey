@@ -1,12 +1,11 @@
 import React,{useState} from 'react'
-import { Tooltip } from '@chakra-ui/react'
 import { SankeyData, SankeyLinkAttrLocal } from '../types/Types'
 import { FaAlignLeft, FaAlignCenter, FaAlignRight, FaEyeSlash, FaEye, FaChevronDown, FaUndo } from 'react-icons/fa'
 import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp } from 'react-icons/fa'
 
 import { Box, Button, Checkbox, Input, InputGroup, InputRightAddon, Menu, MenuButton, MenuItem, MenuList, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, Tab, TabPanel } from '@chakra-ui/react'
 
-import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,TooltipValueSurcharge, IsAllLinkNotLocalAttrSameValue} from './SankeyUtils'
+import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,TooltipValueSurcharge, IsAllLinkNotLocalAttrSameValue, OSTooltip} from './SankeyUtils'
 import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
@@ -233,12 +232,8 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             AssignLinkValueToCorrectVar(d,'right_horiz_shift',(!evt.target.checked?0.8:0),menu_for_style)
           })
           updateMenuConfigLink()              }}>
-      <Tooltip
-        key={'flux.apparence.tooltips.11'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Flux.apparence.tooltips.recy')}>{t('Flux.apparence.recy')}
-      </Tooltip>
+      <OSTooltip label={t('Flux.apparence.tooltips.recy')}>{t('Flux.apparence.recy')}
+      </OSTooltip>
     </Checkbox>
 
     {/* Orientation du flux */}
@@ -248,11 +243,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       </Box>
       <Box layerStyle='options_4cols' >
         {/* Horizontal - Horizontal  */}
-        <Tooltip
-          key={'Flux.apparence.tooltips.3'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.apparence.tooltips.of_hh')}>
+        <OSTooltip label={t('Flux.apparence.tooltips.of_hh')}>
           <Button
             className='btn_menu_config'
             value='hh'
@@ -266,14 +257,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 })
                 updateMenuConfigLink()
               }}>{logo_hh}</Button>
-        </Tooltip>
+        </OSTooltip>
 
         {/* Vertical - Verticale  */}
-        <Tooltip
-          key={'Flux.apparence.tooltips.4'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.apparence.tooltips.of_vv')}>
+        <OSTooltip label={t('Flux.apparence.tooltips.of_vv')}>
           <Button
             className='btn_menu_config'
 
@@ -286,14 +273,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'orientation','vv',menu_for_style)
                 })
                 updateMenuConfigLink()              }}>{logo_vv}</Button>
-        </Tooltip>
+        </OSTooltip>
 
         {/* Vertical - Horizontal  */}
-        <Tooltip
-          key={'Flux.apparence.tooltips.5'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.apparence.tooltips.of_vh')}>
+        <OSTooltip label={t('Flux.apparence.tooltips.of_vh')}>
           <Button
             className='btn_menu_config'
 
@@ -306,14 +289,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'orientation','vh',menu_for_style)
                 })
                 updateMenuConfigLink()              }}>{logo_vh}</Button>
-        </Tooltip>
+        </OSTooltip>
 
         {/* Horizontal - Vertical  */}
-        <Tooltip
-          key={'flux.apparence.tooltips.6'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.apparence.tooltips.of_hv')}>
+        <OSTooltip label={t('Flux.apparence.tooltips.of_hv')}>
           <Button
             className='btn_menu_config'
 
@@ -326,7 +305,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   AssignLinkValueToCorrectVar(d,'orientation','hv',menu_for_style)
                 })
                 updateMenuConfigLink()              }}>{logo_hv}</Button>
-        </Tooltip>
+        </OSTooltip>
       </Box>
     </Box>
 
@@ -344,13 +323,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           updateMenuConfigLink()
         }
       }>    
-      <Tooltip
-        key={'flux.apparence.tooltips.10'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Flux.apparence.tooltips.fleche')}>
+      <OSTooltip label={t('Flux.apparence.tooltips.fleche')}>
         {t('Flux.apparence.fleche')}    
-      </Tooltip>
+      </OSTooltip>
     </Checkbox>
 
 
@@ -361,11 +336,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       <InputGroup
         variant='menuconfigpanel_option_input'
       >
-        <Tooltip
-          key={'flux.apparence.tooltips.13'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.apparence.tooltips.arrow_size')}>
+        <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
           <NumberInput
             variant='menuconfigpanel_option_numberinput'
             inputMode='numeric'
@@ -388,7 +359,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             </NumberInputStepper>
 
           </NumberInput>
-        </Tooltip>
+        </OSTooltip>
       </InputGroup>
     </Box>
 
@@ -405,13 +376,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
             .map(d => AssignLinkValueToCorrectVar(d,'curved',evt.target.checked,menu_for_style))
           updateMenuConfigLink()              }}>
-      <Tooltip
-        key={'flux.apparence.tooltips.9'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Flux.apparence.tooltips.courbe')}>
+      <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
         {t('Flux.apparence.courbe')}
-      </Tooltip>
+      </OSTooltip>
     </Checkbox>
 
 
@@ -424,12 +391,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       <InputGroup
         variant='menuconfigpanel_option_input'
       >
-        <Tooltip 
-          key={'flux.apparence.tooltips.12'}
-          placement={'top'}
-          openDelay={500}
-          
-          label={t('Flux.apparence.tooltips.courbure')}>
+        <OSTooltip label={t('Flux.apparence.tooltips.courbure')}>
           <NumberInput
             variant='menuconfigpanel_option_numberinput'
             inputMode='numeric'
@@ -450,7 +412,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             </NumberInputStepper>
 
           </NumberInput>
-        </Tooltip>
+        </OSTooltip>
       </InputGroup>
     </Box>
   
@@ -460,12 +422,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         {t('Flux.apparence.pdc')}
       </Box>
 
-      <Tooltip 
-        key={'flux.apparence.tooltips.7'}
-        placement={'top'}
-        openDelay={500}
-        
-        label={t('Flux.apparence.tooltips.pdc')}>
+      <OSTooltip label={t('Flux.apparence.tooltips.pdc')}>
         <InputGroup
           variant='menuconfigpanel_option_input'
         >
@@ -502,7 +459,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               %
           </InputRightAddon>
         </InputGroup>
-      </Tooltip>
+      </OSTooltip>
     </Box>
 
 
@@ -512,11 +469,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         {t('Flux.apparence.eep')}{(IsLinkDiplayingValueLocal(multi_selected_links,'left_horiz_shift',menu_for_style)&&IsLinkDiplayingValueLocal(multi_selected_links,'right_horiz_shift',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
       </Box>
 
-      <Tooltip
-        key={'flux.apparence.tooltips.8'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Flux.apparence.tooltips.eep')}>
+      <OSTooltip label={t('Flux.apparence.tooltips.eep')}>
         <InputGroup
           variant='menuconfigpanel_option_input'
         >
@@ -556,7 +509,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               %
           </InputRightAddon>
         </InputGroup>
-      </Tooltip>
+      </OSTooltip>
     </Box>
 
     {/* Choix de la couleur du flux */}
@@ -585,40 +538,36 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
       <InputGroup
         variant='menuconfigpanel_option_input'
       >
-        <Tooltip
-          key={'Flux.apparence.tooltips.1'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.apparence.tooltips.opacity')}><>
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput'
-              inputMode='numeric'
-              max={1}
-              min={0}
-              step={0.1}
-              value={display_link_opacity}
-              isInvalid={selected_parameter.length>0?+display_link_opacity!=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'opacity',menu_for_style):false}
-              onChange={
-                evt => {
-                  dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(evt))
-                }}
-              onBlur={(evt)=>{
-                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(
-                  d => AssignLinkValueToCorrectVar(d,'opacity',+evt,menu_for_style)
-                )
-                link_function.RedrawLinks(multi_selected_links.current)
-                updateComponentMenuConfigLink.current()
+        <OSTooltip label={t('Flux.apparence.tooltips.opacity')}><>
+          <NumberInput
+            variant='menuconfigpanel_option_numberinput'
+            inputMode='numeric'
+            max={1}
+            min={0}
+            step={0.1}
+            value={display_link_opacity}
+            isInvalid={selected_parameter.length>0?+display_link_opacity!=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'opacity',menu_for_style):false}
+            onChange={
+              evt => {
+                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(evt))
               }}
-            >
-              <NumberInputField/>
-              <NumberInputStepper>
-                <NumberIncrementStepper/>
-                <NumberDecrementStepper/>
-              </NumberInputStepper>
-            </NumberInput>
+            onBlur={(evt)=>{
+              Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(
+                d => AssignLinkValueToCorrectVar(d,'opacity',+evt,menu_for_style)
+              )
+              link_function.RedrawLinks(multi_selected_links.current)
+              updateComponentMenuConfigLink.current()
+            }}
+          >
+            <NumberInputField/>
+            <NumberInputStepper>
+              <NumberIncrementStepper/>
+              <NumberDecrementStepper/>
+            </NumberInputStepper>
+          </NumberInput>
            
-          </>
-        </Tooltip>
+        </>
+        </OSTooltip>
       </InputGroup>
     </Box>
 
@@ -635,13 +584,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           .filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink))
           .forEach(d => AssignLinkValueToCorrectVar(d,'dashed',evt.target.checked,menu_for_style))
         updateMenuConfigLink()            }}>
-      <Tooltip
-        key={'Flux.apparence.tooltips.2'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Flux.apparence.tooltips.hach')}>
+      <OSTooltip label={t('Flux.apparence.tooltips.hach')}>
         {t('Flux.apparence.hach')+' '}
-      </Tooltip>
+      </OSTooltip>
       {IsLinkDiplayingValueLocal(multi_selected_links,'dashed',menu_for_style)?TooltipValueSurcharge('link_var_',t):<></>}
     </Checkbox>
 
@@ -671,13 +616,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           })
           updateMenuConfigLink()
         }}>
-        <Tooltip
-          key={'flux.label.tooltips.1'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.label.tooltips.label')}>
+        <OSTooltip label={t('Flux.label.tooltips.label')}>
           {t('Flux.label.vdb')+' '}
-        </Tooltip>
+        </OSTooltip>
         {(IsLinkDiplayingValueLocal(multi_selected_links,'label_visible',menu_for_style)?
           TooltipValueSurcharge('link_var_',t):<></>)}
       </Checkbox>
@@ -689,11 +630,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.label.NbPrecision')}
         </Box>
-        <Tooltip
-          key={'flux.label.tooltips.14'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.label.tooltips.NbPrecision')}>
+        <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
           <NumberInput
             variant='menuconfigpanel_option_numberinput'
             inputMode='numeric'
@@ -715,7 +652,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             </NumberInputStepper>
 
           </NumberInput>
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       {/* Choix d'affichage en notation scientifique  */}
@@ -732,13 +669,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           })
           updateMenuConfigLink()
         }}>
-        <Tooltip
-          key={'flux.label.tooltips.13'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.label.tooltips.toPrecision')}>
+        <OSTooltip label={t('Flux.label.tooltips.toPrecision')}>
           {t('Flux.label.toPrecision')+' '}
-        </Tooltip>
+        </OSTooltip>
         {(IsLinkDiplayingValueLocal(multi_selected_links,'to_precision',menu_for_style)?
           TooltipValueSurcharge('link_var_',t):<></>)}
 
@@ -762,13 +695,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           })
           updateMenuConfigLink()
         }}>
-        <Tooltip
-          key={'flux.label.tooltips.cd'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.label.tooltips.custom_digit')}>
+        <OSTooltip label={t('Flux.label.tooltips.custom_digit')}>
           {t('Flux.label.custom_digit')+' '}
-        </Tooltip>
+        </OSTooltip>
         {(IsLinkDiplayingValueLocal(multi_selected_links,'custom_digit',menu_for_style)?
           TooltipValueSurcharge('link_var_',t):<></>)}
 
@@ -781,11 +710,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             {t('Flux.label.NbDigit')}
           </Box>
 
-          <Tooltip
-            key={'flux.label.tooltips.nd'}
-            placement={'top'}
-            openDelay={500}
-            label={t('Flux.label.tooltips.NbDigit')}>
+          <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
             <NumberInput
               variant='menuconfigpanel_option_numberinput'
               inputMode='numeric'
@@ -805,7 +730,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 <NumberDecrementStepper/>
               </NumberInputStepper>
             </NumberInput>
-          </Tooltip>
+          </OSTooltip>
         </Box></>:<></>}
 
       {/* Ajout une unité au label de flux */}
@@ -821,13 +746,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           })
           updateMenuConfigLink()
         }}>      
-        <Tooltip
-          key={'Flux.label.tooltips.2'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.label.tooltips.l_u_v')}>
+        <OSTooltip label={t('Flux.label.tooltips.l_u_v')}>
           {t('Flux.label.l_u_v')+' '}
-        </Tooltip>
+        </OSTooltip>
         {(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit_visible',menu_for_style)?
           TooltipValueSurcharge('link_var_',t):<></>)}
 
@@ -840,11 +761,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           <Box layerStyle='menuconfigpanel_option_name'>
             {t('Flux.label.l_u')}{(IsLinkDiplayingValueLocal(multi_selected_links,'label_unit',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}
           </Box>
-          <Tooltip
-            key={'Flux.label.tooltips.l_u'}
-            placement={'top'}
-            openDelay={500}
-            label={t('Flux.label.tooltips.l_u')}>
+          <OSTooltip label={t('Flux.label.tooltips.l_u')}>
             <Input
               variant='menuconfigpanel_option_input'
               value={ReturnCorrectLinkAttributeValue(data,selected_parameter[0],'label_unit',menu_for_style) as string}
@@ -852,7 +769,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                 Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).forEach(d => AssignLinkValueToCorrectVar(d,'label_unit',evt.target.value,menu_for_style))
                 updateMenuConfigLink()
               }}/>
-          </Tooltip>
+          </OSTooltip>
         </Box>
       </>:<></>}
       <Box
@@ -866,11 +783,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         <Box layerStyle='options_3cols' >
 
           {/* Label en noir  */}
-          <Tooltip
-            key={'flux.label.tooltips.2'}
-            placement={'top'}
-            openDelay={500}
-            label={t('Flux.label.tooltips.len')}>
+          <OSTooltip label={t('Flux.label.tooltips.len')}>
             <Button
               
               disabled={!list_value['label_visible'][0]}
@@ -882,14 +795,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   })
                   updateMenuConfigLink()
                 }}>{t('Flux.label.len')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
-          </Tooltip>
+          </OSTooltip>
 
           {/* Label en blanc  */}
-          <Tooltip
-            key={'flux.label.tooltips.3'}
-            placement={'top'}
-            openDelay={500}
-            label={t('Flux.label.tooltips.lb')}>
+          <OSTooltip label={t('Flux.label.tooltips.lb')}>
             <Button
               disabled={!list_value['label_visible'][0]}
               variant={!list_value['text_color'][1] && list_value['text_color'][0]==='white'?'menuconfigpanel_option_button_activated_center':'menuconfigpanel_option_button_center'}
@@ -900,14 +809,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   })
                   updateMenuConfigLink()
                 }}>{t('Flux.label.lb')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
-          </Tooltip>
+          </OSTooltip>
 
           {/* Label en couleur  */}
-          <Tooltip
-            key={'flux.label.tooltips.4'}
-            placement={'top'}
-            openDelay={500}
-            label={t('Flux.label.tooltips.lec')}>
+          <OSTooltip label={t('Flux.label.tooltips.lec')}>
             <Button
               
               disabled={!list_value['label_visible'][0]}
@@ -919,7 +824,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                   })
                   updateMenuConfigLink()
                 }}>{t('Flux.label.lec')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
-          </Tooltip>
+          </OSTooltip>
         </Box>
         <Box as='span' layerStyle='menuconfigpanel_part_title_3' >
       Police
@@ -986,11 +891,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             <Box layerStyle='options_3cols' >
             
               {/* Vers le début  */}
-              <Tooltip
-                key={'flux.label.tooltips.6'}
-                placement={'top'}
-                openDelay={500}
-                label={t('Flux.label.tooltips.deb')}>
+              <OSTooltip label={t('Flux.label.tooltips.deb')}>
                 <Button
                   paddingStart='0'
                   paddingEnd='0'
@@ -1010,14 +911,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     }}>
                   <FaAlignLeft/>
                 </Button>
-              </Tooltip>
+              </OSTooltip>
 
               {/* Vers le milieu  */}
-              <Tooltip
-                key={'flux.label.tooltips.7'}
-                placement={'top'}
-                openDelay={500}
-                label={t('Flux.label.tooltips.milieu_h')}>
+              <OSTooltip label={t('Flux.label.tooltips.milieu_h')}>
                 <Button
                   paddingStart='0'
                   paddingEnd='0'
@@ -1037,14 +934,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     }}>
                   <FaAlignCenter/>
                 </Button>
-              </Tooltip>
+              </OSTooltip>
 
               {/* Vers la fin du flux  */}
-              <Tooltip
-                key={'flux.label.tooltips.8'}
-                placement={'top'}
-                openDelay={500}
-                label={t('Flux.label.tooltips.fin')}>
+              <OSTooltip label={t('Flux.label.tooltips.fin')}>
                 <Button
                   paddingStart='0'
                   paddingEnd='0'
@@ -1064,17 +957,13 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     }}>
                   <FaAlignRight/>
                 </Button>
-              </Tooltip>
+              </OSTooltip>
             </Box>
             <Box layerStyle='options_3cols' >
 
               {/* Positionnement vertical des label  */}
               {/* Positionnement au dessous  */}
-              <Tooltip
-                key={'flux.label.tooltips.9'}
-                placement={'top'}
-                openDelay={500}
-                label={t('Flux.label.tooltips.dessous')}>
+              <OSTooltip label={t('Flux.label.tooltips.dessous')}>
                 <Button
                 
                   paddingStart='0'
@@ -1096,14 +985,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     }}>
                   {svg_label_bottom}
                 </Button>
-              </Tooltip>
+              </OSTooltip>
 
               {/* Positionnement au milieu  */}
-              <Tooltip
-                key={'flux.label.tooltips.10'}
-                placement={'top'}
-                openDelay={500}
-                label={t('Flux.label.tooltips.milieu_v')}>
+              <OSTooltip label={t('Flux.label.tooltips.milieu_v')}>
                 <Button
                 
                   paddingStart='0'
@@ -1125,14 +1010,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     }}>
                   {svg_label_center}
                 </Button>
-              </Tooltip>
+              </OSTooltip>
 
               {/* Positionnement au dessus  */}
-              <Tooltip
-                key={'flux.label.tooltips.11'}
-                placement={'top'}
-                openDelay={500}
-                label={t('Flux.label.tooltips.dessus')}>
+              <OSTooltip label={t('Flux.label.tooltips.dessus')}>
                 <Button
                   paddingStart='0'
                   paddingEnd='0'
@@ -1153,7 +1034,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
                     }}>
                   {svg_label_top}
                 </Button>
-              </Tooltip>
+              </OSTooltip>
             </Box>
           </Box>
         </Box>
@@ -1181,13 +1062,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           })
           updateMenuConfigLink()
         }}>
-        <Tooltip
-          key={'flux.label.tooltips.5'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.label.tooltips.acf')}>
+        <OSTooltip label={t('Flux.label.tooltips.acf')}>
           {t('Flux.label.acf')+' '}
-        </Tooltip>
+        </OSTooltip>
         {(IsLinkDiplayingValueLocal(multi_selected_links,'label_on_path',menu_for_style)?
           TooltipValueSurcharge('link_var_',t):<></>)}
       </Checkbox>
@@ -1232,11 +1109,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
           })}
         </MenuList>
       </Menu>
-      <Tooltip
-        key={'menu.tooltips.noeud.5'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Noeud.tooltips.AS')}
+      <OSTooltip label={t('Noeud.tooltips.AS')}
       >
         <Button
           variant='menuconfigpanel_option_button'
@@ -1247,7 +1120,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         >
           <FaUndo />
         </Button>
-      </Tooltip>
+      </OSTooltip>
     </Box>
     <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
   </Box>:<></>
@@ -1275,11 +1148,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         layerStyle='options_4cols'
       >
         {/* Boutton pour monter le lien sélctionné */}
-        <Tooltip
-          key={'Menu.tooltips.flux.up'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.tooltips.up')}>
+        <OSTooltip label={t('Flux.tooltips.up')}>
           <Button
             className='btn_menu_config'
             variant={'menuconfigpanel_option_button_left'}
@@ -1292,13 +1161,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             }}>
             <FaAngleUp/>
           </Button>
-        </Tooltip>
+        </OSTooltip>
 
-        <Tooltip
-          key={'Menu.tooltips.flux.upup'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.tooltips.upup')}>
+        <OSTooltip label={t('Flux.tooltips.upup')}>
           <Button  
             variant={'menuconfigpanel_option_button_center'}
             disabled={multi_selected_links.current.length<1}
@@ -1316,14 +1181,10 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             }}>
             <FaAngleDoubleUp />
           </Button>
-        </Tooltip>
+        </OSTooltip>
 
         {/* Boutton pour baisser le lien sélctionné */}
-        <Tooltip
-          key={'Menu.tooltips.flux.dwn'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.tooltips.dwn')}>
+        <OSTooltip label={t('Flux.tooltips.dwn')}>
           <Button  
             variant={'menuconfigpanel_option_button_center'}
             disabled={multi_selected_links.current.length != 1}
@@ -1337,13 +1198,9 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             }}>
             <FaAngleDown />
           </Button>
-        </Tooltip>
+        </OSTooltip>
 
-        <Tooltip
-          key={'Menu.tooltips.flux.dwndwn'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.tooltips.dwndwn')}>
+        <OSTooltip label={t('Flux.tooltips.dwndwn')}>
           <Button 
             variant={'menuconfigpanel_option_button_right'}
             disabled={multi_selected_links.current.length<1}
@@ -1364,7 +1221,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
             }}>
             <FaAngleDoubleDown />
           </Button>
-        </Tooltip>
+        </OSTooltip>
       </Box>
     </Box>
     <hr style={{borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />

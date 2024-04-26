@@ -14,11 +14,9 @@ import {
   Modal,
   Nav,
   Navbar,
-  OverlayTrigger,
   Row,
   Toast,
-  ToggleButton,
-  Tooltip
+  ToggleButton
 } from 'react-bootstrap'
 import {
   Box,
@@ -51,7 +49,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
 import {MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, ToastWaitFuncFType} from './types/SankeyMenuTopTypes'
-import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue } from '../configmenus/SankeyUtils'
+import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue, OSTooltip } from '../configmenus/SankeyUtils'
 import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
 import { UploadExcelImpl } from '../dialogs/SankeyPersistence'
@@ -273,129 +271,119 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 
   if(!window.SankeyToolsStatic){
     ui['file']=[
-      <OverlayTrigger
-        key={'file_new'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-file_new'}>{t('Menu.tooltips.new')} </Tooltip>}>
-        <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' >
+      <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' >
+
+        <OSTooltip placement='bottom' label={t('Menu.tooltips.new')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faPlus} />
             {t('Menu.new')}
           </MenuButton>
-          <MenuList>
-            <MenuItem
-              onClick={Reinitialization} >
-              <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')} 
-            </MenuItem>
+        </OSTooltip>
 
-            <MenuItem
-              onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_template.current!(true) }}
-            >{logo_tempalte} {t('Menu.from_model')} </MenuItem>
-          </MenuList>
-        </ChakraMenu></OverlayTrigger>,
+        <MenuList>
+          <MenuItem
+            onClick={Reinitialization} >
+            <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')} 
+          </MenuItem>
 
-      <OverlayTrigger
-        key={'file_open'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-file_open'}>{t('Menu.tooltips.ouvrir')} </Tooltip>}>
-        <Box>
-          <ChakraMenu placement='bottom-start'  id='ouvrir'  >
+          <MenuItem
+            onClick={() => { dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_template.current!(true) }}
+          >{logo_tempalte} {t('Menu.from_model')} </MenuItem>
+        </MenuList>
+      </ChakraMenu>,
+
+      <Box>
+          
+        <ChakraMenu placement='bottom-start'  id='ouvrir'  >
+          <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
+
             <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
               <FontAwesomeIcon icon={faFolderOpen} />
               {t('Menu.ouvrir')}
             </MenuButton>
-            <MenuList>
-              <MenuItem
-                onClick={() => {
-                  if (_load_json.current) {
-                    _load_json.current.name = ''
-                    _load_json.current.click()
-                  }
-                }} >{t('Menu.open_json')}</MenuItem>
-              <Form.Control
-                accept='.json'
-                type="file"
-                ref={_load_json}
-                style={{ display: 'none' }}
-                onChange={(evt: ChangeEvent) => {
-                  const files = (evt.target as HTMLFormElement).files
-                  const reader = new FileReader()
-                  reader.onload = (() => {
-                    return (e: ProgressEvent<FileReader>) => {
-                      Reinitialization()
-                      const result = String((e.target as FileReader).result)
-                      const new_data = get_default_data()
-                      const result_data = JSON.parse(result)
-                      Object.assign(new_data, result_data)
-                      if (result_data.version === undefined) {
-                        (new_data.version as unknown as undefined) = undefined
-                      }
-                      convert_data(new_data,get_default_data)
-                      complete_sankey_data(new_data,get_default_data,DefaultNode,DefaultLink)
-
-                      set_data(new_data)
-                      const test = document.getElementsByClassName('navbar')
-                      let margin_top = 0
-                      if (test && test.length > 0) {
-                        margin_top = test[0].getBoundingClientRect().height
-                        d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
-                      }
+          </OSTooltip>
+          <MenuList>
+            <MenuItem
+              onClick={() => {
+                if (_load_json.current) {
+                  _load_json.current.name = ''
+                  _load_json.current.click()
+                }
+              }} >{t('Menu.open_json')}</MenuItem>
+            <Form.Control
+              accept='.json'
+              type="file"
+              ref={_load_json}
+              style={{ display: 'none' }}
+              onChange={(evt: ChangeEvent) => {
+                const files = (evt.target as HTMLFormElement).files
+                const reader = new FileReader()
+                reader.onload = (() => {
+                  return (e: ProgressEvent<FileReader>) => {
+                    Reinitialization()
+                    const result = String((e.target as FileReader).result)
+                    const new_data = get_default_data()
+                    const result_data = JSON.parse(result)
+                    Object.assign(new_data, result_data)
+                    if (result_data.version === undefined) {
+                      (new_data.version as unknown as undefined) = undefined
                     }
-                  })()
-                  reader.readAsText(files[0])
-                }}
-              />
-              <MenuItem
-                onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current!(true)}
-              >{t('Menu.open_excel')}</MenuItem>
-            </MenuList>
-          </ChakraMenu>
-        </Box>
-      </OverlayTrigger>,
+                    convert_data(new_data,get_default_data)
+                    complete_sankey_data(new_data,get_default_data,DefaultNode,DefaultLink)
 
-      <OverlayTrigger
-        key={'file_save'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-file_save'}>{t('Menu.tooltips.enregistrer')} </Tooltip>}>
-        <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='enregistrer' >
+                    set_data(new_data)
+                    const test = document.getElementsByClassName('navbar')
+                    let margin_top = 0
+                    if (test && test.length > 0) {
+                      margin_top = test[0].getBoundingClientRect().height
+                      d3.select(' .opensankey #svg-container').style('margin-top',margin_top+'px')
+                    }
+                  }
+                })()
+                reader.readAsText(files[0])
+              }}
+            />
+            <MenuItem
+              onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current!(true)}
+            >{t('Menu.open_excel')}</MenuItem>
+          </MenuList>
+        </ChakraMenu>
+      </Box>,
+
+      <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='enregistrer' >
+          
+        <OSTooltip placement='bottom' label={t('Menu.tooltips.enregistrer')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faDownload} />
             {t('Menu.enregistrer')}
           </MenuButton>
-          <MenuList>
-            <MenuItem onClick={()=>{
+        </OSTooltip>
+        <MenuList>
+          <MenuItem onClick={()=>{
               dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current!(true)
-            }} >{t('Menu.open_json')}</MenuItem>
-            <MenuItem onClick={()=>ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</MenuItem>
-            {externale_save_item}
-          </MenuList>
-        </ChakraMenu></OverlayTrigger>,
+          }} >{t('Menu.open_json')}</MenuItem>
+          <MenuItem onClick={()=>ClickSaveExcel('/opensankey/',data)} >{t('Menu.open_excel')}</MenuItem>
+          {externale_save_item}
+        </MenuList>
+      </ChakraMenu>,
 
-      <OverlayTrigger
-        key={'export'}
-        placement={'left'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-export'}>{t('Menu.tooltips.export')} </Tooltip>}>
-        <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='exporter' >
+      <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='exporter' >
+
+        <OSTooltip placement='bottom' label={t('Menu.tooltips.export')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />}>
             <FontAwesomeIcon icon={faFileExport} />
             {t('Menu.exporter')}
           </MenuButton>
-          <MenuList>
-            <MenuItem onClick={()=>clickSavePDF(data)} >PDF</MenuItem>
-            {external_file_export_item}
-          </MenuList>
-        </ChakraMenu></OverlayTrigger>,
+        </OSTooltip>
+          
+        <MenuList>
+          <MenuItem onClick={()=>clickSavePDF(data)} >PDF</MenuItem>
+          {external_file_export_item}
+        </MenuList>
+      </ChakraMenu>,
 
       <>{external_file_item}</>,
-      <OverlayTrigger
-        key={'file_setting'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-file_setting'}>{t('Menu.tooltips.preference')} </Tooltip>}>
+      <OSTooltip placement='bottom' label={t('Menu.tooltips.preference')}>
         <Box>
           <ChakraButton variant='submenu_nav_btn' 
             onClick={() => { 
@@ -405,46 +393,37 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
             
           </ChakraButton>
         </Box>
-      </OverlayTrigger>
+      </OSTooltip>
     ]
 
     ui['edition']=[
-      <OverlayTrigger
-        key={'edition_layout'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-edition_layout'}>{t('Menu.tooltips.amp')} </Tooltip>}>
+      <OSTooltip placement='bottom' label={t('Menu.tooltips.amp')}>
         <ChakraButton variant='submenu_nav_btn'
           onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_apply_layout.current!(true)}>
           <FontAwesomeIcon icon={faFileInvoice} />
           {t('Menu.Transformation.amp_short')}
         </ChakraButton>
-      </OverlayTrigger>,
+      </OSTooltip>,
 
-      <OverlayTrigger
-        key={'file_style'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-file_style'}>{t('Menu.tooltips.style')} </Tooltip>}>
-        <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' id='exporter' >
+      <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' id='exporter' >
+          
+        <OSTooltip placement='bottom' label={t('Menu.tooltips.style')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faPenToSquare} />
             {t('Menu.style')}
           </MenuButton>
-          <MenuList>
-            <MenuItem onClick={()=>{ref_setter_show_style_node.current(true)}}>{t('Menu.esn')}</MenuItem>
-            <MenuItem onClick={()=>{ref_setter_show_style_link.current(true)}}>{t('Menu.esf')}</MenuItem>
-          </MenuList></ChakraMenu></OverlayTrigger>,
+        </OSTooltip>
+
+        <MenuList>
+          <MenuItem onClick={()=>{ref_setter_show_style_node.current(true)}}>{t('Menu.esn')}</MenuItem>
+          <MenuItem onClick={()=>{ref_setter_show_style_link.current(true)}}>{t('Menu.esf')}</MenuItem>
+        </MenuList></ChakraMenu>,
 
       <>{external_edition_item}</>
     ]
 
     ui['aide']=[
-      <OverlayTrigger
-        key={'help_welcome'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-help_welcome'}>{t('Menu.tooltips.DisplayWelcome')} </Tooltip>}>
+      <OSTooltip placement='bottom' label={t('Menu.tooltips.DisplayWelcome')} >
         <ChakraButton  variant='submenu_nav_btn' onClick={() =>{
           dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current!(true)
           never_see_again.current = false
@@ -452,40 +431,28 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         }}>
           {logo_home}
           {t('DisplayWelcome')}
-        </ChakraButton ></OverlayTrigger>,
+        </ChakraButton ></OSTooltip>,
 
-      <OverlayTrigger
-        key={'tuto'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-tuto'}>{t('Menu.tooltips.tuto')} </Tooltip>}>
+      <OSTooltip placement='bottom' label={t('Menu.tooltips.tuto')}>
         <ChakraButton variant='submenu_nav_btn'
           onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_tuto.current!(true)} >
           {logo_tuto}
           {t('Menu.formation')}
-        </ChakraButton></OverlayTrigger>,
+        </ChakraButton></OSTooltip>,
 
-      <OverlayTrigger
-        key={'doc'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-doc'}>{t('Menu.tooltips.doc')} </Tooltip>}>
+      <OSTooltip placement='bottom' label={t('Menu.tooltips.doc')}>
         <ChakraButton variant='submenu_nav_btn' onClick={() => GoToUserDoc()} >
           {logo_doc}
           {t('Menu.doc')}
-        </ChakraButton></OverlayTrigger>,
+        </ChakraButton></OSTooltip>,
 
-      <OverlayTrigger
-        key={'support'}
-        placement={'bottom'}
-        rootClose
-        overlay={<Tooltip id={'tooltip-support'}>{t('Menu.tooltips.support')} </Tooltip>}>
+      <OSTooltip placement='bottom' label={t('Menu.tooltips.support')}>
         <ChakraButton variant='submenu_nav_btn'
           onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_modale_support.current!(true)}>
           {logo_contact}
           {t('Menu.support')}
         </ChakraButton>
-      </OverlayTrigger>
+      </OSTooltip>
     ]
   }
 
@@ -1090,19 +1057,14 @@ export const OpenSankeySaveButton : OpenSankeySaveButtonFType = (
 
   }
   return <>
-    <OverlayTrigger
-      key={'buttonCheckpoint'}
-      placement={'left'}
-      delay={500}
-      overlay={(<Tooltip id={'buttonCheckpoint'}>{applicationContext.t('Menu.tooltips.checkpoint')} </Tooltip>)}
-    >
+    <OSTooltip placement='bottom' label={applicationContext.t('Menu.tooltips.checkpoint')} >
       <Button variant='light' onClick={() => {const ev = document;const tmp = new KeyboardEvent('keydown',{key:'s',ctrlKey:true})
         if (ev.onkeydown) {
           ev.onkeydown(tmp)
         }
       }}  ><FontAwesomeIcon style={{width:'2.5rem',height:'2.5rem'}} icon={faCloudArrowUp} />
         {indicator_saved_data}
-      </Button></OverlayTrigger></>
+      </Button></OSTooltip></>
 }
 
 const clickSavePDF = (data:SankeyData) => {
