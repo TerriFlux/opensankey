@@ -88,6 +88,22 @@ export const draw_arrow : draw_arrowFType = (
   return d
 }
 
+// When node arrow is horizontal (right & left) :
+//      _______            _______
+//      \      |          |      /
+//       \     |          |     /  This part is drawed when (ratio_cum + ratio_cur < 1) 
+//        \    |          |    /
+//         \___|__________|___/______________________
+//          \  |          |  /
+//           \ |          | /
+//            \|          |/       This  part is drawed when none of the other 2 conditions are met
+//            /|          |\
+//           / |          | \
+//          /__|__________|__\___________________________
+//         /   |          |   \
+//        /    |          |    \
+//       /     |          |     \   This part is drawed when (ratio_cum > 1)
+//      /______|          |______\
 export const DrawLinkSabot : DrawLinkSabotFType = (
   node_face_size: number,
   position_node_face: number[],
@@ -119,16 +135,16 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
       d += ' L ' + String(position_node_face[0] ) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
       d += ' L ' + String(position_node_face[0] -arrow_length_oriented*(1-ratio_cur)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
     } else if (ratio_cum > 1) {
-      d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)*((ratio_cum-ratio_cur)-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
+      d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
-      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum+ratio_cur-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ' Z'
     } else {
       d = ' M ' + String(position_node_face[0] - (arrow_length_oriented)*(1-ratio_cum)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
-      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cur-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) 
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum+ratio_cur-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) 
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   } else {
@@ -489,15 +505,14 @@ export const bezier_link_classic_recycling = (
   }
 }
 export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
-  data: SankeyData,
+  dict_variable_application_data,
   n: SankeyNode,
-  display_nodes: { [node_id: string]: SankeyNode} ,
-  display_links: { [link_id: string]: SankeyLink} ,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType,
   LinkSabotColor: LinkColorFuncType
 ) => {
+  const {data,display_links,display_nodes}=dict_variable_application_data
   let cum_v_left = 0
   let cum_h_top = 0
   let cum_v_right = 0
