@@ -4,8 +4,8 @@ import { Dropdown, ButtonGroup, Button, Popover } from 'react-bootstrap'
 import { SelectVisualyLinks, nodeTransform } from '../draw/SankeyDrawFunction'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { 
-  NodeContextHasAggregate, NodeContextHasDesaggregate, DeleteNode, 
+import {
+  NodeContextHasAggregate, NodeContextHasDesaggregate, DeleteNode,
   ReturnValueLink,
   ReturnValueNode,
   AssignNodeLocalAttribute} from '../configmenus/SankeyUtils'
@@ -48,8 +48,8 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   let is_top=true
   let pos_x=pointer_pos.current[0]+10
   let pos_y=pointer_pos.current[1]-20
-  
-  // The limit value of the mouse position that engages the shift of the context menu 
+
+  // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if(contextualised_node){
     if(pointer_pos.current[0]+410>window.innerWidth){
@@ -132,13 +132,16 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
       {
         Object.values(data.style_node).map(sn=>{
           return <Dropdown.Item onClick={()=>{
-            contextualised_node!.style=sn.idNode
-            multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>n.style=sn.idNode)
+            if (contextualised_node) {
+              contextualised_node.style=sn.idNode
+              multi_selected_nodes.current.filter(n=>n!=contextualised_node).forEach(n=>n.style=sn.idNode)
 
-            RedrawNodes(multi_selected_nodes.current)
-            ComponentUpdater.updateComponenSaveInCache.current(false)
-
-          }}>{sn.name}</Dropdown.Item>
+              RedrawNodes(multi_selected_nodes.current)
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+            }
+          }}>
+            {sn.name}
+          </Dropdown.Item>
         })
       }
     </Dropdown.Menu>

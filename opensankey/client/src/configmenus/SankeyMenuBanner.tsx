@@ -108,7 +108,7 @@ export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
               handleSimpleDropdown(evt, levelTags['Primaire'])
               recomputeDisplayedElement()
               redrawAllNodes()
-              redrawAllLinks()    
+              redrawAllLinks()
               reDrawLegend()
 
             }}>{
@@ -198,7 +198,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                     handleSimpleDropdown(evt, tags_group)
                     redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
-                  
+
                   }}>{
                     Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
                       return (<option key={i} value={tag_key}>{tag.name}</option>)
@@ -559,7 +559,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
                   d[1].label_pos_auto=evt.target.checked
                 })
                 setForceUpdate(!forceUpdate)
-                redrawNodeLinkLegend()            
+                redrawNodeLinkLegend()
               }}>{t('Flux.ajust_label')}</Checkbox></Col>
       </Form.Group></OSTooltip>
   </>
@@ -617,7 +617,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
               onChange={evt => {
                 dict_variable_application_data.data.display_style.filter_label = +evt.target.value
                 setForceUpdate(!forceUpdate)
-                redrawNodeLinkLegend()            
+                redrawNodeLinkLegend()
               }}
             />
           </Col>
@@ -868,7 +868,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
         data.show_structure = data.show_structure == 'reconciled' ? 'structure' : 'reconciled'
         setForceUpdate(!forceUpdate)
         redrawNodeLinkLegend()
-        
+
       }} >
         <Col><FontAwesomeIcon icon={faCodeBranch} /></Col>
       </Button>
@@ -1033,7 +1033,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                 {<Form.Select
                   key={the_tags_group.group_name}
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                    handleSimpleDropdown(evt, the_tags_group) 
+                    handleSimpleDropdown(evt, the_tags_group)
                     redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
                   }}>{
@@ -1156,7 +1156,7 @@ const addAllDropDownLinks = (
 ) => {
   const {data}=dict_variable_application_data
   const [forceUpdate,setForceUpdate]=useState(false)
-  
+
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     if (tags_group.banner == 'one') {
@@ -1254,7 +1254,7 @@ const addAllDropDownLinks = (
                 })
                 data.links=new_links
                 data.linkZIndex=Object.keys(new_links)
-                
+
                 setForceUpdate(!forceUpdate)
 
                 redrawNodeLinkLegend()

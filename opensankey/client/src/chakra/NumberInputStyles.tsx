@@ -22,7 +22,7 @@ export const numberinput_base_style = definePartsStyle({
     },
     _focus: {
       border: 'solid 2px ',
-      borderColor: 'openSankey.100',
+      borderColor: 'openSankey.400',
     }
   }
 })
@@ -40,6 +40,6 @@ export const menuconfigpanel_option_numberinput_with_right_addon = definePartsSt
     borderRadius: '6px 0px 0px 6px',
     fontSize: '12px',
     paddingLeft: '0.5rem',
-    paddingRight: '0.5rem'
+    paddingRight: '0.5rem',
   }
 })
