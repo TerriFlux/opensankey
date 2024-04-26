@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Tooltip } from '@chakra-ui/react'
 import { SankeyMenuConfigurationNodesTooltipFType } from './types/SankeyMenuConfigurationNodesTooltipTypes'
 import { Box, Tab, TabPanel, Textarea } from '@chakra-ui/react'
+import { OSTooltip } from './SankeyUtils'
 
 export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesTooltipFType = (
   applicationContext,
@@ -21,14 +21,7 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
       {t('Noeud.IB')}
     </Box>
 
-    <Tooltip
-      key={'Noeud.tooltips.IB.1'}
-      placement={'top'}
-      openDelay={500}
-      label={
-        t('Noeud.tooltips.IB')
-      }
-    >
+    <OSTooltip label={t('Noeud.tooltips.IB')}>
       <Textarea
         rows={10}
         value={
@@ -42,7 +35,7 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
             setForceUpdate(!forceUpdate)
           }}
       />
-    </Tooltip>
+    </OSTooltip>
   </Box>
 
   return menu_for_modal?

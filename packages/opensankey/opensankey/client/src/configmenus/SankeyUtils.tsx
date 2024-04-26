@@ -14,9 +14,8 @@ import { SankeyData,
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
-import React, { CSSProperties } from 'react'
+import React, { CSSProperties, FunctionComponent } from 'react'
 import { FaCaretRight } from 'react-icons/fa'
-import { OverlayTrigger,Tooltip } from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { faCircleInfo} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -33,12 +32,14 @@ import {
   GetNodeAttributeValueFromStyleFuncType, GetVerticalMarginForSankeyZoneFuncType, IsAllLinkAttrSameValueFuncType,
   IsAllNodeAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, IsNodeDisplayingValueLocalFuncType,
   LinkColorFuncType, LinkTextFuncType, LinkVisibleFunctType, NodeColorFuncType, NodeContextHasAggregateFuncType,
-  NodeContextHasDesaggregateFuncType, NodeDisplayedFuncType, RecursionDataTagFuncType,
+  NodeContextHasDesaggregateFuncType, NodeDisplayedFuncType, OSTooltpFuncType, RecursionDataTagFuncType,
   ReturnCorrectLinkAttributeValueFuncType, ReturnCorrectNodeAttributeValueFuncType, ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType, ReturnValueLinkFuncType, ReturnValueNodeFuncType, SetNodeStyleToTypeNodeFuncType,
   TestLinkValueFuncType, ToPrecisionFuncType, createDefaultLinkValueForNewDataTagType} from './types/SankeyUtilsTypes'
 import { DeleteGLinks } from '../draw/SankeyDrawLinks'
 import { DeleteGNodes } from '../draw/SankeyDrawNodes'
+import { Tooltip } from '@chakra-ui/react'
+
 
 declare const window: Window &
   typeof globalThis & {
@@ -1943,10 +1944,9 @@ export const StyleTitleSubSectionMenuEditionElements=({
 
 // Tooltipe added to input in menu when add a local value (for nodes & links local attributes)
 export const TooltipValueSurcharge=(k:string,t:TFunction)=>{
-  const rand_key=k+GetRandomInt(1000)
-  return <OverlayTrigger overlay={<Tooltip id={rand_key}>{t('Menu.overcharge_style_value')}</Tooltip>}>
+  return <OSTooltip label={t('Menu.overcharge_style_value')}>
     <FontAwesomeIcon style={{color:'#6cc3d5',height:'12',width:'12',float:'right'}} icon={faCircleInfo}/>
-  </OverlayTrigger>
+  </OSTooltip>
 }
 
 type ValueOf<T>=T[keyof T]
@@ -2090,4 +2090,24 @@ export const deleteSelectedNodeFromData=(
     DeleteGLinks([l[0]])
     delete dict_variable_application_data.display_links[l[0]]
   })
+}
+
+
+
+export const OSTooltip:FunctionComponent<OSTooltpFuncType>=(
+  {
+    label,
+    delay=500,
+    placement='top',
+    children
+  }
+)=>{
+  return <Tooltip
+    key={label.split(' ').join('_')}
+    openDelay={delay}
+    placement={placement}
+    label={label}
+  >
+    {children}
+  </Tooltip>
 }

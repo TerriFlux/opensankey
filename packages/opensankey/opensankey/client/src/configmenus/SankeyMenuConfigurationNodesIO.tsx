@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Tooltip } from '@chakra-ui/react'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 
@@ -17,7 +16,7 @@ import {
   Tr,
 } from '@chakra-ui/react'
 
-import { LinkVisible, LinkColor, ReturnValueLink } from './SankeyUtils'
+import { LinkVisible, LinkColor, ReturnValueLink, OSTooltip } from './SankeyUtils'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
 import { SankeyMenuConfigurationNodesIOFType} from './types/SankeyMenuConfigurationNodesIOTypes'
 import { LinkFunctionTypes, SankeyData, SankeyNode } from '../types/Types'
@@ -551,14 +550,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
       {t('Noeud.Reorg_title')}
     </Box>
 
-    <Tooltip
-      key={'menu.tooltips.noeud.7'}
-      placement={'top'}
-      openDelay={500}
-      label={
-        t('Noeud.tooltips.Reorg')
-      }
-    >
+    <OSTooltip label={t('Noeud.tooltips.Reorg')}>
       <Button
         variant='menuconfigpanel_option_button'
         onClick={() => {
@@ -577,7 +569,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
       >
         {t('Noeud.Reorg')}
       </Button>
-    </Tooltip>
+    </OSTooltip>
   </Box>
 
   // Content to reorganize the i/o of only 1 node at the time
@@ -590,21 +582,14 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
       >
-        <Tooltip
-          key={'noeud.pf.tooltips.1'}
-          placement={'top'}
-          openDelay={500}
-          label={
-            t('Noeud.PF.tooltips.io')
-          }
-        >
+        <OSTooltip label={t('Noeud.PF.tooltips.io')}>
           <Box
             as='span'
             layerStyle='menuconfigpanel_option_name'
           >
             {t('Noeud.PF.FES')}
           </Box>
-        </Tooltip>
+        </OSTooltip>
         <Select
           variant='menuconfigpanel_option_select'
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -641,21 +626,14 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
       >
-        <Tooltip
-          key={'noeud.pf.tooltips.1'}
-          placement={'top'}
-          openDelay={500}
-          label={
-            t('Noeud.PF.tooltips.side')
-          }
-        >
+        <OSTooltip label={t('Noeud.PF.tooltips.side')}>
           <Box
             as='span'
             layerStyle='menuconfigpanel_option_name'
           >
             {t('Noeud.PF.FRN')}
           </Box>
-        </Tooltip>
+        </OSTooltip>
         <Select
           variant='menuconfigpanel_option_select'
           value={link_pos}
@@ -693,16 +671,9 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           set_tab_colored(evt.target.checked)
         }}
       >
-        {/* <Tooltip
-          key={'noeud.pf.tooltips.7'}
-          placement={'top'}
-          openDelay={500}
-          label={
-            t('Noeud.PF.tooltips.lti')
-          } */}
-        {/* >           */}
-        {t('Noeud.PF.lti')}
-        {/* </Tooltip> */}
+        <OSTooltip label={t('Noeud.PF.tooltips.lti')}>          
+          {t('Noeud.PF.lti')}
+        </OSTooltip>
       </Checkbox>
 
       {/* Table montrant les noeuds selectionnés  */}
@@ -739,14 +710,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
       as='span'
       layerStyle='options_2cols'
     >
-      <Tooltip
-        key={'menu.tooltips.noeud.8'}
-        placement={'top'}
-        openDelay={500}
-        label={
-          t('Noeud.tooltips.SlctOutLink')
-        }
-      >
+      <OSTooltip label={t('Noeud.tooltips.SlctOutLink')}>
         <Button
           variant='menuconfigpanel_option_button_left'
           onClick={() => {
@@ -765,16 +729,9 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         >
           {t('Noeud.SlctOutLink')}
         </Button>
-      </Tooltip>
+      </OSTooltip>
 
-      <Tooltip
-        key={'menu.tooltips.noeud.9'}
-        placement={'top'}
-        openDelay={500}
-        label={
-          t('Noeud.tooltips.SlctInLink')
-        }
-      >
+      <OSTooltip label={t('Noeud.tooltips.SlctInLink')}>
         <Button
           variant='menuconfigpanel_option_button_right'
           onClick={() => {
@@ -793,7 +750,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         >
           {t('Noeud.SlctInLink')}
         </Button>
-      </Tooltip>
+      </OSTooltip>
     </Box>
   </Box>
 

@@ -1,5 +1,4 @@
 import React, { FunctionComponent, MutableRefObject, useState } from 'react'
-import { Tooltip } from '@chakra-ui/react'
 
 import {
   Box,
@@ -34,7 +33,8 @@ import {
   AssignLinkValueToCorrectVar,
   ReturnCorrectLinkAttributeValue,
   AddNewNode,
-  windowSankey
+  windowSankey,
+  OSTooltip
 } from './SankeyUtils'
 
 import { MultiSelect } from 'react-multi-select-component'
@@ -86,7 +86,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       link_function,
       ComponentUpdater
     ),
-    'tooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t,false)
+    'OSTooltip':MenuConfigurationLinksTooltip(data,set_data,multi_selected_links,t,false)
   }
   const pre_tag_menu=MenuConfigurationLinksTags(
     dict_variable_application_data,
@@ -400,10 +400,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       layerStyle='menuconfigpanel_row_droplist'
     >
       {/* Ajout d'un flux  */}
-      <Tooltip
-        key={'Menu.tooltips.flux.plus'}
-        placement={'top'}
-        openDelay={500}
+      <OSTooltip
         label={t('Menu.tooltips.flux.plus')}>
         <Button
           variant='menuconfigpanel_add_button'
@@ -414,23 +411,15 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             }}>
           <FaPlus/>
         </Button>
-      </Tooltip>
+      </OSTooltip>
 
       {/* Selection d'un flux  */}
-      <Tooltip
-        key={'Menu.tooltips.flux.slct'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Menu.tooltips.flux.slct')}>
+      <OSTooltip label={t('Menu.tooltips.flux.slct')}>
         {dropdownMultiLinks()}
-      </Tooltip>
+      </OSTooltip>
 
       {/* Suppression d'un flux  */}
-      <Tooltip
-        key={'Menu.tooltips.flux.rm'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Menu.tooltips.flux.rm')}>
+      <OSTooltip label={t('Menu.tooltips.flux.rm')}>
         <Button
           variant='menuconfigpanel_del_button'
           onClick={
@@ -441,14 +430,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             }}>
           <FaMinus />
         </Button>
-      </Tooltip>
+      </OSTooltip>
 
       {/* Activer / Désactiver selection uniquement des flux actuellement visibles */}
-      <Tooltip
-        key={'menu.tooltips.noeud.4'}
-        placement={'top'}
-        openDelay={500}
-        label={t('Menu.tooltips.noeud.dns')}>
+      <OSTooltip label={t('Menu.tooltips.noeud.dns')}>
         <Button
           variant='menuconfigpanel_option_button'
           onClick={
@@ -458,7 +443,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             }}>
           {data.displayed_link_selector?<FaEye/>:<FaEyeSlash/>}
         </Button>
-      </Tooltip>
+      </OSTooltip>
     </Box>
 
     <Box
@@ -476,17 +461,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
         gridRowGap='0.25rem'
       >
         {/* Choix du point de départ du flux  */}
-        <Tooltip
-          key={'Menu.tooltips.flux.src'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.tooltips.src')}>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <InputLeftAddon
-              width='5rem'
-            >
+        <OSTooltip label={t('Flux.tooltips.src')}>
+          <InputGroup variant='menuconfigpanel_option_input' >
+            <InputLeftAddon width='5rem' >
               {t('Flux.src')}
             </InputLeftAddon>
             <Select
@@ -497,14 +474,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               {addDropSource()}
             </Select>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
 
         {/* Choix du point d'arrivée du flux  */}
-        <Tooltip
-          key={'Menu.tooltips.flux.trgt'}
-          placement={'top'}
-          openDelay={500}
-          label={t('Flux.tooltips.trgt')}>
+        <OSTooltip label={t('Flux.tooltips.trgt')}>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -521,16 +494,12 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               {addDropCible()}
             </Select>
           </InputGroup>
-        </Tooltip>
+        </OSTooltip>
       </Box>
 
       {/* Bouton d'inversions du flux : cible <-> source */}
       <Box>
-        <Tooltip
-          key={'Menu.tooltips.flux.inverse'}
-          placement='top'
-          openDelay={500}
-          label={t('Flux.tooltips.inv')}>
+        <OSTooltip label={t('Flux.tooltips.inv')}>
           <Button
             height='100%'
             onClick={()=>{
@@ -564,7 +533,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           >
             <FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/>
           </Button>
-        </Tooltip>
+        </OSTooltip>
       </Box>
     </Box>
 
