@@ -63,7 +63,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       return
     }
     RemoveAnimate()
-    d3.select('body').style('background-color',data.couleur_fond_sankey)
+    d3.select('#svg').style('background-color',data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
     if (ref_getter_mode_selection.current=='s') {
       d3.select(' .opensankey #svg').attr('class','mode_selection')
