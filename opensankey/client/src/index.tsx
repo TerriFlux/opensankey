@@ -50,7 +50,6 @@ declare const window: Window &
     sankey: {
       filiere?: SankeyData,
       header?: string,
-      has_header?: boolean,
       footer?: boolean,
       logo_width?: number,
       excel?: string,
@@ -133,30 +132,12 @@ if (!window.SankeyToolsStatic) {
     complete_sankey_data(data,DefaultSankeyData,DefaultNode,DefaultLink)
   }
   render(
-    <>
-      <SankeyApp
-        initial_sankey_data={data}
-        formations_menu={{}}
-        logo={logo}
-        logo_terriflux={logo_terriflux}
-      />
-      {window.sankey.footer ? (
-        <div id="copyright">
-          <div className="container">
-            <div className="row" style={{ 'marginTop': '0px' }} >
-              <div className="col-sm-11">
-                <br />
-                <p>Réalisé par TerriFlux - <a href="https://terriflux.com">www.terriflux.fr</a></p>
-              </div>
-              <div className="col-sm-1">
-                <img src="logo_terriflux.png" width="100" />
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (<></>)
-      }
-    </>,
+    <SankeyApp
+      initial_sankey_data={data}
+      formations_menu={{}}
+      logo={logo}
+      logo_terriflux={logo_terriflux}
+    />,
     document.getElementById('react-container')
   )
 }
