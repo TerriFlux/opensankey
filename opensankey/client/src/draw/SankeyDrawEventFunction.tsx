@@ -631,6 +631,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   dict_variable_elements_selected,
   uiElementsRef,
   applicationContext,
+  ComponentUpdater,
   link_function,
   node_function
 ) => {
@@ -638,6 +639,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,ref_getter_mode_selection} = dict_variable_elements_selected
   const { accordion_ref, links_accordion_ref,button_ref } = uiElementsRef
   const {GetLinkValue}=link_function
+  const {updateComponentMenuConfigLink}=ComponentUpdater
   if ((!event.ctrlKey && !event.metaKey) && first_selected_node.current && ref_getter_mode_selection.current=='ln') {
     if (d.name.includes('_tmp')) {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
@@ -698,6 +700,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
         const tmp = Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
         tmp.name = 'node' + (Object.keys(data.nodes).length - 1)
       }
+      updateComponentMenuConfigLink.current();
     }
 
     first_selected_node.current = undefined

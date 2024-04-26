@@ -130,6 +130,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
           dict_variable_elements_selected,
           uiElementsRef,
           applicationContext,
+          ComponentUpdater,
           link_function,
           node_function
         )
