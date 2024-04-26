@@ -117,7 +117,7 @@ export type SankeyLinkValue = {
   value: number | string,
   display_value: string,
   tags: {[_:string] : string[]},
-  // for previous_value, data_value, data_source, data_period, mini, maxi ...
+  // for previous_value, data_value, data_source, mini, maxi ...
   extension: {[_:string] : string}
 }
 

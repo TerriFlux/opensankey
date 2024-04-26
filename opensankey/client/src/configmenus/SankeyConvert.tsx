@@ -71,7 +71,6 @@ interface ConvertSankeyLink {
   tooltip_text?: string
   data_value?: number | number[]
   data_source?: string | string[]
-  data_period?: string | string[]
   agregated_data_value?: number
   conv?: number[]
   natural_unit?: string
@@ -986,9 +985,6 @@ export const convert_links:convert_linksFuncType = (
         if (convert_link.data_source !== undefined) {
           convert_link.data_source = []
         }
-        if (convert_link.data_period !== undefined) {
-          convert_link.data_period = []
-        }
 
         key_names.forEach(
           cur_key_name => {
@@ -1003,9 +999,6 @@ export const convert_links:convert_linksFuncType = (
             }
             if (convert_link.data_source !== undefined) {
               (convert_link.data_source as string[]).push(data_to_convert.links[cur_key_name][i].data_source as string)
-            }
-            if (convert_link.data_period !== undefined) {
-              (convert_link.data_period as string[]).push(data_to_convert.links[cur_key_name][i].data_period as string)
             }
           }
         )
@@ -1371,9 +1364,6 @@ export const convert_links:convert_linksFuncType = (
               if ( 'data_source' in editable_link) {
                 sankey_link_value.extension.data_source = (editable_link.data_source as string[])[value_index]
               }
-              if ( 'data_period' in editable_link) {
-                sankey_link_value.extension.data_period = (editable_link.data_period as string[])[value_index]
-              }
               sankey_link_value['tags']['flux_types'] = ['initial_data']
             }
           }
@@ -1450,9 +1440,6 @@ export const convert_links:convert_linksFuncType = (
           }
           if ( 'data_source' in editable_link && sankey_link_value.extension) {
             sankey_link_value.extension.data_source = (editable_link.data_source as string[])[0]
-          }
-          if ( 'data_period' in editable_link && sankey_link_value.extension) {
-            sankey_link_value.extension.data_period = (editable_link.data_period as string[])[0]
           }
         }
       )
