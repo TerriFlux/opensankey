@@ -275,11 +275,9 @@ export const DrawLegend : DrawLegendFType= (
       free_value.append('text').text('*').attr('x','5')
       free_value.append('text').attr('x','35').text(t('MEP.show_legend_free_value')).call(wrap)
     }
-
+    dy+=sankey_has_interval_value?(document.getElementById('g_legend_free_value')?.getBoundingClientRect().height??0):data.legend_police
     if(sankey_has_dashed_links){
-      dy+=sankey_has_interval_value?(document.getElementById('g_legend_free_value')?.getBoundingClientRect().height??0):data.legend_police
       const dashed_link=legend.append('g').attr('id','g_legend_dashed_links').style('transform', 'translate(0,' + (dy) + 'px)').attr('font-size',data.legend_police+'px')
-
       dashed_link.append('path').attr('d','M 0 0 L 25 0  Z')
         .attr('fill','none')
         .attr('stroke-width','5')
@@ -292,15 +290,16 @@ export const DrawLegend : DrawLegendFType= (
         .call(wrap)
       dashed_link.select('text').attr('x','35')
     }
+    dy+=sankey_has_dashed_links?(document.getElementById('g_legend_dashed_links')?.getBoundingClientRect().height??0):data.legend_police
 
     // DRAW SCALE
     if(data.display_legend_scale){
+      dy+=data.legend_police
       d3.selectAll(' .opensankey #svg .g_scale').remove()
-      dy+=65
       const g_scale=legend.append('g').attr('class','g_scale').style('transform', 'translate(0,' + (dy) + 'px)')
       g_scale.append('text').text(t('scale')+':').style('font-size',data.legend_police+'px')
     
-      const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate(80px, -30px)')
+      const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate('+(7*(data.legend_police*0.75))+'px, -30px)')
       g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
       g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
     
