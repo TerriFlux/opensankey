@@ -773,7 +773,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         </Container>
       </Navbar>
       {/* Bottom Navbar with some more info */}
-      <Navbar bg='light' fixed='bottom' style={{fontSize:'0.85em'}} >
+      {!window.SankeyToolsStatic || window.sankey.footer ? <Navbar bg='light' fixed='bottom' style={{fontSize:'0.85em'}} >
         <Container className='sankeyFooter' >
 
           <span style={{display:'inline'}}>
@@ -789,7 +789,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           </span>
 
         </Container>
-      </Navbar>
+      </Navbar>:<></>}
 
       {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?
         <Drawer 
