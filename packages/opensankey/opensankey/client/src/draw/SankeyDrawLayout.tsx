@@ -1328,6 +1328,15 @@ export const updateLayout: updateLayoutFuncType = (
       difference = difference.filter((d: { path: string[]; kind: string} ) => d.kind === 'E' && d.path.length === 1 && d.path[0]!=='current_view')
       difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data, {}, diff))
     }
+    difference = deep_diff.diff(data.style_node, new_layout.style_node);
+    if (difference) {
+        difference.forEach((diff: { path: string[]; kind: string}) => deep_diff.applyChange(data.style_node, {}, diff));
+    }
+
+    difference = deep_diff.diff(data.style_link, new_layout.style_link);
+    if (difference) {
+        difference.forEach((diff: { path: string[]; kind: string}) => deep_diff.applyChange(data.style_link, {}, diff));
+    }
   }
 
   if (mode.includes('addNode')) {
@@ -1457,6 +1466,7 @@ export const updateLayout: updateLayoutFuncType = (
       if (difference) {
         difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(node.local, {}, diff))
       }
+      node.style = layoutNode.style
     })
   }
   if (mode.includes('attrFlux')) {
@@ -1475,6 +1485,8 @@ export const updateLayout: updateLayoutFuncType = (
       if (difference) {
         difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(link.local, {}, diff))
       }
+      link.style = layoutLink.style
+
     })
   }
 
@@ -1498,25 +1510,52 @@ export const updateLayout: updateLayoutFuncType = (
     }
   }
   if (mode.includes('tagNode')) {
-    const difference = deep_diff.diff(data.nodeTags, new_layout.nodeTags)
-    if (difference) {
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.nodeTags, {}, diff))
-    }
-    Object.entries(data.nodes).forEach(([key, node]) => {
-      const layoutNode = new_layout.nodes[key]
-      if (!layoutNode) {
-        return
-      }
-      const difference = deep_diff.diff(node.tags, layoutNode.tags)
-      if (difference) {
-        difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(node.tags, {}, diff))
-      }
+    // Finds the corresponding tag group by name and apply the "dynamic" attributes
+    // activate, show_legend and selected.
+    Object.values(data.nodeTags).forEach(nodeTag=>{
+      Object.values(new_layout.nodeTags).filter(_=>_.group_name === nodeTag.group_name).forEach(_=>{
+        nodeTag.activated=_.activated
+        nodeTag.show_legend = _.show_legend
+        Object.values(nodeTag.tags).forEach(tag=>
+          Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
+            tag.selected = ltag.selected
+          })
+        )
+      })
     })
+    // Sets the selected colormap
+    const color_map_name = new_layout.nodeTags[new_layout.nodesColorMap].group_name
+    const layout_groups = Object.values(data.nodeTags).filter(tagg=>tagg.group_name==color_map_name)
+    if (layout_groups.length>0) {
+      data.nodesColorMap = layout_groups[0].group_name
+      Object.values(data.nodes).forEach(el => {
+        el.colorTag = data.nodesColorMap
+      })
+    }
   }
+
   if (mode.includes('tagFlux')) {
-    const difference = deep_diff.diff(data.fluxTags, new_layout.fluxTags)
-    if (difference) {
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.fluxTags, {}, diff))
+    // Finds the corresponding tag group by name and apply the "dynamic" attributes
+    // activate, show_legend and selected.
+    Object.values(data.fluxTags).forEach(fluxTag=>{
+      Object.values(new_layout.fluxTags).filter(_=>_.group_name === fluxTag.group_name).forEach(_=>{
+        fluxTag.activated=_.activated
+        fluxTag.show_legend = _.show_legend
+        Object.values(fluxTag.tags).forEach(tag=>
+          Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
+            tag.selected = ltag.selected
+          })
+        )
+      })
+    })
+    // Sets the selected colormap
+    const color_map_name = new_layout.fluxTags[new_layout.linksColorMap].group_name
+    const layout_groups = Object.values(data.fluxTags).filter(tagg=>tagg.group_name==color_map_name)
+    if (layout_groups.length>0) {
+      data.linksColorMap = layout_groups[0].group_name
+      Object.values(data.links).forEach(el => {
+        el.colorTag = data.linksColorMap
+      })
     }
   }
 
