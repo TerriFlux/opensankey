@@ -1354,6 +1354,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   n.style = d
                 })
                 ApplyStyleToNodes(multi_selected_nodes,node_function)
+                setForceUpdate(!forceUpdate)
                 ComponentUpdater.updateComponenSaveInCache.current(false)
               }}
             >
