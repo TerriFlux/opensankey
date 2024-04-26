@@ -163,6 +163,7 @@ export const opensankey_theme = extendTheme({
     }
   },
   layerStyles: {
+    
     menuconfig_entry: {
       textStyle: 'h1',
       textAlign: 'left',
@@ -302,6 +303,18 @@ export const opensankey_theme = extendTheme({
       gridTemplateColumns: '1fr 6fr 1fr',
       gridColumnGap: '0.25rem',
       height: '2rem'
+    },
+    title_menu_draggable: {
+      display: 'grid',
+      gridTemplateColumns: '9fr 1fr',
+      gridColumnGap: '0.25rem',
+      zIndex:1,
+      borderBottom:' 1px solid #eceeef',
+      lineHeight:'1.5rem',
+      backgroundColor:'white',
+      position:'sticky',
+      top:'0',
+      padding:'1rem'
     },
   },
   textStyles: {
