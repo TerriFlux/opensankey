@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
-import { Tooltip } from '@chakra-ui/react'
 import * as d3 from 'd3'
 
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
 
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
-import { ReturnValueLink,AssignLinkLocalAttribute } from './SankeyUtils'
+import { ReturnValueLink,AssignLinkLocalAttribute, OSTooltip } from './SankeyUtils'
 import { SankeyNode } from '../types/Types'
 import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select, Tab, TabPanel } from '@chakra-ui/react'
 /*************************************************************************************************/
@@ -91,11 +90,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
       })}
     {/* Valeur du flux pour les parametre (flitres) choisi  */}
     {/* Valeur du flux  */}
-    <Tooltip
-      key={'flux.data.tooltips.1'}
-      placement={'top'}
-      openDelay={500}
-      label={t('Flux.data.tooltips.vpp')}>
+    <OSTooltip label={t('Flux.data.tooltips.vpp')}>
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
@@ -187,16 +182,12 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
 
         </InputGroup>
       </Box>
-    </Tooltip>
+    </OSTooltip>
 
 
     {/* Afficher ou non les donnée sur le Sankey  */}
 
-    <Tooltip
-      key={'flux.data.tooltips.3'}
-      placement={'top'}
-      openDelay={500}
-      label={t('Flux.data.tooltips.affichage')}>
+    <OSTooltip label={t('Flux.data.tooltips.affichage')}>
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
@@ -232,7 +223,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
           />
         </InputGroup>
       </Box>
-    </Tooltip>
+    </OSTooltip>
 
     {additional_data_element}
 
