@@ -617,7 +617,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 
       node_function.CreateNodesOnSVG([n_node])
       link_function.CreateLinksOnSVG([n_link])
-
+      updateComponentMenuConfigLink.current()
     }
   }
 }
