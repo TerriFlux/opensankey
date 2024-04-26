@@ -574,6 +574,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
     })
 
   // Create des coins de départ des flux si le noeud source est en forme de flêche
+  d3.selectAll('#svg .start_corner').remove() // supression dans le cas du drag notamment
   d3.selectAll(' .opensankey .ggg_nodes')
     .filter((n)=>{
       return ReturnValueNode(data,(n as SankeyNode),'shape')==='arrow'
