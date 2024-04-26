@@ -118,7 +118,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       if(pos_h=='left'){
         horiz_shift=box_text.width
       } else if (pos_h == 'middle'  && size_shape<box_text.width) {
-          horiz_shift = box_text.width / 2;
+        horiz_shift = box_text.width / 2
       }
       
       return ((box_text.x)-box_zdd.x-horiz_shift)/scale_svg-2

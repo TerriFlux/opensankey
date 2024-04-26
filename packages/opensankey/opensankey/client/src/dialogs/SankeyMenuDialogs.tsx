@@ -1,10 +1,10 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
-import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,OverlayTrigger,Tooltip,FormControl} from 'react-bootstrap'
+import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,FormControl} from 'react-bootstrap'
 import { SankeyData, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
-import { DefaultLink, DefaultNode, SmoothClasses } from '../configmenus/SankeyUtils'
+import { DefaultLink, DefaultNode, OSTooltip, SmoothClasses } from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from '../draw/SankeyDrawFunction'
 import { arrangeNodes, ComputeAutoSankey } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
@@ -107,12 +107,7 @@ export const ApplyLayoutDialog = ({
         t, convert_data, data,set_data, prev_sankey_data, set_prev_sankey_data, 
         updateLayout, elementToDispose,DefaultSankeyData
       )}
-      <OverlayTrigger
-        key={'TransforShortCut'}
-        placement={'bottom'}
-        delay={500}
-        overlay={<Tooltip id={'TransforShortCut'}>{t('Menu.Transformation.tooltips.Shortcuts')} </Tooltip>}
-      >
+      <OSTooltip label={t('Menu.Transformation.tooltips.Shortcuts')}>
         <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Shortcuts')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
@@ -151,15 +146,11 @@ export const ApplyLayoutDialog = ({
           >{t('Menu.Transformation.selectDefault')}</Button>
         
         </InputGroup>  
-      </OverlayTrigger>
+      </OSTooltip>
 
       {mode_trans!='simple'?
-        <OverlayTrigger
-          key={'TransforTopology'}
-          placement={'bottom'}
-          delay={500}
-          overlay={<Tooltip id={'TransforTopology'}>{t('Menu.Transformation.tooltips.Topology')} </Tooltip>}
-        ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Topology')}</InputGroup.Text>
+        <OSTooltip label={t('Menu.Transformation.tooltips.Topology')}>
+          <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Topology')}</InputGroup.Text>
             <Button 
               className='btn_menu_config'
               style={{width:'20%'}}
@@ -215,15 +206,10 @@ export const ApplyLayoutDialog = ({
                 }}
               }>{t('Menu.Transformation.removeFlux')}</Button>
         
-          </InputGroup></OverlayTrigger>:<></>}
+          </InputGroup></OSTooltip>:<></>}
 
       {/* Taille et pos des noeud/flux */}
-      <OverlayTrigger
-        key={'TransforGeometry'}
-        placement={'bottom'}
-        delay={500}
-        overlay={<Tooltip id={'TransforGeometry'}>{t('Menu.Transformation.tooltips.Geometry')} </Tooltip>}
-      >
+      <OSTooltip label={t('Menu.Transformation.tooltips.Geometry')}  >
         <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
@@ -252,43 +238,37 @@ export const ApplyLayoutDialog = ({
               }}
             }> {t('Menu.Transformation.posFlux')}</Button>
         
-        </InputGroup></OverlayTrigger>
+        </InputGroup>
+      </OSTooltip>
       
       {/* Valeur des flux */}
-      {mode_trans!='simple'?<OverlayTrigger
-        key={'TransforValues'}
-        placement={'bottom'}
-        delay={500}
-        overlay={<Tooltip id={'TransforValues'}>{t('Menu.Transformation.tooltips.Values')} </Tooltip>}
-      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Values')}</InputGroup.Text>
-          <Button 
-            className='btn_menu_config' 
-            style={{width:'20%'}}
-            variant={ elementToDispose.current.includes('Values')?'primary':'outline-primary'} 
-            onClick={() => {
-              if(!elementToDispose.current.includes('Values')){
-                elementToDispose.current.push('Values')
-                // Also need dataTags because we can't only import values without the structur of dataTags
-                // (but we can import dataTags without values)
-                if(!elementToDispose.current.includes('tagData')){
-                  elementToDispose.current.push('tagData')
-                }
-                setForceUpdate(!forceUpdate)
-              }else{
-                elementToDispose.current.splice(elementToDispose.current.indexOf('Values'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{elementToDispose.current.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      {mode_trans!='simple'?
+        <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
+          <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Values')}</InputGroup.Text>
+            <Button 
+              className='btn_menu_config' 
+              style={{width:'20%'}}
+              variant={ elementToDispose.current.includes('Values')?'primary':'outline-primary'} 
+              onClick={() => {
+                if(!elementToDispose.current.includes('Values')){
+                  elementToDispose.current.push('Values')
+                  // Also need dataTags because we can't only import values without the structur of dataTags
+                  // (but we can import dataTags without values)
+                  if(!elementToDispose.current.includes('tagData')){
+                    elementToDispose.current.push('tagData')
+                  }
+                  setForceUpdate(!forceUpdate)
+                }else{
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('Values'),1)
+                  setForceUpdate(!forceUpdate)
+                }}
+              }
+            >{elementToDispose.current.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
         
-        </InputGroup></OverlayTrigger>:<></>}
+          </InputGroup></OSTooltip>:<></>}
       
-      <OverlayTrigger
-        key={'TransforAttribut'}
-        placement={'bottom'}
-        delay={500}
-        overlay={<Tooltip id={'TransforAttribut'}>{t('Menu.Transformation.tooltips.Attribut')} </Tooltip>}
-      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
+      <OSTooltip label={t('Menu.Transformation.tooltips.Attribut')} >
+        <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
@@ -319,90 +299,80 @@ export const ApplyLayoutDialog = ({
             }
           >{t('Menu.Transformation.attrFlux')}</Button>
         
-        </InputGroup></OverlayTrigger>
+        </InputGroup></OSTooltip>
 
       {/* Etiquette */}
-      {mode_trans=='expert'?<OverlayTrigger
-        key={'TransforTags'}
-        placement={'bottom'}
-        delay={500}
-        overlay={<Tooltip id={'TransforTags'}>{t('Menu.Transformation.tooltips.Tags')} </Tooltip>}
-      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Tags')}</InputGroup.Text>
-          <Button 
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={elementToDispose.current.includes('tagNode')?'primary':'outline-primary'} 
-            onClick={() =>{
-              if(!elementToDispose.current.includes('tagNode')){
-                elementToDispose.current.push('tagNode')
-                setForceUpdate(!forceUpdate)
-              }else{
-                elementToDispose.current.splice(elementToDispose.current.indexOf('tagNode'),1)
-                setForceUpdate(!forceUpdate)
+      {mode_trans=='expert'?
+        <OSTooltip label={t('Menu.Transformation.tooltips.Tags')} >
+          <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Tags')}</InputGroup.Text>
+            <Button 
+              className='btn_menu_config'
+              style={{width:'20%'}}
+              variant={elementToDispose.current.includes('tagNode')?'primary':'outline-primary'} 
+              onClick={() =>{
+                if(!elementToDispose.current.includes('tagNode')){
+                  elementToDispose.current.push('tagNode')
+                  setForceUpdate(!forceUpdate)
+                }else{
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('tagNode'),1)
+                  setForceUpdate(!forceUpdate)
 
-              }}
-            }
-          >{t('Menu.Transformation.tagNode')}</Button>
-          <Button 
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={elementToDispose.current.includes('tagFlux')?'primary':'outline-primary'} 
-            onClick={() => {
-              if(!elementToDispose.current.includes('tagFlux')){
-                elementToDispose.current.push('tagFlux')
-                setForceUpdate(!forceUpdate)
-              }else{
-                elementToDispose.current.splice(elementToDispose.current.indexOf('tagFlux'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{t('Menu.Transformation.tagFlux')}</Button>
-          <Button 
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={elementToDispose.current.includes('tagData')?'primary':'outline-primary'}
-            onClick={() => {
-              if(!elementToDispose.current.includes('tagData')){
-                elementToDispose.current.push('tagData')
-                setForceUpdate(!forceUpdate)
-              }else if(!elementToDispose.current.includes('Values')){
-                elementToDispose.current.splice(elementToDispose.current.indexOf('tagData'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{t('Menu.Transformation.tagData')}</Button>
+                }}
+              }
+            >{t('Menu.Transformation.tagNode')}</Button>
+            <Button 
+              className='btn_menu_config'
+              style={{width:'20%'}}
+              variant={elementToDispose.current.includes('tagFlux')?'primary':'outline-primary'} 
+              onClick={() => {
+                if(!elementToDispose.current.includes('tagFlux')){
+                  elementToDispose.current.push('tagFlux')
+                  setForceUpdate(!forceUpdate)
+                }else{
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('tagFlux'),1)
+                  setForceUpdate(!forceUpdate)
+                }}
+              }
+            >{t('Menu.Transformation.tagFlux')}</Button>
+            <Button 
+              className='btn_menu_config'
+              style={{width:'20%'}}
+              variant={elementToDispose.current.includes('tagData')?'primary':'outline-primary'}
+              onClick={() => {
+                if(!elementToDispose.current.includes('tagData')){
+                  elementToDispose.current.push('tagData')
+                  setForceUpdate(!forceUpdate)
+                }else if(!elementToDispose.current.includes('Values')){
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('tagData'),1)
+                  setForceUpdate(!forceUpdate)
+                }}
+              }
+            >{t('Menu.Transformation.tagData')}</Button>
         
-        </InputGroup></OverlayTrigger>:<></>}
+          </InputGroup></OSTooltip>:<></>}
 
       {/* Aggrégation */}
-      {mode_trans=='expert'?<OverlayTrigger
-        key={'TransfortagLevel'}
-        placement={'bottom'}
-        delay={500}
-        overlay={<Tooltip id={'TransfortagLevel'}>{t('Menu.Transformation.tooltips.tagLevel')} </Tooltip>}
-      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
-          <Button 
-            className='btn_menu_config'
-            style={{width:'20%'}}
-            variant={elementToDispose.current.includes('tagLevel')?'primary':'outline-primary'} 
-            onClick={() => {
-              if(!elementToDispose.current.includes('tagLevel')){
-                elementToDispose.current.push('tagLevel')
-                setForceUpdate(!forceUpdate)
-              }else{
-                elementToDispose.current.splice(elementToDispose.current.indexOf('tagLevel'),1)
-                setForceUpdate(!forceUpdate)
-              }}
-            }
-          >{elementToDispose.current.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-        </InputGroup></OverlayTrigger>:<></>}
+      {mode_trans=='expert'?
+        <OSTooltip label={t('Menu.Transformation.tooltips.tagLevel')} >
+          <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
+            <Button 
+              className='btn_menu_config'
+              style={{width:'20%'}}
+              variant={elementToDispose.current.includes('tagLevel')?'primary':'outline-primary'} 
+              onClick={() => {
+                if(!elementToDispose.current.includes('tagLevel')){
+                  elementToDispose.current.push('tagLevel')
+                  setForceUpdate(!forceUpdate)
+                }else{
+                  elementToDispose.current.splice(elementToDispose.current.indexOf('tagLevel'),1)
+                  setForceUpdate(!forceUpdate)
+                }}
+              }
+            >{elementToDispose.current.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          </InputGroup></OSTooltip>:<></>}
       
-      <OverlayTrigger
-        key={'TransforattrGeneral'}
-        placement={'bottom'}
-        delay={500}
-        overlay={<Tooltip id={'TransforattrGeneral'}>{t('Menu.Transformation.tooltips.attrGeneral')} </Tooltip>}
-      ><InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
+      <OSTooltip label={t('Menu.Transformation.tooltips.attrGeneral')} >
+        <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
           <Button 
             className='btn_menu_config'
             style={{width:'20%'}}
@@ -417,7 +387,7 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{elementToDispose.current.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-        </InputGroup></OverlayTrigger>
+        </InputGroup></OSTooltip>
       {apply_transformation_additional_elements.map((c:JSX.Element,i:number)=>{
         return <React.Fragment key={i}>{c}</React.Fragment>
       })}
@@ -426,12 +396,7 @@ export const ApplyLayoutDialog = ({
     <Tab key={'manuelle'} eventKey={'manuelle'} title={t('Menu.Transformation.amp_manuelle')} style={{marginBottom:'10px'}}>
       {/* Ecart horizontal */}
       <Form.Group ><InputGroup.Text style={{width:'20%'}}>{t('MEP.Horizontal')}</InputGroup.Text>
-        <OverlayTrigger
-          key={'MEP.tooltips.EEN_h'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'tooltip-adjust'}>{t('MEP.tooltips.EEN_h')} </Tooltip>}>
+        <OSTooltip label={t('MEP.tooltips.EEN_h')} >
           <FormControl
             type="text"
             value={node_hspace}
@@ -439,17 +404,12 @@ export const ApplyLayoutDialog = ({
               set_node_hspace(+evt.target.value)
               data.h_space = +evt.target.value
             }}/>
-        </OverlayTrigger>
+        </OSTooltip>
         
       </Form.Group>
       {/* Ecart Vertical */}
       <Form.Group><InputGroup.Text style={{width:'20%'}}>{t('MEP.Vertical')}</InputGroup.Text>
-        <OverlayTrigger
-          key={'MEP.tooltips.EEN_v'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.EEN_v'}>{t('MEP.tooltips.EEN_v')} </Tooltip>}>
+        <OSTooltip label={t('MEP.tooltips.EEN_v')} >
           <FormControl
             type="text"
             value={node_vspace}
@@ -457,15 +417,10 @@ export const ApplyLayoutDialog = ({
               set_node_vspace(+evt.target.value)
               data.v_space = +evt.target.value
             }}/>
-        </OverlayTrigger>
+        </OSTooltip>
         
       </Form.Group>
-      <OverlayTrigger
-        key={'MEP.tooltips.factExpH'}
-        placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'MEP.tooltips.factExpH'}>{t('MEP.tooltips.factExpH')} </Tooltip>}>
+      <OSTooltip label={t('MEP.tooltips.factExpH')} >
         <Form.Group>
           
 
@@ -492,13 +447,9 @@ export const ApplyLayoutDialog = ({
           </InputGroup>
           
         </Form.Group>
-      </OverlayTrigger>
-      <OverlayTrigger
-        key={'MEP.tooltips.factExpV'}
-        placement={'top'}
-        delay={500}
-        rootClose
-        overlay={<Tooltip id={'MEP.tooltips.factExpV'}>{t('MEP.tooltips.factExpV')} </Tooltip>}><Form.Group>
+      </OSTooltip>
+      <OSTooltip label={t('MEP.tooltips.factExpV')} >
+        <Form.Group>
           
           <Form.Label>
             {t('MEP.factExpV')}
@@ -523,16 +474,12 @@ export const ApplyLayoutDialog = ({
           </InputGroup>
           
         </Form.Group>
-      </OverlayTrigger>
+      </OSTooltip>
 
       { /* Positionnement des noeuds */}
       <Form.Group>
-        { /* Mise en forme automatique */}<OverlayTrigger
-          key={'MEP.tooltips.PA'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.PA'}>{t('MEP.tooltips.PA')} </Tooltip>}>
+        { /* Mise en forme automatique */}
+        <OSTooltip label={t('MEP.tooltips.PA')} >
           <Button
             size="sm"
             onClick={() => {              
@@ -545,12 +492,8 @@ export const ApplyLayoutDialog = ({
             }}>
             {t('MEP.PA')}
           </Button>
-        </OverlayTrigger>{/* Arranger les noeud */}<OverlayTrigger
-          key={'MEP.tooltips.AN'}
-          placement={'top'}
-          delay={500}
-          rootClose
-          overlay={<Tooltip id={'MEP.tooltips.AN'}>{t('MEP.tooltips.AN')} </Tooltip>}>
+        </OSTooltip>{/* Arranger les noeud */}
+        <OSTooltip label={t('MEP.tooltips.AN')}>
           <Button
             size="sm"
             onClick={() => {
@@ -559,7 +502,7 @@ export const ApplyLayoutDialog = ({
             }}>
             {t('MEP.AN')}
           </Button>
-        </OverlayTrigger>
+        </OSTooltip>
         
       </Form.Group>
     </Tab>

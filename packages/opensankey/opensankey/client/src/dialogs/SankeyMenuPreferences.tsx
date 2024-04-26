@@ -1,11 +1,11 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { FunctionComponent } from 'react'
 
-import { Form,  Button, ButtonGroup, InputGroup,OverlayTrigger,Tooltip} from 'react-bootstrap'
+import { Form,  Button, ButtonGroup, InputGroup} from 'react-bootstrap'
 import { SankeyData } from '../types/Types'
 import { TFunction,i18n } from 'i18next'
 import { Checkbox } from '@chakra-ui/react'
-import { SmoothClasses } from '../configmenus/SankeyUtils'
+import { OSTooltip, SmoothClasses } from '../configmenus/SankeyUtils'
 import { OpenSankeyDefaultModalePreferenceContentFType, modalPreferenceTypes, preferenceCheckFType } from './types/SankeyMenuPreferencesTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
@@ -132,11 +132,8 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         </Checkbox>
       </InputGroup>,
     ],
-    'node_label_sep':<OverlayTrigger
-      key={'Banner.ndd_lst.1'}
-      placement={'top'}
-      delay={500}
-      overlay={<Tooltip id={'node_label_sep'}>{t('Menu.tooltips.node_label_sep')} </Tooltip>}><InputGroup>
+    'node_label_sep':<OSTooltip label={t('Menu.tooltips.node_label_sep')}>
+      <InputGroup>
         <InputGroup.Text>{t('Menu.node_label_sep')}</InputGroup.Text>
         <Form.Control type='text' value={data.node_label_separator} onChange={(evt)=>{
           data.node_label_separator=evt.target.value
@@ -144,7 +141,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
             
 
         }}></Form.Control>
-      </InputGroup></OverlayTrigger>,
+      </InputGroup></OSTooltip>,
 
     
 
