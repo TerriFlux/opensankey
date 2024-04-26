@@ -700,7 +700,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
         const tmp = Object.values(data.nodes).filter(d => d.name == 'node_tmp')[0]
         tmp.name = 'node' + (Object.keys(data.nodes).length - 1)
       }
-      updateComponentMenuConfigLink.current();
+      updateComponentMenuConfigLink.current()
     }
 
     first_selected_node.current = undefined
