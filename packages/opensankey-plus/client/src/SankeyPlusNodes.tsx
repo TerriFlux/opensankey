@@ -1,7 +1,5 @@
 import React, { ChangeEvent, useState, useRef, MutableRefObject } from 'react'
 import {
-  OverlayTrigger,
-  Tooltip,
   Badge
 } from 'react-bootstrap'
 import {
@@ -53,6 +51,7 @@ import {
   SvgDragMiddleMouseStart,
   actualizeDrawAreaFrame,
   hideLinkOnDragElement,
+  OSTooltip,
 } from './import/OpenSankey'
 
 import { TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
@@ -138,18 +137,9 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
         <Box
           layerStyle='menuconfigpanel_grid'
         >
-          <OverlayTrigger
-            key={'iconDisabled2'}
-            placement={'top'}
-            delay={500}
-            overlay={
-              (!is_activated)?
-                <Tooltip id={'iconDisabled2'}>
-                  {t('Menu.sankeyPlusDisabled')}
-                </Tooltip>:
-                <></>
-            }
-          >
+
+          <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
+
             <Box
               as='span'
               layerStyle='menuconfigpanel_row_2cols'
@@ -172,20 +162,10 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
                 <FontAwesomeIcon icon={faIcons} />
               </Button>
             </Box>
-          </OverlayTrigger>
+          </OSTooltip>
 
-          <OverlayTrigger
-            key={'iconDisabled3'}
-            placement={'top'}
-            delay={500}
-            overlay={
-              (!is_activated)?
-                <Tooltip id={'iconDisabled3'}>
-                  {t('Menu.sankeyPlusDisabled')}
-                </Tooltip>:
-                <></>
-            }
-          >
+
+          <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
             <Box
               as='span'
               layerStyle='menuconfigpanel_row_2cols'
@@ -215,7 +195,7 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
                 }}
               />
             </Box>
-          </OverlayTrigger>
+          </OSTooltip>
         </Box>:
         <></>
     }
@@ -228,18 +208,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
     {/* Import image */}
     {
       (button_icon_or_image === 'image')?
-        <OverlayTrigger
-          key={'imageDisabled2'}
-          placement={'top'}
-          delay={500}
-          overlay={
-            (!is_activated)?
-              <Tooltip id={'imageDisabled2'}>
-                {t('Menu.sankeyPlusDisabled')}
-              </Tooltip>:
-              <></>
-          }
-        >
+        <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
+
           <Box
             as='span'
             layerStyle='menuconfigpanel_row_2cols'
@@ -304,7 +274,7 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
               }}
             />
           </Box>
-        </OverlayTrigger>
+        </OSTooltip>
         :<></>
     }
   </Box>
@@ -314,49 +284,31 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
     layerStyle='menuconfigpanel_grid'
   >
     {/* Visibilite du noeud */}
-    <OverlayTrigger
-      key={'noeud.apparence.tooltips.1'}
-      placement={'top'}
-      delay={500}
-      overlay={
-        <Tooltip id={'noeud.apparence.tooltips.1'}>
-          {t('Noeud.apparence.tooltips.Visibilité')}
-        </Tooltip>
-      }
-    >
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={isAllNodeVisible[1]}
-        isChecked={isAllNodeVisible[0]}
-        onChange={(evt) => {
-          Object.values(data.nodes)
-            .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-            .forEach(d => AssignNodeValueToCorrectVar(d, 'shape_visible', evt.target.checked, false))
-          node_function.reDrawIllustration(multi_selected_nodes.current)
-          setForceUpdate(!forceUpdate)
-        }}
-      >
-        {t('Noeud.apparence.Visibilité')}
-        {
-          IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',false)?
-            TooltipValueSurcharge('node_plus_var',t):
-            <></>
-        }
-      </Checkbox>
-    </OverlayTrigger>
 
-    <OverlayTrigger
-      key={'imageDisabled1'}
-      placement={'top'}
-      delay={500}
-      overlay={
-        (!is_activated)?
-          <Tooltip id={'imageDisabled1'}>
-            {t('Menu.sankeyPlusDisabled')}
-          </Tooltip>:
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={isAllNodeVisible[1]}
+      isChecked={isAllNodeVisible[0]}
+      onChange={(evt) => {
+        Object.values(data.nodes)
+          .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+          .forEach(d => AssignNodeValueToCorrectVar(d, 'shape_visible', evt.target.checked, false))
+        node_function.reDrawIllustration(multi_selected_nodes.current)
+        setForceUpdate(!forceUpdate)
+      }}
+    >
+      <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')} >
+        {t('Noeud.apparence.Visibilité')}
+      </OSTooltip>
+      {
+        IsNodeDisplayingValueLocal(multi_selected_nodes,'shape_visible',false)?
+          TooltipValueSurcharge('node_plus_var',t):
           <></>
       }
-    >
+    </Checkbox>
+
+    <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
+
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
@@ -436,7 +388,7 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
           </Button>
         </Box>
       </Box>
-    </OverlayTrigger>
+    </OSTooltip>
 
     {
       button_icon_or_image==='icon'?
@@ -462,27 +414,17 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
       >
         {t('Noeud.tabs.icon')}
         {
-          (!is_activated)?
-            <OverlayTrigger
-              key={'textZoneDisabled'}
-              placement={'top'}
-              delay={500}
-              overlay={
-                <Tooltip id={'textZoneDisabled'}>
-                  {t('Menu.sankeyPlusDisabled')}
-                </Tooltip>
-              }
-            >
-              <Badge
-                pill
-                bg="none"
-                style={{fontSize:'1em'}}>
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{color: '#66a593', display: 'inline'}}
-                />
-              </Badge>
-            </OverlayTrigger>:
+          (!is_activated)?<OSTooltip label={t('Menu.sankeyPlusDisabled')} >
+            <Badge
+              pill
+              bg="none"
+              style={{fontSize:'1em'}}>
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{color: '#66a593', display: 'inline'}}
+              />
+            </Badge>
+          </OSTooltip>:
             <Badge
               pill
               bg="info"
@@ -518,16 +460,8 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
     <Box
       layerStyle='menuconfigpanel_grid'
     >
-      <OverlayTrigger
-        key={'imageDisabledHL'}
-        placement={'top'}
-        delay={500}
-        overlay={
-          (!is_activated)?
-            <Tooltip id={'imageDisabledHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-            <></>
-        }
-      >
+      <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
+
         <Box
           as='span'
           layerStyle='menuconfigpanel_row_2cols'
@@ -553,19 +487,10 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
             />
           </InputGroup>
         </Box>
-      </OverlayTrigger>
+      </OSTooltip>
 
       {/* Open Hyperlink */}
-      <OverlayTrigger
-        key={'imageDisabledOHL'}
-        placement={'top'}
-        delay={500}
-        overlay={
-          (!is_activated)?
-            <Tooltip id={'imageDisabledOHL'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-            <></>
-        }
-      >
+      <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
         <Box
           as='span'
           layerStyle='menuconfigpanel_row_2cols'
@@ -585,7 +510,7 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
             <FontAwesomeIcon icon={faUpRightFromSquare} />
           </Button>
         </Box>
-      </OverlayTrigger>
+      </OSTooltip>
     </Box>:
     <></>
 
@@ -597,16 +522,7 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
         {t('Noeud.tabs.hl')}
         {
           (!is_activated)?
-            <OverlayTrigger
-              key={'textZoneDisabled'}
-              placement={'top'}
-              delay={500}
-              overlay={
-                <Tooltip id={'textZoneDisabled'}>
-                  {t('Menu.sankeyPlusDisabled')}
-                </Tooltip>
-              }
-            >
+            <OSTooltip label={t('Menu.sankeyPlusDisabled')}>
               <Badge
                 pill
                 bg="none"
@@ -617,7 +533,7 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
                   style={{color: '#66a593', display: 'inline'}}
                 />
               </Badge>
-            </OverlayTrigger>:
+            </OSTooltip>:
             <Badge
               pill
               bg="info"

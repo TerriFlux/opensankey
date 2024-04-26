@@ -1,6 +1,6 @@
 
 import React, { ChangeEvent, useRef, useState } from 'react'
-import { OverlayTrigger, Tooltip, Form, InputGroup, Dropdown} from 'react-bootstrap'
+import { Form, InputGroup, Dropdown} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FaEye, FaEyeSlash, FaFileImport} from 'react-icons/fa'
 import * as d3 from 'd3'
@@ -42,6 +42,7 @@ import {
   DragLegendGElementOSTyped,
   LinkColor,
   NodeColor,
+  OSTooltip,
   PlusMenuDraggable,
   ReturnValueLink,
 } from './import/OpenSankey'
@@ -105,15 +106,7 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
       >
         {t('MEP.show_image')}
       </Checkbox>
-      <OverlayTrigger
-        key={'imageDisabled2'}
-        placement={'top'}
-        delay={500}
-        overlay={
-          (!has_open_sankey_plus)?
-            <Tooltip id={'imageDisabled2'}>{t('Menu.sankeyPlusDisabled')} </Tooltip>:
-            <></>}
-      >
+      <OSTooltip label={!has_open_sankey_plus?t('Menu.sankeyPlusDisabled'):''} >
         <Box>
           <Button
             variant='menuconfigpanel_option_button'
@@ -149,7 +142,7 @@ export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
             }}
           />
         </Box>
-      </OverlayTrigger>
+      </OSTooltip>
     </Box>
   </>
   return content_image

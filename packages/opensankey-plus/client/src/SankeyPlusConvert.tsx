@@ -9,12 +9,13 @@ import { DefaultLink,
   convert_data,
   convert_nodes,
   convert_links,
-  convert_tags} from './import/OpenSankey'
+  convert_tags,
+  OSTooltip} from './import/OpenSankey'
 
 import {SankeyPlusDiagramSelectorFType, apply_transformation_opensankey_plus_elementsFType, plus_convert_dataFType, plus_sankey_layoutFType } from '../types/SankeyPlusConvertTypes'
 
 // Opensankey files
-import { InputGroup, Button, Form, OverlayTrigger, Tooltip} from 'react-bootstrap'
+import { InputGroup, Button, Form} from 'react-bootstrap'
 import React, { MutableRefObject, useState } from 'react'
 import { TFunction } from 'i18next'
 import { FaCheck } from 'react-icons/fa'
@@ -315,12 +316,7 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
       >{elementToDispose.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
     
     </InputGroup>,
-    <OverlayTrigger
-      key={'noeud.apparence.tooltips.4'}
-      placement={'top'}
-      delay={500}
-      overlay={!is_current_data_master?<Tooltip id={'transformation_view'}>{t('Menu.Transformation.disabled_view')} </Tooltip>:<></>}>
-
+    <OSTooltip label={!is_current_data_master?t('Menu.Transformation.disabled_view'):''} >
       <InputGroup>
         <InputGroup.Text
           style={{width:'20%',
@@ -344,7 +340,7 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           }
         >{elementToDispose.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
       </InputGroup>
-    </OverlayTrigger>
+    </OSTooltip>
   ]}
 
 export const plus_sankey_layout : plus_sankey_layoutFType =(

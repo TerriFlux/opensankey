@@ -1,5 +1,5 @@
 import React, { MutableRefObject, useRef, useState } from 'react'
-import { Badge, OverlayTrigger, Tooltip} from 'react-bootstrap'
+import { Badge} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
@@ -15,6 +15,7 @@ import { NodeDisplayed } from './import/OpenSankey'
 import {PlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+import { OSTooltip } from 'open-sankey/dist/configmenus/SankeyUtils'
 
 
 declare const window: Window &
@@ -128,16 +129,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
         {t('Noeud.tabs.fo')}
         {
           (!is_activated)?
-            <OverlayTrigger
-              key={'textZoneDisabled'}
-              placement={'top'}
-              delay={500}
-              overlay={
-                <Tooltip id={'textZoneDisabled'}>
-                  {t('Menu.sankeyPlusDisabled')}
-                </Tooltip>
-              }
-            >
+            <OSTooltip label={t('Menu.sankeyPlusDisabled')}>
               <Badge
                 pill
                 bg="none"
@@ -147,7 +139,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
                   style={{color: '#66a593', display: 'inline'}}
                 />
               </Badge>
-            </OverlayTrigger>:
+            </OSTooltip>:
             <Badge
               pill
               bg="info"
@@ -162,96 +154,54 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
       <Box
         layerStyle='menuconfigpanel_grid'
       >
-        <OverlayTrigger
-          key={'foDisabled'}
-          placement={'top'}
-          delay={500}
-          overlay={
-            (!is_activated)?
-              <Tooltip id={'foDisabled'}>
-                {t('Menu.sankeyPlusDisabled')}
-              </Tooltip>:
-              <></>
-          }
+       
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isDisabled={!is_activated}
+          isIndeterminate={value_of_key['has_FO'][1]}
+          isChecked={value_of_key['has_FO'][0] as boolean}
+          onChange={(evt) => {
+            Object
+              .values(data.nodes)
+              .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => {
+                d.has_FO = evt.target.checked
+              })
+            node_function.RedrawNodes(multi_selected_nodes.current)
+            setForceUpdate(!forceUpdate)
+          }}
         >
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            isDisabled={!is_activated}
-            isIndeterminate={value_of_key['has_FO'][1]}
-            isChecked={value_of_key['has_FO'][0] as boolean}
-            onChange={(evt) => {
-              Object
-                .values(data.nodes)
-                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => {
-                  d.has_FO = evt.target.checked
-                })
-              node_function.RedrawNodes(multi_selected_nodes.current)
-              setForceUpdate(!forceUpdate)
-            }}
-          >
-            {t('Noeud.foreign_object.Visibilité')}
-          </Checkbox>
-        </OverlayTrigger>
-
-        <OverlayTrigger
-          key={'foRawDisabled'}
-          placement={'top'}
-          delay={500}
-          overlay={
-            (!is_activated)?
-              <Tooltip id={'foRawDisabled'}>
-                {t('Menu.sankeyPlusDisabled')}
-              </Tooltip>:
-              <></>
-          }
+          {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyPlusDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
+        </Checkbox>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isDisabled={!is_activated}
+          isIndeterminate={value_of_key['is_FO_raw'][1]}
+          isChecked={value_of_key['is_FO_raw'][0] as boolean}
+          onChange={(evt) => {
+            Object
+              .values(data.nodes)
+              .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              .forEach(d => {
+                d.is_FO_raw = evt.target.checked
+              })
+            node_function.RedrawNodes(multi_selected_nodes.current)
+            setForceUpdate(!forceUpdate)
+          }}
         >
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            isDisabled={!is_activated}
-            isIndeterminate={value_of_key['is_FO_raw'][1]}
-            isChecked={value_of_key['is_FO_raw'][0] as boolean}
-            onChange={(evt) => {
-              Object
-                .values(data.nodes)
-                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => {
-                  d.is_FO_raw = evt.target.checked
-                })
-              node_function.RedrawNodes(multi_selected_nodes.current)
-              setForceUpdate(!forceUpdate)
-            }}
-          >
-            {t('Noeud.foreign_object.raw')}
-          </Checkbox>
-        </OverlayTrigger>
+          {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyPlusDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
+        </Checkbox>
 
         {
           (multi_selected_nodes.current.length>0)?
-            <OverlayTrigger
-              key={'foContentDisabled'}
-              placement={'top'}
-              delay={500}
-              overlay={
-                (!is_activated)?
-                  <Tooltip id={'foContentDisabled'}>
-                    {t('Menu.sankeyPlusDisabled')}
-                  </Tooltip>:
-                  (
-                    !value_of_key['has_FO'][0]?
-                      <Tooltip id={'foNotVisible'}>
-                        {t('Noeud.foreign_object.not_activated')}
-                      </Tooltip>:
-                      <></>
-                  )
-              }
-            >
+            
+            <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyPlusDisabled')}>
               {
                 (multi_selected_nodes.current[0].is_FO_raw)?
                   editor_fo_raw:
                   editor_fo
               }
-            </OverlayTrigger>
+            </OSTooltip>
             :<></>
         }
 
