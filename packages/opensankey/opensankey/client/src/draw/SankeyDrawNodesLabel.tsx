@@ -41,9 +41,6 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .attr('fill','white')
     .attr('fill-opacity',0.55)
     .attr('rx',4)
-    .attr('fill','white')
-    .attr('fill-opacity',0.55)
-    .attr('rx',4)
 
   filtered_gggnodes
     .filter(n=>{
@@ -120,11 +117,11 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       const pos_h=ReturnValueNode(data,n,'label_horiz')
       if(pos_h=='left'){
         horiz_shift=box_text.width
-      }else if (pos_h == 'middle' && size_shape<box_text.width) {
-        horiz_shift= (box_text.width-size_shape)/2
+      } else if (pos_h == 'middle'  && size_shape<box_text.width) {
+          horiz_shift = box_text.width / 2;
       }
       
-      return ((box_text.x)-box_zdd.x-horiz_shift)/scale_svg
+      return ((box_text.x)-box_zdd.x-horiz_shift)/scale_svg-2
     })
       .attr('y',n=>{
         const pos_y=ReturnValueNode(data,n,'label_vert')
@@ -136,10 +133,16 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
         }else if(pos_y==='middle'){
           if(nb_tspan===1){
             shift_y=(ReturnValueNode(data,n,'font_size') as number)
+            const shift=(0.25 *(ReturnValueNode(data,n,'font_size') as number))
+            shift_y = shift_y-shift
           }else{
             shift_y=(nb_tspan-1)*(ReturnValueNode(data,n,'font_size') as number)
+            const shift=(0.25 *(ReturnValueNode(data,n,'font_size') as number))
+            shift_y = shift_y-shift
+            shift_y = shift_y-(nb_tspan-1)*(-(ReturnValueNode(data,n,'font_size') as number))/2
           }
         }
+
         return org_text_pos-shift_y
       })
       .attr('width',n=>{
