@@ -272,7 +272,7 @@ export const SetNodeHeight:SetNodeHeightFuncType = (
   }else if(shape==='arrow'){
     const k_angle = ReturnValueNode(data, n, 'node_arrow_angle_factor') as number
     const angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
-    const path = PathNodeArrowShape(n_w, n_h, k_angle, angle_direction,scale)
+    const path = PathNodeArrowShape(node_size_s_width, node_size_s_height, k_angle, angle_direction,scale)
     d3.select(' .opensankey #shape_' + n.idNode).attr('d',path)
   }
 }

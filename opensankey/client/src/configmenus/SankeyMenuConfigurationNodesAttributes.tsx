@@ -53,6 +53,7 @@ import {
   IsNodeDisplayingValueLocal,
   OSTooltip,
   ReturnCorrectNodeAttributeValue,
+  ReturnValueNode,
   TooltipValueSurcharge,
 } from './SankeyUtils'
 import { OpenSankeyConfigurationNodesAttributesFType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
@@ -88,6 +89,23 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     }
     ComponentUpdater.updateComponenSaveInCache.current(false)
     setForceUpdate(!forceUpdate)
+  }
+
+  const updateLinkAttachedToNodes=()=>{
+    if(!menu_for_style){
+      // Redraw link attached to modified node when the modification to the node
+      // modify links path
+      let link_to_update:string[]=[]
+      multi_selected_nodes.current.forEach(n=>{
+        link_to_update=link_to_update.concat(n.outputLinksId)
+        link_to_update=link_to_update.concat(n.inputLinksId)
+      })
+      link_to_update=[...new Set(link_to_update)]
+      const list_links=link_to_update.map(lid=>data.links[lid])
+      RedrawLinks(list_links)
+    } else {
+      RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    }
   }
 
   const list_of_key = [
@@ -209,19 +227,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             onChange={evt=>{
               Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode)).forEach(d => AssignNodeValueToCorrectVar(d,'color',evt.target.value,menu_for_style))
               updateMenuConfigNode()
-              if(!menu_for_style){
-              // Redraw link attached to modified node that are 'produit' because we specified a user case where 'produit' nodes control link color
-                let link_to_update:string[]=[]
-                multi_selected_nodes.current.filter(n=>n.tags&&n.tags['Type de noeud'] && n.tags['Type de noeud'].includes('produit')).forEach(n=>{
-                  link_to_update=link_to_update.concat(n.outputLinksId)
-                  link_to_update=link_to_update.concat(n.inputLinksId)
-                })
-                link_to_update=[...new Set(link_to_update)]
-                const list_links=link_to_update.map(lid=>data.links[lid])
-                RedrawLinks(list_links)
-              }else{
-                RedrawLinks(Object.values(dict_variable_application_data.display_links))
-              }
+              updateLinkAttachedToNodes()
+
             }}
           />
         </OSTooltip>
@@ -274,6 +281,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                 .forEach(d =>AssignNodeValueToCorrectVar(d,'shape','ellipse',menu_for_style))
               updateMenuConfigNode()
+              updateLinkAttachedToNodes()
             }}
           >
             <svg
@@ -300,6 +308,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                 .forEach(d =>AssignNodeValueToCorrectVar(d,'shape','rect',menu_for_style))
               updateMenuConfigNode()
+              updateLinkAttachedToNodes()
+
             }}
           >
             <svg
@@ -327,21 +337,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                 .forEach(d =>AssignNodeValueToCorrectVar(d,'shape','arrow',menu_for_style))
               updateMenuConfigNode()
-              if(!menu_for_style){
-                // Redraw link attached to modified node when the modification to the node
-                // modify links path
-                let link_to_update:string[]=[]
-                multi_selected_nodes.current.forEach(n=>{
-                  link_to_update=link_to_update.concat(n.outputLinksId)
-                  link_to_update=link_to_update.concat(n.inputLinksId)
-                })
-                link_to_update=[...new Set(link_to_update)]
-                const list_links=link_to_update.map(lid=>data.links[lid])
-                RedrawLinks(list_links)
-              } else {
-                RedrawLinks(Object.values(dict_variable_application_data.display_links))
-              }
-              
+              updateLinkAttachedToNodes()
             }}
           >
             <svg
@@ -389,21 +385,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                     .forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_factor', value, menu_for_style))
                   updateMenuConfigNode()
-
-                  if(!menu_for_style){
-                    // Redraw link attached to modified node when the modification to the node
-                    // modify links path
-                    let link_to_update:string[]=[]
-                    multi_selected_nodes.current.forEach(n=>{
-                      link_to_update=link_to_update.concat(n.outputLinksId)
-                      link_to_update=link_to_update.concat(n.inputLinksId)
-                    })
-                    link_to_update=[...new Set(link_to_update)]
-                    const list_links=link_to_update.map(lid=>data.links[lid])
-                    RedrawLinks(list_links)
-                  } else {
-                    RedrawLinks(Object.values(dict_variable_application_data.display_links))
-                  }
+                  // Redraw only sabot of link attached to the node already shaped as an arrow
+                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n=>ReturnValueNode(data,n,'shape')==='arrow'))
                 }}
               >
                 <SliderMark
@@ -444,20 +427,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                     .forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','left',menu_for_style))
                   updateMenuConfigNode()
-                  if(!menu_for_style){
-                    // Redraw link attached to modified node when the modification to the node
-                    // modify links path
-                    let link_to_update:string[]=[]
-                    multi_selected_nodes.current.forEach(n=>{
-                      link_to_update=link_to_update.concat(n.outputLinksId)
-                      link_to_update=link_to_update.concat(n.inputLinksId)
-                    })
-                    link_to_update=[...new Set(link_to_update)]
-                    const list_links=link_to_update.map(lid=>data.links[lid])
-                    RedrawLinks(list_links)
-                  } else {
-                    RedrawLinks(Object.values(dict_variable_application_data.display_links))
-                  }
+                  // Redraw only sabot of link attached to the node already shaped as an arrow
+                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n=>ReturnValueNode(data,n,'shape')==='arrow'))
                   
                 }}
               >
@@ -476,20 +447,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                     .forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','right',menu_for_style))
                   updateMenuConfigNode()
-                  if(!menu_for_style){
-                    // Redraw link attached to modified node when the modification to the node
-                    // modify links path
-                    let link_to_update:string[]=[]
-                    multi_selected_nodes.current.forEach(n=>{
-                      link_to_update=link_to_update.concat(n.outputLinksId)
-                      link_to_update=link_to_update.concat(n.inputLinksId)
-                    })
-                    link_to_update=[...new Set(link_to_update)]
-                    const list_links=link_to_update.map(lid=>data.links[lid])
-                    RedrawLinks(list_links)
-                  } else {
-                    RedrawLinks(Object.values(dict_variable_application_data.display_links))
-                  }
+                  // Redraw only sabot of link attached to the node already shaped as an arrow
+                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n=>ReturnValueNode(data,n,'shape')==='arrow'))
                 }}
               >
                 <FaArrowRight/>
@@ -507,20 +466,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                     .forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','top',menu_for_style))
                   updateMenuConfigNode()
-                  if(!menu_for_style){
-                    // Redraw link attached to modified node when the modification to the node
-                    // modify links path
-                    let link_to_update:string[]=[]
-                    multi_selected_nodes.current.forEach(n=>{
-                      link_to_update=link_to_update.concat(n.outputLinksId)
-                      link_to_update=link_to_update.concat(n.inputLinksId)
-                    })
-                    link_to_update=[...new Set(link_to_update)]
-                    const list_links=link_to_update.map(lid=>data.links[lid])
-                    RedrawLinks(list_links)
-                  } else {
-                    RedrawLinks(Object.values(dict_variable_application_data.display_links))
-                  }
+                  // Redraw only sabot of link attached to the node already shaped as an arrow
+                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n=>ReturnValueNode(data,n,'shape')==='arrow'))
                 }}
               >
                 <FaArrowUp/>
@@ -538,20 +485,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                     .forEach(d =>AssignNodeValueToCorrectVar(d,'node_arrow_angle_direction','bottom',menu_for_style))
                   updateMenuConfigNode()
-                  if(!menu_for_style){
-                    // Redraw link attached to modified node when the modification to the node
-                    // modify links path
-                    let link_to_update:string[]=[]
-                    multi_selected_nodes.current.forEach(n=>{
-                      link_to_update=link_to_update.concat(n.outputLinksId)
-                      link_to_update=link_to_update.concat(n.inputLinksId)
-                    })
-                    link_to_update=[...new Set(link_to_update)]
-                    const list_links=link_to_update.map(lid=>data.links[lid])
-                    RedrawLinks(list_links)
-                  } else {
-                    RedrawLinks(Object.values(dict_variable_application_data.display_links))
-                  }
+                  // Redraw only sabot of link attached to the node already shaped as an arrow
+                  link_function.reDrawLinkStartSabot(multi_selected_nodes.current.filter(n=>ReturnValueNode(data,n,'shape')==='arrow'))
                 }}
               >
                 <FaArrowDown/>
@@ -600,21 +535,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                 .forEach(d => AssignNodeValueToCorrectVar(d,'node_width',value,menu_for_style))
               updateMenuConfigNode()
+              updateLinkAttachedToNodes()
 
-              if(!menu_for_style){
-                // Redraw link attached to modified node when the modification to the node
-                // modify links path
-                let link_to_update:string[]=[]
-                multi_selected_nodes.current.forEach(n=>{
-                  link_to_update=link_to_update.concat(n.outputLinksId)
-                  link_to_update=link_to_update.concat(n.inputLinksId)
-                })
-                link_to_update=[...new Set(link_to_update)]
-                const list_links=link_to_update.map(lid=>data.links[lid])
-                RedrawLinks(list_links)
-              } else {
-                RedrawLinks(Object.values(dict_variable_application_data.display_links))
-              }
             }}
           >
             <NumberInputField/>
@@ -661,21 +583,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                 .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
                 .forEach(d => AssignNodeValueToCorrectVar(d,'node_height',value,menu_for_style))
               updateMenuConfigNode()
+              updateLinkAttachedToNodes()
 
-              if(!menu_for_style){
-                // Redraw link attached to modified node when the modification to the node
-                // modify links path
-                let link_to_update:string[]=[]
-                multi_selected_nodes.current.forEach(n=>{
-                  link_to_update=link_to_update.concat(n.outputLinksId)
-                  link_to_update=link_to_update.concat(n.inputLinksId)
-                })
-                link_to_update=[...new Set(link_to_update)]
-                const list_links=link_to_update.map(lid=>data.links[lid])
-                RedrawLinks(list_links)
-              } else {
-                RedrawLinks(Object.values(dict_variable_application_data.display_links))
-              }
             }}
           >
             <NumberInputField/>
