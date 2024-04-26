@@ -42,7 +42,8 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": ["-- generate_results"]
         },
         {
             "name": "reconciliation no uncert Fruits et Légumes",
