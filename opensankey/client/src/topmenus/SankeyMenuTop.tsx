@@ -1137,7 +1137,6 @@ export const pre_process_export_svg =()=>{
   svg.selectAll('.sankey-tooltip').remove()
   svg.selectAll('text[visibility=hidden]').remove()
   svg.style('border','0px')
-  svg.style('background-color','#fff')
   svg.select('#grid').style('opacity','0')
   svg.selectAll('.box_width_threshold').remove()
   d3.selectAll('.gg_nodes .node_shape').style('stroke-width',null)
@@ -1151,7 +1150,6 @@ export const pre_process_export_svg =()=>{
 }
 
 export const post_process_export_svg=()=>{
-  d3.select(' .opensankey#svg-container svg').style('background-color','inherit')
   d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity','1')
   d3.select(' .opensankey#svg-container svg').style('border','2px')
 }

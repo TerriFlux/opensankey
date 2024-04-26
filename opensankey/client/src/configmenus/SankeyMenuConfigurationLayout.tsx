@@ -12,6 +12,7 @@ import {
   InputGroup,
   InputRightAddon,
 } from '@chakra-ui/react'
+import * as d3 from 'd3'
 
 import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
 import { DrawGrid } from '../draw/SankeyDrawFunction'
@@ -75,6 +76,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           value={data.couleur_fond_sankey}
           onChange={evt=>{
             data.couleur_fond_sankey=evt.target.value
+            d3.select('#svg').style('background-color',evt.target.value)
+          }}
+          onBlur={()=>{
             set_data({...data})
           }}
         />

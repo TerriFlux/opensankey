@@ -26,7 +26,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
 
   const [ show_context_zdd, set_show_context_zdd ] = useState(false)
   contextMenu.showContextZDDRef.current=[ show_context_zdd, set_show_context_zdd ]
-  const { data } = dict_variable_application_data
+  const { data,set_data} = dict_variable_application_data
   const { t } = applicationContext
   const { pointer_pos } = contextMenu
   const {RedrawNodes} =node_function
@@ -62,8 +62,10 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   }
   const button_bg_color=<Form as={Button} variant='light'><Form.Control hidden type='color' id='color_bg_zdd' name='color_bg_zdd' onChange={(evt)=>{
     data.couleur_fond_sankey=evt.target.value
-    d3.select('body').style('background-color',data.couleur_fond_sankey)
-  }}></Form.Control>
+    d3.select('#svg').style('background-color',data.couleur_fond_sankey)
+  }}
+  onBlur={()=>set_data({...data})}
+  ></Form.Control>
   <Form.Label htmlFor='color_bg_zdd'>{t('Menu.BgC')}</Form.Label>
   </Form>
 
