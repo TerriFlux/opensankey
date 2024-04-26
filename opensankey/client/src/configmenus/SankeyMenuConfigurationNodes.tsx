@@ -44,7 +44,7 @@ import {
   ReturnValueNode,AddNewNode, deleteSelectedNodeFromData,
   OSTooltip} from './SankeyUtils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
-import { SankeyMenuConfigurationNodesAttributes } from './SankeyMenuConfigurationNodesAttributes'
+import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { SankeyMenuConfigurationNodesTags } from './SankeyMenuConfigurationNodesTags'
 import { SankeyMenuConfigurationNodesTooltip } from './SankeyMenuConfigurationNodesTooltip'
 import { DeselectVisualyNodes, NodeVisibleOnsSvg, SelectVisualyNodes } from '../draw/SankeyDrawFunction'
@@ -78,10 +78,11 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   const { data } = dict_variable_application_data
 
   const ui : {[s:string] : JSX.Element[]}= {
-    'apparence': SankeyMenuConfigurationNodesAttributes(
-      applicationContext.t,
+    'apparence': SankeyWrapperConfigInModalOrMenu(
       menu_configuration_nodes_attributes,
-      false
+      false,
+      applicationContext.t('Noeud.tabs.apparence') as string,
+      'node_attr'
     ),
     'infos': SankeyMenuConfigurationNodesTooltip(
       applicationContext,

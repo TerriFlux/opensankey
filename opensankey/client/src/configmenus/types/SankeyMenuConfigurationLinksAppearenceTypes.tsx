@@ -8,7 +8,6 @@ export type MenuConfigurationLinksAppearenceFType = (
   menu_for_style:boolean,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
-  menu_for_modal? : boolean
 ) => JSX.Element[]
 
 //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import {
   FaAlignCenter,
   FaAlignLeft,
@@ -44,7 +44,7 @@ import {
   TabPanel,
 } from '@chakra-ui/react'
 
-import { SankeyNodeAttrLocal } from '../types/Types'
+import { SankeyData, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle } from '../types/Types'
 import {
   ApplyStyleToNodes,
   AssignNodeValueToCorrectVar,
@@ -82,8 +82,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   const {RedrawLinks}=link_function
   updateComponentMenuConfigNodeAppearence.current=()=>setForceUpdate(!forceUpdate)
 
+  const element_to_update=menu_for_style?Object.values(dict_variable_application_data.display_nodes):multi_selected_nodes.current
+
   const updateMenuConfigNode=()=>{
-    RedrawNodes(multi_selected_nodes.current)
+    ComponentUpdater.updateComponenSaveInCache.current(false)
+    RedrawNodes(element_to_update)
     if(!menu_for_style){
       updateComponentMenuConfigNode.current()
     }
@@ -111,15 +114,10 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   const list_of_key = [
     'shape_visible',
     'colorSustainable',
-    'node_width',
-    'node_height',
     'label_visible',
     'label_color',
     'label_background',
     'show_value',
-    'label_box_width',
-    'font_size',
-    'value_font_size',
     'font_family',
     'bold',
     'uppercase',
@@ -515,40 +513,21 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         >
           {t('Noeud.apparence.TML')}
         </Box>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
-            min={0}
-            step={1}
-            value={list_value['node_width'][0] as number}
-            onChange={_ => {
-              const val=Number(_)
-              let value=40
-              if(!isNaN(+val)){
-                value=Math.abs(Math.round(+val))
-              }
+        <ConfigNodeAttributeNumberInput
+          data={dict_variable_application_data.data}
+          parameter_to_modify={parameter_to_modify}
+          selected_parameter={selected_parameter}
+          menu_for_style={menu_for_style}
+          local_var_of_node='node_width'
+          function_onBlur={()=>{
+            updateMenuConfigNode()
+            updateLinkAttachedToNodes()
+          }}
+          stepper={true}
+          minimum_value={1}
+          unitText='pixels'
+        />
 
-              Object
-                .values(parameter_to_modify)
-                .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => AssignNodeValueToCorrectVar(d,'node_width',value,menu_for_style))
-              updateMenuConfigNode()
-              updateLinkAttachedToNodes()
-
-            }}
-          >
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
-          </NumberInput>
-          <InputRightAddon>
-            pixels
-          </InputRightAddon>
-        </InputGroup>
       </Box>
     </OSTooltip>
 
@@ -563,40 +542,20 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         >
           {t('Noeud.apparence.TMH')}
         </Box>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
-            min={0}
-            step={1}
-            value={list_value['node_height'][0] as number}
-            onChange={_ => {
-              const val=Number(_)
-              let value=40
-              if(!isNaN(+val)){
-                value=Math.abs(Math.round(+val))
-              }
-
-              Object
-                .values(parameter_to_modify)
-                .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                .forEach(d => AssignNodeValueToCorrectVar(d,'node_height',value,menu_for_style))
-              updateMenuConfigNode()
-              updateLinkAttachedToNodes()
-
-            }}
-          >
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
-          </NumberInput>
-          <InputRightAddon>
-            pixels
-          </InputRightAddon>
-        </InputGroup>
+        <ConfigNodeAttributeNumberInput
+          data={dict_variable_application_data.data}
+          parameter_to_modify={parameter_to_modify}
+          selected_parameter={selected_parameter}
+          menu_for_style={menu_for_style}
+          local_var_of_node='node_height'
+          function_onBlur={()=>{
+            updateMenuConfigNode()
+            updateLinkAttachedToNodes()
+          }}
+          stepper={true}
+          minimum_value={1}
+          unitText='pixels'
+        />
       </Box>
     </OSTooltip>
     {advanced_appearence_content}
@@ -780,33 +739,18 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                     >{d}</option>})
               }
             </Select>
-
-            <InputGroup
-              variant='menuconfigpanel_option_input'
-            >
-              <NumberInput
-                variant='menuconfigpanel_option_numberinput_with_right_addon'
-                min={11}
-                step={1}
-                value={list_value['font_size'][0] as number}
-                onChange={value => {
-                  Object
-                    .values(parameter_to_modify)
-                    .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                    .forEach(d => AssignNodeValueToCorrectVar(d,'font_size', Number(value), menu_for_style))
-                  updateMenuConfigNode()
-                }}
-              >
-                <NumberInputField/>
-                <NumberInputStepper>
-                  <NumberIncrementStepper/>
-                  <NumberDecrementStepper/>
-                </NumberInputStepper>
-              </NumberInput>
-              <InputRightAddon>
-                pixels
-              </InputRightAddon>
-            </InputGroup>
+            <ConfigNodeAttributeNumberInput
+              data={dict_variable_application_data.data}
+              parameter_to_modify={parameter_to_modify}
+              selected_parameter={selected_parameter}
+              menu_for_style={menu_for_style}
+              local_var_of_node='font_size'
+              function_onBlur={()=>{
+                updateMenuConfigNode()
+              }}
+              stepper={true}
+              unitText='pixels'
+            />
           </Box>
 
           {/* Ajout fond coloré pour meilleur visibilité si label sur flux */}
@@ -853,37 +797,19 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
                   <>{TooltipValueSurcharge('node_var_',t)}</>:
                   <></>)}
               </Box>
-              <InputGroup
-                variant='menuconfigpanel_option_input'
-              >
-                <NumberInput
-                  variant='menuconfigpanel_option_numberinput_with_right_addon'
-                  min={0}
-                  max={500}
-                  step={5}
-                  value={list_value['label_box_width'][0] as number}
-                  //placeholder={'110'}
-                  onChange={value => {
-                    if (!isNaN(+Number(value))) {
-                      const val = (+Number(value) < 0) ? 0 : +Number(value)
-                      Object
-                        .values(parameter_to_modify)
-                        .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                        .forEach(d => AssignNodeValueToCorrectVar(d,'label_box_width',val,menu_for_style))
-                      updateMenuConfigNode()
-                    }
-                  }}
-                >
-                  <NumberInputField/>
-                  <NumberInputStepper>
-                    <NumberIncrementStepper/>
-                    <NumberDecrementStepper/>
-                  </NumberInputStepper>
-                </NumberInput>
-                <InputRightAddon>
-                  pixels
-                </InputRightAddon>
-              </InputGroup>
+
+              <ConfigNodeAttributeNumberInput
+                data={dict_variable_application_data.data}
+                parameter_to_modify={parameter_to_modify}
+                selected_parameter={selected_parameter}
+                menu_for_style={menu_for_style}
+                local_var_of_node='label_box_width'
+                function_onBlur={()=>updateMenuConfigNode()}
+                stepper={true}
+                minimum_value={0}
+                maximum_value={500}
+                unitText='pixels'
+              />
             </Box>
           </OSTooltip>
 
@@ -1132,32 +1058,18 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             >
               Police
             </Box>
-            <InputGroup
-              variant='menuconfigpanel_option_input'
-            >
-              <NumberInput
-                variant='menuconfigpanel_option_numberinput_with_right_addon'
-                min={11}
-                step={1}
-                value={list_value['value_font_size'][0] as number}
-                onChange={value => {
-                  Object
-                    .values(parameter_to_modify)
-                    .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
-                    .forEach(d => AssignNodeValueToCorrectVar(d, 'value_font_size', +Number(value), menu_for_style))
-                  updateMenuConfigNode()
-                }}
-              >
-                <NumberInputField/>
-                <NumberInputStepper>
-                  <NumberIncrementStepper/>
-                  <NumberDecrementStepper/>
-                </NumberInputStepper>
-              </NumberInput>
-              <InputRightAddon>
-                pixels
-              </InputRightAddon>
-            </InputGroup>
+
+            <ConfigNodeAttributeNumberInput
+              data={dict_variable_application_data.data}
+              parameter_to_modify={parameter_to_modify}
+              selected_parameter={selected_parameter}
+              menu_for_style={menu_for_style}
+              local_var_of_node='value_font_size'
+              function_onBlur={()=>updateMenuConfigNode()}
+              stepper={true}
+              minimum_value={11}
+              unitText='pixels'
+            />
           </Box>
 
           {/* Position de l'affichage des données par rapport au noeud */}
@@ -1426,4 +1338,135 @@ export const SankeyMenuConfigurationNodesAttributes = (
         </Box>
       </TabPanel>
     ]
+}
+
+export const SankeyWrapperConfigInModalOrMenu = (
+  menu_to_wrap:JSX.Element[],
+  for_modal = false,
+  title_tab='',
+  idTab=''
+) => {
+  //Function that check if all selected nodes have the same value for some parameter
+  return for_modal ?
+    [
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        {menu_to_wrap.map((c:JSX.Element,i)=>{
+          return <React.Fragment key={i}>{c}</React.Fragment>
+        })}
+      </Box>
+    ]:[
+      <Tab>
+        <Box
+          layerStyle='submenuconfig_tab'
+        >
+          {/* {SankeyWrapperConfigInModalOrMenu} */}
+          {title_tab}
+        </Box>
+      </Tab>,
+      <TabPanel
+        id={idTab}
+      >
+        <Box layerStyle='menuconfigpanel_grid'>
+          {menu_to_wrap.map((c:JSX.Element,i)=>{
+            return <React.Fragment key={i}>{c}</React.Fragment>
+          })}
+        </Box>
+      </TabPanel>
+    ]
+}
+
+type ConfigLayoutNumberInputType={
+  data:SankeyData
+  local_var_of_node: keyof SankeyNodeAttrLocal
+  parameter_to_modify: {[_: string]: SankeyNodeStyle;} | {[_: string]: SankeyNode;}
+  selected_parameter: SankeyNodeStyle[] | SankeyNode[]
+  menu_for_style:boolean
+  minimum_value?:number
+  maximum_value?:number
+  stepper?:boolean
+  unitText?:string
+  function_onBlur:()=>void
+}
+/**
+ * Component developped for number input of the nodes attributs config menu
+ * 
+ * @param {dict_variable_application_dataType} dict_variable_application_data
+ * @param {keyof SankeyNodeAttrLocal} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
+ * @param {{[_: string]: SankeyNodeStyle;} | {[_: string]: SankeyNode;}} parameter_to_modify multi_selected_nodes or dict of node style
+ * @param {SankeyNodeStyle[] | SankeyNode[]} selected_parameter either modify node style or selected node depending on if we are in the edition of style or configuration menu
+ * @param {boolean} menu_for_style Modify either the style of node or the multi_selected_nodes
+ * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
+ * @param {number} maximum_value (optional, if not specified it mean the value can be undefined )
+ * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
+ * @param {string} unitText (default:'') text of the addon
+ * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
+ * 
+ * @return {JSX.Elmement}
+ */
+export const ConfigNodeAttributeNumberInput:FunctionComponent<ConfigLayoutNumberInputType>=({
+  data,
+  local_var_of_node,
+  parameter_to_modify,
+  selected_parameter,
+  menu_for_style,
+  minimum_value,
+  maximum_value,
+  stepper=false,
+  unitText,
+  function_onBlur
+})=>{
+  const [update,setUpdate]=useState(false)
+  const ref_input=useRef<HTMLInputElement>(null)
+  const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
+  let val=0
+  const variantOfInput=unitText?'menuconfigpanel_option_numberinput_with_right_addon':'menuconfigpanel_option_numberinput'
+  
+  if(selected_parameter[0]){
+    val=ReturnCorrectNodeAttributeValue(data,selected_parameter[0],local_var_of_node,menu_for_style) as number
+  }
+
+  // Add stepper addon if specified
+  const stepperBtn=stepper?<NumberInputStepper>
+    <NumberIncrementStepper/>
+    <NumberDecrementStepper/>
+  </NumberInputStepper>:<></>
+
+  // Add unit addon if specified
+  const inputUnit=unitText?<InputRightAddon>{unitText}</InputRightAddon>:<></>
+
+  return <InputGroup variant='menuconfigpanel_option_input' >
+    <NumberInput allowMouseWheel variant={variantOfInput} min={minimum_value} max={maximum_value} step={1} 
+      value={val}
+      onChange={(_,value)=>{
+        Object
+          .values(parameter_to_modify)
+          .filter(f => selected_parameter.map(d => d.idNode).includes(f.idNode))
+          .forEach(d => AssignNodeValueToCorrectVar(d,local_var_of_node, Number(value), menu_for_style))
+
+        if(!menu_for_style){
+          // reset timeout if exist
+          if(isModifying.current){
+            clearTimeout(isModifying.current)
+          }
+          // launch timeout that automatically blur the input
+          isModifying.current=setTimeout(()=>{
+            function_onBlur()
+            ref_input.current?.blur()
+          },2000)
+        }
+       
+        setUpdate(!update)
+      }}
+      onBlur={()=>{
+        if(!menu_for_style)clearTimeout(isModifying.current)
+        function_onBlur()
+      }}
+    >
+      <NumberInputField ref={ref_input}/>
+      {stepperBtn}
+    </NumberInput>
+    {inputUnit}
+  </InputGroup>
 }

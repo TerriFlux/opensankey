@@ -1,4 +1,4 @@
-import React,{useState} from 'react'
+import React,{FunctionComponent, MutableRefObject, useRef, useState} from 'react'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import {
   Box,
@@ -16,6 +16,7 @@ import * as d3 from 'd3'
 
 import { OpenSankeyMenuConfigurationLayoutFType} from './types/SankeyMenuConfigurationLayoutTypes'
 import { DrawGrid } from '../draw/SankeyDrawFunction'
+import { SankeyData } from '../types/Types'
 import { OSTooltip } from './SankeyUtils'
 
 export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
@@ -30,18 +31,12 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
 ) => {
   const { t } = applicationContext
   const { data, set_data} = dict_variable_application_data
-  const { userScaleRef } = dict_variable_elements_selected
   const {RedrawNodes} = node_function
   const {RedrawLinks} = link_function
 
   const {updateComponentMenuConfigLayout}=ComponentUpdater
   const [legend_position,set_legend_position] = useState(data.legend_position)
-  const [current_legend_bg_opacity,set_current_legend_bg_opacity]=useState(data.legend_bg_opacity)
-  const [,set_user_scale]=useState(data.user_scale)
-  const [minimum_flux,set_minimum_flux] = useState(data.minimum_flux)
-  const [maximum_flux,set_maximum_flux] = useState(data.maximum_flux)
   const [forceUpdate,setForceUpdate]=useState(false)
-
   updateComponentMenuConfigLayout.current=()=>setForceUpdate(!forceUpdate)
   const right_addon_pixel = (val: number) => {
     if (val === 1) {
@@ -50,10 +45,6 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
     return 'pixels'
   }
 
-  if(data.maximum_flux && data.minimum_flux && data.minimum_flux>data.maximum_flux){
-    data.maximum_flux=data.minimum_flux
-    set_maximum_flux(data.minimum_flux)
-  }
   return [
     <Box
       as='span'
@@ -119,30 +110,16 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
       </Box>
       <Box>
         <OSTooltip label={t('MEP.tooltips.TCG')}>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput_with_right_addon'
-              min={10}
-              step={1}
-              value={data.grid_square_size}
-              onChange={value => {
-                data.grid_square_size = Number(value)
-                DrawGrid(data)
-                setForceUpdate(!forceUpdate)
-              }}
-            >
-              <NumberInputField/>
-              <NumberInputStepper>
-                <NumberIncrementStepper/>
-                <NumberDecrementStepper/>
-              </NumberInputStepper>
-            </NumberInput>
-            <InputRightAddon>
-              pixels
-            </InputRightAddon>
-          </InputGroup>
+
+          <ConfigLayoutNumberInput
+            data={dict_variable_application_data.data}
+            var_of_data={'grid_square_size'}
+            function_onBlur={()=>DrawGrid(data)}
+            minimum_value={10}
+            stepper={true}
+            unitText={right_addon_pixel(data.grid_square_size)}
+          />
+
         </OSTooltip>
       </Box>
     </Box>,
@@ -163,39 +140,21 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         {t('MEP.Echelle')}
       </Box>
       <Box>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
-            min={1}
-            value={userScaleRef.current}
-            isInvalid={userScaleRef.current != data.user_scale}
-            inputMode='numeric'
-            errorBorderColor='red'
-            onChange={value => {
-              userScaleRef.current = Number(value)
-              set_user_scale(Number(value))
-            }}
-            onBlur={() => {
-              data.user_scale = userScaleRef.current
-              setForceUpdate(!forceUpdate)
-              reDrawLegend()
-              RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-              RedrawLinks(Object.values(dict_variable_application_data.display_links))
-              ComponentUpdater.updateComponenSaveInCache.current(false)
-              
-            }}
-          >
-            <NumberInputField/>
-          </NumberInput>
-          <InputRightAddon>
-            {'unit. / 100 pixels'}
-          </InputRightAddon>
-        </InputGroup>
-        {/* <FormControl.Feedback type='invalid'>
-          {t('MEP.onBlur')}
-        </FormControl.Feedback> */}
+
+        <ConfigLayoutNumberInput
+          data={dict_variable_application_data.data}
+          var_of_data={'user_scale'}
+          function_onBlur={()=>{
+            reDrawLegend()
+            RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+            RedrawLinks(Object.values(dict_variable_application_data.display_links))
+            ComponentUpdater.updateComponenSaveInCache.current(false)
+          }}
+          minimum_value={1}
+          stepper={true}
+          unitText='unit. / 100 pixels'
+        />
+
       </Box>
     </Box>,
 
@@ -239,32 +198,18 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         gridRowEnd='3'
       >
         <OSTooltip label={t('MEP.tooltips.MinFlux')}>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput_with_right_addon'
-              min={1}
-              value={minimum_flux!}
-              inputMode='numeric'
-              onChange={value => {
-                set_minimum_flux(Number(value))
-              }}
-              onBlur={() => {
-                data.minimum_flux = isNaN(Number(minimum_flux))?undefined:minimum_flux
-                setForceUpdate(!forceUpdate)
-                RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-                RedrawLinks(Object.values(dict_variable_application_data.display_links))
-                ComponentUpdater.updateComponenSaveInCache.current(false)
-                
-              }}
-            >
-              <NumberInputField/>
-            </NumberInput>
-            <InputRightAddon>
-              {right_addon_pixel(minimum_flux!)}
-            </InputRightAddon>
-          </InputGroup>
+
+          <ConfigLayoutNumberInput
+            data={dict_variable_application_data.data}
+            var_of_data={'minimum_flux'}
+            function_onBlur={()=>{
+              RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+            }}
+            unitText={right_addon_pixel(data.minimum_flux!)}
+          />
+
         </OSTooltip>
       </Box>
       <Box
@@ -274,32 +219,17 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         gridRowEnd='3'
       >
         <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput_with_right_addon'
-              min={1}
-              value={maximum_flux!}
-              inputMode='numeric'
-              onChange={value => {
-                set_maximum_flux(Number(value))
-              }}
-              onBlur={() => {
-                data.maximum_flux = maximum_flux
-                setForceUpdate(!forceUpdate)
-                RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-                RedrawLinks(Object.values(dict_variable_application_data.display_links))
-                ComponentUpdater.updateComponenSaveInCache.current(false)
-                
-              }}
-            >
-              <NumberInputField/>
-            </NumberInput>
-            <InputRightAddon>
-              {right_addon_pixel(maximum_flux!)}
-            </InputRightAddon>
-          </InputGroup>
+
+          <ConfigLayoutNumberInput
+            data={dict_variable_application_data.data}
+            var_of_data={'maximum_flux'}
+            function_onBlur={()=>{
+              RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+              RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              ComponentUpdater.updateComponenSaveInCache.current(false)
+            }}
+            unitText={right_addon_pixel(data.maximum_flux!)}
+          />
         </OSTooltip>
       </Box>
     </Box>,
@@ -350,24 +280,17 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           {t('Menu.fontSize')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.fontSize')}>
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput'
-            min={1}
-            step={1}
-            value={data.legend_police}
-            inputMode='numeric'
-            onChange={value =>{
-              data.legend_police = Number(value)
+
+          <ConfigLayoutNumberInput
+            data={dict_variable_application_data.data}
+            var_of_data={'legend_police'}
+            function_onBlur={()=>{
               reDrawLegend()
-              setForceUpdate(!forceUpdate)
             }}
-          >
-            <NumberInputField/>
-            <NumberInputStepper>
-              <NumberIncrementStepper/>
-              <NumberDecrementStepper/>
-            </NumberInputStepper>
-          </NumberInput>
+            minimum_value={1}
+            stepper={true}
+          />
+
         </OSTooltip>
       </Box>
 
@@ -409,45 +332,19 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           {t('Menu.LegBgOpacity')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput_with_right_addon'
-              min={0}
-              max={100}
-              step={1}
-              value={current_legend_bg_opacity}
-              inputMode='numeric'
-              onChange={value => set_current_legend_bg_opacity(Number(value))}
-              onBlur={() => {
-                let value=0
-                if(isNaN(current_legend_bg_opacity)){
-                  value=0
-                }else if(current_legend_bg_opacity>100){
-                  set_current_legend_bg_opacity(100)
-                  value=100
-                }else if(current_legend_bg_opacity<0){
-                  set_current_legend_bg_opacity(0)
-                  value=0
-                }else{
-                  value=current_legend_bg_opacity
-                }
-                data.legend_bg_opacity = value
-                reDrawLegend()
-                setForceUpdate(!forceUpdate)
-              }}
-            >
-              <NumberInputField/>
-              <NumberInputStepper>
-                <NumberIncrementStepper/>
-                <NumberDecrementStepper/>
-              </NumberInputStepper>
-            </NumberInput>
-            <InputRightAddon>
-              %
-            </InputRightAddon>
-          </InputGroup>
+
+          <ConfigLayoutNumberInput
+            data={dict_variable_application_data.data}
+            var_of_data={'legend_bg_opacity'}
+            function_onBlur={()=>{
+              reDrawLegend()
+            }}
+            minimum_value={0}
+            maximum_value={100}
+            stepper={true}
+            unitText='%'
+          />
+
         </OSTooltip>
       </Box>
 
@@ -484,9 +381,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           {t('Menu.LegX')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegX')}>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
+          <InputGroup variant='menuconfigpanel_option_input' >
             <NumberInput
               variant='menuconfigpanel_option_numberinput_with_right_addon'
               min={0}
@@ -562,31 +457,17 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           {t('Menu.LegWidth')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegWidth')}>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput_with_right_addon'
-              min={0}
-              step={1}
-              value={data.legend_width}
-              inputMode='numeric'
-              onChange={value =>{
-                data.legend_width = Number(value)
-                reDrawLegend()
-                setForceUpdate(!forceUpdate)
-              }}
-            >
-              <NumberInputField/>
-              <NumberInputStepper>
-                <NumberIncrementStepper/>
-                <NumberDecrementStepper/>
-              </NumberInputStepper>
-            </NumberInput>
-            <InputRightAddon>
-              {right_addon_pixel(data.legend_width)}
-            </InputRightAddon>
-          </InputGroup>
+
+          <ConfigLayoutNumberInput
+            data={dict_variable_application_data.data}
+            var_of_data={'legend_width'}
+            function_onBlur={()=>{
+              reDrawLegend()
+            }}
+            minimum_value={0}
+            stepper={true}
+            unitText={right_addon_pixel(data.legend_width)}
+          />
         </OSTooltip>
       </Box>
 
@@ -627,4 +508,85 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
       </Checkbox>
     </Box>
   ]
+}
+
+
+type ConfigLayoutNumberInputType={
+  data:SankeyData
+  var_of_data:keyof SankeyData
+  minimum_value?:number
+  maximum_value?:number
+  stepper?:boolean
+  unitText?:string
+  function_onBlur:()=>void
+}
+/**
+ * Component developped for number input of the layout config menu
+ *
+ * @param {SankeyData} data
+ * @param {keyof SankeyData} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
+ * @param {number} minimum_value (optional, if not specified it mean the value can be undefined )
+ * @param {boolean} stepper (default:false) add stepper to the input to increase or decrease the value
+ * @param {boolean} hasUnit (default:false) add an addon after the input
+ * @param {string} unitText (default:'') text of the addon
+ * @param {function} function_onBlur function called when we leave the input, it is generally used to update the draw area
+ *
+ * @return {JSX.Elmement}
+ */
+export const ConfigLayoutNumberInput:FunctionComponent<ConfigLayoutNumberInputType>=({
+  data,
+  var_of_data,
+  minimum_value,
+  maximum_value,
+  stepper=false,
+  unitText,
+  function_onBlur
+})=>{
+  const [update,setUpdate]=useState(false)
+  const ref_input=useRef<HTMLInputElement>(null)
+  const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
+  const variantOfInput=unitText?'menuconfigpanel_option_numberinput_with_right_addon':'menuconfigpanel_option_numberinput'
+  const val_of_key=(data[var_of_data] as number)
+
+  // Add stepper addon if specified
+  const stepperBtn=stepper?<NumberInputStepper>
+    <NumberIncrementStepper/>
+    <NumberDecrementStepper/>
+  </NumberInputStepper>:<></>
+
+  // Add unit addon if specified
+  const inputUnit=unitText?<InputRightAddon>{unitText}</InputRightAddon>:<></>
+
+  return <InputGroup variant='menuconfigpanel_option_input' >
+    <NumberInput allowMouseWheel
+      variant={variantOfInput}
+      min={minimum_value}
+      max={maximum_value}
+      step={1}
+      value={(val_of_key || val_of_key===0)?val_of_key:''}
+      onChange={(_,value)=>{
+        (data[var_of_data] as number)=value
+        setUpdate(!update)
+
+        if(isModifying.current){
+          clearTimeout(isModifying.current)
+        }
+
+        isModifying.current=setTimeout(()=>{
+          function_onBlur()
+          ref_input.current?.blur()
+        },2000)
+      }}
+      onBlur={()=>{
+        clearTimeout(isModifying.current)
+        function_onBlur
+      }}
+    >
+      <NumberInputField
+        ref={ref_input}
+      />
+      {stepperBtn}
+    </NumberInput>
+    {inputUnit}
+  </InputGroup>
 }

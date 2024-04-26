@@ -22,7 +22,7 @@ import {
   DefaultNodeStyle,
   DefaultLinkStyle
 } from '../configmenus/SankeyUtils'
-import { SankeyMenuConfigurationNodesAttributes } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
+import { SankeyWrapperConfigInModalOrMenu } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import { MenuConfigurationLinksAppearence } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import {
   applicationContextType,
@@ -166,10 +166,9 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
     </Box>
 
     {
-      SankeyMenuConfigurationNodesAttributes(
-        t,
+      SankeyWrapperConfigInModalOrMenu(
         node_attribute_tab,
-        true
+        true,
       )[0]
     }
   </Box>
@@ -201,6 +200,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
 
   const [selected_style_link,set_selected_style_link] = useState('default')
   const [forceUpdate,setForceUpdate]=useState(false)
+  const ref_input_name= useRef<HTMLInputElement>(null)
   ref_selected_style_link.current = selected_style_link
 
   if(data.style_link && !Object.keys(data.style_link).includes(selected_style_link)) {
@@ -225,6 +225,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
           setForceUpdate(!forceUpdate)
           updateComponentMenuConfigLink.current()
           set_selected_style_link(new_style.idLink)
+          ref_input_name.current!.value=data.style_link[new_id].name
         }}>
         <FaPlus/>
       </Button>
@@ -245,18 +246,17 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
           {
             Object
               .keys(data.style_link)
-              .map((d,i) => {
-                return (
-                  <MenuItem
-                    key={i}
-                    onClick={() => {
+              .map((d,i) => 
+                <MenuItem
+                  key={i}
+                  onClick={() => {
+                      ref_input_name.current!.value=data.style_link[d].name
                       set_selected_style_link(d)
-                    }}
-                  >
-                    {data.style_link[d].name}
-                  </MenuItem>
-                )
-              })
+                  }}
+                >
+                  {data.style_link[d].name}
+                </MenuItem>
+              )
           }
         </MenuList>
       </Menu>
@@ -291,17 +291,16 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
         {t('Menu.ns')}
       </Box>
       <Box>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
+        <InputGroup variant='menuconfigpanel_option_input' >
           <Input
+            ref={ref_input_name}
             variant='menuconfigpanel_option_input'
             disabled={(selected_style_link === 'default')? true: false}
-            value={
+            defaultValue={
               (selected_style_link !== '') ? data.style_link[selected_style_link].name : ''
             }
-            onChange={evt => {
-              data.style_link[selected_style_link].name = evt.target.value
+            onBlur={() => {
+              data.style_link[selected_style_link].name = ref_input_name.current?.value??''
               setForceUpdate(!forceUpdate)
               updateComponentMenuConfigLink.current()
             }}
@@ -318,9 +317,7 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
         additional_link_appearence_items,
         true,
         link_function,
-        ComponentUpdater,
-        true
-      )
+        ComponentUpdater)
     }
   </Box>
 
