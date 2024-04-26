@@ -136,10 +136,7 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
             const shift=(0.25 *(ReturnValueNode(data,n,'font_size') as number))
             shift_y = shift_y-shift
           }else{
-            shift_y=(nb_tspan-1)*(ReturnValueNode(data,n,'font_size') as number)
-            const shift=(0.25 *(ReturnValueNode(data,n,'font_size') as number))
-            shift_y = shift_y-shift
-            shift_y = shift_y-(nb_tspan-1)*(-(ReturnValueNode(data,n,'font_size') as number))/2
+            shift_y=(nb_tspan+0.5)*(ReturnValueNode(data,n,'font_size') as number)/2
           }
         }
 
@@ -149,7 +146,12 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
         return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().width??0))/scale_svg+4
       })
       .attr('height',n=>{
-        return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().height??0))/scale_svg+4
+        const nb_tspan = d3.selectAll(' .opensankey #ggg_' + n.idNode + ' text tspan').nodes().length
+        if(nb_tspan===1){
+          return ((document.getElementById('text_'+n.idNode)?.getBoundingClientRect().height??0))/scale_svg+4
+        } else {
+          return ((nb_tspan+0.5)*(ReturnValueNode(data,n,'font_size') as number))
+        }
       })
   }
     
