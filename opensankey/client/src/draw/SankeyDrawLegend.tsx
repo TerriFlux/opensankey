@@ -86,7 +86,7 @@ export const DrawLegend : DrawLegendFType= (
       .append('g').style('transform','translate(3px,-6px)')
 
     const wrap = textwrap()
-      .bounds({ height: 100, width: pas - 40 })
+      .bounds({ height: 100, width: pas })
       .method('tspans')
 
     const all_tags = Object.assign({},data.nodeTags,data.fluxTags,data.dataTags)
@@ -222,10 +222,10 @@ export const DrawLegend : DrawLegendFType= (
         
           // Ajout du shape  
           tagElement.append('rect')
-            .attr('width', 20)
-            .attr('height', 20)
+            .attr('width', data.legend_police)
+            .attr('height', data.legend_police)
             .attr('x', 0)
-            .attr('y', -10-data.legend_police/4)
+            .attr('y', -0.75*data.legend_police)
             .attr('rx', 3)
             .attr('ry', 3)
             .style('fill', () => (tag as [string, { color: string }])[1].color )
@@ -284,11 +284,12 @@ export const DrawLegend : DrawLegendFType= (
         .attr('stroke','#aaa')
         .attr('stroke-opacity',0.85)
         .attr('stroke-dasharray','3,3')
+
       
       dashed_link.append('text')
         .text(t('MEP.legend_dashed_links'))
         .call(wrap)
-      dashed_link.select('text').attr('x','35')
+      dashed_link.select('text').attr('x','35').attr('y',data.legend_police/2)
     }
     dy+=sankey_has_dashed_links?(document.getElementById('g_legend_dashed_links')?.getBoundingClientRect().height??0):data.legend_police
 
@@ -300,8 +301,13 @@ export const DrawLegend : DrawLegendFType= (
       g_scale.append('text').text(t('scale')+':').style('font-size',data.legend_police+'px')
     
       const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate('+(7*(data.legend_police*0.75))+'px, -30px)')
-      g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
-      g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
+      if (data.legend_police >= 20) {
+        g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
+        g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
+      } else {
+        g_draggable.append('rect').attr('width','3px').attr('height','10px').attr('fill','black')
+        g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/10)*scale_for_legend))        
+      }
     
     
       g_draggable.call(d3.drag<SVGGElement,unknown>()
@@ -313,7 +319,12 @@ export const DrawLegend : DrawLegendFType= (
     let h=document.getElementById('g_legend')?.getBoundingClientRect().height
     h=h?h:50
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
-  
+    let w=document.getElementById('g_legend')?.getBoundingClientRect().width
+    if (w && w>data.legend_width) {
+      d3.select('#g_legend .drag_zone_leg').attr('width',w)
+      data.legend_width = w
+    }
+
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
     draw_legend_handles(data,legend_clicked.current,h,ComponentUpdater,reDrawLegend,resizeCanvas)
   }
