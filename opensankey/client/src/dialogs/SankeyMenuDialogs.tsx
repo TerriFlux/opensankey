@@ -656,7 +656,9 @@ export type ExcelModalTypes = {
  */
 export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelImpl, url_prefix,launch,dict_hook_ref_setter_show_dialog_components,Reinitialization,pointer_pos }) => {
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
-  const content =<>
+  const content =<Box
+    layerStyle='menuconfigpanel_grid'
+  >
     <Box>
       {t('Menu.input_file_excel')}
       <Form.Control
@@ -668,7 +670,7 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
     </Box>
 
     <Box layerStyle='menuconfigpanel_row_2cols'>
-      <Box></Box>
+      <Box/>
       <ChakraButton
         variant="menuconfigpanel_option_button"
         onClick={
@@ -681,9 +683,8 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
           }
         }
       >{t('Menu.ouvrir')}</ChakraButton>
-    
     </Box>
-  </>
+  </Box>
   return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_excel_dialog',content,pointer_pos,t('Menu.open_excel_file'))
 
 }
