@@ -276,7 +276,7 @@ export const open_resources = {
         stretchH:'Apply',
         stretchV:'Apply',
         show_legend_free_value:'Value is contained in an interval',
-        legend_dashed_links:'Thickness doesn\'t represent link\'s value',
+        legend_dashed_links:'Existing link',
         hide_leg:'Hide the legend',
         show_leg:'Show the legend',
         tooltips: {
@@ -955,7 +955,7 @@ export const open_resources = {
         stretchH:'Appliquer',
         stretchV:'Appliquer',
         show_legend_free_value:'Valeur contenue dans un intervalle',
-        legend_dashed_links:'Épaisseur non-représentative de la valeur du flux',
+        legend_dashed_links:'Flux existant',
         hide_leg:'Masquer la légende',
         show_leg:'Afficher la légende',
         tooltips: {
