@@ -869,6 +869,7 @@ const style_menu_draggable={
   width:'25%', 
   paddingLeft:'0.75rem',
   paddingRight:'0.75rem',
+  paddingBottom:'0.25rem',
   position: 'fixed',
   flexDirection: 'column',
   backgroundColor: '#fff',
