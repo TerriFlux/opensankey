@@ -301,13 +301,8 @@ export const DrawLegend : DrawLegendFType= (
       g_scale.append('text').text(t('scale')+':').style('font-size',data.legend_police+'px')
     
       const g_draggable=g_scale.append('g').attr('class','g_draggable_scale').style('cursor','grab').style('transform', 'translate('+(7*(data.legend_police*0.75))+'px, -30px)')
-      if (data.legend_police >= 20) {
-        g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
-        g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
-      } else {
-        g_draggable.append('rect').attr('width','3px').attr('height','10px').attr('fill','black')
-        g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/10)*scale_for_legend))        
-      }
+      g_draggable.append('rect').attr('width','3px').attr('height','50px').attr('fill','black')
+      g_draggable.append('text').attr('class','measurment_scale').style('transform','translate(5px,25px)').text(Math.round((data.user_scale/2)*scale_for_legend))
     
     
       g_draggable.call(d3.drag<SVGGElement,unknown>()
