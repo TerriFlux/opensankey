@@ -296,6 +296,7 @@ export const keyHandler : keyHandlerFType = (
 
   } else if (e.key == 'Escape') {
     ref_setter_mode_selection.current('s')
+    dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
     d3.select(' .opensankey #svg').attr('class','mode_selection')
 
     // Visualy deselect nodes then deselect in the app data
