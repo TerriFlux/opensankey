@@ -1228,6 +1228,10 @@ export const ConfigLinkAttributeNumberInput:FunctionComponent<ConfigLinkNumberIn
   
   if(selected_parameter[0]){
     val=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],local_var_of_node,menu_for_style) as number
+    if (val == null) {
+      //TODO investigate
+      val = 0
+    }
   }
 
   // Add stepper addon if specified
