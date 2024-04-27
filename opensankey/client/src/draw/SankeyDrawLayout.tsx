@@ -1328,14 +1328,14 @@ export const updateLayout: updateLayoutFuncType = (
       difference = difference.filter((d: { path: string[]; kind: string} ) => d.kind === 'E' && d.path.length === 1 && d.path[0]!=='current_view')
       difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data, {}, diff))
     }
-    difference = deep_diff.diff(data.style_node, new_layout.style_node);
+    difference = deep_diff.diff(data.style_node, new_layout.style_node)
     if (difference) {
-        difference.forEach((diff: { path: string[]; kind: string}) => deep_diff.applyChange(data.style_node, {}, diff));
+      difference.forEach((diff: { path: string[]; kind: string}) => deep_diff.applyChange(data.style_node, {}, diff))
     }
 
-    difference = deep_diff.diff(data.style_link, new_layout.style_link);
+    difference = deep_diff.diff(data.style_link, new_layout.style_link)
     if (difference) {
-        difference.forEach((diff: { path: string[]; kind: string}) => deep_diff.applyChange(data.style_link, {}, diff));
+      difference.forEach((diff: { path: string[]; kind: string}) => deep_diff.applyChange(data.style_link, {}, diff))
     }
   }
 
