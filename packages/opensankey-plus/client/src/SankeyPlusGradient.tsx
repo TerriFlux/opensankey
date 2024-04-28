@@ -77,6 +77,12 @@ export const LinkStroke : LinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlusData
   const l_ori=ReturnValueLink(data,l,'orientation')
   const l_grad=PlusReturnValueLink(data,l,'gradient')
   const l_recy=ReturnValueLink(data,l,'recycling')
+  const source_svg = +d3.select(' .opensankey #shape_' + l.idSource)
+  const target_svg = +d3.select(' .opensankey #shape_' + l.idTarget)
+  if (source_svg == null || target_svg == null) {
+    return LinkStrokeOSTyped(l,data,GetLinkValue)
+  }
+
   const width_src = +d3.select(' .opensankey #shape_' + l.idSource).attr('width')
   const height_src = +d3.select(' .opensankey #shape_' + l.idSource).attr('height')
   const width_trgt = +d3.select(' .opensankey #shape_' + l.idTarget).attr('width')
