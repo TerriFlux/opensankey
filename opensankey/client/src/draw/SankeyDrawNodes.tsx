@@ -147,7 +147,14 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     }
   }
   // ggg_nodes.on('contextmenu', (ev, n) => EventNodeContextMenu(ev,n,data,set_agregation_node,set_is_agregation,set_show_agregation,set_data) )
-  ggg_nodes.on('contextmenu', (ev, n) => {if(!window.SankeyToolsStatic){return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)}})
+  ggg_nodes.on('contextmenu', (ev, n) => {
+    if(!window.SankeyToolsStatic){
+      // if the right mouse button is clicked we switch to selection mode
+      dict_variable_elements_selected.ref_setter_mode_selection.current('s')
+      dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
+      return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)
+    }}
+  )
   // Add tooltip when mouse hover the <g> element that contains shape/label/icon (everything that compose a node)
   const gg_nodes = d3.selectAll(' .opensankey .gg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>
   const filtered_gg_nodes = gg_nodes.filter(
