@@ -269,7 +269,7 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
  
   node_to_update.forEach(n=>{
     SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue)
-    d3.select('gg_' + n.idNode).style('display', () => {
+    d3.select(' .opensankey #gg_' + n.idNode).style('display', () => {
       if (HasLinksZero(data,n)) {
         return 'none'
       }

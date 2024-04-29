@@ -548,7 +548,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
       continue
     }
 
-    if (!LinkVisible(l, data, display_nodes, GetLinkValue)) {
+    if (!LinkVisible(l, data, display_nodes)) {
       continue
     }
 
