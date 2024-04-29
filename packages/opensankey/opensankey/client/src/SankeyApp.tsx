@@ -578,36 +578,38 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
 
   const {filter}=dict_variable_application_data.data.display_style
-  const toolbar = ToolbarBuilder(
-    applicationContext,
-    dict_variable_application_data,
-    dict_variable_elements_selected,
-    filter,
-    ( new_current_filter: number ) => {
-      const { display_style } = dict_variable_application_data.data
-      display_style.filter = +new_current_filter
-      dict_variable_application_data.set_data({ ...dict_variable_application_data.data })
-    },
-    <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
+  const toolbar = <ToolbarBuilder
+    applicationContext={applicationContext}
+    dict_variable_application_data={dict_variable_application_data}
+    dict_variable_elements_selected={dict_variable_elements_selected}
+    filter={filter}
+    set_current_filter= {
+      ( new_current_filter: number ) => {
+        const { display_style } = dict_variable_application_data.data
+        display_style.filter = +new_current_filter
+        dict_variable_application_data.set_data({ ...dict_variable_application_data.data })
+      }}
+    detail_level={<Popover id='popover-details-level' style={{maxWidth:'100%'}}>
       <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
       <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-
         <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
           {addSimpleLevelDropDown(dict_variable_application_data,reDrawLegend,redrawAllNodes,redrawAllLinks,recomputeDisplayedElement)}</>
         ) : (<>
           <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
       </Popover.Body>
-    </Popover>,
-    '',
-    dict_variable_elements_selected.first_selected_node,
-    GetSankeyMinWidthAndHeight,
-    dict_hook_ref_setter_show_dialog_components,
-    never_see_again,
-    [],
-    reDrawLegend,
-    node_function,link_function,
-    recomputeDisplayedElement,ComponentUpdater
-  )
+    </Popover>}
+    url_prefix={''}
+    first_selected_node={dict_variable_elements_selected.first_selected_node}
+    GetSankeyMinWidthAndHeight={GetSankeyMinWidthAndHeight}
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+    never_see_again={never_see_again}
+    additional_link_visual_filter_content={[]}
+    reDrawLegend={reDrawLegend}
+    node_function={node_function}
+    link_function={link_function}
+    recomputeDisplayedElement={recomputeDisplayedElement}
+    ComponentUpdater={ComponentUpdater}
+  />
 
   sankey_menus['toolbar']=toolbar
 
