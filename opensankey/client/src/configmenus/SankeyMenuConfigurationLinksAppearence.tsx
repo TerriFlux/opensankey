@@ -728,7 +728,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
               onClick={
                 () => {
                   Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-                    AssignLinkValueToCorrectVar(d,'text_color',ReturnCorrectLinkAttributeValue(data,d,'color',menu_for_style),menu_for_style)
+                    AssignLinkValueToCorrectVar(d,'text_color','color',menu_for_style)
                   })
                   updateMenuConfigLink()
                 }}>{t('Flux.label.lec')}{(IsLinkDiplayingValueLocal(multi_selected_links,'text_color',menu_for_style)?<>{TooltipValueSurcharge('link_var_',t)}</>:<></>)}</Button>
