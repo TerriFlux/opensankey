@@ -108,7 +108,6 @@ export interface SankeyPlusShowMenuComponentsType extends dict_hook_ref_setter_s
   ref_setter_show_modal_transparent_view_attr : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   show_toast_new_view:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   show_toast_update_view:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_show_resolution_save_png : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 
 }
 
