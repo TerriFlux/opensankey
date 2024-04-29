@@ -340,6 +340,29 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           }
         >{elementToDispose.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
       </InputGroup>
+    </OSTooltip>,
+    
+    <OSTooltip label={t('Menu.Transformation.list_icon_tooltip')} >
+      <InputGroup>
+        <InputGroup.Text
+          style={{width:'20%'}}
+        >{t('Menu.Transformation.list_icon')}</InputGroup.Text>
+        <Button
+          className='btn_menu_config'
+          style={{width:'20%'}}
+          disabled={!is_current_data_master}
+          variant={elementToDispose.current.includes('Views')?'primary':'outline-primary'} 
+          onClick={() => {
+            if(!elementToDispose.current.includes('icon_catalog')){
+              elementToDispose.current.push('icon_catalog')
+              setForceUpdate(!forceUpdate)
+            }else{
+              elementToDispose.current.splice(elementToDispose.current.indexOf('icon_catalog'),1)
+              setForceUpdate(!forceUpdate)
+            }}
+          }
+        >{elementToDispose.current.includes('icon_catalog')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      </InputGroup>
     </OSTooltip>
   ]}
 
@@ -357,6 +380,7 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
       difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.labels, {}, diff))
     }
   }
+
   if (mode.includes('Views') && new_layout.view) {
     if (new_layout.view) {
       if (!(data.view)) {
@@ -387,6 +411,14 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
       )
     }
   }
+
+  if(mode.includes('icon_catalog')){
+    // Import catalog of icon 
+    Object.entries(new_layout.icon_catalog).filter(icon=>icon[0] && icon[1]).forEach(icon=>{
+      data.icon_catalog[icon[0]]=icon[1]
+    })
+  }
+
   if(mode.includes('attrNode')){
     Object.entries(data.nodes).forEach( ([key,node]) => {
       const layoutNode = new_layout.nodes[key]
