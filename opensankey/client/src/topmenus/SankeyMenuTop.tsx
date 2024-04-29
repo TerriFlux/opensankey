@@ -25,7 +25,13 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  Spinner
+  Spinner,
+  InputGroup,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper
 } from '@chakra-ui/react'
 import {
   SankeyData,
@@ -48,7 +54,7 @@ import { faFolderOpen, faDownload, faFileInvoice, faPenToSquare,faFile,faPlus, f
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Draggable from 'react-draggable'
 import CloseButton from 'react-bootstrap/CloseButton'
-import {MenuDraggableFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, ToastWaitFuncFType} from './types/SankeyMenuTopTypes'
+import {MenuDraggableFType, Modale_resolution_pngFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, ToastWaitFuncFType} from './types/SankeyMenuTopTypes'
 import { RecursionDataTag, DefaultNode, DefaultLink, FindMaxLinkValue, OSTooltip } from '../configmenus/SankeyUtils'
 import { ClickSaveExcel } from '../dialogs/SankeyPersistence'
 import { UploadExemple } from '../dialogs/SankeyPersistence'
@@ -377,6 +383,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         </OSTooltip>
           
         <MenuList>
+          <MenuItem onClick={()=>dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)} >PNG</MenuItem>
           <MenuItem onClick={()=>clickSavePDF(data)} >PDF</MenuItem>
           {external_file_export_item}
         </MenuList>
@@ -458,7 +465,133 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 
   return ui
 }
+export const Modale_resolution_png : Modale_resolution_pngFType =(
+  t:TFunction,
+  dict_hook_ref_setter_show_dialog_components,
+  dict_variable_application_data,
+  pointer_pos
+)=>{
+  const [h,set_h]=useState<number>()
+  const [v,set_v]=useState<number>()
+  const valid_input= (h===undefined && v===undefined) ||  (v!==undefined && h!==undefined && !isNaN(+v) && !isNaN(+h))
 
+  const content=<>      
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.larg')}
+      </Box>
+      <InputGroup
+        variant='menuconfigpanel_option_input'
+      >
+        <NumberInput
+          variant='menuconfigpanel_option_numberinput'
+          allowMouseWheel
+          min={0}
+          step={1}
+          value={h}
+          onChange={
+            (_,val) => {
+              if(!isNaN(val)){
+                set_h(val)
+              }
+            }}
+        >
+          <NumberInputField/>
+          <NumberInputStepper>
+            <NumberIncrementStepper/>
+            <NumberDecrementStepper/>
+          </NumberInputStepper>
+        </NumberInput>
+      </InputGroup>
+    </Box>
+
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.haut')}
+      </Box>
+      <InputGroup
+        variant='menuconfigpanel_option_input'
+      >
+        <NumberInput
+          variant='menuconfigpanel_option_numberinput'
+          allowMouseWheel
+          min={0}
+          step={1}
+          value={v}
+          onChange={
+            (_,val) => {
+              if(!isNaN(val)){
+                set_v(val)
+              }
+            }}
+        >
+          <NumberInputField/>
+          <NumberInputStepper>
+            <NumberIncrementStepper/>
+            <NumberDecrementStepper/>
+          </NumberInputStepper>
+        </NumberInput>
+      </InputGroup>
+    </Box>
+    <Button variant='primary' disabled={!valid_input} onClick={()=>{
+      dict_variable_application_data.function_on_wait.current=()=>{
+        clickSavePNG(h,v)
+      }
+      dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
+    }}>Save</Button>
+  </>
+
+  return MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_resolution_save_png',content,pointer_pos,t('Menu.setResolutionPNG'))
+
+}
+
+const clickSavePNG = (
+  h:number|undefined,
+  v:number|undefined,  
+) => {
+  const svg = pre_process_export_svg()
+  const html = ((svg.attr('title', 'test2')
+    .attr('version', 1.1)
+    .attr('xmlns', 'http://www.w3.org/2000/svg')
+    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
+
+  const blob = new Blob([html], { type: 'image/svg+xml' })
+  const form_data = new FormData()
+  form_data.append('html', blob)
+  let size_to_send=''
+  if(h!==undefined && v!==undefined){
+    size_to_send=h+' '+v
+  }
+
+  form_data.append('size',size_to_send)
+
+  post_process_export_svg()
+
+  const path = window.location.href
+  let url = path + '/opensankey/sankey/save_png'
+  const fetchData = {
+    method: 'POST',
+    body: form_data
+  }
+
+  const showFile = (blob: BlobPart) => {
+    const newBlob = new Blob([blob], { type: 'application/png' })
+    FileSaver.saveAs(newBlob, 'sankey_diagram.png')
+  }
+
+  const cleanFile = () => {
+    const fetchData = {
+      method: 'POST'
+    }
+    url = path + '/opensankey/sankey/clean_png'
+    fetch(url, fetchData)
+  }
+
+  fetch(url, fetchData).then(
+    r => r.blob()
+  )
+    .then(showFile).then(cleanFile)
+}
 /**
  * Description placeholder
  *
