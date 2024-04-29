@@ -543,7 +543,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
     .attr('id', d => 'draggable_text_' + d.idLink)
     .attr('style',l=> 'font-weight: bold; font-size:' + ReturnValueLink(data,l,'label_font_size') + 'px;'+'font-family:'+ReturnValueLink(data,l,'font_family'))
     .attr('fill', l => {
-      if (ReturnValueLink(data,l,'text_color') === ReturnValueLink(data,l,'color')) {
+      if (ReturnValueLink(data,l,'text_color') === 'color') {
         return LinkColor(l,data,GetLinkValue) as string
       }
       return ReturnValueLink(data,l,'text_color')
