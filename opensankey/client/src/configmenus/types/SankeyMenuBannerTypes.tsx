@@ -41,7 +41,7 @@ export type addAllDropDownNodeFType = (
 /**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
  */
-export type ToolbarBuilderFType = (
+export type ToolbarBuilderFType = {
   applicationContext:applicationContextType,
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
@@ -59,9 +59,7 @@ export type ToolbarBuilderFType = (
   link_function:LinkFunctionTypes,
   recomputeDisplayedElement:()=>void,
   ComponentUpdater:ComponentUpdaterType
-
-
-) => JSX.Element
+}
 
 export type stretchButtonsFType=(
   dict_variable_application_data : dict_variable_application_dataType,
