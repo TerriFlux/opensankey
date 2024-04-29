@@ -579,7 +579,7 @@ export const ConfigLayoutNumberInput:FunctionComponent<ConfigLayoutNumberInputTy
       }}
       onBlur={()=>{
         clearTimeout(isModifying.current)
-        function_onBlur
+        function_onBlur()
       }}
     >
       <NumberInputField
