@@ -81,3 +81,10 @@ export type ToastWaitFuncFType={
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   applicationContext:applicationContextType
 }
+
+export type Modale_resolution_pngFType=(
+  t:TFunction,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  pointer_pos:{current:number[]}
+  )=> JSX.Element
