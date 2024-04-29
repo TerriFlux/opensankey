@@ -1,6 +1,6 @@
 
-import React, { ChangeEvent, useRef, useState } from 'react'
-import { Form, InputGroup, Dropdown} from 'react-bootstrap'
+import React, { ChangeEvent, useRef } from 'react'
+import { Form, Dropdown} from 'react-bootstrap'
 import { TFunction } from 'i18next'
 import { FaEye, FaEyeSlash, FaFileImport} from 'react-icons/fa'
 import * as d3 from 'd3'
@@ -25,7 +25,6 @@ import {
   DragLegendPlusFType,
   ImportImageAsSvgBgFType,
   IsAllZdtAttrSameValueFType,
-  Modale_resolution_pngFType,
   OSPIsAllNodeNotLocalAttrSameValueFType,
   PlusAssignLinkValueToCorrectVarFType,
   PlusItemExportFType,
@@ -43,7 +42,6 @@ import {
   LinkColor,
   NodeColor,
   OSTooltip,
-  PlusMenuDraggable,
   ReturnValueLink,
 } from './import/OpenSankey'
 
@@ -235,97 +233,7 @@ export const PlusLinkSabotColor : PlusLinkSabotColorFType = (
   return PlusReturnValueLink(data,l,'gradient')===true ? NodeColor(data.nodes[l.idSource],data) : LinkColor(l,data,GetLinkValue)
 }
 
-export const Modale_resolution_png : Modale_resolution_pngFType =(
-  t:TFunction,
-  dict_hook_ref_setter_show_dialog_components,
-  dict_variable_application_data,
-  pointer_pos
-)=>{
-  const [h,set_h]=useState<string>()
-  const [v,set_v]=useState<string>()
-  const valid_input= (h===undefined && v===undefined) ||  (v!==undefined && h!==undefined && !isNaN(+v) && !isNaN(+h))
 
-
-  const content=<>      
-    <InputGroup>
-      <InputGroup.Text>{t('Menu.larg')}</InputGroup.Text>
-      <Form.Control type='number' value={h}
-        step={1}
-        onChange={(evt)=>{
-          if(evt.target.value===undefined || !isNaN(+evt.target.value)){
-            set_h(evt.target.value)
-          }
-        }}/>
-    </InputGroup>
-    <InputGroup>
-      <InputGroup.Text>{t('Menu.haut')}</InputGroup.Text>
-      <Form.Control type='number' value={v}
-        step={1}
-        onChange={(evt)=>{
-          if(evt.target.value===undefined || !isNaN(+evt.target.value)){
-            set_v(evt.target.value)
-          }
-        }}/>
-    </InputGroup>
-    <Button variant='primary' disabled={!valid_input} onClick={()=>{
-      dict_variable_application_data.function_on_wait.current=()=>{
-        clickSavePNG(h,v)
-      }
-      dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
-    }}>Save</Button>
-  </>
-
-  return PlusMenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_resolution_save_png',content,pointer_pos,t('Menu.setResolutionPNG'))
-
-}
-
-const clickSavePNG = (
-  h:string|undefined,
-  v:string|undefined,  
-) => {
-  const svg = pre_process_export_svg()
-  const html = ((svg.attr('title', 'test2')
-    .attr('version', 1.1)
-    .attr('xmlns', 'http://www.w3.org/2000/svg')
-    .node() as HTMLElement).parentNode as HTMLElement).innerHTML
-
-  const blob = new Blob([html], { type: 'image/svg+xml' })
-  const form_data = new FormData()
-  form_data.append('html', blob)
-  let size_to_send=''
-  if(h!==undefined && v!==undefined){
-    size_to_send=h+' '+v
-  }
-
-  form_data.append('size',size_to_send)
-
-  post_process_export_svg()
-
-  const path = window.location.href
-  let url = path + '/opensankey/sankey/save_png'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/png' })
-    FileSaver.saveAs(newBlob, 'sankey_diagram.png')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = path + '/opensankey/sankey/clean_png'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
-}
 
 // Function used before exporting a sankey to svg format
 // It add used attribute from css file in the html tag attribute 'style', because otherwise the foreignObject element doesn't have proper css
@@ -388,11 +296,9 @@ export const clickSaveSVG : clickSaveSVGFType = () => {
 
 
 export const PlusItemExport:PlusItemExportFType=(
-  dict_hook_ref_setter_show_dialog_components
 )=>{
   return <>
     <Dropdown.Item onClick={clickSaveSVG} >SVG</Dropdown.Item>
-    <Dropdown.Item onClick={()=>dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)} >PNG</Dropdown.Item>
   </>
   
 }
