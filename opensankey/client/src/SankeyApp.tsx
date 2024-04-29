@@ -225,7 +225,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_modal_preference : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_modal_template : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-    ref_setter_show_waiting : useRef<Dispatch<SetStateAction<boolean>>>(()=>null)
+    ref_setter_show_waiting : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_show_resolution_save_png : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   }
   /*************************************************************************************************/
   const contextMenu : contextMenuType = {
