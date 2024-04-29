@@ -99,7 +99,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   logo,
   logo_terriflux
 }) => {
-  const [, set_show_draw] = useState(false)
 
   /*************************************************************************************************/
   const applicationContext : applicationContextType = {
@@ -625,11 +624,38 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   document.onkeydown = formatKeyHandler
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
-  if( !windowSankey.SankeyToolsStatic ){
-    setTimeout(()=>{
+
+  /*************************************************************************************************/
+  useEffect(() => {
+
+    DrawAllNodes(contextMenu,
+      dict_variable_application_data,
+      uiElementsRef,
+      dict_variable_elements_selected,
+      applicationContext,
+      ref_alt_key_pressed,
+      accept_simple_click,
+      link_function,
+      NodeTooltipsContent,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components,
+      node_function,
+      GetSankeyMinWidthAndHeight,
+      applicationDraw
+
+    )
+    DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
+      link_function,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components
+    )
+    // Zoom Behavior
+    applyZoomEvent(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+
+    if( !windowSankey.SankeyToolsStatic ){
       //Ajout des events sur les l'ajout des noeuds aux click
       const svgSankey=d3.select('.opensankey #svg')
-
+  
       svgSankey.on('mousedown',evt=>{
         EventOnZoneMouseDown(
           dict_variable_application_data,
@@ -667,44 +693,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           resizeCanvas
         )
       })
-    },100)
-  }
-  /*************************************************************************************************/
-  useEffect(() => {
-
-    DrawAllNodes(contextMenu,
-      dict_variable_application_data,
-      uiElementsRef,
-      dict_variable_elements_selected,
-      applicationContext,
-      ref_alt_key_pressed,
-      accept_simple_click,
-      link_function,
-      NodeTooltipsContent,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      node_function,
-      GetSankeyMinWidthAndHeight,
-      applicationDraw
-
-    )
-    DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,ref_alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
-      link_function,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components
-    )
-    // Zoom Behavior
-    applyZoomEvent(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+    }
   },[data])
   /*************************************************************************************************/
-  //Ajout d'un delay pour laisser le temps au Menu de render pour ensuite utiliser sa hauteur afin d'ajouter un margin top au draw
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      set_show_draw(true)
-      AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
-    }, 1000)
-    return () => clearTimeout(timer)
-  }, [])
 
   return <ChakraProvider theme={opensankey_theme}>
     <div style={{ 'backgroundColor' : 'WhiteSmoke' }}>
