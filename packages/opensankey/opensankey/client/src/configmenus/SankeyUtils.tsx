@@ -916,7 +916,6 @@ export const DefaultNodeStyle:DefaultNodeStyleFuncType=()=>{
 
 export const DefaultNodeSectorStyle:DefaultNodeSectorStyleFuncStyle=()=>{
   const node_style=DefaultNodeStyle()
-  node_style.shape='ellipse'
   node_style.idNode='NodeSectorStyle'
   node_style.name='Noeud de type secteur'
   return node_style
@@ -925,6 +924,7 @@ export const DefaultNodeSectorStyle:DefaultNodeSectorStyleFuncStyle=()=>{
 
 export const DefaultNodeProductStyle:DefaultNodeProductStyleFuncStyle=(): SankeyNodeStyle=>{
   const node_style=DefaultNodeStyle()
+  node_style.shape='ellipse'
   node_style.idNode='NodeProductStyle'
   node_style.name='Noeud de type produit'
   return node_style
