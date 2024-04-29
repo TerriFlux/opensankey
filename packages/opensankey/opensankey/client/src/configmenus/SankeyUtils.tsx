@@ -774,7 +774,6 @@ export const LinkVisible: LinkVisibleFunctType=(
   GetLinkValue:GetLinkValueFuncType
 ): boolean => {
   const { dataTags, fluxTags } = data
-  const special_data_cast=data as unknown as {free_null_link_visible:boolean}
 
   if (!l) {
     return false
@@ -832,16 +831,6 @@ export const LinkVisible: LinkVisibleFunctType=(
     }
   })
   if (!visible) {
-    return false
-  }
-  const link_values = GetLinkValue(data,l.idLink)
-  const is_free = link_values.extension?.free_mini !== undefined &&
-                  data.show_structure !== 'free_interval' &&
-                  data.show_structure !== 'free_value'
-  if (TestLinkValue(data, data.nodes, l,GetLinkValue) === 0) {
-    if (is_free && special_data_cast.free_null_link_visible ) {
-      return true
-    }
     return false
   }
   return true
@@ -1482,10 +1471,13 @@ export const AssignNodeStyleAttribute:AssignNodeStyleAttributeFuncType = (n:Sank
  * @param {SankeyNode} node Node to check
  * @param {boolean} skip_link_zero
  */
-export const NodeDisplayed:NodeDisplayedFuncType = (data:SankeyData,node:SankeyNode,skip_link_zero=false): boolean=>{
+export const NodeDisplayed:NodeDisplayedFuncType = (
+  data:SankeyData,
+  node:SankeyNode
+): boolean=>{
   const has_local_level=ReturnLocalNodeValue(node,'local_aggregation') as boolean | undefined
   const local_level=has_local_level ?? NodeHasDisplayedLevel(data,node)
-  return NodeHasDisplayedTags(data,node) && ( local_level ) && ( skip_link_zero || HasLinksZero(data,node))
+  return NodeHasDisplayedTags(data,node) && ( local_level )
 }
 
 const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode): boolean=>{
@@ -1536,72 +1528,6 @@ const NodeHasDisplayedLevel=(data:SankeyData,n:SankeyNode)=>{
     }
   })
   return to_display
-}
-
-// Check if incoming and/or outgoing links have all 0 for value, if that the case we we returne false
-// We can short-circuit the function if the variable null_flux is true or the variable is show_structur is 'structure' (doesn't care about links value)
-const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
-  if((node.outputLinksId.length==0 && node.inputLinksId.length==0)|| 
-  // data.display_style.null_flux || 
-  data.show_structure == 'structure'){
-    return true
-  }else{
-    let total_input = 0
-    if (node.inputLinksId.length > 0) {
-      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
-
-      for (let i = 0; i < node.inputLinksId.length; i++) {
-        const link = data.links[node.inputLinksId[i]]
-        if (link === undefined) {
-          //alert('Corruption du diagramme')
-          continue
-        }
-        if (!NodeDisplayed(data,data.nodes[link.idSource],true) || !NodeDisplayed(data,data.nodes[link.idTarget],true)) {
-          continue
-        }
-        if (data.nodes[link.idSource]  && data.nodes[link.idTarget]) {
-          const val = GetLinkValue(data, link.idLink)
-          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined && val.value == 0) {
-            total_input +=1
-            continue
-          }
-          if (val && val.value!=undefined) {
-            total_input += val.value as number
-          } else {
-            console.log('val is undefined')
-          }
-        }
-      }
-    }
-    let total_output = 0
-    if (node.outputLinksId.length > 0) {
-      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
-
-      for (let i = 0; i < node.outputLinksId.length; i++) {
-        const link = data.links[node.outputLinksId[i]]
-        if (link === undefined) {
-          //alert('Corruption du diagramme')
-          continue
-        }
-        if (!NodeDisplayed(data,data.nodes[link.idSource],true) || !NodeDisplayed(data,data.nodes[link.idTarget],true)) {
-          continue
-        }
-        if (data.nodes[link.idSource] && data.nodes[link.idTarget]) {
-          const val = GetLinkValue(data, link.idLink)
-          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined && val.value == 0) {
-            total_input +=1
-            continue
-          }
-          if (val && val.value!=undefined ) {
-            total_output += val.value as number
-          } else {
-            console.log('val is undefined')
-          }
-        }
-      }
-    }
-    return (total_input + total_output) !== 0
-  }
 }
 
 // Return the value of an attribute from link :
