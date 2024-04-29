@@ -1,4 +1,4 @@
-import React, {  useRef, useState } from 'react'
+import React, {  FunctionComponent, useRef, useState } from 'react'
 import { Row,
   Col,
   Form,
@@ -434,7 +434,7 @@ export const setDiagram:setDiagramFuncType = (
 /**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
  */
-export const ToolbarBuilder : ToolbarBuilderFType = (
+export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   applicationContext,
   dict_variable_application_data,
   dict_variable_elements_selected,
@@ -452,7 +452,7 @@ export const ToolbarBuilder : ToolbarBuilderFType = (
   link_function,
   recomputeDisplayedElement,
   ComponentUpdater
-) => {
+}) => {
 
   const {data}=dict_variable_application_data
   const {t}=applicationContext

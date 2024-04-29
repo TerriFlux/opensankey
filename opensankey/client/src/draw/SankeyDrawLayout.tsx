@@ -1549,13 +1549,7 @@ export const updateLayout: updateLayoutFuncType = (
       })
     })
     // Sets the selected colormap
-    const color_map_name = new_layout.fluxTags[new_layout.linksColorMap].group_name
-    const layout_groups = Object.values(data.fluxTags).filter(tagg=>tagg.group_name==color_map_name)
-    if (layout_groups.length>0) {
-      data.linksColorMap = layout_groups[0].group_name
-      Object.values(data.links).forEach(el => {
-        el.colorTag = data.linksColorMap
-      })
+        Object.values(data.links).forEach(el => {
     }
   }
 
