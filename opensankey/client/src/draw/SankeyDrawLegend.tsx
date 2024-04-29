@@ -117,7 +117,7 @@ export const DrawLegend : DrawLegendFType= (
           if(Object.keys(data.fluxTags).includes(data.linksColorMap) && Object.keys(data.fluxTags).includes(tag_group[0])){
             const t=Object.values(data.links).filter(l=>{
               const tmp=GetLinkValue(data,l.idLink)
-              return LinkVisible(l,data,display_nodes,GetLinkValue) && tmp.tags[data.linksColorMap] && tmp.tags[data.linksColorMap].includes(tag[0])
+              return LinkVisible(l,data,display_nodes) && tmp.tags[data.linksColorMap] && tmp.tags[data.linksColorMap].includes(tag[0])
             }).length
             return t>0
           }

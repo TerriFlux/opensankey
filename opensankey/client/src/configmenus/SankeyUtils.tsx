@@ -770,8 +770,7 @@ export const LinkColor:LinkColorFuncType = (l: SankeyLink,data:SankeyData,
 export const LinkVisible: LinkVisibleFunctType=(
   l: SankeyLink,
   data: SankeyData,
-  display_nodes : { [node_id: string]: SankeyNode },
-  GetLinkValue:GetLinkValueFuncType
+  display_nodes : { [node_id: string]: SankeyNode }
 ): boolean => {
   const { dataTags, fluxTags } = data
 
