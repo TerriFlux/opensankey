@@ -31,7 +31,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   ref_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
-  const {data,set_data}=dict_variable_application_data
+  const {set_data}=dict_variable_application_data
   const {ref_getter_mode_selection,ref_setter_mode_selection}=dict_variable_elements_selected
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
@@ -62,8 +62,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (animation.current) {
       return
     }
+    [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
     RemoveAnimate()
-    d3.select('#svg').style('background-color',data.couleur_fond_sankey)
+    d3.select('#svg').style('background-color',dict_variable_application_data.data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
     if (ref_getter_mode_selection.current=='s') {
       d3.select(' .opensankey #svg').attr('class','mode_selection')
@@ -90,9 +91,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const svgSankey = d3.select('.opensankey #svg')
 
-    svgSankey.style('width', data.width + 'px')
+    svgSankey.style('width', dict_variable_application_data.data.width + 'px')
 
-    svgSankey.style('height', data.height + 'px');
+    svgSankey.style('height', dict_variable_application_data.data.height + 'px');
 
     
 
@@ -112,7 +113,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           SvgDragMiddleMouseStart()
         })
         .on('drag', event=> {
-          SvgDragMiddleMouseMove(event,data)
+          SvgDragMiddleMouseMove(event,dict_variable_application_data.data)
         })
         .on('end',()=>{
           
@@ -120,7 +121,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
           svgSankey.style('width', dict_variable_application_data.data.width + 'px')
           svgSankey.style('height', dict_variable_application_data.data.height + 'px')
-          DrawGrid(data)
+          DrawGrid(dict_variable_application_data.data)
         })
 
       )
@@ -128,7 +129,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if(!window.SankeyToolsStatic && d3.select(evt.target).attr('class')=='mode_selection'){return EventZDDContextMenu(evt,contextMenu)}
     })
 
-    DrawGrid(data)
+    DrawGrid(dict_variable_application_data.data)
 
     const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
 
@@ -155,14 +156,15 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     border = '2px solid #d3d3d3'
   }
 
-
-  const width_to_display=((data.width) ? data.width : window.innerWidth*0.975)
+  console.log('here')
+  console.trace('here',dict_variable_application_data.data.width,dict_variable_application_data.data.height)
+  const width_to_display=((dict_variable_application_data.data.width) ? dict_variable_application_data.data.width : window.innerWidth*0.975)
   return (
     <>
       <div className="span12" id='visualization_div' >
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <div className='scroll_zone' >
-            <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
+            <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': dict_variable_application_data.data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
               <g className='grid' id='grid'></g>
               <g className='g_links' id='g_links' style={{ 'position': position }} ></g>
               <g className='g_nodes' id='g_nodes' style={{ 'position': position }} ></g>
@@ -174,7 +176,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       </div>
       <AgregationModal
         agregationRef={agregation}
-        data={data}
+        data={dict_variable_application_data.data}
         set_data={set_data}
         display_nodes={display_nodes}
         display_links={display_links}
