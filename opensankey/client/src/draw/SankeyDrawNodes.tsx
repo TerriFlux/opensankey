@@ -150,8 +150,8 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   ggg_nodes.on('contextmenu', (ev, n) => {
     if(!window.SankeyToolsStatic){
       // if the right mouse button is clicked we switch to selection mode
-      dict_variable_elements_selected.ref_setter_mode_selection.current('s')
-      dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
+      // dict_variable_elements_selected.ref_setter_mode_selection.current('s')
+      // dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
       return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)
     }}
   )
