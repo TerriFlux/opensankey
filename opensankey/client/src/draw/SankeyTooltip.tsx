@@ -194,7 +194,7 @@ export const NodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
-      if (!LinkVisible(link,data,display_nodes,GetLinkValue)) {
+      if (!LinkVisible(link,data,display_nodes)) {
         continue
       }
       const link_info = GetLinkValue(data,link.idLink)
@@ -226,7 +226,7 @@ export const NodeTooltipsContent = (
       if (link_info.display_value == 'missing') {
         continue
       }
-      if (!LinkVisible(link,data,display_nodes,GetLinkValue)) {
+      if (!LinkVisible(link,data,display_nodes)) {
         continue
       }
       
@@ -264,7 +264,7 @@ export const NodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
-      if (!LinkVisible(link,data,display_nodes,GetLinkValue)) {
+      if (!LinkVisible(link,data,display_nodes)) {
         continue
       }
       const link_info = GetLinkValue(data,link.idLink)
@@ -295,7 +295,7 @@ export const NodeTooltipsContent = (
           return ''
         }
         const link_info = GetLinkValue(data,link.idLink)
-        if (!LinkVisible(link,data,display_nodes,GetLinkValue)) {
+        if (!LinkVisible(link,data,display_nodes)) {
           continue
         }
         let the_value = link_info.value

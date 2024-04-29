@@ -32,8 +32,7 @@ const getIOLink = (
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   pos:string,
-  io:string,
-  GetLinkValue:GetLinkValueFuncType
+  io:string
 )=>{
   const n=multi_selected_nodes.current[0]
 
@@ -50,7 +49,7 @@ const getIOLink = (
         const cond_no_recy=(((n_s.x<=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x<0))&& !recy)
         const cond_recy=(recy && n_s.x>=n.x)
 
-        return (cond_no_recy || cond_recy)  && (ori=='hh' ||ori=='vh') && LinkVisible(data.links[k],data,display_nodes,GetLinkValue)
+        return (cond_no_recy || cond_recy)  && (ori=='hh' ||ori=='vh') && LinkVisible(data.links[k],data,display_nodes)
       })
     } else if(pos=='right') {
       //Recherche tous les flux entrant a droite
@@ -62,7 +61,7 @@ const getIOLink = (
         const cond_no_recy=(((n_s.x>=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x>0))&& !recy)
         const cond_recy=(recy && n_s.x<n.x)
 
-        return  (cond_no_recy ||cond_recy) && (ori=='hh' ||ori=='vh') && LinkVisible(data.links[k], data, display_nodes, GetLinkValue)
+        return  (cond_no_recy ||cond_recy) && (ori=='hh' ||ori=='vh') && LinkVisible(data.links[k], data, display_nodes)
       })
     } else if (pos=='top') {
       //Recherche tous les flux entrant en haut
@@ -70,7 +69,7 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_s=data.nodes[data.links[k].idSource]
 
-        return n_s.y<n.y && (ori=='vv' ||ori=='hv') && LinkVisible(data.links[k],data,display_nodes,GetLinkValue)
+        return n_s.y<n.y && (ori=='vv' ||ori=='hv') && LinkVisible(data.links[k],data,display_nodes)
       })
     } else if(pos=='bottom') {
       //Recherche tous les flux entrant en haut
@@ -78,7 +77,7 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_s=data.nodes[data.links[k].idSource]
 
-        return n_s.y>=n.y && (ori=='vv' ||ori=='hv') && LinkVisible(data.links[k],data,display_nodes,GetLinkValue)
+        return n_s.y>=n.y && (ori=='vv' ||ori=='hv') && LinkVisible(data.links[k],data,display_nodes)
       })
     }
   } else if (io=='output') {
@@ -94,7 +93,7 @@ const getIOLink = (
         const cond_no_recy=(((n_t.x<n.x  && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x<=0)) && !recy)
         const cond_recy=(recy && n_t.x>n.x)
 
-        return (( cond_no_recy|| cond_recy)) && (ori=='hh' ||ori=='hv')&& LinkVisible(data.links[k],data,display_nodes,GetLinkValue)
+        return (( cond_no_recy|| cond_recy)) && (ori=='hh' ||ori=='hv')&& LinkVisible(data.links[k],data,display_nodes)
       })
     } else if(pos=='right') {
       //Recherche tous les flux entrant a droite
@@ -108,7 +107,7 @@ const getIOLink = (
         const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !recy)
         const cond_recy=(recy && n_t.x<=n.x)
 
-        return  ( cond_no_recy || cond_recy) && (ori=='hh' ||ori=='hv')&& LinkVisible(data.links[k],data,display_nodes,GetLinkValue)
+        return  ( cond_no_recy || cond_recy) && (ori=='hh' ||ori=='hv')&& LinkVisible(data.links[k],data,display_nodes)
       })
     } else if (pos=='top') {
       //Recherche tous les flux entrant en haut
@@ -119,7 +118,7 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
 
-        return n_t.y<n.y && (ori=='vv' ||ori=='vh')&& LinkVisible(data.links[k],data,display_nodes,GetLinkValue)
+        return n_t.y<n.y && (ori=='vv' ||ori=='vh')&& LinkVisible(data.links[k],data,display_nodes)
       })
     } else if (pos=='bottom') {
       //Recherche tous les flux entrant en haut
@@ -130,7 +129,7 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
 
-        return n_t.y>=n.y && (ori=='vv' ||ori=='vh')&& LinkVisible(data.links[k],data,display_nodes,GetLinkValue)
+        return n_t.y>=n.y && (ori=='vv' ||ori=='vh')&& LinkVisible(data.links[k],data,display_nodes)
       })
     }
   }
@@ -157,7 +156,7 @@ const handleUpLinkIOPos=(
   forceUpdate:boolean
 )=>{
   const n=multi_selected_nodes.current[0]
-  const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
+  const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
   if (io=='input') {
     if (pos=='left') {
       //Repositionne le flux avant le flux entrant du même coté
@@ -260,7 +259,7 @@ const handleDownLinkIOPos=(
   forceUpdate:boolean
 )=>{
   const n=multi_selected_nodes.current[0]
-  const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
+  const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
 
   if (io=='input') {
     if (pos=='left') {
@@ -357,10 +356,9 @@ const has_link_come_from=(
   display_nodes: { [node_id: string]: SankeyNode },
   multi_selected_nodes:{current:SankeyNode[]},
   io:string,
-  pos:string,
-  GetLinkValue:GetLinkValueFuncType
+  pos:string
 )=>{
-  const link_io = getIOLink(data, display_nodes, multi_selected_nodes, pos, io, GetLinkValue)
+  const link_io = getIOLink(data, display_nodes, multi_selected_nodes, pos, io)
   return link_io.length!==0
 }
 
@@ -383,7 +381,7 @@ const tab_pos_link=(
   setForceUpdate:React.Dispatch<React.SetStateAction<boolean>>,
   forceUpdate:boolean
 )=>{
-  const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io,GetLinkValue)
+  const link_io=getIOLink(data,display_nodes,multi_selected_nodes,pos,io)
   return (
     <>
       <Table
@@ -487,16 +485,16 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
   let has_output_links = false
   if (multi_selected_nodes.current.length===1) {
     has_input_links = (
-      has_link_come_from(data, display_nodes, multi_selected_nodes, 'input', 'left', GetLinkValue) ||
-      has_link_come_from(data, display_nodes, multi_selected_nodes, 'input', 'right', GetLinkValue) ||
-      has_link_come_from(data, display_nodes, multi_selected_nodes, 'input', 'top', GetLinkValue) ||
-      has_link_come_from(data, display_nodes, multi_selected_nodes, 'input', 'bottom', GetLinkValue)
+      has_link_come_from(data, display_nodes, multi_selected_nodes, 'input', 'left') ||
+      has_link_come_from(data, display_nodes, multi_selected_nodes, 'input', 'right') ||
+      has_link_come_from(data, display_nodes, multi_selected_nodes, 'input', 'top') ||
+      has_link_come_from(data, display_nodes, multi_selected_nodes, 'input', 'bottom')
     )
     has_output_links = (
-      has_link_come_from(data, display_nodes, multi_selected_nodes, 'output', 'left', GetLinkValue) ||
-      has_link_come_from(data, display_nodes, multi_selected_nodes, 'output', 'right', GetLinkValue) ||
-      has_link_come_from(data, display_nodes, multi_selected_nodes, 'output', 'top', GetLinkValue) ||
-      has_link_come_from(data, display_nodes, multi_selected_nodes, 'output', 'bottom', GetLinkValue)
+      has_link_come_from(data, display_nodes, multi_selected_nodes, 'output', 'left') ||
+      has_link_come_from(data, display_nodes, multi_selected_nodes, 'output', 'right') ||
+      has_link_come_from(data, display_nodes, multi_selected_nodes, 'output', 'top') ||
+      has_link_come_from(data, display_nodes, multi_selected_nodes, 'output', 'bottom')
     )
   }
 
@@ -505,10 +503,10 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
       const k_display_link=Object.values(display_links).map(l=>l.idLink)
       if (multi_selected_nodes.current[0].inputLinksId.filter(lid=>k_display_link.includes(lid)).length>multi_selected_nodes.current[0].outputLinksId.filter(lid=>k_display_link.includes(lid)).length){
         const obj_list_link={
-          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','input',GetLinkValue).length,
-          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','input',GetLinkValue).length,
-          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','input',GetLinkValue).length,
-          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','input',GetLinkValue).length,
+          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','input').length,
+          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','input').length,
+          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','input').length,
+          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','input').length,
         }
         const side_with_most_link=Object.entries(obj_list_link)
           .sort(([,a],[,b]) => b-a)[0][0]
@@ -521,10 +519,10 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
         }
       } else {
         const obj_list_link={
-          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','output',GetLinkValue).length,
-          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','output',GetLinkValue).length,
-          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','output',GetLinkValue).length,
-          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','output',GetLinkValue).length,
+          left:getIOLink(data,display_nodes,multi_selected_nodes,'left','output').length,
+          right:getIOLink(data,display_nodes,multi_selected_nodes,'right','output').length,
+          top:getIOLink(data,display_nodes,multi_selected_nodes,'top','output').length,
+          bottom:getIOLink(data,display_nodes,multi_selected_nodes,'bottom','output').length,
         }
         const side_with_most_link=Object.entries(obj_list_link)
           .sort(([,a],[,b]) => b-a)[0][0]
@@ -594,13 +592,13 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           variant='menuconfigpanel_option_select'
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             set_link_io(evt.target.value)
-            if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'left', GetLinkValue)) {
+            if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'left')) {
               set_link_pos('left')
             }
-            else if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'right', GetLinkValue)) {
+            else if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'right')) {
               set_link_pos('right')
             }
-            else if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'top', GetLinkValue)) {
+            else if (has_link_come_from(data, display_nodes, multi_selected_nodes, evt.target.value, 'top')) {
               set_link_pos('top')
             }
             else {
@@ -640,22 +638,22 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_link_pos(evt.target.value)}
         >
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'left', GetLinkValue)?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'left')?
               <option value='left'>{t('Noeud.PF.gauche')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'right', GetLinkValue)?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'right')?
               <option value='right'>{t('Noeud.PF.droite')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'top', GetLinkValue)?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'top')?
               <option value='top'>{t('Noeud.PF.ades')}</option>:
               <></>
           }
           {
-            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'bottom', GetLinkValue)?
+            has_link_come_from(data, display_nodes, multi_selected_nodes, link_io, 'bottom')?
               <option value='bottom'>{t('Noeud.PF.edes')}</option>:
               <></>
           }

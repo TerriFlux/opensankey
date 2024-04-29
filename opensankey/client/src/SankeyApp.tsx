@@ -120,7 +120,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       })
     }, {}) as {[idNode:string]:SankeyNode}
   const pre_display_links=Object.keys(data.links)
-    .filter((key) =>LinkVisible(data.links[key],data,display_nodes,GetLinkValue))
+    .filter((key) =>LinkVisible(data.links[key],data,display_nodes))
     .reduce((obj, key) => {
       return Object.assign(obj, {
         [key]: data.links[key]
@@ -149,7 +149,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       }, {}) as {[idNode:string]:SankeyNode}
 
     const pre_display_links=Object.keys(data.links)
-      .filter((key) =>LinkVisible(data.links[key],data,dict_variable_application_data.display_nodes,GetLinkValue))
+      .filter((key) =>LinkVisible(data.links[key],data,dict_variable_application_data.display_nodes))
       .reduce((obj, key) => {
         return Object.assign(obj, {
           [key]: data.links[key]
