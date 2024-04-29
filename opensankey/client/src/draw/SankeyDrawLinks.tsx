@@ -285,6 +285,9 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
     .selectAll('.gg_links') as d3.Selection<SVGTextElement, SankeyLink, d3.BaseType, unknown>
   gg_links.on('contextmenu', (ev, l) => {
     if(!window.SankeyToolsStatic){
+      // if the right mouse button is clicked we switch to selection mode
+      dict_variable_elements_selected.ref_setter_mode_selection.current('s')
+      dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
       return EventLinkContextMenu(
         dict_variable_application_data,ev,l,ref_setter_contextualised_link,pointer_pos,
         dict_variable_elements_selected,tags_selected,
@@ -511,9 +514,21 @@ export const drawLinkShape:drawLinkShapeFType  = (
   filtered_gglinks.selectAll('text').remove()
   // filtered_gglinks.selectAll('.link_value').attr('x',null).attr('y',null)
   filtered_gglinks.style('display', (d) => {
-    let display: string
-    if (LinkVisible(d, data,display_nodes,GetLinkValue)) { display = 'inline' } else { display = 'none' }
-    return display
+    const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+    if (data.show_structure === 'structure') {
+      return 'inline'
+    }
+    const link_values = GetLinkValue(data,d.idLink)
+    const is_free = link_values.extension?.free_mini !== undefined &&
+                    data.show_structure !== 'free_interval' &&
+                    data.show_structure !== 'free_value'
+    if (TestLinkValue(data, data.nodes, d,GetLinkValue) === 0) {
+      if (is_free && special_data_cast.free_null_link_visible ) {
+        return 'inline'
+      }
+      return 'none'
+    }
+    return 'inline'
   })
     .attr('pointer-events', 'auto')
     .attr('cursor', (ref_getter_mode_selection.current == 's')? 'pointer' : 'unset')
@@ -536,7 +551,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
     .attr('visibility', d => {
       let tmp=GetLinkValue(data, d.idLink).value as number
       tmp=(tmp)?tmp:0
-      return  LinkVisible(d, data,display_nodes,GetLinkValue) && tmp >= max_filter_label? 'visible' : 'hidden'
+      return  LinkVisible(d, data,display_nodes) && tmp >= max_filter_label? 'visible' : 'hidden'
     })
 
 

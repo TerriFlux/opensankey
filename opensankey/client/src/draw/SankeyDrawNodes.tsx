@@ -1,10 +1,10 @@
 import React from 'react'
 import * as d3 from 'd3'
 
-import { SankeyNode} from '../types/Types'
+import { SankeyData, SankeyNode} from '../types/Types'
 import { AddDrawNodesFType, DeleteGNodesFType, DrawAllNodesFType, drawNodeShapeFType, updateDrawNodeShapeFType } from './types/SankeyDrawNodesTypes'
 
-import { NodeColor,ReturnValueNode} from '../configmenus/SankeyUtils'
+import { GetLinkValue, NodeColor,NodeDisplayed,ReturnValueNode} from '../configmenus/SankeyUtils'
 import { 
   SetNodeHeight,
   nodeTransform,NodeStrokeWidth,PathNodeArrowShape, 
@@ -267,7 +267,82 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
     )
 
  
-  node_to_update.forEach(n=>SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue))
+  node_to_update.forEach(n=>{
+    SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue)
+    d3.select('gg_' + n.idNode).style('display', () => {
+      if (HasLinksZero(data,n)) {
+        return 'none'
+      }
+      if (n.position === 'relative') { 
+        return 'none'
+      } 
+      return 'inline'
+    })
+  })
+}
+
+// Check if incoming and/or outgoing links have all 0 for value, if that the case we we returne false
+// We can short-circuit the function if the variable null_flux is true or the variable is show_structur is 'structure' (doesn't care about links value)
+const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
+  if((node.outputLinksId.length==0 && node.inputLinksId.length==0) || data.show_structure == 'structure'){
+    return false
+  }else{
+    let total_input = 0
+    if (node.inputLinksId.length > 0) {
+      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
+      for (let i = 0; i < node.inputLinksId.length; i++) {
+        const link = data.links[node.inputLinksId[i]]
+        if (link === undefined) {
+          //alert('Corruption du diagramme')
+          continue
+        }
+        if (!NodeDisplayed(data,data.nodes[link.idSource]) || !NodeDisplayed(data,data.nodes[link.idTarget])) {
+          continue
+        }
+        if (data.nodes[link.idSource]  && data.nodes[link.idTarget]) {
+          const val = GetLinkValue(data, link.idLink)
+          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined && val.value == 0) {
+            total_input +=1
+            continue
+          }
+          if (val && val.value!=undefined) {
+            total_input += val.value as number
+          } else {
+            console.log('val is undefined')
+          }
+        }
+      }
+    }
+    let total_output = 0
+    if (node.outputLinksId.length > 0) {
+      const special_data_cast=data as unknown as {free_null_link_visible:boolean}
+
+      for (let i = 0; i < node.outputLinksId.length; i++) {
+        const link = data.links[node.outputLinksId[i]]
+        if (link === undefined) {
+          //alert('Corruption du diagramme')
+          continue
+        }
+        if (!NodeDisplayed(data,data.nodes[link.idSource]) || !NodeDisplayed(data,data.nodes[link.idTarget])) {
+          continue
+        }
+        if (data.nodes[link.idSource] && data.nodes[link.idTarget]) {
+          const val = GetLinkValue(data, link.idLink)
+          if (special_data_cast.free_null_link_visible && val?.extension.free_mini!==undefined && val.value == 0) {
+            total_input +=1
+            continue
+          }
+          if (val && val.value!=undefined ) {
+            total_output += val.value as number
+          } else {
+            console.log('val is undefined')
+          }
+        }
+      }
+    }
+    return (total_input + total_output) === 0
+  }
 }
 
 /**
@@ -306,9 +381,13 @@ export const drawAddNodes : drawNodeShapeFType = (
     // On gere la visibilité directement sur gg_nodes avec un display <inline />
     // Cela permettra de mieux gérer des zooms sur les éléments visibles
       .style('display', (d) => {
-        let display: string
-        if (d.position === 'absolute') { display = 'inline'}  else { display = 'none'} 
-        return display
+        if (HasLinksZero(data,d)) {
+          return 'none'
+        }
+        if (d.position === 'relative') { 
+          return 'none'
+        } 
+        return 'inline'
       })
       .style('font-family', (d) => {
         return ReturnValueNode(data, d, 'font_family') as string
