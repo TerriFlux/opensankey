@@ -640,7 +640,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   const { accordion_ref, links_accordion_ref,button_ref } = uiElementsRef
   const {GetLinkValue}=link_function
   const {updateComponentMenuConfigLink}=ComponentUpdater
-  if ((!event.ctrlKey && !event.metaKey) && first_selected_node.current && ref_getter_mode_selection.current=='ln') {
+  if ((!event.ctrlKey && !event.metaKey && event.button != 2) && first_selected_node.current && ref_getter_mode_selection.current=='ln') {
     if (d.name.includes('_tmp')) {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       d.name = d.idNode
