@@ -46,7 +46,11 @@ export type DefaultSankeyDataFuncType = ()=>SankeyData
 
 export type LinkColorFuncType = (l: SankeyLink,data:SankeyData,GetLinkValue:GetLinkValueFuncType)=>string
 
-export type LinkVisibleFunctType = (l: SankeyLink, data: SankeyData, display_nodes : {[d:string]:SankeyNode},GetLinkValue: GetLinkValueFuncType) => boolean 
+export type LinkVisibleFunctType = (
+  l: SankeyLink, 
+  data: SankeyData, 
+  display_nodes : {[d:string]:SankeyNode}
+) => boolean 
 
 export type DefaultNodeFuncType = (data: SankeyData) => SankeyNode
 
@@ -104,7 +108,10 @@ export type AssignNodeLocalAttributeFuncType = (n:SankeyNode,k:keyof SankeyNodeA
 
 export type AssignNodeStyleAttributeFuncType = (n:SankeyNodeStyle,k:keyof SankeyNodeStyle,v:boolean|string|number)=>void
 
-export type NodeDisplayedFuncType =(data:SankeyData,node:SankeyNode,skip_link_zero?:boolean)=>boolean
+export type NodeDisplayedFuncType =(
+  data:SankeyData,
+  node:SankeyNode
+)=>boolean
 
 export type ReturnValueLinkFuncType = (data:SankeyData,l:SankeyLink,k:keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle)=>string | number | boolean
 

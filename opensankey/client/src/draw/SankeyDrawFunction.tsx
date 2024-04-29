@@ -379,7 +379,7 @@ export const DrawArrows : DrawArrowsType = (
 
     const link_direction_same_as_node_arrow= link_input_from_right || link_input_from_left || link_input_from_top || link_input_from_from_bottom
 
-    if (!LinkVisible(l, data,display_nodes,GetLinkValue)) {
+    if (!LinkVisible(l, data,display_nodes)) {
       continue
     }
     if((!l_arrow) && !(node_shape!=='arrow')){
@@ -984,7 +984,7 @@ const DrawCurve = (
   inv_scale:(t:number)=>number,
 ): string => {
   const {data,display_nodes,display_links}=dict_variable_application_data
-  if (!LinkVisible(link, data, display_nodes,GetLinkValue)) {
+  if (!LinkVisible(link, data, display_nodes)) {
     return ''
   }
   const link_value = TestLinkValue(data, display_nodes, link,GetLinkValue)
