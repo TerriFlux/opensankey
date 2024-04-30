@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { PlusApplicationContextType, PlusElementsSelectedType, PlusLinkFuntionType, PlusNodeFuntionType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
+import { PlusApplicationContextType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusLinkFuntionType, PlusNodeFuntionType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from './Types'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
@@ -14,7 +14,8 @@ export type SankeyPlusNodeIconFType = (
   is_activated:boolean,
   menu_for_modal:boolean,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
-  node_function:PlusNodeFuntionType
+  node_function:PlusNodeFuntionType,
+  ComponentUpdater:PlusComponentUpdaterType
 )=> JSX.Element[]
 
 export type SankeyPlusHyperLinkFType=(
@@ -38,7 +39,6 @@ export type PlusNodeClickEventFType=(
 
 
 export type node_icon_fill_colorFType=(
-  data:SankeyPlusData,
   n:SankeyPlusNode
 ) => string
 
