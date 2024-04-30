@@ -1501,6 +1501,11 @@ export const updateLayout: updateLayoutFuncType = (
         difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(link.value, {}, diff))
       }
     })
+    // If values are applied dataTags must be applied also
+    const difference = deep_diff.diff(data.dataTags, new_layout.dataTags)
+    if (difference) {
+      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.dataTags, {}, diff))
+    }
   }
 
   if (mode.includes('tagLevel')) {
@@ -1564,10 +1569,19 @@ export const updateLayout: updateLayoutFuncType = (
   }
 
   if (mode.includes('tagData')) {
-    const difference = deep_diff.diff(data.dataTags, new_layout.dataTags)
-    if (difference) {
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.dataTags, {}, diff))
-    }
+    // Finds the corresponding tag group by name and apply the "dynamic" attributes
+    // activate, show_legend and selected.
+    Object.values(data.dataTags).forEach(dataTag=>{
+      Object.values(new_layout.dataTags).filter(_=>_.group_name === dataTag.group_name).forEach(_=>{
+        dataTag.activated=_.activated
+        dataTag.show_legend = _.show_legend
+        Object.values(dataTag.tags).forEach(tag=>
+          Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
+            tag.selected = ltag.selected
+          })
+        )
+      })
+    })
   }
 
   //- Sanity check
