@@ -86,7 +86,8 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
   menu_for_modal=false,
   // set_ref_setter_show_modal_import_icons:(b:boolean)=>void,
   dict_hook_ref_setter_show_dialog_components,
-  node_function
+  node_function,
+  ComponentUpdater
 )=> {
   const [show_menu_node_icon, set_show_menu_node_icon] = useState(false)
   const [forceUpdate, setForceUpdate]=useState(false)
@@ -293,7 +294,9 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
         Object.values(data.nodes)
           .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
           .forEach(d => AssignNodeValueToCorrectVar(d, 'shape_visible', evt.target.checked, false))
-        node_function.reDrawIllustration(multi_selected_nodes.current)
+        node_function.RedrawNodes(multi_selected_nodes.current)
+        ComponentUpdater.updateComponentMenuConfigNode.current()
+        ComponentUpdater.updateComponenSaveInCache.current(false)
         setForceUpdate(!forceUpdate)
       }}
     >
@@ -759,15 +762,8 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
 }
 
 export const node_icon_fill_color : node_icon_fill_colorFType = (
-  data:SankeyData,n:SankeyNode
+  n:SankeyNode
 )=>{
-  if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
-    const selected_tag = n.tags[n.colorTag][0]
-    const tag = data.nodeTags[n.colorTag].tags[selected_tag]
-    if (tag && !ReturnValueNode(data,n,'shape_visible')) {
-      return tag.color as string
-    }
-  }
   return (n as SankeyPlusNode).iconColor
 }
 
@@ -855,7 +851,7 @@ export const SankeyPlusDrawNodesIllustration : SankeyPlusDrawNodesIllustrationFT
       .on('mouseout', function () {
         sankeyTooltip.style('opacity', 0)
       })
-      .style('fill', n =>node_icon_fill_color(data,n))
+      .style('fill', n =>node_icon_fill_color(n))
       .attr('d', n =>node_icon_path(data,n))
   }
 
