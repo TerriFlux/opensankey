@@ -117,21 +117,23 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
           .attr('id', d.idLabel + '_img')
           .attr('href',d.image_src)
 
-        gg_label.call(
-          dragLabelEvent(
-            applicaTionData,dict_variable_elements_selected,
-            applicationContext,
-            d,
-            GetSankeyMinWidthAndHeight,
-            scale,
-            inv_scale,
-            start_point,
-            ComponentUpdater,
-            reDrawPlusLabels,
-            link_function,
-            applicationDraw
+        if (!window.SankeyToolsStatic) {
+          gg_label.call(
+            dragLabelEvent(
+              applicaTionData,dict_variable_elements_selected,
+              applicationContext,
+              d,
+              GetSankeyMinWidthAndHeight,
+              scale,
+              inv_scale,
+              start_point,
+              ComponentUpdater,
+              reDrawPlusLabels,
+              link_function,
+              applicationDraw
+            )
           )
-        )
+        }
         gg_label.append('rect')
           .attr('id','drag_zone_'+d.idLabel)
           .attr('width', d.label_width).attr('height', d.label_height)
