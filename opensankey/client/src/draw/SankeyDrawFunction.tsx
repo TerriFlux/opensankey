@@ -700,7 +700,7 @@ export const DrawLinkText = (
         // pos x
         const left_xpos = +handles[0].split(',')[0].substring(10)
         const right_xpos = +handles[1].split(',')[0].substring(10)
-        x_pos = (left_xpos + right_xpos) / 2 - 5
+        x_pos = (left_xpos + right_xpos) / 2
     
         // pos y
         const left_y_pos_str = handles[0].split(',')[1]
