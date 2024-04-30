@@ -323,10 +323,14 @@ export const DragElements: DragElementsFuncType = (
     if((pos_n[0]+margin)>dict_variable_application_data.data.width){
       const svgSankey = d3.select('.opensankey #svg')
       svgSankey.style('width', (pos_n[0]+margin) + 'px')
+      dict_variable_application_data.data.width = pos_n[0]+margin
+      DrawGrid(data)
     }
     if((pos_n[1]+margin)>dict_variable_application_data.data.height){
       const svgSankey = d3.select('.opensankey #svg')
       svgSankey.style('height', (pos_n[1]+margin) + 'px')
+      dict_variable_application_data.data.height = pos_n[1]+margin
+      DrawGrid(data)
     }
     return 'translate(' + n.x + ',' + n.y + ')'
   })
