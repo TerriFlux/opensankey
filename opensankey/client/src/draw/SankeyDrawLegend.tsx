@@ -307,7 +307,11 @@ export const DrawLegend : DrawLegendFType= (
     
       g_draggable.call(d3.drag<SVGGElement,unknown>()
         .subject(Object).on('drag', function (event) {
-          d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
+          h=h?h:50
+          d3.select('#g_legend .drag_zone_leg').attr('height',h)
+          if (event.x>0 && event.x<data.legend_width && event.y <0 && event.y > -h+25) {
+            d3.select(' .opensankey .g_draggable_scale').style('transform','translate('+(event.x-15)+'px,'+(event.y-25)+'px)')
+          }
         }))
     }
 
