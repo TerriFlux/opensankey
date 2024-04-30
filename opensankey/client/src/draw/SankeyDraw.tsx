@@ -62,7 +62,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (animation.current) {
       return
     }
-    [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
     RemoveAnimate()
     d3.select('#svg').style('background-color',dict_variable_application_data.data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
