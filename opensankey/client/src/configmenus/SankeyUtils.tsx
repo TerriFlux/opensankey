@@ -1133,12 +1133,12 @@ export const NodeColor:NodeColorFuncType = (n: SankeyNode,data:SankeyData): stri
     if (n.colorTag !== undefined && n.colorTag !== '' && n.colorTag !=='no_colormap') {
       const tagGroup = n.colorTag
       if (n.tags[tagGroup] === undefined) {
-        return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:''
+        return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:'grey'
       } else if (n.tags[tagGroup].length == 1 ) {
         if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
           return data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color??''
         } else {
-          return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:''
+          return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:'grey'
         }
       } else {
         return 'grey'
