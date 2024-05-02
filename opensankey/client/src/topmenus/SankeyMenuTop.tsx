@@ -903,11 +903,14 @@ export const Menu: FunctionComponent<MenuTypes> = (
           {/* We have to set the width of the component here (and not in the theme) 
           because for some reason a style is directly applied to this component 
           and we cannot override it in the theme */}
-          <DrawerContent style={{width:menu_config_width,
-            marginTop:document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
-
-          }}>
-            <DrawerBody>
+          <DrawerContent 
+            width={menu_config_width}
+            marginTop={
+              document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y + 
+              document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+            }
+          >
+            <DrawerBody zIndex={1}>
               <SankeyConfigurationMenu
                 configuration_menus={configurations_menus}
               />
@@ -918,7 +921,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
       <ButtonGroup vertical
         className='sideBar'
-        style={{top:window.innerHeight/2-120,right:0}}
+        style={{top:window.innerHeight/2-120,right:0,zIndex:1}}
       >
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
