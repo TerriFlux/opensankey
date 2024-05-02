@@ -22,17 +22,14 @@ export type IsAllNodeNotLocalAttrSameValueFType =(data:SankeyData,m_s_n:SankeyNo
 export type GetLinkValueFuncType=(data: SankeyData,idLink: string,up?:boolean)=> SankeyLinkValue 
 
 export type TestLinkValueFuncType = (
-    data:SankeyData, 
-    nodes: { [node_id: string]: SankeyNode }, 
+  dict_variable_application_data:dict_variable_application_dataType,
     d: SankeyLink,
     GetLinkValue:GetLinkValueFuncType
 ) => string | number | SankeyLinkValue
 
 export type ComputeTotalOffsetsFuncType=(inv_scale:(t:number)=>number,
 node: SankeyNode,
-data: SankeyData,
-display_nodes: { [node_id: string]: SankeyNode },
-display_links: { [node_id: string]: SankeyLink },
+dict_variable_application_data:dict_variable_application_dataType,
 TestLinkValue: TestLinkValueFuncType,
 ref_link: SankeyLink | undefined,
 GetLinkValue:GetLinkValueFuncType

@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import * as d3 from 'd3'
 
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
@@ -192,6 +192,8 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
   const [update,setUpdate]=useState(false)
   const ref_input=useRef<HTMLInputElement>(null)
   const variantOfInput='menuconfigpanel_option_numberinput'
+  const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
+
   const val_of_key=ValueSelectedParameter(
     dict_variable_application_data,
     multi_selected_links,
@@ -203,14 +205,17 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
     <NumberDecrementStepper/>
   </NumberInputStepper>
 
-
+  const f_onBlur=()=>{
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    ComponentUpdater.updateComponenSaveInCache.current(false)
+  }
   return <InputGroup variant='menuconfigpanel_option_input' >
     <NumberInput allowMouseWheel 
       variant={variantOfInput} 
       step={1} 
       value={val_of_key.value}
       onChange={evt=>{
-        console.trace('here')
         const formatedValue=evt.replace(',','.')
         if(formatedValue!=='' && !isNaN(+formatedValue )){
           const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
@@ -257,13 +262,18 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
           })
           
         }
+        if(isModifying.current){
+          clearTimeout(isModifying.current)
+        }
+        isModifying.current=setTimeout(()=>{
+          f_onBlur()
+          ref_input.current?.blur()
+        },2000)
         setUpdate(!update)
       }}
       onBlur={()=>{
-        node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-        link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-        ComponentUpdater.updateComponenSaveInCache.current(false)
-
+        clearTimeout(isModifying.current)
+        f_onBlur()
       }}
     >
       <NumberInputField ref={ref_input}/>
