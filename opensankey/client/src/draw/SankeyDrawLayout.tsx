@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { SankeyData, SankeyLink, SankeyNode, SankeyNodeAttrLocal, agregationType} from '../types/Types'
+import { SankeyData, SankeyLink, SankeyNode, SankeyNodeAttrLocal, agregationType, dict_variable_application_dataType} from '../types/Types'
 import {
   AssignLinkLocalAttribute,
   AssignNodeLocalAttribute,
@@ -311,19 +311,16 @@ export const arrangeNodes : arrangeNodesFType = (
  */
 export const nodeHeight : nodeHeightFType = (
   node: SankeyNode,
-  data:SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+  dict_variable_application_data,
   inv_scale: (t:number)=>number,
   scale: (t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 ) => {
+  const {data}=dict_variable_application_data
   const res = ComputeTotalOffsets(
     inv_scale,
     node,
-    data,
-    display_nodes,
-    display_links,
+    dict_variable_application_data,
     TestLinkValue,
     undefined,
     GetLinkValue)
@@ -351,10 +348,11 @@ export const nodeHeight : nodeHeightFType = (
  * @param {number} h_space Horizontal spacing factor
  */
 export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
-  data: SankeyData,
+  dict_variable_application_data,
   h_space : number,
   reset_scale
 ) => {
+  const {data}=dict_variable_application_data
   const display_nodes = Object.keys(data.nodes)
     .filter((key) => NodeDisplayed(data,data.nodes[key]))
     .reduce((obj, key) => {
@@ -362,6 +360,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
         [key]: data.nodes[key]
       })
     }, {}) as {[idNode:string]:SankeyNode}
+  dict_variable_application_data.display_nodes=display_nodes
   const display_links=Object.keys(data.links)
     .filter((key) => data.links[key].idSource in display_nodes && data.links[key].idTarget in display_nodes)
     .reduce((obj, key) => {
@@ -369,7 +368,8 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
         [key]: data.links[key]
       })
     }, {})
-
+  
+  dict_variable_application_data.display_links=display_links
   // Positionning values
   const v_space = data.v_space
 
@@ -550,9 +550,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
         // Node height
         const node_height = nodeHeight(
           node,
-          data,
-          display_nodes,
-          display_links,
+          dict_variable_application_data,
           v_scale_inv,
           v_scale,
           GetLinkValue)
@@ -746,13 +744,12 @@ export const reorganize_all_input_outputLinksId : reorganize_all_input_outputLin
  * @param {boolean} ComputeAutoSankey Has the function been called from ComputeAutoSankey ?
  */
 export const desagregation : desagregationFType = (
-  data: SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+  dict_variable_application_data,
   idNode: string,
   cur_dimension: string,
   to_compute_auto_sankey=false
 ) => {
+  const {data}=dict_variable_application_data
   const dim_desagregate_nodes = Object.values(data.nodes).filter( n => n.dimensions[cur_dimension] && n.dimensions[cur_dimension].parent_name === idNode )
   if (dim_desagregate_nodes.length == 0) {
     return
@@ -765,15 +762,15 @@ export const desagregation : desagregationFType = (
     .domain([0, data.user_scale])
   const nb_desagregated = dim_desagregate_nodes.length
   let nodes_heights = 0
-  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,data,display_nodes,display_links,inv_scale,scale,GetLinkValue))
-  const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],data,display_nodes,display_links,inv_scale,scale,GetLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
+  dim_desagregate_nodes.forEach(n=>nodes_heights+=nodeHeight(n,dict_variable_application_data,inv_scale,scale,GetLinkValue))
+  const start_point = data.nodes[idNode].y+nodeHeight(data.nodes[idNode],dict_variable_application_data,inv_scale,scale,GetLinkValue)/2 - (data.v_space*0.9+nodes_heights)/2
   let delta_y = 0
   dim_desagregate_nodes.forEach(n => {
     if ((n.x === undefined || (n.x === 0 || n.y === 0)) && (data.nodes[idNode].x !==0 && data.nodes[idNode].y !==0 )) {
       n.x = data.nodes[idNode].x
       n.y = start_point + delta_y
     }
-    delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,data,display_nodes,display_links,inv_scale,scale,GetLinkValue)
+    delta_y += data.v_space*0.9 / (nb_desagregated-1) + nodeHeight(n,dict_variable_application_data,inv_scale,scale,GetLinkValue)
 
     if(n.local==undefined || n.local==null) {
       n.local = {} as SankeyNodeAttrLocal
@@ -883,16 +880,14 @@ export const agregation : agregationFType = (
 }
 
 export type AgregationModalTypes = {
-  data : SankeyData,
-  set_data : (_:SankeyData)=>void
-  display_nodes : { [node_id: string]: SankeyNode },
-  display_links : { [link_id: string]: SankeyLink },
+  dict_variable_application_data:dict_variable_application_dataType
   agregationRef : agregationType
 }
 
 export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
-  {data, set_data, display_nodes, display_links, agregationRef}
+  {dict_variable_application_data, agregationRef}
 ) => {
+  const {data,set_data}=dict_variable_application_data
   const [show_agregation,set_show_agregation] = useState(false)
   const [dim_name,set_dim_name] = useState('')
   const [child_names,set_child_names] = useState<string[]>([])
@@ -1037,7 +1032,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           <Button
             variant="secondary"
             onClick={()=> {
-              desagregation(data,display_nodes,display_links,n.idNode,dim_name,false)
+              desagregation(dict_variable_application_data,n.idNode,dim_name,false)
               set_data({...data})
               set_show_agregation(false)
               set_dim_name('')
@@ -1643,11 +1638,10 @@ export const Aggregate: AggregateFuncType = (
 
 export const Desaggregate: DesaggregateFuncType = (
   n: SankeyNode,
-  data: SankeyData,
-  display_nodes: { [id: string]: SankeyNode} ,
-  display_links: { [id: string]: SankeyLink} ,
+  dict_variable_application_data,
   agregationRef
 ) => {
+  const {data}=dict_variable_application_data
   const child_names: string[] = []
   const dim_names: string[] = []
   Object.values(data.nodes).forEach(n2 => {
@@ -1674,7 +1668,7 @@ export const Desaggregate: DesaggregateFuncType = (
     agregationRef.isAgregationRef.current = false
     agregationRef.showAgregationRef.current![0][1](true)
   } else {
-    desagregation(data, display_nodes, display_links, n.idNode, dim_names[0], false)
+    desagregation(dict_variable_application_data, n.idNode, dim_names[0], false)
   }
 
 }

@@ -1,5 +1,5 @@
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyNode, SankeyLink, TagsCatalog, dict_variable_application_dataType } from '../../types/Types'
+import { SankeyData, SankeyNode, SankeyLink, dict_variable_application_dataType } from '../../types/Types'
 
 /**
  * Function that return the path used t draw arrow with d3
@@ -173,11 +173,8 @@ export type DrawLinkStartSabotFType = (
 export type ComputeEndPointsFType = (
   source_node: SankeyNode,
   target_node: SankeyNode,
+  dict_variable_application_data:dict_variable_application_dataType,
   link: SankeyLink,
-  display_nodes: { [node_id: string]: SankeyNode; },
-  display_links: { [link_id: string]: SankeyLink; },
-  selected_tags: TagsCatalog,
-  data: SankeyData,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType
