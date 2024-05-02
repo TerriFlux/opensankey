@@ -52,7 +52,6 @@ import { TFunction } from 'i18next'
 
 const default_handle_size = 10
 const default_horiz_shift = 50
-const min_thickness = 2
 
 declare const window: Window &
    typeof globalThis & {
@@ -236,15 +235,14 @@ export const TextNodeWrap : TextNodeWrapFType = (
 // if the sum of input/output links values is supperior to the min_height/min_width of the node then it return the maximum between the outputs and inputs link values scaled to the graph
 export const SetNodeHeight:SetNodeHeightFuncType = (
   n: SankeyNode,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [link_id: string]: SankeyLink },
-  data:SankeyData,
+  dict_variable_application_data,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 
 ) => {
-  const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
+  const {data}=dict_variable_application_data
+  const res = ComputeTotalOffsets(inv_scale,n, dict_variable_application_data, TestLinkValue,undefined,GetLinkValue)
   const [total_offset_height_left, total_offset_height_right, total_offset_width_top, total_offset_width_bottom] = res
   const n_w=ReturnValueNode(data,n,'node_width') as number
   const n_h=ReturnValueNode(data,n,'node_height') as number
@@ -338,14 +336,13 @@ export const clip : clipFType = (
 // Function that add marker at the end of links, those marker are arrow
 export const DrawArrows : DrawArrowsType = (
   n: SankeyNode,
-  data:SankeyData,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [link_id: string]: SankeyLink },
+  dict_variable_application_data,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
   display_style: display_styleType
 ) => {
+  const {data,display_nodes}=dict_variable_application_data
   let cum_v_left = 0
   let cum_h_top = 0
   let cum_v_right = 0
@@ -360,7 +357,7 @@ export const DrawArrows : DrawArrowsType = (
     node_angle=ReturnValueNode(data,n,'node_arrow_angle_factor') as number
     node_angle_direction=ReturnValueNode(data,n,'node_arrow_angle_direction') as string
   }
-  const res = ComputeTotalOffsets(inv_scale,n, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
+  const res = ComputeTotalOffsets(inv_scale,n, dict_variable_application_data, TestLinkValue,undefined,GetLinkValue)
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
 
@@ -385,11 +382,12 @@ export const DrawArrows : DrawArrowsType = (
     if((!l_arrow) && !(node_shape!=='arrow')){
       continue
     }
-    let link_value = TestLinkValue(data,data.nodes, l, GetLinkValue)
+    let link_value = TestLinkValue(dict_variable_application_data, l, GetLinkValue)
     if (link_value === undefined) {
       continue
     }
-    link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
+    const is_link_unvalued=link_value==''
+    link_value=(( !is_link_unvalued && +link_value==0)||(+link_value>=inv_scale(dict_variable_application_data.min_link_thickness)))?+link_value:inv_scale(dict_variable_application_data.min_link_thickness)
     const extension = GetLinkValue(data, n.inputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
@@ -397,11 +395,11 @@ export const DrawArrows : DrawArrowsType = (
         // Generale settings: free link value are displayed dashed without text without witdh
         const link_value_is_free = extension?.free_mini !== undefined ??false
         if (link_value_is_free) {
-          link_value = inv_scale(5)
+          link_value = inv_scale(dict_variable_application_data.min_link_thickness)
         }
       }
       if (extension.display_thin) {
-        link_value = inv_scale(5)
+        link_value = inv_scale(dict_variable_application_data.min_link_thickness)
       }
     }
 
@@ -437,7 +435,7 @@ export const DrawArrows : DrawArrowsType = (
     }
 
 
-    if ((!display_style.filter || link_value >= display_style.filter )&& l_arrow) {
+    if ((!display_style.filter || link_value >= display_style.filter )&& l_arrow && !is_link_unvalued) {
       //selection
       d3.select('#gg_' + l.idLink + ' .arrow').remove() // supression dans le cas du drag notamment
       d3.select('#gg_' + l.idLink)
@@ -519,7 +517,7 @@ export const SetNodesHeight : SetNodesHeightFType = (
   inv_scale
 
 ) => {
-  const {data,display_links,display_nodes}=dict_variable_application_data
+  const {data,display_nodes}=dict_variable_application_data
   const source_node = display_nodes[d.idSource]
   const target_node = display_nodes[d.idTarget]
   if (target_node === undefined) {
@@ -529,9 +527,9 @@ export const SetNodesHeight : SetNodesHeightFType = (
     return
   }
 
-  const res_source = ComputeTotalOffsets(inv_scale,source_node, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
+  const res_source = ComputeTotalOffsets(inv_scale,source_node, dict_variable_application_data, TestLinkValue,undefined,GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res_source
-  const res_target = ComputeTotalOffsets(inv_scale,target_node, data, display_nodes, display_links, TestLinkValue,undefined,GetLinkValue)
+  const res_target = ComputeTotalOffsets(inv_scale,target_node, dict_variable_application_data, TestLinkValue,undefined,GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res_target
 
   let node_size_s_height = Math.max(
@@ -656,7 +654,7 @@ export const PathNodeArrowShape : PathNodeArrowShapeFType = (
 // Affichage de la valeur du flux dans le link en fonction des options
 // Position latérale ; middle, beginning, end et frozen
 export const DrawLinkText = (
-  data: SankeyData,
+  dict_variable_application_data:dict_variable_application_dataType,
   link: SankeyLink,
   link_value: number,
   xs: number,
@@ -669,7 +667,7 @@ export const DrawLinkText = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
 ) => {
-
+  const {data}=dict_variable_application_data
   const lab_pos=ReturnValueLink(data,link,'label_position') as string
   const label_on_path=ReturnValueLink(data,link,'label_on_path')
   const label_text=LinkText(data, link,GetLinkValue,t )
@@ -695,7 +693,7 @@ export const DrawLinkText = (
       x_pos = xs 
       y_pos=ys
     } else if (lab_pos === 'middle' || lab_pos==='frozen') {
-      const handles = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
+      const handles = HandlesPositions(dict_variable_application_data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
       if (handles.length >= 2) {
         // pos x
         const left_xpos = +handles[0].split(',')[0].substring(10)
@@ -774,7 +772,7 @@ const AddCenterHandle=(
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
 )=>{
-  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {data,display_links}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   const ori=ReturnValueLink(data,link,'orientation')
@@ -797,16 +795,14 @@ const AddCenterHandle=(
       target_node.y = 100
     }
     const res = ComputeEndPoints(
-      source_node, target_node, link, display_nodes, display_links, 
-      data.nodeTags,
-      data,scale,inv_scale,GetLinkValue
+      source_node, target_node, dict_variable_application_data,link,scale,inv_scale,GetLinkValue
     )
     const [, ys, xt, ] = res
     let [xs, , , yt] = res
     if (data.show_structure == 'structure') {
       [xs, yt] = [source_node.x + (ReturnValueNode(data,source_node,'node_height') as number) / 2, target_node.y + (ReturnValueNode(data,target_node,'node_height') as number) / 2]
     }
-    const pos_d=CenterHandlePosition(data,link,xs,ys,xt,yt,GetLinkValue,scale,inv_scale)
+    const pos_d=CenterHandlePosition(dict_variable_application_data,link,xs,ys,xt,yt,GetLinkValue,scale,inv_scale)
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('circle')
       .attr('id', 'center_handle_' + link.idLink)
@@ -829,7 +825,9 @@ const AddCenterHandle=(
 }
 
 // Compute the position of the center handle of links
-const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
+const CenterHandlePosition=(
+  dict_variable_application_data:dict_variable_application_dataType,
+  link:SankeyLink,
   xs: number,
   ys: number,
   xt: number,
@@ -839,8 +837,8 @@ const CenterHandlePosition=(data:SankeyData,link:SankeyLink,
   inv_scale:(t:number)=>number,
 )=>{
   const center_handle = 1/2
-  
-  const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
+  const {data}=dict_variable_application_data
+  const handle_pos = HandlesPositions(dict_variable_application_data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
   const ori=ReturnValueLink(data,link,'orientation')
 
   if((ori=='hh' || ori=='vv')){
@@ -958,7 +956,7 @@ const add_shift_handles = (
     // Draw handle at the correct position
     d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
       .attr('transform', () => {
-        const handle_pos = HandlesPositions(data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
+        const handle_pos = HandlesPositions(dict_variable_application_data, link, xs, ys, xt, yt,GetLinkValue,scale,inv_scale)
         return handle_pos[i] // 0 => vertical handle
       })
   }
@@ -983,11 +981,11 @@ const DrawCurve = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
 ): string => {
-  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {data,display_nodes}=dict_variable_application_data
   if (!LinkVisible(link, data, display_nodes)) {
     return ''
   }
-  const link_value = TestLinkValue(data, display_nodes, link,GetLinkValue)
+  const link_value = TestLinkValue(dict_variable_application_data, link,GetLinkValue)
   const recy=ReturnValueLink(data,link,'recycling') as boolean
   const curved=ReturnValueLink(data,link,'curved') as boolean
   const ori=ReturnValueLink(data,link,'orientation')
@@ -1018,16 +1016,16 @@ const DrawCurve = (
     return ''
   }
 
-  let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, display_nodes, display_links, nodeTags,data,scale,inv_scale,GetLinkValue)
+  let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, dict_variable_application_data,link,scale,inv_scale,GetLinkValue)
   if(ori=='vv' ||ori=='hh'){
     add_shift_handles(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
-    AddDragLinkZone(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,default_handle_size,default_horiz_shift,scale,inv_scale,min_thickness,drawCurveFunction,LinkText,GetLinkValue,DrawArrows,ComponentUpdater)
+    AddDragLinkZone(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,default_handle_size,default_horiz_shift,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,DrawArrows,ComponentUpdater)
     AddCenterHandle(dict_variable_application_data,dict_variable_elements_selected,applicationContext,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
   }
 
 
   if (label_visible && (+link_value > display_style.filter_label ) ) {
-    DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t,scale,inv_scale)
+    DrawLinkText(dict_variable_application_data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t,scale,inv_scale)
   }
 
   if (ori === 'vh' && !recy) {
@@ -1123,7 +1121,7 @@ export const drawCurveFunction : SankeyDrawCurve = {curve:DrawCurve}
 
 // Returns the x/y position of link_center / left/right/vert_shift
 const HandlesPositions = (
-  data:SankeyData,
+  dict_variable_application_data:dict_variable_application_dataType,
   link: SankeyLink,
   xs: number,
   ys: number,
@@ -1133,6 +1131,7 @@ const HandlesPositions = (
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
 ) => {
+  const {data}=dict_variable_application_data
   let tmp=GetLinkValue(data, link.idLink).value as number
   tmp=(tmp)?tmp:0
   const recy=ReturnValueLink(data,link,'recycling') as boolean
@@ -1153,7 +1152,7 @@ const HandlesPositions = (
       AssignLinkLocalAttribute(link,'vert_shift',0)
 
     }
-    const thickness=LinkStrokeWidth(link,data,scale,inv_scale,min_thickness,data.nodes,GetLinkValue)
+    const thickness=LinkStrokeWidth(link,dict_variable_application_data,scale,inv_scale,GetLinkValue)
     if (xt < xs) {
       const x_left = xt - default_horiz_shift + l_h_s - (thickness) // x14
       const x_right = xs + default_horiz_shift + r_h_s  + (thickness) // x2
@@ -1538,13 +1537,12 @@ export const RepositionneSidebar:RepositionneSidebarFuncType =(show_nav:boolean)
 // Function that compute the link width
 export const LinkStrokeWidth : LinkStrokeWidthFType = (
   l:SankeyLink,
-  data:SankeyData,
+  dict_variable_application_data,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  min_thickness:number,
-  display_nodes:{ [node_id: string]: SankeyNode},
   GetLinkValue:GetLinkValueFuncType,
 )=>{
+  const {data}=dict_variable_application_data
   const node = data.nodes[l.idSource]
   const nodes = data.nodes
   //Met les flux entre les noeuds qui sont 'invalides' en mode fin pour afficehr erreurs
@@ -1568,12 +1566,12 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
       return 5
     }
   }
-  if (link_values.extension && link_values.extension?.display_thin) {
+  if ( link_values.extension && link_values.extension?.display_thin) {
     // if flux is displayed thin
     return 5
   }
-  let link_value = TestLinkValue(data, nodes, l,GetLinkValue)
-  link_value=(+link_value==0||(+link_value>=inv_scale(2)))?+link_value:inv_scale(2)
+  let link_value = TestLinkValue(dict_variable_application_data, l,GetLinkValue)
+  link_value=((+link_value==0)||(+link_value>=inv_scale(dict_variable_application_data.min_link_thickness)))?+link_value:inv_scale(dict_variable_application_data.min_link_thickness)
   const width_n=(document.getElementById('shape_'+node.idNode)?.getBoundingClientRect().width??0)/scale_svg
   //Zones limite à ne pas êtres
   // La limite à ne pas être(fixé arbitrairement) ce situe à : largeur/hauteur du noeud + 1/4 de l'épaisseur du flux 
@@ -1600,9 +1598,9 @@ export const LinkStrokeWidth : LinkStrokeWidthFType = (
   if (draw_warning && !ReturnValueLink(data,l,'recycling')) {
     return 1
   } else {
-    const link_value = TestLinkValue(data, display_nodes, l,GetLinkValue)
+    const link_value = TestLinkValue(dict_variable_application_data, l,GetLinkValue)
     const tmp =(link_value=='')?1:link_value as number
-    return scale(Math.max(inv_scale(min_thickness), tmp ? tmp : 0))
+    return scale(Math.max(inv_scale(dict_variable_application_data.min_link_thickness), tmp ? tmp : 0))
   }
 }
 

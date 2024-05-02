@@ -1,7 +1,7 @@
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, agregationType } from '../../types/Types'
+import { SankeyData, SankeyLink, SankeyNode, agregationType, dict_variable_application_dataType } from '../../types/Types'
 
-export type ComputeAutoSankeyFuncType = (data: SankeyData, h_space: number,reset_scale:boolean) => void
+export type ComputeAutoSankeyFuncType = (dict_variable_application_data:dict_variable_application_dataType, h_space: number,reset_scale:boolean) => void
 
 export type reorganize_inputLinksIdFType = (
   data:SankeyData,
@@ -111,9 +111,7 @@ export type arrangeNodesFType = (
  */
 export type nodeHeightFType = (
   node: SankeyNode,
-  data:SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+  dict_variable_application_data:dict_variable_application_dataType,
   inv_scale: (t:number)=>number,
   scale: (t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
@@ -142,9 +140,7 @@ export type reorganize_all_input_outputLinksIdFType = (
  * @param {boolean} ComputeAutoSankey Has the function been called from ComputeAutoSankey ?
  */
 export type desagregationFType = (
-  data: SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+  dict_variable_application_data:dict_variable_application_dataType,
   idNode: string,
   cur_dimension: string,
   to_compute_auto_sankey:boolean
@@ -180,9 +176,7 @@ export type AggregateFuncType = (
 
 export type DesaggregateFuncType = (
     n: SankeyNode,
-    data: SankeyData,
-    display_nodes: { [id: string]: SankeyNode} ,
-    display_links: { [id: string]: SankeyLink} ,
+    dict_variable_application_data:dict_variable_application_dataType,
     agregation: agregationType
 ) => void
 

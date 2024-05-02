@@ -237,7 +237,6 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   const{ data,display_nodes } = dict_variable_application_data
   const { display_style } = data
   const {t}=applicationContext
-  const min_thickness=2
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, data.user_scale])
@@ -257,11 +256,11 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
           AssignLinkLocalAttribute(link,'label_position','frozen')
           AssignLinkLocalAttribute(link,'orthogonal_label_position','frozen')
           if(!(link.x_label && link.y_label)){
-            const link_value = TestLinkValue(data, display_nodes, link,GetLinkValue)
+            const link_value = TestLinkValue(dict_variable_application_data, link,GetLinkValue)
             const source_node=data.nodes[link.idSource]
             const target_node=data.nodes[link.idTarget]
-            const [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, link, display_nodes, dict_variable_application_data.display_links, data.nodeTags,data,scale,inv_scale,GetLinkValue)
-            DrawLinkText(data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t,scale,inv_scale)
+            const [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node,dict_variable_application_data, link, scale,inv_scale,GetLinkValue)
+            DrawLinkText(dict_variable_application_data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t,scale,inv_scale)
           }
 
     
@@ -314,7 +313,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   paths
     .on('mouseover', function (event, d) {
       // Quand on survole des flux petit : aggrandi la taille du flux pour être plus facile sélectionnable
-      if(+LinkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,GetLinkValue)<15){
+      if(+LinkStrokeWidth(d,dict_variable_application_data,scale,inv_scale,GetLinkValue)<15){
         d3.select('.link#path_'+d.idLink).attr('stroke-width','15')
         if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
           d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 2')
@@ -346,8 +345,8 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
     })
     .on('mouseout', function (event, d) {
       // Quand on quitte le survole des flux petit : remet la taille du flux a sa valeur originel
-      if(+LinkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,GetLinkValue)<15){
-        d3.select('.link#path_'+d.idLink).attr('stroke-width',LinkStrokeWidth(d,data,scale,inv_scale,min_thickness,display_nodes,GetLinkValue))
+      if(+LinkStrokeWidth(d,dict_variable_application_data,scale,inv_scale,GetLinkValue)<15){
+        d3.select('.link#path_'+d.idLink).attr('stroke-width',LinkStrokeWidth(d,dict_variable_application_data,scale,inv_scale,GetLinkValue))
         if(d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray')!=''){
           d3.select('.gg_links#gg_'+d.idLink).attr('stroke-dasharray','10, 2')
         }
@@ -453,7 +452,7 @@ export const drawAddLinks:drawAddLinksFType = (
       paths.call(
         DragLinkEvent(
           dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,data.display_style,drawCurveFunction,
-          scale,inv_scale,2,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater
+          scale,inv_scale,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater
         )
       )
     }
@@ -490,7 +489,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
 ) => {
   const { GetLinkValue,LinkStroke,LinkText,DrawArrows,LinkSabotColor } = link_functions
   const { multi_selected_links } = dict_variable_elements_selected
-  const{ data, display_nodes, display_links} = dict_variable_application_data
+  const{ data, display_nodes} = dict_variable_application_data
   const { ref_getter_mode_selection} = dict_variable_elements_selected
   const max_filter_label=Math.max(data.display_style.filter, data.display_style.filter_label)
   const inv_scale = d3.scaleLinear()
@@ -499,7 +498,6 @@ export const drawLinkShape:drawLinkShapeFType  = (
   const scale = d3.scaleLinear()
     .range([0, 100])
     .domain([0, data.user_scale])
-  const min_thickness=2
   const { display_style } = data
   const gg_links = d3
     .select('.opensankey #g_links')
@@ -522,7 +520,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
     const is_free = link_values.extension?.free_mini !== undefined &&
                     data.show_structure !== 'free_interval' &&
                     data.show_structure !== 'free_value'
-    if (TestLinkValue(data, data.nodes, d,GetLinkValue) === 0) {
+    if (TestLinkValue(dict_variable_application_data, d,GetLinkValue) === 0) {
       if (is_free && special_data_cast.free_null_link_visible ) {
         return 'inline'
       }
@@ -571,6 +569,8 @@ export const drawLinkShape:drawLinkShapeFType  = (
 
 
   let error_msg: { text?: string | undefined } | undefined
+  console.log(paths)
+  console.log(link_functions)
   paths
     .attr('class', 'link')
     .attr('id', d => 'path_'+d.idLink)
@@ -579,13 +579,13 @@ export const drawLinkShape:drawLinkShapeFType  = (
       let tmp=GetLinkValue(data, d.idLink).value as number
       tmp=(tmp)?tmp:0
       return  tmp >= display_style.filter ? (!((data as unknown) as { show_uncert: boolean }).show_uncert && (String(GetLinkValue(data, d.idLink).display_value).includes('[')) ? ReturnValueLink(data,d,'opacity') : ReturnValueLink(data,d,'opacity')) : 0})
-    .attr('stroke-width', l =>LinkStrokeWidth(l,data,scale,inv_scale,min_thickness,display_nodes,GetLinkValue))
+    .attr('stroke-width', l =>LinkStrokeWidth(l,dict_variable_application_data,scale,inv_scale,GetLinkValue))
     .attr('stroke', l => LinkStroke(l,data,GetLinkValue))
 
   //Creation des Arrows associés au link
   d3.selectAll(' .opensankey .ggg_nodes')
     .each( (n) => {
-      DrawArrows(n as SankeyNode,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
+      DrawArrows(n as SankeyNode,dict_variable_application_data,scale,inv_scale,GetLinkValue,display_style)
     })
 
   // Create des coins de départ des flux si le noeud source est en forme de flêche

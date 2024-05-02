@@ -277,7 +277,8 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
     default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
   }
   const new_data = Object.assign(default_data, server_data) as SankeyData
-  ProcessExample(new_data, updateLayout, convert_data, callback, DefaultSankeyData)
+  dict_variable_application_data.data=new_data
+  ProcessExample(dict_variable_application_data, updateLayout, convert_data, callback, DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   delete (new_data as SankeyData & { layout?: SankeyData} ).layout
@@ -321,13 +322,14 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (data: SankeyData, nam
   FileSaver.saveAs(blob, name + '.json')
 }
 export const ProcessExample: ProcessExampleFuncType = (
-  data: SankeyData,
+  dict_variable_application_data,
   updateLayout: updateLayoutFuncType,
   convert_data: ConvertDataFuncType,
   callback: (server_data: SankeyData) => void,
   DefaultSankeyData: () => SankeyData
 
 ): SankeyData => {
+  const {data}=dict_variable_application_data
   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
   convert_data(data, DefaultSankeyData)
   if ((data as SankeyData & layout_type).layout === undefined) {
@@ -341,7 +343,7 @@ export const ProcessExample: ProcessExampleFuncType = (
         Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
         // Select current tag to compute position
         tag_prim.selected=true
-        ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+        ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
       })
     }else if((lvl_tag_keys.length > 1)){
     // If data have multiple level Tag 
@@ -354,12 +356,12 @@ export const ProcessExample: ProcessExampleFuncType = (
           Object.values(data.levelTags[kt].tags).forEach(t=>t.selected=false)
           // Select current tag to compute position
           tag_prim.selected=true
-          ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+          ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
         })
       })
     
     }else{
-      ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+      ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
 
     }
     callback(data)
@@ -372,7 +374,7 @@ export const ProcessExample: ProcessExampleFuncType = (
     compute_default_input_outputLinksId(data.nodes, data.links)
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData} ).layout
-    updateLayout(data, data_layout, ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux'], true)
+    updateLayout(data, data_layout, ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
     callback(data)
   }
   d3.select('.loading_auto_compute').remove()
