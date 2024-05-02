@@ -1645,15 +1645,15 @@ export const MenuEnregistrerView : MenuEnregistrerViewFType = (
   set_save_only_view:(b:boolean)=>void
 )=>{
   return <Form.Group>
-    <OSTooltip label={t('view.tooltips.buttonExportView')}>
       <Checkbox
         sx={SmoothClasses({})}
         maxW={'40%'}
         isChecked={save_only_view}
         onChange={() => set_save_only_view(!save_only_view)}>
-        {t('view.export')}
+        <OSTooltip label={t('view.tooltips.buttonExportView')}>
+          {t('view.export')}
+        </OSTooltip>
       </Checkbox>
-    </OSTooltip>
   </Form.Group>
 }
 
