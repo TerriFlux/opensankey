@@ -950,12 +950,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
         t={applicationContext.t}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         dict_variable_application_data={dict_variable_application_data}
-        updateLayout={applicationDraw.updateLayout}
+        applicationDraw={applicationDraw}
         convert_data={convert_data}
         elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
         DefaultSankeyData={dict_variable_application_data.get_default_data}
+        ComponentUpdater={ComponentUpdater}
       />
 
       <ExcelModal

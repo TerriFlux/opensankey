@@ -74,7 +74,7 @@ import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfig
 import { ContextMenuLink } from './dialogs/SankeyMenuContextLink'
 import { ContextMenuNode } from './dialogs/SankeyMenuContextNode'
 import { ContextMenuZdd } from './dialogs/SankeyMenuContextZDD'
-import { ApplySaveJSONDialog, OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
+import { ApplySaveJSONDialog, OpenSankeyDiagramSelector, os_all_element_to_transform } from './dialogs/SankeyMenuDialogs'
 import {
   ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
@@ -253,7 +253,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     updateComponentMenuConfigLayout:useRef(()=>null),
     updateComponentMenu:useRef(()=>null),
     updateComponenSaveInCache:useRef(()=>null),
-    updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[])
+    updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[]),
+    updateComponentBtnUpdateLayout : useRef(()=>null)
 
   }
   /*************************************************************************************************/
@@ -292,7 +293,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     GetSankeyMinWidthAndHeight,
     updateLayout,
     resizeCanvas:resizeCanvas,
-    reAdjustSankey:reAdjustSankey
+    reAdjustSankey:reAdjustSankey,
+    all_element_UpdateLayout:os_all_element_to_transform
   }
   /*************************************************************************************************/
   const start_point=useRef([0,0])
