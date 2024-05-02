@@ -5,12 +5,13 @@ import { Checkbox } from '@chakra-ui/react'
 
 import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplayingValueLocal, NodeColor, LinkStrokeOSTyped, DrawArrows, OSTooltip } from './import/OpenSankey'
 import { SankeyPlusData,SankeyPlusNode,SankeyPlusLink } from '../types/Types'
-import { LinkStrokeFType, SankeyPlusDrawArrowsFType, dragNodeRedrawGradientFType, menu_conf_link_apparence_gradientFType } from '../types/SankeyPlusGradientTypes'
+import { LinkStrokeFType, dragNodeRedrawGradientFType, menu_conf_link_apparence_gradientFType } from '../types/SankeyPlusGradientTypes'
 
-import { SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyNode, display_styleType} from 'open-sankey/src/types/Types'
+import { SankeyLinkAttrLocal, SankeyNode, display_styleType} from 'open-sankey/src/types/Types'
 import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import {TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
+import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
 
 export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradientFType =(
@@ -506,18 +507,17 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
   }
 }
 
-export const SankeyPlusDrawArrows : SankeyPlusDrawArrowsFType = (
+export const SankeyPlusDrawArrows : DrawArrowsType = (
   n: SankeyNode,
-  data:SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+  dict_variable_application_data,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
   display_style: display_styleType,
 
 ) => {
-  DrawArrows(n,data,display_nodes,display_links,scale,inv_scale,GetLinkValue,display_style)
+  const {data}=dict_variable_application_data
+  DrawArrows(n,dict_variable_application_data,scale,inv_scale,GetLinkValue,display_style)
   for (const id_link of n.inputLinksId) {
     const l_arrow=ReturnValueLink(data,data.links[id_link],'arrow')
     const l_grad=PlusReturnValueLink(data as SankeyPlusData,data.links[id_link] as SankeyPlusLink,'gradient')
