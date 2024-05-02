@@ -10,9 +10,8 @@ export type ValueSelectedParameterFuncType = (
   ) => SankeyLinkValue
 
 export type SetNodeHeightFuncType = (
-  n: SankeyNode, display_nodes: {[node_id: string]: SankeyNode;},
-  display_links: {[link_id: string]: SankeyLink;},
-  data: SankeyData,
+  n: SankeyNode, 
+  dict_variable_application_data:dict_variable_application_dataType,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType
@@ -20,9 +19,7 @@ export type SetNodeHeightFuncType = (
 
 export type DrawArrowsType = (
   n: SankeyNode,
-  data:SankeyData,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [node_id: string]: SankeyLink },
+  dict_variable_application_data:dict_variable_application_dataType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
@@ -153,11 +150,9 @@ export type SelectVisualyNodesFType = (n:SankeyNode)=> void
 
 // Function that compute the link width
 export type LinkStrokeWidthFType = (l:SankeyLink,
-  data:SankeyData,
+  dict_variable_application_data:dict_variable_application_dataType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  min_thickness:number,
-  display_nodes:{ [node_id: string]: SankeyNode},
   GetLinkValue:GetLinkValueFuncType,
 )=> number
 

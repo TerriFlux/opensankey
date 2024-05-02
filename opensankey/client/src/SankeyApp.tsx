@@ -134,7 +134,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     get_default_data : DefaultSankeyData,
     display_nodes : display_nodes,
     display_links : display_links,
-    function_on_wait:useRef(()=>null)
+    function_on_wait:useRef(()=>null),
+    min_link_thickness:5
   }
 
 
@@ -227,6 +228,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_waiting : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_resolution_save_png : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_png_res_h:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null),
+    ref_setter_png_res_v:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null),
   }
   /*************************************************************************************************/
   const contextMenu : contextMenuType = {
@@ -951,8 +954,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       <SankeyDraw
         contextMenu={contextMenu}
         dict_variable_application_data={dict_variable_application_data}
-        display_nodes={display_nodes}
-        display_links={display_links}
         animation={useRef(false)}
         dict_variable_elements_selected={dict_variable_elements_selected}
         agregation={agregation}

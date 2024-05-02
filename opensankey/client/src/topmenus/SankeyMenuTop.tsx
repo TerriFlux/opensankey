@@ -383,7 +383,11 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         </OSTooltip>
           
         <MenuList>
-          <MenuItem onClick={()=>dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)} >PNG</MenuItem>
+          <MenuItem onClick={()=>{
+            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current(data.width)
+            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current(data.height)
+            dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)
+          }} >PNG</MenuItem>
           <MenuItem onClick={()=>clickSavePDF(data)} >PDF</MenuItem>
           {external_file_export_item}
         </MenuList>
@@ -474,7 +478,8 @@ export const Modale_resolution_png : Modale_resolution_pngFType =(
   const [h,set_h]=useState<number>()
   const [v,set_v]=useState<number>()
   const valid_input= (h===undefined && v===undefined) ||  (v!==undefined && h!==undefined && !isNaN(+v) && !isNaN(+h))
-
+  dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current=set_h
+  dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current=set_v
   const content=<>      
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>
@@ -826,7 +831,9 @@ export const Menu: FunctionComponent<MenuTypes> = (
       dict_variable_application_data,node_function,link_function,ComponentUpdater
     )
   }
-
+  const modal_resolution_png=Modale_resolution_png(applicationContext.t,
+    dict_hook_ref_setter_show_dialog_components,dict_variable_application_data,contextMenu.pointer_pos
+  )
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
@@ -992,7 +999,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       }
       {modal_tuto}
       {modal_support}
-
+      {modal_resolution_png}
     </>
   )
 }
