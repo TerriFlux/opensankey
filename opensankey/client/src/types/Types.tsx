@@ -434,6 +434,7 @@ export type processFunctionsType = {
 export type applicationDrawType = {
   GetSankeyMinWidthAndHeight :GetSankeyMinWidthAndHeightFuncType,
   updateLayout:updateLayoutFuncType,
+  all_element_UpdateLayout:string[]
   reAdjustSankey:()=>void
   resizeCanvas:()=>void
 }
@@ -526,6 +527,7 @@ export type ComponentUpdaterType={
   updateComponentMenu:MutableRefObject<()=>void>
   updateComponenSaveInCache:MutableRefObject<(b:boolean)=>void>
   updateComponentMenuNodeIOSelectSideNode:MutableRefObject<(()=>void)[]>
+  updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>,
 
 
 }
