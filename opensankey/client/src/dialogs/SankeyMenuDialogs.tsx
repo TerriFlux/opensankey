@@ -17,7 +17,14 @@ import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
 
-
+export   const os_all_element_to_transform = [
+  'addNode', 'addFlux', 'removeNode', 'removeFlux',
+  'posNode', 'posFlux', 
+  'Values', 
+  'attrNode', 'attrFlux', 
+  'tagNode', 'tagFlux', 'tagData', 'tagLevel',
+  'attrGeneral'
+]
 
 /**
  *
@@ -27,12 +34,14 @@ import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/
 export const ApplyLayoutDialog = ({ 
   t,dict_hook_ref_setter_show_dialog_components, 
   dict_variable_application_data,
-  updateLayout,convert_data,
+  applicationDraw,convert_data,
   diagramSelector,
   elementToDispose,
   apply_transformation_additional_elements,
-  DefaultSankeyData
+  DefaultSankeyData,
+  ComponentUpdater
 }: ApplyLayoutDialogTypes) => {
+  const {updateLayout,all_element_UpdateLayout}=applicationDraw
   const {data,set_data}=dict_variable_application_data
   const [prev_sankey_data,set_prev_sankey_data] = useState(data)
   const [forceUpdate,setForceUpdate] = useState(true)
@@ -48,14 +57,6 @@ export const ApplyLayoutDialog = ({
     set_node_vspace(data.v_space)
   }
   const node_visible=NodeVisibleOnsSvg()
-  const all_element_to_transform = [
-    'addNode', 'addFlux', 'removeNode', 'removeFlux',
-    'posNode', 'posFlux', 
-    'Values', 
-    'attrNode', 'attrFlux', 
-    'tagNode', 'tagFlux', 'tagData', 'tagLevel',
-    'attrGeneral'
-  ]
   const advanced_element_to_transform = [
     'addNode', 'addFlux', 'removeNode', 'removeFlux',
     'posNode', 'posFlux', 
@@ -129,8 +130,10 @@ export const ApplyLayoutDialog = ({
               }else if(mode_trans==='avancé'){
                 advanced_element_to_transform.forEach(el=>elementToDispose.current.push(el))
               }else{
-                all_element_to_transform.forEach(el=>elementToDispose.current.push(el))
+                console.log('here',all_element_UpdateLayout)
+                all_element_UpdateLayout.forEach(el=>elementToDispose.current.push(el))
               }
+              ComponentUpdater.updateComponentBtnUpdateLayout.current()
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.selectAll')}</Button>
