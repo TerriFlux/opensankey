@@ -15,7 +15,7 @@ export type CounterFType = (
   {url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}
 ) => unknown
 export type ProcessExampleFuncType = (
-    data: SankeyData,
+  dict_variable_application_data:dict_variable_application_dataType,
     updateLayout: updateLayoutFuncType,
     convert_data: ConvertDataFuncType,
     callback: (server_data: SankeyData) => void,

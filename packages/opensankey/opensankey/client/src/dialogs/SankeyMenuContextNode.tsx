@@ -38,7 +38,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   contextMenu.ref_setter_contextualised_node.current=set_contextualised_node
   const [forceUpdate,setForceUpdate]=useState(false)
   const { t } = applicationContext
-  const { data, set_data, display_nodes, display_links } = dict_variable_application_data
+  const { data, set_data } = dict_variable_application_data
   const { multi_selected_nodes,multi_selected_links } = dict_variable_elements_selected
   const { pointer_pos } = contextMenu
   const {RedrawNodes}=node_function
@@ -377,7 +377,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   }}>{t('Noeud.context_agregate')}</Button>:<></>
 
   const btn_desagregate=multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node &&NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-    Desaggregate(contextualised_node,data,display_nodes,display_links,agregation)
+    Desaggregate(contextualised_node,dict_variable_application_data,agregation)
     multi_selected_nodes.current =[]
     node_function.recomputeDisplayedElement()
     set_data({...data})

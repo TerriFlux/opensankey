@@ -23,15 +23,12 @@ typeof globalThis & {
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   contextMenu,
   dict_variable_application_data, 
-  display_nodes,
-  display_links,
   animation,
   dict_variable_elements_selected,
   agregation,
   ref_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
-  const {set_data}=dict_variable_application_data
   const {ref_getter_mode_selection,ref_setter_mode_selection}=dict_variable_elements_selected
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
@@ -155,8 +152,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     border = '2px solid #d3d3d3'
   }
 
-  console.log('here')
-  console.trace('here',dict_variable_application_data.data.width,dict_variable_application_data.data.height)
   const width_to_display=((dict_variable_application_data.data.width) ? dict_variable_application_data.data.width : window.innerWidth*0.975)
   return (
     <>
@@ -175,10 +170,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       </div>
       <AgregationModal
         agregationRef={agregation}
-        data={dict_variable_application_data.data}
-        set_data={set_data}
-        display_nodes={display_nodes}
-        display_links={display_links}
+        dict_variable_application_data={dict_variable_application_data}
       />
     </>
   )

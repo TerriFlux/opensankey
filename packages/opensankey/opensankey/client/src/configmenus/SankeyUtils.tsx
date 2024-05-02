@@ -197,9 +197,7 @@ export const FindMaxLinkValue:FindMaxLinkValueFuncType = (
 export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   inv_scale:(t:number)=>number,
   node: SankeyNode,
-  data: SankeyData,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [node_id: string]: SankeyLink },
+  dict_variable_application_data:dict_variable_application_dataType,
   TestLinkValue: TestLinkValueFuncType,
   ref_link: SankeyLink | undefined = undefined,
   GetLinkValue:GetLinkValueFuncType
@@ -208,6 +206,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   if (node == undefined) {
     return [0,0,0,0]
   }
+  const {data,display_links,display_nodes}=dict_variable_application_data
   const { nodes, links} = data
   let offset_height_left = 0
   let offset_height_right = 0
@@ -285,7 +284,8 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y + +source_node.y
         const node_x = node.position === 'absolute' ? +node.x : +source_node.x + +node.x
         const node_y = node.position === 'absolute' ? +node.y : +source_node.y + +node.y
-        if (ReturnValueLink(data,link,'orientation') === 'vv') {
+        const ori_link = ReturnValueLink(data,link,'orientation')
+        if (ori_link === 'vv') {
           if (source_node_y < node_y) {
             // flux goes down
             top_flux.push(idLink)
@@ -293,7 +293,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
             // flux goes up
             bottom_flux.push(idLink)
           }
-        } else if (ReturnValueLink(data,link,'orientation') === 'hh') {
+        } else if (ori_link === 'hh') {
           if (source_node_x >= node_x && ReturnValueLink(data,link,'recycling') || source_node_x < node_x && !ReturnValueLink(data,link,'recycling')) {
             // flux goes right
             left_flux.push(idLink)
@@ -301,7 +301,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
             // flux goes left
             right_flux.push(idLink)
           }
-        } else if (ReturnValueLink(data,link,'orientation') === 'hv') {
+        } else if (ori_link === 'hv') {
           if (source_node_y < node_y) {
             // flux goes right
             top_flux.push(idLink)
@@ -309,7 +309,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
             // flux goes left
             bottom_flux.push(idLink)
           }
-        } else if (ReturnValueLink(data,link,'orientation') === 'vh') {
+        } else if (ori_link === 'vh') {
           if (source_node_x < node_x) {
             // flux goes right
             left_flux.push(idLink)
@@ -336,11 +336,12 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         the_id = top_flux[i - 1]
       }
 
-      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
+      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -350,7 +351,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free ) {
         // if flux is displayed thin
-        offset_width_top += inv_scale(5)
+        offset_width_top += inv_scale(dict_variable_application_data.min_link_thickness)
       } else {
         offset_width_top += +v
       }
@@ -369,11 +370,12 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
+      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -383,7 +385,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_width_bottom += inv_scale(5)
+        offset_width_bottom += inv_scale(dict_variable_application_data.min_link_thickness)
       } else {
         offset_width_bottom += +v
       }
@@ -403,11 +405,12 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
+      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -417,7 +420,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_height_left += inv_scale(5)
+        offset_height_left += inv_scale(dict_variable_application_data.min_link_thickness)
       } else {
         offset_height_left += +v
       }
@@ -437,11 +440,11 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
+      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -451,7 +454,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_height_right += inv_scale(5)
+        offset_height_right += inv_scale(dict_variable_application_data.min_link_thickness)
       } else {
         offset_height_right += +v
       }
@@ -532,11 +535,11 @@ export const LinkText:LinkTextFuncType = (
 
 
 export const TestLinkValue:TestLinkValueFuncType = (
-  data:SankeyData,
-  nodes: { [node_id: string]: SankeyNode },
+  dict_variable_application_data,
   d: SankeyLink,
   GetLinkValue:GetLinkValueFuncType
 ) => {
+  const {data}=dict_variable_application_data
   const { dataTags } = data
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -545,7 +548,7 @@ export const TestLinkValue:TestLinkValueFuncType = (
     .range([0, 100])
     .domain([0, data.user_scale])
   if (data.show_structure == 'structure' ) {
-    return inv_scale(5)
+    return inv_scale(dict_variable_application_data.min_link_thickness)
   }
   if (data.show_structure == 'data' ) {
     const link_value = GetLinkValue(data, d.idLink)
@@ -555,7 +558,7 @@ export const TestLinkValue:TestLinkValueFuncType = (
       const inv_scale = d3.scaleLinear()
         .domain([0, 100])
         .range([0, data.user_scale])
-      return inv_scale(5)
+      return inv_scale(dict_variable_application_data.min_link_thickness)
     }
   }
   let val = d.value
