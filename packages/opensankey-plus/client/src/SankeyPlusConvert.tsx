@@ -153,6 +153,13 @@ export const plus_convert_data : plus_convert_dataFType = (
       v.view_data={diff:difference}
     }
   })
+  Object.values(data.links).forEach(l=>{
+    const convert_link = l as unknown as {gradient?:boolean}
+    if (convert_link.gradient) {
+      delete convert_link.gradient
+      l.local!.gradient = true
+    }
+  })
 }
 
 export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (

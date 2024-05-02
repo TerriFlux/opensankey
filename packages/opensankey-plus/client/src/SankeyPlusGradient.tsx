@@ -64,7 +64,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   </>
 }
 
-export const LinkStroke : LinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:GetLinkValueFuncType)=>{
+export const PlusLinkStroke : LinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:GetLinkValueFuncType)=>{
 
   const defGradient = d3.select(' .opensankey #svg #sankey_def')
   const nodes = data.nodes
