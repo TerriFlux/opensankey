@@ -1,6 +1,6 @@
-import { PlusApplicationContextType, PlusComponentUpdaterType, PlusLinkFuntionType, SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from './Types'
+import { PlusApplicationContextType, PlusComponentUpdaterType, PlusLinkFuntionType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, display_styleType } from 'open-sankey/src/types/Types'
+import { SankeyNode, display_styleType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
 
 export type menu_conf_link_apparence_gradientFType=(
@@ -30,9 +30,7 @@ export type dragNodeRedrawGradientFType=(
 
 export type SankeyPlusDrawArrowsFType = (
   n: SankeyNode,
-  data:SankeyData,
-  display_nodes:{ [node_id: string]: SankeyNode },
-  display_links:{ [link_id: string]: SankeyLink },
+  dict_variable_application_data:SankeyPlusApplicationDataType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
