@@ -484,7 +484,7 @@ export const ApplyLayoutDialog = ({
             size="sm"
             onClick={() => {              
               dict_variable_application_data.function_on_wait.current=()=>{
-                ComputeAutoSankey(data, node_hspace,false)
+                ComputeAutoSankey(dict_variable_application_data, node_hspace,false)
                 set_data({ ...data })
               }
               dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)

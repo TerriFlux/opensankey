@@ -203,7 +203,7 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
   multi_selected_nodes,
   node_to_update
 ) =>{
-  const {data,display_nodes,display_links}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const {GetLinkValue}=link_function
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -268,7 +268,7 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
 
  
   node_to_update.forEach(n=>{
-    SetNodeHeight(n, display_nodes,display_links,data,scale,inv_scale,GetLinkValue)
+    SetNodeHeight(n,dict_variable_application_data,scale,inv_scale,GetLinkValue)
     d3.select(' .opensankey #gg_' + n.idNode).style('display', () => {
       if (HasLinksZero(data,n)) {
         return 'none'
