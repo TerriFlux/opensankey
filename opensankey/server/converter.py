@@ -508,7 +508,7 @@ class SankeyToJson(object):
                 next_datas_strct[tag.name_unformatted] = copy.deepcopy(datas_json)
             datas_json = next_datas_strct
         # We use result data if present instead of simple data
-        has_data = self._parse_datas_or_results(
+        _ = self._parse_datas_or_results(
             sankey,
             flux,
             default_data_json,
