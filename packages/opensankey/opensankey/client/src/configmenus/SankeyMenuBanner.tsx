@@ -566,7 +566,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   //Popover element to handle filter on links, it contians :
   // - filter on link (if value of link is inferior to filter then the link is not displayed)
   // - filter on link label
-  const popover_link_visual_filter=<Popover id="popover-link-filter" style={{maxWidth:'100%',maxHeight:'600px'}}>
+  const popover_link_visual_filter=<Popover id="popover-link-filter" style={{maxWidth:'100%',maxHeight:'600px',zIndex:1}}>
     <Popover.Header as="h3">{t('Banner.p_aff')}</Popover.Header>
     <Popover.Body >
       <Form>
@@ -650,7 +650,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
 
 
 
-  const struc_data_reconciled=<Popover id='popover-details-level'>
+  const struc_data_reconciled=<Popover id='popover-details-level' style={{zIndex:1}}>
     <Popover.Header as="h3">{t('Banner.sdr')}</Popover.Header>
     <Popover.Body>
       <FormGroup as={Row}>
@@ -707,7 +707,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   </Popover>
 
   //Popover element to handle the display of data tags
-  const filter_data=<Popover id='tooltip-data-color-filter' style={{minWidth:'350px'}}>
+  const filter_data=<Popover id='tooltip-data-color-filter' style={{minWidth:'350px',zIndex:1}}>
     <Popover.Header as="h3">{t('Banner.sdd')}</Popover.Header>
     <Popover.Body>
       {legend_filter}
@@ -750,7 +750,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   </Popover>
 
   //Popover element to handle the display of link tags
-  const filter_color_link=<Popover id='tooltip-node-color-filter' style={{minWidth:'350px'}}>
+  const filter_color_link=<Popover id='tooltip-node-color-filter' style={{minWidth:'350px',zIndex:1}}>
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px'}}>
       {legend_filter}
