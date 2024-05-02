@@ -35,7 +35,9 @@ interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
 const deep_diff = require('deep-diff')
 /* eslint-enable */
 
-
+export const plus_all_element_to_transform = [
+  'Views','icon_catalog','freeLabels'
+]
 export const plus_convert_data : plus_convert_dataFType = (
   data:SankeyPlusData,
   DefaultSankeyData: ()=>SankeyPlusData
@@ -299,11 +301,14 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
 export const apply_transformation_opensankey_plus_elements : apply_transformation_opensankey_plus_elementsFType = (
   data:SankeyPlusData,
   t:TFunction,
-  elementToDispose
+  elementToDispose,
+  ComponentUpdater
 ) => {
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
   const is_current_data_master=data.current_view==='none'
   const [forceUpdate,setForceUpdate]=useState(false)
+  const {updateComponentBtnUpdateLayout}=ComponentUpdater
+  updateComponentBtnUpdateLayout.current=()=>setForceUpdate(!forceUpdate)
   return [
     <InputGroup>
       <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>

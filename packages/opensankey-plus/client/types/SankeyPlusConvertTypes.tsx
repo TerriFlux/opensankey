@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyPlusData } from './Types'
+import { PlusComponentUpdaterType, SankeyPlusData } from './Types'
 import { OpenSankeyDiagramSelectorFType } from 'open-sankey/src/dialogs/types/SankeyMenuDialogsTypes'
 import { MutableRefObject } from 'react'
 
@@ -20,7 +20,8 @@ export type SankeyPlusDiagramSelectorFType = (
 export type apply_transformation_opensankey_plus_elementsFType = (
   data:SankeyPlusData,
   t:TFunction,
-  elementToDispose: MutableRefObject<string[]>
+  elementToDispose: MutableRefObject<string[]>,
+  ComponentUpdater:PlusComponentUpdaterType
 ) => JSX.Element[]
 
 export type plus_sankey_layoutFType=(
