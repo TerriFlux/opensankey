@@ -520,16 +520,16 @@ export type NodeFunctionTypes = {
 }
 
 export type ComponentUpdaterType={
-  updateComponentMenuConfigNode:MutableRefObject<()=>void>
-  updateComponentMenuConfigNodeAppearence:MutableRefObject<()=>void>
-  updateComponentMenuConfigLink:MutableRefObject<()=>void>
-  updateComponentToolbar:MutableRefObject<()=>void>
-  updateComponentMenuConfig:MutableRefObject<()=>void>
-  updateComponentMenuConfigLayout:MutableRefObject<()=>void>
-  updateComponentMenu:MutableRefObject<()=>void>
-  updateComponenSaveInCache:MutableRefObject<(b:boolean)=>void>
-  updateComponentMenuNodeIOSelectSideNode:MutableRefObject<(()=>void)[]>
-  updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>,
-
-
+  updateComponentMenuConfigNode: MutableRefObject<()=>void>
+  updateComponentMenuConfigNodeAppearence: MutableRefObject<()=>void>
+  updateComponentMenuConfigLink: MutableRefObject<()=>void>
+  updateComponentToolbar: MutableRefObject<()=>void>
+  updateComponentMenuConfig: MutableRefObject<()=>void>
+  updateComponentMenuConfigLayout: MutableRefObject<()=>void>
+  updateComponentMenu: MutableRefObject<()=>void>
+  updateComponenSaveInCache: MutableRefObject<(b:boolean)=>void>
+  updateComponentMenuNodeIOSelectSideNode: MutableRefObject<(()=>void)[]>
+  updateMenuConfigTextNodeTooltip: MutableRefObject<(()=>void)[]>
+  updateMenuConfigTextLinkTooltip: MutableRefObject<(()=>void)[]>  
+  updateComponentBtnUpdateLayout : MutableRefObject<(()=>void)>
 }

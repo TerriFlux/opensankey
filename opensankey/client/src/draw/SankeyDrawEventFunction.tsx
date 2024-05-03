@@ -70,7 +70,7 @@ export const EventNodeClick : EventNodeClickFType =(
 )=>{
   const {ref_getter_mode_selection, multi_selected_nodes}=dict_variable_elements_selected
   const {nodes_accordion_ref,accordion_ref,button_ref}=uiElementsRef
-  const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode,updateMenuConfigTextNodeTooltip}=ComponentUpdater
   multi_selected_nodes.current.forEach(n=>DeselectVisualyNodes(n))
   if (  (event.ctrlKey || event.metaKey)) {
     ref_getter_mode_selection.current='s'
@@ -131,7 +131,8 @@ export const EventNodeClick : EventNodeClickFType =(
   }
   updateComponentMenuConfigNode.current()
   updateComponentMenuConfigNodeAppearence.current()
-  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
+  updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
 }
 
 export const EventNodeContextMenu: EventNodeContextMenuFType = (
