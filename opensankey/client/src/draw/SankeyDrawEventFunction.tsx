@@ -747,10 +747,6 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
   const {data}=dict_variable_application_data
   svgSankey
     .attr('transform', t)
-  // Change the width of scrollable zone if the menu is open so we can scroll until the menu is not on the sankey zone
-  if (d3.select('.offcanvas-body').node()) {
-    d3.select('.scroll_zone').style('width', ((data.width + 600) * evt.transform.k - (600 * (evt.transform.k - 1.1))) + 'px')
-  }
   //Compensate the scale of the legend when we dezoom so the legend has alway a readable size
   const scale_legend = 1 / ((evt.transform.k < 1) ? evt.transform.k : 1)
   svgSankey
@@ -813,7 +809,6 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
 export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(dict_variable_application_data,GetSankeyMinWidthAndHeight)=>{
   [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
   const scale_svg=returnScaleOfDrawArea()
-
   d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
   d3.select('.scroll_zone').style('height',((dict_variable_application_data.data.height+200)*scale_svg-(200*(scale_svg-1.1)))+'px')
 }
