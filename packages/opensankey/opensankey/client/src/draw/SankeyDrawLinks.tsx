@@ -187,26 +187,29 @@ const eventLinkClick=(
 
     }
 
-    if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
-      button_ref.current.click()
-    }
-    // Open element accordion if not already openend
-    if (
-      accordion_ref &&
-      accordion_ref.current &&
-      d3.select(accordion_ref.current).attr('aria-expanded')==='false'
-    ) {
-      accordion_ref.current.click()
+    if(event.ctrlKey){
+      if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
+        button_ref.current.click()
+      }
+      // Open element accordion if not already openend
+      if (
+        accordion_ref &&
+        accordion_ref.current &&
+        d3.select(accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        accordion_ref.current.click()
+      }
+
+      // Open link accordion if not already openend
+      if (
+        links_accordion_ref &&
+        links_accordion_ref.current &&
+        d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
+      ) {
+        links_accordion_ref.current.click()
+      }
     }
 
-    // Open link accordion if not already openend
-    if (
-      links_accordion_ref &&
-      links_accordion_ref.current &&
-      d3.select(links_accordion_ref.current).attr('aria-expanded')==='false'
-    ) {
-      links_accordion_ref.current.click()
-    }
     if(multi_selected_links.current.length>0){
       let new_tags_selected=tags_selected
       const link_data_ref=multi_selected_links.current[0].idLink
