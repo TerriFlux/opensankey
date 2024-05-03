@@ -350,7 +350,7 @@ export const PlusLinkStroke : LinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlus
     }
     )
   }
-  return (l_grad) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : LinkStrokeOSTyped(l,data,GetLinkValue)
+  return (data.linksColorMap==='no_colormap' && l_grad) ? 'url(#gradient-' + l.idSource + '-' + l.idTarget + ')' : LinkStrokeOSTyped(l,data,GetLinkValue)
 }
 
 // Function used to create gradient for each link, but are used only if the link has the gradient varibale at true
@@ -544,7 +544,7 @@ export const SankeyPlusDrawArrows : DrawArrowsType = (
   for (const id_link of n.inputLinksId) {
     const l_arrow=ReturnValueLink(data,data.links[id_link],'arrow')
     const l_grad=PlusReturnValueLink(data as SankeyPlusData,data.links[id_link] as SankeyPlusLink,'gradient')
-    if(l_arrow && l_grad){
+    if(l_arrow && l_grad && data.linksColorMap==='no_colormap'){
       d3.selectAll(' .opensankey #path_'+id_link+'_arrow').attr('fill',NodeColor(n,data)??'')
     }
   }
