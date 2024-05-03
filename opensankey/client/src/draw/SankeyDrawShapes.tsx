@@ -1,10 +1,33 @@
 import * as d3 from 'd3'
-import { ReturnValueNode, ComputeTotalOffsets, TestLinkValue, ReturnValueLink, LinkVisible } from '../configmenus/SankeyUtils'
-import { GetLinkValueFuncType, LinkColorFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { SankeyNode, SankeyLink, SankeyLinkValue } from '../types/Types'
-import { SetNodeHeight } from './SankeyDrawFunction'
-import { ComputeEndPointsFType,DrawLinkStartSabotFType } from './types/SankeyShapesTypes'
-import { draw_arrowFType, DrawLinkSabotFType, bezier_link_classic_vvFType } from './types/SankeyShapesTypes'
+
+import {
+  SankeyNode,
+  SankeyLink,
+  SankeyLinkValue
+} from '../types/Types'
+import {
+  ReturnValueNode,
+  ComputeTotalOffsets,
+  TestLinkValue,
+  ReturnValueLink,
+  LinkVisible
+} from '../configmenus/SankeyUtils'
+import {
+  GetLinkValueFuncType,
+  LinkColorFuncType
+} from '../configmenus/types/SankeyUtilsTypes'
+import {
+  SetNodeHeight
+} from './SankeyDrawFunction'
+import {
+  ComputeEndPointsFType,
+  DrawLinkStartSabotFType
+} from './types/SankeyShapesTypes'
+import {
+  draw_arrowFType,
+  DrawLinkSabotFType,
+  bezier_link_classic_vvFType
+} from './types/SankeyShapesTypes'
 
 const default_horiz_shift = 50
 
@@ -45,7 +68,7 @@ export const draw_arrow : draw_arrowFType = (
   const node_face_size_scaled_by_ratio_cumulative_value=node_face_size * ratio_cum
   const node_face_size_scaled_by_ratio_current_value=node_face_size * ratio_cur
   const arrow_length_oriented=coeff * arrow_length
-  
+
   let d
   if (horizontal) {
     if (ratio_cum + ratio_cur < 1) {
@@ -91,7 +114,7 @@ export const draw_arrow : draw_arrowFType = (
 // When node arrow is horizontal (right & left) :
 //      _______            _______
 //      \      |          |      /
-//       \     |          |     /  This part is drawed when (ratio_cum + ratio_cur < 1) 
+//       \     |          |     /  This part is drawed when (ratio_cum + ratio_cur < 1)
 //        \    |          |    /
 //         \___|__________|___/______________________
 //          \  |          |  /
@@ -144,7 +167,7 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
-      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum+ratio_cur-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) 
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum+ratio_cur-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   } else {
@@ -163,7 +186,7 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
       d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1])
-      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)) 
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   }
@@ -441,7 +464,7 @@ export const bezier_link_classic_recycling = (
   }
 
   const curved_sign = curved ? 1 : 0
-  let x1 = x0 + factor * default_horiz_shift + factor * right_horiz_shift 
+  let x1 = x0 + factor * default_horiz_shift + factor * right_horiz_shift
   const y1 = y0
   let x16 = x17 - factor * default_horiz_shift + factor * left_horiz_shift
   const y16 = y17
@@ -529,7 +552,14 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     node_angle = ReturnValueNode(data, n, 'node_arrow_angle_factor') as number
     node_angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
   }
-  const res = ComputeTotalOffsets(inv_scale, n,dict_variable_application_data, TestLinkValue, undefined, GetLinkValue)
+  const res = ComputeTotalOffsets(
+    inv_scale,
+    n,
+    dict_variable_application_data,
+    TestLinkValue,
+    undefined,
+    GetLinkValue
+  )
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
   for (let i = 0; i < n.outputLinksId.length; i++) {
@@ -537,10 +567,26 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     const node_target = data.nodes[l.idTarget]
     const ori = ReturnValueLink(data, l, 'orientation')
     const recy = ReturnValueLink(data, l, 'recycling')
-    const link_output_to_right = (n.x < node_target.x) && node_angle_direction === 'right' && (ori === 'hh' || ori === 'hv')
-    const link_output_to_left = (n.x > node_target.x) && node_angle_direction === 'left' && (ori === 'hh' || ori === 'hv')
-    const link_output_to_top = (n.y > node_target.y) && node_angle_direction === 'top' && (ori === 'vv' || ori === 'vh')
-    const link_output_to_bottom = (n.y < node_target.y) && node_angle_direction === 'bottom' && (ori === 'vv' || ori === 'vh')
+    const link_output_to_right = (
+      (n.x < node_target.x) &&
+      (node_angle_direction === 'right') &&
+      (ori === 'hh' || ori === 'hv')
+    )
+    const link_output_to_left = (
+      (n.x > node_target.x) &&
+      (node_angle_direction === 'left') &&
+      (ori === 'hh' || ori === 'hv')
+    )
+    const link_output_to_top = (
+      (n.y > node_target.y) &&
+      (node_angle_direction === 'top') &&
+      (ori === 'vv' || ori === 'vh')
+    )
+    const link_output_to_bottom = (
+      (n.y < node_target.y) &&
+      (node_angle_direction === 'bottom') &&
+      (ori === 'vv' || ori === 'vh')
+    )
 
     const link_direction_same_as_node_arrow = link_output_to_right || link_output_to_left || link_output_to_top || link_output_to_bottom
     // If the link don't exit by the node arrow direction, then don't draw the sabot
@@ -562,7 +608,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
       if (display_free_as_dashed) {
         // Generale settings: free link value are displayed dashed without text without witdh
-        const link_value_is_free = extension?.free_mini !== undefined ?? false
+        const link_value_is_free = (extension?.free_mini !== undefined)
         if (link_value_is_free) {
           // Link value is free should be displayed dashed without text
           link_value = inv_scale(dict_variable_application_data.min_link_thickness)
@@ -689,7 +735,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         is_structure = true
       }
     } else if (data.show_structure === 'reconciled') {
-      const link_value_is_free = theLinkValue.extension?.free_mini !== undefined ?? false
+      const link_value_is_free = (theLinkValue.extension?.free_mini !== undefined)
       if (link_value_is_free) {
         // If the link is free we check if data allow indeterminate free null link
         //  to be considerate as visible
