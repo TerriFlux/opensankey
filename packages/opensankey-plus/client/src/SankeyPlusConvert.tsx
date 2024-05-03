@@ -159,6 +159,9 @@ export const plus_convert_data : plus_convert_dataFType = (
     const convert_link = l as unknown as {gradient?:boolean}
     if (convert_link.gradient) {
       delete convert_link.gradient
+      if (!l.local) {
+        l.local = {}
+      }
       l.local!.gradient = true
     }
   })
