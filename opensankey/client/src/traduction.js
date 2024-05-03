@@ -332,6 +332,7 @@ export const open_resources = {
       Noeud:{
         Nom:'Name',
         Style:'Style',
+        multi_style:'Selected nodes have different style',
         editStyle:'Assign a style',
         context_agregate:'Agregate',
         context_desagregate:'Desagregate',
@@ -1013,6 +1014,7 @@ export const open_resources = {
         Nom:'Nom',
         Style:'Style',
         editStyle:'Assigner un style',
+        multi_style:'Multiple style sélectionné',
         SelectStyle:'Sélectionner un style',
         context_agregate:'Agréger',
         context_desagregate:'Désagréger',
