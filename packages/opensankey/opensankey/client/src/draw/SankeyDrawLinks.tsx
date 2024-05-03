@@ -1,24 +1,60 @@
-import { SankeyLink, SankeyData, SankeyNode, dict_variable_application_dataType, dict_variable_elements_selectedType, ComponentUpdaterType } from '../types/Types'
 import React, { MutableRefObject } from 'react'
 import * as d3 from 'd3'
-import {  AssignLinkLocalAttribute, LinkColor,LinkVisible,ReturnValueLink,ReturnValueNode, TestLinkValue} from '../configmenus/SankeyUtils'
-import { 
-  drawCurveFunction, 
+
+import {
+  SankeyLink,
+  SankeyData,
+  SankeyNode,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType,
+  ComponentUpdaterType
+} from '../types/Types'
+import {
+  AssignLinkLocalAttribute,
+  LinkColor,
+  LinkVisible,
+  ReturnValueLink,
+  ReturnValueNode,
+  TestLinkValue
+} from '../configmenus/SankeyUtils'
+import {
+  drawCurveFunction,
   StrokeDasharray,
-  GetSankeyMinWidthAndHeight, DeselectVisualyLinks, SelectVisualyLinks, DrawLinkText} from './SankeyDrawFunction'
-import { EventLinkContextMenu } from './SankeyDrawEventFunction'
-import {ValueSelectedParameter,LinkStrokeWidth} from './SankeyDrawFunction'
-import { ComputeEndPoints, DrawLinkStartSabot } from './SankeyDrawShapes'
-import { AddDrawLinksEventsFType, DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType  } from './types/SankeyDrawLinksTypes'
-import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { DragLinkEvent } from './SankeyDragLinks'
+  GetSankeyMinWidthAndHeight,
+  DeselectVisualyLinks,
+  SelectVisualyLinks,
+  DrawLinkText
+} from './SankeyDrawFunction'
+import {
+  EventLinkContextMenu
+} from './SankeyDrawEventFunction'
+import {
+  ValueSelectedParameter,
+  LinkStrokeWidth
+} from './SankeyDrawFunction'
+import {
+  ComputeEndPoints,
+  DrawLinkStartSabot
+} from './SankeyDrawShapes'
+import {
+  AddDrawLinksEventsFType,
+  DrawAllLinksFType,
+  drawAddLinksFType,
+  drawLinkShapeFType
+} from './types/SankeyDrawLinksTypes'
+import {
+  GetLinkValueFuncType
+} from '../configmenus/types/SankeyUtilsTypes'
+import {
+  DragLinkEvent
+} from './SankeyDragLinks'
 
 declare const window: Window &
 typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-// Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear 
+// Function triggerd when a link is clicked, based on if it's to select or deselect a link, some elment will appear or disappear
 //(center handle,shift handles,drag zone) and add pointer event to those element
 
 // Function that return the side of link label
@@ -26,17 +62,24 @@ const TextLinkSide=(link:SankeyLink,data:SankeyData)=>{
   if (ReturnValueLink(data,link,'recycling')) {
     if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
       return 'left'
-    } else if (ReturnValueLink(data,link,'label_position') === 'middle' && ReturnValueLink(data,link,'orientation') === 'hh') {
+    }
+    else if (
+      ReturnValueLink(data,link,'label_position') === 'middle' &&
+      ReturnValueLink(data,link,'orientation') === 'hh'
+    ) {
       return 'right'
     }
-    return 'left'
-  } else {
+    else {
+      return 'left'
+    }
+  }
+  else {
     if (data.nodes[link.idSource].x < data.nodes[link.idTarget].x) {
       return 'left'
-    } else {
+    }
+    else {
       return 'right'
     }
-    return 'left'
   }
 }
 
@@ -263,7 +306,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
             DrawLinkText(dict_variable_application_data, link, +link_value, xs, ys, xt, yt,LinkText,GetLinkValue,applicationContext.t,scale,inv_scale)
           }
 
-    
+
         }
       })
       .on('drag', function (event, link) {
@@ -408,7 +451,7 @@ export const DrawAllLinks : DrawAllLinksFType = (
   )
 }
 /**
- * Add Visual element to represent 
+ * Add Visual element to represent
  */
 export const drawAddLinks:drawAddLinksFType = (
   contextMenu,
@@ -457,7 +500,7 @@ export const drawAddLinks:drawAddLinksFType = (
       )
     }
   })
-  
+
   drawLinkShape(
     dict_variable_application_data,
     dict_variable_elements_selected,
@@ -549,7 +592,15 @@ export const drawLinkShape:drawLinkShapeFType  = (
     .attr('visibility', d => {
       let tmp=GetLinkValue(data, d.idLink).value as number
       tmp=(tmp)?tmp:0
-      return  LinkVisible(d, data,display_nodes) && tmp >= max_filter_label? 'visible' : 'hidden'
+      return (
+        LinkVisible(
+          d,
+          data,
+          display_nodes
+        ) &&
+        (tmp >= max_filter_label))?
+        'visible' :
+        'hidden'
     })
 
 
@@ -565,7 +616,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
     .attr('side', link => TextLinkSide(link,data))
     .attr('class', 'link_value')
     .attr('href', d => '#path_' + d.idLink)
-    
+
 
 
   let error_msg: { text?: string | undefined } | undefined
@@ -616,7 +667,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
 
 /**
  * Function used to delete visual elements of links
- * @param links_to_delete List of links id 
+ * @param links_to_delete List of links id
  */
 export const DeleteGLinks=(links_to_delete:string[])=>{
   (d3
@@ -626,5 +677,5 @@ export const DeleteGLinks=(links_to_delete:string[])=>{
   links_to_delete.forEach(lid=>{
     d3.selectAll(' .opensankey #gg_link_handle_'+lid).remove()
   })
-  
+
 }
