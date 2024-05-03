@@ -142,7 +142,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
       if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? CutName(data.style_node[style_to_display].name,20 ) : 'Multiple style parmi les noeuds sélectionnés'
+        return (inchangee) ? CutName(data.style_node[style_to_display].name,20 ) : t('Noeud.multi_style')
       } else {
         return 'Aucun'
       }
