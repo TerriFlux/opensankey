@@ -58,6 +58,8 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (animation.current) {
       return
     }
+  [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
+
     RemoveAnimate()
     d3.select('#svg').style('background-color',dict_variable_application_data.data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
@@ -111,8 +113,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           SvgDragMiddleMouseMove(event,dict_variable_application_data.data)
         })
         .on('end',()=>{
-
-          // AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+          
           [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
           svgSankey.style('width', dict_variable_application_data.data.width + 'px')
           svgSankey.style('height', dict_variable_application_data.data.height + 'px')
