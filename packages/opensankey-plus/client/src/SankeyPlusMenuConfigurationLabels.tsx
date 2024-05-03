@@ -1,5 +1,7 @@
 // Standard libs
 import React, { Ref, useState, ChangeEvent, FunctionComponent } from 'react'
+import * as d3 from 'd3'
+
 import {
   Form,
   FormControl,
@@ -12,7 +14,6 @@ import { FaAngleDown, FaAngleUp, FaMinus, FaPlus} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 import ReactQuill, { Quill } from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
-import * as d3 from 'd3'
 
 // Imported libs
 import {
@@ -36,6 +37,7 @@ import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 
 // Local libs
 import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
+import { deleteGLabel } from './SankeyPlusLabels'
 import { SankeyPlusContextMenuType, SankeyPlusData,SankeyPlusLabel} from '../types/Types'
 import {
   SankeyPlusMenuConfigurationFreeLabelsFType,
@@ -44,12 +46,11 @@ import {
   context_zdtFType,
   zdtMenuAsAccordeonItemType
 } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
+import { OSTooltip } from './import/OpenSankey'
 
-// OpenSankey libs
+// OpenSankey js-code
 import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
 import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
-import { deleteGLabel } from './SankeyPlusLabels'
-import { OSTooltip } from './import/OpenSankey'
 
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
@@ -372,7 +373,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           }
           data.labels[new_label.idLabel] = new_label
           multi_selected_label.current = [new_label]
-            
+
           reDrawPlusLabels(multi_selected_label.current)
           setForceUpdate(!forceUpdate)
         }
@@ -411,7 +412,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             handleUplabel(l.idLabel)
           })
         }}><FaAngleDown /></Button>
-      
+
     </Box>
 
     <Box
@@ -506,7 +507,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             value={allLabelHeight()}
             onChange={evt => {
               multi_selected_label.current.map(d => d.label_height = +evt)
-          
+
               reDrawPlusLabels(multi_selected_label.current)
               setForceUpdate(!forceUpdate)
             }}
@@ -536,7 +537,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             value={allLabelWidth()}
             onChange={evt => {
               multi_selected_label.current.map(d => d.label_width = +evt)
-          
+
               reDrawPlusLabels(multi_selected_label.current)
               setForceUpdate(!forceUpdate)
             }}
@@ -572,7 +573,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           onChange={evt => {
             const val = evt.target.value
             multi_selected_label.current.map(d => d.color = val)
-          
+
             reDrawPlusLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
           }}
@@ -598,7 +599,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             onChange={evt => {
               const value=+evt
               multi_selected_label.current.map(d => d.opacity = value)
-          
+
               reDrawPlusLabels(multi_selected_label.current)
               setForceUpdate(!forceUpdate)
             }}
@@ -634,7 +635,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           onChange={evt => {
             const val = evt.target.value
             multi_selected_label.current.map(d => d.color_border = val)
-          
+
             reDrawPlusLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
           }}
@@ -648,7 +649,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           isChecked={valAllLabelBorderTransparent[0]}
           onChange={(evt) => {
             multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
-          
+
             reDrawPlusLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
           }}>
@@ -772,16 +773,20 @@ export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
       >
         {t('Menu.LL')}
       </Box>
-      {(!has_open_sankey_plus)?<OSTooltip label={t('Menu.sankeyPlusDisabled')} >
-        <Badge pill
-          bg="white"
-          style={{marginLeft:'5px', fontSize:'1.3em'}}>
-          <FontAwesomeIcon
-            icon={faLock}
-            style={{
-              color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
-        </Badge>
-      </OSTooltip>:<></>}
+      {
+        (!has_open_sankey_plus)?
+          <OSTooltip label={t('Menu.sankeyPlusDisabled')} >
+            <Badge pill
+              bg="white"
+              style={{marginLeft:'5px', fontSize:'1.3em'}}>
+              <FontAwesomeIcon
+                icon={faLock}
+                style={{
+                  color: 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'}} />
+            </Badge>
+          </OSTooltip>:
+          <></>
+      }
       <AccordionIcon/>
     </AccordionButton>
     <AccordionPanel>

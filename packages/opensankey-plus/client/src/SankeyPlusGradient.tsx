@@ -1,15 +1,38 @@
+// External imports
 import React, { useState } from 'react'
 import * as d3 from 'd3'
-import { Badge} from 'react-bootstrap'
+
+import { Badge } from 'react-bootstrap'
 import { Checkbox } from '@chakra-ui/react'
 
-import { ReturnValueLink,IsAllLinkAttrSameValue, ReturnValueNode,IsLinkDiplayingValueLocal, NodeColor, LinkStrokeOSTyped, DrawArrows, OSTooltip } from './import/OpenSankey'
-import { SankeyPlusData,SankeyPlusNode,SankeyPlusLink } from '../types/Types'
-import { LinkStrokeFType, dragNodeRedrawGradientFType, menu_conf_link_apparence_gradientFType } from '../types/SankeyPlusGradientTypes'
+// Local imports
+import { PlusReturnValueLink, PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
+import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink } from '../types/Types'
+import {
+  LinkStrokeFType,
+  dragNodeRedrawGradientFType,
+  menu_conf_link_apparence_gradientFType
+} from '../types/SankeyPlusGradientTypes'
+import {
+  ReturnValueLink,
+  IsAllLinkAttrSameValue,
+  ReturnValueNode,
+  IsLinkDiplayingValueLocal,
+  NodeColor,
+  LinkStrokeOSTyped,
+  DrawArrows,
+  OSTooltip
+} from './import/OpenSankey'
 
-import { SankeyLinkAttrLocal, SankeyNode, display_styleType} from 'open-sankey/src/types/Types'
-import { PlusReturnValueLink,PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
+// OpenSankey types
+import {
+  SankeyLinkAttrLocal,
+  SankeyNode,
+  display_styleType
+} from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+
+// OpenSankey js-code
 import {TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
@@ -26,9 +49,9 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
 )=>{
   const {t}=applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
-  // I have to do this because when we change selected_style_link it only re-render SankeyModalStyleLink 
-  // who re-render MenuConfigurationLinksAppearence 
-  // but menu_conf_link_apparence_gradient is rendered outside the scope of SankeyModalStyleLink 
+  // I have to do this because when we change selected_style_link it only re-render SankeyModalStyleLink
+  // who re-render MenuConfigurationLinksAppearence
+  // but menu_conf_link_apparence_gradient is rendered outside the scope of SankeyModalStyleLink
   // so selected_style_link can be out of sync with the real selected_style_link
   if(menu_for_style && !Object.keys(data.style_link).includes(selected_style_link.current)){
     selected_style_link.current=(Object.keys(data.style_link)[0])
@@ -41,7 +64,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   return <>
 
     <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
-      <Checkbox 
+      <Checkbox
         variant='menuconfigpanel_option_checkbox'
         isDisabled={!is_activated}
         isIndeterminate={gradChecked[1]}
@@ -53,7 +76,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
           })
           link_function.RedrawLinks(multi_selected_links.current)
           ComponentUpdater.updateComponenSaveInCache.current(false)
-          
+
           setForceUpdate(!forceUpdate)
         }}>
         {t('Flux.apparence.grad')}

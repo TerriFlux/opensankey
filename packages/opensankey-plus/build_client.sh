@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Function that trigger exit depending on command output code
 exit_if_error() {
   local exit_code=$1
   shift
@@ -9,10 +10,95 @@ exit_if_error() {
     }
 }
 
+# Check input args
+install=false
+linter=false
+build=false
+dist=false
+link=false
+link_dirs=()
+skip_gdeps=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --install-deps | -I )
+      install=true
+      shift # past argument
+      ;;
+    --linter | -L )
+      linter=true
+      shift # past argument
+      ;;
+    --build | -B)
+      build=true
+      shift # past argument
+      ;;
+    --no-dist | -D)
+      dist=true
+      shift # past argument
+      ;;
+    --link | -K)
+      link=true
+      link_dirs+=("$2") # save positional arg
+      shift # past argument
+      shift # past value
+      ;;
+    --skip_gdeps)
+      skip_gdeps=true
+      shift # past argument
+      ;;
+    --help | -H)
+      echo 'Options: '
+      echo '--install-deps | -I : Install node modules dependencies'
+      echo '--linter | -L : Run linter'
+      echo '--build | -B : Run build'
+      echo '--dist | -D : Compile dist'
+      echo '--link | -K : Link to node package manager'
+      echo '--skip_gdeps : Skip install of global deps'
+      exit 1
+      ;;
+    *)
+      echo 'Unknown option $1'
+      echo ''
+      echo 'Options: '
+      echo '--install-deps | -I : Install node modules dependencies'
+      echo '--linter | -L : Run linter'
+      echo '--build | -B : Run build'
+      echo '--dist | -D : Compile dist'
+      echo '--link | -K : Link to node package manager'
+      echo '--skip_gdeps : Skip install of global deps'
+      exit 1
+      ;;
+  esac
+done
+
+# Install global dependencies
+if [ "$skip_gdeps" = false ] ; then
+  printf "Global dependencies ------------------------------------------------\n"
+  global=`npm root -g`
+  printf ">>> Installation dans "${global}"\n"
+  npm install -g pnpm
+fi
+
 # Front-end build
+printf "\nBuild --------------------------------------------------------------\n"
 cd client
-npm install --legacy-peer-deps || exit_if_error $?
-npm link --legacy-peer-deps open-sankey || exit_if_error $?
-# npm run lint || exit_if_error $?
-npm run build || exit_if_error $?
+if [ "$install" = true ] ; then
+  printf ">>> Install deps\n\n" && pnpm install || exit_if_error $?
+  printf "\n"
+fi
+if [ "$linter" = true ] ; then
+  printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
+fi
+if [ "$link" = true ] ; then
+  printf ">>> Link with other modules \n" && pnpm link ${link_dirs[@]} || exit_if_error $?
+  printf "\n"
+fi
+if [ "$build" = true ] ; then
+  printf ">>> Build standalone\n" && CI= pnpm run build || exit_if_error $?
+fi
+if [ "$dist" = true ] ; then
+  printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
+fi
 cd ..
+printf "OK -----------------------------------------------------------------\n"

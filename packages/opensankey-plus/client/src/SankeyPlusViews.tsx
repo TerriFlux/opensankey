@@ -1,8 +1,15 @@
 // Standard libs
 import React, { ChangeEvent, useRef, useState } from 'react'
 import * as d3 from 'd3'
+
 import { TFunction } from 'i18next'
 import LZString from 'lz-string'
+import {
+  Diff,
+  diff as getDiff,
+  applyChange
+} from 'deep-diff'
+
 import {
   Form,
   Toast,
@@ -33,7 +40,8 @@ import {
   Th,
   Thead,
   Tr,
-  Button} from '@chakra-ui/react'
+  Button
+} from '@chakra-ui/react'
 
 // OpenSankey Libs
 import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
@@ -74,10 +82,6 @@ import {
 } from './import/OpenSankey'
 import { deleteGLabel } from './SankeyPlusLabels'
 
-/* eslint-disable */
-// @ts-ignore
-const deep_diff = require('deep-diff')
-/* eslint-enable */
 export const getSetDiagramFunc : getSetDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
   set_view: (s:string)=>void,
@@ -154,7 +158,6 @@ export const GetDataFromView : GetDataFromViewFType = (
   master_data:SankeyPlusData|undefined,
   id_view_to_see:string
 )=>{
-  const applyChange = deep_diff.applyChange
   // Copy master data
   if (!master_data) {
     alert('sankey master undefined')
@@ -175,18 +178,18 @@ export const GetDataFromView : GetDataFromViewFType = (
     if (!diff_view) {
       return data_init
     }
-    diff_view.forEach((d :{path:string[],kind:string}) => applyChange(data_init, {}, d))
+    diff_view.forEach((d) => applyChange(data_init, {}, d))
   }else{
     data_init=view_object.view_data as SankeyPlusData
   }
   updateLayoutOSTyped(data_init,master_data,view_object.heredited_attr_from_master)
   // updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
   return data_init
-
 }
 
-export const FilterView : FilterViewFType =(pre_diff:{path:string[],kind:string,item:{kind:string}}[])=>{
-  return JSON.parse(JSON.stringify(pre_diff))
+export const FilterView : FilterViewFType = (pre_diff) => {
+  return JSON
+    .parse(JSON.stringify(pre_diff))
     .filter((d:{path:string[]})=>{
       return !d.path.includes('view')
     })
@@ -200,7 +203,7 @@ export const FilterView : FilterViewFType =(pre_diff:{path:string[],kind:string,
       if(d.kind === 'E'){
         delete ((d as unknown) as differenceType).lhs
       }
-      return d
+      return d as Diff<undefined, SankeyPlusData>
     })
 }
 
@@ -218,15 +221,15 @@ export const RecomputeViews : RecomputeViewsFType = (
 
       if((current_v.view_data as SankeyPlusData).version){
         current_v.view_data=data_view
-      }else{
-        let difference = deep_diff.diff(new_master_data,data_view)
+      }
+      else{
+        let difference = getDiff(new_master_data, data_view)
         difference = (difference !== undefined) ? difference : []
         difference = FilterView(difference)
         if (difference.length > 0) {
           (current_v.view_data as DiffType).diff = difference
         }
       }
-
     })
   }
   // master data is now set
@@ -321,15 +324,15 @@ export const keyHandler : keyHandlerFType = (
         // If we do a control+S while we are on a view, we save the difference between the data we are handling
         // and the master data. These difference are the saved the view we are currently on
         // Get difference between master_data and the current data then save it in view
-        let difference = deep_diff.diff(master_data, data)
-        difference=(difference !== undefined)?difference:[]
-        difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-        difference=FilterView(difference)
-  
+        let difference = getDiff(master_data, data)
+        difference = (difference !== undefined)?difference:[]
+        difference = difference.filter((d) => !(d.path!.includes('view')))
+        difference = FilterView(difference)
+
         // Check wich format of the view is better optimized for memory storage
         const raw_is_smaller_than_diff=JSON.stringify(data).length<JSON.stringify(difference).length
         master_data!.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff?JSON.parse(JSON.stringify(data)):{diff:difference}
-  
+
         // Save master data with the view we are currently working on updated
         set_master_data({...master_data!})
         // Save master_data data in localStorage
@@ -348,7 +351,7 @@ export const keyHandler : keyHandlerFType = (
     if(view!=='none'){
       dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current!(true)
     }
-    dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)  
+    dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
 
 
 
@@ -361,9 +364,9 @@ export const keyHandler : keyHandlerFType = (
     // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
     let saved=true
     if(view !== 'none' && connected ){
-      const diff=CheckCurrentViewSaved(master_data,data,view)
+      const diff = CheckCurrentViewSaved(master_data, data,view)
       if(diff.length>0 && !window.SankeyToolsStatic){
-        saved=false
+        saved = false
         set_view_not_saved(view)
         set_view('none')
       }
@@ -394,8 +397,8 @@ export const keyHandler : keyHandlerFType = (
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
       let saved=true
       if(view !== 'none' &&  connected ){
-        const diff=CheckCurrentViewSaved(master_data,data,view)
-        if(diff.length>0 && !window.SankeyToolsStatic){
+        const diff = CheckCurrentViewSaved(master_data, data, view)
+        if (diff.length>0 && !window.SankeyToolsStatic) {
           saved=false
           set_view_not_saved(view)
           set_view(master_data!.view[ind-1].id)
@@ -795,7 +798,7 @@ export const viewsAccordion : viewsAccordionFType = (
             </Tbody>
           </Table>
         </Box>
-  
+
 
       </AccordionPanel>
     </AccordionItem>
@@ -820,10 +823,15 @@ export const viewsAccordion : viewsAccordionFType = (
             const imported_data=JSON.parse(JSON.stringify(result_data))
             imported_data.view=[]
             convert_data(imported_data,DefaultSankeyData)
-            let difference = deep_diff.diff(master_data,imported_data)
-            difference=JSON.parse(JSON.stringify((difference !== undefined)?difference:[]))
-            difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
-            cur_view.view_data = {diff:difference}
+            let difference = getDiff(master_data, imported_data)
+            difference = JSON.parse(
+              JSON.stringify(
+                (difference !== undefined)?
+                  difference:[]
+              )
+            )
+            difference = (difference as Diff<undefined, SankeyPlusData>[]).filter((d) => !(d.path!.includes('view')))
+            cur_view.view_data = { diff: difference }
 
             cur_view.nom = (files[0].name).replace('.json','')
 
@@ -844,7 +852,7 @@ export const CheckCurrentViewSaved : CheckCurrentViewSavedFType =(
   master_data:SankeyPlusData| undefined,
   data:SankeyPlusData| undefined,
   view:string
-)=>{
+) => {
   const view_data = GetDataFromView(master_data,view)
   //const data=JSON.parse(JSON.stringify(data))
   //const updated_diff=JSON.parse(JSON.stringify(original_diff))
@@ -852,11 +860,16 @@ export const CheckCurrentViewSaved : CheckCurrentViewSavedFType =(
   //updateLayout(data_updated_layout,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
   //updateLayout(updated_diff,master_data,master_data.view.filter(v=>v.id===view)[0].heredited_attr_from_master)
 
-  let difference = deep_diff.diff(view_data, data)
-  difference=(difference !== undefined)?difference:[]
-  difference=difference.filter((d:{path:string[],kind:string,item:{kind:string}})=>{
+  let difference = getDiff(view_data, data)
+  difference = (difference !== undefined)?difference:[]
+  difference = difference.filter((d)=>{
     // Ne prend pas en compte les modif de vue, de la largeur ou hauteur du sankey
-    return d.path[0] !== 'current_view' && d.path[0] !== 'view'  && d.path[0] !== 'width' && d.path[0] !== 'height' && !(d.path.length === 4 && d.path[3] === 'vert_shift')
+    return (
+      (d.path![0] !== 'current_view') &&
+      (d.path![0] !== 'view') &&
+      (d.path![0] !== 'width') &&
+      (d.path![0] !== 'height') &&
+      !(d.path!.length === 4 && d.path![3] === 'vert_shift'))
   })
   return difference
 }
@@ -1317,9 +1330,9 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
           onClick={()=>{
             // Save the view before changing to the selected one
 
-            let difference = deep_diff.diff(master_data, data)
-            difference=(difference !== undefined)?difference:[]
-            difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'))
+            let difference = getDiff(master_data, data)
+            difference = (difference !== undefined)?difference:[]
+            difference = difference.filter((d)=>!(d.path!.includes('view')))
             master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = {diff:difference}
 
             if(view !== 'none'){
@@ -1487,7 +1500,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
               }
               set_data({...data})
               set_master_data({...master_data!})
-            }}> 
+            }}>
             {t('Menu.Transformation.posFlux')}</Button>
         </Box>
       </Box>
@@ -1592,7 +1605,7 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
       </Box>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
-        
+
         <Box as='span' layerStyle='options_4cols'>
           <Button
             variant={current_view.heredited_attr_from_master.includes('tagLevel')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}

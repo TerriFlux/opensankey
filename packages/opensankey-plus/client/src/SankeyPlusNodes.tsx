@@ -1,4 +1,10 @@
+// External lib
 import React, { ChangeEvent, useState, useRef, MutableRefObject } from 'react'
+import * as d3 from 'd3'
+
+import {
+  TFunction
+} from 'i18next'
 import {
   Badge
 } from 'react-bootstrap'
@@ -18,9 +24,8 @@ import {
 import { faIcons } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare, faLock, faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
-import * as d3 from 'd3'
-import { TFunction } from 'i18next'
 
+// Local imports
 import {
   PlusApplicationContextType,
   PlusElementsSelectedType,
@@ -32,7 +37,22 @@ import {
   SankeyPlusLink,
   SankeyPlusNode,
 } from '../types/Types'
-import { PlusReturnValueLink } from './SankeyPlusUtils'
+import {
+  ContextNodeIconFType,
+  node_icon_fill_colorFType,
+  node_icon_pathFType,
+  OpposingDragElementsPlusFType,
+  PlusDragElementsFType,
+  PlusNodeClickEventFType,
+  PlusNodeDragEventFType,
+  PlusReturnOutOfBoundElementsFType,
+  SankeyPlusDrawNodesIllustrationFType,
+  SankeyPlusHyperLinkFType,
+  SankeyPlusNodeIconFType,
+} from '../types/SankeyPlusNodesTypes'
+import {
+  PlusReturnValueLink
+} from './SankeyPlusUtils'
 import {
   AssignNodeValueToCorrectVar,
   drag_node_text,
@@ -54,24 +74,25 @@ import {
   OSTooltip,
 } from './import/OpenSankey'
 
-import { TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
-import { ComponentUpdaterType, SankeyData,  SankeyNode, applicationDrawType, uiElementsRefType } from 'open-sankey/src/types/Types'
-import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+// OpenSankey types
 import {
-  ContextNodeIconFType,
-  node_icon_fill_colorFType,
-  node_icon_pathFType,
-  OpposingDragElementsPlusFType,
-  PlusDragElementsFType,
-  PlusNodeClickEventFType,
-  PlusNodeDragEventFType,
-  PlusReturnOutOfBoundElementsFType,
-  SankeyPlusDrawNodesIllustrationFType,
-  SankeyPlusHyperLinkFType,
-  SankeyPlusNodeIconFType,
-} from '../types/SankeyPlusNodesTypes'
+  ComponentUpdaterType,
+  SankeyData,
+  SankeyNode,
+  applicationDrawType,
+  uiElementsRefType
+} from 'open-sankey/src/types/Types'
+import {
+  GetLinkValueFuncType,
+  GetSankeyMinWidthAndHeightFuncType,
+  LinkTextFuncType
+} from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+
+// Opensankey js-code
+import { TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
+
 
 declare const window: Window &
 typeof globalThis & {

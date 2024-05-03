@@ -19,15 +19,17 @@ build:
   stage: build
   tags:
     - dev
-  variables:
-    # We should create an ad'hoc folder for SankeySuite in /home/gitlab-runner/gitlab_dev/
-    # to have a dedicated node_modules for the gitlab compilations
-    SANKEYSUITE: "/home/ubuntu/dev_opensankey/sankeysuitemanager/SankeySuite"
   script:
+    # Prepare env
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    - cd client
-    - ln -s $SANKEYSUITE/client/node_modules
-    - CI= npm run build
+    # Install and link open-sankey node module
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/su-model/opensankey.git
+    - cd opensankey
+    - bash build_client.sh -I -D
+    - cd ..
+    - export OPENSANKEY=`pwd`/opensankey/opensankey/client
+    # Build OpenSankey+ node module
+    - bash build_client.sh -I -L -B -D -K $OPENSANKEY
   except:
     - schedules
