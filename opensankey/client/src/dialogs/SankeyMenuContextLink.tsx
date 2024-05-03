@@ -41,6 +41,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     }).remove()
     link_function.CreateLinksOnSVG(multi_selected_links.current)
     ComponentUpdater.updateComponentMenuConfigLink.current()
+    ComponentUpdater.updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
+
     setForceUpdate(!forceUpdate)
   }
 
