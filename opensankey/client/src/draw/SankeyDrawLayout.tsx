@@ -366,7 +366,7 @@ export const nodeHeight : nodeHeightFType = (
 export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   dict_variable_application_data,
   h_space : number,
-  reset_scale
+  launched_from_process
 ) => {
   const {data}=dict_variable_application_data
   const display_nodes = Object.keys(data.nodes)
@@ -402,7 +402,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
   max_link_value += 1 // Protection if all values are at 0
 
   // Get scale from max value
-  if (reset_scale) {
+  if (launched_from_process) {
     data.user_scale = data.maximum_flux ? Math.min(data.maximum_flux, max_link_value): max_link_value
   }
 
@@ -623,32 +623,37 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
           }
         }
 
+        // If we launched the function from process example 
+        // then we assume we need to place node label according to some parameters
+        if(launched_from_process){
         // Place labels accordingly
         // If node is lone, source, sink or in the middle
-        if ((node.inputLinksId.length === 0) &&
+          if ((node.inputLinksId.length === 0) &&
             (node.outputLinksId.length === 0))
-        {
+          {
           // Node is lone node
-          AssignNodeLocalAttribute(node,'label_horiz', 'middle')
-          AssignNodeLocalAttribute(node,'label_vert', 'middle')
-          AssignNodeLocalAttribute(node,'label_background', true)
-        }
-        else if (node.inputLinksId.length === 0) {
+            AssignNodeLocalAttribute(node,'label_horiz', 'middle')
+            AssignNodeLocalAttribute(node,'label_vert', 'middle')
+            AssignNodeLocalAttribute(node,'label_background', true)
+          }
+          else if (node.inputLinksId.length === 0) {
           // Node is a source : no input link
-          AssignNodeLocalAttribute(node,'label_horiz', 'left')
-          AssignNodeLocalAttribute(node,'label_vert', 'middle')
-        }
-        else if (node.outputLinksId.length === 0) {
+            AssignNodeLocalAttribute(node,'label_horiz', 'left')
+            AssignNodeLocalAttribute(node,'label_vert', 'middle')
+          }
+          else if (node.outputLinksId.length === 0) {
           // Node is a sink : no output link
-          AssignNodeLocalAttribute(node,'label_horiz', 'right')
-          AssignNodeLocalAttribute(node,'label_vert', 'middle')
-        }
-        else {
+            AssignNodeLocalAttribute(node,'label_horiz', 'right')
+            AssignNodeLocalAttribute(node,'label_vert', 'middle')
+          }
+          else {
           // Node is in the middle of the sankey
-          AssignNodeLocalAttribute(node,'label_horiz', 'left')
-          AssignNodeLocalAttribute(node,'label_vert', 'middle')
-          AssignNodeLocalAttribute(node,'label_background', true)
+            AssignNodeLocalAttribute(node,'label_horiz', 'left')
+            AssignNodeLocalAttribute(node,'label_vert', 'middle')
+            AssignNodeLocalAttribute(node,'label_background', true)
+          }
         }
+
       })
 
     // Get horizontal index that need the most of vertical space
