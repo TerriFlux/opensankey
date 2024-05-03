@@ -44,7 +44,6 @@ import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
 import { ValueSelectedParameter, NodeVisibleOnsSvg, SelectVisualyLinks, DeselectVisualyLinks } from '../draw/SankeyDrawFunction'
 
-import { t } from 'i18next'
 import { MenuConfigurationLinksFType } from './types/SankeyMenuConfigurationLinksTypes'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRotate} from '@fortawesome/free-solid-svg-icons'
@@ -58,9 +57,10 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   menu_config_link_attr,
   link_function,
   ComponentUpdater,
-  node_function
+  node_function,
 ) => {
-  const {data,set_data}=dict_variable_application_data
+  const {t}=applicationContext
+  const {data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const [forceUpdate,setForceUpdate]=useState(false)
   const {updateComponentMenuConfigLink}=ComponentUpdater
@@ -78,8 +78,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       t('Flux.apparence.apparence') as string,
       'link_attr_tab_id'),
     'tooltip': MenuConfigurationLinksTooltip(
-      data,
-      set_data,
+      ComponentUpdater,
       multi_selected_links,
       t,
       false)
@@ -136,7 +135,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
-  const {updateComponentMenuConfigLink}=ComponentUpdater
+  const {updateComponentMenuConfigLink,updateMenuConfigTextLinkTooltip}=ComponentUpdater
   const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
@@ -248,6 +247,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               Object.values(dict_variable_application_data.display_links).forEach(l=>DeselectVisualyLinks(l))
               multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
               updateComponentMenuConfigLink.current()
+              updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
+
             }}
           />
         </Box>

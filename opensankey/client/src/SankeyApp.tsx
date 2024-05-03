@@ -263,9 +263,17 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     updateComponentMenu:useRef(()=>null),
     updateComponenSaveInCache:useRef(()=>null),
     updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[]),
-    updateComponentBtnUpdateLayout : useRef(()=>null)
+    updateComponentBtnUpdateLayout : useRef(()=>null),
+    updateMenuConfigTextNodeTooltip:useRef([] as (()=>void)[]),
+    updateMenuConfigTextLinkTooltip:useRef([] as (()=>void)[]),
 
   }
+  ComponentUpdater.updateMenuConfigTextNodeTooltip.current=[]
+  ComponentUpdater.updateMenuConfigTextLinkTooltip.current=[]
+
+  /*************************************************************************************************/
+
+
   /*************************************************************************************************/
   const agregation : agregationType = {
     showAgregationRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([]),
@@ -553,14 +561,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   // MENU DRAGGABLE LINK Tooltip
   const menu_link_tooltip = MenuConfigurationLinksTooltip(
-    data,set_data,
+    ComponentUpdater,
     dict_variable_elements_selected.multi_selected_links,
     applicationContext.t,true)
 
 
 
   // MENU DRAGGABLE NODE Tooltip editor
-  const menu_node_tooltip = SankeyMenuConfigurationNodesTooltip(applicationContext,dict_variable_elements_selected,true)
+  const menu_node_tooltip = SankeyMenuConfigurationNodesTooltip(applicationContext,dict_variable_elements_selected,ComponentUpdater,true)
 
   const menuNodeTooltip= MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
@@ -839,7 +847,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 applicationContext,
                 dict_variable_application_data,
                 dict_variable_elements_selected,
-                contextMenu,
                 menu_configuration_nodes_attributes,
                 GetLinkValue,
                 node_function,link_function,
