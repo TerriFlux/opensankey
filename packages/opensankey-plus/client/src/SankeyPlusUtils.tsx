@@ -1,17 +1,18 @@
-
+// External libs
 import React, { ChangeEvent, useRef } from 'react'
-import { Form, Dropdown} from 'react-bootstrap'
-import { TFunction } from 'i18next'
-import { FaEye, FaEyeSlash, FaFileImport} from 'react-icons/fa'
 import * as d3 from 'd3'
-import FileSaver from 'file-saver'
 
+import { TFunction } from 'i18next'
+import { Form, Dropdown } from 'react-bootstrap'
+import { FaEye, FaEyeSlash, FaFileImport } from 'react-icons/fa'
+import FileSaver from 'file-saver'
 import {
   Box,
   Button,
   Checkbox
 } from '@chakra-ui/react'
 
+// Internal imports
 import {
   SankeyPlusData,
   SankeyPlusLabel,
@@ -45,8 +46,11 @@ import {
   ReturnValueLink,
 } from './import/OpenSankey'
 
+// OpenSankey types
 import { SankeyLinkAttrLocal, SankeyLinkStyle } from 'open-sankey/src/types/Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+
+// OpenSankey js-code
 import {pre_process_export_svg,post_process_export_svg} from 'open-sankey/dist/topmenus/SankeyMenuTop'
 
 
@@ -64,21 +68,27 @@ export  const DragLegendPlus : DragLegendPlusFType = (
   node_function,
   link_function,
   dict_variable_application_data
-) => d3.drag<SVGGElement, unknown>()
+) => d3
+  .drag<SVGGElement, unknown>()
   .subject(Object).on('drag', function (event) {
-
     if(d3.select('.opensankey #svg').nodes().length>0){
       DragLegendGElementOSTyped(data,event)
-      if(data.legend_position[0]===0 ||data.legend_position[1]===0){
-        OpposingDragElementsPlus([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],event,({} as SankeyPlusNode),dict_variable_application_data,{current:[]},multi_selected_label)
+      if (data.legend_position[0]===0 || data.legend_position[1]===0) {
+        OpposingDragElementsPlus(
+          [({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],
+          event,
+          ({} as SankeyPlusNode),dict_variable_application_data,{current:[]},
+          multi_selected_label)
       }
     }
-  }).on('end',()=>{
+  })
+  .on('end',()=>{
     ComponentUpdater.updateComponentMenuConfigLayout.current()
     node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
     resizeCanvas()
   })
+
 export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
   t:TFunction,
   data,set_data,
@@ -233,8 +243,6 @@ export const PlusLinkSabotColor : PlusLinkSabotColorFType = (
   return PlusReturnValueLink(data,l,'gradient')===true ? NodeColor(data.nodes[l.idSource],data) : LinkColor(l,data,GetLinkValue)
 }
 
-
-
 // Function used before exporting a sankey to svg format
 // It add used attribute from css file in the html tag attribute 'style', because otherwise the foreignObject element doesn't have proper css
 const addStyleInlineSVG=()=>{
@@ -300,5 +308,5 @@ export const PlusItemExport:PlusItemExportFType=(
   return <>
     <Dropdown.Item onClick={clickSaveSVG} >SVG</Dropdown.Item>
   </>
-  
+
 }

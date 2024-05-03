@@ -1,18 +1,22 @@
+// External imports
 import React, { MutableRefObject, useRef, useState } from 'react'
-import { Badge} from 'react-bootstrap'
+import * as d3 from 'd3'
+
+import { Badge } from 'react-bootstrap'
+import { Quill } from 'react-quill'
+import ReactQuill from 'react-quill'
 import { TFunction } from 'i18next'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLock } from '@fortawesome/free-solid-svg-icons'
-import { Quill } from 'react-quill'
 import { Box, Button, Checkbox, Tab, TabPanel, Textarea } from '@chakra-ui/react'
-import * as d3 from 'd3'
-import ReactQuill from 'react-quill'
 
-import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
-
+// Local imports
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
+import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
+import { PlusDrawNodesFOFType, SankeyPlusNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
 import { NodeDisplayed } from './import/OpenSankey'
-import {PlusDrawNodesFOFType, SankeyPlusNodeFOFType} from '../types/SankeyPlusForeignObjectTypes'
+
+// OpenSankey types
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { OSTooltip } from 'open-sankey/dist/configmenus/SankeyUtils'
@@ -154,7 +158,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
       <Box
         layerStyle='menuconfigpanel_grid'
       >
-       
+
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
           isDisabled={!is_activated}
@@ -194,7 +198,7 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
 
         {
           (multi_selected_nodes.current.length>0)?
-            
+
             <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyPlusDisabled')}>
               {
                 (multi_selected_nodes.current[0].is_FO_raw)?

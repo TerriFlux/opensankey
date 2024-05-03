@@ -1,8 +1,37 @@
+// External imports
+import React, { MutableRefObject, useState } from 'react'
 
-// Local files
-import {SankeyPlusData,SankeyPlusLabel,DiffType, ViewType} from '../types/Types'
-import { GetDataFromView, RecomputeViews,FilterView } from './SankeyPlusViews'
-import { DefaultLink,
+import { InputGroup, Button, Form } from 'react-bootstrap'
+import { FaCheck } from 'react-icons/fa'
+import { TFunction } from 'i18next'
+import {
+  applyChange,
+  diff as getDiff,
+  Diff,
+} from 'deep-diff'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
+
+// Local imports
+import {
+  GetDataFromView,
+  RecomputeViews,
+  FilterView
+} from './SankeyPlusViews'
+import {
+  SankeyPlusData,
+  SankeyPlusLabel,
+  DiffType,
+  ViewType
+} from '../types/Types'
+import {
+  SankeyPlusDiagramSelectorFType,
+  apply_transformation_opensankey_plus_elementsFType,
+  plus_convert_dataFType,
+  plus_sankey_layoutFType
+} from '../types/SankeyPlusConvertTypes'
+import {
+  DefaultLink,
   DefaultNode,
   synchronizeNodesandLinksIdOSTyped,
   complete_sankey_data,
@@ -10,19 +39,13 @@ import { DefaultLink,
   convert_nodes,
   convert_links,
   convert_tags,
-  OSTooltip} from './import/OpenSankey'
+  OSTooltip
+} from './import/OpenSankey'
 
-import {SankeyPlusDiagramSelectorFType, apply_transformation_opensankey_plus_elementsFType, plus_convert_dataFType, plus_sankey_layoutFType } from '../types/SankeyPlusConvertTypes'
-
-// Opensankey files
-import { InputGroup, Button, Form} from 'react-bootstrap'
-import React, { MutableRefObject, useState } from 'react'
-import { TFunction } from 'i18next'
-import { FaCheck } from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark } from '@fortawesome/free-solid-svg-icons'
+// Opensankey types
 import { SankeyData } from 'open-sankey/src/types/Types'
 import { updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
+
 
 interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
   transparent?:boolean,
@@ -30,23 +53,19 @@ interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
   font_size?:number
 }
 
-/* eslint-disable */
-// @ts-ignore
-const deep_diff = require('deep-diff')
-/* eslint-enable */
-
 export const plus_all_element_to_transform = [
-  'Views','icon_catalog','freeLabels'
+  'Views', 'icon_catalog', 'freeLabels'
 ]
+
 export const plus_convert_data : plus_convert_dataFType = (
   data:SankeyPlusData,
   DefaultSankeyData: ()=>SankeyPlusData
 )=>{
-    
+
   data.background_image=(data.background_image===undefined)?'':data.background_image
 
   data.show_background_image=(data.show_background_image===undefined)?false:data.show_background_image
-  
+
   if (!data.labels) {
     data.labels = {}
   }
@@ -72,9 +91,9 @@ export const plus_convert_data : plus_convert_dataFType = (
       if(((l as unknown) as SankeyPlusLabelToConvert ).name!==undefined){
         const new_content=((l as unknown) as SankeyPlusLabelToConvert).name
         if (((l as unknown) as SankeyPlusLabelToConvert).font_size === 40) {
-          l.content=new_content?'<h3>'+new_content+'</h3>':''   
+          l.content=new_content?'<h3>'+new_content+'</h3>':''
         } else if (((l as unknown) as SankeyPlusLabelToConvert).font_size === 30) {
-          l.content=new_content?'<h4>'+new_content+'</h4>':''        
+          l.content=new_content?'<h4>'+new_content+'</h4>':''
         } else {
           l.content=new_content?new_content:''
         }
@@ -113,46 +132,37 @@ export const plus_convert_data : plus_convert_dataFType = (
       v.heredited_attr_from_master=['']
     }
     if((v.view_data as unknown as SankeyPlusData ).version){
-      complete_sankey_data(v.view_data as SankeyPlusData,DefaultSankeyData,DefaultNode,DefaultLink);
+      complete_sankey_data(
+        v.view_data as SankeyPlusData,
+        DefaultSankeyData,
+        DefaultNode,DefaultLink);
       (v.view_data as unknown as SankeyPlusData ).view= []
       convert_tags(v.view_data as unknown as SankeyPlusData)
       convert_nodes(v.view_data as unknown as SankeyPlusData)
       convert_links(v.view_data as unknown as SankeyPlusData)
-      convert_data(v.view_data as unknown as SankeyPlusData,DefaultSankeyData)
+      convert_data(v.view_data as unknown as SankeyPlusData, DefaultSankeyData)
       plus_convert_data((v.view_data as unknown as SankeyPlusData ),DefaultSankeyData)
-      // let difference = deep_diff.diff(data, v.view_data)
-      // difference=(difference!==undefined)?difference:[]
-      // difference=JSON.parse(JSON.stringify(difference)).map((d:{path:string[],kind:string,item:{kind:string}})=>{
-      //   if(d.kind==='D'){
-      //     delete ((d as unknown) as differenceType).lhs
-      //   }
-      //   if(d.kind==='A' && d.item.kind==='D'){
-      //     delete ((d as unknown) as differenceType).item.lhs
-      //   }
-      //   if(d.kind==='E'){
-      //     delete ((d as unknown) as differenceType).lhs
-      //   }
-      //   return d
-      // })
-      // difference=difference.filter((d:{path:string[]})=>!d.path.includes('view'));
-      // (v.view_data as {diff:object[]}) = {
-      //   diff : difference
-      // }
-
-
-    } else if((v.view_data as unknown as DiffType).diff!==undefined){
-      const d_view=GetDataFromView(data,v.id) as SankeyPlusData
-      convert_data(d_view,DefaultSankeyData)
-      plus_convert_data(d_view,DefaultSankeyData)
-      const copy_data={...data}
-      copy_data.view=[]
-      const converted_master=JSON.parse(JSON.stringify(copy_data))
-      convert_data(converted_master,DefaultSankeyData)
-      plus_convert_data(converted_master,DefaultSankeyData)
-      let difference = deep_diff.diff(converted_master, d_view)
-      difference=(difference !== undefined)?difference:[]
-      difference=FilterView(difference)
-      v.view_data={diff:difference}
+    }
+    else if ((v.view_data as unknown as DiffType).diff!==undefined) {
+      const d_view = GetDataFromView(data, v.id) as SankeyPlusData
+      convert_data(d_view, DefaultSankeyData)
+      plus_convert_data(d_view, DefaultSankeyData)
+      const copy_data = {...data}
+      copy_data.view = []
+      const converted_master = JSON.parse(JSON.stringify(copy_data))
+      convert_data(converted_master, DefaultSankeyData)
+      plus_convert_data(converted_master, DefaultSankeyData)
+      let differences = getDiff(converted_master, d_view)
+      differences = (differences !== undefined)?differences:[]
+      differences = FilterView(differences)
+      v.view_data = {diff: differences}
+    }
+  })
+  Object.values(data.links).forEach(l=>{
+    const convert_link = l as unknown as {gradient?:boolean}
+    if (convert_link.gradient) {
+      delete convert_link.gradient
+      l.local!.gradient = true
     }
   })
   Object.values(data.links).forEach(l=>{
@@ -168,38 +178,38 @@ export const plus_convert_data : plus_convert_dataFType = (
 }
 
 export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
-  master_data : SankeyPlusData | undefined,
-  set_master_data : (d:SankeyPlusData| undefined)=>void,
-  view : string,
-  view_selected:string,
-  set_view_selected:(s:string)=>void,
+  master_data: SankeyPlusData | undefined,
+  set_master_data: (d:SankeyPlusData| undefined)=>void,
+  view: string,
+  view_selected: string,
+  set_view_selected: (s:string)=>void,
   DefaultSankeyData: ()=>SankeyPlusData
 ) => {
   const [s_diagram_type, sDiagramType] = useState('File')
   const SankeyPlusDiagramSelectorInner = (
-    t: TFunction, 
+    t: TFunction,
     convert_data: (s:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
     sankey_data: SankeyData,
     set_sankey_data: (s:SankeyData)=>void,
     prev_sankey_data: SankeyData,
-    set_prev_sankey_data: (s:SankeyData)=>void, 
-    updateLayout: updateLayoutFuncType, 
+    set_prev_sankey_data: (s:SankeyData)=>void,
+    updateLayout: updateLayoutFuncType,
     elementToDispose : MutableRefObject<string[]>
   ) => {
     const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
 
-    return <InputGroup>
-      
+    return (<InputGroup>
+
       <InputGroup.Text style={{width:'20%'}} >{t('Menu.Transformation.fmep')}</InputGroup.Text>
-      <Button 
-        className='btn_menu_config' 
+      <Button
+        className='btn_menu_config'
         style={{width:'10%'}}
         variant={s_diagram_type==='File'?'primary':'outline-primary'}
         onClick={
           () => {
             sDiagramType('File')
           }}>{t('Menu.other_file')}</Button>
-      <Button 
+      <Button
         className='btn_menu_config'
         style={{width:'10%'}}
         variant={s_diagram_type==='View'?'primary':'outline-primary'}
@@ -207,12 +217,12 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
           () => {
             sDiagramType('View')
           }}>{t('Menu.view_actual_file')}</Button>
-      
+
       {s_diagram_type==='File' ? <Form.Control
         type="file"
-        onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} /> : 
-        
-        <Form.Select 
+        onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} /> :
+
+        <Form.Select
           onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=> {
             set_view_selected(evt.target.value)
           }}>
@@ -222,7 +232,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
           }) : <></>}
         </Form.Select>
       }
-      
+
       <Button
         className='btn_menu_config'
         style={{width:'15%'}}
@@ -242,7 +252,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
               if (view === view_selected ) {
                 // No update of view by itself
                 return
-              }                
+              }
               const data_view=GetDataFromView(master_data,view_selected) as SankeyPlusData
               updateLayout(sankey_data,data_view,elementToDispose.current)
               const copy_data = JSON.parse(JSON.stringify(sankey_data))
@@ -281,8 +291,8 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
           reader.readAsText(file_layout[0])
         } }>{t('Menu.Transformation.ad')}
       </Button>
-      
-      
+
+
       <Button
         className='btn_menu_config'
         style={{width:'15%'}}
@@ -295,8 +305,8 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
           }
         } }>{t('Menu.Transformation.undo')}
       </Button>
-      
-    </InputGroup>
+
+    </InputGroup>)
   }
   return SankeyPlusDiagramSelectorInner
 }
@@ -318,7 +328,7 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
       <Button
         className='btn_menu_config'
         style={{width:'20%'}}
-        variant={elementToDispose.current.includes('freeLabels')?'primary':'outline-primary'} 
+        variant={elementToDispose.current.includes('freeLabels')?'primary':'outline-primary'}
         onClick={() => {
           if(!elementToDispose.current.includes('freeLabels')){
             elementToDispose.current.push('freeLabels')
@@ -329,7 +339,7 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           }}
         }
       >{elementToDispose.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-    
+
     </InputGroup>,
     <OSTooltip label={!is_current_data_master?t('Menu.Transformation.disabled_view'):''} >
       <InputGroup>
@@ -343,7 +353,7 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           className='btn_menu_config'
           style={{width:'20%'}}
           disabled={!is_current_data_master}
-          variant={elementToDispose.current.includes('Views')?'primary':'outline-primary'} 
+          variant={elementToDispose.current.includes('Views')?'primary':'outline-primary'}
           onClick={() => {
             if(!elementToDispose.current.includes('Views')){
               elementToDispose.current.push('Views')
@@ -356,7 +366,7 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
         >{elementToDispose.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
       </InputGroup>
     </OSTooltip>,
-    
+
     <OSTooltip label={t('Menu.Transformation.list_icon_tooltip')} >
       <InputGroup>
         <InputGroup.Text
@@ -366,7 +376,7 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           className='btn_menu_config'
           style={{width:'20%'}}
           disabled={!is_current_data_master}
-          variant={elementToDispose.current.includes('Views')?'primary':'outline-primary'} 
+          variant={elementToDispose.current.includes('Views')?'primary':'outline-primary'}
           onClick={() => {
             if(!elementToDispose.current.includes('icon_catalog')){
               elementToDispose.current.push('icon_catalog')
@@ -390,9 +400,9 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
     if (!data.labels) {
       data.labels = {}
     }
-    const difference = deep_diff.diff(data.labels, new_layout.labels)
-    if (difference) {
-      difference.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(data.labels, {}, diff))
+    const differences = getDiff(data.labels, new_layout.labels)
+    if (differences) {
+      differences.forEach((difference) => applyChange(data.labels, {}, difference))
     }
   }
 
@@ -408,19 +418,23 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
             // Views are copied identical to what they were
             view_of_new_layout.heredited_attr_from_master = ['']
             // nodeId and linkId must be synchronized with new master
-            synchronizeNodesandLinksIdOSTyped((view_of_new_layout.view_data)as SankeyPlusData,data)
+            synchronizeNodesandLinksIdOSTyped(
+              view_of_new_layout.view_data as SankeyPlusData,
+              data)
             data.view.push(view_of_new_layout)
-          } else if((view_of_new_layout.view_data as DiffType).diff!==undefined){
-            (view_of_new_layout.view_data as DiffType).diff.forEach((diff :{path:string[],kind:string}) => deep_diff.applyChange(view_data, {}, diff))
+          }
+          else if ((view_of_new_layout.view_data as DiffType).diff!==undefined) {
+            (view_of_new_layout.view_data as DiffType)
+              .diff
+              .forEach((difference) => applyChange(view_data, {}, difference))
             // nodeId and linkId must be synchronized with new master
             synchronizeNodesandLinksIdOSTyped(view_data,data)
-            const data_view_diff = deep_diff.diff(data,view_data) as {path:string[],kind:string,rhs:string}[]
-            (view_of_new_layout.view_data as DiffType).diff = data_view_diff.filter((d:{path:string[]}) => !d.path.includes('view'))
+            const data_view_diff = getDiff(data, view_data) as Diff<undefined, SankeyPlusData>[]
+            (view_of_new_layout.view_data as DiffType).diff = data_view_diff.filter((d) => !(d.path!.includes('view')))
             // Views are copied identical to what they were
             view_of_new_layout.heredited_attr_from_master = ['']
             data.view.push(view_of_new_layout)
           }
-           
         }
       }
       )
@@ -428,7 +442,7 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
   }
 
   if(mode.includes('icon_catalog')){
-    // Import catalog of icon 
+    // Import catalog of icon
     Object.entries(new_layout.icon_catalog).filter(icon=>icon[0] && icon[1]).forEach(icon=>{
       data.icon_catalog[icon[0]]=icon[1]
     })
@@ -441,13 +455,13 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
         return
       }
 
-      // Add icon fromm imported layout if it has all the attribut 
+      // Add icon fromm imported layout if it has all the attribut
       if(layoutNode.iconVisible!==undefined && layoutNode.iconColor && layoutNode.iconName ){
         node.iconVisible=layoutNode.iconVisible
         node.iconColor=layoutNode.iconColor
         node.iconName=layoutNode.iconName
       }
-      // Add ForeignObject from imported layout if it has all the attribut 
+      // Add ForeignObject from imported layout if it has all the attribut
       if(layoutNode.has_FO!==undefined && layoutNode.is_FO_raw && layoutNode.FO_content ){
         node.has_FO=layoutNode.has_FO
         node.is_FO_raw=layoutNode.is_FO_raw

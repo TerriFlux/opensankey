@@ -1,7 +1,27 @@
 import { TFunction } from 'i18next'
-import { DictSetterInputValueType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusShowMenuComponentsType, ViewType, reDrawPlusLabelsFType } from './Types'
-import { SankeyLinkValueDict, TagsGroup, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
-import { setDiagramFuncType } from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
+import { Diff } from 'deep-diff'
+
+import {
+  DictSetterInputValueType,
+  PlusComponentUpdaterType,
+  PlusElementsSelectedType,
+  PlusUiElementsRefType,
+  SankeyPlusApplicationDataType,
+  SankeyPlusData,
+  SankeyPlusShowMenuComponentsType,
+  ViewType,
+  reDrawPlusLabelsFType
+} from './Types'
+
+import {
+  SankeyLinkValueDict,
+  TagsGroup,
+  dict_variable_application_dataType
+} from 'open-sankey/src/types/Types'
+import {
+  setDiagramFuncType
+} from 'open-sankey/src/configmenus/types/SankeyMenuBannerTypes'
+
 
 export type getSetDiagramFType = (
   set_master_data: (d:SankeyPlusData | undefined)=>void,
@@ -26,8 +46,8 @@ export type GetDataFromViewFType =(
 )=> SankeyPlusData | undefined
 
 export type FilterViewFType = (
-  pre_diff:{path:string[],kind:string,item:{kind:string}}[]
-) => {path:string[],kind:string,item:{kind:string}}
+  pre_diff:Diff<undefined | SankeyPlusData, SankeyPlusData>[]
+) => Diff<undefined | SankeyPlusData, SankeyPlusData>[]
 
 export type RecomputeViewsFType = (
   new_master_data: SankeyPlusData | undefined,
@@ -48,7 +68,6 @@ export type keyHandlerFType = (
   reDrawPlusLabels:reDrawPlusLabelsFType,
   ComponentUpdater:PlusComponentUpdaterType,
   d_setter_input_value:DictSetterInputValueType,
-
 ) => void
 
 export type SelecteurViewFType = (
@@ -58,7 +77,6 @@ export type SelecteurViewFType = (
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
   d_setter_input_value:DictSetterInputValueType,
-
 ) => JSX.Element
 
 export type viewsAccordionFType = (
@@ -70,16 +88,15 @@ export type viewsAccordionFType = (
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
   DefaultSankeyData: ()=>SankeyPlusData,
   view_selector:JSX.Element,
-
 ) => JSX.Element
 
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
 export type CheckCurrentViewSavedFType = (
-  master_data:SankeyPlusData | undefined,
-  data:SankeyPlusData,
-  view:string
-)=> string[]
+  master_data: SankeyPlusData | undefined,
+  data: SankeyPlusData,
+  view: string
+) => Diff<SankeyPlusData | undefined, SankeyPlusData | undefined>[]
 
 // Function that return a toolbar to navigate,create or modify view, it contain :
 // - a button to return to master data
@@ -132,7 +149,7 @@ export type MenuEnregistrerViewFType = (
 export type OpenSankeyPlusCheckpointButtonFType = (
   master_data:SankeyPlusData| undefined,
   data:SankeyPlusData,
-  view:string, 
+  view:string,
   view_not_saved:string,
   connected:boolean,
   t:TFunction

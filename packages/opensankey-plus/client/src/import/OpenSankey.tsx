@@ -1,38 +1,90 @@
+// External libs
+import { FunctionComponent } from 'react'
+
+// OpenSankey js-code
 import * as OpensankeyUtils from 'open-sankey/dist/configmenus/SankeyUtils'
 import * as OpenSankeyDrawFunc from 'open-sankey/dist/draw/SankeyDrawFunction'
 import * as OpenSankeyDrawEventFunc from 'open-sankey/dist/draw/SankeyDrawEventFunction'
-// import * as OpensankeyDragLinksFunc from 'open-sankey/dist/lib/SankeyDragLinks'
 import * as OpensankeyDragNodeFunc from 'open-sankey/dist/draw/SankeyDragNodes'
 import * as OpensankeyConvert from 'open-sankey/dist/configmenus/SankeyConvert'
 import * as OpenSankeyLayout from 'open-sankey/dist/draw/SankeyDrawLayout'
 import * as OpenSankeyMenuTop from 'open-sankey/dist/topmenus/SankeyMenuTop'
 import { DragLegendGElement} from 'open-sankey/dist/draw/SankeyDrawLegend'
 
-import { 
-  ReturnValueLinkFuncType, ReturnValueNodeFuncType, IsAllLinkAttrSameValueFuncType, IsLinkDisplayingValueLocalFuncType, 
-  NodeColorFuncType, GetSankeyMinWidthAndHeightFuncType, IsNodeDisplayingValueLocalFuncType, IsAllNodeAttrSameValueFuncType, 
-  AssignNodeValueToCorrectVarFuncType, LinkColorFuncType, AssignLinkValueToCorrectVarFuncType, DefaultLinkStyleFuncType, 
-  DefaultLinkFuncType, DefaultNodeFuncType, AdjustSankeyZoneFuncType, NodeDisplayedFuncType, 
+// Local types
+import {
+  SankeyPlusShowMenuComponentsType
+} from '../../types/Types'
+
+// OpenSankey types
+import {
+  ReturnValueLinkFuncType,
+  ReturnValueNodeFuncType,
+  IsAllLinkAttrSameValueFuncType,
+  IsLinkDisplayingValueLocalFuncType,
+  NodeColorFuncType,
+  GetSankeyMinWidthAndHeightFuncType,
+  IsNodeDisplayingValueLocalFuncType,
+  IsAllNodeAttrSameValueFuncType,
+  AssignNodeValueToCorrectVarFuncType,
+  LinkColorFuncType,
+  AssignLinkValueToCorrectVarFuncType,
+  DefaultLinkStyleFuncType,
+  DefaultLinkFuncType,
+  DefaultNodeFuncType,
+  AdjustSankeyZoneFuncType,
+  NodeDisplayedFuncType,
   OSTooltpFuncType
 } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-import { complete_sankey_dataFunctType, ConvertDataFuncType, convert_nodesFuncType, convert_linksFuncType, convert_tagsFuncType } from 'open-sankey/src/configmenus/types/SankeyConvertTypes'
-import { 
-  DrawArrowsType, NodeVisibleOnsSvgFuncType, 
-  LinkVisibleOnsSvgFuncType, DeselectVisualyNodesFuncType, RemoveAnimateFuncType, 
-  DrawGridFType, 
+import {
+  complete_sankey_dataFunctType,
+  ConvertDataFuncType,
+  convert_nodesFuncType,
+  convert_linksFuncType,
+  convert_tagsFuncType
+} from 'open-sankey/src/configmenus/types/SankeyConvertTypes'
+import {
+  DrawArrowsType, NodeVisibleOnsSvgFuncType,
+  LinkVisibleOnsSvgFuncType, DeselectVisualyNodesFuncType, RemoveAnimateFuncType,
+  DrawGridFType,
   SelectVisualyNodesFType,
   SelectVisualyLinksFType,
   hideLinkOnDragElementFuncType
 } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
-import { LinkStrokeFuncType } from 'open-sankey/src/draw/types/SankeyDrawLinksTypes'
-import { DragElementsFuncType, drag_node_textFuncType, opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
-import { drag_legend_g_elementFuncType } from 'open-sankey/src/draw/types/SankeyDrawLegendTypes'
-import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFuncType, synchronizeNodesandLinksIdFuncType, updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
-import {SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType, actualizeDrawAreaFrameFType, selectOpensankeyElementsInSelectionZoneFType} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
-import {MenuDraggableFType} from 'open-sankey/src/topmenus/types/SankeyMenuTopTypes'
-import { dict_hook_ref_setter_show_dialog_componentsType } from 'open-sankey/src/types/Types'
-import { SankeyPlusShowMenuComponentsType } from '../../types/Types'
-import { FunctionComponent } from 'react'
+import {
+  LinkStrokeFuncType
+} from 'open-sankey/src/draw/types/SankeyDrawLinksTypes'
+import {
+  DragElementsFuncType,
+  drag_node_textFuncType,
+  opposing_DragElementsFuncType,
+  ReturnOutOfBoundElementFuncType
+} from 'open-sankey/src/draw/types/SankeyDragTypes'
+import {
+  drag_legend_g_elementFuncType
+} from 'open-sankey/src/draw/types/SankeyDrawLegendTypes'
+import {
+  reorganize_node_inputLinksIdFuncType,
+  reorganize_node_outputLinksIdFuncType,
+  synchronizeNodesandLinksIdFuncType,
+  updateLayoutFuncType
+} from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
+import {
+  SimpleGNodeClickFuncType,
+  SvgDragMiddleMouseMoveFuncType,
+  SvgDragMiddleMouseStartFuncType,
+  actualizeDrawAreaFrameFType,
+  selectOpensankeyElementsInSelectionZoneFType
+} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
+import {
+  MenuDraggableFType
+} from 'open-sankey/src/topmenus/types/SankeyMenuTopTypes'
+import {
+  dict_hook_ref_setter_show_dialog_componentsType
+} from 'open-sankey/src/types/Types'
+
+// Override exports --------------------------------------------------------------------------
+
 export const ReturnValueLink=OpensankeyUtils.ReturnValueLink as ReturnValueLinkFuncType
 
 export const ReturnValueNode=OpensankeyUtils.ReturnValueNode as ReturnValueNodeFuncType

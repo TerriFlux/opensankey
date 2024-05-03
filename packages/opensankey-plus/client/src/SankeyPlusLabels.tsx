@@ -1,16 +1,40 @@
 import * as d3 from 'd3'
 
-import {  SankeyPlusData, SankeyPlusLabel,PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, PlusApplicationContextType, PlusComponentUpdaterType, reDrawPlusLabelsFType, DictSetterInputValueType} from '../types/Types'
-import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+// Local imports
 import {
-  PlusDrawLabelsFType, eventLabelClickFType, sankey_plus_min_width_and_heightFType,
-  sankey_plus_zoom_text_zoneFType, zone_selection_labelFType
+  PlusDragElements,
+  PlusReturnOutOfBoundElements,
+  OpposingDragElementsPlus
+} from './SankeyPlusNodes'
+import {
+  SankeyPlusData,
+  SankeyPlusLabel,
+  PlusElementsSelectedType,
+  SankeyPlusApplicationDataType,
+  SankeyPlusContextMenuType,
+  PlusApplicationContextType,
+  PlusComponentUpdaterType,
+  reDrawPlusLabelsFType,
+  DictSetterInputValueType
+} from '../types/Types'
+import {
+  PlusDrawLabelsFType,
+  eventLabelClickFType,
+  sankey_plus_min_width_and_heightFType,
+  sankey_plus_zoom_text_zoneFType,
+  zone_selection_labelFType
 } from '../types/SankeyPlusLabelsTypes'
+import {
+  GetSankeyMinWidthAndHeight,
+  hideLinkOnDragElement,
+  selectOpensankeyElementsInSelectionZone
+} from './import/OpenSankey'
 
-import { GetSankeyMinWidthAndHeight,hideLinkOnDragElement,selectOpensankeyElementsInSelectionZone} from './import/OpenSankey'
-
-import { PlusDragElements,PlusReturnOutOfBoundElements,OpposingDragElementsPlus } from './SankeyPlusNodes'
+// OpenSankey types
 import { LinkFunctionTypes, applicationDrawType } from 'open-sankey/src/types/Types'
+import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
+
+// OpenSankey jscode
 import { GetVerticalMarginForSankeyZone } from 'open-sankey/dist/configmenus/SankeyUtils'
 
 declare const window: Window &
@@ -331,7 +355,7 @@ export const sankey_plus_min_width_and_height : sankey_plus_min_width_and_height
   const has_scroll_bar=window.innerHeight-document.getElementsByTagName('html')[0].clientHeight
   width_plus=Math.max(width_plus, window.innerWidth - 60 - has_scroll_bar)
   height_plus= Math.max(height_plus, window.innerHeight - 20 - (vertical_shift))
-  
+
   return [Math.max(width,width_plus),Math.max(height,height_plus)]
 }
 
@@ -371,7 +395,7 @@ export const zone_selection_label : zone_selection_labelFType = (
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
 
     }
-    
+
   }
 }
 
@@ -541,7 +565,7 @@ export const deleteGLabel=(zdt_to_delete:SankeyPlusLabel[],d_setter_input_value:
     d3.select('#'+zdt.idLabel).remove()
     d3.selectAll('#gg_zdt_handles_'+zdt.idLabel).remove()
   })
-  
+
   d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
 
 }

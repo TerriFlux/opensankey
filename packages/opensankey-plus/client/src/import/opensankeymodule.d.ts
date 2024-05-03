@@ -18,7 +18,3 @@ declare module 'open-sankey/dist/configmenus/SankeyMenuConfigurationLinksLabel';
 declare module 'open-sankey/dist/draw/SankeyDrawLegend';
 declare module 'open-sankey/dist/configmenus/SankeyMenuConfigurationNodes'
 
-declare module 'afmsankey/dist/lib/SankeyTrade';
-
-declare module 'sankeyicons/dist/SankeyIconsUtils';
-

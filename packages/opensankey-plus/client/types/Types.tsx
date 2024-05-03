@@ -1,6 +1,13 @@
+import { Dispatch, SetStateAction, MutableRefObject } from 'react'
+import { Diff } from 'deep-diff'
+
 import {
-  SankeyData, SankeyLink, SankeyNode, 
-  SankeyNodeStyle,SankeyLinkStyle,SankeyLinkAttrLocal,
+  SankeyData,
+  SankeyLink,
+  SankeyNode,
+  SankeyNodeStyle,
+  SankeyLinkStyle,
+  SankeyLinkAttrLocal,
   dict_hook_ref_setter_show_dialog_componentsType,
   dict_variable_application_dataType,
   dict_variable_elements_selectedType,
@@ -11,20 +18,18 @@ import {
   LinkFunctionTypes,
   ComponentUpdaterType
 } from 'open-sankey/src/types/Types'
-import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 
-export type DiffType={
-    diff:{
-      path:string[],
-      kind:string,
-      rhs:string
-    }[]
-  }
+
+export type DiffType = {
+  diff: Diff<undefined | SankeyPlusData, SankeyPlusData>[]
+}
 
 export type SankeyPlusNodeStyle = SankeyNodeStyle
+
 export interface SankeyPlusLinkStyle extends SankeyLinkStyle{
   gradient:boolean,
 }
+
 export interface SankeyPlusNode extends SankeyNode {
   iconName: string,
   iconColor: string,
@@ -38,7 +43,7 @@ export interface SankeyPlusNode extends SankeyNode {
   is_image:boolean,
   image_src:string,
 
-  hyperlink:string  
+  hyperlink:string
 }
 
 export interface SankeyPlusLinkAttrLocal extends SankeyLinkAttrLocal{
@@ -48,6 +53,7 @@ export interface SankeyPlusLinkAttrLocal extends SankeyLinkAttrLocal{
 interface SankeyPlusLinkIntern {
   local?:SankeyPlusLinkAttrLocal
 }
+
 export type SankeyPlusLink = SankeyLink & SankeyPlusLinkIntern
 
 export type ViewType={
@@ -56,8 +62,8 @@ export type ViewType={
    nom:string,
    details:string,
    heredited_attr_from_master:string[]
-  
-  }
+}
+
 export interface SankeyPlusData extends SankeyData {
   icon_catalog: { [x: string]: string | null | undefined},
   nodes:{[x: string]:SankeyPlusNode}
@@ -71,8 +77,6 @@ export interface SankeyPlusData extends SankeyData {
   show_background_image:boolean,
   is_catalog:boolean,
 }
-
-//export type SankeyPlusData = ISankeyPlusData & SankeyData
 
 export interface SankeyPlusLabel {
     // identification
@@ -99,7 +103,7 @@ export interface differenceType{
     path:string[],
     lhs?:object,
     item:{kind:string,lhs?:object}
-  } 
+}
 
 export interface SankeyPlusShowMenuComponentsType extends dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_menu_node_icon : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
@@ -108,7 +112,6 @@ export interface SankeyPlusShowMenuComponentsType extends dict_hook_ref_setter_s
   ref_setter_show_modal_transparent_view_attr : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   show_toast_new_view:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   show_toast_update_view:MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-
 }
 
 export interface SankeyPlusApplicationDataType extends dict_variable_application_dataType {
@@ -136,11 +139,12 @@ export interface DictSetterInputValueType {
   r_setter_editor_content_fo_node:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
   r_setter_editor_content_fo_zdt:MutableRefObject<Dispatch<SetStateAction<string>>[] | undefined>,
   r_setter_value_editor_name_view:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
-
 }
+
 export interface PlusApplicationContextType extends applicationContextType{
   has_open_sankey_plus:boolean
 }
+
 export interface PlusUiElementsRefType extends uiElementsRefType{
   zdt_accordion_ref : MutableRefObject<HTMLDivElement|null>,
 }
@@ -161,6 +165,5 @@ export interface PlusNodeFuntionType extends NodeFunctionTypes {
   reDrawIllustration:reDrawIllustrationFType,
   reDrawPlusNodeEvent:reDrawPlusNodeEventFType,
 }
-
 
 export type PlusLinkFuntionType= LinkFunctionTypes
