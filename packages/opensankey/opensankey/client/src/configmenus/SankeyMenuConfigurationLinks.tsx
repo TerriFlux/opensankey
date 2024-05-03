@@ -163,7 +163,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       return
     }
     return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink }
-  })
+  }) as []
 
   //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
@@ -180,6 +180,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             valueRenderer={ (selected :selected_type[]) => {
               return selected.filter(d=>d!==undefined).length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
             }}
+            labelledBy='TODO Change'
             options={INITIAL_OPTIONS_LINKS}
             value={selected_links}
             overrideStrings={{
@@ -523,8 +524,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               link_function.RedrawLinks(multi_selected_links.current)
               ComponentUpdater.updateComponenSaveInCache.current(false)
               setForceUpdate(!forceUpdate)
-
-
             }}
           >
             <FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/>

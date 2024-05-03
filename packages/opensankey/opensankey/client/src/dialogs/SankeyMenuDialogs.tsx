@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,FormControl} from 'react-bootstrap'
@@ -19,9 +18,9 @@ import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/
 
 export   const os_all_element_to_transform = [
   'addNode', 'addFlux', 'removeNode', 'removeFlux',
-  'posNode', 'posFlux', 
-  'Values', 
-  'attrNode', 'attrFlux', 
+  'posNode', 'posFlux',
+  'Values',
+  'attrNode', 'attrFlux',
   'tagNode', 'tagFlux', 'tagData', 'tagLevel',
   'attrGeneral'
 ]
@@ -31,8 +30,8 @@ export   const os_all_element_to_transform = [
  * @param {ApplyLayoutDialogTypes} { ref_setter_show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
-export const ApplyLayoutDialog = ({ 
-  t,dict_hook_ref_setter_show_dialog_components, 
+export const ApplyLayoutDialog = ({
+  t,dict_hook_ref_setter_show_dialog_components,
   dict_variable_application_data,
   applicationDraw,convert_data,
   diagramSelector,
@@ -59,18 +58,18 @@ export const ApplyLayoutDialog = ({
   const node_visible=NodeVisibleOnsSvg()
   const advanced_element_to_transform = [
     'addNode', 'addFlux', 'removeNode', 'removeFlux',
-    'posNode', 'posFlux', 
-    'Values', 
-    'attrNode', 'attrFlux', 
+    'posNode', 'posFlux',
+    'Values',
+    'attrNode', 'attrFlux',
     'attrGeneral'
   ]
   const simple_element_to_transform = [
-    'posNode', 'posFlux', 
-    'attrNode', 'attrFlux', 
+    'posNode', 'posFlux',
+    'attrNode', 'attrFlux',
     'attrGeneral'
   ]
   const default_element_to_transform = [
-    'posNode', 'posFlux',  
+    'posNode', 'posFlux',
     'attrNode', 'attrFlux',
     'attrGeneral'
   ]
@@ -102,27 +101,27 @@ export const ApplyLayoutDialog = ({
         <Button variant={mode_trans=='avancé'?'warning':'outline-warning'} style={{width:50/3+'%'}} onClick={()=>{set_mode_trans('avancé')}}>{t('Avancé')}</Button>
         <Button variant={mode_trans=='expert'?'danger':'outline-danger'} style={{width:50/3+'%'}} onClick={()=>{set_mode_trans('expert')}}>Expert</Button>
       </InputGroup>
-      
+
 
       {diagramSelector(
-        t, convert_data, data,set_data, prev_sankey_data, set_prev_sankey_data, 
+        t, convert_data, data,set_data, prev_sankey_data, set_prev_sankey_data,
         updateLayout, elementToDispose,DefaultSankeyData
       )}
       <OSTooltip label={t('Menu.Transformation.tooltips.Shortcuts')}>
         <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Shortcuts')}</InputGroup.Text>
-          <Button 
+          <Button
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant='outline-primary' 
+            variant='outline-primary'
             onClick={() => {
               elementToDispose.current.length = 0
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.unSelectAll')}</Button>
-          <Button 
+          <Button
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant='outline-primary' 
+            variant='outline-primary'
             onClick={() => {
               elementToDispose.current.length = 0
               if(mode_trans==='simple'){
@@ -137,27 +136,27 @@ export const ApplyLayoutDialog = ({
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.selectAll')}</Button>
-          <Button 
+          <Button
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant='outline-primary' 
+            variant='outline-primary'
             onClick={() => {
               elementToDispose.current.length = 0
               default_element_to_transform.forEach(el=>elementToDispose.current.push(el))
               setForceUpdate(!forceUpdate)
             }}
           >{t('Menu.Transformation.selectDefault')}</Button>
-        
-        </InputGroup>  
+
+        </InputGroup>
       </OSTooltip>
 
       {mode_trans!='simple'?
         <OSTooltip label={t('Menu.Transformation.tooltips.Topology')}>
           <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Topology')}</InputGroup.Text>
-            <Button 
+            <Button
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.current.includes('addNode')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('addNode')?'primary':'outline-primary'}
               onClick={() => {
                 if(!elementToDispose.current.includes('addNode')){
                   elementToDispose.current.push('addNode')
@@ -168,10 +167,10 @@ export const ApplyLayoutDialog = ({
                 }}
               }
             >{t('Menu.Transformation.addNode')}</Button>
-            <Button 
+            <Button
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.current.includes('removeNode')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('removeNode')?'primary':'outline-primary'}
               onClick={() => {
                 if(!elementToDispose.current.includes('removeNode')){
                   elementToDispose.current.push('removeNode')
@@ -182,10 +181,10 @@ export const ApplyLayoutDialog = ({
                 }}
               }
             >{t('Menu.Transformation.removeNode')}</Button>
-            <Button 
+            <Button
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.current.includes('addFlux')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('addFlux')?'primary':'outline-primary'}
               onClick={() => {
                 if(!elementToDispose.current.includes('addFlux')){
                   elementToDispose.current.push('addFlux')
@@ -195,10 +194,10 @@ export const ApplyLayoutDialog = ({
                   setForceUpdate(!forceUpdate)
                 }}
               }>{t('Menu.Transformation.addFlux')}</Button>
-            <Button 
+            <Button
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.current.includes('removeFlux')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('removeFlux')?'primary':'outline-primary'}
               onClick={() => {
                 if(!elementToDispose.current.includes('removeFlux')){
                   elementToDispose.current.push('removeFlux')
@@ -208,16 +207,16 @@ export const ApplyLayoutDialog = ({
                   setForceUpdate(!forceUpdate)
                 }}
               }>{t('Menu.Transformation.removeFlux')}</Button>
-        
+
           </InputGroup></OSTooltip>:<></>}
 
       {/* Taille et pos des noeud/flux */}
       <OSTooltip label={t('Menu.Transformation.tooltips.Geometry')}  >
         <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Geometry')}</InputGroup.Text>
-          <Button 
+          <Button
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={ elementToDispose.current.includes('posNode')?'primary':'outline-primary'} 
+            variant={ elementToDispose.current.includes('posNode')?'primary':'outline-primary'}
             onClick={() => {
               if(!elementToDispose.current.includes('posNode')){
                 elementToDispose.current.push('posNode')
@@ -227,10 +226,10 @@ export const ApplyLayoutDialog = ({
                 setForceUpdate(!forceUpdate)
               }}
             }>{t('Menu.Transformation.PosNoeud')}</Button>
-          <Button 
+          <Button
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={ elementToDispose.current.includes('posFlux')?'primary':'outline-primary'} 
+            variant={ elementToDispose.current.includes('posFlux')?'primary':'outline-primary'}
             onClick={() => {
               if(!elementToDispose.current.includes('posFlux')){
                 elementToDispose.current.push('posFlux')
@@ -240,18 +239,18 @@ export const ApplyLayoutDialog = ({
                 setForceUpdate(!forceUpdate)
               }}
             }> {t('Menu.Transformation.posFlux')}</Button>
-        
+
         </InputGroup>
       </OSTooltip>
-      
+
       {/* Valeur des flux */}
       {mode_trans!='simple'?
         <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
           <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Values')}</InputGroup.Text>
-            <Button 
-              className='btn_menu_config' 
+            <Button
+              className='btn_menu_config'
               style={{width:'20%'}}
-              variant={ elementToDispose.current.includes('Values')?'primary':'outline-primary'} 
+              variant={ elementToDispose.current.includes('Values')?'primary':'outline-primary'}
               onClick={() => {
                 if(!elementToDispose.current.includes('Values')){
                   elementToDispose.current.push('Values')
@@ -267,15 +266,15 @@ export const ApplyLayoutDialog = ({
                 }}
               }
             >{elementToDispose.current.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-        
+
           </InputGroup></OSTooltip>:<></>}
-      
+
       <OSTooltip label={t('Menu.Transformation.tooltips.Attribut')} >
         <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Attribut')}</InputGroup.Text>
-          <Button 
+          <Button
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.current.includes('attrNode')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('attrNode')?'primary':'outline-primary'}
             onClick={() => {
               if(!elementToDispose.current.includes('attrNode')){
                 elementToDispose.current.push('attrNode')
@@ -287,10 +286,10 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{t('Menu.Transformation.attrNode')}</Button>
-          <Button 
+          <Button
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.current.includes('attrFlux')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('attrFlux')?'primary':'outline-primary'}
             onClick={() =>{
               if(!elementToDispose.current.includes('attrFlux')){
                 elementToDispose.current.push('attrFlux')
@@ -301,17 +300,17 @@ export const ApplyLayoutDialog = ({
               }}
             }
           >{t('Menu.Transformation.attrFlux')}</Button>
-        
+
         </InputGroup></OSTooltip>
 
       {/* Etiquette */}
       {mode_trans=='expert'?
         <OSTooltip label={t('Menu.Transformation.tooltips.Tags')} >
           <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.Tags')}</InputGroup.Text>
-            <Button 
+            <Button
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={elementToDispose.current.includes('tagNode')?'primary':'outline-primary'} 
+              variant={elementToDispose.current.includes('tagNode')?'primary':'outline-primary'}
               onClick={() =>{
                 if(!elementToDispose.current.includes('tagNode')){
                   elementToDispose.current.push('tagNode')
@@ -323,10 +322,10 @@ export const ApplyLayoutDialog = ({
                 }}
               }
             >{t('Menu.Transformation.tagNode')}</Button>
-            <Button 
+            <Button
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={elementToDispose.current.includes('tagFlux')?'primary':'outline-primary'} 
+              variant={elementToDispose.current.includes('tagFlux')?'primary':'outline-primary'}
               onClick={() => {
                 if(!elementToDispose.current.includes('tagFlux')){
                   elementToDispose.current.push('tagFlux')
@@ -337,7 +336,7 @@ export const ApplyLayoutDialog = ({
                 }}
               }
             >{t('Menu.Transformation.tagFlux')}</Button>
-            <Button 
+            <Button
               className='btn_menu_config'
               style={{width:'20%'}}
               variant={elementToDispose.current.includes('tagData')?'primary':'outline-primary'}
@@ -351,17 +350,17 @@ export const ApplyLayoutDialog = ({
                 }}
               }
             >{t('Menu.Transformation.tagData')}</Button>
-        
+
           </InputGroup></OSTooltip>:<></>}
 
       {/* Aggrégation */}
       {mode_trans=='expert'?
         <OSTooltip label={t('Menu.Transformation.tooltips.tagLevel')} >
           <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.tagLevel')}</InputGroup.Text>
-            <Button 
+            <Button
               className='btn_menu_config'
               style={{width:'20%'}}
-              variant={elementToDispose.current.includes('tagLevel')?'primary':'outline-primary'} 
+              variant={elementToDispose.current.includes('tagLevel')?'primary':'outline-primary'}
               onClick={() => {
                 if(!elementToDispose.current.includes('tagLevel')){
                   elementToDispose.current.push('tagLevel')
@@ -373,13 +372,13 @@ export const ApplyLayoutDialog = ({
               }
             >{elementToDispose.current.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
           </InputGroup></OSTooltip>:<></>}
-      
+
       <OSTooltip label={t('Menu.Transformation.tooltips.attrGeneral')} >
         <InputGroup><InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.attrGeneral')}</InputGroup.Text>
-          <Button 
+          <Button
             className='btn_menu_config'
             style={{width:'20%'}}
-            variant={elementToDispose.current.includes('attrGeneral')?'primary':'outline-primary'} 
+            variant={elementToDispose.current.includes('attrGeneral')?'primary':'outline-primary'}
             onClick={() =>{
               if(!elementToDispose.current.includes('attrGeneral')){
                 elementToDispose.current.push('attrGeneral')
@@ -408,7 +407,7 @@ export const ApplyLayoutDialog = ({
               data.h_space = +evt.target.value
             }}/>
         </OSTooltip>
-        
+
       </Form.Group>
       {/* Ecart Vertical */}
       <Form.Group><InputGroup.Text style={{width:'20%'}}>{t('MEP.Vertical')}</InputGroup.Text>
@@ -421,17 +420,17 @@ export const ApplyLayoutDialog = ({
               data.v_space = +evt.target.value
             }}/>
         </OSTooltip>
-        
+
       </Form.Group>
       <OSTooltip label={t('MEP.tooltips.factExpH')} >
         <Form.Group>
-          
+
 
           <Form.Label>
             {t('MEP.factExpH')}
           </Form.Label>
-          
-          
+
+
           <InputGroup>
             <Form.Control
               type='number'
@@ -448,17 +447,17 @@ export const ApplyLayoutDialog = ({
               {t('MEP.stretchH')}
             </Button>
           </InputGroup>
-          
+
         </Form.Group>
       </OSTooltip>
       <OSTooltip label={t('MEP.tooltips.factExpV')} >
         <Form.Group>
-          
+
           <Form.Label>
             {t('MEP.factExpV')}
           </Form.Label>
-          
-          
+
+
           <InputGroup>
             <Form.Control
               type='number'
@@ -475,7 +474,7 @@ export const ApplyLayoutDialog = ({
               {t('MEP.stretchV')}
             </Button>
           </InputGroup>
-          
+
         </Form.Group>
       </OSTooltip>
 
@@ -485,13 +484,13 @@ export const ApplyLayoutDialog = ({
         <OSTooltip label={t('MEP.tooltips.PA')} >
           <Button
             size="sm"
-            onClick={() => {              
+            onClick={() => {
               dict_variable_application_data.function_on_wait.current=()=>{
                 ComputeAutoSankey(dict_variable_application_data, node_hspace,false)
                 set_data({ ...data })
               }
               dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
-      
+
             }}>
             {t('MEP.PA')}
           </Button>
@@ -506,7 +505,7 @@ export const ApplyLayoutDialog = ({
             {t('MEP.AN')}
           </Button>
         </OSTooltip>
-        
+
       </Form.Group>
     </Tab>
     <Tab key='trans_topo' eventKey='trans_topo' title={t('Menu.Transformation.trans_topo')} style={{marginBottom:'10px'}}></Tab>
@@ -529,8 +528,6 @@ export const ApplyLayoutDialog = ({
  */
 export type ApplySaveJSONTypes = {
   t : TFunction
-  // ref_setter_show_save_json : boolean,
-  // set_show_save_json: (_:boolean)=>void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   sankey_data : SankeyData,
   additionnal_button_option_save_json:JSX.Element[],
@@ -543,7 +540,13 @@ export type ApplySaveJSONTypes = {
  * @returns {*}
  */
 export const ApplySaveJSONDialog = (
-  { t,dict_hook_ref_setter_show_dialog_components,sankey_data,additionnal_button_option_save_json,ClickSaveDiagram }: ApplySaveJSONTypes
+  {
+    t,
+    dict_hook_ref_setter_show_dialog_components,
+    sankey_data,
+    additionnal_button_option_save_json,
+    ClickSaveDiagram
+  }: ApplySaveJSONTypes
 ) => {
   const [mode_save,set_mode_save]=useState(true)
   const [mode_visible_element,set_mode_visible_element]=useState(false)
@@ -565,7 +568,7 @@ export const ApplySaveJSONDialog = (
       <Modal.Body>
         <Form >
           <Form.Label>
-            <Checkbox 
+            <Checkbox
               sx={SmoothClasses({})}
               maxW={'40%'}
               isChecked={mode_save}
@@ -574,7 +577,7 @@ export const ApplySaveJSONDialog = (
             </Checkbox>
           </Form.Label>
           <Form.Label>
-            <Checkbox 
+            <Checkbox
               sx={SmoothClasses({})}
               maxW={'40%'}
               isChecked={mode_visible_element}
@@ -626,7 +629,7 @@ export const ApplySaveJSONDialog = (
                 }))
                 cpy.levelTags={}
                 cpy.linkZIndex=link_present;
-                
+
                 (cpy as unknown as {view:[]}).view=[]
               }
 
@@ -693,13 +696,13 @@ export const ExcelModal: FunctionComponent<ExcelModalTypes> = ({ t,UploadExcelIm
 }
 
 export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
-  t, 
+  t,
   convert_data,
   sankey_data,
   set_sankey_data,
   prev_sankey_data,
-  set_prev_sankey_data, 
-  updateLayout, 
+  set_prev_sankey_data,
+  updateLayout,
   elementToDispose,
   defaultData
 ) => {

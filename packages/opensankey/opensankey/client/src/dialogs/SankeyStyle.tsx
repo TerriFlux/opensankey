@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { useRef, useState } from 'react'
 import {
   FaPlus,
@@ -48,7 +47,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
   const { data } = dict_variable_application_data
   const { updateComponentMenuConfigNodeAppearence } = ComponentUpdater
   const { RedrawNodes } = node_function
-  
+
   const [ forceUpdate, setForceUpdate ] = useState(false)
   const [ selected_style_node, set_selected_style_node ] = useState('default')
   ref_selected_style_node.current = selected_style_node

@@ -1,14 +1,46 @@
 import * as d3 from 'd3'
-import { SankeyNode, SankeyLink,  TagsCatalog, SankeyData, SankeyDrawCurve, display_styleType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../types/Types'
-import {GetSankeyMinWidthAndHeight,DrawArrows} from './SankeyDrawFunction'
-import { ComputeEndPoints } from './SankeyDrawShapes'
-import {   LinkVisible,TestLinkValue,ReturnValueNode,ReturnValueLink,AssignLinkLocalAttribute} from '../configmenus/SankeyUtils'
-import { AddDragLinkZoneFType, DragLinkEventFType, DragLinkIOPositionFType } from './types/SankeyDragTypes'
-import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
 import {
-  GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType,
+  SankeyNode,
+  SankeyLink,
+  TagsCatalog,
+  SankeyData,
+  SankeyDrawCurve,
+  display_styleType,
+  dict_variable_application_dataType,
+  dict_variable_elements_selectedType
+} from '../types/Types'
+import {
+  GetSankeyMinWidthAndHeight,
+  DrawArrows
+} from './SankeyDrawFunction'
+import {
+  ComputeEndPoints
+} from './SankeyDrawShapes'
+import {
+  LinkVisible,
+  TestLinkValue,
+  ReturnValueNode,
+  ReturnValueLink,
+  AssignLinkLocalAttribute
+} from '../configmenus/SankeyUtils'
+import {
+  AddDragLinkZoneFType,
+  DragLinkEventFType,
+  DragLinkIOPositionFType
+} from './types/SankeyDragTypes'
+import {
+  DrawArrowsType
+} from './types/SankeyDrawFunctionTypes'
+import {
+  GetLinkValueFuncType,
+  GetSankeyMinWidthAndHeightFuncType,
+  LinkTextFuncType,
 } from '../configmenus/types/SankeyUtilsTypes'
-import { DragLinkCenterHandleEventFType, DragLinkShiftHandleEventFType, DragHandleFType} from './types/SankeyDragTypes'
+import {
+  DragLinkCenterHandleEventFType,
+  DragLinkShiftHandleEventFType,
+  DragHandleFType
+} from './types/SankeyDragTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -186,7 +218,7 @@ export const DragLinkIOPosition : DragLinkIOPositionFType =(
             )
           }
         )
-      }            
+      }
     })
 }
 
@@ -235,14 +267,14 @@ export const DragLinkCenterHandleEvent : DragLinkCenterHandleEventFType=(
         const shift_handle=d3.selectAll(' .opensankey #gg_link_handle_'+link.idLink+' .handle').nodes()
         DragHandle(link, dict_variable_application_data,dict_variable_elements_selected,applicationContext,data.display_style,selected_tags,(shift_handle[0] as Element), 'left', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,ComponentUpdater)
         DragHandle(link, dict_variable_application_data,dict_variable_elements_selected,applicationContext,data.display_style,selected_tags,(shift_handle[1] as Element), 'right', event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,ComponentUpdater)
-      }            
+      }
     })
     .on('end',()=>{
       updateComponentMenuConfigLink.current()
     })
 }
 /**
- * Function to drag a shift handle on selected links 
+ * Function to drag a shift handle on selected links
  *
  * @param {{current: SankeyLink[]}} multi_selected_links
  * @param {SankeyLink} link
@@ -289,7 +321,7 @@ export const DragLinkShiftHandleEvent : DragLinkShiftHandleEventFType = (
           link, dict_variable_application_data,dict_variable_elements_selected,applicationContext, display_style,    selected_tags,    this, position, event,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction, LinkText,GetLinkValue,ComponentUpdater
         )
       }
-        
+
     })
     .on('end',()=>{
       updateComponentMenuConfigLink.current()
@@ -307,7 +339,7 @@ const drag_link = (
   DrawArrows:DrawArrowsType
 ) => {
   const {data,display_nodes,display_links}=dict_variable_application_data
-  //Peut etre appelé sur un drag de path qui a directement l'id du link 
+  //Peut etre appelé sur un drag de path qui a directement l'id du link
   //ou bien peut etre appelé par le rect de drag qui a l'id du link après un prefix
   const idLink = d3.select(dragged).attr('id').replace('drag_zone_s_','').replace('drag_zone_t_','')
   const p2 = d3.pointer(event, (d3.select(' .opensankey #g_links').node() as SVGGElement))
@@ -316,16 +348,24 @@ const drag_link = (
     return
   }
   const node = display_nodes[linked_node.node_id]
-  let id_input_filtered=node.inputLinksId.filter(id=>{return id && data.links[id] && LinkVisible(data.links[id],data,display_nodes) })
-  let id_output_filtered=node.outputLinksId.filter(id=>LinkVisible(data.links[id],data,display_nodes))
-  const link_dragged=data.links[idLink]
-  const l_ori=ReturnValueLink(data,link_dragged,'orientation')
-  const l_recy=ReturnValueLink(data,link_dragged,'recycling')
+  let id_input_filtered = node
+    .inputLinksId
+    .filter(id=>{
+      return (
+        id &&
+        data.links[id] &&
+        LinkVisible(data.links[id], data, display_nodes)
+      )
+    })
+  let id_output_filtered = node
+    .outputLinksId
+    .filter(id=>LinkVisible(data.links[id], data, display_nodes))
+  const link_dragged = data.links[idLink]
+  const l_ori = ReturnValueLink(data, link_dragged, 'orientation')
+  const l_recy = ReturnValueLink(data, link_dragged, 'recycling')
 
   let io=''
-      
   if (linked_node.type === 'source') {
-      
     if(l_ori=='hh' ||l_ori=='hv' ){
       if((!l_recy && data.nodes[link_dragged.idTarget].x>data.nodes[linked_node.node_id].x) ||(l_recy && data.nodes[link_dragged.idTarget].x<data.nodes[linked_node.node_id].x) ){
         io='right'
@@ -353,7 +393,7 @@ const drag_link = (
       }else if(io=='bottom'){
         good_orientation=data.nodes[data.links[id].idTarget].y>=data.nodes[linked_node.node_id].y && (nl_ori=='vv' || nl_ori=='vh')
       }
-      return good_orientation 
+      return good_orientation
     })
     const true_source_order = node.outputLinksId.indexOf(idLink)
     const source_order = id_output_filtered.indexOf(idLink)
@@ -394,7 +434,7 @@ const drag_link = (
         }
       }
     }
-      
+
   }
   if (linked_node.type === 'target') {
     if(l_ori=='hh' ||l_ori=='hv' ){
@@ -411,7 +451,7 @@ const drag_link = (
       }
     }
     //Filtre les flux qui arrivent du même coté que le flux dragged
-      
+
     id_input_filtered=id_input_filtered.filter(id=>{
       let good_orientation=false
       const nl_ori=ReturnValueLink(data,data.links[id],'orientation')
@@ -425,7 +465,7 @@ const drag_link = (
       }else if(io=='bottom'){
         good_orientation=data.nodes[data.links[id].idSource].y>=data.nodes[linked_node.node_id].y && (nl_ori=='vv' || nl_ori=='vh')
       }
-      return good_orientation 
+      return good_orientation
     })
     const true_target_order = node.inputLinksId.indexOf(idLink)
     const target_order = id_input_filtered.indexOf(idLink)
@@ -522,7 +562,7 @@ export const DragHandle : DragHandleFType = (
   const d: SankeyLink = data.links[d3.select(dragged).attr('id').replace('right_horiz_shift','').replace('left_horiz_shift','').replace('vert_shift','')]
   let u_center_new = -1
   const source_node = display_nodes[d.idSource]
-  const target_node = display_nodes[d.idTarget]  
+  const target_node = display_nodes[d.idTarget]
   const d_recy=ReturnValueLink(data,d,'recycling')
   const d_v_s=ReturnValueLink(data,d,'vert_shift') as number
   const d_l_h_s=ReturnValueLink(data,d,'left_horiz_shift') as number
@@ -541,7 +581,14 @@ export const DragHandle : DragHandleFType = (
   if (isNaN(target_node.y)) {
     target_node.y = 100
   }
-  const [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, dict_variable_application_data,link,scale,inv_scale,GetLinkValue)  
+  const [xs, ys, xt, yt] = ComputeEndPoints(
+    source_node,
+    target_node,
+    dict_variable_application_data,
+    link,
+    scale,
+    inv_scale,
+    GetLinkValue)
   if (!d_recy) {
     if (d_ori === 'hh') {
       const link_x_length = Math.abs(xt - xs)
@@ -652,37 +699,37 @@ const drag_zone_position=(link:SankeyLink,
   scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 )=>{
-  const {data}=dict_variable_application_data
-  const pos_drag_zone_left = 1 / 50  
+  const { data } = dict_variable_application_data
+  const pos_drag_zone_left = 1 / 50
   const pos_drag_zone_right = 49 / 50
   const l_recy=ReturnValueLink(data,link,'recycling')
   const l_v_s=ReturnValueLink(data,link,'vert_shift') as number
   const l_ori=ReturnValueLink(data,link,'orientation')
-  
+
   const link_value = TestLinkValue(dict_variable_application_data, link,GetLinkValue)
   const tmp=(link_value=='')?1:link_value as number
   if (l_ori === 'hh' && l_recy) {
     if (!l_v_s) {
       AssignLinkLocalAttribute(link,'left_horiz_shift',0)
     }
-    
-    if (xt < xs) {  
+
+    if (xt < xs) {
       const vert = 'translate(' + (xs) + ', ' + (ys - default_handle_size / 2) + ')'
       const left = 'translate(' + (xt - default_handle_size ) + ' ,' + (yt - default_handle_size / 2) + ')'
       return [vert, left]
-    } else {  
+    } else {
       const vert = 'translate(' + (xt ) + ', ' + (yt - default_handle_size / 2) + ')'
       const left = 'translate(' + (xs - default_handle_size ) + ' ,' + (ys  - default_handle_size / 2) + ')'
       return [vert, left]
     }
   } else if (l_ori === 'vv' && l_recy) {
-   
+
     if (!l_v_s) {
       AssignLinkLocalAttribute(link,'left_horiz_shift',0)
     }
-    const y_left = yt - default_horiz_shift + pos_drag_zone_left - scale(tmp) // x14 
-    const y_right = ys + default_horiz_shift + pos_drag_zone_right + scale(tmp) // x2 
-    const x_vert = Math.max(xs, xt) + scale(2 * tmp) + l_v_s // y8 
+    const y_left = yt - default_horiz_shift + pos_drag_zone_left - scale(tmp) // x14
+    const y_right = ys + default_horiz_shift + pos_drag_zone_right + scale(tmp) // x2
+    const x_vert = Math.max(xs, xt) + scale(2 * tmp) + l_v_s // y8
     const vert = 'translate(' + (x_vert - default_handle_size / 2) + ', ' + (y_left + (y_right - y_left) / 2 - default_handle_size / 2) + ')'
     const left = 'translate(' + (xt + (x_vert - xt) / 2 - default_handle_size / 2) + ' ,' + (y_left - default_handle_size / 2) + ')'
     const right = 'translate(' + (xs + (x_vert - xs) / 2 - default_handle_size / 2) + ' ,' + (y_right - default_handle_size / 2) + ')'
@@ -698,7 +745,7 @@ const drag_zone_position=(link:SankeyLink,
     const left_s=(ys>yt)?-10:0
     const shift_left = 'translate(' + (xs - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_left+left_s) + ')'
     const shift_right = 'translate(' + (xt - default_handle_size / 2) + ', ' + (ys + (yt - ys) * pos_drag_zone_right+right_s) + ')'
-    return [shift_left, shift_right]  
+    return [shift_left, shift_right]
   } else if (l_ori === 'vh') {
     const x_center_draw = xs
     const y_center_draw = yt
@@ -748,9 +795,9 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
   const {multi_selected_links}=dict_variable_elements_selected
   d3.selectAll(' .opensankey #drag_zone_s_' + link.idLink).remove()
   d3.selectAll(' .opensankey #drag_zone_t_' + link.idLink).remove()
-  if (Object.values(data.links).map(d => d.idLink).includes(link.idLink) ) {  
+  if (Object.values(data.links).map(d => d.idLink).includes(link.idLink) ) {
     let error_msg: { text: string | undefined } | undefined
-    
+
     const source_node=display_nodes[link.idSource]
     const target_node=display_nodes[link.idTarget]
     if (isNaN(source_node.x)) {
@@ -780,8 +827,19 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link))?'ns-resize':'pointer')
-      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,drawCurveFunction,scale,inv_scale,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater)
-      )  
+      .call(DragLinkIOPosition(
+        link,
+        dict_variable_application_data,
+        dict_variable_elements_selected,
+        applicationContext,error_msg,
+        drawCurveFunction,scale,
+        inv_scale,
+        LinkText,
+        GetSankeyMinWidthAndHeight,
+        GetLinkValue,
+        DrawArrows,
+        ComponentUpdater)
+      )
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
       .attr('id', 'drag_zone_t_' + link.idLink)
@@ -795,7 +853,7 @@ export const AddDragLinkZone : AddDragLinkZoneFType =(
       .attr('fill-opacity','0')
       .attr('transform',pos_d[1])
       .attr('cursor',(multi_selected_links.current.includes(link))?'s-resize':'pointer')
-      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,drawCurveFunction,scale,inv_scale,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater))  
+      .call(DragLinkIOPosition(link,dict_variable_application_data,dict_variable_elements_selected,applicationContext,error_msg,drawCurveFunction,scale,inv_scale,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater))
   }
 }
 
