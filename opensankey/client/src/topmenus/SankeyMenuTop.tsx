@@ -384,8 +384,8 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
           
         <MenuList>
           <MenuItem onClick={()=>{
-            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current(data.width)
-            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current(data.height)
+            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current(parseInt(String(data.width)))
+            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current(parseInt(String(data.height)))
             dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)
           }} >PNG</MenuItem>
           <MenuItem onClick={()=>clickSavePDF(data)} >PDF</MenuItem>
@@ -1291,6 +1291,10 @@ export const pre_process_export_svg =()=>{
   d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0').attr('fill-opacity', '0')
   d3.selectAll('.opensankey .gg_label rect').attr('stroke-width','1')
   d3.selectAll('.opensankey .fo_input_label').remove()
+
+  // To hide handles from OpenSankey+ zdt
+  d3.selectAll(' .opensankey .g_label_handles .zdt_handles').attr('stroke-opacity', '0').attr('fill-opacity', '0')
+
   return svg
 }
 
