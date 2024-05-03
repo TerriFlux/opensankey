@@ -156,7 +156,7 @@ const eventLinkClick=(
 
 )=>{
   const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef}=dict_variable_elements_selected
-  const {updateComponentMenuConfigLink}=ComponentUpdater
+  const {updateComponentMenuConfigLink,updateMenuConfigTextLinkTooltip}=ComponentUpdater
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
       dataTagKey,
@@ -261,6 +261,7 @@ const eventLinkClick=(
       displayedInputLinkValueSetterRef.current.forEach(setter=>setter(''))
     }
     updateComponentMenuConfigLink.current()
+    updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
   }
 }
 
