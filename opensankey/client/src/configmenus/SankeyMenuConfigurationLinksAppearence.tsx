@@ -158,7 +158,7 @@ export const MenuConfigurationLinksAppearence : MenuConfigurationLinksAppearence
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
       if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? CutName(data.style_link[style_to_display].name, 25 ) : 'Multiple style parmi les noeuds sélectionnés'
+        return (inchangee) ? CutName(data.style_link[style_to_display].name, 25 ) : t('Noeud.multi_style')
       } else {
         return 'Aucun'
       }
