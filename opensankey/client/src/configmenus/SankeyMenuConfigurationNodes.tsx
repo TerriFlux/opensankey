@@ -1,5 +1,4 @@
 import React, { FunctionComponent, useState } from 'react'
-import 'react-folder-tree/dist/style.css'
 import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -174,7 +173,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           <MultiSelect
             options={INITIAL_OPTIONS}
             value={selected}
-            label={t('Noeud.TS')}
+            labelledBy={t('Noeud.TS')}
             onChange={(selected: [{ label: string, value: string }]) => {
               const new_sel = selected.map(d => d.value)
               const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))

@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -289,7 +288,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         <MenuList>
           <MenuItem
             onClick={Reinitialization} >
-            <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')} 
+            <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')}
           </MenuItem>
 
           <MenuItem
@@ -299,7 +298,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       </ChakraMenu>,
 
       <Box>
-          
+
         <ChakraMenu placement='bottom-start'  id='ouvrir'  >
           <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
 
@@ -357,7 +356,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       </Box>,
 
       <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='enregistrer' >
-          
+
         <OSTooltip placement='bottom' label={t('Menu.tooltips.enregistrer')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faDownload} />
@@ -381,7 +380,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
             {t('Menu.exporter')}
           </MenuButton>
         </OSTooltip>
-          
+
         <MenuList>
           <MenuItem onClick={()=>{
             dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current(data.width)
@@ -396,12 +395,12 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       <>{external_file_item}</>,
       <OSTooltip placement='bottom' label={t('Menu.tooltips.preference')}>
         <Box>
-          <ChakraButton variant='submenu_nav_btn' 
-            onClick={() => { 
+          <ChakraButton variant='submenu_nav_btn'
+            onClick={() => {
               dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_preference.current!(true) }}>
             <FontAwesomeIcon icon={faGears} />
             {t('Menu.preference')}
-            
+
           </ChakraButton>
         </Box>
       </OSTooltip>
@@ -417,7 +416,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       </OSTooltip>,
 
       <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' id='exporter' >
-          
+
         <OSTooltip placement='bottom' label={t('Menu.tooltips.style')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faPenToSquare} />
@@ -899,16 +898,16 @@ export const Menu: FunctionComponent<MenuTypes> = (
       </Navbar>:<></>}
 
       {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?
-        <Drawer 
+        <Drawer
           blockScrollOnMount={false}
-          isOpen={show_nav} 
-          placement='right' 
+          isOpen={show_nav}
+          placement='right'
           onClose={()=>set_show_nav(false)}
           variant='drawer_menu_config'
           trapFocus={false}
         >
-          {/* We have to set the width of the component here (and not in the theme) 
-          because for some reason a style is directly applied to this component 
+          {/* We have to set the width of the component here (and not in the theme)
+          because for some reason a style is directly applied to this component
           and we cannot override it in the theme */}
           <DrawerContent 
             width={menu_config_width}
@@ -1010,7 +1009,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
 const style_menu_draggable={
   display:'flex',
-  width:'25%', 
+  width:'25%',
   paddingLeft:'0.75rem',
   paddingRight:'0.75rem',
   paddingBottom:'0.25rem',
@@ -1143,7 +1142,7 @@ const  DataTagsDDNavBar = (
             <Col><FormLabel style={{justifyContent: 'center',fontWeight:'bold'}}>{tags_group.group_name}</FormLabel></Col>
             <Col><MultiSelect
               className={'multidropdown_filter_node_link'}
-              style={{ color: 'black'}}
+              // style={{ color: 'black'}}
               labelledBy={'dropdown_link_filter'}
               overrideStrings={{
                 'selectAll': 'Tout sélectionner',
@@ -1252,10 +1251,6 @@ const clickSavePDF = (data:SankeyData) => {
     .then(showFile).then(cleanFile)
 }
 
-
-
-
-
 export const pre_process_export_svg =()=>{
   // Resize the svg scale to be the scale by default
   const svg =d3.select(' .opensankey#svg-container svg')
@@ -1298,7 +1293,6 @@ export const post_process_export_svg=()=>{
   d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity','1')
   d3.select(' .opensankey#svg-container svg').style('border','2px')
 }
-
 
 export const ToastWaitFunc=({
   dict_variable_application_data,

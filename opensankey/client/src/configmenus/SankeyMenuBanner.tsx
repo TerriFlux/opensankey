@@ -305,7 +305,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
               <Col xs={10}>
                 <MultiSelect
                   className={'multidropdown_filter_node_link'}
-                  style={{widthMax:'200px', color: 'black' }}
+                  // style={{widthMax:'200px', color: 'black' }}
                   valueRenderer={(selected:selected_type[]) => {
                     return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
                   }}
@@ -1091,7 +1091,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
               <Col xs={10}>
                 <MultiSelect
                   className={'multidropdown_filter_node_link'}
-                  style={{ color: 'black',width:'200px' }}
+                  // style={{ color: 'black',width:'200px' }}
                   valueRenderer={(selected: selected_type[]) => {
                     return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun tag sélectionné'
                   }}
@@ -1220,7 +1220,7 @@ const addAllDropDownLinks = (
           <FormLabel>{tags_group.group_name}</FormLabel>
           <MultiSelect
             className={'multidropdown_filter_node_link'}
-            style={{ color: 'black',width:'200px' }}
+            // style={{ color: 'black',width:'200px' }}
             labelledBy={'dropdown_link_filter'}
             overrideStrings={{
               'selectAll': 'Tout sélectionner',
