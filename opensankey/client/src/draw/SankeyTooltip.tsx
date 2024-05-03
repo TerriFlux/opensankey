@@ -1,6 +1,6 @@
 import { SankeyNode, SankeyLink, SankeyData } from '../types/Types'
-import { ToPrecision,LinkVisible,NodeDisplayed,ReturnValueLink } from '../configmenus/SankeyUtils'
-import {  GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
+import { ToPrecision, LinkVisible, NodeDisplayed, ReturnValueLink } from '../configmenus/SankeyUtils'
+import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { TFunction } from 'i18next'
 
 
@@ -15,10 +15,10 @@ import { TFunction } from 'i18next'
  * @returns {string}
  */
 function WriteChildrenTable(
-  desagregate_source_nodes : SankeyNode[], 
-  desagregate_target_nodes : SankeyNode[], 
+  desagregate_source_nodes : SankeyNode[],
+  desagregate_target_nodes : SankeyNode[],
   data: SankeyData,
-  t: string, 
+  t: string,
   l: SankeyLink,
   GetLinkValue:GetLinkValueFuncType,
   trad:TFunction
@@ -43,7 +43,7 @@ function WriteChildrenTable(
           header_written = true
         }
         //const value_field = is_data ? 'data_value' : 'value'
-        let value_to_display = desagregated_link_info['value']  
+        let value_to_display = desagregated_link_info['value']
         if (desagregated_link_info.display_value && desagregated_link_info.display_value.includes('*')) {
           value_to_display = +String(GetLinkValue(data,desagregated_link.idLink).display_value).replace('*','')
         }
@@ -80,12 +80,12 @@ export const  LinkTooltipsContent = (
   d : SankeyLink | SankeyNode,
   GetLinkValue:GetLinkValueFuncType,
   trad:TFunction
-) => {  
+) => {
   const l = d as SankeyLink
   let t = '<p class="title" style="margin-bottom: 5px;">'+ data.nodes[l.idSource].name.split('\\n').join(' ') + ' → ' + data.nodes[l.idTarget].name.split('\\n').join(' ') + '</p>'
 
   if (l.tooltip_text) {
-    t += '<p>'+l.tooltip_text.split('\n').join('</br>')+ '</p>' 
+    t += '<p>'+l.tooltip_text.split('\n').join('</br>')+ '</p>'
   }
 
   //- Données
@@ -98,7 +98,7 @@ export const  LinkTooltipsContent = (
   let the_value = link_info.value
   if ('display_value' in d && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
     the_value = Number(String(link_info.display_value).replace('*',''))
-  } 
+  }
   t += '<td>' + TooltipLinkToPrecision(data,l,(the_value)?the_value as number:0,trad) +'</td>'
   t += '</td>'
   t += '</tr>'
@@ -111,14 +111,14 @@ export const  LinkTooltipsContent = (
 
   const source_node = data.nodes[l.idSource]
   const target_node = data.nodes[l.idTarget]
-  desagregate_source_nodes = Object.values(data.nodes).filter( 
+  desagregate_source_nodes = Object.values(data.nodes).filter(
     n => {
       for (const dim in n.dimensions) {
         if (n.dimensions[dim] !== undefined && n.dimensions[dim].parent_name) {
           if (n.dimensions[dim].parent_name === source_node.idNode) {
             return true
           } /*else {
-            const parent_node = Object.values(data.nodes).filter(n2=> n.dimensions[dim].parent_name && (n2.idNode === n.dimensions[dim].parent_name) )[0] 
+            const parent_node = Object.values(data.nodes).filter(n2=> n.dimensions[dim].parent_name && (n2.idNode === n.dimensions[dim].parent_name) )[0]
             if (parent_node && parent_node.dimensions[dim] && parent_node.dimensions[dim].parent_name === source_node.idNode) {
               return true
             }
@@ -136,7 +136,7 @@ export const  LinkTooltipsContent = (
         if ( parent_name === target_node.idNode) {
           return true
         } /*else {
-          const parent_node = Object.values(data.nodes).filter( n2=> n2.idNode === parent_name )[0] 
+          const parent_node = Object.values(data.nodes).filter( n2=> n2.idNode === parent_name )[0]
           if (parent_node && parent_node.dimensions[dim] && parent_node.dimensions[dim].parent_name === target_node.idNode) {
             return true
           }
@@ -169,7 +169,7 @@ export const  LinkTooltipsContent = (
  */
 export const NodeTooltipsContent = (
   data : SankeyData,
-  display_nodes : { [node_id: string]: SankeyNode }, 
+  display_nodes : { [node_id: string]: SankeyNode },
   d : SankeyNode,
   GetLinkValue:GetLinkValueFuncType,
   trad:TFunction
@@ -179,11 +179,11 @@ export const NodeTooltipsContent = (
   const display_links = data.links
 
   let t =  '<p class="title" style="margin-bottom: 5px;">'  + n.name.split('\\n').join(' ') + '</p>'
-  
+
   t += '<div style="padding-left :5px;padding-right :5px">'
 
   if (n.tooltip_text) {
-    t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n').join('<br>') + '</p>' 
+    t += '<p class="subtitle" style="	margin-bottom: 5px;">'+n.tooltip_text.split('\n').join('<br>') + '</p>'
   }
 
   let total=0
@@ -194,26 +194,26 @@ export const NodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
-      if (!LinkVisible(link,data,display_nodes)) {
+      if (!LinkVisible(link, data, display_nodes)) {
         continue
       }
       const link_info = GetLinkValue(data,link.idLink)
       let the_value = link_info.value
       if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
-      } 
+      }
       if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
         total += (the_value)?the_value as number:0
       }
     }
   }
   if ( n.inputLinksId.length > 0 ) {
-    t += '<p class="tab-title" style="margin-bottom: 5px;">Entrées'+ '</p>' 
+    t += '<p class="tab-title" style="margin-bottom: 5px;">Entrées'+ '</p>'
     t += '<table class="table" style="margin-bottom: 5px;">'
     t +=   '<thead><tr>'
     t +=      '<th></th><th>Valeur</th>'
     t +='<th>Pourcentage</th>'
-    Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>')  
+    Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>')
     t += '</tr></thead>'
     for (let i=0;i<n.inputLinksId.length;i++) {
       const link = display_links[n.inputLinksId[i]]
@@ -226,13 +226,13 @@ export const NodeTooltipsContent = (
       if (link_info.display_value == 'missing') {
         continue
       }
-      if (!LinkVisible(link,data,display_nodes)) {
+      if (!LinkVisible(link, data, display_nodes)) {
         continue
       }
-      
+
       if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
-      } 
+      }
       if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
         const source_name = data.nodes[link.idSource].name.split('\\n').join(' ')
         t += '<tr><td style="white-space: nowrap;">' + source_name + '</td>'
@@ -242,13 +242,13 @@ export const NodeTooltipsContent = (
           t += '<td>'+ percent + '%</td>'
           Object.keys(data.fluxTags).forEach(tag_group_key=> {
             const names : string[]= []
-            link_info.tags[tag_group_key].forEach(tag=> 
+            link_info.tags[tag_group_key].forEach(tag=>
               names.push(data.fluxTags[tag_group_key].tags[tag].name)
             )
             t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
           })
         } else {
-          t += '<td></td></tr>'          
+          t += '<td></td></tr>'
         }
       }
     }
@@ -264,7 +264,7 @@ export const NodeTooltipsContent = (
         //alert('Corruption du diagramme')
         return ''
       }
-      if (!LinkVisible(link,data,display_nodes)) {
+      if (!LinkVisible(link, data, display_nodes)) {
         continue
       }
       const link_info = GetLinkValue(data,link.idLink)
@@ -274,20 +274,20 @@ export const NodeTooltipsContent = (
       let the_value = link_info.value
       if ('display_value' in link_info && link_info.display_value !== '' && !link_info.display_value.includes('[')) {
         the_value = Number(String(link_info.display_value).replace('*',''))
-      } 
+      }
 
       if (NodeDisplayed(data,nodes[link.idSource]) && NodeDisplayed(data,nodes[link.idTarget]) ) {
         total += (the_value)?the_value as number:0
       }
     }
     if ( n.outputLinksId.length > 0 ) {
-      t += '<p class="tab-title" style="margin-bottom: 5px;">Sorties</p>'        
+      t += '<p class="tab-title" style="margin-bottom: 5px;">Sorties</p>'
       t += '<table class="table" style="margin-bottom: 5px;">'
       t +=   '<thead><tr>'
       t +=      '<th></th><th>Valeur</th>'
-      t +='<th>Pourcentage</th>' 
-      Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>') 
-      t += '</tr></thead>'    
+      t +='<th>Pourcentage</th>'
+      Object.values(data.fluxTags).forEach(tag=> t+='<th>'+tag.group_name+'</th>')
+      t += '</tr></thead>'
       for (let i=0;i<n.outputLinksId.length;i++) {
         const link = data.links[n.outputLinksId[i]]
         if (link === undefined ) {
@@ -295,7 +295,7 @@ export const NodeTooltipsContent = (
           return ''
         }
         const link_info = GetLinkValue(data,link.idLink)
-        if (!LinkVisible(link,data,display_nodes)) {
+        if (!LinkVisible(link, data, display_nodes)) {
           continue
         }
         let the_value = link_info.value
@@ -317,7 +317,7 @@ export const NodeTooltipsContent = (
               t += '<td style="white-space: nowrap;">'+names.join()+'</td></tr>'
             })
           } else {
-            t += '<td></td></tr>'          
+            t += '<td></td></tr>'
           }
         }
       }
@@ -336,7 +336,7 @@ export const NodeTooltipsContent = (
       if (! header_written) {
         t += '<br><p><b>Noeuds agrégés et désagrégés<b></p>'
         t += '<table class="table table-striped " ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
-        header_written = true        
+        header_written = true
       }
       has_parent = true
       t += '<td style="white-space: nowrap;">' + data.nodes[n.dimensions[dim].parent_name as string].name +'</td>'
@@ -346,10 +346,10 @@ export const NodeTooltipsContent = (
       if (! header_written) {
         t += '<br><p><b>Noeuds agrégés et désagrégés</b></p>'
         t += '<table class="table table-striped " ><thead><tr><th width="50%">Produit agrégé</th><th width="50%">Produits désagrégés</th></tr></thead><tbody><tr>'
-        header_written = true        
+        header_written = true
       }
       if (!has_parent) {
-        t += '<td></td>'        
+        t += '<td></td>'
       }
       t += '<td style="white-space: nowrap;">'
       desagregate_nodes.forEach(n=> t+=n.name+'<br>')

@@ -41,8 +41,8 @@ const SankeyLoad = ({
   const [show_load_dialog,set_show_load_dialog] = useState(false)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_load.current=set_show_load_dialog
   const [result,set_result] = useState('')
-  const [processing,set_processing] = useState(false)
   ref_result.current = set_result
+  const [processing,set_processing] = useState(false)
   ref_setter_processing.current = set_processing
   const [is_computing,set_is_computing] = useState(false)
 
@@ -203,8 +203,16 @@ const SankeyLoad = ({
 export const Counter = ({
   url_prefix,
   finishReconciliation,
-  value,result,set_result
-}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,set_result:(_:string)=>void}) => {
+  value,
+  result,
+  set_result
+}:{
+  url_prefix:string,
+  finishReconciliation:(x:boolean)=>void,
+  value:number[],
+  result:string,
+  set_result:(_:string)=>void
+}) => {
   useEffect(() =>{
     const interval = setInterval(() => {
       const root = window.location.href
@@ -346,7 +354,7 @@ export const ProcessExample: ProcessExampleFuncType = (
         ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
       })
     }else if((lvl_tag_keys.length > 1)){
-    // If data have multiple level Tag 
+    // If data have multiple level Tag
     // then compute node position at each level of each level tag group
     // except 'Primaire'
 
@@ -359,14 +367,15 @@ export const ProcessExample: ProcessExampleFuncType = (
           ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
         })
       })
-    
-    }else{
+
+    }
+    else{
       ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
 
     }
     callback(data)
     compute_default_input_outputLinksId(data.nodes, data.links)
-    // Set sector/product style to node only when it come from an excel file and without a layout 
+    // Set sector/product style to node only when it come from an excel file and without a layout
     SetNodeStyleToTypeNode(data)
   } else {
     convert_data((data as SankeyData & layout_type).layout, DefaultSankeyData)

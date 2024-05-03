@@ -1,5 +1,3 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
-
 //import renderer from 'react-test-renderer';
 //import {DefaultSankeyData, GetLinkValue} from '../configmenus/SankeyUtils'
 // import SankeyDraw from './SankeyDraw'

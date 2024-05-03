@@ -17,7 +17,6 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   EIGEN_INCLUDE: /home/ubuntu/dev_opensankey/sankeysuitemanager/eigen
   TESTS_DIR: /home/ubuntu/dev_opensankey/sankeysuitemanager/Tests
-  SankeyExcelParser: /home/ubuntu/dev_opensankey/SankeyExcelParser
 
 build:
   stage: build
@@ -27,10 +26,14 @@ build:
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
     - echo $TESTS_DIR
-    - echo $SankeyExcelParser
     - source /home/gitlab-runner/gitlab_dev/bin/activate
-    - pip install $SankeyExcelParser
-    - bash build_client.sh
+    # Install and link SankeyExcelParser
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/su-model/sankeyexcelparser.git
+    - cd sankeyexcelparser
+    - bash build.sh
+    - cd ..
+    # Build open-sankey
+    - bash build_client.sh -I -L -B -D
     - bash build_server.sh
     - bash build_doc.sh
   except:
