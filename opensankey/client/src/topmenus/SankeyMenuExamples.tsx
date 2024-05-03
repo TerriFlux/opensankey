@@ -1,4 +1,4 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
+
 import React from 'react'
 import { NavDropdown, Dropdown, } from 'react-bootstrap'
 import { SankeyData, SankeyNode, SankeyLink } from '../types/Types'
@@ -23,10 +23,10 @@ type subtypeObjectList={[_:string]:ExempleMenuTypes}
  */
 export type ExempleItemTypes = {
   exemple_menu : JSX.Element | ExempleMenuTypes,
-  url_prefix : string, 
-  data : SankeyData, 
-  set_data : (_:SankeyData)=>void 
-  current_path : string, 
+  url_prefix : string,
+  data : SankeyData,
+  set_data : (_:SankeyData)=>void
+  current_path : string,
   multi_selected_nodes: {current:SankeyNode[]},
   multi_selected_links: {current:SankeyLink[]},
   launch: (s:string) => void,
@@ -42,11 +42,22 @@ export type ExempleItemTypes = {
  * @returns {*}
  */
 export const ExempleItem = (
-  { exemple_menu, url_prefix, data, set_data, current_path, multi_selected_nodes, multi_selected_links,launch,Reinitialization,convert_data,DefaultSankeyData
-  }: ExempleItemTypes) => {
+  {
+    exemple_menu,
+    url_prefix,
+    data,
+    set_data,
+    current_path,
+    multi_selected_nodes,
+    multi_selected_links,
+    launch,Reinitialization,
+    convert_data,
+    DefaultSankeyData
+  }: ExempleItemTypes
+) => {
   return (
     <>
-      { ('Files' in exemple_menu) 
+      { ('Files' in exemple_menu)
         ? (exemple_menu as subtypeFileList)['Files'].map( (item,index)=> {
           let path = current_path+'/sankey/'+item
           if (!item.includes('.xlsx') && !item.includes('.json')) {
@@ -74,7 +85,7 @@ export const ExempleItem = (
                 }
                 UploadExemple(
                   path, url_prefix, data, set_data,Reinitialization,convert_data,DefaultSankeyData
-                )} 
+                )}
               }
             >{item.includes('xlsx') ? item.includes('reconciled') ? item.split('.x')[0].replace(/_/g, ' ').replace('reconciled',' excel') : item.split('.x')[0].replace(/_/g, ' ') + ' excel'
                 : item.includes('json') ? item.replace(/_/g, ' ').replace(' layout.json',' sankey') : item.replace('afmsankey_0.9.0.','')
@@ -88,9 +99,9 @@ export const ExempleItem = (
               tmp_title.shift()
             }
             const title=tmp_title.join(' ')
-            
+
             if (key === 'artefacts') {
-              return <></> 
+              return <></>
             }
             if (key == 'Tests') {
               return <></>

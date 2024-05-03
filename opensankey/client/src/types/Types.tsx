@@ -357,8 +357,8 @@ export interface dict_hook_ref_setter_show_dialog_componentsType {
   ref_setter_show_load : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_waiting : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_resolution_save_png : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_png_res_h:MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,
-  ref_setter_png_res_v:MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,
+  ref_setter_png_res_h : MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,
+  ref_setter_png_res_v : MutableRefObject<Dispatch<SetStateAction<number|undefined>>>,
 }
 
 export type applicationContextType = {

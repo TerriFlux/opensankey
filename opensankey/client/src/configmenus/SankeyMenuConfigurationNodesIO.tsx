@@ -49,7 +49,11 @@ const getIOLink = (
         const cond_no_recy=(((n_s.x<=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x<0))&& !recy)
         const cond_recy=(recy && n_s.x>=n.x)
 
-        return (cond_no_recy || cond_recy)  && (ori=='hh' ||ori=='vh') && LinkVisible(data.links[k],data,display_nodes)
+        return (
+          (cond_no_recy || cond_recy) &&
+          (ori==='hh' || ori==='vh') &&
+          LinkVisible(data.links[k], data, display_nodes)
+        )
       })
     } else if(pos=='right') {
       //Recherche tous les flux entrant a droite
@@ -61,7 +65,11 @@ const getIOLink = (
         const cond_no_recy=(((n_s.x>=n.x && n_s.position!='relative') ||(n_s.position=='relative' && n_s.x>0))&& !recy)
         const cond_recy=(recy && n_s.x<n.x)
 
-        return  (cond_no_recy ||cond_recy) && (ori=='hh' ||ori=='vh') && LinkVisible(data.links[k], data, display_nodes)
+        return (
+          (cond_no_recy ||cond_recy) &&
+          (ori==='hh' || ori==='vh') &&
+          LinkVisible(data.links[k], data, display_nodes)
+        )
       })
     } else if (pos=='top') {
       //Recherche tous les flux entrant en haut
@@ -69,7 +77,11 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_s=data.nodes[data.links[k].idSource]
 
-        return n_s.y<n.y && (ori=='vv' ||ori=='hv') && LinkVisible(data.links[k],data,display_nodes)
+        return (
+          (n_s.y < n.y) &&
+          (ori === 'vv' ||ori === 'hv') &&
+          LinkVisible(data.links[k], data, display_nodes)
+        )
       })
     } else if(pos=='bottom') {
       //Recherche tous les flux entrant en haut
@@ -77,7 +89,11 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_s=data.nodes[data.links[k].idSource]
 
-        return n_s.y>=n.y && (ori=='vv' ||ori=='hv') && LinkVisible(data.links[k],data,display_nodes)
+        return (
+          (n_s.y >= n.y) &&
+          (ori === 'vv' ||ori === 'hv') &&
+          LinkVisible(data.links[k], data, display_nodes)
+        )
       })
     }
   } else if (io=='output') {
@@ -93,7 +109,11 @@ const getIOLink = (
         const cond_no_recy=(((n_t.x<n.x  && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x<=0)) && !recy)
         const cond_recy=(recy && n_t.x>n.x)
 
-        return (( cond_no_recy|| cond_recy)) && (ori=='hh' ||ori=='hv')&& LinkVisible(data.links[k],data,display_nodes)
+        return (
+          (cond_no_recy || cond_recy) &&
+          (ori === 'hh' || ori === 'hv') &&
+          LinkVisible(data.links[k], data, display_nodes)
+        )
       })
     } else if(pos=='right') {
       //Recherche tous les flux entrant a droite
@@ -107,7 +127,11 @@ const getIOLink = (
         const cond_no_recy=(((n_t.x>=n.x && n_t.position!='relative') ||(n_t.position=='relative' && n_t.x>0))&& !recy)
         const cond_recy=(recy && n_t.x<=n.x)
 
-        return  ( cond_no_recy || cond_recy) && (ori=='hh' ||ori=='hv')&& LinkVisible(data.links[k],data,display_nodes)
+        return (
+          (cond_no_recy || cond_recy) &&
+          (ori==='hh' || ori==='hv') &&
+          LinkVisible(data.links[k], data, display_nodes)
+        )
       })
     } else if (pos=='top') {
       //Recherche tous les flux entrant en haut
@@ -118,7 +142,11 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
 
-        return n_t.y<n.y && (ori=='vv' ||ori=='vh')&& LinkVisible(data.links[k],data,display_nodes)
+        return (
+          (n_t.y<n.y) &&
+          (ori === 'vv' ||ori === 'vh') &&
+          LinkVisible(data.links[k], data, display_nodes)
+        )
       })
     } else if (pos=='bottom') {
       //Recherche tous les flux entrant en haut
@@ -129,7 +157,11 @@ const getIOLink = (
         const ori=ReturnValueLink(data,data.links[k],'orientation') as string
         const n_t=data.nodes[data.links[k].idTarget]
 
-        return n_t.y>=n.y && (ori=='vv' ||ori=='vh')&& LinkVisible(data.links[k],data,display_nodes)
+        return (
+          (n_t.y >= n.y) &&
+          (ori === 'vv' ||ori === 'vh') &&
+          LinkVisible(data.links[k], data, display_nodes)
+        )
       })
     }
   }
@@ -472,7 +504,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
   menu_for_modal=false
 ) => {
   const { t } = applicationContext
-  const { data,  display_nodes,display_links } = dict_variable_application_data
+  const { data, display_nodes, display_links } = dict_variable_application_data
   const { multi_selected_nodes, multi_selected_links } = dict_variable_elements_selected
   const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
   const [ link_io, set_link_io ] = useState('output')
@@ -669,7 +701,7 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
           set_tab_colored(evt.target.checked)
         }}
       >
-        <OSTooltip label={t('Noeud.PF.tooltips.lti')}>          
+        <OSTooltip label={t('Noeud.PF.tooltips.lti')}>
           {t('Noeud.PF.lti')}
         </OSTooltip>
       </Checkbox>

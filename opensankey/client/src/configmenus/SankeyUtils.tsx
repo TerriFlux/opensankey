@@ -201,12 +201,11 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   TestLinkValue: TestLinkValueFuncType,
   ref_link: SankeyLink | undefined = undefined,
   GetLinkValue:GetLinkValueFuncType
-
 ): number[] => {
   if (node == undefined) {
     return [0,0,0,0]
   }
-  const {data,display_links,display_nodes}=dict_variable_application_data
+  const { data, display_links, display_nodes } = dict_variable_application_data
   const { nodes, links} = data
   let offset_height_left = 0
   let offset_height_right = 0
@@ -1212,10 +1211,10 @@ export interface DataSuiteType{
   view?:{id: string,view_data: object,nom:string,details:string}[],
 }
 /**
- * 
- * @param data 
- * @param type_tag_name 
- * @param tags_group_key 
+ *
+ * @param data
+ * @param type_tag_name
+ * @param tags_group_key
  * @param is_auto_from_add_grp_tag variable used to avoid redondancie when we add a new group data tag
  */
 export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,is_auto_from_add_grp_tag=false): void=>{
@@ -1258,19 +1257,19 @@ export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 
  * Create a subtree value for link, this function is used when we add a new tag to an existing data tag group
  * It allow to get a default subtree that we add to each link value at the correct depth
  * Ex : - we have 2 grp : grp1 and group2 with each one have at least 1 tag already wich give us link value like : value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}}}
- *  
+ *
  * - if we add a new tag to a group branch (grp1) we have to recreate subtree to be similar to other tag of the same grp wich give us :
  *  value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}},
  *          tag2_grp1:{tag1_grp2:{value:'',display_value:'',...}}
  *           }
- * 
+ *
  *  - if we add a new tag to a group leaf (in that case grp2) we just add a new value possible :
  *  value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}, tag2_grp2:{value:'',display_value:'',...}}}
  */
 const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagType=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number)=>{
   if(current_index<index_of_grp_tag){
     const next_link_value_depth=Object.values(link_value)[0] as SankeyLinkValueDict
-    return createDefaultLinkValueForNewDataTag(next_link_value_depth,index_of_grp_tag,current_index+1) 
+    return createDefaultLinkValueForNewDataTag(next_link_value_depth,index_of_grp_tag,current_index+1)
   }else{
     const entries_of_values= Object.entries(link_value)
     const last_entrie=entries_of_values[entries_of_values.length-1]
@@ -1311,7 +1310,7 @@ export const AddGroupTag:AddGroupTagFuncType = (data:SankeyData,type_tag_name:'n
     Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[type_tag_name])[0])
   }
 
-  // Add a tag to the group 
+  // Add a tag to the group
   AddTag(data,type_tag_name,k,true)
 
   // If we create a group of data tags then we redesign link value object
@@ -1327,7 +1326,7 @@ export const resetLinkValueAfterDeleteDTGrp=(data:SankeyData)=>{
   const nObjet = CreateObject(data, listK)
   Object.entries(data.links).forEach(l=>{
     // We parse a stringified version of the object to make a copy of it
-    // if we didn't do it all link value would reference the same object therefore modifying one link value would modify all of them 
+    // if we didn't do it all link value would reference the same object therefore modifying one link value would modify all of them
     l[1].value=JSON.parse(JSON.stringify(nObjet))
   })
 }
@@ -1337,7 +1336,7 @@ export const addDepthLinkValueWithNewDTGrp=(data:SankeyData)=>{
   const listK = Object.keys(data.dataTags).filter(d => Object.keys(data.dataTags[d].tags).length != 0)
   const first_tag_of_last_grp=Object.keys(data.dataTags[listK[listK.length-1]].tags)[0]
   Object.entries(data.links).forEach(l=>{
-    //For eack link we go through each value and add a new depath to the value with the first tag of the new dataTagGrp 
+    //For eack link we go through each value and add a new depath to the value with the first tag of the new dataTagGrp
     l[1].value=updateLinkValueDepthWithNewDTGrp(l[1].value,first_tag_of_last_grp)
   })
 }

@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import { SankeyData, SankeyLink, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode,TagsCatalog,TagsGroup,SankeyNodeStyle,SankeyLinkAttrLocal, SankeyNodeAttrLocal} from '../types/Types'
 import colormap from 'colormap'
 import { DefaultNode,AssignLinkLocalAttribute, ReturnValueLink, DefaultLinkStyle,DefaultNodeProductStyle,DefaultNodeSectorStyle} from './SankeyUtils'
@@ -298,7 +297,7 @@ export const compute_initial_colors : compute_initial_colorsFType = (
 export const convert_boolean : convert_booleanFType = (
   data : SankeyData
 ) =>{
-  
+
   Object.values(data.nodeTags).forEach(
     tags_group => {
       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
@@ -475,7 +474,7 @@ export const convert_tags:convert_tagsFuncType = (
       delete data.nodeTags['Type de noeud'].tags['échange']
     }
 
-    // Delete residue of old key for sector & product style to avoid redondance in list of node style 
+    // Delete residue of old key for sector & product style to avoid redondance in list of node style
     if(Object.keys(data.style_node).includes('style_node_prod')){
       delete data.style_node['style_node_prod']
     }
@@ -587,7 +586,7 @@ export const convert_tags:convert_tagsFuncType = (
           Object.keys(target_node.dimensions).forEach(dim_key => {
             n.dimensions[dim_key] = JSON.parse(JSON.stringify(target_node.dimensions[dim_key]))
           })
-    
+
           Object.keys(target_node.tags).forEach(tag_key => {
             if ( tag_key === 'Type de noeud' ) {
               return
@@ -595,8 +594,8 @@ export const convert_tags:convert_tagsFuncType = (
             //const tags = [...target_node.tags[tag_key]]
             if (tag_key in n.tags) {
               n.tags[tag_key] = JSON.parse(JSON.stringify(target_node.tags[tag_key]))
-            } 
-          })   
+            }
+          })
         } else {
           const link = data.links[n.inputLinksId[0]]
           if (!link) {
@@ -607,7 +606,7 @@ export const convert_tags:convert_tagsFuncType = (
           Object.keys(source_node.dimensions).forEach(dim_key => {
             n.dimensions[dim_key] = JSON.parse(JSON.stringify(source_node.dimensions[dim_key]))
           })
-    
+
           Object.keys(source_node.tags).forEach(tag_key => {
             if ( tag_key === 'Type de noeud' ) {
               return
@@ -704,10 +703,10 @@ export const convert_tags:convert_tagsFuncType = (
   })
   Object.values(data.dataTags).forEach(t=>{
     t.show_legend=typeof(t.show_legend)=='boolean'?t.show_legend:((t.show_legend===1))
-    t.siblings=t.siblings?t.siblings:[]    
+    t.siblings=t.siblings?t.siblings:[]
   })
 
-  // Convertie les nodeTags avec pour bannière 'level' en levelTags 
+  // Convertie les nodeTags avec pour bannière 'level' en levelTags
   if(has_not_converted_nodeTags_as_levelTags(data)){
     data.levelTags = Object.assign({},data.levelTags,Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level')))
     data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
@@ -722,11 +721,11 @@ export const convert_nodes:convert_nodesFuncType = (
   const data_to_convert = data as SankeyData & ConvertSankeyData
   const default_n=DefaultNode(data)
 
-  // If node has old 'id' attribute, convert it to new one 'idNode' 
+  // If node has old 'id' attribute, convert it to new one 'idNode'
   if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {
     Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
-  
+
   const has_product = Object.values(data.nodes).filter(n =>((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes=Object.values(data.nodes).map(n=>n.idNode)
 
@@ -786,12 +785,12 @@ export const convert_nodes:convert_nodesFuncType = (
       n.local.value_font_size=n_depreciated.display_style?.value_font_size
       n.local.label_horiz_valeur=n_depreciated.display_style?.label_horiz_valeur
       n.local.label_vert_valeur=n_depreciated.display_style?.label_vert_valeur
-        
+
 
       delete n_depreciated.display_style
     }
 
-    // Assign ancienement attribut de noeud obligatoires en tant que var local 
+    // Assign ancienement attribut de noeud obligatoires en tant que var local
     if (n_depreciated.visible === 1) {
       n.local=(n.local!==undefined && n.local!==null)?n.local:{} as SankeyNodeAttrLocal
       n.local.shape_visible = true
@@ -861,7 +860,7 @@ export const convert_nodes:convert_nodesFuncType = (
     // FIN CONVERSION EN ATTRIBUT LOCAL
     // ==================================================================
 
-    
+
     if (n_depreciated.definition) {
       n.tooltip_text = n_depreciated.definition
       delete n_depreciated.definition
@@ -937,11 +936,11 @@ export const convert_nodes:convert_nodesFuncType = (
       n.dimensions = new_dimensions
     }
 
-    
+
     // Filter out variable in the node that are null or undefined so they can be attribued the default value
     n=(Object.fromEntries(Object.entries(n).filter(kn=>kn[1]!==null && kn[1]!==undefined)) as SankeyNode)
 
-    // Fill missing variable from incoming node with default value so the node has the required structure 
+    // Fill missing variable from incoming node with default value so the node has the required structure
     n=Object.assign(JSON.parse(JSON.stringify(default_n)),n)
 
     // Search if nodes reference parent that doesn't exist
@@ -1294,7 +1293,7 @@ export const convert_links:convert_linksFuncType = (
       if(Object.keys(l).includes(k)){
         l.local=l.local?l.local:{};
         (l.local[kl] as unknown)=((l as SankeyLink)[(k as keyof SankeyLink)] as boolean | string | number)
-        delete l[(k as keyof SankeyLink)] 
+        delete l[(k as keyof SankeyLink)]
       }
     })
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color) ) {
@@ -1453,7 +1452,7 @@ export const convert_links:convert_linksFuncType = (
       }
     )
   }
-  
+
 
 }
 
@@ -1522,7 +1521,7 @@ export const convert_data:ConvertDataFuncType = (
   // const tmp1 : SankeyLinkStyle = {
   //   idLink:'',
   //   name:'',
-  
+
   //   // Geometry/appearence
   //   orientation: '',
   //   arrow: true,
@@ -1556,7 +1555,7 @@ export const convert_data:ConvertDataFuncType = (
   // const tmp2 : SankeyNodeStyle = {
   //   idNode: '',
   //   name: '',
-  
+
   //   // Parameter of node shape
   //   shape_visible: true,
   //   label_visible: true,
@@ -1567,7 +1566,7 @@ export const convert_data:ConvertDataFuncType = (
   //   node_arrow_angle_factor:0,
   //   node_arrow_angle_direction:'',
   //   colorSustainable: true,
-  
+
   //   // Parameter of node label
   //   font_family: '',
   //   font_size: 0,
@@ -1579,7 +1578,7 @@ export const convert_data:ConvertDataFuncType = (
   //   label_vert: '',
   //   label_horiz: '',
   //   label_background:true,
-  
+
   //   // Parameter of node value label
   //   show_value: true,
   //   label_vert_valeur: '',
@@ -1588,7 +1587,7 @@ export const convert_data:ConvertDataFuncType = (
   // }
 
   // Convert style of node and link
-  // Previously tehy were object identical to SankeyNode or SankeyLink, now they are like local attribute  
+  // Previously tehy were object identical to SankeyNode or SankeyLink, now they are like local attribute
   // if(Object.keys(data_to_convert.style_link['default'])!== Object.keys(tmp1) ){
   //   data.style_link['default'] = DefaultLinkStyle()
   // }
@@ -1627,7 +1626,7 @@ const clean_data_local=(data:SankeyData)=>{
 
         if(n.local && n.local[k_l_c]==data.style_node[n.style][k_s_c]){
           delete n.local[k_l_c]
-        } 
+        }
       })
     }
   })
@@ -1641,7 +1640,7 @@ const clean_data_local=(data:SankeyData)=>{
 
         if(l.local && l.local[k_l_c]==data.style_link[l.style][k_s_c]){
           delete l.local[k_l_c]
-        } 
+        }
       })
     }
   })

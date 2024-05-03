@@ -1,5 +1,47 @@
+
+import React, { FunctionComponent, useState } from 'react'
 import * as d3 from 'd3'
-import { SankeyData, SankeyLink, SankeyNode, SankeyNodeAttrLocal, agregationType, dict_variable_application_dataType} from '../types/Types'
+
+import {
+  diff as getDiff,
+  applyChange
+} from 'deep-diff'
+import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
+
+import {
+  SankeyData,
+  SankeyLink,
+  SankeyNode,
+  SankeyNodeAttrLocal,
+  agregationType,
+  dict_variable_application_dataType
+} from '../types/Types'
+import {
+  AggregateFuncType,
+  DesaggregateFuncType,
+  computeHorizontalIndexFuncType,
+  hasAggregationLinkToNodeFuncType,
+  synchronizeNodesandLinksIdFuncType,
+  updateLayoutFuncType
+} from './types/SankeyDrawLayoutTypes'
+import {
+  reorganize_node_inputLinksIdFuncType,
+  reorganize_node_outputLinksIdFuncType
+} from './types/SankeyDrawLayoutTypes'
+import {
+  ComputeAutoSankeyFuncType,
+  agregationFType,
+  apply_input_outputLinksIdFType,
+  arrangeNodesFType,
+  compute_default_input_outputLinksIdFType,
+  desagregationFType,
+  nodeHeightFType,
+  reorganize_all_input_outputLinksIdFType,
+  reorganize_inputLinksIdFType
+} from './types/SankeyDrawLayoutTypes'
+import {
+  GetLinkValueFuncType
+} from '../configmenus/types/SankeyUtilsTypes'
 import {
   AssignLinkLocalAttribute,
   AssignNodeLocalAttribute,
@@ -9,35 +51,10 @@ import {
   NodeDisplayed,
   ReturnValueNode,
   TestLinkValue,
+  ReturnValueLink,
+  DeleteNode,
+  DeleteLink
 } from '../configmenus/SankeyUtils'
-import React, { FunctionComponent, useState } from 'react'
-import { Modal, Form, Row, Col, Button } from 'react-bootstrap'
-import { GetLinkValueFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { 
-  AggregateFuncType, 
-  DesaggregateFuncType, 
-  computeHorizontalIndexFuncType, 
-  hasAggregationLinkToNodeFuncType, 
-  synchronizeNodesandLinksIdFuncType, 
-  updateLayoutFuncType 
-} from './types/SankeyDrawLayoutTypes'
-import { 
-  reorganize_node_inputLinksIdFuncType, 
-  reorganize_node_outputLinksIdFuncType 
-} from './types/SankeyDrawLayoutTypes'
-import {
-  ComputeAutoSankeyFuncType, 
-  agregationFType, 
-  apply_input_outputLinksIdFType, 
-  arrangeNodesFType, 
-  compute_default_input_outputLinksIdFType, 
-  desagregationFType, 
-  nodeHeightFType, 
-  reorganize_all_input_outputLinksIdFType, 
-  reorganize_inputLinksIdFType
-} from './types/SankeyDrawLayoutTypes'
-import { ReturnValueLink } from '../configmenus/SankeyUtils'
-import { DeleteNode, DeleteLink } from '../configmenus/SankeyUtils'
 
 
 export const reorganize_inputLinksId : reorganize_inputLinksIdFType = (
@@ -48,7 +65,6 @@ export const reorganize_inputLinksId : reorganize_inputLinksIdFType = (
   nodes: { [idNode:string]:SankeyNode},
   links: { [idLink:string]:SankeyLink}
 ) => {
-
   if (input) {
     reorganize_node_inputLinksId(data,node, nodes, links)
   }
@@ -227,7 +243,7 @@ export const computeHorizontalIndex:computeHorizontalIndexFuncType = (
  * @param {object} links
  * @param {object} nodes
  */
-const compute_recycling_horizontal_index = (
+export const compute_recycling_horizontal_index = (
   link: SankeyLink,
   visible_nodes_ids: string[],
   recycling_links_ids: string[],
@@ -300,7 +316,7 @@ export const arrangeNodes : arrangeNodesFType = (
 }
 
 /**
- * Calcul de la hauteur d'un noeud
+ * Calcul de la hauteur difference'un noeud
  *
  * @param {SankeyNode} node Node to compute height from
  * @param {SankeyData} data
@@ -368,7 +384,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
         [key]: data.links[key]
       })
     }, {})
-  
+
   dict_variable_application_data.display_links=display_links
   // Positionning values
   const v_space = data.v_space
@@ -514,7 +530,7 @@ export const ComputeAutoSankey:ComputeAutoSankeyFuncType = (
         if (horizontal_indexes_per_nodes_ids[node.idNode]<min_next_horizontal_index-1) {
           to_splice.push(node)
           // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
-          // ce qui lors de l'affectation d'une position x, ceux-ci sont négatif
+          // ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
           horizontal_indexes_per_nodes_ids[node.idNode] = min_next_horizontal_index - 1
           if (!nodes_per_horizontal_indexes[min_next_horizontal_index - 1]) {
             nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
@@ -827,7 +843,7 @@ const hasAggregationLinkToNode:hasAggregationLinkToNodeFuncType=(data : SankeyDa
  *
  * @param {SankeyData} data Data structure for Sankey
  * @param {string} idNode Id of node that we aggregate
- * @param {string} cur_dimension Dimension on which we aggregate node 
+ * @param {string} cur_dimension Dimension on which we aggregate node
  */
 export const agregation : agregationFType = (
   data : SankeyData,
@@ -880,7 +896,7 @@ export const agregation : agregationFType = (
 }
 
 export type AgregationModalTypes = {
-  dict_variable_application_data:dict_variable_application_dataType
+  dict_variable_application_data: dict_variable_application_dataType
   agregationRef : agregationType
 }
 
@@ -925,7 +941,7 @@ export const AgregationModal : FunctionComponent<AgregationModalTypes> = (
           set_dim_name('')
         } } >
         <Modal.Header closeButton>
-          <Modal.Title>Dimension d'agrégation</Modal.Title>
+          <Modal.Title>Dimension difference'agrégation</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -1081,7 +1097,7 @@ export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType 
   data: SankeyData,
   node: SankeyNode,
   nodes: { [idNode: string]: SankeyNode} ,
-  links: { [idLink: string]: SankeyLink} 
+  links: { [idLink: string]: SankeyLink}
 ) => {
   // Get list of input links of given node
   const input_links = Object.values(links).filter(
@@ -1148,7 +1164,9 @@ export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType 
     }
   })
   node.inputLinksId = input_links.map(l => l.idLink)
-}/**
+}
+
+/**
  * Reorganize vertically all output links
  * from given node
  *
@@ -1157,13 +1175,11 @@ export const reorganize_node_inputLinksId: reorganize_node_inputLinksIdFuncType 
  * @param {object} nodes Dict of node to reorganize
  * @param {object} links Dict of links to reorganize
  */
-
-
 export const reorganize_node_outputLinksId: reorganize_node_outputLinksIdFuncType = (
   data: SankeyData,
   node: SankeyNode,
   nodes: { [idNode: string]: SankeyNode} ,
-  links: { [idLink: string]: SankeyLink} 
+  links: { [idLink: string]: SankeyLink}
 ) => {
   // Get list of output links of given node
   const output_links = Object.values(links).filter(
@@ -1231,10 +1247,12 @@ export const reorganize_node_outputLinksId: reorganize_node_outputLinksIdFuncTyp
   })
   node.outputLinksId = output_links.map(l => l.idLink)
 }
+
 const normalize_name = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
   return new_name
 }
+
 export const synchronizeNodesandLinksId: synchronizeNodesandLinksIdFuncType = (
   dataModify: SankeyData,
   dataRef: SankeyData
@@ -1304,6 +1322,7 @@ export const synchronizeNodesandLinksId: synchronizeNodesandLinksIdFuncType = (
   })
   // compute_default_input_outputLinksId(dataModify.nodes, dataModify.links)
 }
+
 export const updateLayout: updateLayoutFuncType = (
   data: SankeyData,
   new_layout: SankeyData,
@@ -1313,60 +1332,75 @@ export const updateLayout: updateLayoutFuncType = (
   if (synchronize) {
     synchronizeNodesandLinksId(data, new_layout)
   }
-  /* eslint-disable */
-  // @ts-ignore
-  const deep_diff = require('deep-diff')
-  /* eslint-enable */
   if (mode.includes('attrGeneral')) {
-    let difference = deep_diff.diff(data, new_layout)
-    if (difference) {
-      difference = difference.filter((d: { path: string[]; kind: string} ) => d.kind === 'E' && d.path.length === 1 && d.path[0]!=='current_view')
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data, {}, diff))
+    let differences = getDiff(data, new_layout)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'E') &&
+          (difference.path!.length === 1) &&
+          (difference.path![0]!=='current_view'))
+      differences.forEach(
+        (difference) => applyChange(data, {}, difference))
     }
-    difference = deep_diff.diff(data.style_node, new_layout.style_node)
-    if (difference) {
-      difference.forEach((diff: { path: string[]; kind: string}) => deep_diff.applyChange(data.style_node, {}, diff))
+    const node_style_differences = getDiff(data.style_node, new_layout.style_node)
+    if (node_style_differences) {
+      node_style_differences.forEach((difference) => applyChange(data.style_node, {}, difference))
     }
 
-    difference = deep_diff.diff(data.style_link, new_layout.style_link)
-    if (difference) {
-      difference.forEach((diff: { path: string[]; kind: string}) => deep_diff.applyChange(data.style_link, {}, diff))
+    const link_style_differences = getDiff(data.style_link, new_layout.style_link)
+    if (link_style_differences) {
+      link_style_differences.forEach((difference) => applyChange(data.style_link, {}, difference))
     }
   }
 
   if (mode.includes('addNode')) {
-    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
-    if (difference) {
+    let differences = getDiff(data.nodes, new_layout.nodes)
+    if (differences) {
       const nodesId: string[] = []
-      difference = difference.filter((d: { path: string[]; kind: string} ) => (d.kind === 'N') && d.path.length === 1)
-      difference.forEach((d: { path: string[]; kind: string} ) => nodesId.push(d.path[0]))
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.nodes, {}, diff))
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'N') &&
+          (difference.path!.length === 1))
+      differences.forEach(
+        (difference) => nodesId.push(difference.path![0]))
+      differences.forEach(
+        (difference) => applyChange(data.nodes, {}, difference))
       nodesId.forEach(nodeId => {
         data.nodes[nodeId].inputLinksId = []
         data.nodes[nodeId].outputLinksId = []
       })
     }
   }
+
   if (mode.includes('removeNode')) {
-    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
-    if (difference) {
+    let differences = getDiff(data.nodes, new_layout.nodes)
+    if (differences) {
       const nodesId: string[] = []
-      difference = difference.filter((d: { path: string[]; kind: string} ) => (d.kind === 'D') && d.path.length === 1)
-      difference.forEach((d: { path: string[]; kind: string} ) => nodesId.push(d.path[0]))
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'D') &&
+          (difference.path!.length === 1))
+      differences.forEach(
+        (difference) => nodesId.push(difference.path![0]))
       nodesId.forEach(nodeId => {
         DeleteNode(data, data.nodes[nodeId])
       })
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.nodes, {}, diff))
+      differences.forEach(
+        (difference) => applyChange(data.nodes, {}, difference))
     }
   }
 
   if (mode.includes('addFlux')) {
-    let difference = deep_diff.diff(data.links, new_layout.links)
-    if (difference) {
+    let differences = getDiff(data.links, new_layout.links)
+    if (differences) {
       const linksId: string[] = []
-      difference = difference.filter((d: { path: string[]; kind: string} ) => (d.kind === 'N') && d.path.length === 1)
-      difference.forEach((d: { path: string[]; kind: string} ) => linksId.push(d.path[0]))
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.links, {}, diff))
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'N') &&
+          (difference.path!.length === 1))
+      differences.forEach((difference) => linksId.push(difference.path![0]))
+      differences.forEach((difference) => applyChange(data.links, {}, difference))
       linksId.forEach(linkId => {
         if (!data.nodes[new_layout.links[linkId].idSource]) {
           data.nodes[new_layout.links[linkId].idSource] = new_layout.nodes[new_layout.links[linkId].idSource]
@@ -1383,25 +1417,30 @@ export const updateLayout: updateLayoutFuncType = (
     }
   }
 
-
   if (mode.includes('removeFlux')) {
-    let difference = deep_diff.diff(data.links, new_layout.links)
-    if (difference) {
+    let differences = getDiff(data.links, new_layout.links)
+    if (differences) {
       const linksId: string[] = []
-      difference = difference.filter((d: { path: string[]; kind: string} ) => (d.kind === 'D') && d.path.length === 1)
-      difference.forEach((d: { path: string[]; kind: string} ) => linksId.push(d.path[0]))
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'D') &&
+          (difference.path!.length === 1))
+      differences.forEach((difference) => linksId.push(difference.path![0]))
       linksId.forEach(linksId => {
         DeleteLink(data, data.links[linksId])
       })
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.links, {}, diff))
+      differences.forEach((difference) => applyChange(data.links, {}, difference))
     }
   }
 
   if (mode.includes('posNode')) {
-    let difference = deep_diff.diff(data.nodes, new_layout.nodes)
-    if (difference) {
-      difference = difference.filter((d: { path: string[]; kind: string} ) => d.kind === 'E' && ['x', 'y', 'x_label', 'y_label'].includes(d.path[1]))
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.nodes, {}, diff))
+    let differences = getDiff(data.nodes, new_layout.nodes)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'E') &&
+          (['x', 'y', 'x_label', 'y_label'].includes(difference.path![1])))
+      differences.forEach((difference) => applyChange(data.nodes, {}, difference))
     }
   }
 
@@ -1422,12 +1461,17 @@ export const updateLayout: updateLayoutFuncType = (
       'orthogonal_label_position',
       'label_on_path'
     ]
-    let difference = deep_diff.diff(data.links, new_layout.links)
-    if (difference) {
-      difference = difference.filter((d: { path: string[]; kind: string} ) => (d.kind === 'D' || d.kind === 'N') && d.path.length === 3 && d.path[1] === 'local' && geometry_attributes.includes(d.path[2]) ||
-        (d.kind === 'E' && geometry_attributes.includes(d.path[1]))
+    let differences = getDiff(data.links, new_layout.links)
+    if (differences) {
+      differences = differences.filter(
+        (difference) =>
+          (difference.kind === 'D' || difference.kind === 'N') &&
+          (difference.path!.length === 3) &&
+          (difference.path![1] === 'local') &&
+          (geometry_attributes.includes(difference.path![2])) ||
+          (difference.kind === 'E' && geometry_attributes.includes(difference.path![1]))
       )
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.links, {}, diff))
+      differences.forEach((difference) => applyChange(data.links, {}, difference))
     }
     Object.entries(data.nodes).forEach(([key, node]) => {
       const layoutNode = new_layout.nodes[key]
@@ -1457,13 +1501,14 @@ export const updateLayout: updateLayoutFuncType = (
       if (!layoutNode.local) {
         layoutNode.local = {}
       }
-      const difference = deep_diff.diff(node.local, layoutNode.local)
-      if (difference) {
-        difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(node.local, {}, diff))
+      const differences = getDiff(node.local, layoutNode.local)
+      if (differences) {
+        differences.forEach((difference) => applyChange(node.local, {}, difference))
       }
       node.style = layoutNode.style
     })
   }
+
   if (mode.includes('attrFlux')) {
     Object.entries(data.links).forEach(([key, link]) => {
       const layoutLink = new_layout.links[key]
@@ -1476,9 +1521,9 @@ export const updateLayout: updateLayoutFuncType = (
       if (!layoutLink.local) {
         layoutLink.local = {}
       }
-      const difference = deep_diff.diff(link.local, layoutLink.local)
-      if (difference) {
-        difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(link.local, {}, diff))
+      const differences = getDiff(link.local, layoutLink.local)
+      if (differences) {
+        differences.forEach((difference) => applyChange(link.local, {}, difference))
       }
       link.style = layoutLink.style
 
@@ -1491,24 +1536,25 @@ export const updateLayout: updateLayoutFuncType = (
       if (!layoutLink) {
         return
       }
-      const difference = deep_diff.diff(link.value, layoutLink.value)
-      if (difference) {
-        difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(link.value, {}, diff))
+      const differences = getDiff(link.value, layoutLink.value)
+      if (differences) {
+        differences.forEach((difference) => applyChange(link.value, {}, difference))
       }
     })
     // If values are applied dataTags must be applied also
-    const difference = deep_diff.diff(data.dataTags, new_layout.dataTags)
-    if (difference) {
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.dataTags, {}, diff))
+    const differences = getDiff(data.dataTags, new_layout.dataTags)
+    if (differences) {
+      differences.forEach((difference) => applyChange(data.dataTags, {}, difference))
     }
   }
 
   if (mode.includes('tagLevel')) {
-    const difference = deep_diff.diff(data.levelTags, new_layout.levelTags)
-    if (difference) {
-      difference.forEach((diff: { path: string[]; kind: string} ) => deep_diff.applyChange(data.levelTags, {}, diff))
+    const differences = getDiff(data.levelTags, new_layout.levelTags)
+    if (differences) {
+      differences.forEach((difference) => applyChange(data.levelTags, {}, difference))
     }
   }
+
   if (mode.includes('tagNode')) {
     // Finds the corresponding tag group by name and apply the "dynamic" attributes
     // activate, show_legend and selected.
@@ -1566,17 +1612,27 @@ export const updateLayout: updateLayoutFuncType = (
   if (mode.includes('tagData')) {
     // Finds the corresponding tag group by name and apply the "dynamic" attributes
     // activate, show_legend and selected.
-    Object.values(data.dataTags).forEach(dataTag=>{
-      Object.values(new_layout.dataTags).filter(_=>_.group_name === dataTag.group_name).forEach(_=>{
-        dataTag.activated=_.activated
-        dataTag.show_legend = _.show_legend
-        Object.values(dataTag.tags).forEach(tag=>
-          Object.values(_.tags).filter(ltag=>ltag.name === tag.name).forEach(ltag=>{
-            tag.selected = ltag.selected
+    Object
+      .values(data.dataTags)
+      .forEach(dataTag => {
+        Object
+          .values(new_layout.dataTags)
+          .filter(_ => _.group_name === dataTag.group_name)
+          .forEach(_ => {
+            dataTag.activated=_.activated
+            dataTag.show_legend = _.show_legend
+            Object
+              .values(dataTag.tags)
+              .forEach(tag => {
+                Object
+                  .values(_.tags)
+                  .filter(ltag => ltag.name === tag.name)
+                  .forEach(ltag => {
+                    tag.selected = ltag.selected
+                  })
+              })
           })
-        )
       })
-    })
   }
 
   //- Sanity check
@@ -1604,6 +1660,7 @@ export const updateLayout: updateLayoutFuncType = (
     n.outputLinksId = newOutputLinksId
   })
 }
+
 export const Aggregate: AggregateFuncType = (
   n: SankeyNode, data: SankeyData,
   agregationRef
@@ -1633,7 +1690,6 @@ export const Aggregate: AggregateFuncType = (
   } else {
     agregation(data, n.idNode, dim_names[0])
   }
-
 }
 
 export const Desaggregate: DesaggregateFuncType = (
@@ -1670,6 +1726,5 @@ export const Desaggregate: DesaggregateFuncType = (
   } else {
     desagregation(dict_variable_application_data, n.idNode, dim_names[0], false)
   }
-
 }
 
