@@ -2029,6 +2029,9 @@ export const OSTooltip:FunctionComponent<OSTooltpFuncType>=(
     children
   }
 )=>{
+  if (label === undefined) {
+    return <>{children}</>
+  }
   return <Tooltip
     key={label.split(' ').join('_')}
     openDelay={delay}
