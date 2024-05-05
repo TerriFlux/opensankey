@@ -909,12 +909,11 @@ export const Menu: FunctionComponent<MenuTypes> = (
           {/* We have to set the width of the component here (and not in the theme)
           because for some reason a style is directly applied to this component
           and we cannot override it in the theme */}
-          <DrawerContent 
-            width={menu_config_width}
-            marginTop={
-              document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y + 
-              document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
-            }
+          <DrawerContent
+            style={{width:menu_config_width,
+              marginTop:document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+
+            }}
           >
             <DrawerBody zIndex={1}>
               <SankeyConfigurationMenu
