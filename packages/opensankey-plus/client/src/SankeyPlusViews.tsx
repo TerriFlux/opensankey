@@ -1278,17 +1278,15 @@ export const SankeyPlusMenuPreferenceView : SankeyPlusMenuPreferenceViewFType =(
   set_data:(_:SankeyPlusData)=>void,
   preferenceCheck:(str: string, data: SankeyPlusData) => void
 )=>{
-  return <InputGroup>
-    <Checkbox
-      sx={SmoothClasses({})}
-      isChecked={data.accordeonToShow.includes('Vis')}
-      onChange={() => {
-        preferenceCheck('Vis',data)
-        set_data({ ...data })
-      }}>
-      {t('view.storytelling')}
-    </Checkbox>
-  </InputGroup>
+  return <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isChecked={data.accordeonToShow.includes('Vis')}
+    onChange={() => {
+      preferenceCheck('Vis',data)
+      set_data({ ...data })
+    }}>
+    {t('view.storytelling')}
+  </Checkbox>
 }
 
 

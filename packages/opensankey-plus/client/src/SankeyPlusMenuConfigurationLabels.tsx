@@ -50,7 +50,6 @@ import { OSTooltip } from './import/OpenSankey'
 
 // OpenSankey js-code
 import { preferenceCheck } from 'open-sankey/dist/dialogs/SankeyMenuPreferences'
-import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 
 const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></Button>
 
@@ -67,17 +66,15 @@ export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFTyp
   data:SankeyPlusData,
   ComponentUpdater
 )=>{
-  return <InputGroup>
-    <Checkbox
-      sx={SmoothClasses({})}
-      isChecked={data.accordeonToShow.includes('LL')}
-      onChange={() => {
-        preferenceCheck('LL',data)
-        ComponentUpdater.updateComponentMenuConfig.current()
-      }}>
-      {t('Menu.LL')}
-    </Checkbox>
-  </InputGroup>
+  return <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isChecked={data.accordeonToShow.includes('LL')}
+    onChange={() => {
+      preferenceCheck('LL',data)
+      ComponentUpdater.updateComponentMenuConfig.current()
+    }}>
+    {t('Menu.LL')}
+  </Checkbox>
 }
 
 /**
