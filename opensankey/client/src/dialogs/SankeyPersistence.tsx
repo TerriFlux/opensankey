@@ -4,7 +4,7 @@ import Spinner  from 'react-bootstrap/Spinner'
 import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType, SankeyData, callbackFuncType } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
-import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, DownloadExempleExcelFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
+import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { AdjustSankeyZone, AssignNodeLocalAttribute, DataSuiteType, DefaultLink, DefaultNode, DefaultSankeyData, GetRandomInt, SetNodeStyleToTypeNode, layout_type, list_palette_color } from '../configmenus/SankeyUtils'
 import FileSaver from 'file-saver'
@@ -486,34 +486,8 @@ export const UploadExemple: UploadExempleFuncType = (
     })
   })
 }
-export const DownloadExempleExcel: DownloadExempleExcelFuncType = (
-  file_name: string
-): void => {
-  let root = window.location.href
-  if (root.includes('dashboard')) {
-    root = root.replace('dashboard', '')
-  }
 
-  const url = root + '/opensankey/sankey/upload_examples'
-  const fetchData = {
-    method: 'POST',
-    body: file_name
-  }
-  fetch(url, fetchData).then((response) => {
-    response.text().then((text) => {
-      const server_data = JSON.parse(text)
-      const error = server_data['error']
-      if (error && error.length != 0) {
-        alert(error)
-        return
-      }
-      ClickSaveExcel('/opensankey/', server_data)
-
-    })
-  })
-}
-
-export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data: SankeyData) => {
+export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data: SankeyData,file_name='sankey') => {
   let root = window.location.href
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
@@ -527,7 +501,7 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data:
 
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    FileSaver.saveAs(newBlob, 'sankey.xlsx')
+    FileSaver.saveAs(newBlob, file_name+'.xlsx')
   }
 
   const cleanFile = () => {
