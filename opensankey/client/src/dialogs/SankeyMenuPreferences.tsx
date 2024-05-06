@@ -1,18 +1,13 @@
 import React, { FunctionComponent } from 'react'
 
-import { Form,  Button, ButtonGroup, InputGroup} from 'react-bootstrap'
+// import { Form,  Button, ButtonGroup, InputGroup} from 'react-bootstrap'
+
 import { SankeyData } from '../types/Types'
-import { TFunction,i18n } from 'i18next'
-import { Checkbox } from '@chakra-ui/react'
-import { OSTooltip, SmoothClasses } from '../configmenus/SankeyUtils'
+import { TFunction, i18n } from 'i18next'
+import { Box, Button, Checkbox, Input, Select } from '@chakra-ui/react'
+import { OSTooltip } from '../configmenus/SankeyUtils'
 import { OpenSankeyDefaultModalePreferenceContentFType, modalPreferenceTypes, preferenceCheckFType } from './types/SankeyMenuPreferencesTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
-
-
-declare const window: Window &
-typeof globalThis & {
-  SankeyToolsStatic: boolean
-}
 
 
 export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
@@ -22,125 +17,119 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
   ComponentUpdater
 )=>{
   const ui={
-    'lang':<InputGroup key={'1'}>
-      <InputGroup.Text >{t('Menu.lang')}</InputGroup.Text>
-      <Form.Select
-        size='sm'
+    'lang':  <Box layerStyle='menuconfigpanel_row_2cols' >
+
+      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.lang')}</Box>
+      <Select
+        variant='menuconfigpanel_option_select'
         value={trad.language}
-        onChange={(evt)=>{
+        onChange={evt=>{
           trad.changeLanguage((evt.target.value))
         }}
       >
         <option key={'francais'} value={'fr'}>Français</option>
         <option key={'english'} value={'en'}>English</option>
-      </Form.Select>
-    </InputGroup>,
+      </Select>
+    </Box>,
 
 
     'form':[
       <h4>{t('Menu.pref_title_sub_menu')}</h4>,
-      <ButtonGroup key={'3'}>
-        <Button variant='info'
-          disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
-          onClick={() => {
-            sessionStorage.removeItem('modepref')
-            data.accordeonToShow = ['MEP']
-            ComponentUpdater.updateComponentMenuConfig.current()
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        <Box layerStyle='options_2cols' >
 
-          }}
-        >Mode Simple</Button>
-        <Button variant='dark'
-          disabled={(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)}
-          onClick={() => {
-            sessionStorage.setItem('modepref','expert')
-            data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
-            ComponentUpdater.updateComponentMenuConfig.current()
-          }}
-        >Mode Expert</Button>
+          <Button variant='menuconfigpanel_option_button_left'
+            onClick={() => {
+              sessionStorage.removeItem('modepref')
+              data.accordeonToShow = ['MEP']
+              ComponentUpdater.updateComponentMenuConfig.current()
 
-      </ButtonGroup>,
-      <InputGroup>
-        <Checkbox
-          sx={SmoothClasses({})}
-          isChecked={data.accordeonToShow.includes('MEP')}
-          onChange={() => {
-            preferenceCheck('MEP',data)
-            ComponentUpdater.updateComponentMenuConfig.current()
+            }}
+          >Mode Simple</Button>
+          <Button variant='menuconfigpanel_option_button_right'
+            onClick={() => {
+              sessionStorage.setItem('modepref','expert')
+              data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
+              ComponentUpdater.updateComponentMenuConfig.current()
+            }}
+          >Mode Expert</Button>
+        </Box>
+      </Box>,
 
-          }}>
-          {t('Menu.MEP')}
-        </Checkbox>
-      </InputGroup>,
-
-      <InputGroup>
-        <Checkbox
-          sx={SmoothClasses({})}
-          isChecked
-          disabled
-        >
-          {t('Menu.Noeuds')}
-        </Checkbox>
-      </InputGroup>,
-
-      <InputGroup>
-        <Checkbox
-          sx={SmoothClasses({})}
-          isChecked={data.accordeonToShow.includes('EN')}
-          onChange={() => {
-            preferenceCheck('EN',data)
-            ComponentUpdater.updateComponentMenuConfig.current()
-
-          }}>
-          {t('Menu.EN')}
-        </Checkbox>
-      </InputGroup>,
-
-      <InputGroup>
-        <Checkbox
-          sx={SmoothClasses({})}
-          isChecked
-          disabled
-        >
-          {t('Menu.flux')}
-        </Checkbox>
-      </InputGroup>,
-
-      <InputGroup>
-        <Checkbox
-          sx={SmoothClasses({})}
-          isChecked={data.accordeonToShow.includes('EF')}
-          onChange={() => {
-            preferenceCheck('EF',data)
-            ComponentUpdater.updateComponentMenuConfig.current()
-
-          }}>
-          {t('Menu.EF')}
-        </Checkbox>
-      </InputGroup>,
-
-      <InputGroup>
-        <Checkbox
-          sx={SmoothClasses({})}
-          isChecked={data.accordeonToShow.includes('ED')}
-          onChange={() => {
-            preferenceCheck('ED',data)
-            ComponentUpdater.updateComponentMenuConfig.current()
-
-          }}>
-          {t('Menu.ED')}
-        </Checkbox>
-      </InputGroup>,
-    ],
-    'node_label_sep':<OSTooltip label={t('Menu.tooltips.node_label_sep')}>
-      <InputGroup>
-        <InputGroup.Text>{t('Menu.node_label_sep')}</InputGroup.Text>
-        <Form.Control type='text' value={data.node_label_separator} onChange={(evt)=>{
-          data.node_label_separator=evt.target.value
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={data.accordeonToShow.includes('MEP')}
+        onChange={() => {
+          preferenceCheck('MEP',data)
           ComponentUpdater.updateComponentMenuConfig.current()
 
+        }}>
+        {t('Menu.MEP')}
+      </Checkbox>,
 
-        }}></Form.Control>
-      </InputGroup></OSTooltip>,
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked
+        disabled
+      >
+        {t('Menu.Noeuds')}
+      </Checkbox>,
+
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={data.accordeonToShow.includes('EN')}
+        onChange={() => {
+          preferenceCheck('EN',data)
+          ComponentUpdater.updateComponentMenuConfig.current()
+
+        }}>
+        {t('Menu.EN')}
+      </Checkbox>,
+
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked
+        disabled
+      >
+        {t('Menu.flux')}
+      </Checkbox>,
+
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={data.accordeonToShow.includes('EF')}
+        onChange={() => {
+          preferenceCheck('EF',data)
+          ComponentUpdater.updateComponentMenuConfig.current()
+
+        }}>
+        {t('Menu.EF')}
+      </Checkbox>,
+
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={data.accordeonToShow.includes('ED')}
+        onChange={() => {
+          preferenceCheck('ED',data)
+          ComponentUpdater.updateComponentMenuConfig.current()
+
+        }}>
+        {t('Menu.ED')}
+      </Checkbox>,
+    ],
+    'node_label_sep':<OSTooltip label={t('Menu.tooltips.node_label_sep')}>
+      <Box layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
+        <Input
+          variant='menuconfigpanel_option_input' value={data.node_label_separator} 
+          onChange={evt=>{
+            data.node_label_separator=evt.target.value
+            ComponentUpdater.updateComponentMenuConfig.current()
+
+
+          }}></Input>
+      </Box></OSTooltip>,
 
 
 
