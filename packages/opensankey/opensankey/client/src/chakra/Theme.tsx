@@ -19,7 +19,10 @@ import {
   menuconfigpanel_option_btn_in_table,
   menuconfigpanel_del_button_in_table,
   submenu_nav_btn,
-  submenu_nav_btn_dropdown
+  submenu_nav_btn_dropdown,
+  menuconfigpanel_option_button_secondary,
+  menuconfigpanel_option_button_light,
+  menuconfigpanel_option_button_tertiary
 } from './ButtonStyles'
 import {
   checkbox_base_style,
@@ -92,7 +95,11 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_btn_in_table,
         menuconfigpanel_del_button_in_table,
         submenu_nav_btn,
-        submenu_nav_btn_dropdown
+        submenu_nav_btn_dropdown,
+        menuconfigpanel_option_button_secondary,
+        menuconfigpanel_option_button_tertiary,
+        menuconfigpanel_option_button_light
+        
       }
     },
     Checkbox: {
