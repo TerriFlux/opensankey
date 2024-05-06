@@ -184,3 +184,42 @@ export const submenu_nav_btn_dropdown = defineStyle({
     gridRowGap: '0',
   }
 })
+
+export const menuconfigpanel_option_button_secondary = defineStyle({
+  height: '2rem',
+  minWidth: '4.5rem',
+  textStyle: 'h4',
+  fontSize: '12px',
+  bg: 'blue.200',
+  bgColor: 'blue.200',
+  _hover: {
+    bg: 'blue.300',
+    bgColor: 'blue.300',
+  },
+})
+
+export const menuconfigpanel_option_button_light = defineStyle({
+  height: '2rem',
+  minWidth: '4.5rem',
+  textStyle: 'h4',
+  fontSize: '12px',
+  bg: 'none',
+  bgColor: 'none',
+  _hover: {
+    bg: 'none',
+    bgColor: 'none',
+  },
+})
+
+export const menuconfigpanel_option_button_tertiary = defineStyle({
+  height: '2rem',
+  minWidth: '4.5rem',
+  textStyle: 'h4',
+  fontSize: '12px',
+  bg: 'yellow.200',
+  bgColor: 'yellow.200',
+  _hover: {
+    bg: 'yellow.300',
+    bgColor: 'yellow.300',
+  },
+})
