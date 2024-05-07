@@ -1271,6 +1271,7 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (di
 
     height = (n.y ) ? Math.max(height,curr_n_size_y) : height
     width = (n.x ) ? Math.max(width, curr_n_size_x) : width
+
   })
 
   Object.values(display_links).forEach(l => {
@@ -1699,8 +1700,14 @@ export const sizeOfNodeInDrawArea=(n:SankeyNode,dict_variable_application_data:d
   const width_label=(box_label?.width??0)/scale_svg
   const height_label=(box_label?.height??0)/scale_svg
 
+  let source_node_y = 0
+  if (n.position == 'relative' && n.inputLinksId.length == 1) {
+    const source_node = data.nodes[data.links[n.inputLinksId[0]].idSource]
+    source_node_y = source_node.y
+  }
+
   let curr_n_size_x=(n.x??0)+node_width
-  let curr_n_size_y=(n.y??0)+node_height
+  let curr_n_size_y=(n.y??0+source_node_y)+node_height
 
   if(n.x_label && n.y_label){
     curr_n_size_x=Math.max(curr_n_size_x,(n.x??0)+n.x_label+width_label)
