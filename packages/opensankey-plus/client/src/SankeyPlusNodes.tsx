@@ -783,8 +783,16 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
 }
 
 export const node_icon_fill_color : node_icon_fill_colorFType = (
-  n:SankeyNode
+  data,
+  n
 )=>{
+  if (n.colorTag in n.tags && n.colorTag in n.tags && n.colorParameter === 'groupTag') {
+    const selected_tag = n.tags[n.colorTag][0]
+    const tag = data.nodeTags[n.colorTag].tags[selected_tag]
+    if (tag && !ReturnValueNode(data,n,'shape_visible')) {
+      return tag.color as string
+    } 
+  }
   return (n as SankeyPlusNode).iconColor
 }
 
@@ -872,7 +880,7 @@ export const SankeyPlusDrawNodesIllustration : SankeyPlusDrawNodesIllustrationFT
       .on('mouseout', function () {
         sankeyTooltip.style('opacity', 0)
       })
-      .style('fill', n =>node_icon_fill_color(n))
+      .style('fill', n =>node_icon_fill_color(data,n))
       .attr('d', n =>node_icon_path(data,n))
   }
 

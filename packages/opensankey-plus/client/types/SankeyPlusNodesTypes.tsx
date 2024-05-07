@@ -39,6 +39,7 @@ export type PlusNodeClickEventFType=(
 
 
 export type node_icon_fill_colorFType=(
+  data:SankeyPlusData,
   n:SankeyPlusNode
 ) => string
 
