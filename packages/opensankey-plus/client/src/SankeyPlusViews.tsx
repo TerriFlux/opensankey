@@ -246,8 +246,7 @@ export const keyHandler : keyHandlerFType = (
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   reDrawPlusLabels,
-  ComponentUpdater,
-  d_setter_input_value
+  ComponentUpdater
 ) => {
   const {show_toast_new_view}=dict_hook_ref_setter_show_dialog_components
   const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
@@ -535,7 +534,7 @@ export const keyHandler : keyHandlerFType = (
   if(e.key==='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')==='menuConfigButton')
     {
-      deleteGLabel(multi_selected_label.current,d_setter_input_value)
+      deleteGLabel(multi_selected_label.current,dict_variable_elements_selected)
       data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
       multi_selected_label.current=[]
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
@@ -548,8 +547,7 @@ export const SelecteurView : SelecteurViewFType =(
   dict_variable_elements_selected,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
-  connected:boolean,
-  d_setter_input_value,
+  connected:boolean
 )=>{
   const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}= dict_variable_elements_selected
@@ -564,7 +562,7 @@ export const SelecteurView : SelecteurViewFType =(
   }
   const [s_value_editor_name_view,sValueEditorNameView]=useState(vname)
   const [s_select_or_edit,sSelectOrEdit]=useState('select')
-  d_setter_input_value.r_setter_value_editor_name_view.current=sValueEditorNameView
+  dict_variable_elements_selected.r_setter_value_editor_name_view.current=sValueEditorNameView
 
   const selecteur=<Select
     variant='menuconfigpanel_option_select'

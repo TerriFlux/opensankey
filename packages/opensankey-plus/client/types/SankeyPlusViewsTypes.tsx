@@ -2,7 +2,6 @@ import { TFunction } from 'i18next'
 import { Diff } from 'deep-diff'
 
 import {
-  DictSetterInputValueType,
   PlusComponentUpdaterType,
   PlusElementsSelectedType,
   PlusUiElementsRefType,
@@ -66,8 +65,7 @@ export type keyHandlerFType = (
   connected:boolean,
   set_view_not_saved:(s:string)=>void,
   reDrawPlusLabels:reDrawPlusLabelsFType,
-  ComponentUpdater:PlusComponentUpdaterType,
-  d_setter_input_value:DictSetterInputValueType,
+  ComponentUpdater:PlusComponentUpdaterType
 ) => void
 
 export type SelecteurViewFType = (
@@ -76,7 +74,6 @@ export type SelecteurViewFType = (
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
-  d_setter_input_value:DictSetterInputValueType,
 ) => JSX.Element
 
 export type viewsAccordionFType = (

@@ -14,7 +14,7 @@ export type menu_conf_link_apparence_gradientFType=(
   selected_style_link:MutableRefObject<string>,
 )=> JSX.Element
 
-export type LinkStrokeFType=(
+export type PlusLinkStrokeFType=(
   l:SankeyPlusLink,
   data:SankeyPlusData,
   GetLinkValue:GetLinkValueFuncType

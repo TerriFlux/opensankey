@@ -1,5 +1,5 @@
 import { LinkFunctionTypes, applicationDrawType, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
-import { DictSetterInputValueType, PlusApplicationContextType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, reDrawPlusLabelsFType } from './Types'
+import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, reDrawPlusLabelsFType } from './Types'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
@@ -10,15 +10,12 @@ export type PlusDrawLabelsFType = (
   uiElementsRef:PlusUiElementsRefType,
   contextMenu:SankeyPlusContextMenuType,
   applicationContext:PlusApplicationContextType,
-  d_setter_input_value:DictSetterInputValueType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  start_point:{current:number[]},
   closeAllMenuContext:()=>void,
   ComponentUpdater:PlusComponentUpdaterType,
   object_to_update:SankeyPlusLabel[],
-  reDrawPlusLabels:reDrawPlusLabelsFType,
   link_function:LinkFunctionTypes,
-  applicationDraw:applicationDrawType
+  applicationDraw:PlusApplicationDrawType
 
   ) => void
 
@@ -27,7 +24,7 @@ export type eventLabelClickFType=(
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyPlusLabel,
   uiElementsRef:PlusUiElementsRefType,
-  d_setter_input_value:DictSetterInputValueType,
+  dict_variable_elements_selected:PlusElementsSelectedType,
   multi_selected_label:{current:SankeyPlusLabel[]},
   multi_selected_nodes:{current:SankeyPlusNode[]},
   multi_selected_links:{current:SankeyPlusLink[]},

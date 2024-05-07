@@ -16,7 +16,8 @@ import {
   uiElementsRefType,
   NodeFunctionTypes,
   LinkFunctionTypes,
-  ComponentUpdaterType
+  ComponentUpdaterType,
+  applicationDrawType
 } from 'open-sankey/src/types/Types'
 
 
@@ -129,16 +130,13 @@ export interface PlusElementsSelectedType extends dict_variable_elements_selecte
   multi_selected_nodes:{current:SankeyPlusNode[]}
   multi_selected_links:{current:SankeyPlusLink[]}
   multi_selected_label:{current:SankeyPlusLabel[]}
+  r_setter_editor_content_fo_node:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
+  r_setter_editor_content_fo_zdt:MutableRefObject<Dispatch<SetStateAction<string>>[] | undefined>,
+  r_setter_value_editor_name_view:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
 }
 
 export interface SankeyPlusContextMenuType extends contextMenuType {
   contextualised_zdt : MutableRefObject<Dispatch<SetStateAction<SankeyPlusLabel|undefined>>|undefined>
-}
-
-export interface DictSetterInputValueType {
-  r_setter_editor_content_fo_node:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
-  r_setter_editor_content_fo_zdt:MutableRefObject<Dispatch<SetStateAction<string>>[] | undefined>,
-  r_setter_value_editor_name_view:MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
 }
 
 export interface PlusApplicationContextType extends applicationContextType{
@@ -167,3 +165,7 @@ export interface PlusNodeFuntionType extends NodeFunctionTypes {
 }
 
 export type PlusLinkFuntionType= LinkFunctionTypes
+
+export interface PlusApplicationDrawType extends applicationDrawType {
+  reDrawPlusLabels : reDrawPlusLabelsFType
+}

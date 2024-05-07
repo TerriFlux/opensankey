@@ -1,5 +1,5 @@
 // Standard libs
-import React, { Ref, useState, ChangeEvent, FunctionComponent } from 'react'
+import React, { Ref, useState, ChangeEvent, FunctionComponent, useRef } from 'react'
 import * as d3 from 'd3'
 
 import {
@@ -90,11 +90,11 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   multi_selected_label,
   t,
   is_activated,
-  d_setter_input_value,
-  r_editor_ZDT,
+  dict_variable_elements_selected,
   ComponentUpdater,
   reDrawPlusLabels
 }) => {
+  const r_editor_ZDT= useRef<ReactQuill>() as {current:ReactQuill}
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
   const INITIAL_OPTIONS_label = Object.values(tmplabel).map((d) => { return { 'label': d.title, 'value': d.idLabel } })
@@ -104,7 +104,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   const [forceUpdate,setForceUpdate]=useState(false)
   const {updateComponentMenuConfigZdt} = ComponentUpdater
   updateComponentMenuConfigZdt.current.push(()=>setForceUpdate(!forceUpdate))
-  d_setter_input_value.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
+  dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
@@ -168,9 +168,9 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
               reDrawPlusLabels(multi_selected_label.current)
               if(multi_selected_label.current.length>0){
                 const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
-                d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(tmp))
+                dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(tmp))
               }else{
-                d_setter_input_value.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+                dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
               }
               updateComponentMenuConfigZdt.current.forEach(f=>f())
             }}
@@ -382,7 +382,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         variant='menuconfigpanel_del_button'
         isDisabled={disable_options}
         onClick={() => {
-          deleteGLabel(multi_selected_label.current,d_setter_input_value)
+          deleteGLabel(multi_selected_label.current,dict_variable_elements_selected)
           data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
           multi_selected_label.current = []
           updateComponentMenuConfigZdt.current.forEach(f=>f())

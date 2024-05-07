@@ -9,7 +9,7 @@ import { Checkbox } from '@chakra-ui/react'
 import { PlusReturnValueLink, PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
 import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink } from '../types/Types'
 import {
-  LinkStrokeFType,
+  PlusLinkStrokeFType,
   dragNodeRedrawGradientFType,
   menu_conf_link_apparence_gradientFType
 } from '../types/SankeyPlusGradientTypes'
@@ -88,7 +88,7 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   </>
 }
 
-export const PlusLinkStroke : LinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:GetLinkValueFuncType)=>{
+export const PlusLinkStroke : PlusLinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:GetLinkValueFuncType)=>{
 
   const defGradient = d3.select(' .opensankey #svg #sankey_def')
   const nodes = data.nodes
