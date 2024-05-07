@@ -895,9 +895,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               )}</React.Fragment>,
               <React.Fragment key={'modale_preference'}><ModalPreference
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-                ui={Object.values(OpenSankeyDefaultModalePreferenceContent(applicationContext.t,
-                  dict_variable_application_data.data,
-                  i18next,ComponentUpdater)).map(d=>{
+                ui={Object.values(OpenSankeyDefaultModalePreferenceContent(
+                  applicationContext.t,
+                  dict_variable_application_data,
+                  i18next,
+                  ComponentUpdater,
+                  node_function)).map(d=>{
                   return <>{d}<hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} /></>
                 })}
                 t={applicationContext.t}
