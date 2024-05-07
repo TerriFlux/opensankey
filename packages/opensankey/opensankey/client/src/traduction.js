@@ -80,7 +80,7 @@ export const open_resources = {
         style:'Styles',
         close:'Close',
         Elements:'Elements',
-        Etiquettes:'Édition tags',
+        Etiquettes:'Editing tags',
         reinit:'Reset',
         amp_short:'Layout',
 
