@@ -712,6 +712,15 @@ export const convert_tags:convert_tagsFuncType = (
     data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
   }
 
+  // Assign colorMap to either fluxTags or nodesTags since now we can display color palette of both at the same time
+  const list_fluxTag=Object.entries(data.fluxTags).filter(ft=>ft[1].show_legend)
+  const list_nodeTag=Object.entries(data.nodeTags).filter(ft=>ft[1].show_legend)
+  if(list_fluxTag.length>0){
+    data.linksColorMap=list_fluxTag[0][0]
+  }
+  if(list_nodeTag.length>0){
+    data.nodesColorMap=list_nodeTag[0][0]
+  }
 
 }
 
