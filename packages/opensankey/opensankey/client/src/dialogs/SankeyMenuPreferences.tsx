@@ -12,10 +12,12 @@ import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
   t:TFunction,
-  data:SankeyData,
+  dict_variable_application_data,
   trad:i18n,
-  ComponentUpdater
+  ComponentUpdater,
+  node_function
 )=>{
+  const {data,display_nodes}=dict_variable_application_data
   const ui={
     'lang':  <Box layerStyle='menuconfigpanel_row_2cols' >
 
@@ -125,10 +127,9 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           variant='menuconfigpanel_option_input' value={data.node_label_separator} 
           onChange={evt=>{
             data.node_label_separator=evt.target.value
-            ComponentUpdater.updateComponentMenuConfig.current()
-
-
-          }}></Input>
+            ComponentUpdater.updateComponentMenuConfig.current()}}
+          onBlur={()=>node_function.RedrawNodes(Object.values(display_nodes))}
+        />
       </Box></OSTooltip>,
 
 
