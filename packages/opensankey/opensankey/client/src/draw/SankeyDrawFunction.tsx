@@ -1276,7 +1276,7 @@ export const GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType = (di
 
   Object.values(display_links).forEach(l => {
     const recy= ReturnValueLink(data,l,'recycling') as boolean
-    if (recy) {
+    if (recy && !d3.select('#path_'+l.idLink).empty()) {
       const link_thickness=d3.select('#path_'+l.idLink).attr('stroke-width')
 
       d3.selectAll('.opensankey #gg_link_handle_'+l.idLink+' .handle').nodes().forEach(element => {
