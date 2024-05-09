@@ -522,8 +522,7 @@ class SankeyToJson(object):
             'idLink': flux.id,
             'idSource': flux.orig.id,
             'idTarget': flux.dest.id,
-            'value': datas_json,
-            'dashed': (not has_data)
+            'value': datas_json
         }
 
     def _parse_datas_or_results(
