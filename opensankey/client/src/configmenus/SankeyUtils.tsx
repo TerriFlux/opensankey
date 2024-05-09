@@ -1011,7 +1011,7 @@ export const DefaultLink :DefaultLinkFuncType= (data: SankeyData): SankeyLink =>
     colorTag: '',
     style:'default',
     label_pos_auto:false,
-    local:{dashed:true}
+    local:{}
   }
 }
 /**
