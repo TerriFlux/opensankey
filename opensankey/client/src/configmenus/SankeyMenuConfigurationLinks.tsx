@@ -44,7 +44,6 @@ import { MenuConfigurationLinksTags } from './SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './SankeyMenuConfigurationLinksTooltip'
 import { ValueSelectedParameter, NodeVisibleOnsSvg, SelectVisualyLinks, DeselectVisualyLinks } from '../draw/SankeyDrawFunction'
 
-import { t } from 'i18next'
 import { MenuConfigurationLinksFType } from './types/SankeyMenuConfigurationLinksTypes'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRotate} from '@fortawesome/free-solid-svg-icons'
@@ -58,9 +57,10 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   menu_config_link_attr,
   link_function,
   ComponentUpdater,
-  node_function
+  node_function,
 ) => {
-  const {data,set_data}=dict_variable_application_data
+  const {t}=applicationContext
+  const {data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const [forceUpdate,setForceUpdate]=useState(false)
   const {updateComponentMenuConfigLink}=ComponentUpdater
@@ -78,8 +78,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       t('Flux.apparence.apparence') as string,
       'link_attr_tab_id'),
     'tooltip': MenuConfigurationLinksTooltip(
-      data,
-      set_data,
+      ComponentUpdater,
       multi_selected_links,
       t,
       false)
@@ -136,7 +135,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
-  const {updateComponentMenuConfigLink}=ComponentUpdater
+  const {updateComponentMenuConfigLink,updateMenuConfigTextLinkTooltip}=ComponentUpdater
   const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
@@ -163,7 +162,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
       return
     }
     return { 'label': (data.nodes[d.idSource].name + '--->' + data.nodes[d.idTarget].name), 'value': d.idLink }
-  })
+  }) as []
 
   //Renvoie le menue déroulant pour la sélection des flux
   const dropdownMultiLinks = () => {
@@ -180,6 +179,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             valueRenderer={ (selected :selected_type[]) => {
               return selected.filter(d=>d!==undefined).length ? selected.map( ({label}) => label + ', ') : 'Aucun flux sélectionné'
             }}
+            labelledBy='TODO Change'
             options={INITIAL_OPTIONS_LINKS}
             value={selected_links}
             overrideStrings={{
@@ -247,6 +247,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               Object.values(dict_variable_application_data.display_links).forEach(l=>DeselectVisualyLinks(l))
               multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
               updateComponentMenuConfigLink.current()
+              updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
+
             }}
           />
         </Box>
@@ -339,16 +341,20 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   const addDropSource = () => {
     if (Object.keys(data.nodes).length >= 2) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)
+      return (<>
+        <option hidden key={'no_target'} value={''}> </option>
+        {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)}
+      </>
       )
     }
   }
 
   const addDropCible = () => {
     if (Object.keys(data.nodes).length >= 2) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)
+      return (<>
+        <option hidden key={'no_cible'} value={''}> </option>
+        {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)}
+      </>
       )
     }
   }
@@ -464,9 +470,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             </InputLeftAddon>
             <Select
               variant='select_custom_style'
-              disabled={Object.keys(data.nodes).length<2}
+              disabled={multi_selected_links.current.length==0}
               onChange={source_change}
-              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
+              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:''}>
               {addDropSource()}
             </Select>
           </InputGroup>
@@ -484,9 +490,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             </InputLeftAddon>
             <Select
               variant='select_custom_style'
-              disabled={Object.keys(data.nodes).length<2}
+              disabled={multi_selected_links.current.length==0}
               onChange={target_change}
-              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
+              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:''}>
               {addDropCible()}
             </Select>
           </InputGroup>
@@ -523,8 +529,6 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               link_function.RedrawLinks(multi_selected_links.current)
               ComponentUpdater.updateComponenSaveInCache.current(false)
               setForceUpdate(!forceUpdate)
-
-
             }}
           >
             <FontAwesomeIcon style={{transform:'rotate(90deg)'}} icon={faRotate}/>

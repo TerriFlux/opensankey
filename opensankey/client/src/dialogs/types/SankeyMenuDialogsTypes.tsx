@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { SankeyData, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
+import { ComponentUpdaterType, SankeyData, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
 import { ConvertDataFuncType  } from '../../configmenus/types/SankeyConvertTypes'
 import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
@@ -27,10 +27,11 @@ export type ApplyLayoutDialogTypes = {
   t:TFunction,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   dict_variable_application_data:dict_variable_application_dataType,
-  updateLayout:updateLayoutFuncType,
+  applicationDraw:applicationDrawType,
   convert_data:ConvertDataFuncType,
   diagramSelector: OpenSankeyDiagramSelectorFType,
   elementToDispose:MutableRefObject<string[]>,
   apply_transformation_additional_elements: JSX.Element[],
   DefaultSankeyData: DefaultSankeyDataFuncType,
+  ComponentUpdater:ComponentUpdaterType
 }

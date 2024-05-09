@@ -41,6 +41,8 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
     }).remove()
     link_function.CreateLinksOnSVG(multi_selected_links.current)
     ComponentUpdater.updateComponentMenuConfigLink.current()
+    ComponentUpdater.updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
+
     setForceUpdate(!forceUpdate)
   }
 
@@ -102,7 +104,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
       return ({} as SankeyLinkValue)
     }
     else{
-      if ( Object.keys(data.links).length === 0 || !((contextualised_link?.idLink in data.links) ?? false) ) {
+      if ( Object.keys(data.links).length === 0 || !(((contextualised_link?.idLink ?? '') in data.links)) ) {
         let val = JSON.parse(JSON.stringify(Object(contextualised_link?.value ?? ({} as SankeyLinkValue))))
         Object.values(tags_selected).map(tag_selected => {
           if (val[tag_selected] === undefined) {

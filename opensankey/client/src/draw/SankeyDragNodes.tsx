@@ -293,7 +293,7 @@ export const DragElements: DragElementsFuncType = (
   ComponentUpdater
 
 ) => {
-  const { data, display_nodes, display_links } = dict_variable_application_data
+  const { data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
   let error_msg: { text: string | undefined}  | undefined
   const node = Object.keys(dragged).includes('idNode') ? dragged as SankeyNode : {} as SankeyNode
@@ -335,7 +335,7 @@ export const DragElements: DragElementsFuncType = (
   if (multi_selected_nodes.current.length > 1) {
     // We redraw each arrows linked to a selected nodes after shifting it
     multi_selected_nodes.current.filter(n => n.position !== 'relative').forEach(n => [
-      DrawArrows(n as SankeyNode, data, display_nodes, display_links, scale, inv_scale, GetLinkValue, data.display_style)
+      DrawArrows(n as SankeyNode, dict_variable_application_data, scale, inv_scale, GetLinkValue, data.display_style)
     ])
     // we redraw link linked to dragged nodes
     multi_selected_nodes.current.forEach(n => {
@@ -353,7 +353,7 @@ export const DragElements: DragElementsFuncType = (
       })
     })
   } else if (Object.keys(node).length > 0 || (multi_selected_nodes.current.length==1 && multi_selected_nodes.current[0]==node)) {
-    DrawArrows(node as SankeyNode, data, display_nodes, display_links, scale, inv_scale, GetLinkValue, data.display_style)
+    DrawArrows(node as SankeyNode, dict_variable_application_data, scale, inv_scale, GetLinkValue, data.display_style)
     Object.values(data.links).filter(l => node.outputLinksId.includes(l.idLink) || node.inputLinksId.includes(l.idLink)).forEach(l => {
       d3.select(' .opensankey #path_' + l.idLink).attr('d',
         drawCurveFunction.curve(
@@ -365,11 +365,11 @@ export const DragElements: DragElementsFuncType = (
           GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows,ComponentUpdater,scale,inv_scale
         )
       )
-      d3.select(' .opensankey #path_' + l.idLink).attr('stroke-width', LinkStrokeWidth(l, data, scale, inv_scale, 2, data.nodes, GetLinkValue))
+      d3.select(' .opensankey #path_' + l.idLink).attr('stroke-width', LinkStrokeWidth(l,dict_variable_application_data, scale, inv_scale, GetLinkValue))
       // if the target is an export node and it has trad_close variable at true then we redraw this node arrow too
       const node_t = (data.nodes[l.idTarget] as unknown as { trade_close: boolean} )
       if (node_t !== undefined && node_t.trade_close) {
-        DrawArrows(node_t as unknown as SankeyNode, data, display_nodes, display_links, scale, inv_scale, GetLinkValue, data.display_style)
+        DrawArrows(node_t as unknown as SankeyNode, dict_variable_application_data, scale, inv_scale, GetLinkValue, data.display_style)
 
       }
     })

@@ -161,7 +161,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
 
       <Dropdown.Item as={Button} variant='light' onClick={() => {
         dict_variable_application_data.function_on_wait.current=()=>{
-          ComputeAutoSankey(dict_variable_application_data.data, node_hspace,false)
+          ComputeAutoSankey(dict_variable_application_data, node_hspace,false)
           Object.values(dict_variable_application_data.display_nodes).forEach(n=>{
             d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
           })

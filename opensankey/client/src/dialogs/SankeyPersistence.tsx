@@ -4,7 +4,7 @@ import Spinner  from 'react-bootstrap/Spinner'
 import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType, SankeyData, callbackFuncType } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
-import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, DownloadExempleExcelFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
+import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { AdjustSankeyZone, AssignNodeLocalAttribute, DataSuiteType, DefaultLink, DefaultNode, DefaultSankeyData, GetRandomInt, SetNodeStyleToTypeNode, layout_type, list_palette_color } from '../configmenus/SankeyUtils'
 import FileSaver from 'file-saver'
@@ -41,8 +41,8 @@ const SankeyLoad = ({
   const [show_load_dialog,set_show_load_dialog] = useState(false)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_load.current=set_show_load_dialog
   const [result,set_result] = useState('')
-  const [processing,set_processing] = useState(false)
   ref_result.current = set_result
+  const [processing,set_processing] = useState(false)
   ref_setter_processing.current = set_processing
   const [is_computing,set_is_computing] = useState(false)
 
@@ -203,8 +203,16 @@ const SankeyLoad = ({
 export const Counter = ({
   url_prefix,
   finishReconciliation,
-  value,result,set_result
-}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,set_result:(_:string)=>void}) => {
+  value,
+  result,
+  set_result
+}:{
+  url_prefix:string,
+  finishReconciliation:(x:boolean)=>void,
+  value:number[],
+  result:string,
+  set_result:(_:string)=>void
+}) => {
   useEffect(() =>{
     const interval = setInterval(() => {
       const root = window.location.href
@@ -277,7 +285,8 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
     default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
   }
   const new_data = Object.assign(default_data, server_data) as SankeyData
-  ProcessExample(new_data, updateLayout, convert_data, callback, DefaultSankeyData)
+  dict_variable_application_data.data=new_data
+  ProcessExample(dict_variable_application_data, updateLayout, convert_data, callback, DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   delete (new_data as SankeyData & { layout?: SankeyData} ).layout
@@ -321,13 +330,14 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (data: SankeyData, nam
   FileSaver.saveAs(blob, name + '.json')
 }
 export const ProcessExample: ProcessExampleFuncType = (
-  data: SankeyData,
+  dict_variable_application_data,
   updateLayout: updateLayoutFuncType,
   convert_data: ConvertDataFuncType,
   callback: (server_data: SankeyData) => void,
   DefaultSankeyData: () => SankeyData
 
 ): SankeyData => {
+  const {data}=dict_variable_application_data
   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
   convert_data(data, DefaultSankeyData)
   if ((data as SankeyData & layout_type).layout === undefined) {
@@ -341,10 +351,10 @@ export const ProcessExample: ProcessExampleFuncType = (
         Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
         // Select current tag to compute position
         tag_prim.selected=true
-        ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+        ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
       })
     }else if((lvl_tag_keys.length > 1)){
-    // If data have multiple level Tag 
+    // If data have multiple level Tag
     // then compute node position at each level of each level tag group
     // except 'Primaire'
 
@@ -354,17 +364,18 @@ export const ProcessExample: ProcessExampleFuncType = (
           Object.values(data.levelTags[kt].tags).forEach(t=>t.selected=false)
           // Select current tag to compute position
           tag_prim.selected=true
-          ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+          ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
         })
       })
-    
-    }else{
-      ComputeAutoSankey(data, data.h_space ? data.h_space : 200,true)
+
+    }
+    else{
+      ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
 
     }
     callback(data)
     compute_default_input_outputLinksId(data.nodes, data.links)
-    // Set sector/product style to node only when it come from an excel file and without a layout 
+    // Set sector/product style to node only when it come from an excel file and without a layout
     SetNodeStyleToTypeNode(data)
   } else {
     convert_data((data as SankeyData & layout_type).layout, DefaultSankeyData)
@@ -372,7 +383,7 @@ export const ProcessExample: ProcessExampleFuncType = (
     compute_default_input_outputLinksId(data.nodes, data.links)
     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
     delete (data as SankeyData & { layout?: SankeyData} ).layout
-    updateLayout(data, data_layout, ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux'], true)
+    updateLayout(data, data_layout, ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
     callback(data)
   }
   d3.select('.loading_auto_compute').remove()
@@ -475,34 +486,8 @@ export const UploadExemple: UploadExempleFuncType = (
     })
   })
 }
-export const DownloadExempleExcel: DownloadExempleExcelFuncType = (
-  file_name: string
-): void => {
-  let root = window.location.href
-  if (root.includes('dashboard')) {
-    root = root.replace('dashboard', '')
-  }
 
-  const url = root + '/opensankey/sankey/upload_examples'
-  const fetchData = {
-    method: 'POST',
-    body: file_name
-  }
-  fetch(url, fetchData).then((response) => {
-    response.text().then((text) => {
-      const server_data = JSON.parse(text)
-      const error = server_data['error']
-      if (error && error.length != 0) {
-        alert(error)
-        return
-      }
-      ClickSaveExcel('/opensankey/', server_data)
-
-    })
-  })
-}
-
-export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data: SankeyData) => {
+export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data: SankeyData,file_name='sankey') => {
   let root = window.location.href
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
@@ -516,7 +501,7 @@ export const ClickSaveExcel: ClickSaveExcelFuncType = (url_prefix: string, data:
 
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    FileSaver.saveAs(newBlob, 'sankey.xlsx')
+    FileSaver.saveAs(newBlob, file_name+'.xlsx')
   }
 
   const cleanFile = () => {

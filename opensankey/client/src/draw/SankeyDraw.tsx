@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
 import { SankeyData } from '../types/Types'
@@ -22,16 +21,13 @@ typeof globalThis & {
 }
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   contextMenu,
-  dict_variable_application_data, 
-  display_nodes,
-  display_links,
+  dict_variable_application_data,
   animation,
   dict_variable_elements_selected,
   agregation,
   ref_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
-  const {set_data}=dict_variable_application_data
   const {ref_getter_mode_selection,ref_setter_mode_selection}=dict_variable_elements_selected
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
@@ -57,11 +53,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
 
   const position = (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute'
- 
+
   useEffect(() => {
     if (animation.current) {
       return
     }
+    [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
+
     RemoveAnimate()
     d3.select('#svg').style('background-color',dict_variable_application_data.data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
@@ -94,7 +92,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     svgSankey.style('height', dict_variable_application_data.data.height + 'px');
 
-    
+
 
 
     // Fonction permettant de déplacer les éléments dans la zone de dessin, seulement quand on drag avec le boutons du milieu de la souris
@@ -116,7 +114,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
         })
         .on('end',()=>{
           
-          // AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
           [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
           svgSankey.style('width', dict_variable_application_data.data.width + 'px')
           svgSankey.style('height', dict_variable_application_data.data.height + 'px')
@@ -155,8 +152,6 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     border = '2px solid #d3d3d3'
   }
 
-  console.log('here')
-  console.trace('here',dict_variable_application_data.data.width,dict_variable_application_data.data.height)
   const width_to_display=((dict_variable_application_data.data.width) ? dict_variable_application_data.data.width : window.innerWidth*0.975)
   return (
     <>
@@ -175,10 +170,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       </div>
       <AgregationModal
         agregationRef={agregation}
-        data={dict_variable_application_data.data}
-        set_data={set_data}
-        display_nodes={display_nodes}
-        display_links={display_links}
+        dict_variable_application_data={dict_variable_application_data}
       />
     </>
   )
@@ -210,7 +202,13 @@ export const keyHandler : keyHandlerFType = (
 ) => {
   const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
   const{updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && ((document.activeElement?.tagName==='INPUT')? d3.select(document.activeElement).attr('value')==='menuConfigButton':true && (!document.activeElement?.className.includes('ql-editor')))) {
+  if (
+    ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
+    (((document.activeElement?.tagName==='INPUT')?
+      d3.select(document.activeElement).attr('value')==='menuConfigButton':
+      true) &&
+     (!document.activeElement?.className.includes('ql-editor')))
+  ) {
     // Deplace les noeuds sélectionné avec les flèches du clavier, cependant ne ce déplace pas si jamais on utilise les flèches pour dépalcer le curseur dans un input
     // (exemples : le input de la largeur minimal d'un noeud)
     if (e.key == 'ArrowUp') {
@@ -291,7 +289,7 @@ export const keyHandler : keyHandlerFType = (
       link_to_update=link_to_update.concat(n.outputLinksId)
       link_to_update=link_to_update.concat(n.inputLinksId)
       d3.selectAll('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
-    })                  
+    })
     link_to_update=[...new Set(link_to_update)]
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
 
@@ -318,7 +316,7 @@ export const keyHandler : keyHandlerFType = (
       dict_variable_application_data,
       uiElementsRef,
       dict_variable_elements_selected,
-      applicationContext, 
+      applicationContext,
       ref_alt_key_pressed,
       accept_simple_click,
       link_function,
@@ -333,18 +331,18 @@ export const keyHandler : keyHandlerFType = (
     updateComponentMenuConfigNodeAppearence.current()
     updateComponentMenuConfigLink.current()
   }else if(e.key=='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
-    
+
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')=='menuConfigButton')
     {
       DeleteGLinks(multi_selected_links.current.map(l=>l.idLink))
       multi_selected_links.current.forEach(el=>{
         DeleteLink(data,el)
       })
-      
+
       deleteSelectedNodeFromData(dict_variable_application_data,dict_variable_elements_selected)
       multi_selected_nodes.current=[]
       multi_selected_links.current=[]
-      
+
       node_function.recomputeDisplayedElement()
       node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
       link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
@@ -374,12 +372,12 @@ export const keyHandler : keyHandlerFType = (
       ComponentUpdater.updateComponenSaveInCache.current(true)
     }
     dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
-    
+
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
     ClickSaveDiagram(data)
   }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
-    if((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor')??true)){
+    if((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))){
       e.preventDefault()
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen()
@@ -387,7 +385,7 @@ export const keyHandler : keyHandlerFType = (
         document.exitFullscreen()
       }
     }
-    
+
   }
 }
 

@@ -74,7 +74,7 @@ import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfig
 import { ContextMenuLink } from './dialogs/SankeyMenuContextLink'
 import { ContextMenuNode } from './dialogs/SankeyMenuContextNode'
 import { ContextMenuZdd } from './dialogs/SankeyMenuContextZDD'
-import { ApplySaveJSONDialog, OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
+import { ApplySaveJSONDialog, OpenSankeyDiagramSelector, os_all_element_to_transform } from './dialogs/SankeyMenuDialogs'
 import {
   ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
@@ -119,7 +119,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       })
     }, {}) as {[idNode:string]:SankeyNode}
   const pre_display_links=Object.keys(data.links)
-    .filter((key) =>LinkVisible(data.links[key],data,display_nodes))
+    .filter((key) =>LinkVisible(
+      data.links[key],
+      data,
+      display_nodes))
     .reduce((obj, key) => {
       return Object.assign(obj, {
         [key]: data.links[key]
@@ -134,7 +137,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     get_default_data : DefaultSankeyData,
     display_nodes : display_nodes,
     display_links : display_links,
-    function_on_wait:useRef(()=>null)
+    function_on_wait:useRef(()=>null),
+    min_link_thickness:5
   }
 
 
@@ -148,7 +152,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       }, {}) as {[idNode:string]:SankeyNode}
 
     const pre_display_links=Object.keys(data.links)
-      .filter((key) =>LinkVisible(data.links[key],data,dict_variable_application_data.display_nodes))
+      .filter((key) =>LinkVisible(
+        data.links[key],
+        data,
+        dict_variable_application_data.display_nodes))
       .reduce((obj, key) => {
         return Object.assign(obj, {
           [key]: data.links[key]
@@ -227,6 +234,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ref_setter_show_load : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_waiting : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     ref_setter_show_resolution_save_png : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
+    ref_setter_png_res_h:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null),
+    ref_setter_png_res_v:useRef<Dispatch<SetStateAction<number|undefined>>>(()=>null),
   }
   /*************************************************************************************************/
   const contextMenu : contextMenuType = {
@@ -253,9 +262,18 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     updateComponentMenuConfigLayout:useRef(()=>null),
     updateComponentMenu:useRef(()=>null),
     updateComponenSaveInCache:useRef(()=>null),
-    updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[])
+    updateComponentMenuNodeIOSelectSideNode:useRef([] as (()=>void)[]),
+    updateComponentBtnUpdateLayout : useRef(()=>null),
+    updateMenuConfigTextNodeTooltip:useRef([] as (()=>void)[]),
+    updateMenuConfigTextLinkTooltip:useRef([] as (()=>void)[]),
 
   }
+  ComponentUpdater.updateMenuConfigTextNodeTooltip.current=[]
+  ComponentUpdater.updateMenuConfigTextLinkTooltip.current=[]
+
+  /*************************************************************************************************/
+
+
   /*************************************************************************************************/
   const agregation : agregationType = {
     showAgregationRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>][]>([]),
@@ -292,7 +310,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     GetSankeyMinWidthAndHeight,
     updateLayout,
     resizeCanvas:resizeCanvas,
-    reAdjustSankey:reAdjustSankey
+    reAdjustSankey:reAdjustSankey,
+    all_element_UpdateLayout:os_all_element_to_transform
   }
   /*************************************************************************************************/
   const start_point=useRef([0,0])
@@ -430,7 +449,16 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*******************************************************************************/
   const reDrawLegend=()=>{
-    DrawLegend(dict_variable_application_data,applicationContext,contextMenu,GetLinkValue,legend_clicked,ComponentUpdater,reDrawLegend,resizeCanvas)
+    DrawLegend(
+      dict_variable_application_data,
+      applicationContext,
+      contextMenu,
+      GetLinkValue,
+      legend_clicked,
+      ComponentUpdater,
+      reDrawLegend,
+      resizeCanvas
+    )
     if(!windowSankey.SankeyToolsStatic){
       const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
       g_legend.call(drag_legend(dict_variable_application_data.data,resizeCanvas,node_function,link_function,dict_variable_application_data))
@@ -533,14 +561,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   // MENU DRAGGABLE LINK Tooltip
   const menu_link_tooltip = MenuConfigurationLinksTooltip(
-    data,set_data,
+    ComponentUpdater,
     dict_variable_elements_selected.multi_selected_links,
     applicationContext.t,true)
 
 
 
   // MENU DRAGGABLE NODE Tooltip editor
-  const menu_node_tooltip = SankeyMenuConfigurationNodesTooltip(applicationContext,dict_variable_elements_selected,true)
+  const menu_node_tooltip = SankeyMenuConfigurationNodesTooltip(applicationContext,dict_variable_elements_selected,ComponentUpdater,true)
 
   const menuNodeTooltip= MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
@@ -819,7 +847,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 applicationContext,
                 dict_variable_application_data,
                 dict_variable_elements_selected,
-                contextMenu,
                 menu_configuration_nodes_attributes,
                 GetLinkValue,
                 node_function,link_function,
@@ -868,9 +895,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               )}</React.Fragment>,
               <React.Fragment key={'modale_preference'}><ModalPreference
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-                ui={Object.values(OpenSankeyDefaultModalePreferenceContent(applicationContext.t,
-                  dict_variable_application_data.data,
-                  i18next,ComponentUpdater)).map(d=>{
+                ui={Object.values(OpenSankeyDefaultModalePreferenceContent(
+                  applicationContext.t,
+                  dict_variable_application_data,
+                  i18next,
+                  ComponentUpdater,
+                  node_function)).map(d=>{
                   return <>{d}<hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 1 }} /></>
                 })}
                 t={applicationContext.t}
@@ -951,8 +981,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       <SankeyDraw
         contextMenu={contextMenu}
         dict_variable_application_data={dict_variable_application_data}
-        display_nodes={display_nodes}
-        display_links={display_links}
         animation={useRef(false)}
         dict_variable_elements_selected={dict_variable_elements_selected}
         agregation={agregation}

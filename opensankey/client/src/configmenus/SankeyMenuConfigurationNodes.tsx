@@ -1,5 +1,4 @@
 import React, { FunctionComponent, useState } from 'react'
-import 'react-folder-tree/dist/style.css'
 import { ReactElementLike } from 'prop-types'
 import { FaPlus, FaMinus, FaEye } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
@@ -69,7 +68,6 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   applicationContext,
   dict_variable_application_data,
   dict_variable_elements_selected,
-  contextMenu,
   menu_configuration_nodes_attributes,
   GetLinkValue:GetLinkValueFuncType,
   node_function,link_function,
@@ -87,6 +85,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     'infos': SankeyMenuConfigurationNodesTooltip(
       applicationContext,
       dict_variable_elements_selected,
+      ComponentUpdater,
       false
     )
   }
@@ -134,7 +133,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   const {t}=applicationContext
   const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
-  const {updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode,updateComponentMenuConfigLink}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode,updateComponentMenuConfigLink,updateMenuConfigTextNodeTooltip}=ComponentUpdater
   updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
   const tmpNodes = Object
     .fromEntries(
@@ -174,7 +173,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
           <MultiSelect
             options={INITIAL_OPTIONS}
             value={selected}
-            label={t('Noeud.TS')}
+            labelledBy={t('Noeud.TS')}
             onChange={(selected: [{ label: string, value: string }]) => {
               const new_sel = selected.map(d => d.value)
               const m_s = Object.values(data.nodes).filter(d => (new_sel.includes(d.idNode)))
@@ -188,6 +187,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               setForceUpdate(!forceUpdate)
               multi_selected_nodes.current.forEach(d=>SelectVisualyNodes(d))
               updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+              updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
+
             }}
             valueRenderer={(selected: selected_type[]) => {
               return selected.length ? selected.map(({ label })=> label + ', ') : t('Noeud.NS')
@@ -321,6 +322,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
               AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
               ComponentUpdater.updateComponenSaveInCache.current(false)
               SelectVisualyNodes(multi_selected_nodes.current[0])
+              updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
               setForceUpdate(!forceUpdate)
             }}>
             <FaPlus/>

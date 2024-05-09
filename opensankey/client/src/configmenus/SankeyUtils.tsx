@@ -197,17 +197,15 @@ export const FindMaxLinkValue:FindMaxLinkValueFuncType = (
 export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   inv_scale:(t:number)=>number,
   node: SankeyNode,
-  data: SankeyData,
-  display_nodes: { [node_id: string]: SankeyNode },
-  display_links: { [node_id: string]: SankeyLink },
+  dict_variable_application_data:dict_variable_application_dataType,
   TestLinkValue: TestLinkValueFuncType,
   ref_link: SankeyLink | undefined = undefined,
   GetLinkValue:GetLinkValueFuncType
-
 ): number[] => {
   if (node == undefined) {
     return [0,0,0,0]
   }
+  const { data, display_links, display_nodes } = dict_variable_application_data
   const { nodes, links} = data
   let offset_height_left = 0
   let offset_height_right = 0
@@ -285,7 +283,8 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         const source_node_y = source_node.position === 'absolute' ? +source_node.y : +node.y + +source_node.y
         const node_x = node.position === 'absolute' ? +node.x : +source_node.x + +node.x
         const node_y = node.position === 'absolute' ? +node.y : +source_node.y + +node.y
-        if (ReturnValueLink(data,link,'orientation') === 'vv') {
+        const ori_link = ReturnValueLink(data,link,'orientation')
+        if (ori_link === 'vv') {
           if (source_node_y < node_y) {
             // flux goes down
             top_flux.push(idLink)
@@ -293,7 +292,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
             // flux goes up
             bottom_flux.push(idLink)
           }
-        } else if (ReturnValueLink(data,link,'orientation') === 'hh') {
+        } else if (ori_link === 'hh') {
           if (source_node_x >= node_x && ReturnValueLink(data,link,'recycling') || source_node_x < node_x && !ReturnValueLink(data,link,'recycling')) {
             // flux goes right
             left_flux.push(idLink)
@@ -301,7 +300,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
             // flux goes left
             right_flux.push(idLink)
           }
-        } else if (ReturnValueLink(data,link,'orientation') === 'hv') {
+        } else if (ori_link === 'hv') {
           if (source_node_y < node_y) {
             // flux goes right
             top_flux.push(idLink)
@@ -309,7 +308,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
             // flux goes left
             bottom_flux.push(idLink)
           }
-        } else if (ReturnValueLink(data,link,'orientation') === 'vh') {
+        } else if (ori_link === 'vh') {
           if (source_node_x < node_x) {
             // flux goes right
             left_flux.push(idLink)
@@ -336,11 +335,12 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         the_id = top_flux[i - 1]
       }
 
-      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
+      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -350,7 +350,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free ) {
         // if flux is displayed thin
-        offset_width_top += inv_scale(5)
+        offset_width_top += inv_scale(dict_variable_application_data.min_link_thickness)
       } else {
         offset_width_top += +v
       }
@@ -369,11 +369,12 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
+      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -383,7 +384,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_width_bottom += inv_scale(5)
+        offset_width_bottom += inv_scale(dict_variable_application_data.min_link_thickness)
       } else {
         offset_width_bottom += +v
       }
@@ -403,11 +404,12 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
+      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -417,7 +419,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_height_left += inv_scale(5)
+        offset_height_left += inv_scale(dict_variable_application_data.min_link_thickness)
       } else {
         offset_height_left += +v
       }
@@ -437,11 +439,11 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      let v = TestLinkValue(data, nodes, links[the_id],GetLinkValue)
+      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=(+v==0||(+v>=inv_scale(2)))?+v:inv_scale(2)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -451,7 +453,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_height_right += inv_scale(5)
+        offset_height_right += inv_scale(dict_variable_application_data.min_link_thickness)
       } else {
         offset_height_right += +v
       }
@@ -532,11 +534,11 @@ export const LinkText:LinkTextFuncType = (
 
 
 export const TestLinkValue:TestLinkValueFuncType = (
-  data:SankeyData,
-  nodes: { [node_id: string]: SankeyNode },
+  dict_variable_application_data,
   d: SankeyLink,
   GetLinkValue:GetLinkValueFuncType
 ) => {
+  const {data}=dict_variable_application_data
   const { dataTags } = data
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -545,7 +547,7 @@ export const TestLinkValue:TestLinkValueFuncType = (
     .range([0, 100])
     .domain([0, data.user_scale])
   if (data.show_structure == 'structure' ) {
-    return inv_scale(5)
+    return inv_scale(dict_variable_application_data.min_link_thickness)
   }
   if (data.show_structure == 'data' ) {
     const link_value = GetLinkValue(data, d.idLink)
@@ -555,7 +557,7 @@ export const TestLinkValue:TestLinkValueFuncType = (
       const inv_scale = d3.scaleLinear()
         .domain([0, 100])
         .range([0, data.user_scale])
-      return inv_scale(5)
+      return inv_scale(dict_variable_application_data.min_link_thickness)
     }
   }
   let val = d.value
@@ -1133,12 +1135,12 @@ export const NodeColor:NodeColorFuncType = (n: SankeyNode,data:SankeyData): stri
     if (n.colorTag !== undefined && n.colorTag !== '' && n.colorTag !=='no_colormap') {
       const tagGroup = n.colorTag
       if (n.tags[tagGroup] === undefined) {
-        return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:''
+        return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:'grey'
       } else if (n.tags[tagGroup].length == 1 ) {
         if (data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]]) {
           return data.nodeTags[tagGroup].tags[n.tags[tagGroup][0]].color??''
         } else {
-          return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:''
+          return (ReturnValueNode(data,n,'colorSustainable'))? ReturnValueNode(data,n,'color') as string:'grey'
         }
       } else {
         return 'grey'
@@ -1209,10 +1211,10 @@ export interface DataSuiteType{
   view?:{id: string,view_data: object,nom:string,details:string}[],
 }
 /**
- * 
- * @param data 
- * @param type_tag_name 
- * @param tags_group_key 
+ *
+ * @param data
+ * @param type_tag_name
+ * @param tags_group_key
  * @param is_auto_from_add_grp_tag variable used to avoid redondancie when we add a new group data tag
  */
 export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 'fluxTags' | 'dataTags',tags_group_key:string,is_auto_from_add_grp_tag=false): void=>{
@@ -1255,19 +1257,19 @@ export const AddTag:AddTagFuncType =(data:SankeyData,type_tag_name:'nodeTags' | 
  * Create a subtree value for link, this function is used when we add a new tag to an existing data tag group
  * It allow to get a default subtree that we add to each link value at the correct depth
  * Ex : - we have 2 grp : grp1 and group2 with each one have at least 1 tag already wich give us link value like : value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}}}
- *  
+ *
  * - if we add a new tag to a group branch (grp1) we have to recreate subtree to be similar to other tag of the same grp wich give us :
  *  value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}},
  *          tag2_grp1:{tag1_grp2:{value:'',display_value:'',...}}
  *           }
- * 
+ *
  *  - if we add a new tag to a group leaf (in that case grp2) we just add a new value possible :
  *  value :{ tag1_grp1:{tag1_grp2:{value:x,display_value:y,...}, tag2_grp2:{value:'',display_value:'',...}}}
  */
 const createDefaultLinkValueForNewDataTag:createDefaultLinkValueForNewDataTagType=(link_value:SankeyLinkValueDict,index_of_grp_tag:number,current_index:number)=>{
   if(current_index<index_of_grp_tag){
     const next_link_value_depth=Object.values(link_value)[0] as SankeyLinkValueDict
-    return createDefaultLinkValueForNewDataTag(next_link_value_depth,index_of_grp_tag,current_index+1) 
+    return createDefaultLinkValueForNewDataTag(next_link_value_depth,index_of_grp_tag,current_index+1)
   }else{
     const entries_of_values= Object.entries(link_value)
     const last_entrie=entries_of_values[entries_of_values.length-1]
@@ -1308,7 +1310,7 @@ export const AddGroupTag:AddGroupTagFuncType = (data:SankeyData,type_tag_name:'n
     Object.values(data[elementName]).forEach(n => n.colorTag = Object.keys(data[type_tag_name])[0])
   }
 
-  // Add a tag to the group 
+  // Add a tag to the group
   AddTag(data,type_tag_name,k,true)
 
   // If we create a group of data tags then we redesign link value object
@@ -1324,7 +1326,7 @@ export const resetLinkValueAfterDeleteDTGrp=(data:SankeyData)=>{
   const nObjet = CreateObject(data, listK)
   Object.entries(data.links).forEach(l=>{
     // We parse a stringified version of the object to make a copy of it
-    // if we didn't do it all link value would reference the same object therefore modifying one link value would modify all of them 
+    // if we didn't do it all link value would reference the same object therefore modifying one link value would modify all of them
     l[1].value=JSON.parse(JSON.stringify(nObjet))
   })
 }
@@ -1334,7 +1336,7 @@ export const addDepthLinkValueWithNewDTGrp=(data:SankeyData)=>{
   const listK = Object.keys(data.dataTags).filter(d => Object.keys(data.dataTags[d].tags).length != 0)
   const first_tag_of_last_grp=Object.keys(data.dataTags[listK[listK.length-1]].tags)[0]
   Object.entries(data.links).forEach(l=>{
-    //For eack link we go through each value and add a new depath to the value with the first tag of the new dataTagGrp 
+    //For eack link we go through each value and add a new depath to the value with the first tag of the new dataTagGrp
     l[1].value=updateLinkValueDepthWithNewDTGrp(l[1].value,first_tag_of_last_grp)
   })
 }
@@ -2027,6 +2029,9 @@ export const OSTooltip:FunctionComponent<OSTooltpFuncType>=(
     children
   }
 )=>{
+  if (label === undefined) {
+    return <>{children}</>
+  }
   return <Tooltip
     key={label.split(' ').join('_')}
     openDelay={delay}
