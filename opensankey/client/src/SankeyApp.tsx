@@ -374,9 +374,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   let regular_ui=OpenSankeyDefaultModalePreferenceContent(
     applicationContext.t,
-    dict_variable_application_data.data,
+    dict_variable_application_data,
     i18next,
-    ComponentUpdater
+    ComponentUpdater,
+    node_function
   )
   regular_ui['form'] = [...regular_ui['form'],...additional_menus.additional_preferences]
 
