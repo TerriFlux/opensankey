@@ -479,8 +479,7 @@ class SankeyToJson(object):
             'idLink': str,
             'idSource': str,
             'idTarget': str,
-            'value': datas_json,
-            'dashed': bool
+            'value': datas_json
         }
 
         Parameters
@@ -1180,8 +1179,7 @@ class JsonToSankey(object):
             'idLink': str,
             'idSource': str,
             'idTarget': str,
-            'value': *datas_json*,
-            'dashed': bool
+            'value': *datas_json*
         }
 
         Struct for *datas_json*:
