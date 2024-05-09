@@ -207,8 +207,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             type='color'
             value={
               (!list_value['color'][1]) ? (
-                ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string
-              ) : (
+                list_value['color'][0]) as string : (
                 '#ffffff'
               )
             }

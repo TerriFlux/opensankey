@@ -341,16 +341,20 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   const addDropSource = () => {
     if (Object.keys(data.nodes).length >= 2) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)
+      return (<>
+        <option hidden key={'no_target'} value={''}> </option>
+        {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode}>{n.name}</option>)}
+      </>
       )
     }
   }
 
   const addDropCible = () => {
     if (Object.keys(data.nodes).length >= 2) {
-      return (
-        Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)
+      return (<>
+        <option hidden key={'no_cible'} value={''}> </option>
+        {Object.values(data.nodes).map((n, i) => <option key={i} value={n.idNode} >{n.name}</option>)}
+      </>
       )
     }
   }
@@ -466,9 +470,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             </InputLeftAddon>
             <Select
               variant='select_custom_style'
-              disabled={Object.keys(data.nodes).length<2}
+              disabled={multi_selected_links.current.length==0}
               onChange={source_change}
-              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:pre_idSource}>
+              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idSource:''}>
               {addDropSource()}
             </Select>
           </InputGroup>
@@ -486,9 +490,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
             </InputLeftAddon>
             <Select
               variant='select_custom_style'
-              disabled={Object.keys(data.nodes).length<2}
+              disabled={multi_selected_links.current.length==0}
               onChange={target_change}
-              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:pre_idTarget}>
+              value={(multi_selected_links.current.length>0)?multi_selected_links.current[0].idTarget:''}>
               {addDropCible()}
             </Select>
           </InputGroup>
