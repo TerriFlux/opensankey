@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { LinkTextFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData } from '../types/Types'
-import { RemoveAnimate, DrawArrows, drawCurveFunction, LinkStrokeWidth, returnScaleOfDrawArea, sizeOfNodeInDrawArea, hideLinkOnDragElement } from './SankeyDrawFunction'
+import { RemoveAnimate, DrawArrows, drawCurveFunction, LinkStrokeWidth, returnScaleOfDrawArea, sizeOfNodeInDrawArea, hideLinkOnDragElement, DrawGrid } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
 import { shiftAllArrowPath, shiftAllLinkPath } from './SankeyDrawEventFunction'
@@ -323,10 +323,14 @@ export const DragElements: DragElementsFuncType = (
     if((pos_n[0]+margin)>dict_variable_application_data.data.width){
       const svgSankey = d3.select('.opensankey #svg')
       svgSankey.style('width', (pos_n[0]+margin) + 'px')
+      dict_variable_application_data.data.width = pos_n[0]+margin
+      DrawGrid(data)
     }
     if((pos_n[1]+margin)>dict_variable_application_data.data.height){
       const svgSankey = d3.select('.opensankey #svg')
       svgSankey.style('height', (pos_n[1]+margin) + 'px')
+      dict_variable_application_data.data.height = pos_n[1]+margin
+      DrawGrid(data)
     }
     return 'translate(' + n.x + ',' + n.y + ')'
   })

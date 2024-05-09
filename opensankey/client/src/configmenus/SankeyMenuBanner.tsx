@@ -1288,10 +1288,11 @@ const redrawSankeyWithSelectedTag=(dict_variable_application_data:dict_variable_
 
   // Create Nodes/Links that are now visually present with the new aggregation levels
   node_function.CreateNodesOnSVG(new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>data.nodes[id]))
-  link_function.CreateLinksOnSVG(new_displayed_links.filter(lid=>!old_displayed_links.includes(lid)).map(id=>data.links[id]))
-
-  // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
-  redrawNodeLinkLegend()
-
-  actualizeDrawAreaFrame(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  const ll = new_displayed_links.filter(lid=>!old_displayed_links.includes(lid))
+  if (ll.length !=0) {
+    link_function.CreateLinksOnSVG(ll.map(id=>data.links[id]))
+    // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
+    redrawNodeLinkLegend()
+    actualizeDrawAreaFrame(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  }
 }
