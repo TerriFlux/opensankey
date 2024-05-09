@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
-import { MutableRefObject } from 'react'
+import {MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
@@ -86,5 +86,7 @@ export type Modale_resolution_pngFType=(
   t:TFunction,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   dict_variable_application_data:dict_variable_application_dataType,
-  pointer_pos:{current:number[]}
+  pointer_pos:{current:number[]},
+
+
   )=> JSX.Element

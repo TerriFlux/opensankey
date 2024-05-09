@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import React, { ChangeEvent, FunctionComponent, useRef, useState, Ref, CSSProperties} from 'react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -147,8 +146,8 @@ const HandleMultiDropdown = (selected: [{ label: string, value: string }], tags_
 const logo_home=<svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox='0 0 1000 1000'
-  height='1.6rem'
-  width='1.6rem'
+  height='1.8rem'
+  width='1.8rem'
 ><path
     d='m 162.74,976.43485 -10.47133,-9.79617 V 766.1038 565.56892 h -45.83039 c -50.763748,0 -66.86203,-5.17542 -80.570758,-25.90272 C 13.167748,520.46444 10.955002,498.30818 19.718259,478.09335 30.219727,453.86882 469.64661,19.352705 487.72193,15.319776 c 26.45493,-5.9025653 35.08525,0.500299 137.16415,101.762594 54.73533,54.29743 100.44482,98.7226 101.5767,98.7226 1.13189,0 2.05795,-13.67075 2.05795,-30.37945 0,-27.18977 1.09936,-31.408 10.4713,-40.17559 9.19405,-8.60121 15.85948,-9.7778 54.64454,-9.64581 66.26282,0.2255 66.00422,-0.25812 66.10665,123.61063 l 0.075,91.29661 59.36176,58.38021 c 45.073,44.32769 60.43581,62.25057 63.82369,74.45937 5.39968,19.45846 2.1815,39.62415 -9.02804,56.57281 -13.53183,20.45968 -29.78886,25.64517 -80.40047,25.64517 H 847.74475 V 766.1038 966.63868 l -10.47131,9.79617 c -9.9428,9.30163 -15.35862,9.79606 -107.30211,9.79606 h -96.8303 v -145.7793 c 0,-142.54209 -0.20069,-146.23082 -9.04087,-166.11263 -15.83064,-35.6037 -23.26302,-37.87197 -124.09321,-37.87197 -100.83021,0 -108.26257,2.26827 -124.09319,37.87197 -8.84013,19.88181 -9.04089,23.57054 -9.04089,166.11263 v 145.7793 H 270.0421 c -91.94345,0 -97.35929,-0.49443 -107.3021,-9.79606 z'
   /></svg>
@@ -289,7 +288,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         <MenuList>
           <MenuItem
             onClick={Reinitialization} >
-            <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')} 
+            <FontAwesomeIcon icon={faFile} style={{width:'24',height:'24'}}/> {t('Menu.from_new')}
           </MenuItem>
 
           <MenuItem
@@ -299,7 +298,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       </ChakraMenu>,
 
       <Box>
-          
+
         <ChakraMenu placement='bottom-start'  id='ouvrir'  >
           <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
 
@@ -357,7 +356,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       </Box>,
 
       <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='enregistrer' >
-          
+
         <OSTooltip placement='bottom' label={t('Menu.tooltips.enregistrer')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faDownload} />
@@ -381,9 +380,13 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
             {t('Menu.exporter')}
           </MenuButton>
         </OSTooltip>
-          
+
         <MenuList>
-          <MenuItem onClick={()=>dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)} >PNG</MenuItem>
+          <MenuItem onClick={()=>{
+            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current(parseInt(String(data.width)))
+            dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current(parseInt(String(data.height)))
+            dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)
+          }} >PNG</MenuItem>
           <MenuItem onClick={()=>clickSavePDF(data)} >PDF</MenuItem>
           {external_file_export_item}
         </MenuList>
@@ -392,12 +395,12 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       <>{external_file_item}</>,
       <OSTooltip placement='bottom' label={t('Menu.tooltips.preference')}>
         <Box>
-          <ChakraButton variant='submenu_nav_btn' 
-            onClick={() => { 
+          <ChakraButton variant='submenu_nav_btn'
+            onClick={() => {
               dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_preference.current!(true) }}>
             <FontAwesomeIcon icon={faGears} />
             {t('Menu.preference')}
-            
+
           </ChakraButton>
         </Box>
       </OSTooltip>
@@ -413,7 +416,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       </OSTooltip>,
 
       <ChakraMenu variant='menu_button_subnav_style' placement='bottom-start' id='exporter' >
-          
+
         <OSTooltip placement='bottom' label={t('Menu.tooltips.style')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />} >
             <FontAwesomeIcon icon={faPenToSquare} />
@@ -474,7 +477,8 @@ export const Modale_resolution_png : Modale_resolution_pngFType =(
   const [h,set_h]=useState<number>()
   const [v,set_v]=useState<number>()
   const valid_input= (h===undefined && v===undefined) ||  (v!==undefined && h!==undefined && !isNaN(+v) && !isNaN(+h))
-
+  dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current=set_h
+  dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_v.current=set_v
   const content=<>      
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>
@@ -826,7 +830,9 @@ export const Menu: FunctionComponent<MenuTypes> = (
       dict_variable_application_data,node_function,link_function,ComponentUpdater
     )
   }
-
+  const modal_resolution_png=Modale_resolution_png(applicationContext.t,
+    dict_hook_ref_setter_show_dialog_components,dict_variable_application_data,contextMenu.pointer_pos
+  )
   return (
     <>
       {external_modal.map((c,i)=>{return <React.Fragment key={i}>{c}</React.Fragment>})}
@@ -892,22 +898,24 @@ export const Menu: FunctionComponent<MenuTypes> = (
       </Navbar>:<></>}
 
       {(!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) ?
-        <Drawer 
+        <Drawer
           blockScrollOnMount={false}
-          isOpen={show_nav} 
-          placement='right' 
+          isOpen={show_nav}
+          placement='right'
           onClose={()=>set_show_nav(false)}
           variant='drawer_menu_config'
           trapFocus={false}
         >
-          {/* We have to set the width of the component here (and not in the theme) 
-          because for some reason a style is directly applied to this component 
+          {/* We have to set the width of the component here (and not in the theme)
+          because for some reason a style is directly applied to this component
           and we cannot override it in the theme */}
-          <DrawerContent style={{width:menu_config_width,
-            marginTop:document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+          <DrawerContent
+            style={{width:menu_config_width,
+              marginTop:document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
 
-          }}>
-            <DrawerBody>
+            }}
+          >
+            <DrawerBody zIndex={1}>
               <SankeyConfigurationMenu
                 configuration_menus={configurations_menus}
               />
@@ -918,7 +926,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
       <ButtonGroup vertical
         className='sideBar'
-        style={{top:window.innerHeight/2-120,right:0}}
+        style={{top:window.innerHeight/2-120,right:0,zIndex:1}}
       >
         {menus['toolbar']}
         {!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false) ? (
@@ -947,12 +955,13 @@ export const Menu: FunctionComponent<MenuTypes> = (
         t={applicationContext.t}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
         dict_variable_application_data={dict_variable_application_data}
-        updateLayout={applicationDraw.updateLayout}
+        applicationDraw={applicationDraw}
         convert_data={convert_data}
         elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
         DefaultSankeyData={dict_variable_application_data.get_default_data}
+        ComponentUpdater={ComponentUpdater}
       />
 
       <ExcelModal
@@ -992,14 +1001,14 @@ export const Menu: FunctionComponent<MenuTypes> = (
       }
       {modal_tuto}
       {modal_support}
-
+      {modal_resolution_png}
     </>
   )
 }
 
 const style_menu_draggable={
   display:'flex',
-  width:'25%', 
+  width:'25%',
   paddingLeft:'0.75rem',
   paddingRight:'0.75rem',
   paddingBottom:'0.25rem',
@@ -1132,7 +1141,7 @@ const  DataTagsDDNavBar = (
             <Col><FormLabel style={{justifyContent: 'center',fontWeight:'bold'}}>{tags_group.group_name}</FormLabel></Col>
             <Col><MultiSelect
               className={'multidropdown_filter_node_link'}
-              style={{ color: 'black'}}
+              // style={{ color: 'black'}}
               labelledBy={'dropdown_link_filter'}
               overrideStrings={{
                 'selectAll': 'Tout sélectionner',
@@ -1241,10 +1250,6 @@ const clickSavePDF = (data:SankeyData) => {
     .then(showFile).then(cleanFile)
 }
 
-
-
-
-
 export const pre_process_export_svg =()=>{
   // Resize the svg scale to be the scale by default
   const svg =d3.select(' .opensankey#svg-container svg')
@@ -1280,6 +1285,10 @@ export const pre_process_export_svg =()=>{
   d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0').attr('fill-opacity', '0')
   d3.selectAll('.opensankey .gg_label rect').attr('stroke-width','1')
   d3.selectAll('.opensankey .fo_input_label').remove()
+
+  // To hide handles from OpenSankey+ zdt
+  d3.selectAll(' .opensankey .g_label_handles .zdt_handles').attr('stroke-opacity', '0').attr('fill-opacity', '0')
+
   return svg
 }
 
@@ -1287,7 +1296,6 @@ export const post_process_export_svg=()=>{
   d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity','1')
   d3.select(' .opensankey#svg-container svg').style('border','2px')
 }
-
 
 export const ToastWaitFunc=({
   dict_variable_application_data,

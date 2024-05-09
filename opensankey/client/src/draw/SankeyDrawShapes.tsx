@@ -1,10 +1,33 @@
 import * as d3 from 'd3'
-import { ReturnValueNode, ComputeTotalOffsets, TestLinkValue, ReturnValueLink, LinkVisible } from '../configmenus/SankeyUtils'
-import { GetLinkValueFuncType, LinkColorFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyNode, SankeyLink, TagsCatalog, SankeyLinkValue } from '../types/Types'
-import { SetNodeHeight } from './SankeyDrawFunction'
-import { ComputeEndPointsFType,DrawLinkStartSabotFType } from './types/SankeyShapesTypes'
-import { draw_arrowFType, DrawLinkSabotFType, bezier_link_classic_vvFType } from './types/SankeyShapesTypes'
+
+import {
+  SankeyNode,
+  SankeyLink,
+  SankeyLinkValue
+} from '../types/Types'
+import {
+  ReturnValueNode,
+  ComputeTotalOffsets,
+  TestLinkValue,
+  ReturnValueLink,
+  LinkVisible
+} from '../configmenus/SankeyUtils'
+import {
+  GetLinkValueFuncType,
+  LinkColorFuncType
+} from '../configmenus/types/SankeyUtilsTypes'
+import {
+  SetNodeHeight
+} from './SankeyDrawFunction'
+import {
+  ComputeEndPointsFType,
+  DrawLinkStartSabotFType
+} from './types/SankeyShapesTypes'
+import {
+  draw_arrowFType,
+  DrawLinkSabotFType,
+  bezier_link_classic_vvFType
+} from './types/SankeyShapesTypes'
 
 const default_horiz_shift = 50
 
@@ -45,7 +68,7 @@ export const draw_arrow : draw_arrowFType = (
   const node_face_size_scaled_by_ratio_cumulative_value=node_face_size * ratio_cum
   const node_face_size_scaled_by_ratio_current_value=node_face_size * ratio_cur
   const arrow_length_oriented=coeff * arrow_length
-  
+
   let d
   if (horizontal) {
     if (ratio_cum + ratio_cur < 1) {
@@ -91,7 +114,7 @@ export const draw_arrow : draw_arrowFType = (
 // When node arrow is horizontal (right & left) :
 //      _______            _______
 //      \      |          |      /
-//       \     |          |     /  This part is drawed when (ratio_cum + ratio_cur < 1) 
+//       \     |          |     /  This part is drawed when (ratio_cum + ratio_cur < 1)
 //        \    |          |    /
 //         \___|__________|___/______________________
 //          \  |          |  /
@@ -144,7 +167,7 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
-      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum+ratio_cur-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) 
+      d += ' L ' + String(position_node_face[0] - (arrow_length_oriented)*(ratio_cum+ratio_cur-1)) + ',' + String(position_node_face[1] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   } else {
@@ -163,7 +186,7 @@ export const DrawLinkSabot : DrawLinkSabotFType = (
       d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value)) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])
       d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1])
-      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented)) 
+      d += ' L ' + String(position_node_face[0] - node_face_size + (node_face_size_scaled_by_ratio_cumulative_value) + (node_face_size_scaled_by_ratio_current_value)) + ',' + String(position_node_face[1] - (arrow_length_oriented))
       d += ' L ' + String(position_node_face[0]) + ',' + String(position_node_face[1])+ ' Z'
     }
   }
@@ -441,7 +464,7 @@ export const bezier_link_classic_recycling = (
   }
 
   const curved_sign = curved ? 1 : 0
-  let x1 = x0 + factor * default_horiz_shift + factor * right_horiz_shift 
+  let x1 = x0 + factor * default_horiz_shift + factor * right_horiz_shift
   const y1 = y0
   let x16 = x17 - factor * default_horiz_shift + factor * left_horiz_shift
   const y16 = y17
@@ -512,7 +535,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   GetLinkValue: GetLinkValueFuncType,
   LinkSabotColor: LinkColorFuncType
 ) => {
-  const {data,display_links,display_nodes}=dict_variable_application_data
+  const {data,display_nodes}=dict_variable_application_data
   let cum_v_left = 0
   let cum_h_top = 0
   let cum_v_right = 0
@@ -529,7 +552,14 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     node_angle = ReturnValueNode(data, n, 'node_arrow_angle_factor') as number
     node_angle_direction = ReturnValueNode(data, n, 'node_arrow_angle_direction') as string
   }
-  const res = ComputeTotalOffsets(inv_scale, n, data, display_nodes, display_links, TestLinkValue, undefined, GetLinkValue)
+  const res = ComputeTotalOffsets(
+    inv_scale,
+    n,
+    dict_variable_application_data,
+    TestLinkValue,
+    undefined,
+    GetLinkValue
+  )
   const [total_height_left, total_height_right, total_width_top, total_width_bottom] = res
 
   for (let i = 0; i < n.outputLinksId.length; i++) {
@@ -537,10 +567,26 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     const node_target = data.nodes[l.idTarget]
     const ori = ReturnValueLink(data, l, 'orientation')
     const recy = ReturnValueLink(data, l, 'recycling')
-    const link_output_to_right = (n.x < node_target.x) && node_angle_direction === 'right' && (ori === 'hh' || ori === 'hv')
-    const link_output_to_left = (n.x > node_target.x) && node_angle_direction === 'left' && (ori === 'hh' || ori === 'hv')
-    const link_output_to_top = (n.y > node_target.y) && node_angle_direction === 'top' && (ori === 'vv' || ori === 'vh')
-    const link_output_to_bottom = (n.y < node_target.y) && node_angle_direction === 'bottom' && (ori === 'vv' || ori === 'vh')
+    const link_output_to_right = (
+      (n.x < node_target.x) &&
+      (node_angle_direction === 'right') &&
+      (ori === 'hh' || ori === 'hv')
+    )
+    const link_output_to_left = (
+      (n.x > node_target.x) &&
+      (node_angle_direction === 'left') &&
+      (ori === 'hh' || ori === 'hv')
+    )
+    const link_output_to_top = (
+      (n.y > node_target.y) &&
+      (node_angle_direction === 'top') &&
+      (ori === 'vv' || ori === 'vh')
+    )
+    const link_output_to_bottom = (
+      (n.y < node_target.y) &&
+      (node_angle_direction === 'bottom') &&
+      (ori === 'vv' || ori === 'vh')
+    )
 
     const link_direction_same_as_node_arrow = link_output_to_right || link_output_to_left || link_output_to_top || link_output_to_bottom
     // If the link don't exit by the node arrow direction, then don't draw the sabot
@@ -552,24 +598,24 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
       continue
     }
 
-    let link_value = TestLinkValue(data, data.nodes, l, GetLinkValue)
+    let link_value = TestLinkValue(dict_variable_application_data, l, GetLinkValue)
     if (link_value === undefined) {
       continue
     }
-    link_value = (+link_value == 0 || (+link_value >= inv_scale(2))) ? +link_value : inv_scale(2)
+    link_value = (+link_value == 0 || (+link_value >= inv_scale(dict_variable_application_data.min_link_thickness))) ? +link_value : inv_scale(dict_variable_application_data.min_link_thickness)
     const extension = GetLinkValue(data, n.outputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
       if (display_free_as_dashed) {
         // Generale settings: free link value are displayed dashed without text without witdh
-        const link_value_is_free = extension?.free_mini !== undefined ?? false
+        const link_value_is_free = (extension?.free_mini !== undefined)
         if (link_value_is_free) {
           // Link value is free should be displayed dashed without text
-          link_value = inv_scale(5)
+          link_value = inv_scale(dict_variable_application_data.min_link_thickness)
         }
       }
       if (extension.display_thin) {
-        link_value = inv_scale(5)
+        link_value = inv_scale(dict_variable_application_data.min_link_thickness)
       }
     }
 
@@ -603,7 +649,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     if (!data.display_style.filter || link_value >= data.display_style.filter) {
       //selection
       d3.select('#gg_' + l.idLink + ' .start_corner').remove() // supression dans le cas du drag notamment
-      SetNodeHeight(n, display_nodes, display_links, data, scale, inv_scale, GetLinkValue)
+      SetNodeHeight(n, dict_variable_application_data,scale, inv_scale, GetLinkValue)
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'start_corner')
@@ -663,25 +709,23 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
 export const ComputeEndPoints: ComputeEndPointsFType = (
   source_node: SankeyNode,
   target_node: SankeyNode,
+  dict_variable_application_data,
   link: SankeyLink,
-  display_nodes: { [node_id: string]: SankeyNode} ,
-  display_links: { [link_id: string]: SankeyLink} ,
-  selected_tags: TagsCatalog,
-  data: SankeyData,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType
 
 ) => {
+  const {data,display_links}=dict_variable_application_data
   if (!display_links) {
     return [0, 0, 0, 0]
   }
-  let link_value = TestLinkValue(data, display_nodes, link, GetLinkValue)
+  let link_value = TestLinkValue(dict_variable_application_data, link, GetLinkValue)
   if (link_value === undefined) {
     return [0, 0, 0, 0]
   }
-  //inv_scale(2) = epaisseur minimum d'un flux
-  link_value = (link_value == 0 || (+link_value >= inv_scale(2))) ? +link_value : inv_scale(2)
+  //inv_scale(dict_variable_application_data.min_link_thickness) = epaisseur minimum d'un flux (5px)
+  link_value = ((link_value!=='' && link_value == 0) || (+link_value >= inv_scale(dict_variable_application_data.min_link_thickness))) ? +link_value : inv_scale(dict_variable_application_data.min_link_thickness)
 
   const theLinkValue = GetLinkValue(data, link.idLink)
   let is_structure = false
@@ -691,7 +735,7 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
         is_structure = true
       }
     } else if (data.show_structure === 'reconciled') {
-      const link_value_is_free = theLinkValue.extension?.free_mini !== undefined ?? false
+      const link_value_is_free = (theLinkValue.extension?.free_mini !== undefined)
       if (link_value_is_free) {
         // If the link is free we check if data allow indeterminate free null link
         //  to be considerate as visible
@@ -703,12 +747,12 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     }
   }
   if (is_structure) {
-    link_value = inv_scale(5)
+    link_value = inv_scale(dict_variable_application_data.min_link_thickness)
   }
 
-  let res = ComputeTotalOffsets(inv_scale, source_node, data, display_nodes, display_links, TestLinkValue, undefined, GetLinkValue)
+  let res = ComputeTotalOffsets(inv_scale, source_node, dict_variable_application_data,TestLinkValue, undefined, GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale, target_node, data, display_nodes, display_links, TestLinkValue, undefined, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, target_node, dict_variable_application_data,TestLinkValue, undefined, GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
   let node_size_s_width = inv_scale((ReturnValueNode(data, source_node, 'node_width') as number))
   let node_size_t_width = inv_scale(ReturnValueNode(data, target_node, 'node_width') as number)
@@ -730,9 +774,9 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       inv_scale((ReturnValueNode(data, target_node, 'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
     )
   }
-  res = ComputeTotalOffsets(inv_scale, source_node, data, display_nodes, display_links, TestLinkValue, link, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, source_node, dict_variable_application_data,TestLinkValue, link, GetLinkValue)
   const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale, target_node, data, display_nodes, display_links, TestLinkValue, link, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, target_node, dict_variable_application_data,TestLinkValue, link, GetLinkValue)
   const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
   const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
   const delta_s_width_top = Math.max(0, (node_size_s_width - s_total_offset_width_top) / 2)

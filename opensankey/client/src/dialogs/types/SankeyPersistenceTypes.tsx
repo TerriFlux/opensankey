@@ -12,15 +12,29 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
  * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
  */
 export type CounterFType = (
-  {url_prefix,finishReconciliation,value,result,setResult}:{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}
+  {
+    url_prefix,
+    finishReconciliation,
+    value,
+    result,
+    setResult
+  }:{
+    url_prefix:string,
+    finishReconciliation:(x:boolean)=>void,
+    value:number[],
+    result:string,
+    setResult:(x:string)=>void
+  }
 ) => unknown
+
 export type ProcessExampleFuncType = (
-    data: SankeyData,
+  dict_variable_application_data:dict_variable_application_dataType,
     updateLayout: updateLayoutFuncType,
     convert_data: ConvertDataFuncType,
     callback: (server_data: SankeyData) => void,
     DefaultSankeyData: DefaultSankeyDataFuncType
 ) => SankeyData
+
 export type RetrieveExcelResultsFuncType = (
     dict_variable_application_data : dict_variable_application_dataType,
     text: string,
@@ -30,14 +44,16 @@ export type RetrieveExcelResultsFuncType = (
     convert_data: ConvertDataFuncType,
     defaultData: () => SankeyData
 ) => void
+
 export type ClickSaveDiagramFuncType = (data: SankeyData, name?: string) => void
+
 export type DownloadExamplesFuncType = (file_name: string, the_url_prefix: string, filetype: string) => void
+
 export type UploadExcelImplFuncType = (set_show_excel_dialog: (b: boolean) => void, input_file: Blob, the_url_prefix: string) => void
 
 export type UploadExempleFuncType = (file_name: string, the_url_prefix: string, data: SankeyData, set_data: (data: SankeyData) => void, Reinitialization: () => void, convert_data: ConvertDataFuncType, DefaultSankeyData: DefaultSankeyDataFuncType) => void
 
-export type DownloadExempleExcelFuncType = (file_name: string) => void
 
-export type ClickSaveExcelFuncType = (url_prefix: string, data: SankeyData) => void
+export type ClickSaveExcelFuncType = (url_prefix: string, data: SankeyData,file_name?:string) => void
 
 //export default SankeyLoad

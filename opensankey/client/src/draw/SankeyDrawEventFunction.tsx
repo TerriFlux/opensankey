@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import * as d3 from 'd3'
 import {
   ReturnValueLink,
@@ -70,7 +69,7 @@ export const EventNodeClick : EventNodeClickFType =(
 )=>{
   const {ref_getter_mode_selection, multi_selected_nodes}=dict_variable_elements_selected
   const {nodes_accordion_ref,accordion_ref,button_ref}=uiElementsRef
-  const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode}=ComponentUpdater
+  const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode,updateMenuConfigTextNodeTooltip}=ComponentUpdater
   multi_selected_nodes.current.forEach(n=>DeselectVisualyNodes(n))
   if (  (event.ctrlKey || event.metaKey)) {
     ref_getter_mode_selection.current='s'
@@ -106,7 +105,7 @@ export const EventNodeClick : EventNodeClickFType =(
     ) {
       nodes_accordion_ref.current.click()
     }
-    
+
     d3.select(' .opensankey #ggg_' + d.idNode + ' rect')
       .style('stroke-width', d => {
         const dd = (d as SankeyNode)
@@ -131,7 +130,8 @@ export const EventNodeClick : EventNodeClickFType =(
   }
   updateComponentMenuConfigNode.current()
   updateComponentMenuConfigNodeAppearence.current()
-  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f() )
+  updateComponentMenuNodeIOSelectSideNode.current.forEach(f => f())
+  updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
 }
 
 export const EventNodeContextMenu: EventNodeContextMenuFType = (
@@ -273,7 +273,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
   const { data } = dict_variable_application_data
   const { ref_getter_mode_selection, first_selected_node } = dict_variable_elements_selected
   closeAllMenuContext()
-  const evt2=evt as unknown as {target:string,ctrlKey:boolean,metaKey:boolean,which:number} 
+  const evt2=evt as unknown as {target:string,ctrlKey:boolean,metaKey:boolean,which:number}
 
   //si le mode de souris est noeud+flux alors crée le premier noeuds
   if (evt.which == 1) {
@@ -524,7 +524,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       }
     } else if ((!evt.ctrlKey && !evt.metaKey) && Object.values(data.nodes).filter(d => d.name == 'node_tmp').length > 0 && d3.select(evt_recast).attr('class') != 'node node_shape') {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
-      Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)  
+      Object.values(data.nodes).filter(d => d.name == 'node_tmp').map(d => d.name = d.idNode)
       //Création second noeud
       const new_node1 = DefaultNode(data)
       let idNode = Object.keys(data.nodes).length
@@ -610,7 +610,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       OpenLinksMenu()
       // Deselect old selected links to then only select the new one
       Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
-      
+
       first_selected_node.current = undefined
       dict_variable_application_data.display_nodes[n_node.idNode]=n_node
       dict_variable_application_data.display_links[n_link.idLink]=n_link
@@ -747,10 +747,6 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
   const {data}=dict_variable_application_data
   svgSankey
     .attr('transform', t)
-  // Change the width of scrollable zone if the menu is open so we can scroll until the menu is not on the sankey zone
-  if (d3.select('.offcanvas-body').node()) {
-    d3.select('.scroll_zone').style('width', ((data.width + 600) * evt.transform.k - (600 * (evt.transform.k - 1.1))) + 'px')
-  }
   //Compensate the scale of the legend when we dezoom so the legend has alway a readable size
   const scale_legend = 1 / ((evt.transform.k < 1) ? evt.transform.k : 1)
   svgSankey
@@ -813,7 +809,6 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
 export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(dict_variable_application_data,GetSankeyMinWidthAndHeight)=>{
   [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
   const scale_svg=returnScaleOfDrawArea()
-
   d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
   d3.select('.scroll_zone').style('height',((dict_variable_application_data.data.height+200)*scale_svg-(200*(scale_svg-1.1)))+'px')
 }

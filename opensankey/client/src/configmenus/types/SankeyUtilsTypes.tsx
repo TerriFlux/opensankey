@@ -19,20 +19,17 @@ export type TooltipValueSurchargeFType =(k:string,t:TFunction)=> JSX.Element
 
 export type IsAllNodeNotLocalAttrSameValueFType =(data:SankeyData,m_s_n:SankeyNode[],k_list:(keyof SankeyNode)[])=>[boolean,boolean]
 
-export type GetLinkValueFuncType=(data: SankeyData,idLink: string,up?:boolean)=> SankeyLinkValue 
+export type GetLinkValueFuncType=(data: SankeyData,idLink: string,up?:boolean)=> SankeyLinkValue
 
 export type TestLinkValueFuncType = (
-    data:SankeyData, 
-    nodes: { [node_id: string]: SankeyNode }, 
-    d: SankeyLink,
-    GetLinkValue:GetLinkValueFuncType
+  dict_variable_application_data: dict_variable_application_dataType,
+  d: SankeyLink,
+  GetLinkValue: GetLinkValueFuncType
 ) => string | number | SankeyLinkValue
 
 export type ComputeTotalOffsetsFuncType=(inv_scale:(t:number)=>number,
 node: SankeyNode,
-data: SankeyData,
-display_nodes: { [node_id: string]: SankeyNode },
-display_links: { [node_id: string]: SankeyLink },
+dict_variable_application_data:dict_variable_application_dataType,
 TestLinkValue: TestLinkValueFuncType,
 ref_link: SankeyLink | undefined,
 GetLinkValue:GetLinkValueFuncType
@@ -42,15 +39,15 @@ export type AddDataTagsFuncType=(dataTags: TagsGroup[], v: {[key: string]: Sanke
 
 export type FindMaxLinkValueFuncType = (max_node_value: number,value_dict: SankeyLinkValue | SankeyLinkValueDict)=> number
 
-export type DefaultSankeyDataFuncType = ()=>SankeyData 
+export type DefaultSankeyDataFuncType = ()=>SankeyData
 
 export type LinkColorFuncType = (l: SankeyLink,data:SankeyData,GetLinkValue:GetLinkValueFuncType)=>string
 
 export type LinkVisibleFunctType = (
-  l: SankeyLink, 
-  data: SankeyData, 
+  l: SankeyLink,
+  data: SankeyData,
   display_nodes : {[d:string]:SankeyNode}
-) => boolean 
+) => boolean
 
 export type DefaultNodeFuncType = (data: SankeyData) => SankeyNode
 
@@ -96,7 +93,12 @@ export type GetNodeAttributeValueFromStyleFuncType  =(data:SankeyData,n:SankeyNo
 
 export type ReturnLocalNodeValueFuncType = (n:SankeyNode,key:keyof SankeyNodeAttrLocal)=>string | number | boolean | null | undefined
 
-export type IsAllNodeAttrSameValueFuncType=(data:SankeyData,m_s_n:SankeyNode[]|SankeyNodeStyle[],k_list:(keyof SankeyNodeAttrLocal)[],menu_for_style:boolean)=> { [x: string]: [string | number | boolean, boolean] }
+export type IsAllNodeAttrSameValueFuncType=(
+  data: SankeyData,
+  m_s_n: SankeyNode[]|SankeyNodeStyle[],
+  k_list: (keyof SankeyNodeAttrLocal)[],
+  menu_for_style: boolean
+)=> { [x: string]: [string | number | boolean, boolean] }
 
 export type IsNodeDisplayingValueLocalFuncType = (m_s_n:{current:SankeyNode[]},k:keyof SankeyNodeAttrLocal,menu_for_style:boolean)=> boolean
 
