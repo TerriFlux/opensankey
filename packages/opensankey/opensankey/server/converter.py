@@ -479,8 +479,7 @@ class SankeyToJson(object):
             'idLink': str,
             'idSource': str,
             'idTarget': str,
-            'value': datas_json,
-            'dashed': bool
+            'value': datas_json
         }
 
         Parameters
@@ -508,7 +507,7 @@ class SankeyToJson(object):
                 next_datas_strct[tag.name_unformatted] = copy.deepcopy(datas_json)
             datas_json = next_datas_strct
         # We use result data if present instead of simple data
-        has_data = self._parse_datas_or_results(
+        self._parse_datas_or_results(
             sankey,
             flux,
             default_data_json,
@@ -522,8 +521,7 @@ class SankeyToJson(object):
             'idLink': flux.id,
             'idSource': flux.orig.id,
             'idTarget': flux.dest.id,
-            'value': datas_json,
-            'dashed': (not has_data)
+            'value': datas_json
         }
 
     def _parse_datas_or_results(
@@ -1181,8 +1179,7 @@ class JsonToSankey(object):
             'idLink': str,
             'idSource': str,
             'idTarget': str,
-            'value': *datas_json*,
-            'dashed': bool
+            'value': *datas_json*
         }
 
         Struct for *datas_json*:
