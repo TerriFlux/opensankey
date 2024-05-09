@@ -128,7 +128,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     'label_horiz_valeur',
     'shape',
     'node_arrow_angle_factor',
-    'node_arrow_angle_direction'
+    'node_arrow_angle_direction',
+    'color'
   ] as (keyof SankeyNodeAttrLocal)[]
 
   const list_value=IsAllNodeAttrSameValue(data,selected_parameter, list_of_key, menu_for_style)
@@ -142,7 +143,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         inchangee = (d.style == style_to_display) ? inchangee : false
       })
       if (style_to_display != '' && style_to_display !== undefined) {
-        return (inchangee) ? CutName(data.style_node[style_to_display].name,20 ) : 'Multiple style parmi les noeuds sélectionnés'
+        return (inchangee) ? CutName(data.style_node[style_to_display].name,20 ) : t('Noeud.multi_style')
       } else {
         return 'Aucun'
       }
@@ -152,15 +153,10 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   }
 
   // Check if the 1st selected node has a tag selected from the group tag 'Type de noeud' so we can disable the selection of the node shape
-  const content_appearence=<Box
-    layerStyle='menuconfigpanel_grid'
-  >
+  const content_appearence=<Box layerStyle='menuconfigpanel_grid' >
 
     {/* Visibilite du noeud */}
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'
-    >
+    <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={(list_value['shape_visible'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
@@ -188,18 +184,12 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     {/* In this position of the array, there is an input who can change the node visibility (hide if intermediary)(dev) */}
     {advanced_appearence_content.splice(1,1)}
 
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_2'
-    >
+    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
       {t('Menu.edition')}
     </Box>
 
     {/* Couleur du noeud */}
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-    >
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Noeud.apparence.Couleur')}
         {
@@ -216,9 +206,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             variant='menuconfigpanel_option_input_color'
             type='color'
             value={
-              (selected_parameter.length == 1) ? (
-                ReturnCorrectNodeAttributeValue(data,selected_parameter[0],'color',menu_for_style) as string
-              ) : (
+              (!list_value['color'][1]) ? (
+                list_value['color'][0]) as string : (
                 '#ffffff'
               )
             }
@@ -254,19 +243,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
 
     {/* Forme du noeud */}
     <OSTooltip label={t('Noeud.apparence.tooltips.Forme')}>
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.Forme')}
           {(IsNodeDisplayingValueLocal(multi_selected_nodes,'shape',menu_for_style)?
             <>{TooltipValueSurcharge('node_var_',t)}</>:
             <></>)}
         </Box>
-        <Box
-          layerStyle='options_3cols'
-        >
+        <Box layerStyle='options_3cols' >
           <Button
             value="ellipse"
             variant={
@@ -359,13 +343,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
       list_value['shape'][0]==='arrow'?
         <Box layerStyle='menuconfigpanel_grid'>
           <OSTooltip label={t('Noeud.apparence.tooltips.arrow_angle')}>
-            <Box
-              as='span'
-              layerStyle='menuconfigpanel_row_2cols'
-            >
-              <Box
-                layerStyle='menuconfigpanel_option_name'
-              >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name' >
                 {t('Noeud.apparence.arrow_angle')}
                 {(IsNodeDisplayingValueLocal(multi_selected_nodes, 'node_arrow_angle_factor', menu_for_style)?
                   <>{TooltipValueSurcharge('node_var_',t)}</>:
@@ -400,18 +379,11 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             </Box>
           </OSTooltip>
 
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_row_2cols'
-          >
-            <Box
-              layerStyle='menuconfigpanel_option_name'
-            >
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name' >
               {t('Noeud.apparence.angle_orientation')}
             </Box>
-            <Box
-              layerStyle='options_4cols'
-            >
+            <Box layerStyle='options_4cols' >
               <Button
                 variant={
                   list_value['node_arrow_angle_direction'][0]==='left'?
@@ -495,22 +467,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
         <></>
     }
 
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_2'
-    >
+    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
       {t('Noeud.size')}
     </Box>
 
     {/* Largeur minimale du noeud */}
     <OSTooltip label={t('Noeud.apparence.tooltips.TML')}>
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-        >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.TML')}
         </Box>
         <ConfigNodeAttributeNumberInput
@@ -533,13 +497,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
 
     {/* Hauteur minimale du noeud */}
     <OSTooltip label={t('Noeud.apparence.tooltips.TMH')}>
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-        >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.TMH')}
         </Box>
         <ConfigNodeAttributeNumberInput
@@ -566,15 +525,10 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   const svg_label_center=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z"/></svg>
   const svg_label_upper=<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12"><g><path d="M22,8V9.026A4.948,4.948,0,0,0,19,8a5,5,0,0,0,0,10,4.948,4.948,0,0,0,3-1.026V18h2V8Zm-3,8a3,3,0,1,1,3-3A3,3,0,0,1,19,16Z"/><path d="M12,18h2.236L7.118,3.764,0,18H2.236l2-4H10ZM5.236,12,7.118,8.236,9,12Z"/></g></svg>
 
-  const content_label=<Box
-    layerStyle='menuconfigpanel_grid'
-  >
+  const content_label=<Box layerStyle='menuconfigpanel_grid' >
     {/* Checkbox visibilité noeud */}
 
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'
-    >
+    <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={(list_value['label_visible'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
@@ -599,25 +553,16 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
 
     {
       list_value['label_visible'][0] as boolean?
-        <Box
-          layerStyle='menuconfigpanel_grid'
-        >
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_2'
-          >
+        <Box layerStyle='menuconfigpanel_grid' >
+          <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
             {t('Menu.edition')}
           </Box>
 
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_3'
-          >
+          <Box as='span' layerStyle='menuconfigpanel_part_title_3' >
             {t('Noeud.text')}
           </Box>
 
           {/* Label en blanc ou noir */}
-
           <Checkbox
             variant='menuconfigpanel_option_checkbox'
             isIndeterminate={list_value['label_color'][1]}
@@ -634,20 +579,13 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
             {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_color',menu_for_style)?TooltipValueSurcharge('node_var',t):<></>)}
           </Checkbox>
 
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_3'
-          >
+          <Box as='span' layerStyle='menuconfigpanel_part_title_3' >
             Police
           </Box>
 
           {/* Police et taille du texte de label */}
-          <Box
-            layerStyle='options_3cols'
-          >
-            <Box
-              layerStyle='options_3cols'
-            >
+          <Box layerStyle='options_3cols' >
+            <Box layerStyle='options_3cols' >
               {/* Gras */}
               <Button
                 variant={
@@ -776,22 +714,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               <></>)}
           </Checkbox>
 
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_2'
-          >
+          <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
             {t('MEP.leg_pos')}
           </Box>
 
           {/* Largeur de la zone de texte du label */}
           <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
-            <Box
-              as='span'
-              layerStyle='menuconfigpanel_row_2cols'
-            >
-              <Box
-                layerStyle='menuconfigpanel_option_name'
-              >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
                 {t('Menu.larg')}
                 {(IsNodeDisplayingValueLocal(multi_selected_nodes,'label_box_width',menu_for_style)?
                   <>{TooltipValueSurcharge('node_var_',t)}</>:
@@ -814,23 +744,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           </OSTooltip>
 
           {/* Position  du label par rapport au noeud */}
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_row_2cols'
-          >
-            <Box
-              layerStyle='menuconfigpanel_option_name'
-            >
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name' >
               Position
             </Box>
 
-            <Box
-              layerStyle='options_2cols'
-            >
+            <Box layerStyle='options_2cols' >
               {/* Position horizontale */}
-              <Box
-                layerStyle='options_3cols'
-              >
+              <Box layerStyle='options_3cols' >
                 {/* A gauche  */}
                 <OSTooltip label={t('Noeud.labels.tooltips.gauche')}>
                   <Button
@@ -913,9 +834,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               </Box>
 
               {/* Position verticale */}
-              <Box
-                layerStyle='options_3cols'
-              >
+              <Box layerStyle='options_3cols' >
                 {/* En haut */}
                 <OSTooltip label={t('Noeud.labels.tooltips.haut')}>
                   <Button
@@ -1006,14 +925,9 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     }
   </Box>
 
-  const content_label_value=<Box
-    layerStyle='menuconfigpanel_grid'
-  >
+  const content_label_value=<Box layerStyle='menuconfigpanel_grid' >
 
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'
-    >
+    <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={(list_value['show_value'][0] as boolean)?<FaEye/>:<FaEyeSlash/>}
@@ -1038,24 +952,14 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
 
     {
       list_value['show_value'][0] as boolean?
-        <Box
-          layerStyle='menuconfigpanel_grid'
-        >
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_2'
-          >
+        <Box layerStyle='menuconfigpanel_grid' >
+          <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
             {t('Menu.edition')}
           </Box>
 
           {/* Taille de la police du texte de la valeur */}
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_row_2cols'
-          >
-            <Box
-              layerStyle='menuconfigpanel_option_name'
-            >
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name' >
               Police
             </Box>
 
@@ -1073,22 +977,13 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
           </Box>
 
           {/* Position de l'affichage des données par rapport au noeud */}
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_row_2cols'
-          >
-            <Box
-              layerStyle='menuconfigpanel_option_name'
-            >
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name' >
               Position
             </Box>
-            <Box
-              layerStyle='options_2cols'
-            >
+            <Box layerStyle='options_2cols' >
               {/* Horizontale */}
-              <Box
-                layerStyle='options_3cols'
-              >
+              <Box layerStyle='options_3cols' >
                 {/* A gauche */}
                 <OSTooltip label={t('Noeud.labels.tooltips.gauche_val')}>
                   <Button
@@ -1160,9 +1055,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
               </Box>
 
               {/* Verticale */}
-              <Box
-                layerStyle='options_3cols'
-              >{/* en haut */}
+              <Box layerStyle='options_3cols' >
+                {/* en haut */}
                 <OSTooltip label={t('Noeud.labels.tooltips.haut_val')}>
                   <Button
                     variant={
@@ -1239,13 +1133,8 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
     }
   </Box>
 
-  const style_node=!menu_for_style? <Box
-    layerStyle='menuconfigpanel_row_stylechoice'
-  >
-    <Box
-      layerStyle='menuconfigpanel_option_name'
-      textStyle='h3'
-    >
+  const style_node=!menu_for_style? <Box layerStyle='menuconfigpanel_row_stylechoice' >
+    <Box layerStyle='menuconfigpanel_option_name' textStyle='h3' >
       {t('Noeud.Style')}
     </Box>
     <Menu>
@@ -1313,18 +1202,14 @@ export const SankeyMenuConfigurationNodesAttributes = (
   //Function that check if all selected nodes have the same value for some parameter
   return for_modal ?
     [
-      <Box
-        layerStyle='menuconfigpanel_grid'
-      >
+      <Box layerStyle='menuconfigpanel_grid' >
         {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
           return <React.Fragment key={i}>{c}</React.Fragment>
         })}
       </Box>
     ]:[
       <Tab>
-        <Box
-          layerStyle='submenuconfig_tab'
-        >
+        <Box layerStyle='submenuconfig_tab' >
           {t('Noeud.tabs.apparence')}
         </Box>
       </Tab>,
@@ -1349,18 +1234,14 @@ export const SankeyWrapperConfigInModalOrMenu = (
   //Function that check if all selected nodes have the same value for some parameter
   return for_modal ?
     [
-      <Box
-        layerStyle='menuconfigpanel_grid'
-      >
+      <Box layerStyle='menuconfigpanel_grid' >
         {menu_to_wrap.map((c:JSX.Element,i)=>{
           return <React.Fragment key={i}>{c}</React.Fragment>
         })}
       </Box>
     ]:[
-      <Tab>
-        <Box
-          layerStyle='submenuconfig_tab'
-        >
+      <Tab> 
+        <Box layerStyle='submenuconfig_tab' >
           {/* {SankeyWrapperConfigInModalOrMenu} */}
           {title_tab}
         </Box>

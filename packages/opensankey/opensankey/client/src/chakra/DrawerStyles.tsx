@@ -13,7 +13,8 @@ export const drawer_menu_config=definePartsStyle({
     maxWidth:'inherit'
   },
   dialogContainer:{
-    width:'inherit'
+    width:'inherit',
+    zIndex:1
   },
   body:{
     padding:'0'
