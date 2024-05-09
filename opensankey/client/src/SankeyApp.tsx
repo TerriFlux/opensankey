@@ -381,6 +381,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   )
   regular_ui['form'] = [...regular_ui['form'],...additional_menus.additional_preferences]
 
+  const menu_style_add_node_appearence_attr=[] as JSX.Element[]
+  const menu_style_add_node_label=[] as JSX.Element[]
+  const menu_style_add_node_label_value=[] as  JSX.Element[]
+
   const formatKeyHandler=(e:KeyboardEvent)=>{
     keyHandler(
       dict_variable_application_data,
@@ -591,7 +595,19 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 dict_variable_elements_selected.ref_selected_style_node,ComponentUpdater,
                 node_function,
                 contextMenu.pointer_pos,
-                []
+                OpenSankeyConfigurationNodesAttributes(
+                  applicationContext,
+                  dict_variable_application_data,
+                  dict_variable_elements_selected,
+                  true,
+                  dict_variable_elements_selected.ref_selected_style_node,
+                  menu_style_add_node_appearence_attr,
+                  menu_style_add_node_label,
+                  menu_style_add_node_label_value,
+                  link_function,
+                  ComponentUpdater,
+                  node_function
+                )
               )}</React.Fragment>,
               <React.Fragment key={'modale_preference'}><ModalPreference
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
