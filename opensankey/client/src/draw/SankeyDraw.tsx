@@ -325,7 +325,7 @@ export const keyHandler : keyHandlerFType = (
       dict_hook_ref_setter_show_dialog_components,
       node_function,
       applicationDraw.GetSankeyMinWidthAndHeight,
-      applicationDraw)
+      applicationDraw.resizeCanvas)
 
     updateComponentMenuConfigNode.current()
     updateComponentMenuConfigNodeAppearence.current()

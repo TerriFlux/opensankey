@@ -227,7 +227,7 @@ export type DragGNodeEventFType=(
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  applicationDraw:applicationDrawType
+  resizeCanvas:(_:dict_variable_application_dataType)=>void
 )=>DragBehavior<SVGGElement, SankeyNode, SankeyNode | SubjectPosition>
 
 /**

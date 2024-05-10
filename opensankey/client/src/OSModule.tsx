@@ -3,6 +3,7 @@ import {
   SetStateAction,
   useRef
 } from 'react'
+import ReactQuill from 'react-quill'
 import { useTranslation } from 'react-i18next'
 /*************************************************************************************************/
 import {
@@ -15,9 +16,15 @@ import {
   dict_variable_elements_selectedType,
   DrawAllType,
   initializeAdditionalMenusType,
+  initializeApplicationDataType,
+  initializeApplicationDrawType,
   initializeLinkFunctionsType,
+  initializeNodeFunctionsType,
+  initializeReinitializationType,
+  InstallEventsOnSVGType,
   LinkFunctionTypes,
   module_dialogsType,
+  NodeFunctionTypes,
   processFunctionsType,
   SankeyData,
   SankeyLink,
@@ -59,6 +66,9 @@ import { SankeyMenuConfigurationNodesTooltip } from './configmenus/SankeyMenuCon
 import { SankeyMenuConfigurationNodesTags } from './configmenus/SankeyMenuConfigurationNodesTags'
 import { MenuConfigurationLinksTags } from './configmenus/SankeyMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigurationLinksTooltip'
+import { drag_legend, DrawLegend } from './draw/SankeyDrawLegend'
+import { EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp } from './draw/SankeyDrawEventFunction'
+import * as SankeyConvert from './configmenus/SankeyConvert'
 
 let logo = ''
 try {
@@ -116,7 +126,12 @@ export const initializeElementSelected : ()=>dict_variable_elements_selectedType
     displayedInputLinkValueSetterRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
     displayedInputLinkDataTagSetterRef : useRef<Dispatch<SetStateAction<{[k: string]: string;}>>[]>([]),
     displayedInputLinkValueRef : useRef<string>(''),
-    userScaleRef : useRef(10)
+
+    r_editor_ZDT :  useRef<ReactQuill|undefined>(),
+
+    userScaleRef : useRef(10),
+
+    legend_clicked : useRef(false)
   }
   // Reset list of setter of input link value
   elementsSelected.displayedInputLinkValueSetterRef.current=[]
@@ -126,7 +141,7 @@ export const initializeElementSelected : ()=>dict_variable_elements_selectedType
 }
 
 // Réinitialise data et vide les noeud/liens sélectionnés
-export const initializeReinitialization = (
+export const initializeReinitialization : initializeReinitializationType = (
   dict_variable_application_data :dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType
@@ -151,12 +166,7 @@ export const initializeReinitialization = (
 }
 
 // Data, displayed data, default data
-export const initializeApplicationData : (  
-  data:SankeyData,
-  set_data:(_:SankeyData)=>void,
-  get_default_data:()=>SankeyData,
-  display_nodes : {[_:string]:SankeyNode},
-  display_links : {[_:string]:SankeyLink})=>dict_variable_application_dataType = (
+export const initializeApplicationData : initializeApplicationDataType = (
     data,
     set_data,
     get_default_data,
@@ -166,6 +176,7 @@ export const initializeApplicationData : (
     data : data,
     set_data : set_data,
     get_default_data : get_default_data,
+    convert_data : SankeyConvert.convert_data,
     display_nodes : display_nodes,
     display_links : display_links,
     function_on_wait:useRef(()=>null),
@@ -173,12 +184,42 @@ export const initializeApplicationData : (
   }
 }
 // General functions necessay to draw the diagram
-export const initializeApplicationDraw = ( dict_variable_application_data:dict_variable_application_dataType)=> {
+export const initializeApplicationDraw : initializeApplicationDrawType = ( 
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  contextMenu:contextMenuType,
+  applicationContext,
+  ComponentUpdater,
+  uiElementsRef : uiElementsRefType,
+  node_function,
+  link_function
+)=> {
   const reAdjustSankey=(dict_variable_application_data:dict_variable_application_dataType)=>()=>{
     AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
   }
   const resizeCanvas=(dict_variable_application_data:dict_variable_application_dataType)=>()=>{
     resizeDrawingArea(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  }
+  const reDrawLegend=()=>{
+    DrawLegend(
+      dict_variable_application_data,
+      applicationContext,
+      contextMenu,
+      GetLinkValue,
+      dict_variable_elements_selected.legend_clicked,
+      ComponentUpdater,
+      reDrawLegend, //TODO why
+      resizeCanvas
+    )
+    //if(!windowSankey.SankeyToolsStatic){ TODO
+    const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
+    g_legend.call( drag_legend(
+      dict_variable_application_data.data,
+      resizeCanvas,
+      node_function,
+      link_function,
+      dict_variable_application_data
+    ))
   }
   return {
     GetSankeyMinWidthAndHeight,
@@ -186,7 +227,8 @@ export const initializeApplicationDraw = ( dict_variable_application_data:dict_v
     resizeCanvas: resizeCanvas(dict_variable_application_data),
     reAdjustSankey: reAdjustSankey(dict_variable_application_data),
     all_element_UpdateLayout:os_all_element_to_transform,
-    start_point:useRef([0,0])
+    start_point:useRef([0,0]),
+    reDrawLegend
   }
 }
 // Functions necessay to draw the links
@@ -276,19 +318,19 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
 }
 
 // Functions necessay to draw the nodes
-export const initializeNodeFunctions = (
-  dict_variable_application_data: dict_variable_application_dataType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
-  contextMenu:contextMenuType,
-  applicationContext: applicationContextType,
-  ComponentUpdater: ComponentUpdaterType,
-  uiElementsRef:uiElementsRefType,
-  applicationDraw:applicationDrawType,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  ref_alt_key_pressed: React.MutableRefObject<boolean>,
-  accept_simple_click: React.MutableRefObject<boolean>,
-  recomputeDisplayedElement: () => void,
-  link_function: LinkFunctionTypes
+export const initializeNodeFunctions : initializeNodeFunctionsType = (
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  contextMenu,
+  applicationContext,
+  ComponentUpdater,
+  uiElementsRef,
+  resizeCanvas,
+  dict_hook_ref_setter_show_dialog_components,
+  ref_alt_key_pressed,
+  accept_simple_click,
+  recomputeDisplayedElement,
+  link_function
 ) => {
   const _ = {
     DrawAllNodes,
@@ -316,7 +358,7 @@ export const initializeNodeFunctions = (
       dict_hook_ref_setter_show_dialog_components,
       _,nodes_to_update,
       GetSankeyMinWidthAndHeight,
-      applicationDraw
+      resizeCanvas
     )
     return null
   }
@@ -353,7 +395,7 @@ export const DrawAll : DrawAllType = (
     dict_hook_ref_setter_show_dialog_components,
     node_function,
     GetSankeyMinWidthAndHeight,
-    applicationDraw
+    applicationDraw.resizeCanvas
 
   )
   DrawAllLinks(
@@ -368,7 +410,64 @@ export const DrawAll : DrawAllType = (
     link_function,
     ComponentUpdater,
     dict_hook_ref_setter_show_dialog_components
-  )  
+  )
+
+
+  
+  // Legend
+  applicationDraw.reDrawLegend()
+}
+
+export const InstallEventsOnSVG : InstallEventsOnSVGType = (
+  contextMenu,
+  dict_variable_application_data,
+  uiElementsRef,
+  dict_variable_elements_selected,
+  link_function,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components,
+  node_function,
+  applicationDraw
+) => {
+  const svgSankey=d3.select('.opensankey #svg')
+  
+  svgSankey.on('mousedown',evt=>{
+    EventOnZoneMouseDown(
+      dict_variable_application_data,
+      dict_variable_elements_selected,
+      dict_hook_ref_setter_show_dialog_components,
+      false,
+      evt,
+      applicationDraw.start_point,
+      contextMenu.closeAllMenuContext,
+      node_function
+    )
+  })
+  svgSankey.on('mousemove',evt=>{
+    EventOnZoneMouseMove(
+      dict_variable_application_data,
+      dict_variable_elements_selected,
+      evt,
+      applicationDraw.start_point
+    )
+  })
+  svgSankey.on('mouseup',evt=>{
+    EventOnZoneMouseUp(
+      dict_variable_application_data,
+      uiElementsRef,
+      dict_variable_elements_selected,
+      dict_hook_ref_setter_show_dialog_components,
+      false,
+      evt,
+      applicationDraw.start_point,
+      dict_variable_elements_selected.legend_clicked,
+      link_function,
+      ComponentUpdater,
+      node_function,
+      applicationDraw.reDrawLegend,
+      applicationDraw.resizeCanvas
+    )
+  })
 }
 
 // Used to update the various component of the application
@@ -668,9 +767,3 @@ export const initializeProcessFunctions : (
     }
     return _
   }
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-import { ComponentUpdaterType, SankeyData, SankeyNode } from '../types/Types'
+import { ComponentUpdaterType, SankeyData, SankeyNode, dict_variable_application_dataType } from '../types/Types'
 import React, { FunctionComponent, useState } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
@@ -72,7 +72,7 @@ export const DrawLegend : DrawLegendFType= (
         let h=document.getElementById('g_legend')?.getBoundingClientRect().height
         h=h?h:50
 
-        draw_legend_handles(data,legend_clicked.current ,h,ComponentUpdater,reDrawLegend,resizeCanvas)
+        draw_legend_handles(dict_variable_application_data,legend_clicked.current ,h,ComponentUpdater,reDrawLegend,resizeCanvas)
       })
 
 
@@ -340,7 +340,7 @@ export const DrawLegend : DrawLegendFType= (
     }
 
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
-    draw_legend_handles(data,legend_clicked.current,h,ComponentUpdater,reDrawLegend,resizeCanvas)
+    draw_legend_handles(dict_variable_application_data,legend_clicked.current,h,ComponentUpdater,reDrawLegend,resizeCanvas)
   }
   if(data.mask_legend){
     drawLegend()
@@ -354,8 +354,8 @@ export const DrawLegend : DrawLegendFType= (
 }
 
 export const drag_legend : drag_legendFType = (
-  data:SankeyData,
-  resizeCanvas:()=>void,
+  data,
+  resizeCanvas,
   node_function,
   link_function,
   dict_variable_application_data
@@ -372,7 +372,7 @@ export const drag_legend : drag_legendFType = (
   }).on('end',()=>{
     node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
     link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-    resizeCanvas()
+    resizeCanvas(dict_variable_application_data)
   })
 
 export const DragLegendGElement:drag_legend_g_elementFuncType=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
@@ -471,28 +471,31 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
 }
 
 export const draw_legend_handles =(
-  data:SankeyData,
+  dict_variable_application_data:dict_variable_application_dataType,
   legend_clicked:boolean,
   h:number,
   ComponentUpdater:ComponentUpdaterType,
   reDrawLegend:()=>void,
-  resizeCanvas:()=>void,
+  resizeCanvas:(_:dict_variable_application_dataType)=>void,
 )=>{
   d3.select('.opensankey #g_legend_handles').selectAll('*').remove();
   ['left','right'].forEach(pos=>{
-    add_legend_handle(pos,data,legend_clicked,h,ComponentUpdater,reDrawLegend,resizeCanvas)
+    add_legend_handle(pos,dict_variable_application_data,legend_clicked,h,ComponentUpdater,reDrawLegend,resizeCanvas)
   })
 }
 const size_zdt_handle=10
 
-const add_legend_handle=(pos:string,data:SankeyData,
+const add_legend_handle=(
+  pos:string,
+  dict_variable_application_data:dict_variable_application_dataType,
   legend_clicked:boolean,
   h:number,
   ComponentUpdater:ComponentUpdaterType,
   reDrawLegend:()=>void,
-  resizeCanvas:()=>void,
+  resizeCanvas:(_:dict_variable_application_dataType)=>void,
 
 )=>{
+  const {data} = dict_variable_application_data
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
   if(d3.select('.opensankey #svg').nodes().length>0){
@@ -513,7 +516,7 @@ const add_legend_handle=(pos:string,data:SankeyData,
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
-    .call(drag_legend_handle(pos,data,svg_k_factor,ComponentUpdater,reDrawLegend,resizeCanvas))
+    .call(drag_legend_handle(pos,dict_variable_application_data,svg_k_factor,ComponentUpdater,reDrawLegend,resizeCanvas))
   // Position the handle
   switch (pos){
 
@@ -531,11 +534,16 @@ const add_legend_handle=(pos:string,data:SankeyData,
   }
 }
 
-const drag_legend_handle=(pos:string,data:SankeyData,svg_k_factor:number,ComponentUpdater:ComponentUpdaterType,
+const drag_legend_handle=(
+  pos:string,
+  dict_variable_application_data:dict_variable_application_dataType,
+  svg_k_factor:number,
+  ComponentUpdater:ComponentUpdaterType,
   reDrawLegend:()=>void,
-  resizeCanvas:()=>void,
+  resizeCanvas:(_:dict_variable_application_dataType)=>void,
 
 )=>{
+  const {data} = dict_variable_application_data
   const g_zdt_h=d3.select('.opensankey #g_legend_handles .legend_handle'+pos)
   const text_zone_shape=d3.select('.g_drag_zone_leg rect')
   const g_text_zone=d3.select('#g_legend')
@@ -569,7 +577,7 @@ const drag_legend_handle=(pos:string,data:SankeyData,svg_k_factor:number,Compone
     .on('end',()=>{
       ComponentUpdater.updateComponentMenuConfigLayout.current()
       reDrawLegend()
-      resizeCanvas()
+      resizeCanvas(dict_variable_application_data)
 
     })
 

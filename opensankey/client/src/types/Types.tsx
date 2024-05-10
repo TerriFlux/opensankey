@@ -1,4 +1,5 @@
 import { TFunction } from 'i18next'
+import ReactQuill from 'react-quill'
 
 import { DrawArrowsType, LinkStrokeFType } from '../draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkColorFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
@@ -9,6 +10,7 @@ import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
 import { LinkTooltipsContentFType, NodeTooltipsContentFType } from '../draw/types/SankeyTooltipTypes'
 import { DrawAllLinksFType, drawAddLinksFType, drawLinkShapeFType } from '../draw/types/SankeyDrawLinksTypes'
 import { DrawAllNodesFType, drawNodeShapeFType } from '../draw/types/SankeyDrawNodesTypes'
+import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 
 export type SankeyNodeAttrLocal ={
   local_aggregation?: boolean,
@@ -401,7 +403,8 @@ export type applicationDrawType = {
   all_element_UpdateLayout:string[]
   reAdjustSankey:()=>void
   resizeCanvas:()=>void
-  start_point: React.MutableRefObject<number[]>
+  start_point: React.MutableRefObject<number[]>,
+  reDrawLegend: () => void
 }
 
 export type agregationType = {
@@ -461,22 +464,23 @@ export type initializeApplicationContextType = ()=>applicationContextType
 export type dict_variable_elements_selectedType = {
   ref_getter_mode_selection: MutableRefObject<string|undefined>
   ref_setter_mode_selection: MutableRefObject<Dispatch<SetStateAction<string>>>
-  multi_selected_nodes : { current : SankeyNode[] },
-  multi_selected_links : { current : SankeyLink[] },
-  ref_selected_style_node : MutableRefObject<string>,
-  ref_selected_style_link : MutableRefObject<string>,
-  first_selected_node :  {current:SankeyNode|undefined},
+  multi_selected_nodes : { current : SankeyNode[] }
+  multi_selected_links : { current : SankeyLink[] }
+  ref_selected_style_node : MutableRefObject<string>
+  ref_selected_style_link : MutableRefObject<string>
+  first_selected_node :  {current:SankeyNode|undefined}
 
-  ref_pre_idSource : MutableRefObject<string>,
-  ref_pre_idTarget : MutableRefObject<string>,
-  ref_display_link_opacity : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
-  displayedInputLinkValueSetterRef : MutableRefObject<Dispatch<SetStateAction<string>>[]>,
-  displayedInputLinkValueRef : MutableRefObject<string>,
-  displayedInputLinkDataTagSetterRef : MutableRefObject<Dispatch<SetStateAction<{
-    [k: string]: string;
-}>>[]>,
+  ref_pre_idSource : MutableRefObject<string>
+  ref_pre_idTarget : MutableRefObject<string>
+  ref_display_link_opacity : MutableRefObject<Dispatch<SetStateAction<string>>[]>
+  displayedInputLinkValueSetterRef : MutableRefObject<Dispatch<SetStateAction<string>>[]>
+  displayedInputLinkValueRef : MutableRefObject<string>
+  displayedInputLinkDataTagSetterRef : MutableRefObject<Dispatch<SetStateAction<{[k: string]: string;}>>[]>
+  r_editor_ZDT : MutableRefObject<ReactQuill|undefined>
 
-  userScaleRef : MutableRefObject<number>,
+  userScaleRef : MutableRefObject<number>
+
+  legend_clicked : MutableRefObject<boolean>
 }
 export type initializeElementSelectedType = ()=>dict_variable_elements_selectedType
 
@@ -491,6 +495,7 @@ export type dict_variable_application_dataType = {
   data : SankeyData,
   set_data : (_:SankeyData)=>void,
   get_default_data : ()=>SankeyData,
+  convert_data: ConvertDataFuncType,
   display_nodes : {[_:string]:SankeyNode},
   display_links : {[_:string]:SankeyLink},
   function_on_wait:MutableRefObject<()=>void>,
@@ -513,7 +518,8 @@ export type initializeApplicationDrawType = (
   applicationContext : applicationContextType,
   ComponentUpdater : ComponentUpdaterType,
   uiElementsRef : uiElementsRefType,
-  link_function : LinkFunctionTypes
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes
 )=>applicationDrawType
 
 export type CreateLinksOnSVGFType=(links_to_update:SankeyLink[])=>void
@@ -561,7 +567,7 @@ export type initializeNodeFunctionsType = (
   applicationContext: applicationContextType,
   ComponentUpdater: ComponentUpdaterType,
   uiElementsRef:uiElementsRefType,
-  applicationDraw:applicationDrawType,
+  resizeCanvas:(_:dict_variable_application_dataType)=>void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   ref_alt_key_pressed: React.MutableRefObject<boolean>,
   accept_simple_click: React.MutableRefObject<boolean>,
@@ -583,8 +589,19 @@ export type DrawAllType = (
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  applicationDraw:applicationDrawType,
+  applicationDraw:applicationDrawType
+) => void
 
+export type InstallEventsOnSVGType = (
+  contextMenu:contextMenuType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  uiElementsRef:uiElementsRefType,
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType,
+  dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
+  node_function:NodeFunctionTypes,
+  applicationDraw:applicationDrawType
 ) => void
 
 export type ComponentUpdaterType={
@@ -689,5 +706,6 @@ export type SankeyAppTypes = {
   initializeNodeFunctions:initializeNodeFunctionsType,
   initializeAdditionalMenus: initializeAdditionalMenusType,
   moduleDialogs:module_dialogsType,
-  DrawAll:DrawAllType
+  DrawAll:DrawAllType,
+  installEventOnSVG:InstallEventsOnSVGType
 }
