@@ -25,7 +25,8 @@ import {
   initializeNodeFunctions,
   initializeAdditionalMenus,
   moduleDialogs,
-  DrawAll
+  DrawAll,
+  InstallEventsOnSVG
 } from './OSModule'
 
 
@@ -64,6 +65,7 @@ root.render(
     initializeLinkFunctions={initializeLinkFunctions} // Functions necessay to draw the links
     initializeNodeFunctions={initializeNodeFunctions} // Functions necessay to draw the nodes
     DrawAll={DrawAll}
+    installEventOnSVG={InstallEventsOnSVG}
 
     //- UI
     initializeComponentUpdater={initializeComponentUpdater} 
