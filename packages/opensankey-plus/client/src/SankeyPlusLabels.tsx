@@ -92,7 +92,9 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
 
         draw_text_zone_handles(applicaTionData,d,multi_selected_label,ComponentUpdater,link_function)
 
-        gg_label.on('click', (event) => eventLabelClick(event,d,uiElementsRef,dict_variable_elements_selected,multi_selected_label,multi_selected_nodes,multi_selected_links,ComponentUpdater))
+        gg_label.on('click', (event) => eventLabelClick(
+          event,d,uiElementsRef,dict_variable_elements_selected,multi_selected_label,multi_selected_nodes,multi_selected_links,ComponentUpdater
+        ))
         gg_label.on('mousedown',()=>closeAllMenuContext())
         gg_label.on('contextmenu',evt=>{
 
