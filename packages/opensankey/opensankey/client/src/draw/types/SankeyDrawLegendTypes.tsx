@@ -10,13 +10,12 @@ export type DrawLegendFType = (
   legend_clicked:MutableRefObject<boolean>,
   ComponentUpdater:ComponentUpdaterType,
   reDrawLegend:()=>void,
-  resizeCanvas:()=>void
-
+  resizeCanvas:(dict_variable_application_data:dict_variable_application_dataType)=>void
 ) => JSX.Element
 
 export type drag_legendFType=(
   data:SankeyData,
-  resizeCanvas:()=>void,
+  resizeCanvas:(dict_variable_application_data:dict_variable_application_dataType)=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   dict_variable_application_data:dict_variable_application_dataType

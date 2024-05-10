@@ -19,8 +19,7 @@ export type DrawAllNodesFType = (
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  applicationDraw:applicationDrawType,
-
+  resizeCanvas:(_:dict_variable_application_dataType)=>void
 ) => void
 
   
@@ -39,7 +38,7 @@ export type AddDrawNodesFType = (
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  applicationDraw:applicationDrawType,
+  resizeCanvas:(_:dict_variable_application_dataType)=>void,
 ) => void
   
 export type drawNodeShapeFType = (
@@ -57,9 +56,8 @@ export type drawNodeShapeFType = (
   node_function:NodeFunctionTypes,
   node_to_draw:SankeyNode[],
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  applicationDraw:applicationDrawType,
-
-  ) => void
+  resizeCanvas:(_:dict_variable_application_dataType)=>void,
+) => void
 
 export type updateDrawNodeShapeFType  = (
     dict_variable_application_data:dict_variable_application_dataType,
