@@ -519,7 +519,9 @@ export type initializeApplicationDrawType = (
   ComponentUpdater : ComponentUpdaterType,
   uiElementsRef : uiElementsRefType,
   node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes
+  link_function:LinkFunctionTypes,
+  start_point:{current:number[]},
+  resizeCanvas:()=>void
 )=>applicationDrawType
 
 export type CreateLinksOnSVGFType=(links_to_update:SankeyLink[])=>void
