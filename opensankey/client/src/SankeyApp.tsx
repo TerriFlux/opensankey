@@ -185,6 +185,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     recomputeDisplayedElement,
     link_function
   )
+  const resizeCanvas=()=>{
+    resizeDrawingArea(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  }
+  const start_point = useRef([0,0])
   const applicationDraw = initializeApplicationDraw(
     dict_variable_application_data,
     dict_variable_elements_selected,
@@ -193,9 +197,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ComponentUpdater,
     uiElementsRef,
     node_function,
-    link_function
+    link_function,
+    start_point,
+    resizeCanvas
   )
-  node_function.
+  // node_function.
 
   recomputeDisplayedElement()
 

@@ -375,7 +375,10 @@ export const drag_legend : drag_legendFType = (
     resizeCanvas(dict_variable_application_data)
   })
 
-export const DragLegendGElement:drag_legend_g_elementFuncType=(data:SankeyData,event:d3.D3DragEvent<SVGGElement, unknown, unknown>)=>{
+export const DragLegendGElement:drag_legend_g_elementFuncType=(
+  data:SankeyData,
+  event:d3.D3DragEvent<SVGGElement, unknown, unknown>
+)=>{
   let scale_for_legend=1
   const scale_svg=returnScaleOfDrawArea()
   scale_for_legend=(scale_svg<1?(1/scale_svg):1)
