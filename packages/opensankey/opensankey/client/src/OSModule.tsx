@@ -16,11 +16,15 @@ import {
   dict_variable_elements_selectedType,
   DrawAllType,
   initializeAdditionalMenusType,
+  initializeApplicationContextType,
   initializeApplicationDataType,
   initializeApplicationDrawType,
+  initializeElementSelectedType,
   initializeLinkFunctionsType,
   initializeNodeFunctionsType,
   initializeReinitializationType,
+  initializeShowDialogType,
+  initializeUIElementsRefType,
   InstallEventsOnSVGType,
   LinkFunctionTypes,
   module_dialogsType,
@@ -99,7 +103,7 @@ try {
 }
 
 // Logo, names, licences
-export const initializeApplicationContext : ()=>applicationContextType = ()=> {return {
+export const initializeApplicationContext : initializeApplicationContextType = ()=> {return {
   t : useTranslation().t,
   logo_width : 100,
   app_name : 'SankeySuite',//TODO
@@ -110,7 +114,7 @@ export const initializeApplicationContext : ()=>applicationContextType = ()=> {r
 
 // Global variables not stored in SankeyData
 // Mode, nodes and links selected, style selected...
-export const initializeElementSelected : ()=>dict_variable_elements_selectedType = ()=> {
+export const initializeElementSelected : initializeElementSelectedType = ()=> {
   const elementsSelected = {
     ref_setter_mode_selection : useRef<Dispatch<SetStateAction<string>>>(()=>null),
     ref_getter_mode_selection : useRef<string>(),
@@ -190,15 +194,14 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   contextMenu:contextMenuType,
   applicationContext,
   ComponentUpdater,
-  uiElementsRef : uiElementsRefType,
+  uiElementsRef,
   node_function,
-  link_function
+  link_function,
+  start_point,
+  resizeCanvas
 )=> {
   const reAdjustSankey=(dict_variable_application_data:dict_variable_application_dataType)=>()=>{
     AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
-  }
-  const resizeCanvas=(dict_variable_application_data:dict_variable_application_dataType)=>()=>{
-    resizeDrawingArea(dict_variable_application_data,GetSankeyMinWidthAndHeight)
   }
   const reDrawLegend=()=>{
     DrawLegend(
@@ -224,10 +227,10 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   return {
     GetSankeyMinWidthAndHeight,
     updateLayout,
-    resizeCanvas: resizeCanvas(dict_variable_application_data),
+    resizeCanvas,
     reAdjustSankey: reAdjustSankey(dict_variable_application_data),
     all_element_UpdateLayout:os_all_element_to_transform,
-    start_point:useRef([0,0]),
+    start_point,
     reDrawLegend
   }
 }
@@ -493,7 +496,7 @@ export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
 }
 
 // Ref to some key ui element (accordion item) in the application
-export const initializeUIElementsRef : ()=> uiElementsRefType = ()=> {return {
+export const initializeUIElementsRef : initializeUIElementsRefType = ()=> {return {
   button_ref : useRef<HTMLLabelElement>(null),
   accordion_ref : useRef<HTMLDivElement>(null),
   links_accordion_ref : useRef<HTMLDivElement>(null),
@@ -670,7 +673,7 @@ export const moduleDialogs : module_dialogsType = (
 ]}
 
 // Visibility states for the modal dialogs
-export const initializeShowDialog : ()=>dict_hook_ref_setter_show_dialog_componentsType = () => {return {
+export const initializeShowDialog : initializeShowDialogType = () => {return {
   ref_setter_show_menu_node_apparence : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_menu_node_io : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
   ref_setter_show_menu_node_tooltip : useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
