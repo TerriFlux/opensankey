@@ -13,8 +13,7 @@ import {
   SankeyPlusApplicationDataType,
   SankeyPlusContextMenuType,
   PlusApplicationContextType,
-  PlusComponentUpdaterType,
-  reDrawPlusLabelsFType
+  PlusComponentUpdaterType
 } from '../types/Types'
 import {
   PlusDrawLabelsFType,
@@ -30,7 +29,7 @@ import {
 } from './import/OpenSankey'
 
 // OpenSankey types
-import { LinkFunctionTypes, applicationDrawType, dict_variable_elements_selectedType } from 'open-sankey/src/types/Types'
+import { LinkFunctionTypes, applicationDrawType } from 'open-sankey/src/types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 // OpenSankey jscode
@@ -53,7 +52,8 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   ComponentUpdater,
   object_to_update,
   link_function,
-  applicationDraw
+  start_point,
+  resizeCanvas
 ) => {
   const {data}=applicaTionData
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}=dict_variable_elements_selected
@@ -150,7 +150,8 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
               inv_scale,
               ComponentUpdater,
               link_function,
-              applicationDraw
+              start_point,
+              resizeCanvas
             )
           )
         }
@@ -254,8 +255,8 @@ const dragLabelEvent = (
   inv_scale:(t:number)=>number,
   ComponentUpdater:PlusComponentUpdaterType,
   link_function:LinkFunctionTypes,
-  applicationDraw:applicationDrawType
-
+  start_point:{current:number[]},
+  resizeCanvas:()=>void
 )=>{
   const { LinkText,GetLinkValue,DrawArrows,RedrawLinks}=link_function
   const {data}=dict_variable_application_data
@@ -273,7 +274,7 @@ const dragLabelEvent = (
       }else if(ref_getter_mode_selection.current==='s' && !evt.ctrlKey){
         // const pos = d3.pointer(evt)
         const pos =[evt.x,evt.y]
-        applicationDraw.start_point.current=pos
+        start_point.current=pos
         d3.select('#svg').append('g').attr('class','selection_zone')
           .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
       }
@@ -283,7 +284,6 @@ const dragLabelEvent = (
     })
     .subject(Object).on('drag', function (event) {
       if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
-        const {start_point} = applicationDraw
         // Create change the size of the selection zone according to the mouse
         const pos = [event.x,event.y]
         const new_x=(pos[0]>start_point.current[0])?start_point.current[0]:pos[0]
@@ -317,11 +317,11 @@ const dragLabelEvent = (
     .on('end',(evt)=>{
       if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
         zone_selection_label(data_plus,multi_selected_label,evt,ComponentUpdater)
-        selectOpensankeyElementsInSelectionZone(dict_variable_application_data,dict_variable_elements_selected,ComponentUpdater,evt,applicationDraw.start_point)
+        selectOpensankeyElementsInSelectionZone(dict_variable_application_data,dict_variable_elements_selected,ComponentUpdater,evt,start_point)
 
       }else if (multi_selected_label.current.length>0){
         RedrawLinks(Object.values(dict_variable_application_data.display_links))
-        applicationDraw.resizeCanvas()
+        resizeCanvas()
         updateComponenSaveInCache.current(false)
       }
     })

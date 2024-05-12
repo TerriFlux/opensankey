@@ -1,0 +1,13 @@
+.gg_label>rect.transparent_border{
+    stroke-opacity: 0;
+}
+.gg_label.selected .zdt_zone{
+    stroke-width: 3;
+    stroke-opacity: 1;
+}
+.gg_zdt_handles{
+    display: none;
+}
+.gg_zdt_handles.selected{
+    display: inline;
+}

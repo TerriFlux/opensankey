@@ -1,5 +1,10 @@
-import { LinkFunctionTypes, applicationDrawType, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
-import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, reDrawPlusLabelsFType } from './Types'
+import { LinkFunctionTypes, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
+import { 
+  PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, 
+  PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, 
+  SankeyPlusContextMenuType, SankeyPlusData, 
+  SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode
+} from './Types'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
@@ -15,9 +20,9 @@ export type PlusDrawLabelsFType = (
   ComponentUpdater:PlusComponentUpdaterType,
   object_to_update:SankeyPlusLabel[],
   link_function:LinkFunctionTypes,
-  applicationDraw:PlusApplicationDrawType
-
-  ) => void
+  start_point:{current:number[]},
+  resizeCanvas:()=>void
+) => void
 
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
 export type eventLabelClickFType=(
