@@ -1,6 +1,9 @@
 import { DragBehavior, SubjectPosition } from 'd3'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
-import { SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes, applicationDrawType } from '../../types/Types'
+import { 
+  SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, 
+  dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes
+} from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from '../../configmenus/types/SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
 

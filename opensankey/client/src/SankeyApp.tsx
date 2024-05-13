@@ -6,7 +6,6 @@ import React, {
   useRef,
   useState
 } from 'react'
-import * as d3 from 'd3'
 import i18next from 'i18next'
 import { Popover, Form } from 'react-bootstrap'
 import { ChakraProvider } from '@chakra-ui/react'
@@ -358,7 +357,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   Object.assign(menu_configuration_nodes,additional_menus.additional_menu_configuration_nodes)
 
 
-  let regular_ui=OpenSankeyDefaultModalePreferenceContent(
+  const regular_ui=OpenSankeyDefaultModalePreferenceContent(
     applicationContext.t,
     dict_variable_application_data,
     i18next,
