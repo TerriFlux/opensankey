@@ -210,13 +210,13 @@ root.render(
         ref_alt_key_pressed: React.MutableRefObject<boolean>
       )=>{
         const _= initializeLinkFunctions(
-            dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,
-            ComponentUpdater,uiElementsRef,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed
-          )
+          dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,
+          ComponentUpdater,uiElementsRef,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed
+        )
         Object.assign(_,OSPInitializeLinkFunctions(
-            dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,
-            ComponentUpdater,uiElementsRef,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed
-          ))
+          dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,
+          ComponentUpdater,uiElementsRef,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed
+        ))
         return _
       }
     }
@@ -286,8 +286,7 @@ root.render(
         link_function:LinkFunctionTypes,
         ComponentUpdater:ComponentUpdaterType,
         additional_menus:AdditionalMenusType,
-        menu_configuration_nodes_attributes:JSX.Element[],
-        reDrawLegend:()=>void
+        menu_configuration_nodes_attributes:JSX.Element[]
       )=>{
         return [
           ...moduleDialogs(

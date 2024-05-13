@@ -1,6 +1,6 @@
 import { LinkFunctionTypes, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { 
-  PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, 
+  PlusApplicationContextType, PlusComponentUpdaterType, 
   PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, 
   SankeyPlusContextMenuType, SankeyPlusData, 
   SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode

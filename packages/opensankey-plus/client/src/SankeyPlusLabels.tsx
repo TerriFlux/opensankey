@@ -29,7 +29,7 @@ import {
 } from './import/OpenSankey'
 
 // OpenSankey types
-import { LinkFunctionTypes, applicationDrawType } from 'open-sankey/src/types/Types'
+import { LinkFunctionTypes } from 'open-sankey/src/types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 // OpenSankey jscode

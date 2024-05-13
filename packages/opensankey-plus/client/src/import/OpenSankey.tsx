@@ -50,13 +50,12 @@ import {
 import {ConvertDataFuncType, complete_sankey_dataFunctType, convert_linksFuncType, convert_nodesFuncType, convert_tagsFuncType} from 'open-sankey/src/configmenus/types/SankeyConvertTypes'
 import { DeleteGNodesFType, DrawAllNodesFType, drawNodeShapeFType, updateDrawNodeShapeFType } from 'open-sankey/src/draw/types/SankeyDrawNodesTypes'
 // import { DrawAddNodesFtype } from 'open-sankey/src/draw/types/SankeyDrawNodesLabelTypes'
-import { AddDrawLinksEventsFType, DrawAllLinksFType, DrawLinksFType, LinkStrokeFuncType, drawAddLinksFType, drawLinkShapeFType } from 'open-sankey/src/draw/types/SankeyDrawLinksTypes'
+import { AddDrawLinksEventsFType, DrawAllLinksFType, LinkStrokeFuncType, drawAddLinksFType, drawLinkShapeFType } from 'open-sankey/src/draw/types/SankeyDrawLinksTypes'
 import { DrawLegendFType, drag_legend_g_elementFuncType } from 'open-sankey/src/draw/types/SankeyDrawLegendTypes'
 import { OpenSankeyConfigurationsMenusFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationTypes'
 import {SankeyMenuConfigurationNodesIOFType} from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationNodesIOTypes'
 import {
-  LastCheckpointTimeFType,
-  MenuDraggableFType, Modale_resolution_pngFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, SankeyMenuFileExportFType, ToastWaitFuncFType
+  MenuDraggableFType, Modale_resolution_pngFType, OpenSankeyMenusFType, OpenSankeySaveButtonFType, ToastWaitFuncFType
 } from 'open-sankey/src/topmenus/types/SankeyMenuTopTypes'
 import { keyHandlerFType } from 'open-sankey/src/draw/types/SankeyDrawTypes'
 import { OpenSankeyMenuConfigurationLayoutFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationLayoutTypes'
