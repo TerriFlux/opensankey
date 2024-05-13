@@ -1,6 +1,9 @@
 import { MutableRefObject} from 'react'
 
-import { dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,LinkFunctionTypes, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, SankeyNode, NodeFunctionTypes, applicationDrawType } from '../../types/Types'
+import { 
+  dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,
+  LinkFunctionTypes, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, SankeyNode, NodeFunctionTypes
+} from '../../types/Types'
 import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
