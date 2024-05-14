@@ -666,6 +666,17 @@ export type AdditionalMenusType = {
 
   // Configuration Menu
   additional_configuration_menus : JSX.Element[]
+
+  menu_style_add_node_appearence_attr : JSX.Element[]
+  menu_style_add_node_label : JSX.Element[]
+  menu_style_add_node_label_value : JSX.Element[],
+
+  additional_edition_item : JSX.Element[],
+  additional_file_save_item : JSX.Element[],
+  additional_file_item : JSX.Element[],
+  additional_file_export_item : JSX.Element[],
+
+  sankey_menus : {[_:string]:JSX.Element}
 }
 
 export type initializeAdditionalMenusType = (  
@@ -677,7 +688,9 @@ export type initializeAdditionalMenusType = (
   uiElementsRef:uiElementsRefType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
-  link_function:LinkFunctionTypes
+  link_function:LinkFunctionTypes,
+  processFunctions:processFunctionsType,
+  Reinitialization:() => void
 ) => AdditionalMenusType
 
 export type module_dialogsType = (
@@ -693,7 +706,8 @@ export type module_dialogsType = (
   ComponentUpdater:ComponentUpdaterType,
   additional_menus:AdditionalMenusType,
   menu_configuration_nodes_attributes:JSX.Element[],
-  reDrawLegend:()=>void
+  reDrawLegend:()=>void,
+  processFunctions:processFunctionsType
 ) => JSX.Element[]
 export type initializeShowDialogType = ()=>dict_hook_ref_setter_show_dialog_componentsType
 

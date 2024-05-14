@@ -541,7 +541,18 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = () => {
   additional_preferences : [],
 
   // Configuration Menu
-  additional_configuration_menus : []
+  additional_configuration_menus : [],
+
+  menu_style_add_node_appearence_attr : [],
+  menu_style_add_node_label : [],
+  menu_style_add_node_label_value :[],
+
+  additional_edition_item : [],
+  additional_file_save_item : [],
+  additional_file_item : [],
+  additional_file_export_item : [],
+
+  sankey_menus : {}
 }}
 
 // Modal Dialogs

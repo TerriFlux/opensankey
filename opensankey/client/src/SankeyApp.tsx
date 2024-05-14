@@ -249,7 +249,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     uiElementsRef,
     dict_hook_ref_setter_show_dialog_components,
     node_function,
-    link_function
+    link_function,
+    processFunctions,
+    Reinitialization
   )
 
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(
@@ -344,6 +346,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ComponentUpdater={ComponentUpdater}
   />
 
+  Object.assign(sankey_menus,additional_menus.sankey_menus)
+
   const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(
     applicationContext,
     dict_variable_application_data,
@@ -364,10 +368,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     node_function
   )
   regular_ui['form'] = [...regular_ui['form'],...additional_menus.additional_preferences]
-
-  const menu_style_add_node_appearence_attr=[] as JSX.Element[]
-  const menu_style_add_node_label=[] as JSX.Element[]
-  const menu_style_add_node_label_value=[] as  JSX.Element[]
 
 
   
@@ -467,7 +467,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           ComponentUpdater,
           additional_menus,
           menu_configuration_nodes_attributes,
-          applicationDraw.reDrawLegend          
+          applicationDraw.reDrawLegend,
+          processFunctions        
         ).map(e=>e)}
         <>
           <Menu
@@ -509,9 +510,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                   dict_variable_elements_selected,
                   true,
                   dict_variable_elements_selected.ref_selected_style_node,
-                  menu_style_add_node_appearence_attr,
-                  menu_style_add_node_label,
-                  menu_style_add_node_label_value,
+                  additional_menus.menu_style_add_node_appearence_attr,
+                  additional_menus.menu_style_add_node_label,
+                  additional_menus.menu_style_add_node_label_value,
                   link_function,
                   ComponentUpdater,
                   node_function
