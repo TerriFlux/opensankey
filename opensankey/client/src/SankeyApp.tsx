@@ -19,7 +19,7 @@ import {
   SankeyNode
 } from './types/Types'
 /*************************************************************************************************/
-import SankeyDraw, { keyHandler } from './draw/SankeyDraw'
+import SankeyDraw from './draw/SankeyDraw'
 import {
   GetSankeyMinWidthAndHeight, // TODO
   NodeVisibleOnsSvg,
@@ -36,19 +36,15 @@ import {
   windowSankey
 } from './configmenus/SankeyUtils'
 import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
-import { ToolbarBuilder, addSimpleLevelDropDown, setDiagram } from './configmenus/SankeyMenuBanner'
-import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
-import { OpenSankeyMenuConfigurationLayout } from './configmenus/SankeyMenuConfigurationLayout'
-import { MenuConfigurationLinks } from './configmenus/SankeyMenuConfigurationLinks'
+import { ToolbarBuilder, addSimpleLevelDropDown } from './configmenus/SankeyMenuBanner'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
 import { OpenSankeyMenuConfigurationNodes } from './configmenus/SankeyMenuConfigurationNodes'
 import { OpenSankeyConfigurationNodesAttributes } from './configmenus/SankeyMenuConfigurationNodesAttributes'
-import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
 import { ContextMenuLink } from './dialogs/SankeyMenuContextLink'
 import { ContextMenuNode } from './dialogs/SankeyMenuContextNode'
 import { ContextMenuZdd } from './dialogs/SankeyMenuContextZDD'
-import { ApplySaveJSONDialog, OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
+import { ApplySaveJSONDialog } from './dialogs/SankeyMenuDialogs'
 import {
   ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
@@ -70,6 +66,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   initializeApplicationDraw,
   initializeShowDialog,
   initializeComponentUpdater,
+  initializeMenuConfiguration,
   closeAllMenu,
   initializeReinitialization,
   initializeProcessFunctions,
@@ -78,6 +75,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   initializeLinkFunctions,
   initializeNodeFunctions,
   initializeAdditionalMenus,
+  initializeKeyHandler,
+  initializeDiagrammSelector,
   moduleDialogs,
   DrawAll,
   installEventOnSVG
@@ -148,7 +147,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   /*************************************************************************************************/
   const accept_simple_click=useRef(true)
-  const elementToDispose = useRef([''])
   const never_see_again = useRef((localStorage.getItem('dontSeeAggainWelcome')==='1'))
   const ref_alt_key_pressed = useRef(false) //TODO
   /*************************************************************************************************/
@@ -277,11 +275,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_variable_application_data.data,
     dict_variable_application_data.set_data,
     additional_menus.external_edition_item,
-    additional_menus.external_file_export_item,
     additional_menus.external_file_item,
+    additional_menus.external_file_export_item,
     additional_menus.externale_save_item,
+    additional_menus.externale_navbar_item,
     dict_variable_application_data.convert_data,
-    setDiagram,
+    dict_variable_application_data.setDiagram,
   )
 
   const config_link_data = MenuConfigurationLinksData(
@@ -370,15 +369,33 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const menu_style_add_node_label=[] as JSX.Element[]
   const menu_style_add_node_label_value=[] as  JSX.Element[]
 
+
+  
+  const menu_configuration=initializeMenuConfiguration(
+    dict_variable_application_data,
+    dict_variable_elements_selected,
+    applicationContext,
+    uiElementsRef,
+    dict_hook_ref_setter_show_dialog_components,
+    additional_menus,
+    node_function,
+    link_function,
+    applicationDraw,
+    ComponentUpdater,
+    menu_configuration_nodes,
+    config_link_data,
+    config_link_attr,
+    contextMenu,
+    ref_alt_key_pressed
+  )
+
+
   const formatKeyHandler=(e:KeyboardEvent)=>{
-    keyHandler(
-      dict_variable_application_data,
+    initializeKeyHandler(dict_variable_application_data,
       uiElementsRef,
       contextMenu,
       e,
-      dict_variable_application_data.data,
       dict_variable_elements_selected,
-      dict_variable_application_data.set_data,
       closeAllMenu(dict_hook_ref_setter_show_dialog_components,contextMenu),
       ref_alt_key_pressed,
       accept_simple_click,
@@ -388,8 +405,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       dict_hook_ref_setter_show_dialog_components,
       applicationContext,
       node_function,
-      applicationDraw
-    )
+      applicationDraw)
   }
   document.onkeydown = formatKeyHandler
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
@@ -465,71 +481,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             applicationDraw={applicationDraw}
 
             example_menu={<></>}
-            configurations_menus={ OpenSankeyConfigurationsMenus(
-              dict_variable_application_data,
-              dict_variable_elements_selected,
-              applicationContext,
-              uiElementsRef,
-              dict_hook_ref_setter_show_dialog_components,
-              OpenSankeyMenuConfigurationLayout(
-                applicationContext,
-                dict_variable_application_data,
-                dict_variable_elements_selected,
-                additional_menus.extra_background_element,
-                node_function,
-                link_function,
-                applicationDraw.reDrawLegend,
-                ComponentUpdater
-              ),
-              <SankeySettingsEditionElementTags
-                applicationContext={applicationContext}
-                dict_variable_application_data={dict_variable_application_data}
-                elementTagNameProp='nodeTags'
-                elementNameProp='nodes'
-                node_function={node_function}
-                link_function={link_function}
-                ComponentUpdater={ComponentUpdater}
-                reDrawLegend={applicationDraw.reDrawLegend}
-              />,
-              <SankeySettingsEditionElementTags
-                applicationContext={applicationContext}
-                dict_variable_application_data={dict_variable_application_data}
-                elementTagNameProp='fluxTags'
-                elementNameProp='links'
-                node_function={node_function}
-                link_function={link_function}
-                ComponentUpdater={ComponentUpdater}
-                reDrawLegend={applicationDraw.reDrawLegend}
-              />,
-              <SankeySettingsEditionElementTags
-                applicationContext={applicationContext}
-                dict_variable_application_data={dict_variable_application_data}
-                elementTagNameProp='dataTags'
-                elementNameProp='links'
-                node_function={node_function}
-                link_function={link_function}
-                ComponentUpdater={ComponentUpdater}
-                reDrawLegend={applicationDraw.reDrawLegend}
-              />,
-              menu_configuration_nodes,
-              MenuConfigurationLinks(
-                dict_variable_application_data,
-                dict_variable_elements_selected,
-                applicationContext,
-                config_link_data,
-                config_link_attr,
-                link_function,
-                ComponentUpdater,
-                node_function
-              ),
-              additional_menus.additional_configuration_menus,
-              false, //TODO
-              link_function,
-              ComponentUpdater,
-              contextMenu,
-              ref_alt_key_pressed,
-              node_function
-            )}
+            configurations_menus={menu_configuration}
             menus={sankey_menus}
             cardsTemplate={<></>}
             external_modal={[
@@ -582,9 +534,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               OpenSankeySaveButton(ComponentUpdater,applicationContext)
             ]}
             convert_data={dict_variable_application_data.convert_data}
-            elementToDispose={elementToDispose}
             apply_transformation_additional_elements={[]}
-            DiagramSelector={OpenSankeyDiagramSelector}
+            DiagramSelector={initializeDiagrammSelector(dict_variable_application_data)}
             callback={()=>null}
             ref_alt_key_pressed={ref_alt_key_pressed}
             accept_simple_click={accept_simple_click}

@@ -191,6 +191,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   external_file_item,
   external_file_export_item,
   externale_save_item,
+  externale_navbar_item,
   convert_data,
   setDiagram
 ) => {
@@ -464,6 +465,11 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         </ChakraButton>
       </OSTooltip>
     ]
+    
+    Object.entries(externale_navbar_item).forEach(ext_nav=>{
+      ui[ext_nav[0]]=[ext_nav[1]]
+    })
+
   }
 
   return ui
@@ -620,7 +626,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
     formations_menu,Reinitialization,
     additional_nav_item,
     convert_data,
-    elementToDispose,
     apply_transformation_additional_elements,
     DiagramSelector,
     callback,
@@ -958,7 +963,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
         dict_variable_application_data={dict_variable_application_data}
         applicationDraw={applicationDraw}
         convert_data={convert_data}
-        elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
         DefaultSankeyData={dict_variable_application_data.get_default_data}
