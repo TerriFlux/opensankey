@@ -313,7 +313,9 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   link_function,
-  initial_additional_menu
+  processFunctions,
+  Reinitialization,
+    initial_additional_menu
 ) => {
   const PlusApplicationContext=applicationContext as PlusApplicationContextType
   const plus_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
