@@ -624,8 +624,6 @@ export const drawLinkShape:drawLinkShapeFType  = (
 
 
   let error_msg: { text?: string | undefined } | undefined
-  console.log(paths)
-  console.log(link_functions)
   paths
     .attr('class', 'link')
     .attr('id', d => 'path_'+d.idLink)

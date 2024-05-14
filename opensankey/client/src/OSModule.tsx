@@ -18,8 +18,11 @@ import {
   initializeApplicationContextType,
   initializeApplicationDataType,
   initializeApplicationDrawType,
+  initializeCloseAllMenuContextType,
   initializeElementSelectedType,
+  initializeKeyHandlerType,
   initializeLinkFunctionsType,
+  initializeMenuConfigurationFuncType,
   initializeNodeFunctionsType,
   initializeReinitializationType,
   initializeShowDialogType,
@@ -39,7 +42,6 @@ import {
 } from './draw/SankeyDrawFunction'
 import {
   AdjustSankeyZone,
-  DefaultSankeyData,
   GetLinkValue,
   LinkColor,
   LinkText,
@@ -68,6 +70,11 @@ import { MenuConfigurationLinksTooltip } from './configmenus/SankeyMenuConfigura
 import { drag_legend, DrawLegend } from './draw/SankeyDrawLegend'
 import { EventOnZoneMouseDown, EventOnZoneMouseMove, EventOnZoneMouseUp } from './draw/SankeyDrawEventFunction'
 import * as SankeyConvert from './configmenus/SankeyConvert'
+import { OpenSankeyConfigurationsMenus } from './configmenus/SankeyMenuConfiguration'
+import { SankeySettingsEditionElementTags } from './configmenus/SankeyMenuConfigurationTags'
+import { MenuConfigurationLinks } from './configmenus/SankeyMenuConfigurationLinks'
+import { keyHandler } from './draw/SankeyDraw'
+import { setDiagram } from './configmenus/SankeyMenuBanner'
 
 let logo = ''
 try {
@@ -145,7 +152,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType
 ) => ()=>{
-  const new_data = DefaultSankeyData()
+  const new_data = dict_variable_application_data.get_default_data()
   dict_variable_elements_selected.multi_selected_nodes.current = []
   dict_variable_elements_selected.multi_selected_links.current = []
   localStorage.removeItem('diff')
@@ -155,13 +162,13 @@ export const initializeReinitialization : initializeReinitializationType = (
   localStorage.removeItem('icon_imported')
   dict_variable_elements_selected.ref_selected_style_node.current = 'default'
   dict_variable_elements_selected.ref_selected_style_link.current = 'default'
-    contextMenu.ref_setter_contextualised_node.current!(undefined)
-    contextMenu.ref_setter_contextualised_link.current!(undefined)
-    contextMenu.tagContext.current![0][1](undefined)
-    contextMenu.showContextZDDRef.current![1](false)
-    dict_variable_application_data.set_data(new_data)
-    sessionStorage.setItem('dismiss_warning_sankey_plus','0')
-    sessionStorage.setItem('dismiss_warning_sankey_mfa','0')
+  contextMenu.ref_setter_contextualised_node.current!(undefined)
+  contextMenu.ref_setter_contextualised_link.current!(undefined)
+  contextMenu.tagContext.current![0][1](undefined)
+  contextMenu.showContextZDDRef.current![1](false)
+  dict_variable_application_data.set_data(new_data)
+  sessionStorage.setItem('dismiss_warning_sankey_plus','0')
+  sessionStorage.setItem('dismiss_warning_sankey_mfa','0')
 }
 
 // Data, displayed data, default data
@@ -179,7 +186,10 @@ export const initializeApplicationData : initializeApplicationDataType = (
   display_nodes : display_nodes,
   display_links : display_links,
   function_on_wait:useRef(()=>null),
-  min_link_thickness:5
+  min_link_thickness:5,
+  dataVarToUpdate:useRef(['']),
+  setDiagram:setDiagram
+
 }
 }
 // General functions necessay to draw the diagram
@@ -507,15 +517,20 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = () => {
   external_file_item: [],
   external_file_export_item: [],
   externale_save_item: [],
+  externale_navbar_item: {},
 
   // Page settings
   extra_background_element: <></>,
 
+  // Apply layout 
+  apply_transformation_additional_elements:[],
   // Nodes
   advanced_appearence_content: [],
   advanced_label_content: [],
   advanced_label_value_content: [],
   additional_menu_configuration_nodes:{},
+  additional_context_element_menu:[],
+  additional_context_element_other:[],
 
   // Links
   additional_data_element: [],
@@ -699,23 +714,40 @@ export const initializeShowDialog : initializeShowDialogType = () => {return {
 
 // Menu opening on RMB
 export const initializeContextMenu : ()=> contextMenuType = ()=> {
+  // Initialize the object onctaining contextMenu var
   const _ = {
     ref_setter_contextualised_node : useRef<Dispatch<SetStateAction<SankeyNode|undefined>>>(),
     ref_contextualised_node : useRef<SankeyNode|undefined>(),
     ref_setter_contextualised_link : useRef<Dispatch<SetStateAction<SankeyLink|undefined>>>(),
     tagContext : useRef<[string|undefined, Dispatch<SetStateAction<string|undefined>>][]>([]),
-    closeAllMenuContext : ()=>{
-      _.ref_setter_contextualised_node.current!(undefined)
-      _.ref_setter_contextualised_link.current!(undefined)
-      _.tagContext.current![0][1](undefined)
-      _.showContextZDDRef.current![1](false)
-    },
     pointer_pos : useRef([window.innerWidth/4,window.innerHeight/4]),
-    showContextZDDRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>]>()
-  }
-  return _
-}
+    showContextZDDRef : useRef<[boolean, Dispatch<SetStateAction<boolean>>]>(),
+    closeAllMenuContext:()=>null
+  }  as contextMenuType
+  
+  // Then add the function closeAllMenuContext
+  _.closeAllMenuContext =initializeCloseAllMenuContext(
+    _.ref_setter_contextualised_node,
+    _.ref_setter_contextualised_link,
+    _.tagContext,
+    _.showContextZDDRef
+  )
 
+  return _ as contextMenuType
+}
+export const initializeCloseAllMenuContext:initializeCloseAllMenuContextType=(
+  ref_setter_contextualised_node ,
+  ref_setter_contextualised_link ,
+  tagContext ,
+  showContextZDDRef 
+)=>{
+  return ()=>{
+    ref_setter_contextualised_node.current!(undefined)
+    ref_setter_contextualised_link.current!(undefined)
+    tagContext.current![0][1](undefined)
+    showContextZDDRef.current![1](false)
+  }
+}
 export const closeAllMenu=(
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   contextMenu:contextMenuType
@@ -765,3 +797,122 @@ export const initializeProcessFunctions : (
     }
     return _
   }
+export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  applicationContext,
+  uiElementsRef,
+  dict_hook_ref_setter_show_dialog_components,
+  additional_menus,
+  node_function,
+  link_function,
+  applicationDraw,
+  ComponentUpdater,
+  menu_configuration_nodes,
+  config_link_data,
+  config_link_attr,
+  contextMenu,
+  ref_alt_key_pressed
+)=>{
+  return OpenSankeyConfigurationsMenus(
+    dict_variable_application_data,
+    dict_variable_elements_selected,
+    applicationContext,
+    uiElementsRef,
+    dict_hook_ref_setter_show_dialog_components,
+    OpenSankeyMenuConfigurationLayout(
+      applicationContext,
+      dict_variable_application_data,
+      dict_variable_elements_selected,
+      additional_menus.extra_background_element,
+      node_function,
+      link_function,
+      applicationDraw.reDrawLegend,
+      ComponentUpdater
+    ),
+    <SankeySettingsEditionElementTags
+      applicationContext={applicationContext}
+      dict_variable_application_data={dict_variable_application_data}
+      elementTagNameProp='nodeTags'
+      elementNameProp='nodes'
+      node_function={node_function}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+      reDrawLegend={applicationDraw.reDrawLegend}
+    />,
+    <SankeySettingsEditionElementTags
+      applicationContext={applicationContext}
+      dict_variable_application_data={dict_variable_application_data}
+      elementTagNameProp='fluxTags'
+      elementNameProp='links'
+      node_function={node_function}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+      reDrawLegend={applicationDraw.reDrawLegend}
+    />,
+    <SankeySettingsEditionElementTags
+      applicationContext={applicationContext}
+      dict_variable_application_data={dict_variable_application_data}
+      elementTagNameProp='dataTags'
+      elementNameProp='links'
+      node_function={node_function}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+      reDrawLegend={applicationDraw.reDrawLegend}
+    />,
+    menu_configuration_nodes,
+    MenuConfigurationLinks(
+      dict_variable_application_data,
+      dict_variable_elements_selected,
+      applicationContext,
+      config_link_data,
+      config_link_attr,
+      link_function,
+      ComponentUpdater,
+      node_function
+    ),
+    additional_menus.additional_configuration_menus,
+    false, //TODO
+    link_function,
+    ComponentUpdater,
+    contextMenu,
+    ref_alt_key_pressed,
+    node_function
+  )
+}
+
+export const initializeKeyHandler:initializeKeyHandlerType=(
+  dict_variable_application_data,
+  uiElementsRef,
+  contextMenu,
+  e,
+  dict_variable_elements_selected,
+  closeAllMenu,
+  ref_alt_key_pressed,
+  accept_simple_click,
+  link_function,
+  NodeTooltipsContent,
+  ComponentUpdater,
+  dict_hook_ref_setter_show_dialog_components,
+  applicationContext,
+  node_function,
+  applicationDraw,
+)=>{
+  keyHandler(
+    dict_variable_application_data,
+    uiElementsRef,
+    contextMenu,
+    e,
+    dict_variable_elements_selected,
+    closeAllMenu,
+    ref_alt_key_pressed,
+    accept_simple_click,
+    link_function,
+    NodeTooltipsContent,
+    ComponentUpdater,
+    dict_hook_ref_setter_show_dialog_components,
+    applicationContext,
+    node_function,
+    applicationDraw
+  )
+}

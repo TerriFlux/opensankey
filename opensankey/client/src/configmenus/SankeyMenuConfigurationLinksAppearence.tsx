@@ -1228,7 +1228,6 @@ export const ConfigLinkAttributeNumberInput:FunctionComponent<ConfigLinkNumberIn
         if(!menu_for_style){
         // reset timeout if exist
           if(isModifying.current){
-            console.log('clear timout')
             clearTimeout(isModifying.current)
           }
           // launch timeout that automatically blur the input
