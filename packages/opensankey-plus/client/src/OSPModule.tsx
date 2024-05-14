@@ -264,8 +264,6 @@ export const OSPInitializeAdditionalMenus : initializeAdditionalMenusType = (
   external_edition_item: [],
   external_file_item: [],
   external_file_export_item: [PlusItemExport()],
-
-  additional_file_save_item:[],
   externale_save_item: [],
 
   // Page settings
@@ -345,7 +343,18 @@ export const OSPInitializeAdditionalMenus : initializeAdditionalMenusType = (
       reDrawPlusLabels={(applicationDraw as PlusApplicationDrawType).reDrawPlusLabels}
       ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
     />
-  )]
+  )],
+
+  menu_style_add_node_appearence_attr : [],
+  menu_style_add_node_label : [],
+  menu_style_add_node_label_value : [],
+
+  additional_edition_item : [],
+  additional_file_save_item : [],
+  additional_file_item : [],
+  additional_file_export_item : [],
+
+  sankey_menus : {}
 }}
 
 export const OSPModuleDialogs : module_dialogsType = (
