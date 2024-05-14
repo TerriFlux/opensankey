@@ -26,8 +26,11 @@ import {
   initializeAdditionalMenus,
   moduleDialogs,
   DrawAll,
-  InstallEventsOnSVG
+  InstallEventsOnSVG,
+  initializeMenuConfiguration,
+  initializeKeyHandler
 } from './OSModule'
+import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 
 
 window.React = React
@@ -68,7 +71,8 @@ root.render(
     installEventOnSVG={InstallEventsOnSVG}
 
     //- UI
-    initializeComponentUpdater={initializeComponentUpdater} 
+    initializeComponentUpdater={initializeComponentUpdater}
+    initializeMenuConfiguration={initializeMenuConfiguration} // Function to create the configuration menu
     // Used to update the various component of the application
     initializeUIElementsRef={initializeUIElementsRef} 
     // Ref to some key ui element in the application
@@ -81,6 +85,15 @@ root.render(
     initializeContextMenu={initializeContextMenu}
     // Menu opening on RMB
     closeAllMenu={closeAllMenu}
+
+    // - Key handler
+    initializeKeyHandler={initializeKeyHandler}
+
+    // Input data used for updateLayout
+    // (OS only use data from imported file 
+    // but OSP can use its view as imported data
+    // )
+    initializeDiagrammSelector={()=>OpenSankeyDiagramSelector}
 
     //- BackEnd
     initializeProcessFunctions={initializeProcessFunctions}
