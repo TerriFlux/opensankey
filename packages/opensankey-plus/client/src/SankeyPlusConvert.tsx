@@ -178,14 +178,12 @@ export const plus_convert_data : plus_convert_dataFType = (
 }
 
 export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
-  master_data: SankeyPlusData | undefined,
-  set_master_data: (d:SankeyPlusData| undefined)=>void,
-  view: string,
-  view_selected: string,
-  set_view_selected: (s:string)=>void,
-  DefaultSankeyData: ()=>SankeyPlusData
+  dict_variable_application_data
 ) => {
+  const {master_data,set_master_data,view,get_default_data} =dict_variable_application_data
   const [s_diagram_type, sDiagramType] = useState('File')
+  const [view_selected, set_view_selected] = useState('none')
+
   const SankeyPlusDiagramSelectorInner = (
     t: TFunction,
     convert_data: (s:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
@@ -194,7 +192,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
     prev_sankey_data: SankeyData,
     set_prev_sankey_data: (s:SankeyData)=>void,
     updateLayout: updateLayoutFuncType,
-    elementToDispose : MutableRefObject<string[]>
+    dataVarToUpdate : MutableRefObject<string[]>
   ) => {
     const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
 
@@ -245,7 +243,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
                 return
               }
               //- current view is updated by master data
-              updateLayout(sankey_data,master_data!,elementToDispose.current)
+              updateLayout(sankey_data,master_data!,dataVarToUpdate.current)
               set_sankey_data({ ...JSON.parse(JSON.stringify(sankey_data)) })
             } else {
               // A view is selected to update either another view or the master data
@@ -254,7 +252,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
                 return
               }
               const data_view=GetDataFromView(master_data,view_selected) as SankeyPlusData
-              updateLayout(sankey_data,data_view,elementToDispose.current)
+              updateLayout(sankey_data,data_view,dataVarToUpdate.current)
               const copy_data = JSON.parse(JSON.stringify(sankey_data))
               set_sankey_data(copy_data)
               if (view === 'none' ) {
@@ -274,10 +272,10 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
                 if (result) {
                   result = String(result) //.split('<br>').join('\\\\n')
                   const new_layout = JSON.parse(result)
-                  convert_data(new_layout,DefaultSankeyData)
-                  complete_sankey_data(new_layout, DefaultSankeyData, DefaultNode, DefaultLink)
+                  convert_data(new_layout,get_default_data)
+                  complete_sankey_data(new_layout, get_default_data, DefaultNode, DefaultLink)
                   set_prev_sankey_data(JSON.parse(JSON.stringify(sankey_data)))
-                  updateLayout(sankey_data, new_layout, elementToDispose.current)
+                  updateLayout(sankey_data, new_layout, dataVarToUpdate.current)
                   const copy_data = { ...JSON.parse(JSON.stringify(sankey_data)) }
                   set_sankey_data(copy_data)
                   if (view === 'none' ) {
@@ -312,13 +310,14 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
 }
 
 export const apply_transformation_opensankey_plus_elements : apply_transformation_opensankey_plus_elementsFType = (
-  data:SankeyPlusData,
+  dict_variable_application_data,
   t:TFunction,
-  elementToDispose,
   ComponentUpdater
 ) => {
+  const {data,master_data,dataVarToUpdate}=dict_variable_application_data
+  const data_to_use=master_data?master_data:data
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
-  const is_current_data_master=data.current_view==='none'
+  const is_current_data_master=data_to_use.current_view==='none'
   const [forceUpdate,setForceUpdate]=useState(false)
   const {updateComponentBtnUpdateLayout}=ComponentUpdater
   updateComponentBtnUpdateLayout.current=()=>setForceUpdate(!forceUpdate)
@@ -328,17 +327,17 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
       <Button
         className='btn_menu_config'
         style={{width:'20%'}}
-        variant={elementToDispose.current.includes('freeLabels')?'primary':'outline-primary'}
+        variant={dataVarToUpdate.current.includes('freeLabels')?'primary':'outline-primary'}
         onClick={() => {
-          if(!elementToDispose.current.includes('freeLabels')){
-            elementToDispose.current.push('freeLabels')
+          if(!dataVarToUpdate.current.includes('freeLabels')){
+            dataVarToUpdate.current.push('freeLabels')
             setForceUpdate(!forceUpdate)
           }else{
-            elementToDispose.current.splice(elementToDispose.current.indexOf('freeLabels'),1)
+            dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('freeLabels'),1)
             setForceUpdate(!forceUpdate)
           }}
         }
-      >{elementToDispose.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      >{dataVarToUpdate.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
 
     </InputGroup>,
     <OSTooltip label={!is_current_data_master?t('Menu.Transformation.disabled_view'):''} >
@@ -353,17 +352,17 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           className='btn_menu_config'
           style={{width:'20%'}}
           disabled={!is_current_data_master}
-          variant={elementToDispose.current.includes('Views')?'primary':'outline-primary'}
+          variant={dataVarToUpdate.current.includes('Views')?'primary':'outline-primary'}
           onClick={() => {
-            if(!elementToDispose.current.includes('Views')){
-              elementToDispose.current.push('Views')
+            if(!dataVarToUpdate.current.includes('Views')){
+              dataVarToUpdate.current.push('Views')
               setForceUpdate(!forceUpdate)
             }else{
-              elementToDispose.current.splice(elementToDispose.current.indexOf('Views'),1)
+              dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Views'),1)
               setForceUpdate(!forceUpdate)
             }}
           }
-        >{elementToDispose.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        >{dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
       </InputGroup>
     </OSTooltip>,
 
@@ -376,17 +375,17 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
           className='btn_menu_config'
           style={{width:'20%'}}
           disabled={!is_current_data_master}
-          variant={elementToDispose.current.includes('Views')?'primary':'outline-primary'}
+          variant={dataVarToUpdate.current.includes('Views')?'primary':'outline-primary'}
           onClick={() => {
-            if(!elementToDispose.current.includes('icon_catalog')){
-              elementToDispose.current.push('icon_catalog')
+            if(!dataVarToUpdate.current.includes('icon_catalog')){
+              dataVarToUpdate.current.push('icon_catalog')
               setForceUpdate(!forceUpdate)
             }else{
-              elementToDispose.current.splice(elementToDispose.current.indexOf('icon_catalog'),1)
+              dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('icon_catalog'),1)
               setForceUpdate(!forceUpdate)
             }}
           }
-        >{elementToDispose.current.includes('icon_catalog')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+        >{dataVarToUpdate.current.includes('icon_catalog')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
       </InputGroup>
     </OSTooltip>
   ]}

@@ -9,7 +9,7 @@ import LZString from 'lz-string'
 import './traduction'
 
 import { 
-  SankeyData, SankeyNode, SankeyLink, dict_variable_application_dataType, ComponentUpdaterType, 
+  dict_variable_application_dataType, ComponentUpdaterType, 
   LinkFunctionTypes, NodeFunctionTypes, applicationContextType, contextMenuType, 
   dict_variable_elements_selectedType, uiElementsRefType, dict_hook_ref_setter_show_dialog_componentsType, 
   applicationDrawType, 
@@ -26,35 +26,43 @@ import {
   moduleDialogs, DrawAll, closeAllMenu, 
   DefaultSankeyData,
   complete_sankey_data,
-  SankeyApp
+  SankeyApp,
+  initializeMenuConfiguration,
+  initializeKeyHandler
 } from './import/OpenSankey'
-import { SankeyPlusData } from 'sankeyanimation/types/Types'
+import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from 'sankeyanimation/types/Types'
 import { 
   OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected, 
   OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization, 
-  OSPInitializeProcessFunctions, OSPInitializeContextMenu, OSPInitializeUIElementsRef, OSPInitializeLinkFunctions, 
-  OSPInitializeNodeFunctions, OSPInitializeAdditionalMenus, OSPModuleDialogs, OSPDrawAll, OSPInstallEventsOnSVG 
-} from './OSPModule'
-import { plus_convert_data } from './SankeyPlusConvert'
+  OSPInitializeContextMenu, OSPInitializeUIElementsRef, OSPInitializeLinkFunctions, 
+  OSPInitializeNodeFunctions, OSPInitializeAdditionalMenus, OSPModuleDialogs, OSPDrawAll, OSPInstallEventsOnSVG,
+  OSPUpdateMenuConf,
+  OSPInitializeKeyHandler} from './OSPModule'
+import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
 
 window.React = React
 
+
 const get_default_data=()=>{
-  const _ = {...DefaultSankeyData()}
-  const TOTO_var={
+  const os_var = DefaultSankeyData()
+
+  const osp_var:SankeyPlusDataVar={
+    nodes:os_var.nodes as {[x:string]:SankeyPlusNode},
+    links:os_var.links as {[x:string]:SankeyPlusLink},
     is_catalog:false,
-    // view:[],
-    // current_view:'none',
+    view:[],
+    current_view:'none',
     labels:{},
     icon_catalog:{},
     style_link:{'default':DefaultSankeyPlusStyleLink()},
-    // unitary_node:[],
-    // unit_link_value_display:'percent',
-    background_image:''
+    background_image:'',
+    show_background_image:false,
+    style_node:os_var.style_node
   }
-  Object.assign(_,TOTO_var)
-  return _
+  const tmp:SankeyPlusData=Object.assign(os_var,osp_var)
+  
+  return tmp
 }
 
 // Create a default sankey
@@ -76,7 +84,7 @@ const container=document.getElementById('react-container') as Element | Document
 const root=createRoot(container)
 root.render(
   <SankeyApp
-    initial_sankey_data={data}
+    initial_sankey_data={data as SankeyPlusData}
     get_default_data={get_default_data}
     initializeApplicationContext={
       ()=>{
@@ -88,16 +96,17 @@ root.render(
     }
     initializeApplicationData={
       (  
-        data:SankeyData,
-        set_data:(_:SankeyData)=>void,
-        get_default_data:()=>SankeyData,
-        display_nodes : {[_:string]:SankeyNode},
-        display_links : {[_:string]:SankeyLink}
+        data,
+        set_data,
+        get_default_data,
+        display_nodes,
+        display_links
+
       )=>{
         return {
           ...initializeApplicationData(data,set_data,get_default_data,display_nodes,display_links),
           ...OSPInitializeApplicationData(data,set_data,get_default_data,display_nodes,display_links)
-        }       
+        } as SankeyPlusApplicationDataType
       }
     }
     initializeElementSelected={
@@ -152,16 +161,41 @@ root.render(
         }
       }
     }
+    initializeMenuConfiguration={
+      (
+        dict_variable_application_data,
+        dict_variable_elements_selected,
+        applicationContext,
+        uiElementsRef,
+        dict_hook_ref_setter_show_dialog_components,
+        additional_menus,
+        node_function,
+        link_function,
+        applicationDraw,
+        ComponentUpdater,
+        menu_configuration_nodes,
+        config_link_data,
+        config_link_attr,
+        contextMenu,
+        ref_alt_key_pressed
+      )=>{
+        const menu_conf= initializeMenuConfiguration(dict_variable_application_data,dict_variable_elements_selected,applicationContext,uiElementsRef,dict_hook_ref_setter_show_dialog_components,additional_menus,node_function,link_function,applicationDraw,ComponentUpdater,menu_configuration_nodes,config_link_data,config_link_attr,contextMenu,ref_alt_key_pressed)
+        
+        OSPUpdateMenuConf(menu_conf,dict_variable_application_data,applicationContext,uiElementsRef)
+        return menu_conf
+  
+      }
+    }
     initializeReinitialization={
       (
-        dict_variable_application_data :dict_variable_application_dataType,
-        dict_variable_elements_selected : dict_variable_elements_selectedType,
-        contextMenu : contextMenuType
+        dict_variable_application_data,
+        dict_variable_elements_selected,
+        contextMenu
       )=>{
-        return (() => {return {
-          ...initializeReinitialization(dict_variable_application_data,dict_variable_elements_selected,contextMenu),
-          ...OSPInitializeReinitialization(dict_variable_application_data,dict_variable_elements_selected,contextMenu)
-        }})
+        return () => {
+          OSPInitializeReinitialization(dict_variable_application_data,dict_variable_elements_selected,contextMenu)()
+          initializeReinitialization(dict_variable_application_data,dict_variable_elements_selected,contextMenu)()
+        }
       }
     }
     closeAllMenu={
@@ -177,8 +211,7 @@ root.render(
         dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType
       )=>{
         return {
-          ...initializeProcessFunctions(dict_hook_ref_setter_show_dialog_components),
-          ...OSPInitializeProcessFunctions(dict_hook_ref_setter_show_dialog_components)
+          ...initializeProcessFunctions(dict_hook_ref_setter_show_dialog_components)
         }
       }
     }
@@ -261,16 +294,16 @@ root.render(
         node_function:NodeFunctionTypes,
         link_function:LinkFunctionTypes
       )=>{
-        return {
-          ...initializeAdditionalMenus(
-            applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
-            uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function
-          ),
-          ...OSPInitializeAdditionalMenus(
-            applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
-            uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function
-          )
-        }
+        const initial_AdditionalMenus=initializeAdditionalMenus(
+          applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
+          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function
+        )
+        OSPInitializeAdditionalMenus(
+          applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
+          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,initial_AdditionalMenus
+        )
+        
+        return initial_AdditionalMenus
       }
     }
     moduleDialogs={
@@ -373,17 +406,74 @@ root.render(
         )
       }
     }
+    initializeKeyHandler={(
+      dict_variable_application_data,
+      uiElementsRef,
+      contextMenu,
+      e,
+      dict_variable_elements_selected,
+      closeAllMenu,
+      ref_alt_key_pressed,
+      accept_simple_click,
+      link_function,
+      NodeTooltipsContent,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components,
+      applicationContext,
+      node_function,
+      applicationDraw
+    )=>{
+      // Recasted var for OSP key handler func
+      const plus_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
+      const plus_applicationContext=applicationContext as PlusApplicationContextType
+      const  plus_app_draw_func= applicationDraw as PlusApplicationDrawType
+      const plus_elem_selected=dict_variable_elements_selected as PlusElementsSelectedType
+      const plus_dict_hook=dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType
+      const plus_updater=ComponentUpdater as PlusComponentUpdaterType
+
+      initializeKeyHandler(
+        dict_variable_application_data,
+        uiElementsRef,
+        contextMenu,
+        e,
+        dict_variable_elements_selected,
+        closeAllMenu,
+        ref_alt_key_pressed,
+        accept_simple_click,
+        link_function,
+        NodeTooltipsContent,
+        ComponentUpdater,
+        dict_hook_ref_setter_show_dialog_components,
+        applicationContext,
+        node_function,
+        applicationDraw
+      )
+      OSPInitializeKeyHandler(plus_applicationContext,e,plus_dict_app_data,plus_elem_selected,plus_dict_hook,plus_app_draw_func.reDrawPlusLabels,plus_updater)
+
+    }
+    }
+    // Input data used for updateLayout
+    // (OS only use data from imported file 
+    // but OSP can use its view as imported data
+    // )
+    initializeDiagrammSelector={(dict_variable_application_data)=>{
+      const plus_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
+      return SankeyPlusDiagramSelector(
+        plus_app_data
+      )}
+
+    }
     installEventOnSVG={
       (
-        contextMenu:contextMenuType,
-        dict_variable_application_data:dict_variable_application_dataType,
-        uiElementsRef:uiElementsRefType,
-        dict_variable_elements_selected:dict_variable_elements_selectedType,
-        link_function:LinkFunctionTypes,
-        ComponentUpdater:ComponentUpdaterType,
-        dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-        node_function:NodeFunctionTypes,
-        applicationDraw:applicationDrawType
+        contextMenu,
+        dict_variable_application_data,
+        uiElementsRef,
+        dict_variable_elements_selected,
+        link_function,
+        ComponentUpdater,
+        dict_hook_ref_setter_show_dialog_components,
+        node_function,
+        applicationDraw
       )=>{
         InstallEventsOnSVG(  
           contextMenu,

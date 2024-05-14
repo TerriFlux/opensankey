@@ -53,7 +53,7 @@ import {
   FilterViewFType,
   GetDataFromViewFType,
   getSetDiagramFType,
-  keyHandlerFType,
+  OSPKeyHandlerFType,
   MenuEnregistrerViewFType,
   modal_transparent_view_attrFType,
   modal_view_not_savedFType,
@@ -236,21 +236,20 @@ export const RecomputeViews : RecomputeViewsFType = (
   set_master_data({...JSON.parse(JSON.stringify(new_master_data))})
 }
 
-export const keyHandler : keyHandlerFType = (
-  t:TFunction,
+export const OSPKeyHandler : OSPKeyHandlerFType = (
+  applicationContext,
   e: KeyboardEvent,
-  master,
   dict_variable_application_data,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
-  connected:boolean,
-  set_view_not_saved:(s:string)=>void,
   reDrawPlusLabels,
   ComponentUpdater
 ) => {
+  const {t,has_open_sankey_plus}=applicationContext
   const {show_toast_new_view}=dict_hook_ref_setter_show_dialog_components
-  const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
+  const {data,set_data,master_data,set_master_data,view,set_view,set_view_not_saved}=dict_variable_application_data
   const {multi_selected_label}=dict_variable_elements_selected
+  const is_master=dict_variable_application_data.view==='none'
   if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
     multi_selected_label.current=Object.values(data.labels)
@@ -258,12 +257,12 @@ export const keyHandler : keyHandlerFType = (
     ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
   }
   // Clone current data,if its a view clone the view
-  if (connected && e.key === 'x' && (e.ctrlKey||e.metaKey)) {
+  if (has_open_sankey_plus && e.key === 'x' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()
 
-    if (master) {
-      // If we do a control+X while we are on master data, we create view empty
-      // data is master data and master_data might not be  se
+    if (is_master) {
+      // If we do a control+X while we are on is_master data, we create view empty
+      // data is is_master data and master_data might not be  se
       const new_ind = 'view_' + String(new Date().getTime())
       // const copy_data = {diff:[]}
       const copy_data = JSON.parse(JSON.stringify(data))
@@ -276,8 +275,8 @@ export const keyHandler : keyHandlerFType = (
         heredited_attr_from_master:[]
       })
       RecomputeViews(new_master_data,master_data,set_master_data)
-      // master data is now set
-      // at this stage data is a view and is equal with master data
+      // is_master data is now set
+      // at this stage data is a view and is equal with is_master data
       show_toast_new_view.current!(true)
       setTimeout(function () {
         show_toast_new_view.current!(false)
@@ -301,7 +300,7 @@ export const keyHandler : keyHandlerFType = (
       })
 
 
-      // master data is now set
+      // is_master data is now set
       master_data!.current_view=new_ind
       set_view(new_ind)
       set_master_data({...master_data!})
@@ -321,7 +320,7 @@ export const keyHandler : keyHandlerFType = (
 
       if(view!=='none'){
         // If we do a control+S while we are on a view, we save the difference between the data we are handling
-        // and the master data. These difference are the saved the view we are currently on
+        // and the is_master data. These difference are the saved the view we are currently on
         // Get difference between master_data and the current data then save it in view
         let difference = getDiff(master_data, data)
         difference = (difference !== undefined)?difference:[]
@@ -332,7 +331,7 @@ export const keyHandler : keyHandlerFType = (
         const raw_is_smaller_than_diff=JSON.stringify(data).length<JSON.stringify(difference).length
         master_data!.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff?JSON.parse(JSON.stringify(data)):{diff:difference}
 
-        // Save master data with the view we are currently working on updated
+        // Save is_master data with the view we are currently working on updated
         set_master_data({...master_data!})
         // Save master_data data in localStorage
         localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
@@ -356,13 +355,13 @@ export const keyHandler : keyHandlerFType = (
 
 
   }
-  // Changing view to master
-  if (!master && e.key === 'F7') {
+  // Changing view to is_master
+  if (!is_master && e.key === 'F7') {
 
     // Check if there is unsaved change before we switch view
     // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
     let saved=true
-    if(view !== 'none' && connected ){
+    if(view !== 'none' && has_open_sankey_plus ){
       const diff = CheckCurrentViewSaved(master_data, data,view)
       if(diff.length>0 && !window.SankeyToolsStatic){
         saved = false
@@ -395,7 +394,7 @@ export const keyHandler : keyHandlerFType = (
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
       let saved=true
-      if(view !== 'none' &&  connected ){
+      if(view !== 'none' &&  has_open_sankey_plus ){
         const diff = CheckCurrentViewSaved(master_data, data, view)
         if (diff.length>0 && !window.SankeyToolsStatic) {
           saved=false
@@ -410,7 +409,7 @@ export const keyHandler : keyHandlerFType = (
 
     } else if (e.key === 'F9') {
       let new_master_data : SankeyPlusData | undefined
-      if (master) {
+      if (is_master) {
         new_master_data = data
         RecomputeViews(new_master_data,master_data,set_master_data)
       } else {
@@ -434,7 +433,7 @@ export const keyHandler : keyHandlerFType = (
         set_master_data(new_master_data)
       }
       let saved=true
-      if(view !== 'none' && connected ){
+      if(view !== 'none' && has_open_sankey_plus ){
         const diff=CheckCurrentViewSaved(new_master_data,data,view)
         if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
@@ -547,7 +546,7 @@ export const SelecteurView : SelecteurViewFType =(
   dict_variable_elements_selected,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
-  connected:boolean
+  has_open_sankey_plus:boolean
 )=>{
   const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}= dict_variable_elements_selected
@@ -566,7 +565,7 @@ export const SelecteurView : SelecteurViewFType =(
 
   const selecteur=<Select
     variant='menuconfigpanel_option_select'
-    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
+    onDoubleClick={()=>has_open_sankey_plus && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
@@ -635,12 +634,10 @@ export const SelecteurView : SelecteurViewFType =(
     }}
   />
 
-  return connected && s_select_or_edit==='edit'?editeur_name:selecteur
+  return has_open_sankey_plus && s_select_or_edit==='edit'?editeur_name:selecteur
 }
 export const viewsAccordion : viewsAccordionFType = (
   dict_variable_application_data,
-  uiElementsRef,
-  _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
@@ -648,7 +645,7 @@ export const viewsAccordion : viewsAccordionFType = (
   view_selector
 ) => {
   const {data,set_data,master_data,set_master_data,view,set_view}= dict_variable_application_data
-
+  const _load_json = useRef<HTMLInputElement>(null)
 
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
@@ -895,10 +892,7 @@ declare const window: Window &
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   dict_variable_application_data,
-  t:TFunction,
-  connected:boolean,
-  _load_json:{current:HTMLInputElement},
-  _load_json_catalog:{current:HTMLInputElement},
+  applicationContext,
   dict_hook_ref_setter_show_dialog_components,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
   view_selector
@@ -908,16 +902,17 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   const m_d=master_data?master_data:data
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
   const target_popover_modify_view_name=useRef(null)
-
+  const _load_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
+  const {t,has_open_sankey_plus}=applicationContext
   const has_views = master_data?master_data.view.length>0:false
   const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
   const prev_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')
 
-  const buttonCreateView=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCreateView')}>
+  const buttonCreateView=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCreateView')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
-        isDisabled={!connected}
+        isDisabled={!has_open_sankey_plus}
         onClick={() => {
           const ev = document
           const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
@@ -927,8 +922,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }}
       >
         <FaPlus
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        {!connected?
+          style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}}/>
+        {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -950,19 +945,19 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
 
   const button_heredited_attr_from_master=!(special_cast_for_unit_sankey.unitary_node && special_cast_for_unit_sankey.unitary_node.length>0)?<OSTooltip
     placement='bottom'
-    label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCloneMasterAttrView')}>
+    label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCloneMasterAttrView')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
-        isDisabled={!connected}
+        isDisabled={!has_open_sankey_plus}
         onClick={
           () => {
             ref_setter_show_modal_transparent_view_attr.current(true)
           }
         }
       >
-        <FontAwesomeIcon style={{opacity:(!connected)?'0.6':'1'}} icon={faListCheck} />
-        {!connected?
+        <FontAwesomeIcon style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}} icon={faListCheck} />
+        {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -977,11 +972,11 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     </Box>
   </OSTooltip>:<></>
 
-  const create_data_catalog=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.catalog_data')}>
+  const create_data_catalog=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.catalog_data')}>
     <Box>
       <Button
         variant= {master_data && master_data.is_catalog?'submenu_nav_btn':'submenu_nav_btn'}
-        isDisabled={!connected}
+        isDisabled={!has_open_sankey_plus}
         onClick={
           () => {
             if (_load_json_catalog.current) {
@@ -992,8 +987,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }
       >
         <FaCopy
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        {!connected?
+          style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}}/>
+        {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1009,11 +1004,11 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   </OSTooltip>
 
 
-  const button_delete_actual_view=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.button_delete_actual_view')}>
+  const button_delete_actual_view=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.button_delete_actual_view')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
-        isDisabled={!connected}
+        isDisabled={!has_open_sankey_plus}
         onClick={
           // Delete the view
           () => {
@@ -1042,7 +1037,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }>
 
         <FaMinus/>
-        {!connected?
+        {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1166,11 +1161,11 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   </Overlay>
   {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
   {window.SankeyToolsStatic ? <></> : create_data_catalog}
-  {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!connected && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.home')}>
+  {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.home')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
-        isDisabled={((!connected && !has_views)||(master_data && master_data.is_catalog))}
+        isDisabled={((!has_open_sankey_plus && !has_views)||(master_data && master_data.is_catalog))}
         onClick={() => {
           const ev = document
           const tmp = { key: 'F7' }
@@ -1180,8 +1175,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }}>
 
         <FaHome
-          style={{opacity:((connected && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/>
-        {(!connected && !has_views)?
+          style={{opacity:((has_open_sankey_plus && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/>
+        {(!has_open_sankey_plus && !has_views)?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1199,7 +1194,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   {window.SankeyToolsStatic ? <></> : buttonCreateView}
 
 
-  <OSTooltip placement='bottom' label={(!connected && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.PrevViewButton')}>
+  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.PrevViewButton')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -1213,7 +1208,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }}>
         <FaCaretSquareLeft
           style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
-        {(!connected && !has_views)?
+        {(!has_open_sankey_plus && !has_views)?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1228,7 +1223,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     </Box>
   </OSTooltip>
 
-  <OSTooltip placement='bottom' label={(!connected && !has_views)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.NextViewButton')}>
+  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.NextViewButton')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -1244,7 +1239,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         <FaCaretSquareRight
           style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}
         />
-        {(!connected && !has_views)?
+        {(!has_open_sankey_plus && !has_views)?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1356,7 +1351,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //   master_data:SankeyPlusData,
 //   set_master_data:(d:SankeyPlusData)=>void,
 //   t:TFunction,
-//   connected:boolean,
+//   has_open_sankey_plus:boolean,
 //   view_not_saved:string,
 //   set_view_not_saved:(s:string)=>void,
 //   _load_json:{current:HTMLInputElement},
@@ -1376,7 +1371,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //     multi_selected_nodes,multi_selected_links,multi_selected_label,
 //     master_data,set_master_data,
 //     t,
-//     connected,set_view_not_saved,
+//     has_open_sankey_plus,set_view_not_saved,
 //     _load_json,_load_json_catalog,set_ref_setter_show_modal_transparent_view_attr,
 //     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,s_value_editor_name_view,sValueEditorNameView,
 //     select_or_edit,sSelectOrEdit,convert_data
@@ -1391,9 +1386,9 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   dict_hook_ref_setter_show_dialog_components,
   dict_variable_application_data,
-  current_view:ViewType,
   t:TFunction
 )=>{
+  const current_view=dict_variable_application_data.master_data?.view.filter(v=>v.id===dict_variable_application_data.master_data!.current_view)[0]??{} as ViewType
   const {data,set_data,master_data,set_master_data}=dict_variable_application_data as SankeyPlusApplicationDataType
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const [show_modal,set_show_modal]=useState(false)
@@ -1673,7 +1668,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
   data:SankeyPlusData,
   view:string,
   view_not_saved:string,
-  connected:boolean,
+  has_open_sankey_plus:boolean,
   t:TFunction
 )=>{
 
@@ -1681,7 +1676,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
   //  - if there is no differences between the the saved view and the current view, then the logo has a check
   //  - else if it contain difference, the logo contain an exclamation point
   const is_different=false
-  if(view !== 'none' && view_not_saved ==='' && master_data && connected){
+  if(view !== 'none' && view_not_saved ==='' && master_data && has_open_sankey_plus){
     // find another way with a variable. Checking the all view consumes too much time
     // const diff=CheckCurrentViewSaved(master_data,data,view)
     // if(diff.length>0){
@@ -1690,9 +1685,9 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
   }
 
   return   <OSTooltip
-    label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.saveView')}>
+    label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.saveView')}>
     <Button
-      isDisabled={!connected}
+      isDisabled={!has_open_sankey_plus}
       variant='light'
       onClick={() => {
         const ev = document
@@ -1704,8 +1699,8 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
     >
       <FontAwesomeIcon
         icon={faFloppyDisk}
-        style={{opacity:(!connected)?'0.6':'1',width:'2rem',height:'2rem'}}/>
-      {!connected?<>
+        style={{opacity:(!has_open_sankey_plus)?'0.6':'1',width:'2rem',height:'2rem'}}/>
+      {!has_open_sankey_plus?<>
         <FontAwesomeIcon
           icon={faLock}
           style={{
