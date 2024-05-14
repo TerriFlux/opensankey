@@ -13,7 +13,8 @@ import {
   LinkFunctionTypes, NodeFunctionTypes, applicationContextType, contextMenuType, 
   dict_variable_elements_selectedType, uiElementsRefType, dict_hook_ref_setter_show_dialog_componentsType, 
   applicationDrawType, 
-  AdditionalMenusType
+  AdditionalMenusType,
+  processFunctionsType
 } from 'open-sankey/src/types/Types'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
@@ -292,15 +293,17 @@ root.render(
         uiElementsRef:uiElementsRefType,
         dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
         node_function:NodeFunctionTypes,
-        link_function:LinkFunctionTypes
+        link_function:LinkFunctionTypes,
+        processFunctions:processFunctionsType,
+        Reinitialization:()=>void
       )=>{
         const initial_AdditionalMenus=initializeAdditionalMenus(
           applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
-          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function
+          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization
         )
         OSPInitializeAdditionalMenus(
           applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
-          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,initial_AdditionalMenus
+          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,initial_AdditionalMenus
         )
         
         return initial_AdditionalMenus
@@ -319,7 +322,9 @@ root.render(
         link_function:LinkFunctionTypes,
         ComponentUpdater:ComponentUpdaterType,
         additional_menus:AdditionalMenusType,
-        menu_configuration_nodes_attributes:JSX.Element[]
+        menu_configuration_nodes_attributes:JSX.Element[],
+        reDrawLegend:()=>void,
+        processFunctions:processFunctionsType
       )=>{
         return [
           ...moduleDialogs(
@@ -335,7 +340,8 @@ root.render(
             ComponentUpdater,
             additional_menus,
             menu_configuration_nodes_attributes,
-            applicationDraw.reDrawLegend 
+            applicationDraw.reDrawLegend,
+            processFunctions 
           ),
           ...OSPModuleDialogs(
             applicationContext,
@@ -350,7 +356,8 @@ root.render(
             ComponentUpdater,
             additional_menus,
             menu_configuration_nodes_attributes,
-            applicationDraw.reDrawLegend 
+            applicationDraw.reDrawLegend,
+            processFunctions
           )
         ]
       }
