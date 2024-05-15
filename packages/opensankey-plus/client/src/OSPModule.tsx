@@ -250,6 +250,7 @@ export const OSPInitializeNodeFunctions : initializeNodeFunctionsType = (
 }
 
 export const OSPInitializeAdditionalMenus : initializeAdditionalMenusType = (
+  additionalMenus,
   applicationContext,
   dict_variable_application_data,
   applicationDraw,
@@ -259,27 +260,21 @@ export const OSPInitializeAdditionalMenus : initializeAdditionalMenusType = (
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   link_function
-) => {return {
-  // Top Menus
-  external_edition_item: [],
-  external_file_item: [],
-  external_file_export_item: [PlusItemExport()],
-  externale_save_item: [],
+) => {
+
+  additionalMenus.external_file_export_item.push(PlusItemExport())
 
   // Page settings
-  extra_background_element: ImportImageAsSvgBg(
+  additionalMenus.extra_background_element = ImportImageAsSvgBg(
     applicationContext.t,
     dict_variable_application_data.data as SankeyPlusData,
     dict_variable_application_data.set_data as (_:SankeyPlusData)=>void,
     true
-  ),
+  )
 
   // Nodes
-  advanced_appearence_content: [], //unchanged
-  advanced_label_content: [], //unchanged a supprimer TODO
-  advanced_label_value_content: [],//unchanged a supprimer TODO
-  additional_menu_configuration_nodes:{
-    'icon' : SankeyPlusNodeIcon(
+
+  additionalMenus.additional_menu_configuration_nodes['icon'] = SankeyPlusNodeIcon(
       applicationContext.t,
       dict_variable_application_data.data as SankeyPlusData,
       dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; },
@@ -288,27 +283,25 @@ export const OSPInitializeAdditionalMenus : initializeAdditionalMenusType = (
       dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType,
       node_function as PlusNodeFuntionType,
       ComponentUpdater as PlusComponentUpdaterType
-    ),
-    'fo' : SankeyPlusNodeFO(
-      applicationContext.t,
-      dict_variable_application_data.data as SankeyPlusData,
-      dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; },
-      true,
-      dict_variable_elements_selected as PlusElementsSelectedType,
-      node_function as PlusNodeFuntionType
-    ),
-    'hl' : SankeyPlusHyperLink(
-      applicationContext.t,
-      dict_variable_application_data.data as SankeyPlusData,
-      dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; },
-      true,
-      node_function as PlusNodeFuntionType
-    )
-  },
+  )
+  additionalMenus.additional_menu_configuration_nodes['fo'] = SankeyPlusNodeFO(
+    applicationContext.t,
+    dict_variable_application_data.data as SankeyPlusData,
+    dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; },
+    true,
+    dict_variable_elements_selected as PlusElementsSelectedType,
+    node_function as PlusNodeFuntionType
+  ),
+  additionalMenus.additional_menu_configuration_nodes['hl'] = SankeyPlusHyperLink(
+    applicationContext.t,
+    dict_variable_application_data.data as SankeyPlusData,
+    dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; },
+    true,
+    node_function as PlusNodeFuntionType
+  )
 
   //Links
-  additional_data_element: [], //unchanged 
-  additional_link_appearence_items: [menu_conf_link_apparence_gradient(
+  additionalMenus.additional_link_appearence_items.push(menu_conf_link_apparence_gradient(
     applicationContext as PlusApplicationContextType,
     ComponentUpdater as PlusComponentUpdaterType,
     dict_variable_elements_selected.multi_selected_links,
@@ -317,20 +310,19 @@ export const OSPInitializeAdditionalMenus : initializeAdditionalMenusType = (
     true,
     false,
     dict_variable_elements_selected.ref_selected_style_link)
-  ],
-  additional_link_visual_filter_content: [], //unchanged
+  )
 
   //Preferences
-  additional_preferences: [
+  additionalMenus.additional_preferences.push(
     SankeyPlusMenuPreferenceLabels(
       applicationContext.t,
       dict_variable_application_data.data as SankeyPlusData,
       ComponentUpdater as PlusComponentUpdaterType
     )
-  ],
+  )
 
   //- Builds Configuration Menus FreeLabel
-  additional_configuration_menus : [zdtMenuAsAccordeonItem(
+  additionalMenus.additional_configuration_menus.push(zdtMenuAsAccordeonItem(
     dict_variable_application_data.data as SankeyPlusData,
     uiElementsRef as PlusUiElementsRefType,
     applicationContext as PlusApplicationContextType,
@@ -343,19 +335,8 @@ export const OSPInitializeAdditionalMenus : initializeAdditionalMenusType = (
       reDrawPlusLabels={(applicationDraw as PlusApplicationDrawType).reDrawPlusLabels}
       ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
     />
-  )],
-
-  menu_style_add_node_appearence_attr : [],
-  menu_style_add_node_label : [],
-  menu_style_add_node_label_value : [],
-
-  additional_edition_item : [],
-  additional_file_save_item : [],
-  additional_file_item : [],
-  additional_file_export_item : [],
-
-  sankey_menus : {}
-}}
+  ))
+}
 
 export const OSPModuleDialogs : module_dialogsType = (
   applicationContext,
