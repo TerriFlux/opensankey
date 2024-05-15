@@ -55,7 +55,6 @@ import * as d3 from 'd3'
 import { DrawLinkStartSabot } from './draw/SankeyDrawShapes'
 import { DrawAllNodes, drawAddNodes, updateDrawNodeShape } from './draw/SankeyDrawNodes'
 import { RedrawNodesLabel } from './draw/SankeyDrawNodesLabel'
-import React from 'react'
 import { MenuDraggable } from './topmenus/SankeyMenuTop'
 import { SankeyMenuConfigurationNodesIO } from './configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
@@ -501,44 +500,7 @@ export const initializeUIElementsRef : initializeUIElementsRefType = ()=> {retur
   ref_setter_sub_nav_item_active : useRef<Dispatch<SetStateAction<string>>>(()=>null)
 }}
 
-export const initializeAdditionalMenus : initializeAdditionalMenusType = () => {return {
-  // Top Menus
-  external_edition_item: [],
-  external_file_item: [],
-  external_file_export_item: [],
-  externale_save_item: [],
-
-  // Page settings
-  extra_background_element: <></>,
-
-  // Nodes
-  advanced_appearence_content: [],
-  advanced_label_content: [],
-  advanced_label_value_content: [],
-  additional_menu_configuration_nodes:{},
-
-  // Links
-  additional_data_element: [],
-  additional_link_appearence_items: [],
-  additional_link_visual_filter_content: [],
-
-  // Preferences
-  additional_preferences : [],
-
-  // Configuration Menu
-  additional_configuration_menus : [],
-
-  menu_style_add_node_appearence_attr : [],
-  menu_style_add_node_label : [],
-  menu_style_add_node_label_value :[],
-
-  additional_edition_item : [],
-  additional_file_save_item : [],
-  additional_file_item : [],
-  additional_file_export_item : [],
-
-  sankey_menus : {}
-}}
+export const initializeAdditionalMenus : initializeAdditionalMenusType = () => {}
 
 // Modal Dialogs
 export const moduleDialogs : module_dialogsType = (
