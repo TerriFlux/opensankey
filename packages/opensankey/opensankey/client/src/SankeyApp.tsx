@@ -243,44 +243,44 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const additionalMenus : AdditionalMenusType = {
   // Top Menu
-  external_edition_item: [],
-  external_file_item: [],
-  external_file_export_item: [],
-  externale_save_item: [],
-  externale_navbar_item:{},
+    external_edition_item: [],
+    external_file_item: [],
+    external_file_export_item: [],
+    externale_save_item: [],
+    externale_navbar_item:{},
   
-  // Mise en page
-  extra_background_element: <></>,
-  apply_transformation_additional_elements:[],
-  // Nodes
-  advanced_appearence_content: [],
-  advanced_label_content: [],
-  advanced_label_value_content: [],
-  additional_menu_configuration_nodes:{},  
-  additional_context_element_menu:[],
-  additional_context_element_other:[],
+    // Mise en page
+    extra_background_element: <></>,
+    apply_transformation_additional_elements:[],
+    // Nodes
+    advanced_appearence_content: [],
+    advanced_label_content: [],
+    advanced_label_value_content: [],
+    additional_menu_configuration_nodes:{},  
+    additional_context_element_menu:[],
+    additional_context_element_other:[],
   
-  // Links
-  additional_data_element: [],
-  additional_link_appearence_items: [],
-  additional_link_visual_filter_content: [],
+    // Links
+    additional_data_element: [],
+    additional_link_appearence_items: [],
+    additional_link_visual_filter_content: [],
 
-  // Preferences
-  additional_preferences: [],
+    // Preferences
+    additional_preferences: [],
 
-  // Configuration Menu
-  additional_configuration_menus : [],
+    // Configuration Menu
+    additional_configuration_menus : [],
 
-  menu_style_add_node_appearence_attr : [],
-  menu_style_add_node_label : [],
-  menu_style_add_node_label_value : [],
+    menu_style_add_node_appearence_attr : [],
+    menu_style_add_node_label : [],
+    menu_style_add_node_label_value : [],
 
-  additional_edition_item : [],
-  additional_file_save_item : [],
-  additional_file_item : [],
-  additional_file_export_item : [],
+    additional_edition_item : [],
+    additional_file_save_item : [],
+    additional_file_item : [],
+    additional_file_export_item : [],
 
-  sankey_menus : {}
+    sankey_menus : {}
   }
 
   initializeAdditionalMenus(
