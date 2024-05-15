@@ -2,6 +2,7 @@ import { PlusApplicationContextType, PlusComponentUpdaterType, PlusLinkFuntionTy
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { SankeyNode, display_styleType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
+import { LinkStrokeFType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
 export type menu_conf_link_apparence_gradientFType=(
   applicationContext:PlusApplicationContextType,
@@ -14,11 +15,7 @@ export type menu_conf_link_apparence_gradientFType=(
   selected_style_link:MutableRefObject<string>,
 )=> JSX.Element
 
-export type PlusLinkStrokeFType=(
-  l:SankeyPlusLink,
-  data:SankeyPlusData,
-  GetLinkValue:GetLinkValueFuncType
-)=> string
+export type PlusLinkStrokeFType = LinkStrokeFType
 
 // Function used to create gradient for each link, but are used only if the link has the gradient varibale at true
 export type dragNodeRedrawGradientFType=(

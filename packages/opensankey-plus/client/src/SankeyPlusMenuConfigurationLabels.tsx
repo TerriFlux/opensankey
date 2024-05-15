@@ -86,14 +86,15 @@ export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFTyp
 export interface selected_type  {'label':string;'value':string}
 
 export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlusMenuConfigurationFreeLabelsFType> = ({
-  data,
-  multi_selected_label,
-  t,
-  is_activated,
+  dict_variable_application_data,
+  applicationContext,
   dict_variable_elements_selected,
   ComponentUpdater,
   reDrawPlusLabels
 }) => {
+  const {data}=dict_variable_application_data
+  const {multi_selected_label}=dict_variable_elements_selected
+  const {t,has_open_sankey_plus}=applicationContext 
   const r_editor_ZDT= useRef<ReactQuill>() as {current:ReactQuill}
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
   const tmplabel = Object.fromEntries(Object.entries(data.labels).sort(([, a], [, b]) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)))
@@ -152,7 +153,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           width='10rem'
         >
           <MultiSelect
-            disabled={!is_activated}
+            disabled={!has_open_sankey_plus}
             valueRenderer={(selected: selected_type[]) => {
               return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
             }}
@@ -259,7 +260,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     'align'
   ]
 
-  const disable_options = is_activated? (multi_selected_label.current.length === 0):true
+  const disable_options = has_open_sankey_plus? (multi_selected_label.current.length === 0):true
   const isQuill_invalid=multi_selected_label.current.length>0?multi_selected_label.current[0].content!==s_editor_content_fo_zdt:false
 
   //Create 2 editor :
@@ -301,7 +302,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
 
   const content_image = <>
     {/* Import image */}
-    <OSTooltip label={!is_activated?t('Menu.sankeyPlusDisabled'):''} >
+    <OSTooltip label={!has_open_sankey_plus?t('Menu.sankeyPlusDisabled'):''} >
 
       <Box
         as='span'
@@ -343,7 +344,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       layerStyle='menuconfigpanel_zdt_row_droplist'
     >
       <Button
-        isDisabled={!is_activated}
+        isDisabled={!has_open_sankey_plus}
         variant='menuconfigpanel_add_button'
         onClick={() => {
 
@@ -627,7 +628,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           type='color'
           id='form_color_border_zdt'
           name='form_color_border_zdt'
-          disabled={!is_activated && !valAllLabelBorderTransparent }
+          disabled={!has_open_sankey_plus && !valAllLabelBorderTransparent }
           value={(multi_selected_label.current.length === 1) ? multi_selected_label.current[0].color_border : '#ffffff'}
           onChange={evt => {
             const val = evt.target.value
@@ -745,7 +746,7 @@ export const blur_ZDT_wysiwyg : blur_ZDT_wysiwygFType = (
  *
  * @param {SankeyPlusData} data
  * @param {uiElementsRefType} uiElementsRef
- * @param {boolean} is_activated
+ * @param {boolean} has_open_sankey_plus
  * @param {TFunction} t
  * @param {JSX.Element} content_menu_zdt
  * @return {*}

@@ -89,7 +89,7 @@ import { MenuConfigurationLinksTooltipFType } from 'open-sankey/src/configmenus/
 import { SankeyMenuConfigurationNodesTagsFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationNodesTagsTypes'
 import { MenuConfigurationLinksTagsFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationLinksTagsTypes'
 import { DrawLinkStartSabotFType } from 'open-sankey/src/draw/types/SankeyShapesTypes'
-import { DrawAllType, InstallEventsOnSVGType, SankeyAppTypes, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, initializeAdditionalMenusType, initializeApplicationContextType, initializeApplicationDataType, initializeApplicationDrawType, initializeComponentUpdaterType, initializeContextMenuType, initializeElementSelectedType, initializeLinkFunctionsType, initializeNodeFunctionsType, initializeProcessFunctionsType, initializeReinitializationType, initializeShowDialogType, initializeUIElementsRefType, module_dialogsType } from 'open-sankey/src/types/Types'
+import { DrawAllType, InstallEventsOnSVGType, SankeyAppTypes, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, initializeAdditionalMenusType, initializeApplicationContextType, initializeApplicationDataType, initializeApplicationDrawType, initializeCloseAllMenuContextType, initializeComponentUpdaterType, initializeContextMenuType, initializeElementSelectedType, initializeKeyHandlerType, initializeLinkFunctionsType, initializeMenuConfigurationFuncType, initializeNodeFunctionsType, initializeProcessFunctionsType, initializeReinitializationType, initializeShowDialogType, initializeUIElementsRefType, module_dialogsType } from 'open-sankey/src/types/Types'
 import { DragLegendGElement } from 'open-sankey/dist/draw/SankeyDrawLegend'
 import { opposing_DragElementsFuncType, ReturnOutOfBoundElementFuncType, drag_node_textFuncType, DragElementsFuncType } from 'open-sankey/src/draw/types/SankeyDragTypes'
 
@@ -298,8 +298,8 @@ export const initializeShowDialog = OSModule.initializeShowDialog as initializeS
 export const initializeUIElementsRef = OSModule.initializeUIElementsRef as initializeUIElementsRefType
 export const initializeAdditionalMenus = OSModule.initializeAdditionalMenus as initializeAdditionalMenusType
 export const moduleDialogs = OSModule.moduleDialogs as module_dialogsType
-
-export const SankeyApp = OSSankeyApp as unknown as FunctionComponent<SankeyAppTypes> 
+export const initializeMenuConfiguration=OSModule.initializeMenuConfiguration as initializeMenuConfigurationFuncType
+export const SankeyApp = OSSankeyApp as FunctionComponent<SankeyAppTypes> 
 export const InstallEventsOnSVG = OSModule.InstallEventsOnSVG as InstallEventsOnSVGType
 export const hideLinkOnDragElement:hideLinkOnDragElementFuncType=SankeyDrawFunc.hideLinkOnDragElement
 export const OSTooltip:FunctionComponent<OSTooltpFuncType>=sankeyUtils.OSTooltip
@@ -311,3 +311,6 @@ export const synchronizeNodesandLinksIdOSTyped:synchronizeNodesandLinksIdFuncTyp
 export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType = SankeyDrawEventFunc.actualizeDrawAreaFrame
 export const DragElements:DragElementsFuncType = sankeyDragNodeFunc.DragElements
 export const selectOpensankeyElementsInSelectionZone : selectOpensankeyElementsInSelectionZoneFType = SankeyDrawEventFunc.selectOpensankeyElementsInSelectionZone
+
+export const initializeCloseAllMenuContext:initializeCloseAllMenuContextType =OSModule.initializeCloseAllMenuContext
+export const initializeKeyHandler:initializeKeyHandlerType = OSModule.initializeKeyHandler
