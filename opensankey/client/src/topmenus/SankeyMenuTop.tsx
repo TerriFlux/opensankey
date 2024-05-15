@@ -374,14 +374,12 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       </ChakraMenu>,
 
       <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='exporter' >
-
         <OSTooltip placement='bottom' label={t('Menu.tooltips.export')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />}>
             <FontAwesomeIcon icon={faFileExport} />
             {t('Menu.exporter')}
           </MenuButton>
         </OSTooltip>
-
         <MenuList>
           <MenuItem onClick={()=>{
             dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current(parseInt(String(data.width)))

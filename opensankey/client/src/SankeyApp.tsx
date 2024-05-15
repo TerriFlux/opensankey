@@ -271,12 +271,12 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     // Configuration Menu
     additional_configuration_menus : [],
 
-    menu_style_add_node_appearence_attr : [],
-    menu_style_add_node_label : [],
-    menu_style_add_node_label_value : [],
+    // menu_style_add_node_appearence_attr : [],
+    // menu_style_add_node_label : [],
+    // menu_style_add_node_label_value : [],
 
     additional_edition_item : [],
-    additional_file_save_item : [],
+    additional_file_save_json_option : [],
     additional_file_item : [],
     additional_file_export_item : [],
 
@@ -295,7 +295,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     node_function,
     link_function,
     processFunctions,
-    Reinitialization
+    Reinitialization,
+    contextMenu
   )
 
   const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(
@@ -554,9 +555,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                   dict_variable_elements_selected,
                   true,
                   dict_variable_elements_selected.ref_selected_style_node,
-                  additionalMenus.menu_style_add_node_appearence_attr,
-                  additionalMenus.menu_style_add_node_label,
-                  additionalMenus.menu_style_add_node_label_value,
+                  additionalMenus.advanced_appearence_content,
+                  additionalMenus.advanced_label_content,
+                  additionalMenus.advanced_label_value_content,
                   link_function,
                   ComponentUpdater,
                   node_function
@@ -594,7 +595,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           t={applicationContext.t}
           dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
           sankey_data={dict_variable_application_data.data}
-          additionnal_button_option_save_json={[]}
+          additionnal_button_option_save_json={additionalMenus.additional_file_save_json_option}
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
@@ -608,8 +609,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         node_function={node_function}
         link_function={link_function}
         ComponentUpdater={ComponentUpdater}
-        additional_context_element_menu = {[<></>]}
-        additional_context_element_other = {[<></>]}
+        additional_context_element_menu = {additionalMenus.additional_context_element_menu}
+        additional_context_element_other = {additionalMenus.additional_context_element_other}
       />
       <ContextMenuLink
         applicationContext = {applicationContext}
