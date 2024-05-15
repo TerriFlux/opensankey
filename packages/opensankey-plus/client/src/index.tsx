@@ -285,28 +285,30 @@ root.render(
     }
     initializeAdditionalMenus={
       (
-        additionalMenus:AdditionalMenusType,
-        applicationContext:applicationContextType,
-        dict_variable_application_data:dict_variable_application_dataType,
-        applicationDraw:applicationDrawType,
-        ComponentUpdater:ComponentUpdaterType,
-        dict_variable_elements_selected:dict_variable_elements_selectedType,
-        uiElementsRef:uiElementsRefType,
-        dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-        node_function:NodeFunctionTypes,
-        link_function:LinkFunctionTypes,
-        processFunctions:processFunctionsType,
-        Reinitialization:()=>void
+        additionalMenus,
+        applicationContext,
+        dict_variable_application_data,
+        applicationDraw,
+        ComponentUpdater,
+        dict_variable_elements_selected,
+        uiElementsRef,
+        dict_hook_ref_setter_show_dialog_components,
+        node_function,
+        link_function,
+        processFunctions,
+        Reinitialization,
+        contextMenu
+
       )=>{
         initializeAdditionalMenus(
           additionalMenus,
           applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
-          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization
+          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,contextMenu
         )
         OSPInitializeAdditionalMenus(
           additionalMenus,
           applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
-          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization
+          uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,contextMenu
         )
       }
     }

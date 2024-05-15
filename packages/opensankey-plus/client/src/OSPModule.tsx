@@ -9,22 +9,20 @@ import ReactQuill from 'react-quill'
 import * as d3 from 'd3'
 import { 
   dict_hook_ref_setter_show_dialog_componentsType, contextMenuType, 
-  SankeyData, ComponentUpdaterType, initializeLinkFunctionsType, 
-  LinkFunctionTypes, 
+  SankeyData, 
   module_dialogsType,  
   DrawAllType,
-  InstallEventsOnSVGType,
-  initializeComponentUpdaterType} from 'open-sankey/src/types/Types'
-import { LinkColorFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
-import { DrawArrowsType, LinkStrokeFType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
+  InstallEventsOnSVGType} from 'open-sankey/src/types/Types'
 import { 
   OSPApplicationDataVarType,
   OSPGetDefaultData,
   OSPInitializeAdditionalMenusType,
   OSPInitializeApplicationContextVarType,
   OSPInitializeApplicationDrawType,
+  OSPInitializeComponentUpdaterType,
   OSPInitializeElementSelectedType,
   OSPInitializeKeyHandlerType,
+  OSPInitializeLinkFuntionType,
   OSPInitializeNodeFunctionsType,
   OSPInitializeReinitializationType,
   OSPInitializeShowDialogType,
@@ -34,7 +32,7 @@ import {
   PlusApplicationContextType,
   PlusApplicationDrawType,
   PlusApplicationDrawVarType,
-  PlusComponentUpdaterType, PlusElementsSelectedType, PlusElementsSelectedVarType, PlusNodeFuntionType, PlusNodeFuntionVarType, PlusUiElementsRefType, SankeyPlusApplicationDataType, 
+  PlusComponentUpdaterType, PlusElementsSelectedType, PlusElementsSelectedVarType, PlusNodeFuntionType, PlusUiElementsRefType, SankeyPlusApplicationDataType, 
   SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusLabel, 
   SankeyPlusLink, 
   SankeyPlusNode, 
@@ -208,12 +206,12 @@ export const OSPInitializeApplicationDraw : OSPInitializeApplicationDrawType= (
   return _ as PlusApplicationDrawVarType
 }
 
-export const OSPInitializeComponentUpdater : initializeComponentUpdaterType  = ()=> {
+export const OSPInitializeComponentUpdater : OSPInitializeComponentUpdaterType  = ()=> {
   const _ = {
     updateComponentMenuConfigZdt : useRef([] as (()=>void)[]),
   }
   _.updateComponentMenuConfigZdt.current = []
-  return _ as unknown as ComponentUpdaterType
+  return _ 
 }
 
 export const OSPInitializeReinitialization : OSPInitializeReinitializationType = (
@@ -248,16 +246,16 @@ export const OSPInitializeUIElementsRef : OSPInitializeUIElementsRefType = () =>
   return {
     zdt_accordion_ref : useRef<HTMLDivElement>(null),
     ViewSelector:useRef<JSX.Element>(null)
-  } as PlusUiElementsRefType
+  }
 }
 
 // Only override 
-export const OSPInitializeLinkFunctions : initializeLinkFunctionsType = () => {
+export const OSPInitializeLinkFunctions : OSPInitializeLinkFuntionType = () => {
   return {
-    DrawArrows : SankeyPlusDrawArrows as DrawArrowsType,
-    LinkStroke : PlusLinkStroke as LinkStrokeFType,
-    LinkSabotColor : PlusLinkSabotColor as LinkColorFuncType
-  } as LinkFunctionTypes
+    DrawArrows : SankeyPlusDrawArrows,
+    LinkStroke : PlusLinkStroke ,
+    LinkSabotColor : PlusLinkSabotColor
+  } 
 }
 
 export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (  
@@ -298,7 +296,7 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
         nodes_to_update
       )
     }
-  } as PlusNodeFuntionVarType
+  }
 }
 
 // Since AdditionalMenus is an OS var specially created to add external element in menus
@@ -589,7 +587,7 @@ export const OSPUpdateMenuConf:OSPUpdateMenuConfType=(menu_conf,
     PlusApplicationContext.has_open_sankey_plus,
     SankeyPlusApplicationData.convert_data,
     SankeyPlusApplicationData.get_default_data,
-    PlusUiElementsRef.ViewSelector.current
+    PlusUiElementsRef.ViewSelector?.current??<></>
   )
   menu_conf.push(menu_conf_view)
   return menu_conf

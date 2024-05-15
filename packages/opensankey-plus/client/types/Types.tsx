@@ -25,8 +25,13 @@ import {
   initializeApplicationDrawType,
   initializeReinitializationType,
   initializeNodeFunctionsType,
-  initializeAdditionalMenusType
+  initializeAdditionalMenusType,
+  initializeComponentUpdaterType,
+  initializeUIElementsRefType,
+  initializeLinkFunctionsType
 } from 'open-sankey/src/types/Types'
+import { PlusLinkSabotColorFType } from './SankeyPlusUtilsTypes'
+import { DrawArrowsType, LinkStrokeFType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
 
 export type DiffType = {
@@ -170,11 +175,11 @@ export interface PlusApplicationContextType extends applicationContextType {
   has_open_sankey_plus: boolean
 }
 
-export interface PlusUiElementsRefType extends uiElementsRefType {
+export type PlusUiElementsRefType = uiElementsRefType & PlusUiElementsRefVar
+export type PlusUiElementsRefVar={
   zdt_accordion_ref: MutableRefObject<HTMLDivElement | null>,
-  ViewSelector:MutableRefObject<JSX.Element>
+  ViewSelector:MutableRefObject<JSX.Element | null>
 }
-export type OSPInitializeUIElementsRefType = ()=> PlusUiElementsRefType
 
 
 // TO DELETE WHEN UNITARY SANKEY WILL BE MERGE IN SANKEYPLUS
@@ -182,7 +187,8 @@ export interface SankeyUnitData extends SankeyPlusData {
   unitary_node: string[],
 }
 
-export interface PlusComponentUpdaterType extends ComponentUpdaterType {
+export type PlusComponentUpdaterType = ComponentUpdaterType & PlusComponentUpdaterVar
+export type PlusComponentUpdaterVar = {
   updateComponentMenuConfigZdt: MutableRefObject<(() => void)[]>
 }
 
@@ -196,8 +202,12 @@ export type PlusNodeFuntionVarType =  {
 
 export type PlusNodeFuntionType = NodeFunctionTypes & PlusNodeFuntionVarType
 
-export type PlusLinkFuntionType = LinkFunctionTypes
-
+export type PlusLinkFuntionType = LinkFunctionTypes & OSPLinkFunctionVar
+export type OSPLinkFunctionVar={
+  DrawArrows: DrawArrowsType
+LinkStroke: LinkStrokeFType
+LinkSabotColor: PlusLinkSabotColorFType
+}
 export type PlusApplicationDrawType = applicationDrawType & PlusApplicationDrawVarType
 export type PlusApplicationDrawVarType={
   reDrawPlusLabels: reDrawPlusLabelsFType
@@ -230,7 +240,9 @@ type parmaInitializeApplicationDrawType=Parameters<initializeApplicationDrawType
 type paramInitializeReinitializationType=Parameters<initializeReinitializationType>
 type paramInitializeNodeFunctionsType=Parameters<initializeNodeFunctionsType>
 type paramInitializeAdditionalMenusType=Parameters<initializeAdditionalMenusType>
-
+type paramInitializeComponentUpdaterType=Parameters<initializeComponentUpdaterType>
+type paramInitializeUIElementsRefType=Parameters<initializeUIElementsRefType>
+type paramInitializeLinkFuntionType=Parameters<initializeLinkFunctionsType>
 
 // Special parameter for additionnalMenu
 // It take original AdditionalMenusType parameters but also its return object that contains array of additonal JSX.Element
@@ -248,6 +260,9 @@ export type OSPInitializeApplicationDrawType = RecastReturnTypeOfFunction<parmaI
 export type OSPInitializeReinitializationType = RecastReturnTypeOfFunction<paramInitializeReinitializationType, ()=>void>
 export type OSPInitializeNodeFunctionsType = RecastReturnTypeOfFunction<paramInitializeNodeFunctionsType, PlusNodeFuntionVarType>
 export type OSPInitializeAdditionalMenusType = RecastReturnTypeOfFunction<paramOSPInitializeAdditionalMenusType, void>
+export type OSPInitializeComponentUpdaterType = RecastReturnTypeOfFunction<paramInitializeComponentUpdaterType, PlusComponentUpdaterVar>
+export type OSPInitializeUIElementsRefType = RecastReturnTypeOfFunction<paramInitializeUIElementsRefType, PlusUiElementsRefVar>
+export type OSPInitializeLinkFuntionType = RecastReturnTypeOfFunction<paramInitializeLinkFuntionType, OSPLinkFunctionVar>
 
 export type OSPUpdateMenuConfType=(
   menu_conf:JSX.Element[],
