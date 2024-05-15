@@ -1,9 +1,9 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
-import { Form, FormLabel, Row, Col, Modal, Button, InputGroup, Tabs,Tab,FormControl} from 'react-bootstrap'
+import { Form, FormLabel, Row, Col, Button, InputGroup, Tabs,Tab,FormControl} from 'react-bootstrap'
 import { SankeyData, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
-import { DefaultLink, DefaultNode, OSTooltip, SmoothClasses } from '../configmenus/SankeyUtils'
+import { DefaultLink, DefaultNode, OSTooltip } from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from '../draw/SankeyDrawFunction'
 import { arrangeNodes, ComputeAutoSankey } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
@@ -11,7 +11,7 @@ import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
-import { Box, Checkbox,Button as ChakraButton } from '@chakra-ui/react'
+import { Box, Checkbox,Button as ChakraButton, Modal, ModalHeader, ModalBody, ModalContent, ModalFooter, ModalCloseButton } from '@chakra-ui/react'
 import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
@@ -552,92 +552,85 @@ export const ApplySaveJSONDialog = (
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current=set_show_save_json_modal
   return (
     <Modal
-      bsSize="large"
-      show={show_save_json_modal}
-      onHide={() => set_show_save_json_modal(false)}
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-      <Modal.Header closeButton>
-        <Modal.Title>{t('Menu.SaveJSON')}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form >
-          <Form.Label>
+      size="lg"
+      isOpen={show_save_json_modal}
+      onClose={() => set_show_save_json_modal(false)}
+    >
+      <ModalContent>
+        <ModalHeader>
+          {t('Menu.SaveJSON')}
+        </ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <Form>
             <Checkbox
-              sx={SmoothClasses({})}
-              maxW={'40%'}
+              variant='menuconfigpanel_option_checkbox'
               isChecked={mode_save}
               onChange={() => set_mode_save(!mode_save)}>
               {t('Menu.SaveValue')}
             </Checkbox>
-          </Form.Label>
-          <Form.Label>
             <Checkbox
-              sx={SmoothClasses({})}
-              maxW={'40%'}
+              variant='menuconfigpanel_option_checkbox'
               isChecked={mode_visible_element}
               onChange={() => set_mode_visible_element(!mode_visible_element)}>
               {t('Menu.VisibleElement')}
             </Checkbox>
-          </Form.Label>
-          {additionnal_button_option_save_json}
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button
-          size="sm"
-          style={{width:'20%'}}
-          variant='danger'
-          onClick={
-            () => {
-              set_show_save_json_modal(false)
-            }
-          }>{t('Menu.close')}
-        </Button>
-        <Button
-          size="sm"
-          style={{width:'20%'}}
-          onClick={
-            () => {
+            {additionnal_button_option_save_json}
+          </Form>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            size="sm"
+            style={{width:'20%'}}
+            variant='danger'
+            onClick={
+              () => {
+                set_show_save_json_modal(false)
+              }
+            }>{t('Menu.close')}
+          </Button>
+          <Button
+            size="sm"
+            style={{width:'20%'}}
+            onClick={
+              () => {
               // Crée une copie pour d'abord enregitrer avec les changements
               // (ClickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-              const cpy:SankeyData=JSON.parse(JSON.stringify(sankey_data))
-              if(!mode_save){
-                Object.values(cpy.links).forEach(d=>{
-                  (d as SankeyLink).value={}
-                })
-              }
-              if(mode_visible_element){
-                // Si l'on enregistre que les element visible alors on cherche les élements visible dasns le svg
-                const link_present=LinkVisibleOnSvg()
-                const node_visible=NodeVisibleOnsSvg()
-                cpy.links=Object.fromEntries(Object.entries(cpy.links).filter(l=>link_present.includes(l[0])).map(l=>l))
-                const key_level_tags=Object.keys(sankey_data.levelTags)
-                cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>{
-                  key_level_tags.forEach(klt=>{
-                    delete n[1].tags[klt]
+                const cpy:SankeyData=JSON.parse(JSON.stringify(sankey_data))
+                if(!mode_save){
+                  Object.values(cpy.links).forEach(d=>{
+                    (d as SankeyLink).value={}
                   })
-                  n[1].dimensions={}
-                  n[1].inputLinksId=n[1].inputLinksId.filter(lid=>link_present.includes(lid))
-                  n[1].outputLinksId=n[1].outputLinksId.filter(lid=>link_present.includes(lid))
-                  return n
-                }))
-                cpy.levelTags={}
-                cpy.linkZIndex=link_present;
+                }
+                if(mode_visible_element){
+                // Si l'on enregistre que les element visible alors on cherche les élements visible dasns le svg
+                  const link_present=LinkVisibleOnSvg()
+                  const node_visible=NodeVisibleOnsSvg()
+                  cpy.links=Object.fromEntries(Object.entries(cpy.links).filter(l=>link_present.includes(l[0])).map(l=>l))
+                  const key_level_tags=Object.keys(sankey_data.levelTags)
+                  cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>{
+                    key_level_tags.forEach(klt=>{
+                      delete n[1].tags[klt]
+                    })
+                    n[1].dimensions={}
+                    n[1].inputLinksId=n[1].inputLinksId.filter(lid=>link_present.includes(lid))
+                    n[1].outputLinksId=n[1].outputLinksId.filter(lid=>link_present.includes(lid))
+                    return n
+                  }))
+                  cpy.levelTags={}
+                  cpy.linkZIndex=link_present;
 
-                (cpy as unknown as {view:[]}).view=[]
-              }
+                  (cpy as unknown as {view:[]}).view=[]
+                }
 
-              // set_sankey_data({...sankey_data})
-              ClickSaveDiagram(cpy)
+                // set_sankey_data({...sankey_data})
+                ClickSaveDiagram(cpy)
               // set_sankey_data({...cpy})
-            }
-          }>{t('Menu.SaveJSON')}
-        </Button>
-      </Modal.Footer>
+              }
+            }>{t('Menu.SaveJSON')}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
     </Modal>
   )
 }

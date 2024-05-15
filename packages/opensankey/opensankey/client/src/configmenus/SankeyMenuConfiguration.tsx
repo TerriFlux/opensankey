@@ -53,7 +53,6 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   menu_configuration_nodes,
   menu_configuration_links,
   additional_accordion_edition_elements,
-  token,
   link_function,
   ComponentUpdater,
   contextMenu,
@@ -141,7 +140,6 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
                 dict_variable_elements_selected={dict_variable_elements_selected}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={menu_configuration_nodes}
-                token={token}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}
                 node_function={node_function}
