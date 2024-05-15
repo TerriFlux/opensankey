@@ -663,7 +663,8 @@ export type AdditionalMenusType = {
   sankey_menus : {[_:string]:JSX.Element}
 }
 
-export type initializeAdditionalMenusType = (  
+export type initializeAdditionalMenusType = (
+  additional_menus:AdditionalMenusType,
   applicationContext:applicationContextType,
   dict_variable_application_data:dict_variable_application_dataType,
   applicationDraw:applicationDrawType,
@@ -675,7 +676,7 @@ export type initializeAdditionalMenusType = (
   link_function:LinkFunctionTypes,
   processFunctions:processFunctionsType,
   Reinitialization:() => void
-) => AdditionalMenusType
+) => void
 
 export type module_dialogsType = (
   applicationContext:applicationContextType,

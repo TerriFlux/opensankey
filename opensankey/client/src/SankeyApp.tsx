@@ -11,6 +11,7 @@ import { Popover, Form } from 'react-bootstrap'
 import { ChakraProvider } from '@chakra-ui/react'
 /*************************************************************************************************/
 import {
+  AdditionalMenusType,
   agregationType,
   dict_variable_application_dataType,
   SankeyAppTypes,
@@ -242,7 +243,47 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     contextMenu
   )
 
-  const additional_menus = initializeAdditionalMenus(  
+  const additionalMenus : AdditionalMenusType = {
+    // Top Menu
+    external_edition_item: [],
+    external_file_item: [],
+    external_file_export_item: [],
+    externale_save_item: [],
+  
+    // Mise en page
+    extra_background_element: <></>,
+  
+    // Nodes
+    advanced_appearence_content: [],
+    advanced_label_content: [],
+    advanced_label_value_content: [],
+    additional_menu_configuration_nodes: {},
+  
+    // Links
+    additional_data_element: [],
+    additional_link_appearence_items: [],
+    additional_link_visual_filter_content: [],
+  
+    // Preferences
+    additional_preferences: [],
+  
+    // Configuration Menu
+    additional_configuration_menus : [],
+  
+    menu_style_add_node_appearence_attr : [],
+    menu_style_add_node_label : [],
+    menu_style_add_node_label_value : [],
+  
+    additional_edition_item : [],
+    additional_file_save_item : [],
+    additional_file_item : [],
+    additional_file_export_item : [],
+  
+    sankey_menus : {}  
+  }
+
+  initializeAdditionalMenus(
+    additionalMenus,
     applicationContext,
     dict_variable_application_data,
     applicationDraw,
@@ -262,9 +303,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_variable_elements_selected,
     false,
     dict_variable_elements_selected.ref_selected_style_node,
-    additional_menus.advanced_appearence_content,
-    additional_menus.advanced_label_content,
-    additional_menus.advanced_label_value_content,
+    additionalMenus.advanced_appearence_content,
+    additionalMenus.advanced_label_content,
+    additionalMenus.advanced_label_value_content,
     link_function,
     ComponentUpdater,
     node_function
@@ -278,10 +319,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     never_see_again,
     dict_variable_application_data.data,
     dict_variable_application_data.set_data,
-    additional_menus.external_edition_item,
-    additional_menus.external_file_export_item,
-    additional_menus.external_file_item,
-    additional_menus.externale_save_item,
+    additionalMenus.external_edition_item,
+    additionalMenus.external_file_export_item,
+    additionalMenus.external_file_item,
+    additionalMenus.externale_save_item,
     dict_variable_application_data.convert_data,
     setDiagram,
   )
@@ -290,7 +331,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_variable_application_data,
     dict_variable_elements_selected,
     applicationContext,
-    additional_menus.additional_data_element,
+    additionalMenus.additional_data_element,
     ComponentUpdater,
     node_function,
     link_function
@@ -299,7 +340,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_variable_application_data,
     dict_variable_elements_selected,
     applicationContext,
-    additional_menus.additional_link_appearence_items,
+    additionalMenus.additional_link_appearence_items,
     false,
     link_function,
     ComponentUpdater 
@@ -339,7 +380,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
     dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
     never_see_again={never_see_again}
-    additional_link_visual_filter_content={additional_menus.additional_link_visual_filter_content}
+    additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
     reDrawLegend={applicationDraw.reDrawLegend}
     node_function={node_function}
     link_function={link_function}
@@ -347,7 +388,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ComponentUpdater={ComponentUpdater}
   />
 
-  Object.assign(sankey_menus,additional_menus.sankey_menus)
+  Object.assign(sankey_menus,additionalMenus.sankey_menus)
 
   const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(
     applicationContext,
@@ -358,7 +399,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     node_function,link_function,
     ComponentUpdater
   )
-  Object.assign(menu_configuration_nodes,additional_menus.additional_menu_configuration_nodes)
+  Object.assign(menu_configuration_nodes,additionalMenus.additional_menu_configuration_nodes)
 
 
   const regular_ui=OpenSankeyDefaultModalePreferenceContent(
@@ -368,7 +409,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ComponentUpdater,
     node_function
   )
-  regular_ui['form'] = [...regular_ui['form'],...additional_menus.additional_preferences]
+  regular_ui['form'] = [...regular_ui['form'],...additionalMenus.additional_preferences]
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
     keyHandler(
@@ -449,7 +490,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           node_function,
           link_function,
           ComponentUpdater,
-          additional_menus,
+          additionalMenus,
           menu_configuration_nodes_attributes,
           applicationDraw.reDrawLegend,
           processFunctions        
@@ -476,7 +517,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 applicationContext,
                 dict_variable_application_data,
                 dict_variable_elements_selected,
-                additional_menus.extra_background_element,
+                additionalMenus.extra_background_element,
                 node_function,
                 link_function,
                 applicationDraw.reDrawLegend,
@@ -523,7 +564,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 ComponentUpdater,
                 node_function
               ),
-              additional_menus.additional_configuration_menus,
+              additionalMenus.additional_configuration_menus,
               false, //TODO
               link_function,
               ComponentUpdater,
@@ -558,9 +599,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                   dict_variable_elements_selected,
                   true,
                   dict_variable_elements_selected.ref_selected_style_node,
-                  additional_menus.menu_style_add_node_appearence_attr,
-                  additional_menus.menu_style_add_node_label,
-                  additional_menus.menu_style_add_node_label_value,
+                  additionalMenus.menu_style_add_node_appearence_attr,
+                  additionalMenus.menu_style_add_node_label,
+                  additionalMenus.menu_style_add_node_label_value,
                   link_function,
                   ComponentUpdater,
                   node_function
