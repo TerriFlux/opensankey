@@ -1,15 +1,14 @@
 import { MutableRefObject } from 'react'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, agregationType, applicationContextType, applicationDrawType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, uiElementsRefType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, agregationType, applicationContextType, applicationDrawType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, uiElementsRefType } from '../../types/Types'
 import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
 
 export type keyHandlerFType = (
     dict_variable_application_data : dict_variable_application_dataType,
     uiElementsRef : uiElementsRefType,
     contextMenu : contextMenuType,
-    e: KeyboardEvent,data:SankeyData,
+    e: KeyboardEvent,
     dict_variable_elements_selected:dict_variable_elements_selectedType,
-    set_data:(d:SankeyData)=>void,
     closeAllMenu:()=>void,
     ref_alt_key_pressed:MutableRefObject<boolean>,
     accept_simple_click:{current:boolean},
