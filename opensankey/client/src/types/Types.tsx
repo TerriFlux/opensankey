@@ -463,7 +463,8 @@ export type applicationContextType = {
   logo_terriflux : string,
   logo_width : number,
   app_name: string,
-  url_prefix: string
+  url_prefix: string,
+  has_free_account:boolean,
 }
 export type initializeApplicationContextType = ()=>applicationContextType
 
@@ -667,12 +668,12 @@ export type AdditionalMenusType = {
   // Configuration Menu
   additional_configuration_menus : JSX.Element[]
 
-  menu_style_add_node_appearence_attr : JSX.Element[]
-  menu_style_add_node_label : JSX.Element[]
-  menu_style_add_node_label_value : JSX.Element[],
+  // menu_style_add_node_appearence_attr : JSX.Element[]
+  // menu_style_add_node_label : JSX.Element[]
+  // menu_style_add_node_label_value : JSX.Element[],
 
   additional_edition_item : JSX.Element[],
-  additional_file_save_item : JSX.Element[],
+  additional_file_save_json_option : JSX.Element[],
   additional_file_item : JSX.Element[],
   additional_file_export_item : JSX.Element[],
 
@@ -691,7 +692,10 @@ export type initializeAdditionalMenusType = (
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   processFunctions:processFunctionsType,
-  Reinitialization:() => void
+  Reinitialization:() => void,
+  contextMenu: contextMenuType
+
+  
 ) => void
 
 export type module_dialogsType = (

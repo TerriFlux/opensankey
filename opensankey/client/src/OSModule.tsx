@@ -110,7 +110,8 @@ export const initializeApplicationContext : initializeApplicationContextType = (
   app_name : 'SankeySuite',//TODO
   url_prefix : '/opensankey/',
   logo : logo,
-  logo_terriflux : logo_terriflux
+  logo_terriflux : logo_terriflux,
+  has_free_account:false
 }}
 
 // Global variables not stored in SankeyData
@@ -840,7 +841,6 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       node_function
     ),
     additional_menus.additional_configuration_menus,
-    false, //TODO
     link_function,
     ComponentUpdater,
     contextMenu,
