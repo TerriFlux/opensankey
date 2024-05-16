@@ -1,0 +1,691 @@
+import i18next from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import LanguageDetector from 'i18next-browser-languagedetector'
+import { open_resources } from 'open-sankey/src/traduction.js'
+// import { icon_resources } from 'sankeyicons/src/traduction.js'
+
+// THE TRANSLATIONS
+// (tip move them in a JSON file and import them,
+// or even better, manage them separated from your code: https://react.i18next.com/guides/multiple-translation-files)
+const resources = {
+  //=======================================================
+  //EN
+  //=======================================================
+  en: {
+    translation: {
+      'connect': 'LogIn',
+      MEP: {
+        onValidate: 'Don\'t forget to load the file',
+        load_icon: 'Load an icon library (from icomoon)',
+        'onBlurNoEnter': 'Quit editor to update the data',
+        show_image: 'Show image',
+      },
+      Menu: {
+        'LL': 'Text Area / Image Area',
+        'view': 'View',
+        'unit': 'Unitary Sankey',
+        'afm': 'AFM',
+        'afm_tools': 'Tools',
+        'excel': 'Extract data',
+        'pub': 'Publish',
+        'setResolutionPNG': 'Select the desired export resolution',
+        'sankeyPlusDisabled': 'Parameter disabled because you don\'t have OpenSankey+',
+        'featureLocked': 'Locked',
+        'featureBeta': 'Beta-test',
+
+        'home': 'Master',
+        'addView': 'Add',
+        'updateView': 'Update',
+        'precView': 'Prec.',
+        'nextView': 'Next',
+
+        'toBeautify': 'Beautify JSON file',
+        'updateFOZdd': 'Update Foreign object on drawing area',
+
+        'import_icon': 'Select icon',
+        'import_icon_from_pack': 'Import icons from pack',
+        'filter_by_name': 'Filter by name ',
+
+        'presentation_OS': 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge, and includes simple functions for creating nodes, flows and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
+        'presentation_OS_limit_node': 'The 15-node limit for use without an account can be lifted by creating a free account.\n\n',
+        'presentation_OSP': 'OpenSankey+ is a paid license that unlocks new features for creating beautiful Sankey diagrams for presentations.\n\nThis license includes advanced formatting features such as the addition of illustrative images or icons for nodes, the addition of color gradients on flows and animations, and more.\n\n But above all, OpenSankey+ lets you generate slideshows to explain your Sankey diagrams, thanks to the "Views" mechanism, which records their visual states (with / without certain filters activated, for example) to simplify navigation between them.\n\n',
+        'presentation_OSS': 'SankeySuite is a paid license that unlocks all the advanced charting and analysis features of Sankey.\n\n This license includes flow data reconciliation functionalities to identify inconsistencies or calculate flows whose values are not directly accessible.\n\n It also includes OpenSankey+ functionalities.\n\n',
+        afm_reconcil_json: 'Reconciling actual sankey diagram',
+        afm_reconcil_excel: 'Reconciling an excel file',
+        view_actual_file: 'View from current file',
+        other_file: 'Other file',
+        trade_close: 'Close to node',
+        Transformation: {
+          'amp_short': 'Trans.',
+          'amp': 'Modifier la mise en page',
+          'amp_import': 'Depuis autre diagramme',
+          'amp_manuelle': 'Géométriques',
+          'trans_topo': 'Topologiques',
+          'fmep': 'Autre diagramme',
+          'ad': 'Appliquer',
+          'undo': 'Annuler',
+          'Shortcuts': 'Raccourcis sélections',
+          'unSelectAll': 'Aucun',
+          'selectAll': 'Tout',
+          'selectDefault': 'Défaut',
+          'Topology': 'Ajouts et suppressions',
+          'Geometry': 'Tailles et positions',
+          'Attribut': 'Attributs',
+          'Tags': 'Etiquettes',
+          'Values': 'Valeurs des flux',
+          'Views': 'Vues',
+          'freeLabels': 'Zones de texte',
+          'addNode': 'Aj. Noeuds',
+          'removeNode': 'Sup. Noeuds',
+          'addFlux': 'Aj. Flux',
+          'removeFlux': 'Sup. Flux',
+          'PosNoeud': 'Noeuds',
+          'posFlux': 'Flux',
+          'attrNode': 'Noeuds',
+          'attrFlux': 'Flux',
+          'tagLevel': 'Niveaux de détail',
+          'tagNode': 'Noeuds',
+          'tagFlux': 'Flux',
+          'tagData': 'Données',
+          'tagNode_assign': 'Assigner une étiquette',
+          'tagFlux_assign': 'Assigner une étiquette',
+          'attrGeneral': 'Zone de dessin',
+          'title': 'Transformations',
+          'disabled_view': 'Impossible to import views into a view, if you want to import them go to the master data',
+          'list_icon':'Icon catalog',
+          'list_icon_tooltip':'Import icon list used in imported layout to the actual data.'
+        },
+        tooltips: {
+          publish: 'Publish online',
+          export: 'Export as image',
+          reconcil: 'Reconciliate data',
+          tool_afm: 'Use annex tools to reconciliation',
+        }
+      },
+      Noeud: {
+        'plns': 'Parameter for selected nodes',
+        'img_visibility': 'Image visibility',
+        'img_src': 'Source',
+        'HL': 'Hyperlink',
+        'open_HL': 'Open',
+        'illustration': 'Illustration',
+        'illustration_type': 'Illustration Type',
+        tabs: {
+          'icon': 'Icon',
+          'fo': 'Illustration',
+          'hl': 'Hyperlink'
+        },
+        apparence: {
+          'HideAlone': 'Hide if intermediate',
+          'toScale': 'Node out of scale',
+          'Orientation': 'Orientation',
+        },
+        icon: {
+          'icon': 'Icon',
+          'Visibilité': 'Visibility of icons',
+          'si': 'Select icon',
+          'couleur': 'Color',
+          'rIN': 'Size ratio icon/node',
+          'Aucun': 'None',
+          'icon_catalog': 'Select an icon from catalog'
+        },
+        foreign_object: {
+          'Visibilité': 'Visibility',
+          'raw': 'Raw editor',
+          'not_activated': 'Set visibility to activate'
+        },
+        FO: {
+          'FO': 'Text',
+          'content': 'Content',
+          'submit': 'Submit',
+          'cancel': 'Cancel'
+        },
+      },
+      Flux: {
+        'asf': 'Apply style to links having this style',
+        data: {
+          'toPrecision': 'Display the value in scientific notation',
+          'fla': 'Display free links',
+          'astr': 'Display structure',
+        },
+
+      },
+      LL: {
+        'hl': 'Height',
+        'll': 'Width',
+        'ft': 'Opacity',
+        'cfl': 'Background Color',
+        'bt': 'Invisible',
+        'hide_border': 'Hide border',
+        'display_border': 'Display border',
+        'cbl': 'Border Color',
+        'labels': 'Labels',
+        'title': 'Title'
+      },
+
+      Login: {
+        'con': 'Login',
+        'dec': 'Log off',
+        'con_win': 'Connect to the application',
+        'err_appel_serveur': 'An error occurred when calling the server',
+        'err_login': 'Error, your email or password is incorrect, please check your login information and try again'
+      },
+      UserPages: {
+        'to_app': 'Back to the application',
+        'to_con': 'Sign in',
+        'to_reg': 'Sign up',
+        'to_acc': 'My account',
+        'to_dbd': 'Dashboard',
+        'id': 'E-mail',
+        'mdp': 'Password',
+        'pnom': 'Firstname',
+        'nom': 'Name',
+        'OS+_lic': 'OpenSankey+ license',
+        'SS_lic': 'SankeySuite license',
+        'update_lic': 'Register new license number',
+        'win_acc_infos': 'Account details',
+        'win_db_template': 'Availables templates',
+        'db_desc_template': 'Template description',
+        'usr_no_lic': 'No license currently registered',
+        'usr_lic_validdate': 'Date of validity : ',
+        'usr_lic_expdate': 'Expired on : ',
+        'usr_lic_valid': 'Valid license',
+        'usr_lic_invalid': 'Invalid license',
+        'usr_lic_deactivated': 'License deactivated',
+        'usr_lic_err': 'License number invalid',
+        'err_get_user_infos': 'Error while trying to access the user\'s infos',
+        'err_get_OS+_infos': 'Error while trying to access the OpenSankey+ license server',
+        'err_get_SS_infos': 'Error while trying to access the SankeySuite license server'
+      },
+      view: {
+        'unit': 'Unit.',
+        'storytelling': 'Storytelling',
+        'select': 'Select View',
+        'actual': 'Sankey master',
+        'name': 'Name',
+        'delete': 'Delete',
+        'copy': 'Clone',
+        'catalog': 'Catalog',
+        'import': 'Import',
+        'export': 'Download only the current view',
+        'applyDisplayFromView': 'Apply the layout from another view',
+        'ns': 'View not saved',
+        'warn_ns': 'You are about to change your view before saving the current view, do you want to save the changes before changing your view ?',
+        'dont_save': 'Don\'t save',
+        'save': 'Save the view',
+        'exportAll': 'Export all view',
+        'importMultiple': 'Import multiple views',
+        'unit_node': 'Create a unitary view',
+        'to_normal_view': 'Considering this view as non-exploring',
+        'in_new': 'in a new vue',
+        'in_existing': 'in the view :',
+        'template_unitary_zdt_content': 'Unitary Sankey build from :',
+        'template_unitary_zdt_content_of_node': 'Unitary node :',
+        'keep_master_var': 'Master variable',
+        'setTransparentAttr': 'Choose variables value herited from Master',
+        'updateViewWithMasterVar': 'Update current view with selected parameter',
+        'edit_name': 'Edit name',
+        'modify_name_view': 'Modify the name of the view',
+        'view_title_modal_select_link_ref_in_unitary_sankey': 'Values displayed',
+        'choose_link_ref_sankey_unit': 'Values',
+        'chose_io': 'Choose input or output links',
+        'chose_node_to_configure': 'Choose a unitary node to configure',
+        'chose_link_ref': 'Choose links referentiel to normalize sankey',
+        'prefix_copy': 'Copy of',
+        'selectNodeForUnitaryView': 'Select a node to create a unitary sankey from',
+        'output_link': 'Output',
+        'input_link': 'Input',
+        legend_unit_sankey_values_links: 'Links value',
+        legend_unit_sankey_percent_links: 'Percent compared to the sum of input or output',
+        legend_unit_sankey_normalize_links: 'Standardized value by the link :',
+        from_actual: 'From current data',
+        from_excel: 'From excel file',
+        unit_from_excel: 'Unit. from excel',
+        select_excel_file: 'Choose an excel file to extract unitary view from',
+        select_data_source: 'Select an imported file',
+        create_unit: 'Create unitary views',
+        create: 'Create unitary view from selected nodes',
+        unit_sankey_values_links: 'Display links value',
+        unit_sankey_percent_links: 'Display links value as percent',
+        unit_sankey_normalize_links: 'Display links value normalized by one or more links value',
+        default_unit_view_name: 'Unitary view of node ',
+
+        tooltips: {
+          keep_master_var: 'Allow to choose variable value of the sankey view to be from the sankey master',
+          catalog_data: 'Generate a catalog of views : gather views from different files',
+
+          PrevViewButton: 'Display previous view',
+          NextViewButton: 'Display next view',
+          saveView: 'Save the modification of the view in master data',
+          home: 'Return to master data (database from which views come from)',
+          buttonCreateView: 'Generate a view from actual sankey diagram',
+          buttonCloneView: 'Copy the the current view to a new one ',
+          buttonImportView: 'Import a data as a view',
+          buttonExportView: 'Export a view as a data (without other view)',
+          buttonCloneMasterAttrView: 'Tranfer value from master data to the view elements',
+          button_delete_actual_view: 'Delete actual view',
+          unit_from_excel: 'Excel  Generate views from one or more excel files',
+          choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher Choose links values to display'
+        }
+
+      },
+      welcome: {
+        'news': 'Updates',
+        'interface':'Interface',
+        'view': 'Buttons to navigate through the differents views of the sankey',
+        'news_content': {
+          230803: {
+            'main_title': 'August 03, 2023: New features',
+            'main_content': 'We added new features to make it easier to manipulate Sankey diagrams',
+            'sub_title_1': 'Right-click with a lot of options',
+            'sub_content_1': 'From now on, a lot of actions on nodes, links and even drawing areas are accessible by right-clicking on the concerned elements.',
+            'sub_title_2': 'Multiple selection frame',
+            'sub_content_2': 'Multiple selection of nodes can now be made with selection frames.',
+            'sub_title_3': 'Ease the expansion of your diagrams',
+            'sub_content_3': 'The drawing area can be expanded in any direction by dragging nodes/flows/text boxes/captions in the chosen direction.',
+            'image1': 'clic droit noeud EN.PNG',
+            'image2': 'clic droit flux EN.PNG',
+            'image3': 'clic droit fond EN.PNG',
+            'image4': 'Zone de selection.PNG'
+          },
+          230908: {
+            'main_title': 'September 08, 2023 ',
+            'main_content': 'Visual enhancement of configuration menu',
+            'sub_title_1': 'Visual redesign of the input in the configuration menu',
+            'sub_content_1': 'Configuration menu inputs have been reshaped with more visible labels and logos for buttons to better understand their usefulness',
+            'sub_title_2': 'Data checkpoint',
+            'sub_content_2': 'At any time you can make a quick backup of your current diagram, once the backup is done you can continue to develop your diagram and if the changes made do not please you, reload the application to find your diagram at the time of backup',
+            'img1': 'menu_config_enhanced_en.PNG',
+            'img2': 'menu_config_enhanced_zdd_en.PNG',
+            'img3': 'menu_last_save_en.PNG',
+          }
+        }
+      },
+      'useTemplate': 'Use this template',
+      'dl': 'Download excel',
+      'elements_sankey+_blocked': 'Blocked diagram elements (OpenSankey+)',
+      'mfa_blocked': 'Blocked diagram elements (MFASankey)',
+      'elements_sankey+_blocked_long': 'Some Sankey elements are not visible because they come from OpenSankey+ and your account does not have this module',
+      'elements_mfa_blocked_long': 'Some Sankey elements are not visible because they come from MFASankey and your account does not have this module',
+    },
+    register: {
+      id: {
+        'label': 'E-mail',
+        'placeholder': 'E-mail is needed to create your account',
+        'error': 'Please enter a valid e-mail adress.'
+      },
+      pwd: {
+        'label': 'Password',
+        'placeholder': 'Choose a good password',
+        'error': 'Password must take more than eight characters, with at least one letter, one number and one special character.',
+        'show': 'show',
+        'hide': 'hide',
+      },
+      err: {
+        'captcha': 'Error : Captcha invalid',
+        'email in use': 'Error : An account already exists with this e-mail'
+      },
+      msg: {
+        'ok account created': 'Account created - You will be redirected to the login page in a moment'
+      },
+      'fn': 'First Name',
+      'ln': 'Last Name',
+      'reg_win': 'Create an account',
+      'lic': 'Add your licenses number (Optional)',
+      'OS+_lic': 'OpenSankey+',
+      'OS+_link': 'infos',
+      'SS_lic': 'SankeySuite',
+      'SS_link': 'infos',
+      'reg': 'Sign up'
+    },
+    terms_of_uses: {
+      'title': 'Terms and conditions of use',
+      'text': 'english_terms.html',
+      'open': 'Please read and accept the terms and conditions',
+      'accept': 'Accept the terms and conditions of use'
+    }
+  },
+  //=======================================================
+  //FR
+  //=======================================================
+  fr: {
+    translation: {
+      'connect': 'Connexion',
+      MEP: {
+        onValidate: 'Pensez à ouvrir le fichier',
+        'onBlurNoEnter': 'quitter la zone d\'édition pour mettre à jour sur la zone de dessin',
+        show_image: 'Image',
+      },
+      Menu: {
+        'diagramme': 'Diagrammes',
+        'LL': 'Édition d\'objets',
+        'view': 'Vues',
+        'unit': 'Sankey Unitaire',
+        'afm': 'AFM',
+        'afm_tools': 'Outils',
+        'excel': 'Extraire données',
+        'pub': 'Publier',
+        'setResolutionPNG': 'Choisissez la résolution désirée pour l\'exportation',
+        'sankeyPlusDisabled': 'Paramètre désactivé car vous n\'avez pas OpenSankey+',
+        'featureLocked': 'Licence',
+        'featureBeta': 'Beta-test',
+
+        'home': 'Maître',
+        'addView': 'Ajout',
+        'updateView': 'M-à-j',
+        'precView': 'Préc.',
+        'nextView': 'Suiv.',
+
+        'toBeautify': 'Embellir le fichier JSON',
+
+        'updateFOZdd': 'Mettre à jour sur la zone de dessin',
+
+        'import_icon': 'Sélection d\'une icône',
+        'import_icon_from_pack': 'Importer le groupe d\'icône',
+        'filter_by_name': 'Filtrer par nom ',
+
+        'presentation_OS': 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
+        'presentation_OS_limit_node': 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
+        'presentation_OSP': 'OpenSankey+ est une licence payante qui permet de débloquer de nouvelles fonctionnalités pour la réalisation de beaux diagrammes de Sankey pour des présentations.\n\n Cette licence inclut des fonctionnalités de mise en forme avancées comme l\'ajout d\'images ou d\'icônes illustratifs pour les noeuds, l\'ajout de gradients de couleurs sur les flux et d\'animations, etc.\n\n Mais surtout, OpenSankey+ permet de générer des diaporamas explicatifs de vos diagrammes de Sankey grâce au mécanisme des "Vues", qui enregistre les états visuel de celui-ci (avec / sans certains filtres activés par exemple) pour simplifier la navigation entre eux.\n\n',
+        'presentation_OSS': 'SankeySuite est une licence payante qui permet de débloquer toutes les usages avancés de réalisation et d\'analyse des diagrammes de Sankey.\n\nCette licence inclut les fonctionnalités de réconciliation des données de flux afin de relever des incohérences ou de calculer des flux dont les valeurs ne sont pas accessibles directement.\n\n Elle inclut aussi les fonctionnalités de OpenSankey+.\n\n',
+        afm_reconcil_json: 'Réconcilier le diagramme de Sankey actuel',
+        afm_reconcil_excel: 'Réconcilier un fichier Excel',
+        view_actual_file: 'Vue du fichier actuel',
+        other_file: 'Autre fichier',
+        trade_close: 'Près du noeud',
+        Transformation: {
+          'disabled_view': 'Impossible d\'importer des vues dans une vue. Pour le faire, positionnez-vous sur le diagramme de Sankey maître.',
+          'list_icon':'Catalogue d\'icône',
+          'list_icon_tooltip':'Importe la liste des icônes utilisées dans les données importées vers les données actuelles.'
+        },
+
+        tooltips: {
+
+          'PrevViewButton': 'Charge la vue précédente',
+          'NextViewButton': 'Charge la vue suivante',
+          'saveView': 'Sauvegarder localement dans le navigateur (mémoire cache)',
+          'home': 'Retourne aux données maître',
+          'buttonCreateView': 'Sur les données maîtres: crée une vue / sur une vue: clone la vue',
+          'buttonCloneView': 'Copie la vue actuelle en une nouvelle vue indépendante de l\'original ',
+          'buttonImportView': 'Importe un diagramme dans cette vue (remplace la vue diagramme actuelle)',
+          'buttonExportView': 'Exporte la vue actuelle en tant que donnée de diagramme',
+          publish: 'Mettre en ligne',
+          export: 'Exporter comme une image',
+          reconcil: 'Réconcilier les données',
+          tool_afm: 'Utiliser des outils annexes à la réconciliation',
+        }
+      },
+      Noeud: {
+        'plns': 'Paramètres pour les noeuds sélectionnés',
+        'img_visibility': 'Visibilité de l\'image',
+        'img_src': 'Source',
+        'HL': 'Hyperlien',
+        'open_HL': 'Ouvrir',
+        'illustration': 'Illustration',
+        'illustration_type': 'Type d\'illustration',
+        tabs: {
+          'icon': 'Icône',
+          'fo': 'Illustration',
+          'hl': 'Hyperlien'
+        },
+        apparence: {
+          'HideAlone': 'Masquer si intermédiaire',
+          'toScale': 'Hors échelle',
+          'Orientation': 'Orientation',
+        },
+        icon: {
+          'icon': 'Icône',
+          'Visibilité': 'Visibilité des icônes',
+          'si': 'Sélectionner l\'icône',
+          'couleur': 'Couleur',
+          'rIN': 'Ratio taille icône/noeud',
+          'Aucun': 'Aucun',
+          'icon_catalog': 'Sélectionner une icône depuis un catalogue'
+        },
+        foreign_object: {
+          'Visibilité': 'Visibilité',
+          'raw': 'Editeur brut',
+          'not_activated': 'Pour activer l\'editeur, activer la visibilité'
+        },
+        FO: {
+          'FO': 'Texte',
+          'content': 'Contenu',
+          'submit': 'Ok',
+          'cancel': 'Annuler'
+        },
+      },
+      Flux: {
+        'asf': 'Appliquer le Style aux flux',
+        data: {
+          'toPrecision': 'En notation scientifique',
+          'fla': 'Flux nuls indéterminés visibles',
+          'astr': 'Affichage structure',
+        },
+      },
+      LL: {
+        'hl': 'Hauteur',
+        'll': 'Largeur',
+        'ft': 'Opacité',
+        'cfl': 'Couleur fond',
+        'bt': 'Invisible',
+        'hide_border': 'Masquer la bordure',
+        'display_border': 'Afficher la bordure',
+        'cbl': 'Couleur bordure',
+        'labels': 'Style police',
+
+        'title': 'Titre'
+      },
+
+      Login: {
+        'con': 'Connexion',
+        'dec': 'Deconnexion',
+        'con_win': 'Se connecter à l\'application',
+        'err_appel_serveur': 'Une erreur est survenue lors de l\'appel au serveur',
+        'err_login': 'Erreur, votre e-mail ou mot de passe est incorrect, veuillez vérifier vos informations de connexion et réessayer'
+      },
+      UserPages: {
+        'to_app': 'Retour à l\'application',
+        'to_con': 'Se connecter',
+        'to_reg': 'Créer un compte',
+        'to_acc': 'Mon compte',
+        'to_dbd': 'Dashboard',
+        'id': 'E-mail',
+        'mdp': 'Mot de passe',
+        'pnom': 'Prénom',
+        'nom': 'Nom',
+        'OS+_lic': 'Licence OpenSankey+',
+        'SS_lic': 'Licence SankeySuite',
+        'update_lic': 'Enregistrer',
+        'win_acc_infos': 'Mes informations',
+        'win_db_template': 'Modèles proposés',
+        'db_desc_template': 'Description du modèle',
+        'usr_no_lic': 'Pas de licence enregistrée',
+        'usr_lic_validdate': 'Date de validité : ',
+        'usr_lic_expdate': 'Expirée depuis le : ',
+        'usr_lic_valid': 'Licence valide',
+        'usr_lic_invalid': 'Licence non valide',
+        'usr_lic_deactivated': 'Licence desactivée',
+        'usr_lic_err': 'Erreur numéro licence',
+        'err_get_user_infos': 'Erreur lors de l\'accès aux données de l\'utilisateur',
+        'err_get_OS+_infos': 'Erreur lors de l\'accès au serveur de licences OpenSankey+',
+        'err_get_SS_infos': 'Erreur lors de l\'accès au serveur de licences SankeySuite'
+      },
+      view: {
+        'unit': 'Unit.',
+
+        'storytelling': 'Gestion des vues',
+        'select': 'Sélection Vue',
+        'actual': 'Sankey maître',
+        'name': 'Nom',
+        'delete': 'Suppr.',
+        'copy': 'Cloner',
+        'catalog': 'Catalog.',
+        'import': 'Importer',
+        'export': 'Télécharger uniquement la vue actuelle',
+        'applyDisplayFromView': 'Appliquer la mise en page d\'une autre vue ',
+        'ns': 'Vue non enregistrée',
+        'warn_ns': 'Vous êtes sur le point de changer de vue avant d\'avoir sauvegardé la vue actuelle, voulez-vous sauvegarder les changements avant de changer de vue ?',
+        'dont_save': 'Ne pas enregistrer',
+        'save': 'Enregistrer la vue',
+        'exportAll': 'Exporter toutes les vues',
+        'importMultiple': 'Importer plusieurs vues',
+        'unit_node': 'Créer une vue unitaire',
+        'to_normal_view': 'Considerer la vue comme non-explorant',
+        'in_new': 'dans une nouvelle vue',
+        'in_existing': 'dans la vue :',
+        'template_unitary_zdt_content': 'Vue unitaire construite à partir de :',
+        'template_unitary_zdt_content_of_node': 'Noeud unitaire :',
+        'keep_master_var': 'M.à.j',
+        'setTransparentAttr': 'Choisir variables hérité du sankey maître',
+        'updateViewWithMasterVar': 'Mettre à jour la vue actuelle avec les paramètres sélectionnés',
+        'edit_name': 'Editer le nom',
+        'modify_name_view': 'Modifier le nom de la vue',
+        'view_title_modal_select_link_ref_in_unitary_sankey': 'Valeurs affichées',
+        'choose_link_ref_sankey_unit': 'Valeurs',
+        'chose_io': 'Position du/des flux de référence par rapport au noeud unitaire',
+        'chose_node_to_configure': 'Choisir un noeud unitaire à configurer',
+        'chose_link_ref': 'Choisir le(s) flux de référence',
+        'prefix_copy': 'Copie de',
+        'selectNodeForUnitaryView': 'Choisissez un noeud pour créer un sankey unitaire',
+        'output_link': 'Sortie',
+        'input_link': 'Entrée',
+        legend_unit_sankey_values_links: 'Valeurs des flux',
+        legend_unit_sankey_percent_links: 'Pourcentages par rapport au total en entrée ou en sortie',
+        legend_unit_sankey_normalize_links: 'Valeurs normalisées par rapport au flux',
+        from_actual: 'Depuis les données actuel',
+        from_excel: 'Depuis un fichier excel',
+        unit_from_excel: 'Unit. excel',
+        select_excel_file: 'Choix du fichier excel à partir duquel extraire des vues unitaires',
+        select_data_source: 'Sélectionner un fichier importé',
+        create: 'Créer des vues unitaires à partir des noeuds sélectionnés',
+        create_unit: 'Générer des vues unitaires',
+        unit_sankey_values_links: 'Afficher les valeurs des flux',
+        unit_sankey_percent_links: 'Afficher les pourcentages des flux',
+        unit_sankey_normalize_links: 'Afficher les valeurs des flux normalisés par rapport à des un/des flux de référence',
+        default_unit_view_name: 'Vue unitaire du noeud ',
+
+        tooltips: {
+          keep_master_var: 'Permet de choisir des variables qui ont pour valeur ceux du sankey maître',
+          catalog_data: 'Générer un catalogue de vues : rassembler des vues issues de fichiers différents',
+          PrevViewButton: 'Afficher la vue précédente',
+          NextViewButton: 'Afficher la vue suivante',
+          saveView: 'Sauvegarder localement dans le navigateur (mémoire cache)',
+          home: 'Revenir au Sankey maître (base de données d\'où sont issues les vues)',
+          buttonCreateView: 'Générer une vue à partir du diagramme actuel',
+          buttonCloneView: 'Copie la vue actuelle en une nouvelle vue indépendante de l\'original ',
+          buttonImportView: 'Importe un diagramme dans cette vue (remplace la vue diagramme actuelle)',
+          buttonExportView: 'Exporte la vue actuelle en tant que donnée de diagramme',
+          buttonCloneMasterAttrView: 'Mettre à jour la vue actuelle en chargeant des éléments du Sankey Maître',
+          buttonCreateViewUnitary: 'Générer une vue unitaire en choisissant un noeud du diagramme actuel',
+          button_delete_actual_view: 'Supprimer la vue actuelle',
+          unit_from_excel: 'Générer une ou plusieurs vue(s) unitaire(s) à partir d\'un ou plusieurs fichier(s) Excel',
+          choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher',
+        }
+      },
+      welcome: {
+        'news': 'Nouveautés',
+        'interface':'Interface',
+        'view': 'Boutons permettant de naviguer entre les différentes vues du diagramme',
+        'news_content': {
+          230803: {
+            'main_title': '03 Août 2023 : Nouvelles fonctionnalités',
+            'main_content': 'Pleins de nouvelles fonctionnalités pour faciliter la manipulation des diagrammes de Sankey',
+            'sub_title_1': 'Ajout d\'un clic droit avec options d\'édition',
+            'sub_content_1': 'Désormais, un certain nombre d\'options sur les noeuds, flux et zone de dessin sont accessible par clic droit sur les éléments concernés.',
+            'sub_title_2': 'Ajout d\'un cadre de selection multiple',
+            'sub_content_2': 'La selection multiple de noeuds peut maintenant se faire avec cadre de sélection.',
+            'sub_title_3': 'Possibilité d\'agrandir la zone de dessin',
+            'sub_content_3': 'La zone de dessin devient extensible dans toutes les directions en glissant les noeuds / flux / zones de texte / légende dans la direction choisie',
+            'image1': 'clic droit noeud.PNG',
+            'image2': 'clic droit flux.PNG',
+            'image3': 'clic droit fond.PNG',
+            'image4': 'Zone de selection.PNG'
+          },
+          230908: {
+            'main_title': '08 Septembre 2023 ',
+            'main_content': 'Amélioration graphique des menu de configuration',
+            'sub_title_1': 'Refonte visuel des inputs dans les menu de configuration',
+            'sub_content_1': 'Les inputs du menu de configuration ont été remis en formes avec des labels plus visibles et des logos pour les boutons afin de mieux comprendre leur utilité',
+            'sub_title_2': 'Point de contrôle des données',
+            'sub_content_2': 'A tous moment vous pouvez faire une sauvegarde rapide de votre diagramme en cours, une fois la sauvegarde faite vous pouvez continuer de développer votre diagramme et si les modifications faites ne vous plaise pas, recharchez l\'application pour retrouver votre diagramme au moment de la sauvegarde ',
+            'img1': 'menu_config_enhanced_fr.PNG',
+            'img2': 'menu_config_enhanced_zdd_fr.PNG',
+            'img3': 'menu_last_save_fr.PNG',
+          }
+        }
+      },
+      'useTemplate': 'Utiliser ce modèle',
+      'dl': 'Télécharger (excel)',
+      'elements_sankey+_blocked': 'Elements du diagrame bloqués (OpenSankey+)',
+      'elements_mfa_blocked': 'Elements du diagrame bloqués (MFASankey+)',
+      'elements_sankey+_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de OpenSankey+ et votre compte ne possède pas ce module',
+      'elements_mfa_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de MFASankey et votre compte ne possède pas ce module',
+    },
+    register: {
+      id: {
+        'label': 'E-mail',
+        'placeholder': 'Veuillez saisir votre e-mail',
+        'error': 'L\'adresse e-mail n\'est pas valide'
+      },
+      pwd: {
+        'label': 'Mot de passe',
+        'placeholder': 'Choisissez un bon mot de passe',
+        'error': 'Le mot de passe doit comporter plus de huit caractères, dont au moins une lettre, un chiffre et un caractère spécial',
+        'show': 'montrer',
+        'hide': 'cacher',
+      },
+      err: {
+        'captcha': 'Erreur : Captcha invalide',
+        'email in use': 'Erreur : Un compte existe déjà avec cet e-mail'
+      },
+      msg: {
+        'ok account created': 'Compte créé - Vous allez être redirigé vers la page de connexion'
+      },
+      'fn': 'Prénom',
+      'ln': 'Nom',
+      'reg_win': 'Créer un compte',
+      'lic': 'Ajouter vos Licences (Optionel)',
+      'OS+_lic': 'OpenSankey+',
+      'OS+_link': 'infos',
+      'SS_lic': 'SankeySuite',
+      'SS_link': 'infos',
+      'reg': 'S\'enregistrer'
+    },
+    terms_of_uses: {
+      'title': 'Conditions d\'utilisation',
+      'text': 'francais_terms.html',
+      'open': 'Lire et accepter les conditions d\'utilisation',
+      'accept': 'Accepter les conditions d\'utilisation'
+    }
+  }
+}
+
+const deep_assign = (s, t) => {
+  Object.entries(s).forEach(k => {
+    if (typeof (k[1]) == 'object') {
+      if (Object.keys(t).includes(k[0])) {
+        deep_assign(s[k[0]], t[k[0]])
+      } else {
+        t[k[0]] = s[k[0]]
+      }
+    } else if (typeof (k[1]) == 'string') {
+      t[k[0]] = s[k[0]]
+    }
+  })
+}
+
+deep_assign(open_resources, resources)
+// deep_assign(icon_resources, resources)
+i18next
+  .use(LanguageDetector)
+  .use(initReactI18next) // passes i18n down to react-i18next
+  .init({
+    resources,
+    ns: ['translation', 'terms_of_uses'],
+    defaultNS: 'translation',
+    interpolation: {
+      escapeValue: false // react already safes from xss
+    }
+  })
+
+export default i18next

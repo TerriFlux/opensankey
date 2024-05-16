@@ -3,13 +3,14 @@ import React, { ChangeEvent, useRef } from 'react'
 import * as d3 from 'd3'
 
 import { TFunction } from 'i18next'
-import { Form, Dropdown } from 'react-bootstrap'
+import { Form } from 'react-bootstrap'
 import { FaEye, FaEyeSlash, FaFileImport } from 'react-icons/fa'
 import FileSaver from 'file-saver'
 import {
   Box,
   Button,
-  Checkbox
+  Checkbox,
+  MenuItem
 } from '@chakra-ui/react'
 
 // Internal imports
@@ -305,8 +306,6 @@ export const clickSaveSVG : clickSaveSVGFType = () => {
 
 export const PlusItemExport:PlusItemExportFType=(
 )=>{
-  return <>
-    <Dropdown.Item onClick={clickSaveSVG} >SVG</Dropdown.Item>
-  </>
+  return <MenuItem onClick={clickSaveSVG} >SVG</MenuItem>
 
 }

@@ -15,7 +15,6 @@ import {
   Toast,
   Badge,
   Popover,
-  Modal,
   Overlay
 } from 'react-bootstrap'
 import { FaHome, FaPlus, FaCaretSquareRight, FaCaretSquareLeft } from 'react-icons/fa'
@@ -40,7 +39,12 @@ import {
   Th,
   Thead,
   Tr,
-  Button
+  Button,
+  Modal,
+  ModalFooter,
+  ModalHeader,
+  ModalBody,
+  ModalContent
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
@@ -53,7 +57,7 @@ import {
   FilterViewFType,
   GetDataFromViewFType,
   getSetDiagramFType,
-  keyHandlerFType,
+  OSPKeyHandlerFType,
   MenuEnregistrerViewFType,
   modal_transparent_view_attrFType,
   modal_view_not_savedFType,
@@ -236,22 +240,20 @@ export const RecomputeViews : RecomputeViewsFType = (
   set_master_data({...JSON.parse(JSON.stringify(new_master_data))})
 }
 
-export const keyHandler : keyHandlerFType = (
-  t:TFunction,
+export const OSPKeyHandler : OSPKeyHandlerFType = (
+  applicationContext,
   e: KeyboardEvent,
-  master,
   dict_variable_application_data,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
-  connected:boolean,
-  set_view_not_saved:(s:string)=>void,
   reDrawPlusLabels,
-  ComponentUpdater,
-  d_setter_input_value
+  ComponentUpdater
 ) => {
+  const {t,has_open_sankey_plus}=applicationContext
   const {show_toast_new_view}=dict_hook_ref_setter_show_dialog_components
-  const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
+  const {data,set_data,master_data,set_master_data,view,set_view,set_view_not_saved}=dict_variable_application_data
   const {multi_selected_label}=dict_variable_elements_selected
+  const is_master=dict_variable_application_data.view==='none'
   if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
     multi_selected_label.current=Object.values(data.labels)
@@ -259,12 +261,12 @@ export const keyHandler : keyHandlerFType = (
     ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
   }
   // Clone current data,if its a view clone the view
-  if (connected && e.key === 'x' && (e.ctrlKey||e.metaKey)) {
+  if (has_open_sankey_plus && e.key === 'x' && (e.ctrlKey||e.metaKey)) {
     e.preventDefault()
 
-    if (master) {
-      // If we do a control+X while we are on master data, we create view empty
-      // data is master data and master_data might not be  se
+    if (is_master) {
+      // If we do a control+X while we are on is_master data, we create view empty
+      // data is is_master data and master_data might not be  se
       const new_ind = 'view_' + String(new Date().getTime())
       // const copy_data = {diff:[]}
       const copy_data = JSON.parse(JSON.stringify(data))
@@ -277,8 +279,8 @@ export const keyHandler : keyHandlerFType = (
         heredited_attr_from_master:[]
       })
       RecomputeViews(new_master_data,master_data,set_master_data)
-      // master data is now set
-      // at this stage data is a view and is equal with master data
+      // is_master data is now set
+      // at this stage data is a view and is equal with is_master data
       show_toast_new_view.current!(true)
       setTimeout(function () {
         show_toast_new_view.current!(false)
@@ -302,7 +304,7 @@ export const keyHandler : keyHandlerFType = (
       })
 
 
-      // master data is now set
+      // is_master data is now set
       master_data!.current_view=new_ind
       set_view(new_ind)
       set_master_data({...master_data!})
@@ -322,7 +324,7 @@ export const keyHandler : keyHandlerFType = (
 
       if(view!=='none'){
         // If we do a control+S while we are on a view, we save the difference between the data we are handling
-        // and the master data. These difference are the saved the view we are currently on
+        // and the is_master data. These difference are the saved the view we are currently on
         // Get difference between master_data and the current data then save it in view
         let difference = getDiff(master_data, data)
         difference = (difference !== undefined)?difference:[]
@@ -333,7 +335,7 @@ export const keyHandler : keyHandlerFType = (
         const raw_is_smaller_than_diff=JSON.stringify(data).length<JSON.stringify(difference).length
         master_data!.view.filter(v => v.id === view)[0].view_data = raw_is_smaller_than_diff?JSON.parse(JSON.stringify(data)):{diff:difference}
 
-        // Save master data with the view we are currently working on updated
+        // Save is_master data with the view we are currently working on updated
         set_master_data({...master_data!})
         // Save master_data data in localStorage
         localStorage.setItem('data', LZString.compress(JSON.stringify(master_data)))
@@ -357,13 +359,13 @@ export const keyHandler : keyHandlerFType = (
 
 
   }
-  // Changing view to master
-  if (!master && e.key === 'F7') {
+  // Changing view to is_master
+  if (!is_master && e.key === 'F7') {
 
     // Check if there is unsaved change before we switch view
     // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
     let saved=true
-    if(view !== 'none' && connected ){
+    if(view !== 'none' && has_open_sankey_plus ){
       const diff = CheckCurrentViewSaved(master_data, data,view)
       if(diff.length>0 && !window.SankeyToolsStatic){
         saved = false
@@ -396,7 +398,7 @@ export const keyHandler : keyHandlerFType = (
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
       let saved=true
-      if(view !== 'none' &&  connected ){
+      if(view !== 'none' &&  has_open_sankey_plus ){
         const diff = CheckCurrentViewSaved(master_data, data, view)
         if (diff.length>0 && !window.SankeyToolsStatic) {
           saved=false
@@ -411,7 +413,7 @@ export const keyHandler : keyHandlerFType = (
 
     } else if (e.key === 'F9') {
       let new_master_data : SankeyPlusData | undefined
-      if (master) {
+      if (is_master) {
         new_master_data = data
         RecomputeViews(new_master_data,master_data,set_master_data)
       } else {
@@ -435,7 +437,7 @@ export const keyHandler : keyHandlerFType = (
         set_master_data(new_master_data)
       }
       let saved=true
-      if(view !== 'none' && connected ){
+      if(view !== 'none' && has_open_sankey_plus ){
         const diff=CheckCurrentViewSaved(new_master_data,data,view)
         if(diff.length>0 && !window.SankeyToolsStatic){
           saved=false
@@ -535,7 +537,7 @@ export const keyHandler : keyHandlerFType = (
   if(e.key==='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')==='menuConfigButton')
     {
-      deleteGLabel(multi_selected_label.current,d_setter_input_value)
+      deleteGLabel(multi_selected_label.current,dict_variable_elements_selected)
       data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
       multi_selected_label.current=[]
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
@@ -548,8 +550,7 @@ export const SelecteurView : SelecteurViewFType =(
   dict_variable_elements_selected,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
-  connected:boolean,
-  d_setter_input_value,
+  has_open_sankey_plus:boolean
 )=>{
   const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}= dict_variable_elements_selected
@@ -564,11 +565,11 @@ export const SelecteurView : SelecteurViewFType =(
   }
   const [s_value_editor_name_view,sValueEditorNameView]=useState(vname)
   const [s_select_or_edit,sSelectOrEdit]=useState('select')
-  d_setter_input_value.r_setter_value_editor_name_view.current=sValueEditorNameView
+  dict_variable_elements_selected.r_setter_value_editor_name_view.current=sValueEditorNameView
 
   const selecteur=<Select
     variant='menuconfigpanel_option_select'
-    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
+    onDoubleClick={()=>has_open_sankey_plus && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
@@ -637,12 +638,10 @@ export const SelecteurView : SelecteurViewFType =(
     }}
   />
 
-  return connected && s_select_or_edit==='edit'?editeur_name:selecteur
+  return has_open_sankey_plus && s_select_or_edit==='edit'?editeur_name:selecteur
 }
 export const viewsAccordion : viewsAccordionFType = (
   dict_variable_application_data,
-  uiElementsRef,
-  _load_json:{current:HTMLInputElement},
   t:TFunction,
   is_activated:boolean,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
@@ -650,7 +649,7 @@ export const viewsAccordion : viewsAccordionFType = (
   view_selector
 ) => {
   const {data,set_data,master_data,set_master_data,view,set_view}= dict_variable_application_data
-
+  const _load_json = useRef<HTMLInputElement>(null)
 
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
@@ -897,10 +896,7 @@ declare const window: Window &
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   dict_variable_application_data,
-  t:TFunction,
-  connected:boolean,
-  _load_json:{current:HTMLInputElement},
-  _load_json_catalog:{current:HTMLInputElement},
+  applicationContext,
   dict_hook_ref_setter_show_dialog_components,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
   view_selector
@@ -910,16 +906,17 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   const m_d=master_data?master_data:data
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
   const target_popover_modify_view_name=useRef(null)
-
+  const _load_json_catalog = useRef<HTMLInputElement>(null) as { current: HTMLInputElement; }
+  const {t,has_open_sankey_plus}=applicationContext
   const has_views = master_data?master_data.view.length>0:false
   const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
   const prev_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')
 
-  const buttonCreateView=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCreateView')}>
+  const buttonCreateView=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCreateView')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
-        isDisabled={!connected}
+        isDisabled={!has_open_sankey_plus}
         onClick={() => {
           const ev = document
           const t=new KeyboardEvent('keydown',{key:'x',ctrlKey:true})
@@ -929,8 +926,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }}
       >
         <FaPlus
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        {!connected?
+          style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}}/>
+        {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -952,19 +949,19 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
 
   const button_heredited_attr_from_master=!(special_cast_for_unit_sankey.unitary_node && special_cast_for_unit_sankey.unitary_node.length>0)?<OSTooltip
     placement='bottom'
-    label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCloneMasterAttrView')}>
+    label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCloneMasterAttrView')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
-        isDisabled={!connected}
+        isDisabled={!has_open_sankey_plus}
         onClick={
           () => {
             ref_setter_show_modal_transparent_view_attr.current(true)
           }
         }
       >
-        <FontAwesomeIcon style={{opacity:(!connected)?'0.6':'1'}} icon={faListCheck} />
-        {!connected?
+        <FontAwesomeIcon style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}} icon={faListCheck} />
+        {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -979,11 +976,11 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     </Box>
   </OSTooltip>:<></>
 
-  const create_data_catalog=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.catalog_data')}>
+  const create_data_catalog=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.catalog_data')}>
     <Box>
       <Button
         variant= {master_data && master_data.is_catalog?'submenu_nav_btn':'submenu_nav_btn'}
-        isDisabled={!connected}
+        isDisabled={!has_open_sankey_plus}
         onClick={
           () => {
             if (_load_json_catalog.current) {
@@ -994,8 +991,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }
       >
         <FaCopy
-          style={{opacity:(!connected)?'0.6':'1'}}/>
-        {!connected?
+          style={{opacity:(!has_open_sankey_plus)?'0.6':'1'}}/>
+        {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1011,11 +1008,11 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   </OSTooltip>
 
 
-  const button_delete_actual_view=<OSTooltip placement='bottom' label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.button_delete_actual_view')}>
+  const button_delete_actual_view=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.button_delete_actual_view')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
-        isDisabled={!connected}
+        isDisabled={!has_open_sankey_plus}
         onClick={
           // Delete the view
           () => {
@@ -1044,7 +1041,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }>
 
         <FaMinus/>
-        {!connected?
+        {!has_open_sankey_plus?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1168,11 +1165,11 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   </Overlay>
   {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
   {window.SankeyToolsStatic ? <></> : create_data_catalog}
-  {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!connected && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.home')}>
+  {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.home')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
-        isDisabled={((!connected && !has_views)||(master_data && master_data.is_catalog))}
+        isDisabled={((!has_open_sankey_plus && !has_views)||(master_data && master_data.is_catalog))}
         onClick={() => {
           const ev = document
           const tmp = { key: 'F7' }
@@ -1182,8 +1179,8 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }}>
 
         <FaHome
-          style={{opacity:((connected && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/>
-        {(!connected && !has_views)?
+          style={{opacity:((has_open_sankey_plus && has_views) && (master_data && !master_data.is_catalog))?'1':'0.6'}}/>
+        {(!has_open_sankey_plus && !has_views)?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1201,7 +1198,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
   {window.SankeyToolsStatic ? <></> : buttonCreateView}
 
 
-  <OSTooltip placement='bottom' label={(!connected && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.PrevViewButton')}>
+  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.PrevViewButton')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -1215,7 +1212,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         }}>
         <FaCaretSquareLeft
           style={{opacity:(prev_button_disabled || !has_views)?'0.6':'1'}}/>
-        {(!connected && !has_views)?
+        {(!has_open_sankey_plus && !has_views)?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1230,7 +1227,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
     </Box>
   </OSTooltip>
 
-  <OSTooltip placement='bottom' label={(!connected && !has_views)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.NextViewButton')}>
+  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.NextViewButton')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -1246,7 +1243,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         <FaCaretSquareRight
           style={{opacity:(next_button_disabled || !has_views)?'0.6':'1'}}
         />
-        {(!connected && !has_views)?
+        {(!has_open_sankey_plus && !has_views)?
           <FontAwesomeIcon
             icon={faLock}
             style={{
@@ -1302,35 +1299,36 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
   return (
     <Modal
       size="lg"
-      show={view_not_saved !== ''}
-      backdrop={'static'}
-      centered>
-      <Modal.Header>
-        <Modal.Title>{t('view.ns')}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {t('view.warn_ns')}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant='danger'
-          onClick={()=>{
+      isOpen={view_not_saved !== ''}
+      onClose={()=>null}
+    >
+      <ModalContent>
+        <ModalHeader>
+          {t('view.ns')}
+        </ModalHeader>
+        <ModalBody>
+          {t('view.warn_ns')}
+        </ModalBody>
+        <ModalFooter>
+          <Button variant='danger'
+            onClick={()=>{
             // Don't save the view before changing to the selected one
-            if(view !== 'none'){
-              const data_view=GetDataFromView(master_data,view) as SankeyPlusData
-              set_data(data_view)
-            } else if(view === 'none'){
-              set_data({...master_data!})
-            }
-            set_view_not_saved('')
-          }}
-        >{t('view.dont_save')}</Button>
-        <Button variant='success'
-          onClick={()=>{
+              if(view !== 'none'){
+                const data_view=GetDataFromView(master_data,view) as SankeyPlusData
+                set_data(data_view)
+              } else if(view === 'none'){
+                set_data({...master_data!})
+              }
+              set_view_not_saved('')
+            }}
+          >{t('view.dont_save')}</Button>
+          <Button variant='success'
+            onClick={()=>{
             // Save the view before changing to the selected one
 
-            let difference = getDiff(master_data, data)
-            difference = (difference !== undefined)?difference:[]
-            difference = difference.filter((d)=>!(d.path!.includes('view')))
+              let difference = getDiff(master_data, data)
+              difference = (difference !== undefined)?difference:[]
+              difference = difference.filter((d)=>!(d.path!.includes('view')))
             master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = {diff:difference}
 
             if(view !== 'none'){
@@ -1342,9 +1340,10 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
               set_data({...JSON.parse(JSON.stringify(master_data))})
             }
             set_view_not_saved('')
-          }}
-        >{t('view.save')}</Button>
-      </Modal.Footer>
+            }}
+          >{t('view.save')}</Button>
+        </ModalFooter>
+      </ModalContent>
     </Modal>)
 }
 
@@ -1358,7 +1357,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //   master_data:SankeyPlusData,
 //   set_master_data:(d:SankeyPlusData)=>void,
 //   t:TFunction,
-//   connected:boolean,
+//   has_open_sankey_plus:boolean,
 //   view_not_saved:string,
 //   set_view_not_saved:(s:string)=>void,
 //   _load_json:{current:HTMLInputElement},
@@ -1378,7 +1377,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //     multi_selected_nodes,multi_selected_links,multi_selected_label,
 //     master_data,set_master_data,
 //     t,
-//     connected,set_view_not_saved,
+//     has_open_sankey_plus,set_view_not_saved,
 //     _load_json,_load_json_catalog,set_ref_setter_show_modal_transparent_view_attr,
 //     show_modal_selection_link_ref_in_unitary_sankey,set_show_modal_selection_link_ref_in_unitary_sankey,s_value_editor_name_view,sValueEditorNameView,
 //     select_or_edit,sSelectOrEdit,convert_data
@@ -1393,260 +1392,265 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   dict_hook_ref_setter_show_dialog_components,
   dict_variable_application_data,
-  current_view:ViewType,
   t:TFunction
 )=>{
+  const current_view=dict_variable_application_data.master_data?.view.filter(v=>v.id===dict_variable_application_data.master_data!.current_view)[0]??{} as ViewType
   const {data,set_data,master_data,set_master_data}=dict_variable_application_data as SankeyPlusApplicationDataType
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const [show_modal,set_show_modal]=useState(false)
   ref_setter_show_modal_transparent_view_attr.current=set_show_modal
-  return master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && dict_variable_application_data.data!==undefined ? <Modal size='xl' show={show_modal} onHide={()=>{
-    RecomputeViews(data,data,set_data as (d: SankeyPlusData | undefined) => void)
-    set_show_modal(false)}}>
-    <Modal.Header closeButton>{t('view.setTransparentAttr')}</Modal.Header>
-    <Modal.Body>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Menu.Transformation.Topology')}
-        </Box>
-        <Box layerStyle='options_4cols'>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('addNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('addNode')){
-                current_view.heredited_attr_from_master.push('addNode')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
+  if(master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && dict_variable_application_data.data!==undefined){
 
-            }
-            }
-          >{t('Menu.Transformation.addNode')}</Button>
+    return  <Modal size='xl' isOpen={show_modal} onClose={()=>{
+      RecomputeViews(data,data,set_data as (d: SankeyPlusData | undefined) => void)
+      set_show_modal(false)}}>
+      <ModalContent>
+        <ModalHeader>{t('view.setTransparentAttr')}</ModalHeader>
+        <ModalBody>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.Transformation.Topology')}
+            </Box>
+            <Box layerStyle='options_4cols'>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('addNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('addNode')){
+                    current_view.heredited_attr_from_master.push('addNode')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addNode'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
 
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('removeNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('removeNode')){
-                current_view.heredited_attr_from_master.push('removeNode')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
+                }
+                }
+              >{t('Menu.Transformation.addNode')}</Button>
 
-            }
-            }
-          >{t('Menu.Transformation.removeNode')}</Button>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('removeNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('removeNode')){
+                    current_view.heredited_attr_from_master.push('removeNode')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeNode'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
 
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('addFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('addFlux')){
-                current_view.heredited_attr_from_master.push('addFlux')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
+                }
+                }
+              >{t('Menu.Transformation.removeNode')}</Button>
 
-            }
-            }>{t('Menu.Transformation.addFlux')}</Button>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('addFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('addFlux')){
+                    current_view.heredited_attr_from_master.push('addFlux')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('addFlux'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
 
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('removeFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('removeFlux')){
-                current_view.heredited_attr_from_master.push('removeFlux')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
+                }
+                }>{t('Menu.Transformation.addFlux')}</Button>
 
-            }
-            }>{t('Menu.Transformation.removeFlux')}</Button>
-        </Box>
-      </Box>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('removeFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('removeFlux')){
+                    current_view.heredited_attr_from_master.push('removeFlux')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('removeFlux'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
 
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Menu.Transformation.Geometry')}
-        </Box>
-        <Box layerStyle='options_4cols'>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('posNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('posNode')){
-                current_view.heredited_attr_from_master.push('posNode')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }}>
-            {t('Menu.Transformation.PosNoeud')}
-          </Button>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('posFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('posFlux')){
-                current_view.heredited_attr_from_master.push('posFlux')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }}>
-            {t('Menu.Transformation.posFlux')}</Button>
-        </Box>
-      </Box>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
+                }
+                }>{t('Menu.Transformation.removeFlux')}</Button>
+            </Box>
+          </Box>
 
-        <Box as='span' layerStyle='options_4cols'>
-          <Button
-            variant={ current_view.heredited_attr_from_master.includes('Values')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('Values')){
-                current_view.heredited_attr_from_master.push('Values')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Menu.Transformation.Geometry')}
+            </Box>
+            <Box layerStyle='options_4cols'>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('posNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('posNode')){
+                    current_view.heredited_attr_from_master.push('posNode')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posNode'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }}>
+                {t('Menu.Transformation.PosNoeud')}
+              </Button>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('posFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('posFlux')){
+                    current_view.heredited_attr_from_master.push('posFlux')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('posFlux'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }}>
+                {t('Menu.Transformation.posFlux')}</Button>
+            </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
 
-            }
-            }
-          >{current_view.heredited_attr_from_master.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
-          </Button>
-        </Box>
+            <Box as='span' layerStyle='options_4cols'>
+              <Button
+                variant={ current_view.heredited_attr_from_master.includes('Values')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('Values')){
+                    current_view.heredited_attr_from_master.push('Values')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('Values'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
 
-      </Box>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
-        <Box as='span' layerStyle='options_4cols'>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('attrNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('attrNode')){
-                current_view.heredited_attr_from_master.push('attrNode')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }}>
-            {t('Menu.Transformation.attrNode')}
-          </Button>
+                }
+                }
+              >{current_view.heredited_attr_from_master.includes('Values')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+              </Button>
+            </Box>
 
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('attrFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() =>{
-              if(!current_view.heredited_attr_from_master.includes('attrFlux')){
-                current_view.heredited_attr_from_master.push('attrFlux')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }}>
-            {t('Menu.Transformation.attrFlux')}
-          </Button>
-        </Box>
-      </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
+            <Box as='span' layerStyle='options_4cols'>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('attrNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('attrNode')){
+                    current_view.heredited_attr_from_master.push('attrNode')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrNode'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }}>
+                {t('Menu.Transformation.attrNode')}
+              </Button>
 
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
-        <Box layerStyle='options_4cols'>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('tagNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() =>{
-              if(!current_view.heredited_attr_from_master.includes('tagNode')){
-                current_view.heredited_attr_from_master.push('tagNode')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }}>
-            {t('Menu.Transformation.tagNode')}
-          </Button>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('tagFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('tagFlux')){
-                current_view.heredited_attr_from_master.push('tagFlux')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }}>
-            {t('Menu.Transformation.tagFlux')}
-          </Button>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('tagData')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('tagData')){
-                current_view.heredited_attr_from_master.push('tagData')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }
-            }
-          >{t('Menu.Transformation.tagData')}</Button>
-        </Box>
-      </Box>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('attrFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() =>{
+                  if(!current_view.heredited_attr_from_master.includes('attrFlux')){
+                    current_view.heredited_attr_from_master.push('attrFlux')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrFlux'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }}>
+                {t('Menu.Transformation.attrFlux')}
+              </Button>
+            </Box>
+          </Box>
 
-        <Box as='span' layerStyle='options_4cols'>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('tagLevel')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() => {
-              if(!current_view.heredited_attr_from_master.includes('tagLevel')){
-                current_view.heredited_attr_from_master.push('tagLevel')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }}>
-            {current_view.heredited_attr_from_master.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
-          </Button>
-        </Box>
-      </Box>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
+            <Box layerStyle='options_4cols'>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('tagNode')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() =>{
+                  if(!current_view.heredited_attr_from_master.includes('tagNode')){
+                    current_view.heredited_attr_from_master.push('tagNode')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagNode'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }}>
+                {t('Menu.Transformation.tagNode')}
+              </Button>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('tagFlux')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('tagFlux')){
+                    current_view.heredited_attr_from_master.push('tagFlux')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagFlux'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }}>
+                {t('Menu.Transformation.tagFlux')}
+              </Button>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('tagData')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('tagData')){
+                    current_view.heredited_attr_from_master.push('tagData')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagData'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }
+                }
+              >{t('Menu.Transformation.tagData')}</Button>
+            </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
 
-        <Box as='span' layerStyle='options_4cols'>
-          <Button
-            variant={current_view.heredited_attr_from_master.includes('attrGeneral')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
-            onClick={() =>{
-              if(!current_view.heredited_attr_from_master.includes('attrGeneral')){
-                current_view.heredited_attr_from_master.push('attrGeneral')
-              }else{
-                current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'),1)
-              }
-              set_data({...data})
-              set_master_data({...master_data!})
-            }}>
-            {current_view.heredited_attr_from_master.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
-          </Button>
-        </Box>
-      </Box>
-    </Modal.Body>
+            <Box as='span' layerStyle='options_4cols'>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('tagLevel')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if(!current_view.heredited_attr_from_master.includes('tagLevel')){
+                    current_view.heredited_attr_from_master.push('tagLevel')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('tagLevel'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }}>
+                {current_view.heredited_attr_from_master.includes('tagLevel')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+              </Button>
+            </Box>
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
 
-    <Modal.Footer><Button onClick={()=>{
-      updateLayoutOSTyped(data,master_data!,current_view.heredited_attr_from_master)
-      // updateLayout(data,master_data,current_view.heredited_attr_from_master)
-      set_data({...data})
-    }}>{t('view.updateViewWithMasterVar')}</Button></Modal.Footer>
-  </Modal> : <></>
+            <Box as='span' layerStyle='options_4cols'>
+              <Button
+                variant={current_view.heredited_attr_from_master.includes('attrGeneral')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+                onClick={() =>{
+                  if(!current_view.heredited_attr_from_master.includes('attrGeneral')){
+                    current_view.heredited_attr_from_master.push('attrGeneral')
+                  }else{
+                    current_view.heredited_attr_from_master.splice(current_view.heredited_attr_from_master.indexOf('attrGeneral'),1)
+                  }
+                  set_data({...data})
+                  set_master_data({...master_data!})
+                }}>
+                {current_view.heredited_attr_from_master.includes('attrGeneral')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}
+              </Button>
+            </Box>
+          </Box>
+        </ModalBody>
+
+        <ModalFooter><Button onClick={()=>{
+          updateLayoutOSTyped(data,master_data!,current_view.heredited_attr_from_master)
+          // updateLayout(data,master_data,current_view.heredited_attr_from_master)
+          set_data({...data})
+        }}>{t('view.updateViewWithMasterVar')}</Button></ModalFooter>
+      </ModalContent>
+    </Modal>
+  } return <></>
 }
 
 export const MenuEnregistrerView : MenuEnregistrerViewFType = (
@@ -1675,7 +1679,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
   data:SankeyPlusData,
   view:string,
   view_not_saved:string,
-  connected:boolean,
+  has_open_sankey_plus:boolean,
   t:TFunction
 )=>{
 
@@ -1683,7 +1687,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
   //  - if there is no differences between the the saved view and the current view, then the logo has a check
   //  - else if it contain difference, the logo contain an exclamation point
   const is_different=false
-  if(view !== 'none' && view_not_saved ==='' && master_data && connected){
+  if(view !== 'none' && view_not_saved ==='' && master_data && has_open_sankey_plus){
     // find another way with a variable. Checking the all view consumes too much time
     // const diff=CheckCurrentViewSaved(master_data,data,view)
     // if(diff.length>0){
@@ -1692,9 +1696,9 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
   }
 
   return   <OSTooltip
-    label={(!connected)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.saveView')}>
+    label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.saveView')}>
     <Button
-      isDisabled={!connected}
+      isDisabled={!has_open_sankey_plus}
       variant='light'
       onClick={() => {
         const ev = document
@@ -1706,8 +1710,8 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
     >
       <FontAwesomeIcon
         icon={faFloppyDisk}
-        style={{opacity:(!connected)?'0.6':'1',width:'2rem',height:'2rem'}}/>
-      {!connected?<>
+        style={{opacity:(!has_open_sankey_plus)?'0.6':'1',width:'2rem',height:'2rem'}}/>
+      {!has_open_sankey_plus?<>
         <FontAwesomeIcon
           icon={faLock}
           style={{

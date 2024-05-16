@@ -9,7 +9,7 @@ import { Checkbox } from '@chakra-ui/react'
 import { PlusReturnValueLink, PlusAssignLinkValueToCorrectVar } from './SankeyPlusUtils'
 import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink } from '../types/Types'
 import {
-  LinkStrokeFType,
+  PlusLinkStrokeFType,
   dragNodeRedrawGradientFType,
   menu_conf_link_apparence_gradientFType
 } from '../types/SankeyPlusGradientTypes'
@@ -26,6 +26,8 @@ import {
 
 // OpenSankey types
 import {
+  SankeyData,
+  SankeyLink,
   SankeyLinkAttrLocal,
   SankeyNode,
   display_styleType
@@ -88,8 +90,8 @@ export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradie
   </>
 }
 
-export const PlusLinkStroke : LinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlusData,GetLinkValue:GetLinkValueFuncType)=>{
-
+export const PlusLinkStroke : PlusLinkStrokeFType =(l:SankeyLink,data:SankeyData,GetLinkValue:GetLinkValueFuncType)=>{
+  const data_plus=data as SankeyPlusData
   const defGradient = d3.select(' .opensankey #svg #sankey_def')
   const nodes = data.nodes
 
@@ -99,7 +101,7 @@ export const PlusLinkStroke : LinkStrokeFType =(l:SankeyPlusLink,data:SankeyPlus
   const n_target=nodes[l.idTarget]
   const n_target_color=ReturnValueNode(data,n_target,'color')
   const l_ori=ReturnValueLink(data,l,'orientation')
-  const l_grad=PlusReturnValueLink(data,l,'gradient')
+  const l_grad=PlusReturnValueLink(data_plus,l,'gradient')
   const l_recy=ReturnValueLink(data,l,'recycling')
   const source_svg = +d3.select(' .opensankey #shape_' + l.idSource)
   const target_svg = +d3.select(' .opensankey #shape_' + l.idTarget)

@@ -32,14 +32,14 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
   data:SankeyPlusData,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
-  d_setter_input_value,
+  dict_variable_elements_selected,
   node_function
 )=> {
   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
   const [forceUpdate, setForceUpdate] = useState(false)
 
   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
-  d_setter_input_value.r_setter_editor_content_fo_node.current = sEditorContentFoNode
+  dict_variable_elements_selected.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
   let s_tmp_editor_content_changed = false
   if (multi_selected_nodes.current.length>0) {
