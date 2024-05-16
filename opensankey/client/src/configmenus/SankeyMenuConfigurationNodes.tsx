@@ -57,7 +57,6 @@ type SankeyEditionTypes = {
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes : {[s:string]: JSX.Element[]},
-  token : boolean,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
@@ -123,7 +122,6 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     dict_variable_elements_selected,
     multi_selected_nodes,
     menu_configuration_nodes,
-    token,
     link_function,
     ComponentUpdater,
     node_function
@@ -297,7 +295,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       {
-        (token==false && Object.keys(data.nodes).length>15)?
+        (!applicationContext.has_free_account && Object.keys(data.nodes).length>15)?
           <Box
             as='span'
             layerStyle='menuconfigpanel_warn_msg'
@@ -316,7 +314,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
-            isDisabled={token==false && Object.keys(data.nodes).length>15}
+            isDisabled={!applicationContext.has_free_account && Object.keys(data.nodes).length>15}
             onClick={() => {
               Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
               AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)

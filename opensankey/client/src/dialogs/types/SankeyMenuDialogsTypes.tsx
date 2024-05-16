@@ -17,6 +17,7 @@ export type OpenSankeyDiagramSelectorFType = (
   DefaultSankeyData: ()=>SankeyData
 ) => JSX.Element
 
+export type initializeDiagrammSelectorFType=(dict_variable_application_data:dict_variable_application_dataType)=>OpenSankeyDiagramSelectorFType
 
 /**
  * Define ApplyLayoutDialog
@@ -30,7 +31,6 @@ export type ApplyLayoutDialogTypes = {
   applicationDraw:applicationDrawType,
   convert_data:ConvertDataFuncType,
   diagramSelector: OpenSankeyDiagramSelectorFType,
-  elementToDispose:MutableRefObject<string[]>,
   apply_transformation_additional_elements: JSX.Element[],
   DefaultSankeyData: DefaultSankeyDataFuncType,
   ComponentUpdater:ComponentUpdaterType

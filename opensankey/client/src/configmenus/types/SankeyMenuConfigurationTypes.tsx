@@ -22,7 +22,6 @@ export type OpenSankeyConfigurationsMenusFType = (
     [s: string]: JSX.Element[];
   },
   additional_accordion_edition_elements:JSX.Element[],
-  token:boolean,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   contextMenu:contextMenuType,

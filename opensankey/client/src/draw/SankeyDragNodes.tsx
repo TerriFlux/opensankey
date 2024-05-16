@@ -40,7 +40,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   node_function,
   link_function,
   GetSankeyMinWidthAndHeight,
-  applicationDraw
+  resizeCanvas
 ) => {
   const {ref_getter_mode_selection}=dict_variable_elements_selected
   const node_visible = [] as string[]
@@ -74,7 +74,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
         link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
       }
-      applicationDraw.resizeCanvas()
+      resizeCanvas(dict_variable_application_data)
     })
 }
 /**

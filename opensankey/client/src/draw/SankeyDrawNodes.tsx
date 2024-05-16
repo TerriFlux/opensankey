@@ -36,7 +36,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   GetSankeyMinWidthAndHeight,
-  applicationDraw
+  resizeCanvas
 ) => {
   const {display_nodes}=dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
@@ -50,7 +50,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
     alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
     Object.values(display_nodes),
     GetSankeyMinWidthAndHeight,
-    applicationDraw
+    resizeCanvas
   )
   updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
   RedrawNodesLabel(dict_variable_application_data,Object.values(display_nodes),GetLinkValue,t,node_function)
@@ -75,7 +75,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   GetSankeyMinWidthAndHeight,
-  applicationDraw
+  resizeCanvas
 ) => {
   const { LinkText, GetLinkValue } = link_function
   const { data, display_nodes } = dict_variable_application_data
@@ -141,7 +141,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
       ggg_nodes.call(
         DragGNodeEvent(
           dict_variable_application_data,dict_variable_elements_selected,applicationContext,
-          alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater,node_function,link_function,GetSankeyMinWidthAndHeight,applicationDraw
+          alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater,node_function,link_function,GetSankeyMinWidthAndHeight,resizeCanvas
         )
       )
     }
@@ -363,7 +363,7 @@ export const drawAddNodes : drawNodeShapeFType = (
   node_function,
   node_to_draw,
   GetSankeyMinWidthAndHeight,
-  applicationDraw,
+  resizeCanvas,
 
 ) => {
   const {multi_selected_nodes } = dict_variable_elements_selected
@@ -413,7 +413,7 @@ export const drawAddNodes : drawNodeShapeFType = (
     dict_hook_ref_setter_show_dialog_components,
     node_function,
     GetSankeyMinWidthAndHeight,
-    applicationDraw
+    resizeCanvas
   )
 }
 
