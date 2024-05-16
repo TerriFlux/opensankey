@@ -141,6 +141,7 @@ export const OSPInitializeElementSelected : OSPInitializeElementSelectedType = (
     multi_selected_nodes : useRef([]),
     multi_selected_links : useRef([]),
     multi_selected_label : useRef([]),
+    r_editor_ZDT :  useRef<ReactQuill|undefined>(),
     r_setter_editor_content_fo_zdt : useRef<Dispatch<SetStateAction<string>>[]>([]),
     r_setter_editor_content_fo_node : useRef<Dispatch<SetStateAction<string>>>(),
     r_setter_value_editor_name_view: useRef<Dispatch<SetStateAction<string>>>(),
@@ -535,7 +536,7 @@ export const OSPInstallEventsOnSVG : InstallEventsOnSVGType = (
 ) => {
   const svgSankey = d3.select('.opensankey #svg')
   svgSankey.on('mousedown',evt=>{
-    blur_ZDT_wysiwyg(dict_variable_elements_selected.r_editor_ZDT as { current: ReactQuill; })
+    blur_ZDT_wysiwyg((dict_variable_elements_selected as unknown as PlusElementsSelectedVarType).r_editor_ZDT as { current: ReactQuill; })
     EventOnZoneMouseDown(
       dict_variable_application_data,
       dict_variable_elements_selected,

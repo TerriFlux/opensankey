@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 import { Diff } from 'deep-diff'
-
+import ReactQuill from 'react-quill'
 import {
   SankeyData,
   SankeyLink,
@@ -160,6 +160,7 @@ export type PlusElementsSelectedVarType={
   multi_selected_nodes: { current: SankeyPlusNode[] }
   multi_selected_links: { current: SankeyPlusLink[] }
   multi_selected_label: { current: SankeyPlusLabel[] }
+  r_editor_ZDT : MutableRefObject<ReactQuill|undefined>
   r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
   r_setter_editor_content_fo_zdt: MutableRefObject<Dispatch<SetStateAction<string>>[] | undefined>,
   r_setter_value_editor_name_view: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
