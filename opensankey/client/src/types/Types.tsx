@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import ReactQuill from 'react-quill'
+
 
 import { DrawArrowsType, LinkStrokeFType } from '../draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkColorFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
@@ -485,7 +485,6 @@ export type dict_variable_elements_selectedType = {
   displayedInputLinkValueSetterRef : MutableRefObject<Dispatch<SetStateAction<string>>[]>
   displayedInputLinkValueRef : MutableRefObject<string>
   displayedInputLinkDataTagSetterRef : MutableRefObject<Dispatch<SetStateAction<{[k: string]: string;}>>[]>
-  r_editor_ZDT : MutableRefObject<ReactQuill|undefined>
 
   userScaleRef : MutableRefObject<number>
 
