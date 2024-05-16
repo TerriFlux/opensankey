@@ -191,6 +191,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   external_file_item,
   external_file_export_item,
   externale_save_item,
+  externale_navbar_item,
   convert_data,
   setDiagram
 ) => {
@@ -373,14 +374,12 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       </ChakraMenu>,
 
       <ChakraMenu placement='bottom-start' variant='menu_button_subnav_style' id='exporter' >
-
         <OSTooltip placement='bottom' label={t('Menu.tooltips.export')}>
           <MenuButton variant='submenu_nav_btn_dropdown' as={ChakraButton}  rightIcon={<ChevronDownIcon />}>
             <FontAwesomeIcon icon={faFileExport} />
             {t('Menu.exporter')}
           </MenuButton>
         </OSTooltip>
-
         <MenuList>
           <MenuItem onClick={()=>{
             dict_hook_ref_setter_show_dialog_components.ref_setter_png_res_h.current(parseInt(String(data.width)))
@@ -464,6 +463,11 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         </ChakraButton>
       </OSTooltip>
     ]
+    
+    Object.entries(externale_navbar_item).forEach(ext_nav=>{
+      ui[ext_nav[0]]=[ext_nav[1]]
+    })
+
   }
 
   return ui
@@ -620,7 +624,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
     formations_menu,Reinitialization,
     additional_nav_item,
     convert_data,
-    elementToDispose,
     apply_transformation_additional_elements,
     DiagramSelector,
     callback,
@@ -858,7 +861,8 @@ export const Menu: FunctionComponent<MenuTypes> = (
           dict_hook_ref_setter_show_dialog_components,
           node_function,
           applicationDraw.GetSankeyMinWidthAndHeight,
-          applicationDraw)
+          applicationDraw.resizeCanvas
+        )
       }} >
         <Container className='MenuNavigation'>
           {!window.SankeyToolsStatic?<>
@@ -957,7 +961,6 @@ export const Menu: FunctionComponent<MenuTypes> = (
         dict_variable_application_data={dict_variable_application_data}
         applicationDraw={applicationDraw}
         convert_data={convert_data}
-        elementToDispose={elementToDispose}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
         DefaultSankeyData={dict_variable_application_data.get_default_data}
