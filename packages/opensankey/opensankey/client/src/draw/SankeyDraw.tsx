@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, useEffect } from 'react'
-import { SankeyData } from '../types/Types'
 import { DeleteLink,deleteSelectedNodeFromData,windowSankey} from '../configmenus/SankeyUtils'
 import { ClickSaveDiagram } from '../dialogs/SankeyPersistence'
 import { AgregationModal } from './SankeyDrawLayout'
@@ -186,9 +185,8 @@ export const keyHandler : keyHandlerFType = (
   dict_variable_application_data,
   uiElementsRef,
   contextMenu,
-  e: KeyboardEvent,data:SankeyData,
+  e: KeyboardEvent,
   dict_variable_elements_selected,
-  set_data:(d:SankeyData)=>void,
   closeAllMenu:()=>void,
   ref_alt_key_pressed,
   accept_simple_click,
@@ -200,6 +198,7 @@ export const keyHandler : keyHandlerFType = (
   node_function,
   applicationDraw
 ) => {
+  const {data}=dict_variable_application_data
   const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
   const{updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
   if (
@@ -325,7 +324,7 @@ export const keyHandler : keyHandlerFType = (
       dict_hook_ref_setter_show_dialog_components,
       node_function,
       applicationDraw.GetSankeyMinWidthAndHeight,
-      applicationDraw)
+      applicationDraw.resizeCanvas)
 
     updateComponentMenuConfigNode.current()
     updateComponentMenuConfigNodeAppearence.current()

@@ -431,7 +431,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray', () => '')
   let h = document.getElementById('g_legend')?.getBoundingClientRect().height
   h = h ? h : 50
-  draw_legend_handles(data, legend_clicked.current, h,ComponentUpdater,reDrawLegend,resizeCanvas)
+  draw_legend_handles(dict_variable_application_data, legend_clicked.current, h,ComponentUpdater,reDrawLegend,resizeCanvas)
 
   const OpenLinksMenu = () => {
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
