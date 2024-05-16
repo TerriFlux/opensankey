@@ -52,7 +52,7 @@ import {
   setDiagram} from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
 import { modal_selection_icons } from './import/SankeyIconsUtils'
-import { SankeyIconsData, SankeyIconsNode } from 'sankeyicons/src/types'
+//import { SankeyIconsData, SankeyIconsNode } from 'sankeyicons/src/types'
 import { SankeyPlusNodeFO } from './SankeyPlusForeignObject'
 import { SankeyPlusDrawArrows, PlusLinkStroke, menu_conf_link_apparence_gradient } from './SankeyPlusGradient'
 import { PlusDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
@@ -460,13 +460,13 @@ export const OSPModuleDialogs : module_dialogsType = (
       ComponentUpdater as PlusComponentUpdaterType,
       (applicationDraw as PlusApplicationDrawType).reDrawPlusLabels
     ),
-    modal_selection_icons(
-      applicationContext.t,
-      dict_variable_elements_selected.multi_selected_nodes as {current:SankeyIconsNode[]},
-      dict_variable_application_data.data as SankeyIconsData,
-      OSP_dict_hook_ref,
-      node_function as PlusNodeFuntionType
-    ),
+    // modal_selection_icons( //TODO move to SankeyIcons
+    //   applicationContext.t,
+    //   dict_variable_elements_selected.multi_selected_nodes as {current:SankeyIconsNode[]},
+    //   dict_variable_application_data.data as SankeyIconsData,
+    //   OSP_dict_hook_ref,
+    //   node_function as PlusNodeFuntionType
+    // ),
     modal_transparent_view_attr(
       OSP_dict_hook_ref,
       OSP_dict_app_data,
