@@ -31,10 +31,7 @@ import {
   initializeMenuConfiguration,
   initializeKeyHandler
 } from './import/OpenSankey'
-import { 
-  PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, 
-  SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, 
-  SankeyPlusShowMenuComponentsType } from './types/Types'
+import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from 'sankeyanimation/types/Types'
 import { 
   OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected, 
   OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization, 
