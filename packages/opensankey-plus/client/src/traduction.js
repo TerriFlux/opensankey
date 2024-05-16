@@ -675,7 +675,7 @@ const deep_assign = (s, t) => {
 }
 
 deep_assign(open_resources, resources)
-deep_assign(icon_resources, resources)
+// deep_assign(icon_resources, resources)
 i18next
   .use(LanguageDetector)
   .use(initReactI18next) // passes i18n down to react-i18next
