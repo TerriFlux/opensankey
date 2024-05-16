@@ -3,7 +3,6 @@ import React, {
   SetStateAction,
   useRef
 } from 'react'
-import ReactQuill from 'react-quill'
 import { useTranslation } from 'react-i18next'
 /*************************************************************************************************/
 import {
@@ -132,8 +131,6 @@ export const initializeElementSelected : initializeElementSelectedType = ()=> {
     displayedInputLinkValueSetterRef : useRef<Dispatch<SetStateAction<string>>[]>([]),
     displayedInputLinkDataTagSetterRef : useRef<Dispatch<SetStateAction<{[k: string]: string;}>>[]>([]),
     displayedInputLinkValueRef : useRef<string>(''),
-
-    r_editor_ZDT :  useRef<ReactQuill|undefined>(),
 
     userScaleRef : useRef(10),
 
