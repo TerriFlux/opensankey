@@ -38,7 +38,7 @@ import {
   SankeyPlusNode, 
   SankeyPlusShowMenuComponentsType,
   SankeyPlusShowMenuComponentsVarType
-} from 'sankeyanimation/types/Types'
+} from 'sankeyanimation/src/types/Types'
 
 import { 
   MenuDraggable, closeAllMenu, 
