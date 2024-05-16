@@ -676,7 +676,9 @@ export type AdditionalMenusType = {
   additional_file_item : JSX.Element[],
   additional_file_export_item : JSX.Element[],
 
-  sankey_menus : {[_:string]:JSX.Element}
+  sankey_menus : {[_:string]:JSX.Element},
+
+  additional_nav_item:JSX.Element[]
 }
 
 export type initializeAdditionalMenusType = (
@@ -693,8 +695,6 @@ export type initializeAdditionalMenusType = (
   processFunctions:processFunctionsType,
   Reinitialization:() => void,
   contextMenu: contextMenuType
-
-  
 ) => void
 
 export type module_dialogsType = (

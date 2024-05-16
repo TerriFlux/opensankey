@@ -6,7 +6,6 @@ import React, {
 import { useTranslation } from 'react-i18next'
 /*************************************************************************************************/
 import {
-
   ComponentUpdaterType,
   contextMenuType,
   dict_hook_ref_setter_show_dialog_componentsType,
@@ -56,7 +55,7 @@ import * as d3 from 'd3'
 import { DrawLinkStartSabot } from './draw/SankeyDrawShapes'
 import { DrawAllNodes, drawAddNodes, updateDrawNodeShape } from './draw/SankeyDrawNodes'
 import { RedrawNodesLabel } from './draw/SankeyDrawNodesLabel'
-import { MenuDraggable } from './topmenus/SankeyMenuTop'
+import { MenuDraggable, OpenSankeySaveButton } from './topmenus/SankeyMenuTop'
 import { SankeyMenuConfigurationNodesIO } from './configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
@@ -508,7 +507,17 @@ export const initializeUIElementsRef : initializeUIElementsRefType = ()=> {retur
   ref_setter_sub_nav_item_active : useRef<Dispatch<SetStateAction<string>>>(()=>null)
 }}
 
-export const initializeAdditionalMenus : initializeAdditionalMenusType = () => {}
+export const initializeAdditionalMenus : initializeAdditionalMenusType = (
+  additional_menus,
+  applicationContext,
+  dict_variable_application_data,
+  applicationDraw,
+  ComponentUpdater
+) => {
+  additional_menus.additional_nav_item.push(
+    OpenSankeySaveButton(ComponentUpdater,applicationContext)
+  )
+}
 
 // Modal Dialogs
 export const moduleDialogs : module_dialogsType = (
