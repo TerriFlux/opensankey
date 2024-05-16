@@ -51,7 +51,7 @@ import {
   initializeCloseAllMenuContext,
   setDiagram} from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
-import { modal_selection_icons } from './import/SankeyIconsUtils'
+// import { modal_selection_icons } from './import/SankeyIconsUtils' //TO move to sankeyIcons
 //import { SankeyIconsData, SankeyIconsNode } from 'sankeyicons/src/types'
 import { SankeyPlusNodeFO } from './SankeyPlusForeignObject'
 import { SankeyPlusDrawArrows, PlusLinkStroke, menu_conf_link_apparence_gradient } from './SankeyPlusGradient'
