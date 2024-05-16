@@ -50,7 +50,7 @@ import {
   ModalPreference, OpenSankeyDefaultModalePreferenceContent
 } from './dialogs/SankeyMenuPreferences'
 import {
-  OpenSankeyMenus, OpenSankeySaveButton, Menu, ToastWaitFunc
+  OpenSankeyMenus, Menu, ToastWaitFunc
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
@@ -280,7 +280,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     additional_file_item : [],
     additional_file_export_item : [],
 
-    sankey_menus : {}
+    sankey_menus : {},
+
+    additional_nav_item:[]
   }
 
   initializeAdditionalMenus(
@@ -576,9 +578,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             ]}
             Reinitialization={Reinitialization}
             formations_menu={{}}
-            additional_nav_item={[
-              OpenSankeySaveButton(ComponentUpdater,applicationContext)
-            ]}
+            additional_nav_item={
+              additionalMenus.additional_nav_item
+            }
             convert_data={dict_variable_application_data.convert_data}
             apply_transformation_additional_elements={[]}
             DiagramSelector={initializeDiagrammSelector(dict_variable_application_data)}
