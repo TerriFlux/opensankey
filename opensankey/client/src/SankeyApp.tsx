@@ -53,8 +53,7 @@ import {
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
-import { DrawAllLinks } from './draw/SankeyDrawLinks'
-import { DeleteGNodes, DrawAllNodes } from './draw/SankeyDrawNodes'
+import { DeleteGNodes} from './draw/SankeyDrawNodes'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
@@ -281,7 +280,10 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
     sankey_menus : {},
 
-    additional_nav_item:[]
+    additional_nav_item:[],
+
+    example_menu:{},
+    formations_menu:{}
   }
 
   initializeAdditionalMenus(
@@ -526,8 +528,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             processFunctions={processFunctions}
             dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
             applicationDraw={applicationDraw}
-
-            example_menu={<></>}
             configurations_menus={menu_configuration}
             menus={sankey_menus}
             cardsTemplate={<></>}
@@ -576,7 +576,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               <></>
             ]}
             Reinitialization={Reinitialization}
-            formations_menu={{}}
+            formations_menu={additionalMenus.formations_menu}
             additional_nav_item={
               additionalMenus.additional_nav_item
             }

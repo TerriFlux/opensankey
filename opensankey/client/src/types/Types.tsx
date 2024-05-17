@@ -440,7 +440,6 @@ export type MenuTypes = {
   external_modal:JSX.Element[],
   apply_transformation_additional_elements: JSX.Element[],
   additional_nav_item:JSX.Element[],
-  example_menu: JSX.Element,
   formations_menu: object,
   callback:callbackFuncType,
   ref_alt_key_pressed:MutableRefObject<boolean>,
@@ -679,7 +678,10 @@ export type AdditionalMenusType = {
 
   sankey_menus : {[_:string]:JSX.Element},
 
-  additional_nav_item:JSX.Element[]
+  additional_nav_item:JSX.Element[],
+
+  example_menu:{ [k: string]: JSX.Element; }
+  formations_menu:{ [k: string]: JSX.Element; }
 }
 
 export type initializeAdditionalMenusType = (
