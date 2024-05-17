@@ -204,7 +204,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*******************************************************************************/
   const redrawAllNodes=()=>{
-    DrawAllNodes(contextMenu,
+    node_function.DrawAllNodes(contextMenu,
       dict_variable_application_data,
       uiElementsRef,
       dict_variable_elements_selected,
@@ -221,7 +221,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     )
   }
   const redrawAllLinks=()=>{
-    DrawAllLinks(
+    link_function.DrawAllLinks(
       contextMenu,
       dict_variable_application_data,
       uiElementsRef,

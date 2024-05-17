@@ -386,7 +386,7 @@ export const DrawAll : DrawAllType = (
   GetSankeyMinWidthAndHeight,
   applicationDraw
 )=>{
-  DrawAllNodes(
+  node_function.DrawAllNodes(
     contextMenu,
     dict_variable_application_data,
     uiElementsRef,
@@ -403,7 +403,7 @@ export const DrawAll : DrawAllType = (
     applicationDraw.resizeCanvas
 
   )
-  DrawAllLinks(
+  link_function.DrawAllLinks(
     contextMenu,
     dict_variable_application_data,
     uiElementsRef,
