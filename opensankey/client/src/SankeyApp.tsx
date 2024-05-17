@@ -53,7 +53,7 @@ import {
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { opensankey_theme } from './chakra/Theme'
-import { DeleteGNodes} from './draw/SankeyDrawNodes'
+import { DeleteGNodes } from './draw/SankeyDrawNodes'
 
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
@@ -203,35 +203,13 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   /*******************************************************************************/
   const redrawAllNodes=()=>{
-    node_function.DrawAllNodes(contextMenu,
-      dict_variable_application_data,
-      uiElementsRef,
-      dict_variable_elements_selected,
-      applicationContext,
-      ref_alt_key_pressed,
-      accept_simple_click,
-      link_function,
-      NodeTooltipsContent,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components,
-      node_function,
-      applicationDraw.GetSankeyMinWidthAndHeight,
-      applicationDraw.resizeCanvas
+    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes)
     )
   }
   const redrawAllLinks=()=>{
-    link_function.DrawAllLinks(
-      contextMenu,
-      dict_variable_application_data,
-      uiElementsRef,
-      dict_variable_elements_selected,
-      applicationContext,
-      ref_alt_key_pressed,
-      (windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',
-      link_function,
-      ComponentUpdater,
-      dict_hook_ref_setter_show_dialog_components
-    )  }
+    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links)
+    )
+  }
 
   const Reinitialization = initializeReinitialization(
     dict_variable_application_data,
