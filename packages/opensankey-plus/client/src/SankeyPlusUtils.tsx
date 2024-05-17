@@ -10,8 +10,7 @@ import {
   Box,
   Button,
   Checkbox,
-  MenuItem
-} from '@chakra-ui/react'
+  MenuItem} from '@chakra-ui/react'
 
 // Internal imports
 import {
@@ -21,6 +20,7 @@ import {
   SankeyPlusLinkAttrLocal,
   SankeyPlusLinkStyle,
   SankeyPlusNode,
+  SankeyPlusNodeVar,
 } from '../types/Types'
 import {
   DefaultSankeyPlusStyleLinkFType,
@@ -40,6 +40,7 @@ import { OpposingDragElementsPlus } from './SankeyPlusNodes'
 import {
   AssignLinkValueToCorrectVar,
   DefaultLinkStyle,
+  DefaultNode,
   DragLegendGElementOSTyped,
   LinkColor,
   NodeColor,
@@ -53,6 +54,13 @@ import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUt
 
 // OpenSankey js-code
 import {pre_process_export_svg,post_process_export_svg} from 'open-sankey/dist/topmenus/SankeyMenuTop'
+
+
+
+// Local imports
+// import { SankeyPlusData,SankeyPlusNode, } from './types'
+import SankeyListIcons from './icons/lib_of_icons.json'
+
 
 
 export const DefaultSankeyPlusStyleLink : DefaultSankeyPlusStyleLinkFType = () => {
@@ -309,3 +317,61 @@ export const PlusItemExport:PlusItemExportFType=(
   return <MenuItem onClick={clickSaveSVG} >SVG</MenuItem>
 
 }
+
+
+
+export const OSPDefaultNode=(data:SankeyPlusData)=>{
+  const os_def_node= DefaultNode(data)
+  const def_plus_data_var:SankeyPlusNodeVar={
+    iconName: '',
+    iconColor: '',
+    iconVisible: false,
+  
+    has_FO: false,
+    is_FO_raw: false,
+    FO_content: '',
+  
+    is_image: false,
+    image_src: '',
+  
+    hyperlink: ''
+  }
+  const osp_def_node={...os_def_node,...def_plus_data_var}
+  return osp_def_node
+}
+
+
+
+
+type KeysOfIcon = keyof typeof SankeyListIcons
+
+export const generate_data_example_icons=(get_default_data:()=>SankeyPlusData)=>{
+  const data_sankey=get_default_data() as SankeyPlusData
+  data_sankey.icon_catalog={}
+  data_sankey.style_node['default'].node_height=100
+  data_sankey.style_node['default'].node_width=100
+  data_sankey.style_node['default'].shape_visible=false
+
+  Object.keys(SankeyListIcons).forEach((cki,nki)=>{
+    const ki=cki as KeysOfIcon
+    Object.entries(SankeyListIcons[ki]).forEach((i,n)=>{
+      data_sankey.icon_catalog[i[0]]=i[1] as string
+      const node=OSPDefaultNode(data_sankey) 
+
+      node.idNode='key_'+i[0]
+      node.name=i[0]
+
+
+      node.iconName=i[0]
+      node.iconVisible=true
+      node.iconColor='black'
+      node.x=(n*150)+50
+      node.y=(nki*200)+100
+
+      data_sankey.nodes[node.idNode]=node
+    })
+  })
+  return data_sankey
+
+}
+

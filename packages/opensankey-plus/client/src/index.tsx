@@ -82,6 +82,11 @@ if (json_data !== null && json_data != '' && json_data!='null') {
   plus_convert_data(data as SankeyPlusData, get_default_data as () => SankeyPlusData)
   complete_sankey_data(data,get_default_data,DefaultNode,DefaultLink)
 }
+
+
+// Cahnge data to list of node contianing icons from the icon lib
+// data = generate_data_example_icons(get_default_data)
+
 const container=document.getElementById('react-container') as Element | DocumentFragment
 const root=createRoot(container)
 root.render(
@@ -276,9 +281,9 @@ root.render(
           recomputeDisplayedElement,link_function
         )
         Object.assign(_,OSPInitializeNodeFunctions(
-            dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,ComponentUpdater,
-            uiElementsRef,resizeCanvas,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed,accept_simple_click,
-            recomputeDisplayedElement,link_function
+          dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,ComponentUpdater,
+          uiElementsRef,resizeCanvas,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed,accept_simple_click,
+          recomputeDisplayedElement,link_function
         ))
         return _
       }
@@ -382,22 +387,6 @@ root.render(
         GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
         applicationDraw:applicationDrawType
       )=>{
-        DrawAll(
-          contextMenu,
-          dict_variable_application_data,
-          uiElementsRef,
-          dict_variable_elements_selected,
-          applicationContext,
-          alt_key_pressed,
-          accept_simple_click,
-          link_function,
-          NodeTooltipsContent,
-          ComponentUpdater,
-          dict_hook_ref_setter_show_dialog_components,
-          node_function,
-          GetSankeyMinWidthAndHeight,
-          applicationDraw
-        )
         OSPDrawAll(
           contextMenu,
           dict_variable_application_data,
@@ -414,6 +403,23 @@ root.render(
           GetSankeyMinWidthAndHeight,
           applicationDraw
         )
+        DrawAll(
+          contextMenu,
+          dict_variable_application_data,
+          uiElementsRef,
+          dict_variable_elements_selected,
+          applicationContext,
+          alt_key_pressed,
+          accept_simple_click,
+          link_function,
+          NodeTooltipsContent,
+          ComponentUpdater,
+          dict_hook_ref_setter_show_dialog_components,
+          node_function,
+          GetSankeyMinWidthAndHeight,
+          applicationDraw
+        )
+
       }
     }
     initializeKeyHandler={(

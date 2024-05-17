@@ -44,7 +44,8 @@ export interface SankeyPlusLinkStyle extends SankeyLinkStyle {
   gradient: boolean,
 }
 
-export interface SankeyPlusNode extends SankeyNode {
+export type SankeyPlusNode = SankeyNode & SankeyPlusNodeVar
+export type SankeyPlusNodeVar={
   iconName: string,
   iconColor: string,
   iconVisible: boolean,
@@ -230,7 +231,7 @@ export type OSPGetDefaultData = () => SankeyPlusData
 // - R : Type of the returned value by RecastReturnTypeOfFunction
 /* eslint-disable */
   // @ts-ignore
-type RecastReturnTypeOfFunction<T extends any[], R extends any> = (...args: T) => R;
+export type RecastReturnTypeOfFunction<T extends any[], R extends any> = (...args: T) => R;
 /* eslint-enable */
 
 // Extract parameter from OS function type
