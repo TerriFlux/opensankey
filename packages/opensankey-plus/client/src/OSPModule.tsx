@@ -14,7 +14,8 @@ import {
   DrawAllType,
   InstallEventsOnSVGType,
   NodeFunctionTypes,
-  SankeyNode} from 'open-sankey/src/types/Types'
+  SankeyNode,
+  InitalizeSelectorDetailNodesType} from 'open-sankey/src/types/Types'
 import { 
   OSPApplicationDataVarType,
   OSPGetDefaultData,
@@ -54,18 +55,24 @@ import {
   setDiagram,
   updateDrawNodeShape,
   RedrawNodesLabel,
-  DrawAllNodes} from './import/OpenSankey'
+  DrawAllNodes,
+  AddAllDropDownNode
+} from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
 import { SankeyPlusNodeFO } from './SankeyPlusForeignObject'
 import { SankeyPlusDrawArrows, PlusLinkStroke, menu_conf_link_apparence_gradient } from './SankeyPlusGradient'
 import { PlusDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
 import { SankeyPlusMenuPreferenceLabels, zdtMenuAsAccordeonItem, SankeyPlusMenuConfigurationFreeLabels, context_zdt, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
 import { SankeyPlusDrawNodesIllustration, PlusNodeClickEvent, SankeyPlusNodeIcon, SankeyPlusHyperLink } from './SankeyPlusNodes'
-import { DefaultSankeyPlusStyleLink, ImportImageAsSvgBg, PlusItemExport, PlusLinkSabotColor } from './SankeyPlusUtils'
+import { DefaultSankeyPlusStyleLink,  ImportImageAsSvgBg, PlusItemExport, PlusLinkSabotColor } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, apply_transformation_opensankey_plus_elements } from './SankeyPlusConvert'
 import { GetDataFromView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, viewsAccordion } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
+
+import { Col, Form, FormGroup, Popover, Row } from 'react-bootstrap'
+import { t } from 'i18next'
+import { windowSankey } from 'open-sankey/dist/configmenus/SankeyUtils'
 
 declare const window: Window &
 typeof globalThis & {
@@ -661,4 +668,38 @@ export const OSPInitializeKeyHandler:OSPInitializeKeyHandlerType=(
     reDrawPlusLabels,
     ComponentUpdater
   )
+}
+
+export const OSPInitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  applicationContext,
+  dict_variable_application_data,
+  applicationDraw,
+  node_function,
+  link_function,
+  ComponentUpdater
+)=>{
+  const opacity_advanced =  !windowSankey.SankeyToolsStatic ? '0.3' : '0'
+
+  const mutiple_level_tag_filter=<AddAllDropDownNode 
+    applicationContext={applicationContext}
+    ComponentUpdater={ComponentUpdater}
+    dict_variable_application_data={dict_variable_application_data}
+    level={true}
+    node_function={node_function}
+    link_function={link_function}
+    applicationDraw={applicationDraw}
+  />
+  return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
+    <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
+    <Popover.Body style={{maxHeight:'600px',overflowY:'auto',  marginLeft: '5px', width: '350px' }}>
+      <FormGroup as={Row}>
+        <Col xs={9}>
+          {t('Menu.group')}
+        </Col>
+      </FormGroup>
+      <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
+        {mutiple_level_tag_filter}</>
+      ) : (<>
+        <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</>
+    </Popover.Body>
+  </Popover>
 }

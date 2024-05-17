@@ -232,8 +232,8 @@ export const MenuConfigurationLinksAppearence =
    MenuConfigurationLinksAppearenceFType
 export const OpenSankeyToolbarBuilder=SankeyMenuBanner
   .ToolbarBuilder as FunctionComponent<ToolbarBuilderFType>
-export const addAllDropDownNode=SankeyMenuBanner
-  .addAllDropDownNode as addAllDropDownNodeFType
+export const AddAllDropDownNode=SankeyMenuBanner
+  .AddAllDropDownNode as FunctionComponent<addAllDropDownNodeFType>
 export const addSimpleLevelDropDown=SankeyMenuBanner
   .addSimpleLevelDropDown as addSimpleLevelDropDownFType
 export const setDiagram=SankeyMenuBanner

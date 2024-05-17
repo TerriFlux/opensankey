@@ -38,7 +38,8 @@ import {
   OSPInitializeContextMenu, OSPInitializeUIElementsRef, OSPInitializeLinkFunctions, 
   OSPInitializeNodeFunctions, OSPInitializeAdditionalMenus, OSPModuleDialogs, OSPDrawAll, OSPInstallEventsOnSVG,
   OSPUpdateMenuConf,
-  OSPInitializeKeyHandler} from './OSPModule'
+  OSPInitializeKeyHandler,
+  OSPInitalizeSelectorDetailNodes} from './OSPModule'
 import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
 import { ClickSaveDiagram } from 'open-sankey/dist/dialogs/SankeyPersistence'
@@ -97,7 +98,8 @@ root.render(
       ()=>{
         return {
           ...initializeApplicationContext(),
-          ...OSPInitializeApplicationContext()
+          ...OSPInitializeApplicationContext(),
+          ...{has_free_account:true}
         }
       }
     }
@@ -200,8 +202,8 @@ root.render(
         contextMenu
       )=>{
         return () => {
-          OSPInitializeReinitialization(dict_variable_application_data,dict_variable_elements_selected,contextMenu)()
           initializeReinitialization(dict_variable_application_data,dict_variable_elements_selected,contextMenu)()
+          OSPInitializeReinitialization(dict_variable_application_data,dict_variable_elements_selected,contextMenu)()
         }
       }
     }
@@ -387,22 +389,6 @@ root.render(
         GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
         applicationDraw:applicationDrawType
       )=>{
-        OSPDrawAll(
-          contextMenu,
-          dict_variable_application_data,
-          uiElementsRef,
-          dict_variable_elements_selected,
-          applicationContext,
-          alt_key_pressed,
-          accept_simple_click,
-          link_function,
-          NodeTooltipsContent,
-          ComponentUpdater,
-          dict_hook_ref_setter_show_dialog_components,
-          node_function,
-          GetSankeyMinWidthAndHeight,
-          applicationDraw
-        )
         DrawAll(
           contextMenu,
           dict_variable_application_data,
@@ -419,7 +405,22 @@ root.render(
           GetSankeyMinWidthAndHeight,
           applicationDraw
         )
-
+        OSPDrawAll(
+          contextMenu,
+          dict_variable_application_data,
+          uiElementsRef,
+          dict_variable_elements_selected,
+          applicationContext,
+          alt_key_pressed,
+          accept_simple_click,
+          link_function,
+          NodeTooltipsContent,
+          ComponentUpdater,
+          dict_hook_ref_setter_show_dialog_components,
+          node_function,
+          GetSankeyMinWidthAndHeight,
+          applicationDraw
+        )
       }
     }
     initializeKeyHandler={(
@@ -464,8 +465,10 @@ root.render(
         node_function,
         applicationDraw
       )
-      OSPInitializeKeyHandler(plus_applicationContext,e,plus_dict_app_data,plus_elem_selected,plus_dict_hook,plus_app_draw_func.reDrawPlusLabels,plus_updater)
-
+      OSPInitializeKeyHandler(
+        plus_applicationContext,e,plus_dict_app_data,plus_elem_selected,
+        plus_dict_hook,plus_app_draw_func.reDrawPlusLabels,plus_updater
+      )
     }
     }
     // Input data used for updateLayout
@@ -516,6 +519,8 @@ root.render(
         )
       }
     }
+
+    InitalizeSelectorDetailNodes={OSPInitalizeSelectorDetailNodes}
   />
 )
 
