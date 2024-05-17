@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
@@ -25,18 +25,16 @@ export type col_title_level_filterFType=(
 ) => JSX.Element
 
 
-export type addAllDropDownNodeFType = (
+export type addAllDropDownNodeFType = {
   applicationContext:applicationContextType,
   ComponentUpdater:ComponentUpdaterType,
   dict_variable_application_data:dict_variable_application_dataType,
   level:boolean,
-  reDrawLegend:()=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  recomputeDisplayedElement:()=>void,
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
+  applicationDraw:applicationDrawType
 
-) => JSX.Element
+}
 
 /**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
@@ -50,15 +48,13 @@ export type ToolbarBuilderFType = {
   detail_level: React.ReactElement,
   url_prefix: string,
   first_selected_node:{current:SankeyNode|undefined},
-  GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again: MutableRefObject<boolean>,
   additional_link_visual_filter_content:JSX.Element[],
-  reDrawLegend:()=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  recomputeDisplayedElement:()=>void,
-  ComponentUpdater:ComponentUpdaterType
+  ComponentUpdater:ComponentUpdaterType,
+  applicationDraw:applicationDrawType
 }
 
 export type stretchButtonsFType=(
