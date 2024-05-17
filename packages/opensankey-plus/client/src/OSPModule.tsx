@@ -56,8 +56,6 @@ import {
   RedrawNodesLabel,
   DrawAllNodes} from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
-// import { modal_selection_icons } from './import/SankeyIconsUtils' //TO move to sankeyIcons
-//import { SankeyIconsData, SankeyIconsNode } from 'sankeyicons/src/types'
 import { SankeyPlusNodeFO } from './SankeyPlusForeignObject'
 import { SankeyPlusDrawArrows, PlusLinkStroke, menu_conf_link_apparence_gradient } from './SankeyPlusGradient'
 import { PlusDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
@@ -66,6 +64,8 @@ import { SankeyPlusDrawNodesIllustration, PlusNodeClickEvent, SankeyPlusNodeIcon
 import { DefaultSankeyPlusStyleLink, ImportImageAsSvgBg, PlusItemExport, PlusLinkSabotColor } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, apply_transformation_opensankey_plus_elements } from './SankeyPlusConvert'
 import { GetDataFromView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, viewsAccordion } from './SankeyPlusViews'
+
+import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
 declare const window: Window &
 typeof globalThis & {
@@ -76,8 +76,8 @@ typeof globalThis & {
 export const OSPDefaultData = () => {
   return {
     is_catalog:false,
-    // view:[],
-    // current_view:'none',
+    view:[],
+    current_view:'none',
     labels:{},
     icon_catalog:{},
     style_link:{'default':DefaultSankeyPlusStyleLink()},
@@ -305,9 +305,9 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
     } 
   } as unknown as NodeFunctionTypes
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
-      updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
-      RedrawNodesLabel(dict_variable_application_data,nodes_to_update,link_function.GetLinkValue,applicationContext.t,_)
-      reDrawIllustration(nodes_to_update as SankeyPlusNode[])
+    updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
+    RedrawNodesLabel(dict_variable_application_data,nodes_to_update,link_function.GetLinkValue,applicationContext.t,_)
+    reDrawIllustration(nodes_to_update as SankeyPlusNode[])
     return null
   }
   _.DrawAllNodes  = (
@@ -484,6 +484,7 @@ export const OSPModuleDialogs : module_dialogsType = (
   const OSP_elements_selected = dict_variable_elements_selected as PlusElementsSelectedType
   const OSP_dict_hook_ref=dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType
   const OSP_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
+  const OSP_node_function=node_function as PlusNodeFuntionType
   return [
     MenuDraggable(
       OSP_dict_hook_ref,
@@ -507,18 +508,18 @@ export const OSPModuleDialogs : module_dialogsType = (
       ComponentUpdater as PlusComponentUpdaterType,
       (applicationDraw as PlusApplicationDrawType).reDrawPlusLabels
     ),
-    // modal_selection_icons( //TODO move to SankeyIcons
-    //   applicationContext.t,
-    //   dict_variable_elements_selected.multi_selected_nodes as {current:SankeyIconsNode[]},
-    //   dict_variable_application_data.data as SankeyIconsData,
-    //   OSP_dict_hook_ref,
-    //   node_function as PlusNodeFuntionType
-    // ),
     modal_transparent_view_attr(
       OSP_dict_hook_ref,
       OSP_dict_app_data,
       applicationContext.t
-    )
+    ),
+    <ModalSelectionIcon 
+      t={applicationContext.t}
+      dict_variable_application_data={OSP_dict_app_data}
+      dict_variable_elements_selected={OSP_elements_selected}
+      dict_hook_ref_setter_show_dialog_components={OSP_dict_hook_ref}
+      node_function={OSP_node_function }
+    />
   ]
 }
 

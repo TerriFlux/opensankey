@@ -94,7 +94,6 @@ export const PlusLinkStroke : PlusLinkStrokeFType =(l:SankeyLink,data:SankeyData
   const data_plus=data as SankeyPlusData
   const defGradient = d3.select(' .opensankey #svg #sankey_def')
   const nodes = data.nodes
-
   const n_source=nodes[l.idSource]
   const n_source_color=ReturnValueNode(data,n_source,'color')
 
