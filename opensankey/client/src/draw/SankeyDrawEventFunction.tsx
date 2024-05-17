@@ -811,6 +811,9 @@ export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(dict_variable_a
   const scale_svg=returnScaleOfDrawArea()
   d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
   d3.select('.scroll_zone').style('height',((dict_variable_application_data.data.height+200)*scale_svg-(200*(scale_svg-1.1)))+'px')
+
+  d3.select('#svg').style('width',dict_variable_application_data.data.width+'px')
+  d3.select('#svg').style('height',dict_variable_application_data.data.height+'px')
 }
 
 

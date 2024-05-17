@@ -7,7 +7,6 @@ import React, {
   useState
 } from 'react'
 import i18next from 'i18next'
-import { Popover, Form } from 'react-bootstrap'
 import { ChakraProvider } from '@chakra-ui/react'
 /*************************************************************************************************/
 import {
@@ -36,7 +35,7 @@ import {
   NodeDisplayed,
   windowSankey
 } from './configmenus/SankeyUtils'
-import { ToolbarBuilder, addSimpleLevelDropDown } from './configmenus/SankeyMenuBanner'
+import { ToolbarBuilder } from './configmenus/SankeyMenuBanner'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
 import { OpenSankeyMenuConfigurationNodes } from './configmenus/SankeyMenuConfigurationNodes'
@@ -79,7 +78,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   moduleDialogs,
   DrawAll,
   installEventOnSVG,
-  ClickSaveDiagram
+  ClickSaveDiagram,
+  InitalizeSelectorDetailNodes
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
@@ -104,33 +104,34 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   /*************************************************************************************************/
 
   const recomputeDisplayedElement=()=>{
-    dict_variable_application_data.display_nodes = Object.keys(data.nodes)
-      .filter((key) => NodeDisplayed(data,data.nodes[key]))
+    const node_visible_svg=NodeVisibleOnsSvg()
+    dict_variable_application_data.display_nodes = Object.keys(dict_variable_application_data.data.nodes)
+      .filter((key) => NodeDisplayed(dict_variable_application_data.data,dict_variable_application_data.data.nodes[key]))
       .reduce((obj, key) => {
         return Object.assign(obj, {
-          [key]: data.nodes[key]
+          [key]: dict_variable_application_data.data.nodes[key]
         })
       }, {}) as {[idNode:string]:SankeyNode}
 
-    const pre_display_links=Object.keys(data.links)
+    const pre_display_links=Object.keys(dict_variable_application_data.data.links)
       .filter((key) =>LinkVisible(
-        data.links[key],
-        data,
+        dict_variable_application_data.data.links[key],
+        dict_variable_application_data.data,
         dict_variable_application_data.display_nodes))
       .reduce((obj, key) => {
         return Object.assign(obj, {
-          [key]: data.links[key]
+          [key]: dict_variable_application_data.data.links[key]
         })
       }, {}) as {[idLink:string]:SankeyLink}
     const pre_link_key=Object.keys(pre_display_links)
 
     dict_variable_application_data.display_links={}
-    data.linkZIndex=pre_link_key
+    dict_variable_application_data.data.linkZIndex=pre_link_key
     pre_link_key.forEach(lid=>dict_variable_application_data.display_links[lid]=data.links[lid])
 
     // delete element no longer displayed
     const curr_displayed_nodes= Object.keys(dict_variable_application_data.display_nodes)
-    const node_to_delete=NodeVisibleOnsSvg().filter(nid=>!curr_displayed_nodes.includes(nid))
+    const node_to_delete=node_visible_svg.filter(nid=>!curr_displayed_nodes.includes(nid))
     DeleteGNodes(node_to_delete)
 
     applyZoomEvent(
@@ -202,14 +203,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   recomputeDisplayedElement()
 
   /*******************************************************************************/
-  const redrawAllNodes=()=>{
-    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes)
-    )
-  }
-  const redrawAllLinks=()=>{
-    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links)
-    )
-  }
 
   const Reinitialization = initializeReinitialization(
     dict_variable_application_data,
@@ -348,28 +341,20 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         display_style.filter = +new_current_filter
         dict_variable_application_data.set_data({ ...dict_variable_application_data.data })
       }}
-    detail_level={<Popover id='popover-details-level' style={{maxWidth:'100%'}}>
-      <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
-      <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-        <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
-          {addSimpleLevelDropDown(
-            dict_variable_application_data,applicationDraw.reDrawLegend,redrawAllNodes,redrawAllLinks,recomputeDisplayedElement
-          )}</>
-        ) : (<>
-          <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
-      </Popover.Body>
-    </Popover>}
+    detail_level={InitalizeSelectorDetailNodes(  applicationContext,
+      dict_variable_application_data,
+      applicationDraw,
+      node_function,
+      link_function,ComponentUpdater)}
     url_prefix={''}
     first_selected_node={dict_variable_elements_selected.first_selected_node}
-    GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
     dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
     never_see_again={dict_variable_elements_selected.never_see_again}
     additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
-    reDrawLegend={applicationDraw.reDrawLegend}
     node_function={node_function}
     link_function={link_function}
-    recomputeDisplayedElement={recomputeDisplayedElement}
     ComponentUpdater={ComponentUpdater}
+    applicationDraw={applicationDraw}
   />
 
   Object.assign(sankey_menus,additionalMenus.sankey_menus)

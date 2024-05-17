@@ -28,7 +28,8 @@ import {
   DrawAll,
   InstallEventsOnSVG,
   initializeMenuConfiguration,
-  initializeKeyHandler
+  initializeKeyHandler,
+  InitalizeSelectorDetailNodes
 } from './OSModule'
 import { OpenSankeyDiagramSelector } from './dialogs/SankeyMenuDialogs'
 import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
@@ -100,6 +101,9 @@ root.render(
     initializeProcessFunctions={initializeProcessFunctions}
 
     ClickSaveDiagram={ClickSaveDiagram}
+
+    // Content of the popover node aggregation selector
+    InitalizeSelectorDetailNodes={InitalizeSelectorDetailNodes}
   />
 )
 
