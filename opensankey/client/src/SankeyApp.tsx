@@ -36,7 +36,6 @@ import {
   NodeDisplayed,
   windowSankey
 } from './configmenus/SankeyUtils'
-import { ClickSaveDiagram } from './dialogs/SankeyPersistence'
 import { ToolbarBuilder, addSimpleLevelDropDown } from './configmenus/SankeyMenuBanner'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
@@ -80,7 +79,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   initializeDiagrammSelector,
   moduleDialogs,
   DrawAll,
-  installEventOnSVG
+  installEventOnSVG,
+  ClickSaveDiagram
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)

@@ -3,7 +3,7 @@ import { TFunction } from 'i18next'
 
 import { DrawArrowsType, LinkStrokeFType } from '../draw/types/SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkColorFuncType, LinkTextFuncType  } from '../configmenus/types/SankeyUtilsTypes'
-import { RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistenceTypes'
+import { ClickSaveDiagramFuncType, RetrieveExcelResultsFuncType } from '../dialogs/types/SankeyPersistenceTypes'
 import { updateLayoutFuncType } from '../draw/types/SankeyDrawLayoutTypes'
 import { OpenSankeyDiagramSelectorFType, initializeDiagrammSelectorFType } from '../dialogs/types/SankeyMenuDialogsTypes'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'react'
@@ -747,7 +747,8 @@ export type SankeyAppTypes = {
   initializeDiagrammSelector:initializeDiagrammSelectorFType,
   moduleDialogs:module_dialogsType,
   DrawAll:DrawAllType,
-  installEventOnSVG:InstallEventsOnSVGType
+  installEventOnSVG:InstallEventsOnSVGType,
+  ClickSaveDiagram:ClickSaveDiagramFuncType
 }
 
 export type initializeMenuConfigurationFuncType=(
