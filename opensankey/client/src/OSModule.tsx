@@ -133,7 +133,8 @@ export const initializeElementSelected : initializeElementSelectedType = ()=> {
 
     userScaleRef : useRef(10),
 
-    legend_clicked : useRef(false)
+    legend_clicked : useRef(false),
+    never_see_again : useRef((localStorage.getItem('dontSeeAggainWelcome')==='1'))
   }
   // Reset list of setter of input link value
   elementsSelected.displayedInputLinkValueSetterRef.current=[]

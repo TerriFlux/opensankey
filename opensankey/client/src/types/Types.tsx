@@ -489,6 +489,7 @@ export type dict_variable_elements_selectedType = {
   userScaleRef : MutableRefObject<number>
 
   legend_clicked : MutableRefObject<boolean>
+  never_see_again : MutableRefObject<boolean>
 }
 export type initializeElementSelectedType = ()=>dict_variable_elements_selectedType
 
