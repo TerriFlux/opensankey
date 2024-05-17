@@ -41,6 +41,7 @@ import {
   OSPInitializeKeyHandler} from './OSPModule'
 import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
+import { ClickSaveDiagram } from 'open-sankey/dist/dialogs/SankeyPersistence'
 
 window.React = React
 
@@ -269,18 +270,17 @@ root.render(
         recomputeDisplayedElement: () => void,
         link_function: LinkFunctionTypes
       )=>{
-        return {
-          ...initializeNodeFunctions(
+        const _ = initializeNodeFunctions(
+          dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,ComponentUpdater,
+          uiElementsRef,resizeCanvas,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed,accept_simple_click,
+          recomputeDisplayedElement,link_function
+        )
+        Object.assign(_,OSPInitializeNodeFunctions(
             dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,ComponentUpdater,
             uiElementsRef,resizeCanvas,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed,accept_simple_click,
             recomputeDisplayedElement,link_function
-          ),
-          ...OSPInitializeNodeFunctions(
-            dict_variable_application_data,dict_variable_elements_selected,contextMenu,applicationContext,ComponentUpdater,
-            uiElementsRef,resizeCanvas,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed,accept_simple_click,
-            recomputeDisplayedElement,link_function
-          )
-        }
+        ))
+        return _
       }
     }
     initializeAdditionalMenus={
@@ -473,6 +473,7 @@ root.render(
       )}
 
     }
+    ClickSaveDiagram={ClickSaveDiagram}
     installEventOnSVG={
       (
         contextMenu,

@@ -12,7 +12,9 @@ import {
   SankeyData, 
   module_dialogsType,  
   DrawAllType,
-  InstallEventsOnSVGType} from 'open-sankey/src/types/Types'
+  InstallEventsOnSVGType,
+  NodeFunctionTypes,
+  SankeyNode} from 'open-sankey/src/types/Types'
 import { 
   OSPApplicationDataVarType,
   OSPGetDefaultData,
@@ -49,7 +51,10 @@ import {
   EventOnZoneMouseDown,
   EventOnZoneMouseUp,
   initializeCloseAllMenuContext,
-  setDiagram} from './import/OpenSankey'
+  setDiagram,
+  updateDrawNodeShape,
+  RedrawNodesLabel,
+  DrawAllNodes} from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
 // import { modal_selection_icons } from './import/SankeyIconsUtils' //TO move to sankeyIcons
 //import { SankeyIconsData, SankeyIconsNode } from 'sankeyicons/src/types'
@@ -274,17 +279,18 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
   link_function
 ) => {
   const animating = useRef(false) //TODO
-  return {
-    reDrawIllustration : (nodes_to_update:SankeyPlusNode[])=>{
-      SankeyPlusDrawNodesIllustration(
-        dict_variable_application_data.data as SankeyPlusData,
-        nodes_to_update,
-        dict_variable_elements_selected as PlusElementsSelectedType,
-        NodeTooltipsContent,
-        link_function.GetLinkValue,
-        applicationContext.t
-      )
-    },
+  const reDrawIllustration = (nodes_to_update:SankeyPlusNode[])=>{
+    SankeyPlusDrawNodesIllustration(
+      dict_variable_application_data.data as SankeyPlusData,
+      nodes_to_update,
+      dict_variable_elements_selected as PlusElementsSelectedType,
+      NodeTooltipsContent,
+      link_function.GetLinkValue,
+      applicationContext.t
+    )
+  }
+  const _ = {
+    reDrawIllustration : reDrawIllustration,
     reDrawPlusNodeEvent : (nodes_to_update:SankeyPlusNode[])=>{
       PlusNodeClickEvent(
         dict_variable_application_data as SankeyPlusApplicationDataType,
@@ -296,8 +302,49 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
         ComponentUpdater,
         nodes_to_update
       )
-    }
+    } 
+  } as unknown as NodeFunctionTypes
+  _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
+      updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
+      RedrawNodesLabel(dict_variable_application_data,nodes_to_update,link_function.GetLinkValue,applicationContext.t,_)
+      reDrawIllustration(nodes_to_update as SankeyPlusNode[])
+    return null
   }
+  _.DrawAllNodes  = (
+    contextMenu,
+    dict_variable_application_data,
+    uiElementsRef,
+    dict_variable_elements_selected,
+    applicationContext,
+    alt_key_pressed,
+    accept_simple_click,
+    link_function,
+    NodeTooltipsContent,
+    ComponentUpdater,
+    dict_hook_ref_setter_show_dialog_components,
+    node_function,
+    GetSankeyMinWidthAndHeight,
+    resizeCanvas
+  ) => {
+    DrawAllNodes(
+      contextMenu,
+      dict_variable_application_data,
+      uiElementsRef,
+      dict_variable_elements_selected,
+      applicationContext,
+      alt_key_pressed,
+      accept_simple_click,
+      link_function,
+      NodeTooltipsContent,
+      ComponentUpdater,
+      dict_hook_ref_setter_show_dialog_components,
+      node_function,
+      GetSankeyMinWidthAndHeight,
+      resizeCanvas      
+    )
+    reDrawIllustration(Object.values(dict_variable_application_data.display_nodes) as SankeyPlusNode[])    
+  }
+  return _ as PlusNodeFuntionType
 }
 
 // Since AdditionalMenus is an OS var specially created to add external element in menus
