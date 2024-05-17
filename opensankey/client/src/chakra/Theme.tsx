@@ -59,7 +59,8 @@ import {
   slider_base_style
 } from './SliderStyles'
 import {
-  tabs_base_style
+  tabs_base_style,
+  tabs_variant_lib_cion
 } from './TabStyles'
 import {
   textarea_base_style
@@ -72,6 +73,7 @@ import {
   table_edit_grp_tag_node_link
 } from './TableStyle'
 import { heading_base_style, heading_welcome_style } from './HeadingStyles'
+import { card_base_style, card_icon_not_selected, card_icon_selected, card_import_icon } from './CardStyle'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -100,6 +102,14 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_button_tertiary,
         menuconfigpanel_option_button_light
         
+      }
+    },
+    Card:{
+      baseStyle:card_base_style,
+      variants:{
+        card_icon_selected,
+        card_icon_not_selected,
+        card_import_icon
       }
     },
     Checkbox: {
@@ -144,6 +154,9 @@ export const opensankey_theme = extendTheme({
     },
     Tabs: {
       baseStyle: tabs_base_style,
+      variants:{
+        tabs_variant_lib_cion
+      }
     },
     Table:{
       baseStyle:table_base_style,
