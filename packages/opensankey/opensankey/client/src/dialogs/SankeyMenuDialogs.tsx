@@ -624,7 +624,7 @@ export const ApplySaveJSONDialog = (
                 }
 
                 // set_sankey_data({...sankey_data})
-                ClickSaveDiagram(cpy)
+                ClickSaveDiagram(cpy,dict_hook_ref_setter_show_dialog_components)
               // set_sankey_data({...cpy})
               }
             }>{t('Menu.SaveJSON')}

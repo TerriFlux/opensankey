@@ -2,7 +2,7 @@ import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTy
 
 import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
-import { SankeyData, callbackFuncType, dict_variable_application_dataType } from '../../types/Types'
+import { SankeyData, callbackFuncType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 /**
@@ -45,7 +45,11 @@ export type RetrieveExcelResultsFuncType = (
     defaultData: () => SankeyData
 ) => void
 
-export type ClickSaveDiagramFuncType = (data: SankeyData, name?: string) => void
+export type ClickSaveDiagramFuncType = (
+  data: SankeyData,
+  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
+  name?: string
+) => void
 
 export type DownloadExamplesFuncType = (file_name: string, the_url_prefix: string, filetype: string) => void
 
