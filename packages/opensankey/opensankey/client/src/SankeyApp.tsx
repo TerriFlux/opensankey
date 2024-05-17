@@ -148,7 +148,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   /*************************************************************************************************/
   const accept_simple_click=useRef(true)
-  const never_see_again = useRef((localStorage.getItem('dontSeeAggainWelcome')==='1'))
   const ref_alt_key_pressed = useRef(false) //TODO
   /*************************************************************************************************/
   const mode_pref=sessionStorage.getItem('modepref')
@@ -320,7 +319,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     Reinitialization,
     dict_variable_application_data.get_default_data,
     dict_hook_ref_setter_show_dialog_components,
-    never_see_again,
+    dict_variable_elements_selected.never_see_again,
     dict_variable_application_data.data,
     dict_variable_application_data.set_data,
     additionalMenus.external_edition_item,
@@ -384,7 +383,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     first_selected_node={dict_variable_elements_selected.first_selected_node}
     GetSankeyMinWidthAndHeight={applicationDraw.GetSankeyMinWidthAndHeight}
     dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    never_see_again={never_see_again}
+    never_see_again={dict_variable_elements_selected.never_see_again}
     additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
     reDrawLegend={applicationDraw.reDrawLegend}
     node_function={node_function}
