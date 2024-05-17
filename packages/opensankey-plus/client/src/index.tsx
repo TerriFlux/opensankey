@@ -38,7 +38,8 @@ import {
   OSPInitializeContextMenu, OSPInitializeUIElementsRef, OSPInitializeLinkFunctions, 
   OSPInitializeNodeFunctions, OSPInitializeAdditionalMenus, OSPModuleDialogs, OSPDrawAll, OSPInstallEventsOnSVG,
   OSPUpdateMenuConf,
-  OSPInitializeKeyHandler} from './OSPModule'
+  OSPInitializeKeyHandler,
+  OSPInitalizeSelectorDetailNodes} from './OSPModule'
 import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
 import { ClickSaveDiagram } from 'open-sankey/dist/dialogs/SankeyPersistence'
@@ -97,7 +98,8 @@ root.render(
       ()=>{
         return {
           ...initializeApplicationContext(),
-          ...OSPInitializeApplicationContext()
+          ...OSPInitializeApplicationContext(),
+          ...{has_free_account:true}
         }
       }
     }
@@ -516,6 +518,8 @@ root.render(
         )
       }
     }
+
+    InitalizeSelectorDetailNodes={OSPInitalizeSelectorDetailNodes}
   />
 )
 
