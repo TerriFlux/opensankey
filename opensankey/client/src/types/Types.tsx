@@ -750,7 +750,8 @@ export type SankeyAppTypes = {
   moduleDialogs:module_dialogsType,
   DrawAll:DrawAllType,
   installEventOnSVG:InstallEventsOnSVGType,
-  ClickSaveDiagram:ClickSaveDiagramFuncType
+  ClickSaveDiagram:ClickSaveDiagramFuncType,
+  InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType
 }
 
 export type initializeMenuConfigurationFuncType=(
@@ -789,3 +790,13 @@ export type initializeKeyHandlerType=(
   applicationDraw:applicationDrawType,
 
 ) => void
+
+
+export type InitalizeSelectorDetailNodesType=(
+  applicationContext:applicationContextType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  applicationDraw:applicationDrawType,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes,
+  ComponentUpdater:ComponentUpdaterType
+)=>JSX.Element

@@ -83,12 +83,8 @@ const delete_local_aggregation=(data:SankeyData)=>{
 
 export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
   dict_variable_application_data,
-  reDrawLegend,
-  redrawAllNodes,
-  redrawAllLinks,
-  recomputeDisplayedElement
 ) => {
-  const {data}=dict_variable_application_data
+  const {data,set_data}=dict_variable_application_data
   const {levelTags} = data
 
   if(Object.keys(levelTags).includes('Primaire')){
@@ -106,11 +102,7 @@ export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
 
               delete_local_aggregation(data)
               handleSimpleDropdown(evt, levelTags['Primaire'])
-              recomputeDisplayedElement()
-              redrawAllNodes()
-              redrawAllLinks()
-              reDrawLegend()
-
+              set_data({...data})
             }}>{
                 Object.entries(levelTags['Primaire'].tags).map(([tag_key, tag],i) => {
                   return (<option key={i} value={tag_key}>{tag.name}</option>)
@@ -143,21 +135,21 @@ export const col_title_level_filter : col_title_level_filterFType = (
 
 }
 
-export const addAllDropDownNode : addAllDropDownNodeFType = (
+export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = ({
   applicationContext,
   ComponentUpdater,
   dict_variable_application_data,
-  level:boolean,
-  reDrawLegend,
+  level,
   node_function,
   link_function,
-  recomputeDisplayedElement,
-  GetSankeyMinWidthAndHeight
+  applicationDraw}
 ) => {
   const color = 'black'
   const {data}=dict_variable_application_data
   const {t}=applicationContext
   const {nodeTags,levelTags} = data
+  const {recomputeDisplayedElement}=node_function
+  const {GetSankeyMinWidthAndHeight,reDrawLegend}=applicationDraw
   const [forceUpdate,setForceUpdate]=useState(false)
   let banner_grouptag = Object.entries(nodeTags).filter(([, tags_group]) => tags_group.banner !== 'none')
   if (level) {
@@ -259,6 +251,7 @@ export const addAllDropDownNode : addAllDropDownNodeFType = (
                   delete_local_aggregation(data)
                   handleSimpleDropdown(evt, tags_group)
                   redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                  
                   setForceUpdate(!forceUpdate)
                 }}>{
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -443,21 +436,22 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   detail_level,
   url_prefix,
   first_selected_node,
-  GetSankeyMinWidthAndHeight,
   dict_hook_ref_setter_show_dialog_components,
   never_see_again,
   additional_link_visual_filter_content,
-  reDrawLegend,
   node_function,
   link_function,
-  recomputeDisplayedElement,
-  ComponentUpdater
+  ComponentUpdater,
+  applicationDraw
 }) => {
 
   const {data}=dict_variable_application_data
   const {t}=applicationContext
   const { ref_getter_mode_selection,ref_setter_mode_selection } = dict_variable_elements_selected
   const {updateComponentToolbar} =ComponentUpdater
+  const {recomputeDisplayedElement}=node_function
+  const {GetSankeyMinWidthAndHeight,reDrawLegend}=applicationDraw
+
   // ===================Create hooks used in this component========================
 
   const ref_btn_target_link_threshold=useRef(null)
@@ -691,7 +685,15 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
       </Form.Group>
     </Popover.Body>
   </Popover>
-  const node_tag_filter_content=addAllDropDownNode(applicationContext,ComponentUpdater,dict_variable_application_data,false,reDrawLegend,node_function,link_function,recomputeDisplayedElement,GetSankeyMinWidthAndHeight)
+  const node_tag_filter_content=<AddAllDropDownNode 
+    applicationContext={applicationContext}
+    ComponentUpdater={ComponentUpdater}
+    dict_variable_application_data={dict_variable_application_data}
+    level={false}
+    node_function={node_function}
+    link_function={link_function}
+    applicationDraw={applicationDraw}
+  />
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
   const filter_color_node=<Popover id='tooltip-link-color-filter' style={{minWidth:'350px'}}>
@@ -1266,7 +1268,8 @@ const addAllDropDownLinks = (
   return allDD
 }
 
-const redrawSankeyWithSelectedTag=(dict_variable_application_data:dict_variable_application_dataType,
+const redrawSankeyWithSelectedTag=(
+  dict_variable_application_data:dict_variable_application_dataType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   recomputeDisplayedElement:()=>void,
   redrawNodeLinkLegend:()=>void,
@@ -1287,7 +1290,8 @@ const redrawSankeyWithSelectedTag=(dict_variable_application_data:dict_variable_
   DeleteGLinks(old_displayed_links.filter(lid=>!new_displayed_links.includes(lid)).map(id=>id))
 
   // Create Nodes/Links that are now visually present with the new aggregation levels
-  node_function.CreateNodesOnSVG(new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>data.nodes[id]))
+  const node_to_add_svg=new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>dict_variable_application_data.data.nodes[id])
+  node_function.CreateNodesOnSVG(node_to_add_svg)
   const ll = new_displayed_links.filter(lid=>!old_displayed_links.includes(lid))
   if (ll.length !=0) {
     link_function.CreateLinksOnSVG(ll.map(id=>data.links[id]))

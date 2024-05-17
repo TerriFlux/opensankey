@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, SankeyData, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, applicationContextType, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
 import { ConvertDataFuncType  } from '../../configmenus/types/SankeyConvertTypes'
 import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
@@ -34,4 +34,12 @@ export type ApplyLayoutDialogTypes = {
   apply_transformation_additional_elements: JSX.Element[],
   DefaultSankeyData: DefaultSankeyDataFuncType,
   ComponentUpdater:ComponentUpdaterType
+}
+
+export type popoverSelectorDetailNodesFType={
+  applicationContext:applicationContextType,
+  dict_variable_application_data:dict_variable_application_dataType,
+  applicationDraw:applicationDrawType,
+  node_function:NodeFunctionTypes,
+  link_function:LinkFunctionTypes
 }
