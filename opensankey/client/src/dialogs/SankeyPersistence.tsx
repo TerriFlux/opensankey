@@ -314,7 +314,11 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
     AdjustSankeyZone(dict_variable_application_data, GetSankeyMinWidthAndHeight)
   }, 100)
 }
-export const ClickSaveDiagram: ClickSaveDiagramFuncType = (data: SankeyData, name = 'sankey_diagram'): void => {
+export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
+  data: SankeyData, 
+  dict_hook_ref_setter_show_dialog_components,
+  name = 'sankey_diagram'
+): void => {
   const data_to_save = { ...data }
   const str_data = JSON.stringify(data_to_save)
 

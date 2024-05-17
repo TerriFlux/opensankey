@@ -374,7 +374,7 @@ export const keyHandler : keyHandlerFType = (
 
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
-    ClickSaveDiagram(data)
+    ClickSaveDiagram(data,dict_hook_ref_setter_show_dialog_components)
   }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){
     if((!d3.select(document.activeElement)?.attr('class')?.includes('ql-editor'))){
       e.preventDefault()
