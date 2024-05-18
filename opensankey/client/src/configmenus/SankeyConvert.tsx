@@ -592,9 +592,9 @@ export const convert_tags:convert_tagsFuncType = (
               return
             }
             //const tags = [...target_node.tags[tag_key]]
-            if (tag_key in n.tags) {
-              n.tags[tag_key] = JSON.parse(JSON.stringify(target_node.tags[tag_key]))
-            }
+            //if (tag_key in target_node.tags) {
+            n.tags[tag_key] = JSON.parse(JSON.stringify(target_node.tags[tag_key]))
+            //}
           })
         } else {
           const link = data.links[n.inputLinksId[0]]
@@ -611,9 +611,9 @@ export const convert_tags:convert_tagsFuncType = (
             if ( tag_key === 'Type de noeud' ) {
               return
             }
-            if (tag_key in n.tags) {
-              n.tags[tag_key] = JSON.parse(JSON.stringify(source_node.tags[tag_key]))
-            }
+            //if (tag_key in n.tags) {
+            n.tags[tag_key] = JSON.parse(JSON.stringify(source_node.tags[tag_key]))
+            //}
           })
         }
       }
