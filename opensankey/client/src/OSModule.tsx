@@ -900,16 +900,11 @@ export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  ap
   applicationDraw,
   node_function,
   link_function)=>{
-  const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-  const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-
   return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
       <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
-        {addSimpleLevelDropDown(
-          dict_variable_application_data,applicationDraw.reDrawLegend,redrawAllNodes,redrawAllLinks,node_function.recomputeDisplayedElement
-        )}</>
+        {addSimpleLevelDropDown(dict_variable_application_data)}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
     </Popover.Body>

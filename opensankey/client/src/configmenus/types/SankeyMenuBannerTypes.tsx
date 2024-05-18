@@ -12,11 +12,7 @@ export type setDiagramFuncType = (
 ) => void
 
 export type addSimpleLevelDropDownFType = (
-  dict_variable_application_data:dict_variable_application_dataType,
-  reDrawLegend:()=>void,
-  redrawAllNodes:()=>void,
-  redrawAllLinks:()=>void,
-  recomputeDisplayedElement:()=>void
+  dict_variable_application_data:dict_variable_application_dataType
 ) => JSX.Element
  
 export type col_title_level_filterFType=(
