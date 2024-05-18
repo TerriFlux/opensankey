@@ -66,7 +66,7 @@ import { SankeyPlusMenuPreferenceLabels, zdtMenuAsAccordeonItem, SankeyPlusMenuC
 import { SankeyPlusDrawNodesIllustration, PlusNodeClickEvent, SankeyPlusNodeIcon, SankeyPlusHyperLink } from './SankeyPlusNodes'
 import { DefaultSankeyPlusStyleLink,  ImportImageAsSvgBg, PlusItemExport, PlusLinkSabotColor } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, apply_transformation_opensankey_plus_elements } from './SankeyPlusConvert'
-import { GetDataFromView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, view_toast, view_toast_update_view, viewsAccordion } from './SankeyPlusViews'
+import { GetDataFromView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, view_toast, view_toast_update_view, viewsAccordion } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
@@ -549,6 +549,12 @@ export const OSPModuleDialogs : module_dialogsType = (
       OSP_dict_hook_ref,
       OSP_dict_app_data,
       applicationContext.t
+    ),
+    modal_view_not_saved(
+      OSP_dict_app_data.view_not_saved, 
+      OSP_dict_app_data.set_view_not_saved,
+      applicationContext.t,
+      dict_variable_application_data as SankeyPlusApplicationDataType
     ),
     <ModalSelectionIcon 
       t={applicationContext.t}
