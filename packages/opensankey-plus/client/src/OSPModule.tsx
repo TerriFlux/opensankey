@@ -66,7 +66,7 @@ import { SankeyPlusMenuPreferenceLabels, zdtMenuAsAccordeonItem, SankeyPlusMenuC
 import { SankeyPlusDrawNodesIllustration, PlusNodeClickEvent, SankeyPlusNodeIcon, SankeyPlusHyperLink } from './SankeyPlusNodes'
 import { DefaultSankeyPlusStyleLink,  ImportImageAsSvgBg, PlusItemExport, PlusLinkSabotColor } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, apply_transformation_opensankey_plus_elements } from './SankeyPlusConvert'
-import { GetDataFromView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, viewsAccordion } from './SankeyPlusViews'
+import { GetDataFromView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, view_toast, view_toast_update_view, viewsAccordion } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
@@ -556,7 +556,13 @@ export const OSPModuleDialogs : module_dialogsType = (
       dict_variable_elements_selected={OSP_elements_selected}
       dict_hook_ref_setter_show_dialog_components={OSP_dict_hook_ref}
       node_function={OSP_node_function }
-    />
+    />,
+    view_toast(
+      dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType
+    ),
+    view_toast_update_view(
+      dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType
+    )
   ]
 }
 
