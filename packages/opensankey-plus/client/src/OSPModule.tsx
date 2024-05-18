@@ -262,7 +262,9 @@ export const OSPInitializeReinitialization : OSPInitializeReinitializationType =
   const recast_selected_dict=dict_variable_elements_selected as PlusElementsSelectedType
   recast_selected_dict.multi_selected_label.current = []
   localStorage.removeItem('icon_imported')
-  sessionStorage.setItem('dismiss_warning_sankey_plus','0')
+  sessionStorage.setItem('dismiss_warning_sankey_plus','0');
+  (dict_variable_application_data as SankeyPlusApplicationDataType).set_master_data(undefined);
+  (dict_variable_application_data as SankeyPlusApplicationDataType).set_view('none')
 }
 
 // Modify context menu
