@@ -95,8 +95,36 @@ export const OSPDefaultData = () => {
 }
 
 export const OSPInitializeApplicationContext : OSPInitializeApplicationContextVarType = ()=>{
+  let logo_OSP = ''
+  try {
+    /* eslint-disable */
+      // @ts-ignore
+      logo_OSP = require('./css/OSP.png')
+      /* eslint-enable */
+    const path = window.location.href
+    if ( !path.includes('localhost') ) {
+      logo_OSP = logo_OSP.replace('static/', 'static/sankeysuite/')
+    }
+  } catch (expt) {
+    console.log('logo_OSP not found')
+  }
+  let logo_terriflux = ''
+  try {
+    /* eslint-disable */
+    // @ts-ignore
+    logo_terriflux = require('./css/terriflux.png')
+    /* eslint-enable */
+    const path = window.location.href
+    if ( !path.includes('localhost') ) {
+      logo_terriflux = logo_terriflux.replace('static/', 'static/opensankey/')
+    }
+  } catch (expt) {
+    console.log('terriflux.png not found')
+  }
   return {
-    has_open_sankey_plus : true
+    has_open_sankey_plus : true,
+    logo : logo_OSP,
+    logo_terriflux : logo_terriflux
   } 
 }
 

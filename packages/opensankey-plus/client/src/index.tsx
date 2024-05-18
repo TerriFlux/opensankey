@@ -96,11 +96,10 @@ root.render(
     get_default_data={get_default_data}
     initializeApplicationContext={
       ()=>{
-        return {
-          ...initializeApplicationContext(),
-          ...OSPInitializeApplicationContext(),
-          ...{has_free_account:true}
-        }
+        const _ = initializeApplicationContext()
+        Object.assign(_,OSPInitializeApplicationContext())
+        _.has_free_account = true
+        return _
       }
     }
     initializeApplicationData={
