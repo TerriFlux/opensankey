@@ -868,6 +868,7 @@ export const CheckCurrentViewSaved : CheckCurrentViewSavedFType =(
       (d.path![0] !== 'view') &&
       (d.path![0] !== 'width') &&
       (d.path![0] !== 'height') &&
+      (d.path![0] !== 'linkZIndex') &&
       !(d.path!.length === 4 && d.path![3] === 'vert_shift'))
   })
   console.log(difference)
