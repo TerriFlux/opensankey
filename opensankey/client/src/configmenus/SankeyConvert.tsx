@@ -1603,6 +1603,13 @@ export const convert_data:ConvertDataFuncType = (
   // if(Object.keys(data_to_convert.style_node['default'])!== Object.keys(tmp2) ){
   //   data.style_node['default'] = DefaultNodeStyle()
   // }
+  
+  let defaut_style = Object.values(data.style_link).filter(s=>s.name==="Style par défaut") as SankeyLinkStyle & SankeyLinkStyle[]
+  if (defaut_style.length>0) {
+    defaut_style = defaut_style[0] as SankeyLinkStyle & SankeyLinkStyle[]
+    defaut_style.idLink = 'default'
+  }
+
 
   if(!data.accordeonToShow.includes('EN') && Object.keys(data.nodeTags).length>0){
     data.accordeonToShow.push('EN')
