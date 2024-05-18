@@ -323,10 +323,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ComponentUpdater 
   )
 
-  Object.values(dict_variable_application_data.data.levelTags).forEach(tag_group=>tag_group.activated = false)
-  if ('Primaire' in dict_variable_application_data.data.levelTags) {
-    dict_variable_application_data.data.levelTags['Primaire'].activated = true
-  }
 
   const {filter}=dict_variable_application_data.data.display_style
 
