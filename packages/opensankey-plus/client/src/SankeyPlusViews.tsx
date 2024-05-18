@@ -870,6 +870,7 @@ export const CheckCurrentViewSaved : CheckCurrentViewSavedFType =(
       (d.path![0] !== 'height') &&
       !(d.path!.length === 4 && d.path![3] === 'vert_shift'))
   })
+  console.log(difference)
   return difference
 }
 
