@@ -1492,7 +1492,9 @@ const NodeHasDisplayedTags=(data:SankeyData,n:SankeyNode): boolean=>{
     if(node_tags_attr.length!=0){
       // If the node has at least 1 tag from the selected tag of the group then we display it
       // If the node has tag from the group attribued to it but are not selected then we don't display it
-
+      if (!nt[1].tags) {
+        return
+      }
       const tags_from_grp_to_display=Object.entries(nt[1].tags).filter(t=>t[1].selected).map(t=>t[0])
       to_display=(node_tags_attr.filter(t=>tags_from_grp_to_display.includes(t)).length>0)?to_display:false
 
