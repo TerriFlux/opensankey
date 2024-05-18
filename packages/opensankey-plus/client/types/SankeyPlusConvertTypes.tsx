@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { PlusComponentUpdaterType, SankeyPlusApplicationDataType, SankeyPlusData } from './Types'
+import { PlusApplicationContextType, PlusComponentUpdaterType, SankeyPlusApplicationDataType, SankeyPlusData } from './Types'
 import { OpenSankeyDiagramSelectorFType } from 'open-sankey/src/dialogs/types/SankeyMenuDialogsTypes'
 
 export type plus_convert_dataFType = (
@@ -13,7 +13,7 @@ export type SankeyPlusDiagramSelectorFType = (
 
 export type apply_transformation_opensankey_plus_elementsFType = (
   dict_variable_application_data:SankeyPlusApplicationDataType,
-  t:TFunction,
+  applicationContext:PlusApplicationContextType,
   ComponentUpdater:PlusComponentUpdaterType
 ) => JSX.Element[]
 

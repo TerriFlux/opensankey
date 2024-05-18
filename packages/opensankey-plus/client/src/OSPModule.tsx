@@ -431,11 +431,11 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
 
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
-  additionalMenus.apply_transformation_additional_elements=PlusApplicationContext.has_open_sankey_plus?apply_transformation_opensankey_plus_elements(
+  additionalMenus.apply_transformation_additional_elements=apply_transformation_opensankey_plus_elements(
     plus_dict_app_data,
-    applicationContext.t,
+    applicationContext as PlusApplicationContextType,
     plus_updater
-  ):[]
+  )
     
 
 

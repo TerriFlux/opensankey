@@ -162,13 +162,6 @@ export const plus_convert_data : plus_convert_dataFType = (
     const convert_link = l as unknown as {gradient?:boolean}
     if (convert_link.gradient) {
       delete convert_link.gradient
-      l.local!.gradient = true
-    }
-  })
-  Object.values(data.links).forEach(l=>{
-    const convert_link = l as unknown as {gradient?:boolean}
-    if (convert_link.gradient) {
-      delete convert_link.gradient
       if (!l.local) {
         l.local = {}
       }
@@ -311,7 +304,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
 
 export const apply_transformation_opensankey_plus_elements : apply_transformation_opensankey_plus_elementsFType = (
   dict_variable_application_data,
-  t:TFunction,
+  applicationContext,
   ComponentUpdater
 ) => {
   const {data,master_data,dataVarToUpdate}=dict_variable_application_data
@@ -321,9 +314,12 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
   const [forceUpdate,setForceUpdate]=useState(false)
   const {updateComponentBtnUpdateLayout}=ComponentUpdater
   updateComponentBtnUpdateLayout.current=()=>setForceUpdate(!forceUpdate)
+  if (!applicationContext.has_open_sankey_plus) {
+    return []
+  }
   return [
     <InputGroup>
-      <InputGroup.Text style={{width:'20%'}}>{t('Menu.Transformation.freeLabels')}</InputGroup.Text>
+      <InputGroup.Text style={{width:'20%'}}>{applicationContext.t('Menu.Transformation.freeLabels')}</InputGroup.Text>
       <Button
         className='btn_menu_config'
         style={{width:'20%'}}
@@ -340,14 +336,14 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
       >{dataVarToUpdate.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
 
     </InputGroup>,
-    <OSTooltip label={!is_current_data_master?t('Menu.Transformation.disabled_view'):''} >
+    <OSTooltip label={!is_current_data_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
       <InputGroup>
         <InputGroup.Text
           style={{width:'20%',
             color:(!is_current_data_master)?'#666666':'',
             backgroundColor:(!is_current_data_master)?'#cccccc':'',
           }}
-        >{t('Menu.Transformation.Views')}</InputGroup.Text>
+        >{applicationContext.t('Menu.Transformation.Views')}</InputGroup.Text>
         <Button
           className='btn_menu_config'
           style={{width:'20%'}}
@@ -366,11 +362,11 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
       </InputGroup>
     </OSTooltip>,
 
-    <OSTooltip label={t('Menu.Transformation.list_icon_tooltip')} >
+    <OSTooltip label={applicationContext.t('Menu.Transformation.list_icon_tooltip')} >
       <InputGroup>
         <InputGroup.Text
           style={{width:'20%'}}
-        >{t('Menu.Transformation.list_icon')}</InputGroup.Text>
+        >{applicationContext.t('Menu.Transformation.list_icon')}</InputGroup.Text>
         <Button
           className='btn_menu_config'
           style={{width:'20%'}}

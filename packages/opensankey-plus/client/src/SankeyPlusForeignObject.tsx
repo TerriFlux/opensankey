@@ -1,5 +1,5 @@
 // External imports
-import React, { MutableRefObject, useRef, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import * as d3 from 'd3'
 
 import { Badge } from 'react-bootstrap'
@@ -28,10 +28,10 @@ typeof globalThis & {
 }
 
 export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
-  t:TFunction,
-  data:SankeyPlusData,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean,
+  t,
+  data,
+  multi_selected_nodes,
+  is_activated,
   dict_variable_elements_selected,
   node_function
 )=> {
