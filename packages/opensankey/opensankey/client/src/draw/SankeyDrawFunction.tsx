@@ -930,7 +930,7 @@ const AddShiftHandle = (
 ) => {
   const {data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
-  if (Object.values(data.links).map(d => d.idLink).includes(link.idLink)) {
+  if (!d3.select(' .opensankey #gg_link_handle_'+link.idLink).empty()) {
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
       .attr('id', shift_name + link.idLink)
