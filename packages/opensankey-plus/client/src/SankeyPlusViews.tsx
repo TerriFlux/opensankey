@@ -167,7 +167,7 @@ export const GetDataFromView : GetDataFromViewFType = (
     alert('sankey master undefined')
     return undefined
   }
-  const copy_master_data= {...master_data}
+  const copy_master_data= JSON.parse(JSON.stringify(master_data))
   copy_master_data.view = []
   let data_init=JSON.parse(JSON.stringify(copy_master_data)) as SankeyPlusData
   // Get the difference from the view
@@ -311,7 +311,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
       // get view data & set_data to avoid synchronisation problem
       const n_data=GetDataFromView(master_data,new_ind)
       if(n_data){
-        set_data({...n_data})
+        set_data(JSON.parse(JSON.stringify(n_data)))
       }
     }
   }
@@ -447,7 +447,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
       }
       const data_view=GetDataFromView(new_master_data,new_master_data!.view[ind+1].id) as SankeyPlusData
       if(saved){
-        set_data(data_view)
+        set_data(JSON.parse(JSON.stringify(data_view)))
         set_view(new_master_data!.view[ind+1].id)
       }
       //}
@@ -605,11 +605,9 @@ export const SelecteurView : SelecteurViewFType =(
             }
             set_view(evt.target.value)
             const data_view=GetDataFromView(new_master_data,evt.target.value) as SankeyPlusData
-            set_data(data_view)
+            set_data(JSON.parse(JSON.stringify(data_view)))
             new_master_data.current_view=evt.target.value
-            set_master_data(new_master_data)
-
-
+            set_data(JSON.parse(JSON.stringify(new_master_data)))
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
             set_data(JSON.parse(JSON.stringify(master_data)))
@@ -737,8 +735,8 @@ export const viewsAccordion : viewsAccordionFType = (
                             const toShift = master_data.view[ind]
                             master_data.view.splice(ind, 1)
                             master_data.view.splice(ind - 1, 0, toShift)
-                            set_master_data({...master_data})
-                            set_data({ ...data })
+                            set_master_data(JSON.parse(JSON.stringify(master_data)))
+                            set_data(JSON.parse(JSON.stringify(data)))
                           }
                         }
                       ><FaArrowUp />
@@ -753,8 +751,8 @@ export const viewsAccordion : viewsAccordionFType = (
                             const toShift = master_data.view[ind]
                             master_data.view.splice(ind, 1)
                             master_data.view.splice(ind + 1, 0, toShift)
-                            set_master_data({...master_data})
-                            set_data({ ...data })
+                            set_master_data(JSON.parse(JSON.stringify(master_data)))
+                            set_data(JSON.parse(JSON.stringify(data)))
                           }
                         }
                       ><FaArrowDown />
@@ -775,19 +773,19 @@ export const viewsAccordion : viewsAccordionFType = (
                           // If master is a catalog and the catalog of view is empty then we got to master
                           if((master_data.current_view===view && master_data.is_catalog===false) || (master_data.view.length===0 && master_data.is_catalog===true)){
                             set_view('none')
-                            set_data({ ...master_data })
+                            set_data(JSON.parse(JSON.stringify(master_data)))
                           }else if(master_data.is_catalog && master_data.view.length>0){
                           // If master is a catalog and the catalog is not empty then we got to the first view
                             set_view(master_data.view[0].id)
                             const tmp=GetDataFromView(master_data,master_data.view[0].id) as SankeyPlusData
-                            set_data({ ...tmp })
+                            set_data(JSON.parse(JSON.stringify(tmp)))
                           }
                           if(master_data.view.length===0){
                             master_data.is_catalog=false
-                            set_data({...master_data})
+                            set_data(JSON.parse(JSON.stringify(master_data)))
 
                           }
-                          set_master_data({...master_data})
+                          set_master_data(JSON.parse(JSON.stringify(master_data)))
                         }
                       }
                     ><FaMinus /></Button></Td>
@@ -834,8 +832,8 @@ export const viewsAccordion : viewsAccordionFType = (
 
             cur_view.nom = (files[0].name).replace('.json','')
 
-            set_master_data({...master_data!})
-            set_data({...imported_data})
+            set_master_data(JSON.parse(JSON.stringify(master_data)))
+            set_data(JSON.parse(JSON.stringify(imported_data)))            
             set_view(cur_view.id)
           }
         })()
@@ -1027,16 +1025,16 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
             // If master is a catalog and the catalog of view is empty then we got to master
             if((master_data!.current_view===view && master_data!.is_catalog===false) || (master_data!.view.length===0 && master_data!.is_catalog===true)){
               set_view('none')
-              set_data({ ...master_data! })
+              set_data(JSON.parse(JSON.stringify(master_data)))
             }else if(master_data!.is_catalog && master_data!.view.length>0){
               // If master is a catalog and the catalog is not empty then we got to the first view
               set_view(master_data!.view[0].id)
               const tmp=GetDataFromView(master_data,master_data!.view[0].id) as SankeyPlusData
-              set_data({ ...tmp })
+              set_data(JSON.parse(JSON.stringify(tmp)))
             }
             if(master_data!.view.length===0){
               master_data!.is_catalog=false
-              set_data({...master_data!})
+              set_data(JSON.parse(JSON.stringify(master_data)))
             }
             set_master_data({...master_data!})
           }
@@ -1069,7 +1067,7 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
         value={master_data && master_data.current_view && master_data.current_view!=='none'?master_data.view.filter(v=>v.id===master_data!.current_view)[0].nom:''}
         onChange={(evt)=>{
           master_data?master_data.view.filter(v=>v.id===master_data!.current_view).forEach(v=>v.nom=evt.target.value):''
-          set_data({...data})
+          set_data(JSON.parse(JSON.stringify(data)))
         }}
       >
 
@@ -1141,9 +1139,9 @@ export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
 
               set_view(new_ind)
               cpy_master_data!.current_view=new_ind
-              set_data({...first_data})
+              set_data(JSON.parse(JSON.stringify(first_data)))
             }
-            set_master_data({...cpy_master_data!})
+            set_master_data(JSON.parse(JSON.stringify(cpy_master_data)))
 
           }
         })()
@@ -1282,7 +1280,7 @@ export const SankeyPlusMenuPreferenceView : SankeyPlusMenuPreferenceViewFType =(
     isChecked={data.accordeonToShow.includes('Vis')}
     onChange={() => {
       preferenceCheck('Vis',data)
-      set_data({ ...data })
+      set_data(JSON.parse(JSON.stringify(data)))
     }}>
     {t('view.storytelling')}
   </Checkbox>
@@ -1317,9 +1315,9 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
             // Don't save the view before changing to the selected one
               if(view !== 'none'){
                 const data_view=GetDataFromView(master_data,view) as SankeyPlusData
-                set_data(data_view)
+                set_data(JSON.parse(JSON.stringify(data_view)))
               } else if(view === 'none'){
-                set_data({...master_data!})
+                set_data(JSON.parse(JSON.stringify(master_data)))
               }
               set_view_not_saved('')
             }}
@@ -1335,11 +1333,11 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 
             if(view !== 'none'){
               const data_view=GetDataFromView(master_data,view) as SankeyPlusData
-              set_master_data({...JSON.parse(JSON.stringify(master_data))})
-              set_data(data_view)
+              set_master_data(JSON.parse(JSON.stringify(master_data)))
+              set_data(JSON.parse(JSON.stringify(data_view)))
 
             } else if(view === 'none'){
-              set_data({...JSON.parse(JSON.stringify(master_data))})
+              set_data(JSON.parse(JSON.stringify(master_data)))
             }
             set_view_not_saved('')
             }}
