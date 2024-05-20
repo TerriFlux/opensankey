@@ -152,7 +152,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType
 ) => ()=>{
-  // const new_data = dict_variable_application_data.get_default_data()
+  const new_data = dict_variable_application_data.get_default_data()
   dict_variable_elements_selected.multi_selected_nodes.current = []
   dict_variable_elements_selected.multi_selected_links.current = []
   localStorage.removeItem('diff')
