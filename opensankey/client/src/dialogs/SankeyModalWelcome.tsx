@@ -1,6 +1,7 @@
 // Standard lib
 import React, {
   CSSProperties,
+  FunctionComponent,
   useState
 } from 'react'
 import {
@@ -28,16 +29,15 @@ import { windowSankey } from '../configmenus/SankeyUtils'
 import { SankeyModalWelcomeFType } from '../topmenus/types/SankeyMenuTopTypes'
 import Draggable from 'react-draggable'
 
-export const SankeyModalWelcome : SankeyModalWelcomeFType = (
+export const SankeyModalWelcome : FunctionComponent<SankeyModalWelcomeFType> = ({
   t,
   active_page,
-  set_active_page,
   dict_hook_ref_setter_show_dialog_components,
   never_see_again,
   additional_shortcut_item,
   external_pagination,
   external_content
-)=>{
+})=>{
   const [show_wecome,set_show_welcome]=useState(!never_see_again.current)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_modal_welcome.current=set_show_welcome
 

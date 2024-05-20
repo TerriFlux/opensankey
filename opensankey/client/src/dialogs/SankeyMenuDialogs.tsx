@@ -1,17 +1,17 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
-import { Form, FormLabel, Row, Col, Button, InputGroup, Tabs,Tab,FormControl} from 'react-bootstrap'
-import { SankeyData, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, } from '../types/Types'
+import { Form, FormLabel, Row, Col, Button, InputGroup, Tabs,Tab,FormControl, Modal} from 'react-bootstrap'
+import { dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultLink, DefaultNode, OSTooltip } from '../configmenus/SankeyUtils'
-import { NodeVisibleOnsSvg,LinkVisibleOnSvg } from '../draw/SankeyDrawFunction'
+import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 import { arrangeNodes, ComputeAutoSankey } from '../draw/SankeyDrawLayout'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { FaCheck } from 'react-icons/fa'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
-import { Box, Checkbox,Button as ChakraButton, Modal, ModalHeader, ModalBody, ModalContent, ModalFooter, ModalCloseButton } from '@chakra-ui/react'
+import { Box, Checkbox,Button as ChakraButton } from '@chakra-ui/react'
 import { UploadExcelImplFuncType } from './types/SankeyPersistenceTypes'
 import { ClickSaveDiagramFuncType } from './types/SankeyPersistenceTypes'
 import { ApplyLayoutDialogTypes, OpenSankeyDiagramSelectorFType } from './types/SankeyMenuDialogsTypes'
@@ -526,9 +526,10 @@ export const ApplyLayoutDialog = ({
  */
 export type ApplySaveJSONTypes = {
   t : TFunction
+  dict_variable_application_data : dict_variable_application_dataType,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  sankey_data : SankeyData,
-  additionnal_button_option_save_json:JSX.Element[],
+  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  additional_file_save_json_option:JSX.Element[],
   ClickSaveDiagram:ClickSaveDiagramFuncType
 }
 
@@ -537,12 +538,13 @@ export type ApplySaveJSONTypes = {
  * @param {ApplySaveJSONTypes} { ref_setter_show_save_json, set_show_save_json,sankey_data,set_sankey_data,ClickSaveDiagram }
  * @returns {*}
  */
-export const ApplySaveJSONDialog = (
+export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
   {
     t,
+    dict_variable_application_data,
     dict_hook_ref_setter_show_dialog_components,
-    sankey_data,
-    additionnal_button_option_save_json,
+    dict_variable_elements_selected,
+    additional_file_save_json_option,
     ClickSaveDiagram
   }: ApplySaveJSONTypes
 ) => {
@@ -550,89 +552,60 @@ export const ApplySaveJSONDialog = (
   const [mode_visible_element,set_mode_visible_element]=useState(false)
   const [show_save_json_modal,set_show_save_json_modal]=useState(false)
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current=set_show_save_json_modal
-  return (
-    <Modal
-      size="lg"
-      isOpen={show_save_json_modal}
-      onClose={() => set_show_save_json_modal(false)}
-    >
-      <ModalContent>
-        <ModalHeader>
-          {t('Menu.SaveJSON')}
-        </ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Form>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isChecked={mode_save}
-              onChange={() => set_mode_save(!mode_save)}>
-              {t('Menu.SaveValue')}
-            </Checkbox>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isChecked={mode_visible_element}
-              onChange={() => set_mode_visible_element(!mode_visible_element)}>
-              {t('Menu.VisibleElement')}
-            </Checkbox>
-            {additionnal_button_option_save_json}
-          </Form>
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            size="sm"
-            style={{width:'20%'}}
-            variant='danger'
-            onClick={
-              () => {
-                set_show_save_json_modal(false)
+  return <Modal
+    show={show_save_json_modal}
+    onHide={() => set_show_save_json_modal(false)}
+  >
+    <Modal.Header closeButton>
+      {t('Menu.SaveJSON')}
+    </Modal.Header>
+    <Modal.Body>
+      <Form>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={mode_save}
+          onChange={() => set_mode_save(!mode_save)}>
+          {t('Menu.SaveValue')}
+        </Checkbox>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={mode_visible_element}
+          onChange={() => set_mode_visible_element(!mode_visible_element)}>
+          {t('Menu.VisibleElement')}
+        </Checkbox>
+        {additional_file_save_json_option.map(el=>el)}
+      </Form>
+    </Modal.Body>
+    <Modal.Footer>
+      <Button
+        size="sm"
+        style={{width:'20%'}}
+        variant='danger'
+        onClick={
+          () => {
+            set_show_save_json_modal(false)
+          }
+        }>{t('Menu.close')}
+      </Button>
+      <Button
+        size="sm"
+        style={{width:'20%'}}
+        onClick={
+          () => {
+            ClickSaveDiagram(
+              dict_variable_application_data,
+              dict_variable_application_data.data,
+              dict_variable_elements_selected,
+              {
+                mode_save,
+                mode_visible_element
               }
-            }>{t('Menu.close')}
-          </Button>
-          <Button
-            size="sm"
-            style={{width:'20%'}}
-            onClick={
-              () => {
-              // Crée une copie pour d'abord enregitrer avec les changements
-              // (ClickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
-                const cpy:SankeyData=JSON.parse(JSON.stringify(sankey_data))
-                if(!mode_save){
-                  Object.values(cpy.links).forEach(d=>{
-                    (d as SankeyLink).value={}
-                  })
-                }
-                if(mode_visible_element){
-                // Si l'on enregistre que les element visible alors on cherche les élements visible dasns le svg
-                  const link_present=LinkVisibleOnSvg()
-                  const node_visible=NodeVisibleOnsSvg()
-                  cpy.links=Object.fromEntries(Object.entries(cpy.links).filter(l=>link_present.includes(l[0])).map(l=>l))
-                  const key_level_tags=Object.keys(sankey_data.levelTags)
-                  cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>{
-                    key_level_tags.forEach(klt=>{
-                      delete n[1].tags[klt]
-                    })
-                    n[1].dimensions={}
-                    n[1].inputLinksId=n[1].inputLinksId.filter(lid=>link_present.includes(lid))
-                    n[1].outputLinksId=n[1].outputLinksId.filter(lid=>link_present.includes(lid))
-                    return n
-                  }))
-                  cpy.levelTags={}
-                  cpy.linkZIndex=link_present;
-
-                  (cpy as unknown as {view:[]}).view=[]
-                }
-
-                // set_sankey_data({...sankey_data})
-                ClickSaveDiagram(cpy,dict_hook_ref_setter_show_dialog_components)
-              // set_sankey_data({...cpy})
-              }
-            }>{t('Menu.SaveJSON')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  )
+            )
+          }
+        }>{t('Menu.SaveJSON')}
+      </Button>
+    </Modal.Footer>
+  </Modal>
 }
 
 export type ExcelModalTypes = {

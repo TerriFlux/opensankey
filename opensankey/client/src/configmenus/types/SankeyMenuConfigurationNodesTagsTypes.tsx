@@ -7,14 +7,14 @@ import { ComponentUpdaterType, NodeFunctionTypes, SankeyNode, applicationContext
    *
    * @type {*}
    */
-export type SankeyMenuConfigurationNodesTagsFType = (
+export type SankeyMenuConfigurationNodesTagsFType = {
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
-  node_funtion:NodeFunctionTypes,
+  node_function:NodeFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   menu_for_modal:boolean
-)=> JSX.Element[]
+}
 
 
 // Check if all value of the attribute "k" is the same in the selected nodes (or selected style)

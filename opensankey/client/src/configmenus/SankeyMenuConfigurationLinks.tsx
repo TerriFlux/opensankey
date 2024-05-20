@@ -6,6 +6,7 @@ import {
   InputGroup,
   InputLeftAddon,
   Select,
+  Tab,
   TabList,
   TabPanels,
   Tabs
@@ -66,22 +67,22 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   const {updateComponentMenuConfigLink}=ComponentUpdater
   updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
   const { fluxTags } = data
-  const ui : {[s:string] : JSX.Element[]}= {
-    'data': SankeyWrapperConfigInModalOrMenu(
-      menu_config_link_data,
-      false,
-      t('Flux.data.données') as string,
-      'link_data_tab_id'),
-    'appearence': SankeyWrapperConfigInModalOrMenu(
-      menu_config_link_attr,
-      false,
-      t('Flux.apparence.apparence') as string,
-      'link_attr_tab_id'),
-    'tooltip': MenuConfigurationLinksTooltip(
+  const ui : {[s:string] : JSX.Element}= {
+    'Flux.data.données': <SankeyWrapperConfigInModalOrMenu
+      menu_to_wrap = {menu_config_link_data}
+      for_modal = {false}
+      idTab={'link_data_tab_id'}
+    />,
+    'Flux.apparence.apparence':<SankeyWrapperConfigInModalOrMenu
+      menu_to_wrap = {menu_config_link_attr}
+      for_modal = {false}
+      idTab={'link_attr_tab_id'}
+    />,
+    'Flux.IS': MenuConfigurationLinksTooltip(
       ComponentUpdater,
       multi_selected_links,
       t,
-      false)
+      false)[0]
   }
   const pre_tag_menu=MenuConfigurationLinksTags(
     dict_variable_application_data,
@@ -90,7 +91,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
     false,ComponentUpdater,node_function,link_function
   )
   if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')){
-    ui['tags']=pre_tag_menu
+    ui['Noeud.tags_node.tags']=pre_tag_menu[0]
   }
 
   return ui
@@ -100,7 +101,7 @@ type SankeyMenuConfigurationLinksTypes = {
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
-  menu_configuration_links : {[s:string]: JSX.Element[]},
+  menu_configuration_links : {[s:string]: JSX.Element},
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   contextMenu:contextMenuType,
@@ -545,19 +546,25 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           <TabList>
             {
               Object
-                .values(menu_configuration_links)
-                .map((c: ReactElementLike[]) => {
-                  return c[0]
-                })
+                .keys(menu_configuration_links)
+                .map((key) => {
+                  return <Tab> 
+                    <Box layerStyle='submenuconfig_tab' >
+                      {t(key)}
+                    </Box>
+                  </Tab>
+                }
+                )
             }
           </TabList>
           <TabPanels>
             {
               Object
                 .values(menu_configuration_links)
-                .map((c: ReactElementLike[]) => {
-                  return c[1]
-                })
+                .map((c: ReactElementLike) => {
+                  return c
+                }
+                )
             }
           </TabPanels>
         </Tabs>:

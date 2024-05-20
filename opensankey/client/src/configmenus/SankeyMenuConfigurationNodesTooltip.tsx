@@ -1,14 +1,14 @@
-import React, { MutableRefObject, useRef, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { SankeyMenuConfigurationNodesTooltipFType } from './types/SankeyMenuConfigurationNodesTooltipTypes'
-import { Box, Button, Tab, TabPanel, Textarea } from '@chakra-ui/react'
+import { Box, Button, TabPanel, Textarea } from '@chakra-ui/react'
 import { OSTooltip } from './SankeyUtils'
 
-export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesTooltipFType = (
+export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuConfigurationNodesTooltipFType> = ({
   applicationContext,
   dict_variable_elements_selected,
   ComponentUpdater,
   menu_for_modal
-) => {
+}) => {
   const { t } = applicationContext
   const {updateMenuConfigTextNodeTooltip}=ComponentUpdater
   const { multi_selected_nodes } = dict_variable_elements_selected
@@ -115,18 +115,16 @@ export const SankeyMenuConfigurationNodesTooltip : SankeyMenuConfigurationNodesT
   </Box>
 
   return menu_for_modal?
-    [
-      content
-    ]:[
-      <Tab>
-        <Box
-          layerStyle='submenuconfig_tab'
-        >
-          {t('Noeud.tabs.infos')}
-        </Box>
-      </Tab>,
-      <TabPanel>
-        {content}
-      </TabPanel>
-    ]
+    content
+    :
+  // <Tab>
+  //   <Box
+  //     layerStyle='submenuconfig_tab'
+  //   >
+  //     {t('Noeud.tabs.infos')}
+  //   </Box>
+  // </Tab>,
+    <TabPanel>
+      {content}
+    </TabPanel>
 }

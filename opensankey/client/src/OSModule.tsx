@@ -152,7 +152,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType
 ) => ()=>{
-  const new_data = dict_variable_application_data.get_default_data()
+  // const new_data = dict_variable_application_data.get_default_data()
   dict_variable_elements_selected.multi_selected_nodes.current = []
   dict_variable_elements_selected.multi_selected_links.current = []
   localStorage.removeItem('diff')
@@ -353,7 +353,8 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
     return null
   }
   _.CreateNodesOnSVG=(nodes_to_update:SankeyNode[])=>{
-    drawAddNodes(contextMenu,
+    drawAddNodes(
+      contextMenu,
       dict_variable_application_data,
       uiElementsRef,
       dict_variable_elements_selected,
@@ -364,7 +365,8 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
       NodeTooltipsContent,
       ComponentUpdater,
       dict_hook_ref_setter_show_dialog_components,
-      _,nodes_to_update,
+      _,
+      nodes_to_update,
       GetSankeyMinWidthAndHeight,
       resizeCanvas
     )
@@ -549,15 +551,16 @@ export const moduleDialogs : module_dialogsType = (
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_node_io',
-    SankeyMenuConfigurationNodesIO(
-      applicationContext,
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      GetLinkValue,
-      node_function,link_function,
-      ComponentUpdater,
-      true
-    )[0],
+    <SankeyMenuConfigurationNodesIO
+      applicationContext={applicationContext}
+      dict_variable_application_data={dict_variable_application_data}
+      dict_variable_elements_selected={dict_variable_elements_selected}
+      GetLinkValue={GetLinkValue}
+      node_function={node_function}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+      menu_for_modal={true}
+    />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.PF.PFM')
   ),
@@ -611,26 +614,26 @@ export const moduleDialogs : module_dialogsType = (
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_node_tooltip',
-    SankeyMenuConfigurationNodesTooltip(
-      applicationContext,
-      dict_variable_elements_selected,
-      ComponentUpdater,
-      true
-    ),
+    <SankeyMenuConfigurationNodesTooltip
+      applicationContext={applicationContext}
+      dict_variable_elements_selected ={dict_variable_elements_selected}
+      ComponentUpdater={ComponentUpdater}
+      menu_for_modal = {true}
+    />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Noeud.IS')
   ),
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_node_tags',
-    SankeyMenuConfigurationNodesTags(
-      applicationContext,
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      node_function,
-      ComponentUpdater,
-      true
-    ),
+    <SankeyMenuConfigurationNodesTags
+      applicationContext={applicationContext}
+      dict_variable_application_data={dict_variable_application_data}
+      dict_variable_elements_selected={dict_variable_elements_selected}
+      node_function={node_function}
+      ComponentUpdater={ComponentUpdater}
+      menu_for_modal={true}
+    />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.Noeuds')+' '+applicationContext.t('Menu.Etiquettes')
   ),
@@ -895,19 +898,31 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
   )
 }
 
-export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  applicationContext,
+export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  
+  applicationContext,
   dict_variable_application_data,
   applicationDraw,
   node_function,
   link_function)=>{
+  // const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+  // const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+
   return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
       <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
-        {addSimpleLevelDropDown(dict_variable_application_data)}</>
+        {addSimpleLevelDropDown(
+          dict_variable_application_data,
+          GetSankeyMinWidthAndHeight,
+          ()=>null,
+          node_function,
+          link_function,
+          node_function.recomputeDisplayedElement
+        )}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
     </Popover.Body>
   </Popover>
 }
+
 

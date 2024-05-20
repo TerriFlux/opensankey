@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { FaArrowAltCircleUp, FaArrowAltCircleDown} from 'react-icons/fa'
 import { TFunction } from 'i18next'
 
@@ -7,7 +7,6 @@ import {
   Button,
   Checkbox,
   Select,
-  Tab,
   TabPanel,
   Table,
   Tbody,
@@ -493,16 +492,16 @@ const tab_pos_link=(
   )
 }
 
-export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFType = (
+export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
   applicationContext,
   dict_variable_application_data,
   dict_variable_elements_selected,
-  GetLinkValue:GetLinkValueFuncType,
+  GetLinkValue,
   node_function,
   link_function,
   ComponentUpdater,
-  menu_for_modal=false
-) => {
+  menu_for_modal
+}) => {
   const { t } = applicationContext
   const { data, display_nodes, display_links } = dict_variable_application_data
   const { multi_selected_nodes, multi_selected_links } = dict_variable_elements_selected
@@ -793,19 +792,19 @@ export const SankeyMenuConfigurationNodesIO : SankeyMenuConfigurationNodesIOFTyp
   </Box>
 
   return menu_for_modal ?
-    [content]:
-    [
-      <Tab>
-        <Box
-          layerStyle='submenuconfig_tab'
-        >
-          {t('Noeud.tabs.io')}
-        </Box>
-      </Tab>,
-      <TabPanel>
-        {content}
-      </TabPanel>
-    ]
+    content:
+    
+  // <Tab>
+  //   <Box
+  //     layerStyle='submenuconfig_tab'
+  //   >
+  //     {t('Noeud.tabs.io')}
+  //   </Box>
+  // </Tab>,
+    <TabPanel>
+      {content}
+    </TabPanel>
+    
 }
 
 
