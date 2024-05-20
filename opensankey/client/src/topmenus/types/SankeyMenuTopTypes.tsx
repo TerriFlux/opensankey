@@ -42,10 +42,10 @@ export type OpenSankeyMenusFType = (
 
 ) => {[s:string]:JSX.Element | JSX.Element[]}
 
-export type SankeyModalWelcomeFType = (
+export type SankeyModalWelcomeFType = {
   t:TFunction,
   active_page : string,
-  set_active_page : (_:string)=>void,
+  // set_active_page : (_:string)=>void,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   never_see_again : MutableRefObject<boolean>,
   additional_shortcut_item:JSX.Element[],
@@ -56,8 +56,9 @@ export type SankeyModalWelcomeFType = (
     rc: JSX.Element;
     licence?: JSX.Element;
     news: JSX.Element;
+    interface: JSX.Element;
   }
-)=> JSX.Element
+}
 
 export type MenuDraggableFType = (
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,

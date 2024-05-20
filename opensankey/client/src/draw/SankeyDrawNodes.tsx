@@ -433,5 +433,6 @@ export const drawAddNodes : drawNodeShapeFType = (
  * @param node_to_delete List of nodes id 
  */
 export const DeleteGNodes:DeleteGNodesFType=(node_to_delete)=>{
-  (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>).filter(n=>node_to_delete.includes(n.idNode)).remove()
+  (d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>).filter(n=>node_to_delete.includes(n.idNode)).remove();
+  (d3.selectAll('.gg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>).filter(n=>node_to_delete.includes(n.idNode)).remove()
 }

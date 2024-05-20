@@ -554,8 +554,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         <ApplySaveJSONDialog
           t={applicationContext.t}
           dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-          sankey_data={dict_variable_application_data.data}
-          additionnal_button_option_save_json={additionalMenus.additional_file_save_json_option}
+          dict_variable_application_data={dict_variable_application_data}
+          dict_variable_elements_selected={dict_variable_elements_selected}
+          additional_file_save_json_option={additionalMenus.additional_file_save_json_option}
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>

@@ -1,7 +1,7 @@
 import React,{ useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 import Spinner  from 'react-bootstrap/Spinner'
-import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType, SankeyData, callbackFuncType } from '../types/Types'
+import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType, SankeyData, callbackFuncType, SankeyLink } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
 import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
@@ -11,6 +11,7 @@ import FileSaver from 'file-saver'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultSankeyDataFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { ComputeAutoSankey, compute_default_input_outputLinksId } from '../draw/SankeyDrawLayout'
+import { LinkVisibleOnSvg, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 
 
 interface SankeyLoadProdTypes {
@@ -315,24 +316,53 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   }, 100)
 }
 export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
-  data: SankeyData, 
+  dict_variable_application_data,
+  data,
   dict_hook_ref_setter_show_dialog_components,
-  name = 'sankey_diagram'
+  options
 ): void => {
-  const data_to_save = { ...data }
-  const str_data = JSON.stringify(data_to_save)
+  // const data_to_save = { ...dict_variable_application_data.data }
+  // const str_data = JSON.stringify(data_to_save)
+  // Crée une copie pour d'abord enregitrer avec les changements
+  // (ClickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
+  const cpy:SankeyData=JSON.parse(JSON.stringify(data))
+  if(!options.mode_save){
+    Object.values(cpy.links).forEach(d=>{
+      (d as SankeyLink).value={}
+    })
+  }
+  if(options.mode_visible_element){
+  // Si l'on enregistre que les element visible alors on cherche les élements visible dasns le svg
+    const link_present=LinkVisibleOnSvg()
+    const node_visible=NodeVisibleOnsSvg()
+    cpy.links=Object.fromEntries(Object.entries(cpy.links).filter(l=>link_present.includes(l[0])).map(l=>l))
+    const key_level_tags=Object.keys(cpy.levelTags)
+    cpy.nodes=Object.fromEntries(Object.entries(cpy.nodes).filter(n=>node_visible.includes(n[0])).map(n=>{
+      key_level_tags.forEach(klt=>{
+        delete n[1].tags[klt]
+      })
+      n[1].dimensions={}
+      n[1].inputLinksId=n[1].inputLinksId.filter(lid=>link_present.includes(lid))
+      n[1].outputLinksId=n[1].outputLinksId.filter(lid=>link_present.includes(lid))
+      return n
+    }))
+    cpy.levelTags={}
+    cpy.linkZIndex=link_present;
 
+    (cpy as unknown as {view:[]}).view=[]
+  }
+  const str_data = JSON.stringify(cpy)
   const blob = new Blob([str_data], { type: 'text/plain;charset=utf-8' })
-  const dataAsSuite = (data as DataSuiteType)
+  const dataAsSuite = (cpy as DataSuiteType)
+  let name = 'Diagramme de Sankey'
   if (dataAsSuite.view && dataAsSuite.view.length > 0 && !dataAsSuite.is_catalog) {
     name = 'Diagramme de Sankey avec vues'
   } else if (dataAsSuite.is_catalog === true) {
     name = 'Catalogue de vues de diagrammes de Sankey'
-  } else {
-    name = 'Diagramme de Sankey'
   }
   FileSaver.saveAs(blob, name + '.json')
 }
+
 export const ProcessExample: ProcessExampleFuncType = (
   dict_variable_application_data,
   updateLayout: updateLayoutFuncType,

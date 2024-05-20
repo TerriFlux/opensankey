@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { LinkTextFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
 import { dict_variable_application_dataType, dict_variable_elements_selectedType, SankeyNode, SankeyData, SankeyLink } from '../types/Types'
-import { RemoveAnimate, DrawArrows, drawCurveFunction, LinkStrokeWidth, returnScaleOfDrawArea, sizeOfNodeInDrawArea, hideLinkOnDragElement, DrawGrid } from './SankeyDrawFunction'
+import { RemoveAnimate, DrawArrows, drawCurveFunction, LinkStrokeWidth, returnScaleOfDrawArea, sizeOfNodeInDrawArea, DrawGrid } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
 import { shiftAllArrowPath, shiftAllLinkPath } from './SankeyDrawEventFunction'
@@ -158,8 +158,8 @@ export const DragNodes: DragNodesFType = (
   node_visible,
   ComponentUpdater
 ) => {
-  const { data } = dict_variable_application_data
-  const { multi_selected_nodes } = dict_variable_elements_selected
+  // const { data } = dict_variable_application_data
+  // const { multi_selected_nodes } = dict_variable_elements_selected
   // Cherche si des element seront hors zone si on les drag 
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
   // const out_of_zone_item = ReturnOutOfBoundElement(node, data, event, multi_selected_nodes, node_visible)

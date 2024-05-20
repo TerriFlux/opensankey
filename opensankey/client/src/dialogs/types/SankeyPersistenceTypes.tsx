@@ -2,7 +2,7 @@ import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTy
 
 import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
-import { SankeyData, callbackFuncType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
+import { SankeyData, callbackFuncType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 /**
@@ -36,19 +36,25 @@ export type ProcessExampleFuncType = (
 ) => SankeyData
 
 export type RetrieveExcelResultsFuncType = (
-    dict_variable_application_data : dict_variable_application_dataType,
-    text: string,
-    updateLayout: updateLayoutFuncType,
-    callback: callbackFuncType,
-    GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
-    convert_data: ConvertDataFuncType,
-    defaultData: () => SankeyData
+  dict_variable_application_data : dict_variable_application_dataType,
+  text: string,
+  updateLayout: updateLayoutFuncType,
+  callback: callbackFuncType,
+  GetSankeyMinWidthAndHeight: GetSankeyMinWidthAndHeightFuncType,
+  convert_data: ConvertDataFuncType,
+  defaultData: () => SankeyData
 ) => void
 
+export type SaveDiagramOptionsType = {
+  mode_save : boolean,
+  mode_visible_element: boolean
+}
+
 export type ClickSaveDiagramFuncType = (
-  data: SankeyData,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  name?: string
+  dict_variable_application_data : dict_variable_application_dataType,
+  data:SankeyData,
+  elementsSelected:dict_variable_elements_selectedType,
+  options: SaveDiagramOptionsType
 ) => void
 
 export type DownloadExamplesFuncType = (file_name: string, the_url_prefix: string, filetype: string) => void

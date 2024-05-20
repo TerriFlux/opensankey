@@ -83,8 +83,13 @@ const delete_local_aggregation=(data:SankeyData)=>{
 
 export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
   dict_variable_application_data,
+  GetSankeyMinWidthAndHeight,
+  redrawNodeLinkLegend,
+  node_function,
+  link_function,
+  recomputeDisplayedElement
 ) => {
-  const {data,set_data}=dict_variable_application_data
+  const {data}=dict_variable_application_data
   const {levelTags} = data
 
   if(Object.keys(levelTags).includes('Primaire')){
@@ -102,7 +107,14 @@ export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
 
               delete_local_aggregation(data)
               handleSimpleDropdown(evt, levelTags['Primaire'])
-              set_data({...data})
+              redrawSankeyWithSelectedTag(
+                dict_variable_application_data,
+                GetSankeyMinWidthAndHeight,
+                recomputeDisplayedElement,
+                redrawNodeLinkLegend,
+                node_function,
+                link_function
+              )
             }}>{
                 Object.entries(levelTags['Primaire'].tags).map(([tag_key, tag],i) => {
                   return (<option key={i} value={tag_key}>{tag.name}</option>)
@@ -220,9 +232,8 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                       data.nodesColorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true
                     }
+                    redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
-                    redrawNodeLinkLegend()
-
                   }}
                 />
               </OSTooltip>
@@ -250,8 +261,14 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                 onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                   delete_local_aggregation(data)
                   handleSimpleDropdown(evt, tags_group)
-                  redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
-                  
+                  redrawSankeyWithSelectedTag(
+                    dict_variable_application_data,
+                    GetSankeyMinWidthAndHeight,
+                    recomputeDisplayedElement,
+                    redrawNodeLinkLegend,
+                    node_function,
+                    link_function
+                  )
                   setForceUpdate(!forceUpdate)
                 }}>{
                   Object.entries(tags_group.tags).map(([tag_key, tag],i) => {
@@ -272,8 +289,10 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                     first_antagonist_tag.siblings.forEach(sibling=>data.levelTags[sibling].activated = tags_group.activated)
                     // Opposed to current tag group
                     tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = !tags_group.activated)
+                    redrawSankeyWithSelectedTag(
+                      dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function
+                    )
                     setForceUpdate(!forceUpdate)
-                    redrawNodeLinkLegend()
                   }}
                 />
               </Col> : <></>
@@ -1296,7 +1315,7 @@ const redrawSankeyWithSelectedTag=(
   if (ll.length !=0) {
     link_function.CreateLinksOnSVG(ll.map(id=>data.links[id]))
     // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
-    redrawNodeLinkLegend()
+    //redrawNodeLinkLegend()
     actualizeDrawAreaFrame(dict_variable_application_data,GetSankeyMinWidthAndHeight)
   }
 }

@@ -14,7 +14,8 @@ import {
   Input,
   Tabs,
   TabList,
-  TabPanels
+  TabPanels,
+  Tab
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -56,7 +57,7 @@ type SankeyEditionTypes = {
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   multi_selected_nodes:{current:SankeyNode[]},
-  menu_configuration_nodes : {[s:string]: JSX.Element[]},
+  menu_configuration_nodes : {[s:string]: JSX.Element},
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
@@ -74,43 +75,41 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 ) => {
   const { data } = dict_variable_application_data
 
-  const ui : {[s:string] : JSX.Element[]}= {
-    'apparence': SankeyWrapperConfigInModalOrMenu(
-      menu_configuration_nodes_attributes,
-      false,
-      applicationContext.t('Noeud.tabs.apparence') as string,
-      'node_attr'
-    ),
-    'infos': SankeyMenuConfigurationNodesTooltip(
-      applicationContext,
-      dict_variable_elements_selected,
-      ComponentUpdater,
-      false
-    )
+  const ui : {[s:string] : JSX.Element}= {
+    'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
+      menu_to_wrap = {menu_configuration_nodes_attributes}
+      for_modal = {false}
+      idTab={'node_attr'}
+    />,
+    'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
+      applicationContext={applicationContext}
+      dict_variable_elements_selected ={dict_variable_elements_selected}
+      ComponentUpdater={ComponentUpdater}
+      menu_for_modal = {false}
+    />
   }
-
-  const node_tags_submenu = SankeyMenuConfigurationNodesTags(
-    applicationContext,
-    dict_variable_application_data,
-    dict_variable_elements_selected,
-    node_function,
-    ComponentUpdater,
-    false
-  )
 
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
-    ui['tags'] = node_tags_submenu
+    ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
+      applicationContext={applicationContext}
+      dict_variable_application_data={dict_variable_application_data}
+      dict_variable_elements_selected={dict_variable_elements_selected}
+      node_function={node_function}
+      ComponentUpdater={ComponentUpdater}
+      menu_for_modal={false}
+    />
   }
 
-  ui['io'] = SankeyMenuConfigurationNodesIO(
-    applicationContext,
-    dict_variable_application_data,
-    dict_variable_elements_selected,
-    GetLinkValue,
-    node_function,link_function,
-    ComponentUpdater,
-    false
-  )
+  ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
+    applicationContext={applicationContext}
+    dict_variable_application_data={dict_variable_application_data}
+    dict_variable_elements_selected={dict_variable_elements_selected}
+    GetLinkValue={GetLinkValue}
+    node_function={node_function}
+    link_function={link_function}
+    ComponentUpdater={ComponentUpdater}
+    menu_for_modal={false}
+  />
 
   return ui
 }
@@ -441,18 +440,23 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             <TabList>
               {
                 Object
-                  .values(menu_configuration_nodes)
-                  .map((c: ReactElementLike[]) => {
-                    return c[0]
-                  })
+                  .keys(menu_configuration_nodes)
+                  .map((key) => {
+                    return <Tab> 
+                      <Box layerStyle='submenuconfig_tab' >
+                        {t(key)}
+                      </Box>
+                    </Tab>
+                  }
+                  )
               }
             </TabList>
             <TabPanels>
               {
                 Object
                   .values(menu_configuration_nodes)
-                  .map((c: ReactElementLike[]) => {
-                    return c[1]
+                  .map((c: ReactElementLike) => {
+                    return c
                   })
               }
             </TabPanels>

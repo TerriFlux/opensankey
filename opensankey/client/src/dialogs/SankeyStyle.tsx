@@ -165,10 +165,11 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
     </Box>
 
     {
-      SankeyWrapperConfigInModalOrMenu(
-        node_attribute_tab,
-        true,
-      )[0]
+      <SankeyWrapperConfigInModalOrMenu
+        menu_to_wrap = {node_attribute_tab}
+        for_modal = {true}
+        idTab={'node_attr'}
+      />
     }
   </Box>
 
