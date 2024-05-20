@@ -83,6 +83,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
+  const [forceUpdate,setForceUpdate]=useState(false)
+
 
   // Logo, names, licences
   const applicationContext = initializeApplicationContext()
@@ -98,7 +100,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   dict_variable_elements_selected.userScaleRef.current = dict_variable_application_data.data.user_scale // TODO
   const dict_hook_ref_setter_show_dialog_components = initializeShowDialog() 
   const contextMenu = initializeContextMenu()
+
   const ComponentUpdater = initializeComponentUpdater()
+  ComponentUpdater.updateComponentMenuConfig.current=()=>setForceUpdate(!forceUpdate) 
+  ComponentUpdater.updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
+
   const processFunctions = initializeProcessFunctions(dict_hook_ref_setter_show_dialog_components)
   const uiElementsRef = initializeUIElementsRef()
   /*************************************************************************************************/
@@ -220,7 +226,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   
     // Mise en page
     extra_background_element: <></>,
-    apply_transformation_additional_elements:[],
+    apply_transformation_additional_elements:[<></>],
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
@@ -273,19 +279,19 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     contextMenu
   )
 
-  const menu_configuration_nodes_attributes = OpenSankeyConfigurationNodesAttributes(
-    applicationContext,
-    dict_variable_application_data,
-    dict_variable_elements_selected,
-    false,
-    dict_variable_elements_selected.ref_selected_style_node,
-    additionalMenus.advanced_appearence_content,
-    additionalMenus.advanced_label_content,
-    additionalMenus.advanced_label_value_content,
-    link_function,
-    ComponentUpdater,
-    node_function
-  )
+  const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
+    applicationContext={applicationContext}
+    dict_variable_application_data={dict_variable_application_data}
+    dict_variable_elements_selected={dict_variable_elements_selected}
+    menu_for_style={false}
+    ref_selected_style_node={dict_variable_elements_selected.ref_selected_style_node}
+    advanced_appearence_content={additionalMenus.advanced_appearence_content}
+    advanced_label_content={additionalMenus.advanced_label_content}
+    advanced_label_value_content={additionalMenus.advanced_label_value_content}
+    link_function={link_function}
+    ComponentUpdater={ComponentUpdater}
+    node_function={node_function}
+  />
 
   const sankey_menus = OpenSankeyMenus(
     applicationContext.t,
@@ -304,25 +310,24 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     dict_variable_application_data.setDiagram,
   )
 
-  const config_link_data = MenuConfigurationLinksData(
-    dict_variable_application_data,
-    dict_variable_elements_selected,
-    applicationContext,
-    additionalMenus.additional_data_element,
-    ComponentUpdater,
-    node_function,
-    link_function
-  )
-  const config_link_attr = MenuConfigurationLinksAppearence(
-    dict_variable_application_data,
-    dict_variable_elements_selected,
-    applicationContext,
-    additionalMenus.additional_link_appearence_items,
-    false,
-    link_function,
-    ComponentUpdater 
-  )
-
+  const config_link_data = <MenuConfigurationLinksData
+    dict_variable_application_data={dict_variable_application_data}
+    dict_variable_elements_selected={dict_variable_elements_selected}
+    applicationContext={applicationContext}
+    additional_data_element={additionalMenus.additional_data_element}
+    ComponentUpdater={ComponentUpdater}
+    node_function={node_function}
+    link_function={link_function}
+  />
+  const config_link_attr = <MenuConfigurationLinksAppearence
+    dict_variable_application_data={dict_variable_application_data}
+    dict_variable_elements_selected={dict_variable_elements_selected}
+    applicationContext={applicationContext}
+    additional_link_appearence_items={additionalMenus.additional_link_appearence_items}
+    menu_for_style={false}
+    link_function={link_function}
+    ComponentUpdater={ComponentUpdater}
+  />
 
   const {filter}=dict_variable_application_data.data.display_style
 
@@ -491,38 +496,41 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             menus={sankey_menus}
             cardsTemplate={<></>}
             external_modal={[
-              <React.Fragment key={'modale_style_link'}>{SankeyModalStyleLink(
-                applicationContext,
-                dict_variable_application_data,
-                dict_variable_elements_selected,
-                dict_hook_ref_setter_show_dialog_components,
-                contextMenu.pointer_pos,
-                [],
-                link_function,
-                ComponentUpdater
-              )
-              }</React.Fragment>,
-              <React.Fragment key={'modale_style_node'}>{SankeyModalStyleNode(
-                applicationContext,
-                dict_variable_application_data,
-                dict_hook_ref_setter_show_dialog_components,
-                dict_variable_elements_selected.ref_selected_style_node,ComponentUpdater,
-                node_function,
-                contextMenu.pointer_pos,
-                OpenSankeyConfigurationNodesAttributes(
-                  applicationContext,
-                  dict_variable_application_data,
-                  dict_variable_elements_selected,
-                  true,
-                  dict_variable_elements_selected.ref_selected_style_node,
-                  additionalMenus.advanced_appearence_content,
-                  additionalMenus.advanced_label_content,
-                  additionalMenus.advanced_label_value_content,
-                  link_function,
-                  ComponentUpdater,
-                  node_function
-                )
-              )}</React.Fragment>,
+              <React.Fragment key={'modale_style_link'}><SankeyModalStyleLink
+                applicationContext={applicationContext}
+                dict_variable_application_data={dict_variable_application_data}
+                dict_variable_elements_selected={dict_variable_elements_selected}
+                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+                pointer_pos={contextMenu.pointer_pos}
+                additional_link_appearence_items={[]}
+                link_function={link_function}
+                ComponentUpdater={ComponentUpdater}
+              />
+              </React.Fragment>,
+              <React.Fragment key={'modale_style_node'}><SankeyModalStyleNode
+                applicationContext={applicationContext}
+                dict_variable_application_data={dict_variable_application_data}
+                dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+                ref_selected_style_node={dict_variable_elements_selected.ref_selected_style_node}
+                ComponentUpdater={ComponentUpdater}
+                node_function={node_function}
+                pointer_pos={contextMenu.pointer_pos}
+                node_attribute_tab={
+                  <OpenSankeyConfigurationNodesAttributes
+                    applicationContext={applicationContext}
+                    dict_variable_application_data={dict_variable_application_data}
+                    dict_variable_elements_selected={dict_variable_elements_selected}
+                    menu_for_style={true}
+                    ref_selected_style_node={dict_variable_elements_selected.ref_selected_style_node}
+                    advanced_appearence_content={additionalMenus.advanced_appearence_content}
+                    advanced_label_content={additionalMenus.advanced_label_content}
+                    advanced_label_value_content={additionalMenus.advanced_label_value_content}
+                    link_function={link_function}
+                    ComponentUpdater={ComponentUpdater}
+                    node_function={node_function}
+                  />
+                }/>
+              </React.Fragment>,
               <React.Fragment key={'modale_preference'}><ModalPreference
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
                 ui={Object.values(regular_ui).map(d=>{
@@ -540,7 +548,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               additionalMenus.additional_nav_item
             }
             convert_data={dict_variable_application_data.convert_data}
-            apply_transformation_additional_elements={[]}
+            apply_transformation_additional_elements={[<></>]}
             DiagramSelector={initializeDiagrammSelector(dict_variable_application_data)}
             callback={()=>null}
             ref_alt_key_pressed={ref_alt_key_pressed}

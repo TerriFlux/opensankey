@@ -192,8 +192,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
   external_file_export_item,
   externale_save_item,
   externale_navbar_item,
-  convert_data,
-  setDiagram
+  convert_data
 ) => {
   const _load_json = useRef<HTMLInputElement>(null)
 
@@ -221,50 +220,50 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
       Object.keys(sous_filieres).forEach(s=>diagrams[s]=[s])
     }
   }
-  const [s_diagram, sDiagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
-  const [s_diagram_2, sDiagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
+  // const [s_diagram, sDiagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
+  // const [s_diagram_2, sDiagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
   // OBJECT THAT CONTAIN DIFFERENT MENUS
   const ui :{[s:string] : JSX.Element[]}=  {}
 
-  let diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
-    <Form.Select style={{ width: '200px', color:'black' }}
-      onChange={evt=> {
-        sDiagram(evt.target.value)
-        setDiagram(evt.target.value, set_data, convert_data,get_default_data)
-      }}
-      value={s_diagram}>
-      {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
-    </Form.Select>
-  </Form.Group> : <React.Fragment key={'1'} />
+  // let diagrams_element = window.SankeyToolsStatic && sous_filieres && !is_split ? <Form.Group key={'1'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
+  //   <Form.Select style={{ width: '200px', color:'black' }}
+  //     onChange={evt=> {
+  //       sDiagram(evt.target.value)
+  //       setDiagram(evt.target.value, set_data, convert_data,get_default_data)
+  //     }}
+  //     value={s_diagram}>
+  //     {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
+  //   </Form.Select>
+  // </Form.Group> : <React.Fragment key={'1'} />
 
 
-  if (window.SankeyToolsStatic && sous_filieres && is_split) {
+  // if (window.SankeyToolsStatic && sous_filieres && is_split) {
 
-    diagrams_element =
-      <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
-        <Form.Select style={{ width: '200px', color:'black' }}
-          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
-            sDiagram(evt.target.value)
-            const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path, set_data,convert_data,get_default_data)
-          }}
-          value={s_diagram}>
-          {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
-        </Form.Select>
-        {is_split ?
-          (<Form.Select style={{ width: '200px', color:'black' }}
-            onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
-              sDiagram2(evt.target.value)
-              const diagram_path = s_diagram+'/'+evt.target.value
-              setDiagram(diagram_path, set_data,convert_data,get_default_data)
-            }}
-            value={s_diagram_2}>
-            {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
-          </Form.Select>) :(<React.Fragment />)
-        }
-      </Form.Group>
-  }
+  //   diagrams_element =
+  //     <Form.Group key={'2'} as={Col} style={{ marginLeft: '10px' }} lg="auto">
+  //       <Form.Select style={{ width: '200px', color:'black' }}
+  //         onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+  //           sDiagram(evt.target.value)
+  //           const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
+  //           setDiagram(diagram_path, set_data,convert_data,get_default_data)
+  //         }}
+  //         value={s_diagram}>
+  //         {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
+  //       </Form.Select>
+  //       {is_split ?
+  //         (<Form.Select style={{ width: '200px', color:'black' }}
+  //           onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+  //             sDiagram2(evt.target.value)
+  //             const diagram_path = s_diagram+'/'+evt.target.value
+  //             setDiagram(diagram_path, set_data,convert_data,get_default_data)
+  //           }}
+  //           value={s_diagram_2}>
+  //           {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
+  //         </Form.Select>) :(<React.Fragment />)
+  //       }
+  //     </Form.Group>
+  // }
 
   const excel_element = window.sankey && window.sankey.excel ? (
     <Form.Group key={'3'} as={Col} lg="auto" style={{marginRight:'10px'}} >
@@ -272,7 +271,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
     </Form.Group>) : (<React.Fragment key={'3'}></React.Fragment>)
 
 
-  if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
+  // if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
   if (window.sankey && window.sankey.excel) ui['excel']=[(excel_element)]
 
   if(!window.SankeyToolsStatic){
@@ -1188,10 +1187,10 @@ const  DataTagsDDNavBar = (
   })
   return allDD
 }
-export const OpenSankeySaveButton : OpenSankeySaveButtonFType = (
+export const OpenSankeySaveButton : FunctionComponent<OpenSankeySaveButtonFType> = ({
   ComponentUpdater,
   applicationContext
-)=>{
+})=>{
   const last_save=localStorage.getItem('last_save')
   const has_save_in_cache=last_save!==undefined && last_save!==null
 

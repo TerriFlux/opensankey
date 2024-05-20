@@ -57,7 +57,7 @@ import {
 } from './SankeyUtils'
 import { OpenSankeyConfigurationNodesAttributesFType, SankeyWrapperConfigInModalOrMenuType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
 
-export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNodesAttributesFType = (
+export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
   applicationContext,
   dict_variable_application_data,
   dict_variable_elements_selected,
@@ -69,7 +69,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   link_function,
   ComponentUpdater,
   node_function
-) => {
+}) => {
   const { t } = applicationContext
   const { data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
@@ -1179,7 +1179,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
   </Box>:<></>
 
   // Tableau d'elements de sous-menu attribut de noeuds
-  return [
+  return <>
     <React.Fragment key={'style_node'}>{style_node}</React.Fragment>,
 
     <React.Fragment key={'sep_1'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
@@ -1190,7 +1190,7 @@ export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNod
 
     <React.Fragment key={'sep_3'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>,
     <React.Fragment key={'val'}>{content_label_value}</React.Fragment>
-  ]
+  </>
 }
 
 export const SankeyMenuConfigurationNodesAttributes = (
@@ -1201,9 +1201,7 @@ export const SankeyMenuConfigurationNodesAttributes = (
   //Function that check if all selected nodes have the same value for some parameter
   return for_modal ?
     <Box layerStyle='menuconfigpanel_grid' >
-      {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
-        return <React.Fragment key={i}>{c}</React.Fragment>
-      })}
+      {menu_configuration_nodes_attributes}
     </Box>
     :
   // <Tab>
@@ -1215,9 +1213,7 @@ export const SankeyMenuConfigurationNodesAttributes = (
       id='nodes_desc'
     >
       <Box layerStyle='menuconfigpanel_grid'>
-        {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
-          return <React.Fragment key={i}>{c}</React.Fragment>
-        })}
+        {menu_configuration_nodes_attributes}
       </Box>
     </TabPanel>
     
@@ -1231,9 +1227,7 @@ export const SankeyWrapperConfigInModalOrMenu : FunctionComponent<SankeyWrapperC
   //Function that check if all selected nodes have the same value for some parameter
   return for_modal ?
     <Box layerStyle='menuconfigpanel_grid' >
-      {menu_to_wrap.map((c:JSX.Element,i)=>{
-        return <React.Fragment key={i}>{c}</React.Fragment>
-      })}
+      {menu_to_wrap}
     </Box>
     :
   // <Tab> 
@@ -1246,9 +1240,7 @@ export const SankeyWrapperConfigInModalOrMenu : FunctionComponent<SankeyWrapperC
       id={idTab}
     >
       <Box layerStyle='menuconfigpanel_grid'>
-        {menu_to_wrap.map((c:JSX.Element,i)=>{
-          return <React.Fragment key={i}>{c}</React.Fragment>
-        })}
+        {menu_to_wrap}
       </Box>
     </TabPanel>
     

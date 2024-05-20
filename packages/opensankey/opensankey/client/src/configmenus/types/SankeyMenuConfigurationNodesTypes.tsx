@@ -13,7 +13,7 @@ export type OpenSankeyMenuConfigurationNodesFType = (
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
-  menu_configuration_nodes_attributes:JSX.Element[],
+  menu_configuration_nodes_attributes:JSX.Element,
   GetLinkValue:GetLinkValueFuncType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
