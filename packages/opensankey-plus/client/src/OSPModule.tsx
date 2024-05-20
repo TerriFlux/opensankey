@@ -66,7 +66,7 @@ import { SankeyPlusMenuPreferenceLabels, zdtMenuAsAccordeonItem, SankeyPlusMenuC
 import { SankeyPlusDrawNodesIllustration, PlusNodeClickEvent, SankeyPlusNodeIcon, SankeyPlusHyperLink } from './SankeyPlusNodes'
 import { DefaultSankeyPlusStyleLink,  ImportImageAsSvgBg, PlusItemExport, PlusLinkSabotColor } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, apply_transformation_opensankey_plus_elements } from './SankeyPlusConvert'
-import { GetDataFromView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, view_toast, view_toast_update_view, viewsAccordion } from './SankeyPlusViews'
+import { GetDataFromView, MenuEnregistrerView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, view_toast, view_toast_update_view, viewsAccordion } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
@@ -172,7 +172,8 @@ export const OSPInitializeApplicationData : OSPinitializeApplicationDataVarType=
     set_view,
     view_not_saved:view_not_saved,
     set_view_not_saved:set_view_not_saved,
-    setDiagram:useOpenSankeySetDiagram?getSetDiagramFunc(set_master_data,set_view,plus_get_defaut_data ) : setDiagram
+    setDiagram:useOpenSankeySetDiagram?getSetDiagramFunc(set_master_data,set_view,plus_get_defaut_data ) : setDiagram,
+    is_catalog:false
   } as OSPApplicationDataVarType
 }
 
@@ -185,6 +186,7 @@ export const OSPInitializeElementSelected : OSPInitializeElementSelectedType = (
     r_setter_editor_content_fo_zdt : useRef<Dispatch<SetStateAction<string>>[]>([]),
     r_setter_editor_content_fo_node : useRef<Dispatch<SetStateAction<string>>>(),
     r_setter_value_editor_name_view: useRef<Dispatch<SetStateAction<string>>>(),
+    saveViewGetter:useRef<boolean>(false)
   } as PlusElementsSelectedVarType
 }
 
@@ -196,7 +198,6 @@ export const OSPInitializeShowDialog : OSPInitializeShowDialogType = ()=>{
     ref_setter_show_modal_transparent_view_attr: useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     show_toast_new_view: useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
     show_toast_update_view: useRef<Dispatch<SetStateAction<boolean>>>(()=>null),
-  
   } as  SankeyPlusShowMenuComponentsVarType
 }
 export const OSPcloseAllMenu = closeAllMenu
@@ -440,31 +441,31 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
 
 
   // Menu conf nodes
-  additionalMenus.additional_menu_configuration_nodes['icon']=SankeyPlusNodeIcon(
-    applicationContext.t,
-      dict_variable_application_data.data as SankeyPlusData,
-      dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; },
-      true,
-      false,
-      dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType,
-      node_function as PlusNodeFuntionType,
-      ComponentUpdater as PlusComponentUpdaterType
-  )
-  additionalMenus.additional_menu_configuration_nodes['fo']=SankeyPlusNodeFO(
-    applicationContext.t,
-      dict_variable_application_data.data as SankeyPlusData,
-      dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; },
-      true,
-      dict_variable_elements_selected as PlusElementsSelectedType,
-      node_function as PlusNodeFuntionType
-  )
-  additionalMenus.additional_menu_configuration_nodes['hl']=SankeyPlusHyperLink(
-    applicationContext.t,
-      dict_variable_application_data.data as SankeyPlusData,
-      dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; },
-      true,
-      node_function as PlusNodeFuntionType
-  )
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon']=<SankeyPlusNodeIcon
+    t={applicationContext.t}
+    data={dict_variable_application_data.data as SankeyPlusData}
+    multi_selected_nodes={dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; }}
+    is_activated={true}
+    menu_for_modal={false}
+    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType}
+    node_function={node_function as PlusNodeFuntionType}
+    ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
+  />
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo']= <SankeyPlusNodeFO
+    t={applicationContext.t}
+    data={dict_variable_application_data.data as SankeyPlusData}
+    multi_selected_nodes={dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; }}
+    is_activated={true}
+    dict_variable_elements_selected={dict_variable_elements_selected as PlusElementsSelectedType}
+    node_function={node_function as PlusNodeFuntionType}
+  />
+  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl']=<SankeyPlusHyperLink
+    t={applicationContext.t}
+    data={dict_variable_application_data.data as SankeyPlusData}
+    multi_selected_nodes={dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; }}
+    is_activated={true}
+    node_function={node_function as PlusNodeFuntionType}
+  />
     
   
   //Links
@@ -499,6 +500,16 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
       ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
     />
   ))
+
+  const plusData = dict_variable_application_data as SankeyPlusApplicationDataType
+  if (plusData.master_data && plusData.master_data.current_view && plusData.master_data.current_view!=='none') {
+    additionalMenus.additional_file_save_json_option.push(
+      <MenuEnregistrerView
+        t={t}
+        elementsSelected={dict_variable_elements_selected as PlusElementsSelectedType}
+      />
+    )
+  }
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type

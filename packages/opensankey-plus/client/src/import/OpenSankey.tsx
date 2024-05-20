@@ -28,6 +28,7 @@ import * as SankeyMenuPreferences from 'open-sankey/dist/dialogs/SankeyMenuPrefe
 import * as SankeyDraw from 'open-sankey/dist/draw/SankeyDraw'
 import * as SankeyLayout from 'open-sankey/dist/draw/SankeyDrawLayout'
 import * as SankeyShape from 'open-sankey/dist/draw/SankeyDrawShapes'
+import * as SankeyPersistence from 'open-sankey/dist/dialogs/SankeyPersistence'
 import * as OSModule from 'open-sankey/dist/OSModule'
 import OSSankeyApp from 'open-sankey/dist/SankeyApp'
 import {FunctionComponent} from 'react'
@@ -83,7 +84,7 @@ import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFunc
 } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
 
 import {EventOnZoneMouseDownFuncType, EventOnZoneMouseMoveFuncType, EventOnZoneMouseUpFuncType, SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType, ZoomFunctionFuncType, actualizeDrawAreaFrameFType, applyZoomEventFType, selectOpensankeyElementsInSelectionZoneFType} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
-import { ClickSaveExcelFuncType, RetrieveExcelResultsFuncType, UploadExempleFuncType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
+import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, RetrieveExcelResultsFuncType, UploadExempleFuncType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
 import { SankeyMenuConfigurationNodesTooltipFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationNodesTooltipTypes'
 import { MenuConfigurationLinksTooltipFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationLinksTooltipTypes'
 import { SankeyMenuConfigurationNodesTagsFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationNodesTagsTypes'
@@ -221,8 +222,7 @@ export const OpenSankeyMenuConfigurationNodes=SankeyMenuConfigurationNodes
 export const OpenSankeyDiagramSelector=SankeyMenuDialogs
   .OpenSankeyDiagramSelector as OpenSankeyDiagramSelectorFType
 export const OpenSankeyMenuConfigurationNodesIO=
-  SankeyMenuConfigurationNodesIO.SankeyMenuConfigurationNodesIO as
-   SankeyMenuConfigurationNodesIOFType
+  SankeyMenuConfigurationNodesIO.SankeyMenuConfigurationNodesIO as FunctionComponent<SankeyMenuConfigurationNodesIOFType>
 export const SankeyMenuConfigurationLinks=
   OpenSankeyMenuConfigurationLinks.MenuConfigurationLinks as MenuConfigurationLinksFType
 export const MenuConfigurationLinksData=SankeyMenuConfigurationLinksData
@@ -248,12 +248,12 @@ export const keyHandler =
 export const ApplySaveJSONDialog :
   FunctionComponent<ApplySaveJSONTypes> = SankeyMenuDialogs.ApplySaveJSONDialog
 
-export const SankeyMenuConfigurationNodesTooltip:SankeyMenuConfigurationNodesTooltipFType=OpenSankeyMenuConfigurationNodesTooltip.SankeyMenuConfigurationNodesTooltip
+export const SankeyMenuConfigurationNodesTooltip:FunctionComponent<SankeyMenuConfigurationNodesTooltipFType>=OpenSankeyMenuConfigurationNodesTooltip.SankeyMenuConfigurationNodesTooltip
 
 export const MenuConfigurationLinksTooltip:
   MenuConfigurationLinksTooltipFType=SankeyMenuConfigurationLinksTooltip.MenuConfigurationLinksTooltip
 
-export const SankeyMenuConfigurationNodesTags:SankeyMenuConfigurationNodesTagsFType=MenuConfigurationNodesTags.SankeyMenuConfigurationNodesTags
+export const SankeyMenuConfigurationNodesTags:FunctionComponent<SankeyMenuConfigurationNodesTagsFType>=MenuConfigurationNodesTags.SankeyMenuConfigurationNodesTags
 
 export const MenuConfigurationLinksTags:MenuConfigurationLinksTagsFType=ConfigurationLinksTags.MenuConfigurationLinksTags
 
@@ -314,3 +314,4 @@ export const selectOpensankeyElementsInSelectionZone : selectOpensankeyElementsI
 
 export const initializeCloseAllMenuContext:initializeCloseAllMenuContextType =OSModule.initializeCloseAllMenuContext
 export const initializeKeyHandler:initializeKeyHandlerType = OSModule.initializeKeyHandler
+export const ClickSaveDiagram:ClickSaveDiagramFuncType = SankeyPersistence.ClickSaveDiagram

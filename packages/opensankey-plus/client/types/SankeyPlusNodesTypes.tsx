@@ -7,7 +7,7 @@ import { dict_variable_application_dataType, contextMenuType, uiElementsRefType,
 import { MutableRefObject } from 'react'
 
 
-export type SankeyPlusNodeIconFType = (
+export type SankeyPlusNodeIconFType = {
   t:TFunction,
   data:SankeyPlusData,
   multi_selected_nodes:{current:SankeyPlusNode[]},
@@ -16,15 +16,15 @@ export type SankeyPlusNodeIconFType = (
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   node_function:PlusNodeFuntionType,
   ComponentUpdater:PlusComponentUpdaterType
-)=> JSX.Element[]
+}
 
-export type SankeyPlusHyperLinkFType=(
+export type SankeyPlusHyperLinkFType={
   t:TFunction,
   data:SankeyPlusData,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
   node_function:PlusNodeFuntionType
-) => JSX.Element[]
+}
 
 export type PlusNodeClickEventFType=(
   applicaTionData:SankeyPlusApplicationDataType,

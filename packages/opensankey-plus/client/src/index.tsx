@@ -14,7 +14,8 @@ import {
   dict_variable_elements_selectedType, uiElementsRefType, dict_hook_ref_setter_show_dialog_componentsType, 
   applicationDrawType, 
   AdditionalMenusType,
-  processFunctionsType
+  processFunctionsType,
+  SankeyData
 } from 'open-sankey/src/types/Types'
 import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyTooltipTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
@@ -29,7 +30,8 @@ import {
   complete_sankey_data,
   SankeyApp,
   initializeMenuConfiguration,
-  initializeKeyHandler
+  initializeKeyHandler,
+  ClickSaveDiagram
 } from './import/OpenSankey'
 import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from '../types/Types'
 import { 
@@ -42,7 +44,8 @@ import {
   OSPInitalizeSelectorDetailNodes} from './OSPModule'
 import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
-import { ClickSaveDiagram } from 'open-sankey/dist/dialogs/SankeyPersistence'
+//import { ClickSaveDiagram } from 'open-sankey/dist/dialogs/SankeyPersistence'
+import { SaveDiagramOptionsType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
 
 window.React = React
 
@@ -481,7 +484,32 @@ root.render(
       )}
 
     }
-    ClickSaveDiagram={ClickSaveDiagram}
+    ClickSaveDiagram={
+      (
+        dict_variable_application_data: dict_variable_application_dataType, 
+        data:SankeyData,
+        dict_variable_elements_selected:dict_variable_elements_selectedType,
+        options:SaveDiagramOptionsType
+      ) => {
+        const {master_data} = dict_variable_application_data as SankeyPlusApplicationDataType
+        const PlusElementsSelected = dict_variable_elements_selected as PlusElementsSelectedType
+        let data_to_save = data as SankeyPlusData
+        if (master_data && (master_data.view.length > 0)) {
+          //if views are present there are two cases. If save only view data is saved otherwise master data is saved.
+          if ( PlusElementsSelected.saveViewGetter.current ) {
+            data_to_save.current_view='none'
+          } else {
+            data_to_save = master_data
+          }
+        }
+        ClickSaveDiagram(
+          dict_variable_application_data,
+          data_to_save,
+          dict_variable_elements_selected,
+          options
+        )
+      }
+    }
     installEventOnSVG={
       (
         contextMenu,

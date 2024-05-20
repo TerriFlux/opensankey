@@ -152,7 +152,7 @@ export type OSPApplicationDataVarType = {
   set_view: (_: string) => void,
   view_not_saved:string,
   set_view_not_saved:(s:string)=>void,
-
+  is_catalog:boolean
 }
 export type SankeyPlusApplicationDataType = dict_variable_application_dataType & OSPApplicationDataVarType
 
@@ -165,6 +165,7 @@ export type PlusElementsSelectedVarType={
   r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
   r_setter_editor_content_fo_zdt: MutableRefObject<Dispatch<SetStateAction<string>>[] | undefined>,
   r_setter_value_editor_name_view: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>,
+  saveViewGetter:MutableRefObject<boolean>
 }
 
 export type SankeyPlusContextMenuType = contextMenuType & SankeyPlusContextMenuVarType

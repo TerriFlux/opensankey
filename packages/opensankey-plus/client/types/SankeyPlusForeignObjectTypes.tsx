@@ -4,14 +4,14 @@ import { NodeTooltipsContentFType } from 'open-sankey/src/draw/types/SankeyToolt
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { dict_variable_elements_selectedType } from 'open-sankey/src/types/Types'
 
-export type SankeyPlusNodeFOFType = (
+export type SankeyPlusNodeFOFType = {
   t:TFunction,
   data:SankeyPlusData,
   multi_selected_nodes:{current:SankeyPlusNode[]},
   is_activated:boolean,
   dict_variable_elements_selected:PlusElementsSelectedType,
   node_function:PlusNodeFuntionType
-) => JSX.Element[]
+ }
 
 export type PlusDrawNodesFOFType = (
   data:SankeyPlusData,

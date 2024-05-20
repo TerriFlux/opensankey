@@ -1,5 +1,5 @@
 // Standard libs
-import React, { ChangeEvent, useRef, useState } from 'react'
+import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 import * as d3 from 'd3'
 
 import { TFunction } from 'i18next'
@@ -49,7 +49,6 @@ import {
 
 // OpenSankey Libs
 import { SankeyLinkValueDict, TagsGroup} from 'open-sankey/src/types/Types'
-import { SmoothClasses} from 'open-sankey/dist/configmenus/SankeyUtils'
 
 // Local libs
 import {
@@ -1653,26 +1652,21 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   } return <></>
 }
 
-export const MenuEnregistrerView : MenuEnregistrerViewFType = (
-  master_data:SankeyPlusData|undefined,
-  t:TFunction,
-  save_only_view:boolean,
-  set_save_only_view:(b:boolean)=>void
-)=>{
-  return <Form.Group>
-    <Checkbox
-      sx={SmoothClasses({})}
-      maxW={'40%'}
-      isChecked={save_only_view}
-      onChange={() => set_save_only_view(!save_only_view)}>
-      <OSTooltip label={t('view.tooltips.buttonExportView')}>
-        {t('view.export')}
-      </OSTooltip>
-    </Checkbox>
-  </Form.Group>
+export const MenuEnregistrerView : FunctionComponent<MenuEnregistrerViewFType> = ({
+  t,
+  elementsSelected
+})=>{
+  const [save_only_view,set_save_only_view] = useState(false)
+  elementsSelected.saveViewGetter.current = save_only_view
+  return <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isChecked={save_only_view}
+    onChange={() => set_save_only_view(!save_only_view)}>
+    <OSTooltip label={t('view.tooltips.buttonExportView')}>
+      {t('view.export')}
+    </OSTooltip>
+  </Checkbox>
 }
-
-
 
 export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFType = (
   master_data:SankeyPlusData|undefined,

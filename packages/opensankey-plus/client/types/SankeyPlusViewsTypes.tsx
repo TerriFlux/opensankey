@@ -122,12 +122,10 @@ export type modal_transparent_view_attrFType = (
   t:TFunction
 )=> JSX.Element
 
-export type MenuEnregistrerViewFType = (
-  master_data:SankeyPlusData| undefined,
+export type MenuEnregistrerViewFType = {
   t:TFunction,
-  save_only_view:boolean,
-  set_save_only_view:(b:boolean)=>void
-)=> JSX.Element
+  elementsSelected: PlusElementsSelectedType
+}
 
 export type OpenSankeyPlusCheckpointButtonFType = (
   master_data:SankeyPlusData| undefined,

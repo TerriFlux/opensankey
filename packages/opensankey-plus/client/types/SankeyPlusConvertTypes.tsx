@@ -1,4 +1,3 @@
-import { TFunction } from 'i18next'
 import { PlusApplicationContextType, PlusComponentUpdaterType, SankeyPlusApplicationDataType, SankeyPlusData } from './Types'
 import { OpenSankeyDiagramSelectorFType } from 'open-sankey/src/dialogs/types/SankeyMenuDialogsTypes'
 

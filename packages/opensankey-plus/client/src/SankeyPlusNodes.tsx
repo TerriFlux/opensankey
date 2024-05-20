@@ -1,13 +1,10 @@
 // External lib
-import React, { ChangeEvent, useState, useRef, MutableRefObject } from 'react'
+import React, { ChangeEvent, useState, useRef, MutableRefObject, FunctionComponent } from 'react'
 import * as d3 from 'd3'
 
 import {
   TFunction
 } from 'i18next'
-import {
-  Badge
-} from 'react-bootstrap'
 import {
   FaEyeSlash,
   FaFileImport
@@ -16,14 +13,13 @@ import {
   Box,
   Button,
   Checkbox,
-  Tab,
   TabPanel,
   Input,
   InputGroup
 } from '@chakra-ui/react'
 import { faIcons } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare, faLock, faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
+import { faUpRightFromSquare, faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 
 // Local imports
 import {
@@ -99,17 +95,16 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
-  t:TFunction,
-  data:SankeyPlusData,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean,
-  menu_for_modal=false,
-  // set_ref_setter_show_modal_import_icons:(b:boolean)=>void,
+export const SankeyPlusNodeIcon : FunctionComponent<SankeyPlusNodeIconFType> = ({
+  t,
+  data,
+  multi_selected_nodes,
+  is_activated,
+  menu_for_modal,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
   ComponentUpdater
-)=> {
+})=> {
   const [show_menu_node_icon, set_show_menu_node_icon] = useState(false)
   const [forceUpdate, setForceUpdate]=useState(false)
 
@@ -431,47 +426,46 @@ export const SankeyPlusNodeIcon : SankeyPlusNodeIconFType = (
     return [content_tab]
   }
 
-  return [
-    <Tab>
-      <Box
-        layerStyle='submenuconfig_tab_with_badge'
-      >
-        {t('Noeud.tabs.icon')}
-        {
-          (!is_activated)?<OSTooltip label={t('Menu.sankeyPlusDisabled')} >
-            <Badge
-              pill
-              bg="none"
-              style={{fontSize:'1em'}}>
-              <FontAwesomeIcon
-                icon={faLock}
-                style={{color: '#66a593', display: 'inline'}}
-              />
-            </Badge>
-          </OSTooltip>:
-            <Badge
-              pill
-              bg="info"
-              style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
-            >
-              Beta
-            </Badge>
-        }
-      </Box>
-    </Tab>,
-    <TabPanel>
-      {content_tab}
-    </TabPanel>
-  ]
+  // return [
+  //   <Tab>
+  //     <Box
+  //       layerStyle='submenuconfig_tab_with_badge'
+  //     >
+  //       {t('Noeud.tabs.icon')}
+  //       {
+  //         (!is_activated)?<OSTooltip label={t('Menu.sankeyPlusDisabled')} >
+  //           <Badge
+  //             pill
+  //             bg="none"
+  //             style={{fontSize:'1em'}}>
+  //             <FontAwesomeIcon
+  //               icon={faLock}
+  //               style={{color: '#66a593', display: 'inline'}}
+  //             />
+  //           </Badge>
+  //         </OSTooltip>:
+  //           <Badge
+  //             pill
+  //             bg="info"
+  //             style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
+  //           >
+  //             Beta
+  //           </Badge>
+  //       }
+  //     </Box>
+  //   </Tab>,
+  return <TabPanel>
+    {content_tab}
+  </TabPanel>
 }
 
-export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
-  t:TFunction,
-  data:SankeyPlusData,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  is_activated:boolean,
+export const SankeyPlusHyperLink : FunctionComponent<SankeyPlusHyperLinkFType> = ({
+  t,
+  data,
+  multi_selected_nodes,
+  is_activated,
   node_function
-)=>{
+})=>{
   const multi_selected_nodes_plus = multi_selected_nodes as {current:SankeyPlusNode[]}
   const hasHyperLink = () => {
     let visible = ''
@@ -538,40 +532,9 @@ export const SankeyPlusHyperLink : SankeyPlusHyperLinkFType = (
     </Box>:
     <></>
 
-  return [
-    <Tab>
-      <Box
-        layerStyle='submenuconfig_tab_with_badge'
-      >
-        {t('Noeud.tabs.hl')}
-        {
-          (!is_activated)?
-            <OSTooltip label={t('Menu.sankeyPlusDisabled')}>
-              <Badge
-                pill
-                bg="none"
-                style={{fontSize:'1em'}}
-              >
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{color: '#66a593', display: 'inline'}}
-                />
-              </Badge>
-            </OSTooltip>:
-            <Badge
-              pill
-              bg="info"
-              style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
-            >
-              Beta
-            </Badge>
-        }
-      </Box>
-    </Tab>,
-    <TabPanel>
-      {content_image_tab}
-    </TabPanel>
-  ]
+  return <TabPanel>
+    {content_image_tab}
+  </TabPanel>
 }
 
 const calcPath = (

@@ -2,13 +2,9 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import * as d3 from 'd3'
 
-import { Badge } from 'react-bootstrap'
 import { Quill } from 'react-quill'
 import ReactQuill from 'react-quill'
-import { TFunction } from 'i18next'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock } from '@fortawesome/free-solid-svg-icons'
-import { Box, Button, Checkbox, Tab, TabPanel, Textarea } from '@chakra-ui/react'
+import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 
 // Local imports
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
@@ -27,14 +23,14 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
+export const SankeyPlusNodeFO : FunctionComponent<SankeyPlusNodeFOFType> = ({
   t,
   data,
   multi_selected_nodes,
   is_activated,
   dict_variable_elements_selected,
   node_function
-)=> {
+})=> {
   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
   const [forceUpdate, setForceUpdate] = useState(false)
 
@@ -125,120 +121,109 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
     }}
   />
 
-  return [
-    <Tab>
-      <Box
-        layerStyle='submenuconfig_tab_with_badge'
+  // return 
+  // <Tab>
+  //   <Box
+  //     layerStyle='submenuconfig_tab_with_badge'
+  //   >
+  //     {t('Noeud.tabs.fo')}
+  //     {
+  //       (!is_activated)?
+  //         <OSTooltip label={t('Menu.sankeyPlusDisabled')}>
+  //           <Badge
+  //             pill
+  //             bg="none"
+  //             style={{fontSize:'1em'}}>
+  //             <FontAwesomeIcon
+  //               icon={faLock}
+  //               style={{color: '#66a593', display: 'inline'}}
+  //             />
+  //           </Badge>
+  //         </OSTooltip>:
+  //         <Badge
+  //           pill
+  //           bg="info"
+  //           style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
+  //         >
+  //           Beta
+  //         </Badge>
+  //     }
+  //   </Box>
+  // </Tab>,
+  return <TabPanel>
+    <Box
+      layerStyle='menuconfigpanel_grid'
+    >
+
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isDisabled={!is_activated}
+        isIndeterminate={value_of_key['has_FO'][1]}
+        isChecked={value_of_key['has_FO'][0] as boolean}
+        onChange={(evt) => {
+          Object
+            .values(data.nodes)
+            .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+            .forEach(d => {
+              d.has_FO = evt.target.checked
+            })
+          node_function.RedrawNodes(multi_selected_nodes.current)
+          setForceUpdate(!forceUpdate)
+        }}
       >
-        {t('Noeud.tabs.fo')}
-        {
-          (!is_activated)?
-            <OSTooltip label={t('Menu.sankeyPlusDisabled')}>
-              <Badge
-                pill
-                bg="none"
-                style={{fontSize:'1em'}}>
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{color: '#66a593', display: 'inline'}}
-                />
-              </Badge>
-            </OSTooltip>:
-            <Badge
-              pill
-              bg="info"
-              style={{fontSize:'1em', height:'1.5em', display: 'inline'}}
-            >
-              Beta
-            </Badge>
-        }
-      </Box>
-    </Tab>,
-    <TabPanel>
-      <Box
-        layerStyle='menuconfigpanel_grid'
+        {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyPlusDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
+      </Checkbox>
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isDisabled={!is_activated}
+        isIndeterminate={value_of_key['is_FO_raw'][1]}
+        isChecked={value_of_key['is_FO_raw'][0] as boolean}
+        onChange={(evt) => {
+          Object
+            .values(data.nodes)
+            .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+            .forEach(d => {
+              d.is_FO_raw = evt.target.checked
+            })
+          node_function.RedrawNodes(multi_selected_nodes.current)
+          setForceUpdate(!forceUpdate)
+        }}
       >
+        {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyPlusDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
+      </Checkbox>
 
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isDisabled={!is_activated}
-          isIndeterminate={value_of_key['has_FO'][1]}
-          isChecked={value_of_key['has_FO'][0] as boolean}
-          onChange={(evt) => {
-            Object
-              .values(data.nodes)
-              .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => {
-                d.has_FO = evt.target.checked
-              })
-            node_function.RedrawNodes(multi_selected_nodes.current)
-            setForceUpdate(!forceUpdate)
-          }}
-        >
-          {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyPlusDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
-        </Checkbox>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isDisabled={!is_activated}
-          isIndeterminate={value_of_key['is_FO_raw'][1]}
-          isChecked={value_of_key['is_FO_raw'][0] as boolean}
-          onChange={(evt) => {
-            Object
-              .values(data.nodes)
-              .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-              .forEach(d => {
-                d.is_FO_raw = evt.target.checked
-              })
-            node_function.RedrawNodes(multi_selected_nodes.current)
-            setForceUpdate(!forceUpdate)
-          }}
-        >
-          {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyPlusDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
-        </Checkbox>
+      {
+        (multi_selected_nodes.current.length>0)?
 
-        {
-          (multi_selected_nodes.current.length>0)?
+          <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyPlusDisabled')}>
+            {
+              (multi_selected_nodes.current[0].is_FO_raw)?
+                editor_fo_raw:
+                editor_fo
+            }
+          </OSTooltip>
+          :<></>
+      }
 
-            <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyPlusDisabled')}>
-              {
-                (multi_selected_nodes.current[0].is_FO_raw)?
-                  editor_fo_raw:
-                  editor_fo
-              }
-            </OSTooltip>
-            :<></>
-        }
-
-        <Box
-          as='span'
-          layerStyle='options_2cols'
-        >
-          <Button
-            variant='menuconfigpanel_option_button_left'
-            isDisabled={!is_activated || !s_tmp_editor_content_changed}
-            backgroundColor='red.200'
-            onClick={() => {
-              if (multi_selected_nodes.current.length>0) {
-                if ( typeof multi_selected_nodes.current[0].FO_content !== 'undefined' ) {
-                  // Reset textaera
-                  if ( typeof inputRef.current !== 'undefined' ) {
-                    if (inputRef.current !== null) {
-                      inputRef.current.value = multi_selected_nodes.current[0].FO_content
-                    }
+      <Box
+        as='span'
+        layerStyle='options_2cols'
+      >
+        <Button
+          variant='menuconfigpanel_option_button_left'
+          isDisabled={!is_activated || !s_tmp_editor_content_changed}
+          backgroundColor='red.200'
+          onClick={() => {
+            if (multi_selected_nodes.current.length>0) {
+              if ( typeof multi_selected_nodes.current[0].FO_content !== 'undefined' ) {
+                // Reset textaera
+                if ( typeof inputRef.current !== 'undefined' ) {
+                  if (inputRef.current !== null) {
+                    inputRef.current.value = multi_selected_nodes.current[0].FO_content
                   }
-                  // Reset state value
-                  sEditorContentFoNode(multi_selected_nodes.current[0].FO_content)
                 }
-                else {
-                  // Reset textaera
-                  if (typeof inputRef.current !== 'undefined') {
-                    if (inputRef.current !== null) {
-                      inputRef.current.value = ''
-                    }
-                  }
-                  // Reset state value
-                  sEditorContentFoNode('')
-                }
+                // Reset state value
+                sEditorContentFoNode(multi_selected_nodes.current[0].FO_content)
               }
               else {
                 // Reset textaera
@@ -250,31 +235,41 @@ export const SankeyPlusNodeFO : SankeyPlusNodeFOFType = (
                 // Reset state value
                 sEditorContentFoNode('')
               }
-              setForceUpdate(!forceUpdate)
-            }}
-          >
-            {t('Noeud.FO.cancel')}
-          </Button>
-          <Button
-            variant='menuconfigpanel_option_button_right'
-            isDisabled={!is_activated || !s_tmp_editor_content_changed}
-            onClick={() => {
-              Object
-                .values(data.nodes)
-                .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
-                .map(d => {
-                  d.FO_content = s_tmp_editor_content_fo_node
-                })
-              node_function.RedrawNodes(multi_selected_nodes.current)
-              sEditorContentFoNode(s_tmp_editor_content_fo_node)
-            }}
-          >
-            {t('Noeud.FO.submit')}
-          </Button>
-        </Box>
+            }
+            else {
+              // Reset textaera
+              if (typeof inputRef.current !== 'undefined') {
+                if (inputRef.current !== null) {
+                  inputRef.current.value = ''
+                }
+              }
+              // Reset state value
+              sEditorContentFoNode('')
+            }
+            setForceUpdate(!forceUpdate)
+          }}
+        >
+          {t('Noeud.FO.cancel')}
+        </Button>
+        <Button
+          variant='menuconfigpanel_option_button_right'
+          isDisabled={!is_activated || !s_tmp_editor_content_changed}
+          onClick={() => {
+            Object
+              .values(data.nodes)
+              .filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode))
+              .map(d => {
+                d.FO_content = s_tmp_editor_content_fo_node
+              })
+            node_function.RedrawNodes(multi_selected_nodes.current)
+            sEditorContentFoNode(s_tmp_editor_content_fo_node)
+          }}
+        >
+          {t('Noeud.FO.submit')}
+        </Button>
       </Box>
-    </TabPanel>
-  ]
+    </Box>
+  </TabPanel>
 }
 
 
