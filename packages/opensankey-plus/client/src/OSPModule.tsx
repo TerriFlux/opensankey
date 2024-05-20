@@ -62,7 +62,7 @@ import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenu
 import { SankeyPlusNodeFO } from './SankeyPlusForeignObject'
 import { SankeyPlusDrawArrows, PlusLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 import { PlusDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
-import { SankeyPlusMenuPreferenceLabels, zdtMenuAsAccordeonItem, SankeyPlusMenuConfigurationFreeLabels, context_zdt, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
+import { SankeyPlusMenuPreferenceLabels, ZDTMenuAsAccordeonItem, SankeyPlusMenuConfigurationFreeLabels, context_zdt, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
 import { SankeyPlusDrawNodesIllustration, PlusNodeClickEvent, SankeyPlusNodeIcon, SankeyPlusHyperLink } from './SankeyPlusNodes'
 import { DefaultSankeyPlusStyleLink,  ImportImageAsSvgBg, PlusItemExport, PlusLinkSabotColor } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, PlusTranformationElements, } from './SankeyPlusConvert'
@@ -415,15 +415,15 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     connected={PlusApplicationContext.has_open_sankey_plus}
   />
   // Top Menus
-  additionalMenus.external_file_export_item.push(PlusItemExport())
+  additionalMenus.external_file_export_item.push(<PlusItemExport/>)
 
   // Page settings
-  additionalMenus.extra_background_element = ImportImageAsSvgBg(
-    applicationContext.t,
-    dict_variable_application_data.data as SankeyPlusData,
-    dict_variable_application_data.set_data as (_:SankeyPlusData)=>void,
-    true
-  )
+  additionalMenus.extra_background_element = <ImportImageAsSvgBg
+    t={applicationContext.t}
+    data={dict_variable_application_data.data as SankeyPlusData}
+    set_data={dict_variable_application_data.set_data as (_:SankeyPlusData)=>void}
+    has_open_sankey_plus={true}
+  />
 
   additionalMenus.externale_navbar_item['view']=<SankeyPlusBannerView
     dict_variable_application_data={dict_variable_application_data as SankeyPlusApplicationDataType}
@@ -433,7 +433,6 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     view_selector={(uiElementsRef as PlusUiElementsRefType).ViewSelector.current as JSX.Element}
   />
 
-
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
   additionalMenus.apply_transformation_additional_elements=[<PlusTranformationElements
@@ -442,8 +441,6 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     ComponentUpdater={plus_updater}
   />]
     
-
-
   // Menu conf nodes
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon']=<SankeyPlusNodeIcon
     t={applicationContext.t}
@@ -471,7 +468,6 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     node_function={node_function as PlusNodeFuntionType}
   />
     
-  
   //Links
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradient
     applicationContext={applicationContext as PlusApplicationContextType}
@@ -485,25 +481,29 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   />)
   //Preferences
   additionalMenus.additional_preferences.push(
-    SankeyPlusMenuPreferenceLabels(
-      applicationContext.t,
-      dict_variable_application_data.data as SankeyPlusData,
-      ComponentUpdater as PlusComponentUpdaterType
-    ))
-
-  //- Builds Configuration Menus FreeLabel
-  additionalMenus.additional_configuration_menus.push(zdtMenuAsAccordeonItem(
-    dict_variable_application_data.data as SankeyPlusData,
-    uiElementsRef as PlusUiElementsRefType,
-    applicationContext as PlusApplicationContextType,
-    <SankeyPlusMenuConfigurationFreeLabels
-      dict_variable_application_data={dict_variable_application_data as SankeyPlusApplicationDataType}
-      applicationContext={applicationContext as PlusApplicationContextType}
-      dict_variable_elements_selected={(dict_variable_elements_selected as PlusElementsSelectedType)}
-      reDrawPlusLabels={(applicationDraw as PlusApplicationDrawType).reDrawPlusLabels}
+    <SankeyPlusMenuPreferenceLabels
+      t={applicationContext.t}
+      data={dict_variable_application_data.data as SankeyPlusData}
       ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
     />
-  ))
+  )
+  //- Builds Configuration Menus FreeLabel
+  additionalMenus.additional_configuration_menus.push(
+    <ZDTMenuAsAccordeonItem
+      data={dict_variable_application_data.data as SankeyPlusData}
+      uiElementsRef={uiElementsRef as PlusUiElementsRefType}
+      applicationContext={applicationContext as PlusApplicationContextType}
+      content_menu_zdt={
+        <SankeyPlusMenuConfigurationFreeLabels
+          dict_variable_application_data={dict_variable_application_data as SankeyPlusApplicationDataType}
+          applicationContext={applicationContext as PlusApplicationContextType}
+          dict_variable_elements_selected={(dict_variable_elements_selected as PlusElementsSelectedType)}
+          reDrawPlusLabels={(applicationDraw as PlusApplicationDrawType).reDrawPlusLabels}
+          ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
+        />
+      }
+    />
+  )
 
   const plusData = dict_variable_application_data as SankeyPlusApplicationDataType
   if (plusData.master_data && plusData.master_data.current_view && plusData.master_data.current_view!=='none') {

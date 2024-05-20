@@ -14,11 +14,11 @@ export  type DragLegendPlusFType = (data:SankeyPlusData,
   dict_variable_application_data:SankeyPlusApplicationDataType
 ) => d3.DragBehavior<SVGGElement, unknown, unknown>
 
-export type ImportImageAsSvgBgFType = (
+export type ImportImageAsSvgBgFType = {
   t:TFunction,
   data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
   has_open_sankey_plus:boolean
-  )=> JSX.Element
+}
 
 export type SetSvgBgFType = (
   data:SankeyPlusData
@@ -60,5 +60,3 @@ export type OSPIsAllNodeNotLocalAttrSameValueFType = (
 
 export type clickSaveSVGFType = () => void
   
-export type PlusItemExportFType=(
-)=>JSX.Element

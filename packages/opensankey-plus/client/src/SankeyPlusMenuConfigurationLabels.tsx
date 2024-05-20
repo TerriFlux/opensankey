@@ -38,13 +38,13 @@ import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 // Local libs
 import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
 import { deleteGLabel } from './SankeyPlusLabels'
-import { SankeyPlusContextMenuType, SankeyPlusData,SankeyPlusLabel} from '../types/Types'
+import { SankeyPlusContextMenuType,SankeyPlusLabel} from '../types/Types'
 import {
   SankeyPlusMenuConfigurationFreeLabelsFType,
   SankeyPlusMenuPreferenceLabelsFType,
   blur_ZDT_wysiwygFType,
   context_zdtFType,
-  zdtMenuAsAccordeonItemType
+  ZDTMenuAsAccordeonItemType
 } from '../types/SankeyPlusMenuConfigurationLabelsTypes'
 import { OSTooltip } from './import/OpenSankey'
 
@@ -61,11 +61,11 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
  * @param { Function } set_data - TODO description
  *
  */
-export const SankeyPlusMenuPreferenceLabels : SankeyPlusMenuPreferenceLabelsFType = (
-  t:TFunction,
-  data:SankeyPlusData,
+export const SankeyPlusMenuPreferenceLabels : FunctionComponent<SankeyPlusMenuPreferenceLabelsFType> = ({
+  t,
+  data,
   ComponentUpdater
-)=>{
+})=>{
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
     isChecked={data.accordeonToShow.includes('LL')}
@@ -751,12 +751,12 @@ export const blur_ZDT_wysiwyg : blur_ZDT_wysiwygFType = (
  * @param {JSX.Element} content_menu_zdt
  * @return {*}
  */
-export const zdtMenuAsAccordeonItem:zdtMenuAsAccordeonItemType=(
+export const ZDTMenuAsAccordeonItem:FunctionComponent<ZDTMenuAsAccordeonItemType>=({
   data,
   uiElementsRef,
   applicationContext,
   content_menu_zdt
-)=>{
+})=>{
   // const {ref_nav_item_active,ref_setter_sub_nav_item_active,zdt_accordion_ref}=uiElementsRef
   const {t,has_open_sankey_plus} = applicationContext
   return <AccordionItem

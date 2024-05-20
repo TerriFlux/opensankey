@@ -3,11 +3,11 @@ import {  PlusApplicationContextType, PlusComponentUpdaterType, PlusElementsSele
 import ReactQuill from 'react-quill'
 import { contextMenuType } from 'open-sankey/src/types/Types'
 
-export type SankeyPlusMenuPreferenceLabelsFType=(
+export type SankeyPlusMenuPreferenceLabelsFType={
   t:TFunction,
   data:SankeyPlusData,
   ComponentUpdater:PlusComponentUpdaterType
-) => JSX.Element
+}
 
 export interface selected_type  {'label':string;'value':string}
 
@@ -34,8 +34,9 @@ export type blur_ZDT_wysiwygFType=(
   r_editor_ZDT:{current:ReactQuill}
 ) =>void
 
-export type zdtMenuAsAccordeonItemType=(
+export type ZDTMenuAsAccordeonItemType={
   data:SankeyPlusData,
   uiElementsRef:PlusUiElementsRefType,
   applicationContext:PlusApplicationContextType,
-  content_menu_zdt:JSX.Element)=>JSX.Element
+  content_menu_zdt:JSX.Element
+}

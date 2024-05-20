@@ -1,8 +1,6 @@
 // External libs
-import React, { ChangeEvent, useRef } from 'react'
+import React, { ChangeEvent, FunctionComponent, useRef } from 'react'
 import * as d3 from 'd3'
-
-import { TFunction } from 'i18next'
 import { Form } from 'react-bootstrap'
 import { FaEye, FaEyeSlash, FaFileImport } from 'react-icons/fa'
 import FileSaver from 'file-saver'
@@ -29,7 +27,6 @@ import {
   IsAllZdtAttrSameValueFType,
   OSPIsAllNodeNotLocalAttrSameValueFType,
   PlusAssignLinkValueToCorrectVarFType,
-  PlusItemExportFType,
   PlusLinkSabotColorFType,
   PlusReturnValueLinkFType,
   SetSvgBgFType,
@@ -98,11 +95,12 @@ export  const DragLegendPlus : DragLegendPlusFType = (
     resizeCanvas()
   })
 
-export const ImportImageAsSvgBg : ImportImageAsSvgBgFType = (
-  t:TFunction,
-  data,set_data,
+export const ImportImageAsSvgBg : FunctionComponent<ImportImageAsSvgBgFType> = ({
+  t,
+  data,
+  set_data,
   has_open_sankey_plus,
-)=>{
+})=>{
   const _load_image = useRef<HTMLInputElement>(null)
 
   const content_image=<>
@@ -311,14 +309,10 @@ export const clickSaveSVG : clickSaveSVGFType = () => {
     .then(showFile).then(cleanFile)
 }
 
-
-export const PlusItemExport:PlusItemExportFType=(
+export const PlusItemExport:FunctionComponent=(
 )=>{
   return <MenuItem onClick={clickSaveSVG} >SVG</MenuItem>
-
 }
-
-
 
 export const OSPDefaultNode=(data:SankeyPlusData)=>{
   const os_def_node= DefaultNode(data)
