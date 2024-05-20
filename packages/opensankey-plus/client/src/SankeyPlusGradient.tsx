@@ -1,5 +1,5 @@
 // External imports
-import React, { useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import * as d3 from 'd3'
 
 import { Badge } from 'react-bootstrap'
@@ -11,7 +11,7 @@ import { SankeyPlusData, SankeyPlusNode, SankeyPlusLink } from '../types/Types'
 import {
   PlusLinkStrokeFType,
   dragNodeRedrawGradientFType,
-  menu_conf_link_apparence_gradientFType
+  MenuConfLinkApparenceGradientFType
 } from '../types/SankeyPlusGradientTypes'
 import {
   ReturnValueLink,
@@ -39,21 +39,21 @@ import {TooltipValueSurcharge} from 'open-sankey/dist/configmenus/SankeyUtils'
 import { DrawArrowsType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
 
-export const menu_conf_link_apparence_gradient : menu_conf_link_apparence_gradientFType =(
+export const MenuConfLinkApparenceGradient : FunctionComponent<MenuConfLinkApparenceGradientFType> =({
   applicationContext,
   ComponentUpdater,
-  multi_selected_links:{current:SankeyPlusLink[]},
-  data:SankeyPlusData,
+  multi_selected_links,
+  data,
   link_function,
-  is_activated:boolean,
-  menu_for_style:boolean,
-  selected_style_link,
-)=>{
+  is_activated,
+  menu_for_style,
+  selected_style_link
+})=>{
   const {t}=applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
   // I have to do this because when we change selected_style_link it only re-render SankeyModalStyleLink
   // who re-render MenuConfigurationLinksAppearence
-  // but menu_conf_link_apparence_gradient is rendered outside the scope of SankeyModalStyleLink
+  // but MenuConfLinkApparenceGradient is rendered outside the scope of SankeyModalStyleLink
   // so selected_style_link can be out of sync with the real selected_style_link
   if(menu_for_style && !Object.keys(data.style_link).includes(selected_style_link.current)){
     selected_style_link.current=(Object.keys(data.style_link)[0])

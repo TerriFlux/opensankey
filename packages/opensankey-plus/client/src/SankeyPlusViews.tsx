@@ -544,13 +544,13 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
   }
 }
 
-export const SelecteurView : SelecteurViewFType =(
+export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
   dict_variable_application_data,
   dict_variable_elements_selected,
-  t:TFunction,
-  set_view_not_saved:(s:string)=>void,
-  has_open_sankey_plus:boolean
-)=>{
+  t,
+  set_view_not_saved,
+  connected
+})=>{
   const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}= dict_variable_elements_selected
 
@@ -568,7 +568,7 @@ export const SelecteurView : SelecteurViewFType =(
 
   const selecteur=<Select
     variant='menuconfigpanel_option_select'
-    onDoubleClick={()=>has_open_sankey_plus && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
+    onDoubleClick={()=>connected && master_data && master_data.current_view && master_data.current_view!=='none' ?sSelectOrEdit('edit'):<></>}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
         multi_selected_nodes.current = []
@@ -635,7 +635,7 @@ export const SelecteurView : SelecteurViewFType =(
     }}
   />
 
-  return has_open_sankey_plus && s_select_or_edit==='edit'?editeur_name:selecteur
+  return connected && s_select_or_edit==='edit'?editeur_name:selecteur
 }
 export const viewsAccordion : viewsAccordionFType = (
   dict_variable_application_data,
@@ -893,13 +893,13 @@ declare const window: Window &
 // - a button to choose variable of the view that get their value from master
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
-export const SankeyPlusBannerView : SankeyPlusBannerViewFType =(
+export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType> =({
   dict_variable_application_data,
   applicationContext,
   dict_hook_ref_setter_show_dialog_components,
-  convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
+  convert_data,
   view_selector
-)=>{
+})=>{
   const {data,set_data,master_data,set_master_data,get_default_data,view,set_view}=dict_variable_application_data
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const m_d=master_data?master_data:data

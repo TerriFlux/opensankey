@@ -10,11 +10,11 @@ export type SankeyPlusDiagramSelectorFType = (
   dict_variable_application_data:SankeyPlusApplicationDataType,
 ) => OpenSankeyDiagramSelectorFType
 
-export type apply_transformation_opensankey_plus_elementsFType = (
+export type PlusTranformationElementsFType = {
   dict_variable_application_data:SankeyPlusApplicationDataType,
   applicationContext:PlusApplicationContextType,
   ComponentUpdater:PlusComponentUpdaterType
-) => JSX.Element[]
+}
 
 export type plus_sankey_layoutFType=(
   data:SankeyPlusData,

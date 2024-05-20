@@ -61,13 +61,13 @@ export type OSPKeyHandlerFType = (
   ComponentUpdater:PlusComponentUpdaterType
 ) => void
 
-export type SelecteurViewFType = (
+export type SelecteurViewFType = {
   dict_variable_application_data:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
   connected:boolean,
-) => JSX.Element
+}
 
 export type viewsAccordionFType = (
   dict_variable_application_data:SankeyPlusApplicationDataType,
@@ -95,13 +95,13 @@ export type CheckCurrentViewSavedFType = (
 // - a button to choose variable of the view that get their value from master
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
-export type SankeyPlusBannerViewFType = (
+export type SankeyPlusBannerViewFType = {
   dict_variable_application_data:SankeyPlusApplicationDataType,
   applicationContext:PlusApplicationContextType,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
   view_selector:JSX.Element
-)=> JSX.Element
+}
 
 export type SankeyPlusMenuPreferenceViewFType = (
   t:TFunction,

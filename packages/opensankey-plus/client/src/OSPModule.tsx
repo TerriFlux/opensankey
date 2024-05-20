@@ -60,13 +60,17 @@ import {
 } from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
 import { SankeyPlusNodeFO } from './SankeyPlusForeignObject'
-import { SankeyPlusDrawArrows, PlusLinkStroke, menu_conf_link_apparence_gradient } from './SankeyPlusGradient'
+import { SankeyPlusDrawArrows, PlusLinkStroke, MenuConfLinkApparenceGradient } from './SankeyPlusGradient'
 import { PlusDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
 import { SankeyPlusMenuPreferenceLabels, zdtMenuAsAccordeonItem, SankeyPlusMenuConfigurationFreeLabels, context_zdt, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
 import { SankeyPlusDrawNodesIllustration, PlusNodeClickEvent, SankeyPlusNodeIcon, SankeyPlusHyperLink } from './SankeyPlusNodes'
 import { DefaultSankeyPlusStyleLink,  ImportImageAsSvgBg, PlusItemExport, PlusLinkSabotColor } from './SankeyPlusUtils'
-import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, apply_transformation_opensankey_plus_elements } from './SankeyPlusConvert'
-import { GetDataFromView, MenuEnregistrerView, OSPKeyHandler, SankeyPlusBannerView, SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, view_toast, view_toast_update_view, viewsAccordion } from './SankeyPlusViews'
+import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, PlusTranformationElements, } from './SankeyPlusConvert'
+import { 
+  GetDataFromView, MenuEnregistrerView, OSPKeyHandler, SankeyPlusBannerView, 
+  SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, 
+  view_toast, view_toast_update_view, viewsAccordion 
+} from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
 
@@ -402,14 +406,14 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   const PlusApplicationContext=applicationContext as PlusApplicationContextType
   const plus_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
   const plus_updater=ComponentUpdater as PlusComponentUpdaterType
-  const selector_of_view=SelecteurView(
-    plus_dict_app_data,
-    dict_variable_elements_selected as PlusElementsSelectedType,
-    applicationContext.t,
-    plus_dict_app_data.set_view_not_saved,
-    PlusApplicationContext.has_open_sankey_plus,
-  );
-  (uiElementsRef as PlusUiElementsRefType).ViewSelector.current=selector_of_view
+
+  (uiElementsRef as PlusUiElementsRefType).ViewSelector.current=<SelecteurView
+    dict_variable_application_data={plus_dict_app_data}
+    dict_variable_elements_selected={dict_variable_elements_selected as PlusElementsSelectedType}
+    t={applicationContext.t}
+    set_view_not_saved={plus_dict_app_data.set_view_not_saved}
+    connected={PlusApplicationContext.has_open_sankey_plus}
+  />
   // Top Menus
   additionalMenus.external_file_export_item.push(PlusItemExport())
 
@@ -421,22 +425,22 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     true
   )
 
-  additionalMenus.externale_navbar_item['view']=SankeyPlusBannerView(
-    dict_variable_application_data as SankeyPlusApplicationDataType,
-    PlusApplicationContext ,
-    (dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType) ,
-    dict_variable_application_data.convert_data,
-    selector_of_view
-  )
+  additionalMenus.externale_navbar_item['view']=<SankeyPlusBannerView
+    dict_variable_application_data={dict_variable_application_data as SankeyPlusApplicationDataType}
+    applicationContext={PlusApplicationContext}
+    dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType)}
+    convert_data={dict_variable_application_data.convert_data}
+    view_selector={(uiElementsRef as PlusUiElementsRefType).ViewSelector.current as JSX.Element}
+  />
 
 
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
-  additionalMenus.apply_transformation_additional_elements=apply_transformation_opensankey_plus_elements(
-    plus_dict_app_data,
-    applicationContext as PlusApplicationContextType,
-    plus_updater
-  )
+  additionalMenus.apply_transformation_additional_elements=[<PlusTranformationElements
+    dict_variable_application_data={plus_dict_app_data}
+    applicationContext={applicationContext as PlusApplicationContextType}
+    ComponentUpdater={plus_updater}
+  />]
     
 
 
@@ -469,16 +473,16 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     
   
   //Links
-  additionalMenus.additional_link_appearence_items.push(menu_conf_link_apparence_gradient(
-    applicationContext as PlusApplicationContextType,
-    ComponentUpdater as PlusComponentUpdaterType,
-    dict_variable_elements_selected.multi_selected_links,
-    dict_variable_application_data.data as SankeyPlusData,
-    link_function,
-    true,
-    false,
-    dict_variable_elements_selected.ref_selected_style_link))
-    
+  additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradient
+    applicationContext={applicationContext as PlusApplicationContextType}
+    ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
+    multi_selected_links={dict_variable_elements_selected.multi_selected_links}
+    data={dict_variable_application_data.data as SankeyPlusData}
+    link_function={link_function}
+    is_activated={true}
+    menu_for_style={false}
+    selected_style_link={dict_variable_elements_selected.ref_selected_style_link}
+  />)
   //Preferences
   additionalMenus.additional_preferences.push(
     SankeyPlusMenuPreferenceLabels(

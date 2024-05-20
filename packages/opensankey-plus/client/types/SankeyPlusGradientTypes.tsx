@@ -4,7 +4,7 @@ import { SankeyNode, display_styleType } from 'open-sankey/src/types/Types'
 import { MutableRefObject } from 'react'
 import { LinkStrokeFType } from 'open-sankey/src/draw/types/SankeyDrawFunctionTypes'
 
-export type menu_conf_link_apparence_gradientFType=(
+export type MenuConfLinkApparenceGradientFType={
   applicationContext:PlusApplicationContextType,
   ComponentUpdater:PlusComponentUpdaterType,
   multi_selected_links:{current:SankeyPlusLink[]},
@@ -13,7 +13,7 @@ export type menu_conf_link_apparence_gradientFType=(
   is_activated:boolean,
   menu_for_style:boolean,
   selected_style_link:MutableRefObject<string>,
-)=> JSX.Element
+}
 
 export type PlusLinkStrokeFType = LinkStrokeFType
 

@@ -1,5 +1,5 @@
 // External imports
-import React, { MutableRefObject, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useState } from 'react'
 
 import { InputGroup, Button, Form } from 'react-bootstrap'
 import { FaCheck } from 'react-icons/fa'
@@ -26,7 +26,7 @@ import {
 } from '../types/Types'
 import {
   SankeyPlusDiagramSelectorFType,
-  apply_transformation_opensankey_plus_elementsFType,
+  PlusTranformationElementsFType,
   plus_convert_dataFType,
   plus_sankey_layoutFType
 } from '../types/SankeyPlusConvertTypes'
@@ -302,11 +302,11 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
   return SankeyPlusDiagramSelectorInner
 }
 
-export const apply_transformation_opensankey_plus_elements : apply_transformation_opensankey_plus_elementsFType = (
+export const PlusTranformationElements : FunctionComponent<PlusTranformationElementsFType> = ({
   dict_variable_application_data,
   applicationContext,
   ComponentUpdater
-) => {
+}) => {
   const {data,master_data,dataVarToUpdate}=dict_variable_application_data
   const data_to_use=master_data?master_data:data
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
@@ -315,76 +315,75 @@ export const apply_transformation_opensankey_plus_elements : apply_transformatio
   const {updateComponentBtnUpdateLayout}=ComponentUpdater
   updateComponentBtnUpdateLayout.current=()=>setForceUpdate(!forceUpdate)
   if (!applicationContext.has_open_sankey_plus) {
-    return []
+    return <></>
   }
-  return [
+  return <><InputGroup>
+    <InputGroup.Text style={{width:'20%'}}>{applicationContext.t('Menu.Transformation.freeLabels')}</InputGroup.Text>
+    <Button
+      className='btn_menu_config'
+      style={{width:'20%'}}
+      variant={dataVarToUpdate.current.includes('freeLabels')?'primary':'outline-primary'}
+      onClick={() => {
+        if(!dataVarToUpdate.current.includes('freeLabels')){
+          dataVarToUpdate.current.push('freeLabels')
+          setForceUpdate(!forceUpdate)
+        }else{
+          dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('freeLabels'),1)
+          setForceUpdate(!forceUpdate)
+        }}
+      }
+    >{dataVarToUpdate.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+
+  </InputGroup>,
+  <OSTooltip label={!is_current_data_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
     <InputGroup>
-      <InputGroup.Text style={{width:'20%'}}>{applicationContext.t('Menu.Transformation.freeLabels')}</InputGroup.Text>
+      <InputGroup.Text
+        style={{width:'20%',
+          color:(!is_current_data_master)?'#666666':'',
+          backgroundColor:(!is_current_data_master)?'#cccccc':'',
+        }}
+      >{applicationContext.t('Menu.Transformation.Views')}</InputGroup.Text>
       <Button
         className='btn_menu_config'
         style={{width:'20%'}}
-        variant={dataVarToUpdate.current.includes('freeLabels')?'primary':'outline-primary'}
+        disabled={!is_current_data_master}
+        variant={dataVarToUpdate.current.includes('Views')?'primary':'outline-primary'}
         onClick={() => {
-          if(!dataVarToUpdate.current.includes('freeLabels')){
-            dataVarToUpdate.current.push('freeLabels')
+          if(!dataVarToUpdate.current.includes('Views')){
+            dataVarToUpdate.current.push('Views')
             setForceUpdate(!forceUpdate)
           }else{
-            dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('freeLabels'),1)
+            dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Views'),1)
             setForceUpdate(!forceUpdate)
           }}
         }
-      >{dataVarToUpdate.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+      >{dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+    </InputGroup>
+  </OSTooltip>,
 
-    </InputGroup>,
-    <OSTooltip label={!is_current_data_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
-      <InputGroup>
-        <InputGroup.Text
-          style={{width:'20%',
-            color:(!is_current_data_master)?'#666666':'',
-            backgroundColor:(!is_current_data_master)?'#cccccc':'',
+  <OSTooltip label={applicationContext.t('Menu.Transformation.list_icon_tooltip')} >
+    <InputGroup>
+      <InputGroup.Text
+        style={{width:'20%'}}
+      >{applicationContext.t('Menu.Transformation.list_icon')}</InputGroup.Text>
+      <Button
+        className='btn_menu_config'
+        style={{width:'20%'}}
+        disabled={!is_current_data_master}
+        variant={dataVarToUpdate.current.includes('Views')?'primary':'outline-primary'}
+        onClick={() => {
+          if(!dataVarToUpdate.current.includes('icon_catalog')){
+            dataVarToUpdate.current.push('icon_catalog')
+            setForceUpdate(!forceUpdate)
+          }else{
+            dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('icon_catalog'),1)
+            setForceUpdate(!forceUpdate)
           }}
-        >{applicationContext.t('Menu.Transformation.Views')}</InputGroup.Text>
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          disabled={!is_current_data_master}
-          variant={dataVarToUpdate.current.includes('Views')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!dataVarToUpdate.current.includes('Views')){
-              dataVarToUpdate.current.push('Views')
-              setForceUpdate(!forceUpdate)
-            }else{
-              dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('Views'),1)
-              setForceUpdate(!forceUpdate)
-            }}
-          }
-        >{dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-      </InputGroup>
-    </OSTooltip>,
-
-    <OSTooltip label={applicationContext.t('Menu.Transformation.list_icon_tooltip')} >
-      <InputGroup>
-        <InputGroup.Text
-          style={{width:'20%'}}
-        >{applicationContext.t('Menu.Transformation.list_icon')}</InputGroup.Text>
-        <Button
-          className='btn_menu_config'
-          style={{width:'20%'}}
-          disabled={!is_current_data_master}
-          variant={dataVarToUpdate.current.includes('Views')?'primary':'outline-primary'}
-          onClick={() => {
-            if(!dataVarToUpdate.current.includes('icon_catalog')){
-              dataVarToUpdate.current.push('icon_catalog')
-              setForceUpdate(!forceUpdate)
-            }else{
-              dataVarToUpdate.current.splice(dataVarToUpdate.current.indexOf('icon_catalog'),1)
-              setForceUpdate(!forceUpdate)
-            }}
-          }
-        >{dataVarToUpdate.current.includes('icon_catalog')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
-      </InputGroup>
-    </OSTooltip>
-  ]}
+        }
+      >{dataVarToUpdate.current.includes('icon_catalog')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+    </InputGroup>
+  </OSTooltip></>
+}
 
 export const plus_sankey_layout : plus_sankey_layoutFType =(
   data:SankeyPlusData,

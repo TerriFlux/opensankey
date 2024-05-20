@@ -334,7 +334,7 @@ root.render(
         link_function:LinkFunctionTypes,
         ComponentUpdater:ComponentUpdaterType,
         additional_menus:AdditionalMenusType,
-        menu_configuration_nodes_attributes:JSX.Element[],
+        menu_configuration_nodes_attributes:JSX.Element,
         reDrawLegend:()=>void,
         processFunctions:processFunctionsType
       )=>{
