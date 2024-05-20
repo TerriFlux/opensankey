@@ -9,7 +9,7 @@ import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyLink,
 import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
 /*************************************************************************************************/
 
-export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
+export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLinksDataFType> = ({
   dict_variable_application_data,
   dict_variable_elements_selected,
   applicationContext,
@@ -17,7 +17,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
   ComponentUpdater,
   node_function,
   link_function
-) => {
+}) => {
   const { t } = applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
   const { data } = dict_variable_application_data
@@ -155,7 +155,7 @@ export const MenuConfigurationLinksData : MenuConfigurationLinksDataFType = (
     {additional_data_element}
 
   </Box>
-  return [content]
+  return content
 }
 
 

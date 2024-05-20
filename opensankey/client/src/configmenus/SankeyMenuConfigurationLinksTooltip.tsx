@@ -1,16 +1,14 @@
-import React, { MutableRefObject, useRef, useState } from 'react'
-import { SankeyLink } from '../types/Types'
-import { TFunction } from 'i18next'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { MenuConfigurationLinksTooltipFType } from './types/SankeyMenuConfigurationLinksTooltipTypes'
-import { Box, Button, Tab, TabPanel, Textarea } from '@chakra-ui/react'
+import { Box, Button, TabPanel, Textarea } from '@chakra-ui/react'
 import { OSTooltip } from './SankeyUtils'
 
-export const MenuConfigurationLinksTooltip : MenuConfigurationLinksTooltipFType = (
+export const MenuConfigurationLinksTooltip : FunctionComponent<MenuConfigurationLinksTooltipFType> = ({
   ComponentUpdater,
-  multi_selected_links:{current:SankeyLink[]},
-  t:TFunction,
-  menu_for_modal:boolean
-)=>{
+  multi_selected_links,
+  t,
+  menu_for_modal
+})=>{
   const {updateMenuConfigTextLinkTooltip}=ComponentUpdater
   const [ forceUpdate, setForceUpdate ]=useState(false)
 
@@ -112,17 +110,17 @@ export const MenuConfigurationLinksTooltip : MenuConfigurationLinksTooltipFType 
     </Box>
   </>
 
-  return menu_for_modal?[content]:
-    [ 
-      <Tab>
-        <Box
-          layerStyle='submenuconfig_tab'
-        >
-          {t('Flux.IS')}
-        </Box>
-      </Tab>,
-      <TabPanel >
-        {content}
-      </TabPanel>]
+  return menu_for_modal?content:
+    // [ 
+    //   <Tab>
+    //     <Box
+    //       layerStyle='submenuconfig_tab'
+    //     >
+    //       {t('Flux.IS')}
+    //     </Box>
+    //   </Tab>,
+    <TabPanel >
+      {content}
+    </TabPanel>
 
 }

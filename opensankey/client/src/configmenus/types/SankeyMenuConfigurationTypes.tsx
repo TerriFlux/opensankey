@@ -11,7 +11,7 @@ export type OpenSankeyConfigurationsMenusFType = (
   applicationContext:applicationContextType,
   uiElementsRef:uiElementsRefType,
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
-  menu_configuration_layout: JSX.Element[],
+  menu_configuration_layout: JSX.Element,
   menu_configuration_node_tags:JSX.Element,
   menu_configuration_link_tags:JSX.Element,
   menu_configuration_data_tags:JSX.Element,

@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import {SankeyLinkValue } from '../types/Types'
-import { Box, Checkbox, Select, Tab, TabPanel } from '@chakra-ui/react'
+import { Box, Checkbox, Select, TabPanel } from '@chakra-ui/react'
 import { updateLinkTagValue } from './SankeyUtils'
 import { MenuConfigurationLinksTagsFType } from './types/SankeyMenuConfigurationLinksTagsTypes'
 
-export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
+export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
   dict_variable_application_data,
   dict_variable_elements_selected,
   applicationContext,
@@ -12,7 +12,7 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
   ComponentUpdater,
   node_function,
   link_function
-)=>{
+})=>{
   const {data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   const {t}=applicationContext
@@ -152,16 +152,16 @@ export const MenuConfigurationLinksTags : MenuConfigurationLinksTagsFType = (
     
 
 
-  return menu_for_modal?[content]:
-    [ 
-      <Tab>
-        <Box
-          layerStyle='submenuconfig_tab'
-        >
-          {t('Noeud.tags_node.tags')}
-        </Box>
-      </Tab>,
-      <TabPanel >
-        {content}
-      </TabPanel>]
+  return menu_for_modal?content:
+    // [ 
+    //   <Tab>
+    //     <Box
+    //       layerStyle='submenuconfig_tab'
+    //     >
+    //       {t('Noeud.tags_node.tags')}
+    //     </Box>
+    //   </Tab>,
+    <TabPanel >
+      {content}
+    </TabPanel>
 }

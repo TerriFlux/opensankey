@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { FunctionComponent, useRef, useState } from 'react'
 import {
   FaPlus,
   FaMinus,
@@ -23,17 +23,11 @@ import {
 } from '../configmenus/SankeyUtils'
 import { SankeyWrapperConfigInModalOrMenu } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import { MenuConfigurationLinksAppearence } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
-import {
-  applicationContextType,
-  dict_hook_ref_setter_show_dialog_componentsType,
-  dict_variable_application_dataType,
-  dict_variable_elements_selectedType
-} from '../types/Types'
 import { SankeyModalStyleLinkFType, SankeyModalStyleNodeFType } from './types/SankeyStyleTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 
-export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
+export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType> = ({
   applicationContext,
   dict_variable_application_data,
   dict_hook_ref_setter_show_dialog_components,
@@ -42,7 +36,7 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
   node_function,
   pointer_pos,
   node_attribute_tab
-) => {
+}) => {
   const { t } = applicationContext
   const { data } = dict_variable_application_data
   const { updateComponentMenuConfigNodeAppearence } = ComponentUpdater
@@ -183,16 +177,16 @@ export const SankeyModalStyleNode : SankeyModalStyleNodeFType = (
 
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
-  applicationContext:applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
+export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>= ({
+  applicationContext,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
+  dict_hook_ref_setter_show_dialog_components,
   pointer_pos,
-  additional_link_appearence_items:JSX.Element[],
+  additional_link_appearence_items,
   link_function,
   ComponentUpdater
-) => {
+}) => {
   const {data}=dict_variable_application_data
   const {t}=applicationContext
   const {ref_selected_style_link}=dict_variable_elements_selected
@@ -310,14 +304,15 @@ export const SankeyModalStyleLink : SankeyModalStyleLinkFType= (
     </Box>
 
     {
-      MenuConfigurationLinksAppearence(
-        dict_variable_application_data,
-        dict_variable_elements_selected,
-        applicationContext,
-        additional_link_appearence_items,
-        true,
-        link_function,
-        ComponentUpdater)
+      <MenuConfigurationLinksAppearence
+        dict_variable_application_data={dict_variable_application_data}
+        dict_variable_elements_selected={dict_variable_elements_selected}
+        applicationContext={applicationContext}
+        additional_link_appearence_items={additional_link_appearence_items}
+        menu_for_style={true}
+        link_function={link_function}
+        ComponentUpdater={ComponentUpdater}
+      />
     }
   </Box>
 

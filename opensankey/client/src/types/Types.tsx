@@ -712,7 +712,7 @@ export type module_dialogsType = (
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   additional_menus:AdditionalMenusType,
-  menu_configuration_nodes_attributes:JSX.Element[],
+  menu_configuration_nodes_attributes:JSX.Element,
   reDrawLegend:()=>void,
   processFunctions:processFunctionsType
 ) => JSX.Element[]
@@ -766,8 +766,8 @@ link_function:LinkFunctionTypes,
 applicationDraw:applicationDrawType,
 ComponentUpdater:ComponentUpdaterType,
 menu_configuration_nodes:{[s: string]: JSX.Element;},
-config_link_data:JSX.Element[],
-config_link_attr:JSX.Element[],
+config_link_data:JSX.Element,
+config_link_attr:JSX.Element,
 contextMenu:contextMenuType,
 ref_alt_key_pressed: React.MutableRefObject<boolean>
 )=>JSX.Element[]

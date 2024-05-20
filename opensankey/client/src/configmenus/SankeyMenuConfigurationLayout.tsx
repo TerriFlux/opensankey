@@ -19,16 +19,15 @@ import { DrawGrid } from '../draw/SankeyDrawFunction'
 import { SankeyData } from '../types/Types'
 import { OSTooltip } from './SankeyUtils'
 
-export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayoutFType = (
+export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMenuConfigurationLayoutFType> = ({
   applicationContext,
   dict_variable_application_data,
-  dict_variable_elements_selected,
   extra_background_element,
   node_function,
   link_function,
   reDrawLegend,
   ComponentUpdater
-) => {
+}) => {
   const { t } = applicationContext
   const { data, set_data} = dict_variable_application_data
   const {RedrawNodes} = node_function
@@ -38,6 +37,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
   const [legend_position,set_legend_position] = useState(data.legend_position)
   const [forceUpdate,setForceUpdate]=useState(false)
   updateComponentMenuConfigLayout.current=()=>setForceUpdate(!forceUpdate)
+  const {updateComponentMenuConfigLink}=ComponentUpdater
+  updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
+
   const right_addon_pixel = (val: number) => {
     if (val === 1) {
       return 'pixel'
@@ -45,12 +47,12 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
     return 'pixels'
   }
 
-  return [
+  return <>
     <Box
       as='span'
       layerStyle='menuconfigpanel_part_title_1'>
       {t('Menu.background')}
-    </Box>,
+    </Box>
 
     /* Couleur du fond de la page */
     <Box
@@ -74,9 +76,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           }}
         />
       </OSTooltip>
-    </Box>,
+    </Box>
 
-    extra_background_element,
+    {extra_background_element}
 
     /* Quadrillage */
     /* Afficher le quadrillage */
@@ -97,7 +99,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         </OSTooltip>
       </Checkbox>
 
-    </Box>,
+    </Box>
 
     /* Taille de la grille */
     <Box
@@ -122,15 +124,15 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
 
         </OSTooltip>
       </Box>
-    </Box>,
+    </Box>
 
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />,
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
     <Box
       as='span'
       layerStyle='menuconfigpanel_part_title_1'>
       {t('MEP.links_size')}
-    </Box>,
+    </Box>
 
     <Box
       as='span'
@@ -156,7 +158,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         />
 
       </Box>
-    </Box>,
+    </Box>
 
     /* Taille minimale du flux */
     <Box
@@ -232,9 +234,9 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
           />
         </OSTooltip>
       </Box>
-    </Box>,
+    </Box>
 
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />,
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
     <Box
       as='span'
@@ -253,7 +255,6 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         {t('Menu.Leg')}
       </Checkbox>
     </Box>
-    ,
 
     <Box
       layerStyle='menuconfigpanel_grid'
@@ -507,7 +508,7 @@ export const OpenSankeyMenuConfigurationLayout : OpenSankeyMenuConfigurationLayo
         {t('MEP.leg_show_dataTags')}
       </Checkbox>
     </Box>
-  ]
+  </>
 }
 
 

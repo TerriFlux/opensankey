@@ -30,7 +30,7 @@ export   const os_all_element_to_transform = [
  * @param {ApplyLayoutDialogTypes} { ref_setter_show_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
-export const ApplyLayoutDialog = ({
+export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   t,dict_hook_ref_setter_show_dialog_components,
   dict_variable_application_data,
   applicationDraw,convert_data,
@@ -38,7 +38,7 @@ export const ApplyLayoutDialog = ({
   apply_transformation_additional_elements,
   DefaultSankeyData,
   ComponentUpdater
-}: ApplyLayoutDialogTypes) => {
+}) => {
   const {updateLayout,all_element_UpdateLayout}=applicationDraw
   const {data,set_data,dataVarToUpdate}=dict_variable_application_data
   const [prev_sankey_data,set_prev_sankey_data] = useState(data)

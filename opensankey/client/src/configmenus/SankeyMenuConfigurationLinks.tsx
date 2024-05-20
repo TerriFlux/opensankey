@@ -63,9 +63,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   const {t}=applicationContext
   const {data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
-  const [forceUpdate,setForceUpdate]=useState(false)
-  const {updateComponentMenuConfigLink}=ComponentUpdater
-  updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
+
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
     'Flux.data.données': <SankeyWrapperConfigInModalOrMenu
@@ -78,20 +76,24 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
       for_modal = {false}
       idTab={'link_attr_tab_id'}
     />,
-    'Flux.IS': MenuConfigurationLinksTooltip(
-      ComponentUpdater,
-      multi_selected_links,
-      t,
-      false)[0]
+    'Flux.IS': <MenuConfigurationLinksTooltip
+      ComponentUpdater={ComponentUpdater}
+      multi_selected_links={multi_selected_links}
+      t={t}
+      menu_for_modal={false}
+    />
   }
-  const pre_tag_menu=MenuConfigurationLinksTags(
-    dict_variable_application_data,
-    dict_variable_elements_selected,
-    applicationContext,
-    false,ComponentUpdater,node_function,link_function
-  )
+  const pre_tag_menu=<MenuConfigurationLinksTags
+    applicationContext={applicationContext}
+    dict_variable_application_data={dict_variable_application_data}
+    dict_variable_elements_selected={dict_variable_elements_selected}
+    menu_for_modal={false}
+    ComponentUpdater={ComponentUpdater}
+    node_function={node_function}
+    link_function={link_function}
+  />
   if (Object.keys(fluxTags).length > 0 && data.accordeonToShow.includes('EF')){
-    ui['Noeud.tags_node.tags']=pre_tag_menu[0]
+    ui['Noeud.tags_node.tags']=pre_tag_menu
   }
 
   return ui

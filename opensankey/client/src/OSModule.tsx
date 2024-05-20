@@ -521,7 +521,10 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   ComponentUpdater
 ) => {
   additional_menus.additional_nav_item.push(
-    OpenSankeySaveButton(ComponentUpdater,applicationContext)
+    <OpenSankeySaveButton
+      ComponentUpdater={ComponentUpdater}
+      applicationContext={applicationContext}
+    />
   )
 }
 
@@ -567,46 +570,46 @@ export const moduleDialogs : module_dialogsType = (
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_link_data',
-    MenuConfigurationLinksData(
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      applicationContext,
-      additional_menus.additional_data_element,
-      ComponentUpdater,
-      node_function,
-      link_function
-    ),
+    <MenuConfigurationLinksData
+      dict_variable_application_data={dict_variable_application_data}
+      dict_variable_elements_selected={dict_variable_elements_selected}
+      applicationContext={applicationContext}
+      additional_data_element={additional_menus.additional_data_element}
+      ComponentUpdater={ComponentUpdater}
+      node_function={node_function}
+      link_function={link_function}
+    />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.data.données')
   ),
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_link_appearence',
-    MenuConfigurationLinksAppearence(
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      applicationContext,
-      additional_menus.additional_link_appearence_items,
-      false,
-      link_function,
-      ComponentUpdater 
-    ),
+    <MenuConfigurationLinksAppearence
+      dict_variable_application_data={dict_variable_application_data}
+      dict_variable_elements_selected={dict_variable_elements_selected}
+      applicationContext={applicationContext}
+      additional_link_appearence_items={additional_menus.additional_link_appearence_items}
+      menu_for_style={false}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+    />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.apparence.apparence')
   ),
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_layout',
-    OpenSankeyMenuConfigurationLayout(
-      applicationContext,
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      additional_menus.extra_background_element,
-      node_function,
-      link_function,
-      reDrawLegend,
-      ComponentUpdater
-    ),
+    <OpenSankeyMenuConfigurationLayout
+      dict_variable_application_data={dict_variable_application_data}
+      dict_variable_elements_selected={dict_variable_elements_selected}
+      applicationContext={applicationContext}
+      extra_background_element={additional_menus.extra_background_element}
+      node_function={node_function}
+      reDrawLegend={reDrawLegend}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+    />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.MEP'),
     33
@@ -640,25 +643,27 @@ export const moduleDialogs : module_dialogsType = (
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_link_tags',
-    MenuConfigurationLinksTags(
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      applicationContext,
-      true,
-      ComponentUpdater,
-      node_function,
-      link_function
-    ),
+    <MenuConfigurationLinksTags
+      applicationContext={applicationContext}
+      dict_variable_application_data={dict_variable_application_data}
+      dict_variable_elements_selected={dict_variable_elements_selected}
+      menu_for_modal={true}
+      ComponentUpdater={ComponentUpdater}
+      node_function={node_function}
+      link_function={link_function}
+    />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.Flux')+' '+applicationContext.t('Menu.Etiquettes')
   ),
   MenuDraggable(
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_link_tooltip',
-    MenuConfigurationLinksTooltip(
-      ComponentUpdater,
-      dict_variable_elements_selected.multi_selected_links,
-      applicationContext.t,true),
+    <MenuConfigurationLinksTooltip
+      ComponentUpdater={ComponentUpdater}
+      multi_selected_links={dict_variable_elements_selected.multi_selected_links}
+      t={applicationContext.t}
+      menu_for_modal={true}
+    />,
     contextMenu.pointer_pos,
     applicationContext.t('Menu.flux')+' '+applicationContext.t('Flux.IB'),
   )
@@ -802,16 +807,16 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     applicationContext,
     uiElementsRef,
     dict_hook_ref_setter_show_dialog_components,
-    OpenSankeyMenuConfigurationLayout(
-      applicationContext,
-      dict_variable_application_data,
-      dict_variable_elements_selected,
-      additional_menus.extra_background_element,
-      node_function,
-      link_function,
-      applicationDraw.reDrawLegend,
-      ComponentUpdater
-    ),
+    <OpenSankeyMenuConfigurationLayout
+      dict_variable_application_data={dict_variable_application_data}
+      dict_variable_elements_selected={dict_variable_elements_selected}
+      applicationContext={applicationContext}
+      extra_background_element={additional_menus.extra_background_element}
+      node_function={node_function}
+      reDrawLegend={applicationDraw.reDrawLegend}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+    />,
     <SankeySettingsEditionElementTags
       applicationContext={applicationContext}
       dict_variable_application_data={dict_variable_application_data}
