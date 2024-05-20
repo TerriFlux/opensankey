@@ -1,15 +1,11 @@
-import React, { useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import {
-  applicationContextType,
-  dict_variable_application_dataType,
-  dict_variable_elements_selectedType,
   SankeyNode,
 } from '../types/Types'
 import {
   Box,
   Checkbox,
   Select,
-  Tab,
   TabPanel
 } from '@chakra-ui/react'
 import { SankeyMenuConfigurationNodesTagsFType } from './types/SankeyMenuConfigurationNodesTagsTypes'
@@ -22,14 +18,14 @@ import { SankeyMenuConfigurationNodesTagsFType } from './types/SankeyMenuConfigu
    *
    * @type {*}
    */
-export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTagsFType = (
-  applicationContext : applicationContextType,
-  dict_variable_application_data : dict_variable_application_dataType,
-  dict_variable_elements_selected : dict_variable_elements_selectedType,
+export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConfigurationNodesTagsFType> = ({
+  applicationContext,
+  dict_variable_application_data,
+  dict_variable_elements_selected,
   node_function,
   ComponentUpdater,
-  menu_for_modal=false
-)=> {
+  menu_for_modal
+})=> {
   const { t } = applicationContext
   const { data } = dict_variable_application_data
   const { multi_selected_nodes } = dict_variable_elements_selected
@@ -139,20 +135,17 @@ export const SankeyMenuConfigurationNodesTags : SankeyMenuConfigurationNodesTags
     </Box>
   </Box>
 
-  return menu_for_modal ?
-    [content]:
-    [
-      <Tab>
-        <Box
-          layerStyle='submenuconfig_tab'
-        >
-          {t('Noeud.tabs.tags')}
-        </Box>
-      </Tab>,
-      <TabPanel>
-        {content}
-      </TabPanel>
-    ]
+  return menu_for_modal ? content:
+  // <><Tab>
+  //   <Box
+  //     layerStyle='submenuconfig_tab'
+  //   >
+  //     {t('Noeud.tabs.tags')}
+  //   </Box>
+  // </Tab>,
+    <TabPanel>
+      {content}
+    </TabPanel>
 }
 
 // Check if all value of the attribute "k" is the same in the selected nodes (or selected style)

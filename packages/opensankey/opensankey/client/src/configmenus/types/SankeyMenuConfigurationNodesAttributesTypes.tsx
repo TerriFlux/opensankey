@@ -21,3 +21,9 @@ export type SankeyMenuConfigurationNodesAttributesFType = (
   menu_configuration_nodes_attributes:JSX.Element[],
   for_modal : boolean
 ) => JSX.Element
+
+export type SankeyWrapperConfigInModalOrMenuType = {
+  menu_to_wrap:JSX.Element[],
+  for_modal:boolean,
+  idTab:string
+}

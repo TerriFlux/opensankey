@@ -40,7 +40,6 @@ import {
   SliderMark,
   SliderThumb,
   SliderTrack,
-  Tab,
   TabPanel,
 } from '@chakra-ui/react'
 
@@ -56,7 +55,7 @@ import {
   ReturnValueNode,
   TooltipValueSurcharge,
 } from './SankeyUtils'
-import { OpenSankeyConfigurationNodesAttributesFType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
+import { OpenSankeyConfigurationNodesAttributesFType, SankeyWrapperConfigInModalOrMenuType } from './types/SankeyMenuConfigurationNodesAttributesTypes'
 
 export const OpenSankeyConfigurationNodesAttributes : OpenSankeyConfigurationNodesAttributesFType = (
   applicationContext,
@@ -1201,61 +1200,58 @@ export const SankeyMenuConfigurationNodesAttributes = (
 ) => {
   //Function that check if all selected nodes have the same value for some parameter
   return for_modal ?
-    [
-      <Box layerStyle='menuconfigpanel_grid' >
+    <Box layerStyle='menuconfigpanel_grid' >
+      {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
+        return <React.Fragment key={i}>{c}</React.Fragment>
+      })}
+    </Box>
+    :
+  // <Tab>
+  //   <Box layerStyle='submenuconfig_tab' >
+  //     {t('Noeud.tabs.apparence')}
+  //   </Box>
+  // </Tab>,
+    <TabPanel
+      id='nodes_desc'
+    >
+      <Box layerStyle='menuconfigpanel_grid'>
         {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
           return <React.Fragment key={i}>{c}</React.Fragment>
         })}
       </Box>
-    ]:[
-      <Tab>
-        <Box layerStyle='submenuconfig_tab' >
-          {t('Noeud.tabs.apparence')}
-        </Box>
-      </Tab>,
-      <TabPanel
-        id='nodes_desc'
-      >
-        <Box layerStyle='menuconfigpanel_grid'>
-          {menu_configuration_nodes_attributes.map((c:JSX.Element,i)=>{
-            return <React.Fragment key={i}>{c}</React.Fragment>
-          })}
-        </Box>
-      </TabPanel>
-    ]
+    </TabPanel>
+    
 }
 
-export const SankeyWrapperConfigInModalOrMenu = (
-  menu_to_wrap:JSX.Element[],
-  for_modal = false,
-  title_tab='',
+export const SankeyWrapperConfigInModalOrMenu : FunctionComponent<SankeyWrapperConfigInModalOrMenuType> = ({
+  menu_to_wrap,
+  for_modal,
   idTab=''
-) => {
+}) => {
   //Function that check if all selected nodes have the same value for some parameter
   return for_modal ?
-    [
-      <Box layerStyle='menuconfigpanel_grid' >
+    <Box layerStyle='menuconfigpanel_grid' >
+      {menu_to_wrap.map((c:JSX.Element,i)=>{
+        return <React.Fragment key={i}>{c}</React.Fragment>
+      })}
+    </Box>
+    :
+  // <Tab> 
+  //   <Box layerStyle='submenuconfig_tab' >
+  //     {/* {SankeyWrapperConfigInModalOrMenu} */}
+  //     {title_tab}
+  //   </Box>
+  // </Tab>,
+    <TabPanel
+      id={idTab}
+    >
+      <Box layerStyle='menuconfigpanel_grid'>
         {menu_to_wrap.map((c:JSX.Element,i)=>{
           return <React.Fragment key={i}>{c}</React.Fragment>
         })}
       </Box>
-    ]:[
-      <Tab> 
-        <Box layerStyle='submenuconfig_tab' >
-          {/* {SankeyWrapperConfigInModalOrMenu} */}
-          {title_tab}
-        </Box>
-      </Tab>,
-      <TabPanel
-        id={idTab}
-      >
-        <Box layerStyle='menuconfigpanel_grid'>
-          {menu_to_wrap.map((c:JSX.Element,i)=>{
-            return <React.Fragment key={i}>{c}</React.Fragment>
-          })}
-        </Box>
-      </TabPanel>
-    ]
+    </TabPanel>
+    
 }
 
 type ConfigLayoutNumberInputType={

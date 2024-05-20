@@ -18,7 +18,7 @@ export type OpenSankeyMenuConfigurationNodesFType = (
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType
-) => { [s: string]: JSX.Element[]; }
+) => { [s: string]: JSX.Element; }
 
 export type tree_data_nodesFType=(t:TFunction<'translation', undefined>,data:SankeyData,multi_selected_nodes:{current:SankeyNode[]},node_visible:string[],
   filter_node_selector:string[]
