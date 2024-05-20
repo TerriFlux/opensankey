@@ -25,9 +25,13 @@ export type getSetDiagramFType = (
   DefaultSankeyData: ()=>SankeyPlusData
 ) => setDiagramFuncType
 
-export type view_toastFType = (dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType)=>JSX.Element
+export type ViewToastFType = {
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
+}
 
-export type view_toast_update_viewFType = (dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType)=>JSX.Element
+export type ViewToast_update_viewFType = {
+  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType
+}
 
 export type setValueFType = (
   dataTags: TagsGroup[],

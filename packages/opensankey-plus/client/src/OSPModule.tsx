@@ -69,7 +69,7 @@ import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, P
 import { 
   GetDataFromView, MenuEnregistrerView, OSPKeyHandler, SankeyPlusBannerView, 
   SelecteurView, getSetDiagramFunc, modal_transparent_view_attr, modal_view_not_saved, 
-  view_toast, view_toast_update_view, viewsAccordion 
+  ViewToast, ViewToast_update_view, viewsAccordion 
 } from './SankeyPlusViews'
 
 import ModalSelectionIcon from './SankeyPlusCatalogIcon'
@@ -578,12 +578,12 @@ export const OSPModuleDialogs : module_dialogsType = (
       dict_hook_ref_setter_show_dialog_components={OSP_dict_hook_ref}
       node_function={OSP_node_function }
     />,
-    view_toast(
-      dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType
-    ),
-    view_toast_update_view(
-      dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType
-    )
+    <ViewToast
+      dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType}
+    />,
+    <ViewToast_update_view
+      dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType}
+    />
   ]
 }
 

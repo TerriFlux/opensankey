@@ -66,8 +66,8 @@ import {
   SankeyPlusMenuPreferenceViewFType,
   SelecteurViewFType,
   setValueFType,
-  view_toast_update_viewFType,
-  view_toastFType,
+  ViewToast_update_viewFType,
+  ViewToastFType,
   viewsAccordionFType
 } from '../types/SankeyPlusViewsTypes'
 
@@ -116,7 +116,7 @@ export const getSetDiagramFunc : getSetDiagramFType = (
   }
 }
 
-export const view_toast : view_toastFType =(dict_hook_ref_setter_show_dialog_components)=> {
+export const ViewToast : FunctionComponent<ViewToastFType> =({dict_hook_ref_setter_show_dialog_components})=> {
   const show_toast=useState(false)
   dict_hook_ref_setter_show_dialog_components.show_toast_new_view.current=show_toast[1]
   return (<Toast show={show_toast[0]} bg='success' className='toastView' style={{ 'position': 'absolute', 'marginTop': '300px', 'marginLeft': '250px', 'zIndex': 1 }}>
@@ -124,7 +124,7 @@ export const view_toast : view_toastFType =(dict_hook_ref_setter_show_dialog_com
     <Toast.Body>Vue sauvegardée</Toast.Body>
   </Toast>)}
 
-export const view_toast_update_view : view_toast_update_viewFType = (dict_hook_ref_setter_show_dialog_components)=> {
+export const ViewToast_update_view : FunctionComponent<ViewToast_update_viewFType> = ({dict_hook_ref_setter_show_dialog_components})=> {
   const show_toast=useState(false)
   dict_hook_ref_setter_show_dialog_components.show_toast_update_view.current=show_toast[1]
 
