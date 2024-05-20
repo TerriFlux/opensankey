@@ -1,4 +1,4 @@
-import React,{ useEffect, useState, } from 'react'
+import React,{ FunctionComponent, useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 import Spinner  from 'react-bootstrap/Spinner'
 import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType, SankeyData, callbackFuncType, SankeyLink } from '../types/Types'
@@ -25,7 +25,7 @@ interface SankeyLoadProdTypes {
   callback:callbackFuncType
 }
 
-const SankeyLoad = ({
+const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   applicationContext,
   applicationDraw,
   dict_variable_application_data,
@@ -34,7 +34,7 @@ const SankeyLoad = ({
   dict_hook_ref_setter_show_dialog_components,
   convert_data,
   callback
-} : SankeyLoadProdTypes) => {
+}) => {
   const { t,url_prefix } = applicationContext
   const { ref_processing, ref_setter_processing, failure, ref_result, not_started, RetrieveExcelResults}=processFunctions
 

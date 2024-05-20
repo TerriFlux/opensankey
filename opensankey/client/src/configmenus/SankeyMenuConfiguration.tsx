@@ -2,7 +2,6 @@
 import React, {
   FunctionComponent,
   Ref,
-  useState
 } from 'react'
 import { ReactElementLike } from 'prop-types'
 
@@ -60,14 +59,6 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   node_function
 
 ) => {
-  // const [subnavitemactive, setsubnavitemactive] = useState('')
-  // const [nav_index, setNavIndex] = useState(-1)
-  // const { ref_setter_nav_item_active, ref_setter_sub_nav_item_active, ref_nav_item_active} = uiElementsRef
-  // ref_setter_nav_item_active.current = setNavIndex
-  // ref_setter_sub_nav_item_active.current = setsubnavitemactive
-  // ref_nav_item_active.current = nav_index
-  const [forceUpdate,setForceUpdate]=useState(false)
-  ComponentUpdater.updateComponentMenuConfig.current=()=>setForceUpdate(!forceUpdate)
   const {data}=dict_variable_application_data
   const {t}=applicationContext
   const {links_accordion_ref, nodes_accordion_ref,accordion_ref} = uiElementsRef
@@ -93,8 +84,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
         </AccordionButton>
         <AccordionPanel>
           <Box layerStyle='menuconfigpanel_grid'>
-            {menu_configuration_layout.map((c,i)=>{
-              return <React.Fragment key={i}>{c}</React.Fragment>})}
+            {menu_configuration_layout}
           </Box>
         </AccordionPanel>
       </AccordionItem>:

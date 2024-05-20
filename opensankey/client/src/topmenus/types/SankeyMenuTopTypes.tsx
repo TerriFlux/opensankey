@@ -69,7 +69,10 @@ export type MenuDraggableFType = (
   width_menu?:number
 )=> JSX.Element
 
-export type OpenSankeySaveButtonFType = (ComponentUpdater:ComponentUpdaterType,applicationContext:applicationContextType) => JSX.Element
+export type OpenSankeySaveButtonFType = {
+  ComponentUpdater:ComponentUpdaterType,
+  applicationContext:applicationContextType
+}
  
 export type LastCheckpointTimeFType = (t:TFunction,ComponentUpdater:ComponentUpdaterType) => JSX.Element
 export type SankeyMenuFileExportFType=(

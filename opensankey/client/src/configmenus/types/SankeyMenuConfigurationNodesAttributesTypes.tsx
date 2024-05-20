@@ -2,7 +2,7 @@ import { TFunction } from 'i18next'
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 
-export type OpenSankeyConfigurationNodesAttributesFType = (
+export type OpenSankeyConfigurationNodesAttributesFType = {
   applicationContext : applicationContextType,
   dict_variable_application_data : dict_variable_application_dataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
@@ -14,7 +14,7 @@ export type OpenSankeyConfigurationNodesAttributesFType = (
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   node_function:NodeFunctionTypes
-) => JSX.Element[]
+}
 
 export type SankeyMenuConfigurationNodesAttributesFType = (
   t:TFunction,
@@ -23,7 +23,7 @@ export type SankeyMenuConfigurationNodesAttributesFType = (
 ) => JSX.Element
 
 export type SankeyWrapperConfigInModalOrMenuType = {
-  menu_to_wrap:JSX.Element[],
+  menu_to_wrap:JSX.Element,
   for_modal:boolean,
   idTab:string
 }

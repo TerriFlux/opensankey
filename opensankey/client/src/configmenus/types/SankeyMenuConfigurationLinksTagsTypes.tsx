@@ -1,6 +1,6 @@
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 
-export type MenuConfigurationLinksTagsFType = (
+export type MenuConfigurationLinksTagsFType = {
  dict_variable_application_data:dict_variable_application_dataType,
  dict_variable_elements_selected:dict_variable_elements_selectedType,
  applicationContext:applicationContextType,
@@ -8,5 +8,5 @@ export type MenuConfigurationLinksTagsFType = (
  ComponentUpdater:ComponentUpdaterType,
  node_function:NodeFunctionTypes,
  link_function:LinkFunctionTypes
-)=> JSX.Element[]
+}
 

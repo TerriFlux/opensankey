@@ -1,6 +1,6 @@
 import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
 
-export type MenuConfigurationLinksAppearenceFType = (
+export type MenuConfigurationLinksAppearenceFType = {
   dict_variable_application_data:dict_variable_application_dataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
@@ -8,7 +8,7 @@ export type MenuConfigurationLinksAppearenceFType = (
   menu_for_style:boolean,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
-) => JSX.Element[]
+}
 
 //Dépalce la place des flux sélectionnés vers le début dans le tableau de flux de data
 //Permet donc de les déssiner avant
