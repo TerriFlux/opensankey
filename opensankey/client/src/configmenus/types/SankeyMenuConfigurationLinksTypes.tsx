@@ -1,4 +1,4 @@
-import { MutableRefObject } from 'react';
+import { MutableRefObject } from 'react'
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, contextMenuType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, uiElementsRefType } from '../../types/Types'
 
 
@@ -13,7 +13,7 @@ export type MenuConfigurationLinksFType = (
   node_function:NodeFunctionTypes
   ) => { [s: string]: JSX.Element; }
 
-  export type SankeyMenuConfigurationLinksTypes = {
+export type SankeyMenuConfigurationLinksTypes = {
     dict_variable_application_data:dict_variable_application_dataType,
     dict_variable_elements_selected:dict_variable_elements_selectedType,
     applicationContext:applicationContextType,

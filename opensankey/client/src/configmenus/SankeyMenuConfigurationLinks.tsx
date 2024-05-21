@@ -1,4 +1,4 @@
-import React, { FunctionComponent, MutableRefObject, useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 
 import {
   Box,

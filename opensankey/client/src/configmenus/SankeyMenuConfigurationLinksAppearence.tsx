@@ -72,18 +72,20 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
 })=>{
   const {t}=applicationContext
   const {data}=dict_variable_application_data
+  const [forceUpdate,setForceUpdate] = useState(false)
   const {ref_selected_style_link,multi_selected_links}=dict_variable_elements_selected
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[ref_selected_style_link.current]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')
-  const {updateComponentMenuConfigLink}=ComponentUpdater
+  //const {updateComponentMenuConfigLink}=ComponentUpdater
 
   const element_to_update=menu_for_style?Object.values(dict_variable_application_data.display_links):multi_selected_links.current
 
   const updateMenuConfigLink=()=>{
     ComponentUpdater.updateComponenSaveInCache.current(false)
     link_function.RedrawLinks(element_to_update)
-    updateComponentMenuConfigLink.current()
+    //updateComponentMenuConfigLink.current()
+    setForceUpdate(!forceUpdate)
   }
   const list_key=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible','color',
     'label_visible','font_family','recycling','arrow','curved',
@@ -99,7 +101,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
     }
     const idx = selected_parameter.length-1
     const current_link = selected_parameter[idx]
-    return parseFloat((((ReturnCorrectLinkAttributeValue(data,current_link,'left_horiz_shift',menu_for_style)as number) + (ReturnCorrectLinkAttributeValue(data,current_link,'right_horiz_shift',menu_for_style)as number)) / 2).toPrecision(2))
+    const left_shift = ReturnCorrectLinkAttributeValue(data,current_link,'left_horiz_shift',menu_for_style)as number
+    const right_shift = ReturnCorrectLinkAttributeValue(data,current_link,'right_horiz_shift',menu_for_style)as number
+
+    return parseFloat(((left_shift + right_shift) / 2).toPrecision(2))
   }
 
   const shift = () => {
@@ -365,8 +370,8 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
           <NumberInput
             variant='menuconfigpanel_option_numberinput_with_right_addon'
             min={0}
-            max={1}
-            step={0.01}
+            max={100}
+            step={1}
             value={Math.round(shiftCenter()*100)}
             isDisabled={(linkOrientation('hv')||linkOrientation('vh'))}
             onChange={
