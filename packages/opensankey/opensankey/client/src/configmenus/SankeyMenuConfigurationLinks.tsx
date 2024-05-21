@@ -14,19 +14,13 @@ import {
 import { ReactElementLike } from 'prop-types'
 
 import {
-  ComponentUpdaterType,
-  LinkFunctionTypes,
-  NodeFunctionTypes,
   SankeyLink,
   SankeyNode,
   applicationContextType,
-  contextMenuType,
-  dict_hook_ref_setter_show_dialog_componentsType,
   dict_variable_application_dataType,
-  dict_variable_elements_selectedType,
-  uiElementsRefType
+  dict_variable_elements_selectedType
 } from '../types/Types'
-
+import {  SankeyMenuConfigurationLinksTypes } from './types/SankeyMenuConfigurationLinksTypes'
 import {
   DefaultLink,
   DeleteLink,
@@ -99,20 +93,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   return ui
 }
 
-type SankeyMenuConfigurationLinksTypes = {
-  dict_variable_application_data:dict_variable_application_dataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
-  applicationContext:applicationContextType,
-  menu_configuration_links : {[s:string]: JSX.Element},
-  link_function:LinkFunctionTypes,
-  ComponentUpdater:ComponentUpdaterType,
-  contextMenu:contextMenuType,
-  uiElementsRef:uiElementsRefType,
-  alt_key_pressed:MutableRefObject<boolean>,
-  dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  node_function:NodeFunctionTypes
 
-}
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
   { dict_variable_application_data,
@@ -128,6 +109,10 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     node_function
   }
 ) => {
+  const {updateComponentMenuConfigLink,updateMenuConfigTextLinkTooltip}=ComponentUpdater
+  const [forceUpdate,setForceUpdate]=useState(false)
+  updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
+
   const {t}=applicationContext
   const {data,set_data}=dict_variable_application_data
   const { multi_selected_links,multi_selected_nodes, displayedInputLinkValueSetterRef}=dict_variable_elements_selected
@@ -138,11 +123,11 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
   dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
   const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
-  const {updateComponentMenuConfigLink,updateMenuConfigTextLinkTooltip}=ComponentUpdater
+
   const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
   const node_visible=NodeVisibleOnsSvg()
-  const [forceUpdate,setForceUpdate]=useState(false)
+
   if ((tags_group_key == '' && Object.keys(fluxTags).length > 0) || (!Object.keys(fluxTags).includes(tags_group_key) && Object.keys(fluxTags).length > 0)) {
     set_tags_group_key(Object.keys(fluxTags)[0])
   }
@@ -250,6 +235,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               Object.values(dict_variable_application_data.display_links).forEach(l=>DeselectVisualyLinks(l))
               multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
               updateComponentMenuConfigLink.current()
+              setForceUpdate(!forceUpdate)
               updateMenuConfigTextLinkTooltip.current.forEach(f=>f())
 
             }}
