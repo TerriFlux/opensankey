@@ -83,8 +83,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
-  const [forceUpdate,setForceUpdate]=useState(false)
-
 
   // Logo, names, licences
   const applicationContext = initializeApplicationContext()
@@ -102,8 +100,6 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const contextMenu = initializeContextMenu()
 
   const ComponentUpdater = initializeComponentUpdater()
-  ComponentUpdater.updateComponentMenuConfig.current=()=>setForceUpdate(!forceUpdate) 
-  ComponentUpdater.updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
 
   const processFunctions = initializeProcessFunctions(dict_hook_ref_setter_show_dialog_components)
   const uiElementsRef = initializeUIElementsRef()

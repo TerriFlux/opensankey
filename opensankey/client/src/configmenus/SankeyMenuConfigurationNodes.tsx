@@ -126,12 +126,17 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
     node_function
   }
 ) => {
+  const [forceUpdate, setForceUpdate] = useState(false)
+  const {
+    updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode,
+    updateComponentMenuConfigLink,updateMenuConfigTextNodeTooltip
+  }=ComponentUpdater
+  updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
+  
   const {data}=dict_variable_application_data
   const {t}=applicationContext
-  const [forceUpdate, setForceUpdate] = useState(false)
   const node_visible=NodeVisibleOnsSvg()
-  const {updateComponentMenuConfigNode,updateComponentMenuNodeIOSelectSideNode,updateComponentMenuConfigLink,updateMenuConfigTextNodeTooltip}=ComponentUpdater
-  updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
+
   const tmpNodes = Object
     .fromEntries(
       Object.entries(data.nodes)

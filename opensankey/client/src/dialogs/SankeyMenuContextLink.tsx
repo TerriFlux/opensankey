@@ -297,6 +297,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
               }else{
                 d3.select('.inputValueLink').style('border','#ced4da 1px solid')
               }
+              setForceUpdate(!forceUpdate)
             }
           }
           onBlur={evt=>{
