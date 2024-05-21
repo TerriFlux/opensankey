@@ -334,6 +334,8 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
       // if the right mouse button is clicked we switch to selection mode
       // dict_variable_elements_selected.ref_setter_mode_selection.current('s')
       // dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
+      dict_variable_elements_selected.multi_selected_links.current = [l]
+      // d3.select(' .opensankey #svg').attr('class','mode_selection')
       return EventLinkContextMenu(
         dict_variable_application_data,ev,l,ref_setter_contextualised_link,pointer_pos,
         dict_variable_elements_selected,tags_selected,
