@@ -283,7 +283,7 @@ export const OSPInitializeContextMenu : ()=> contextMenuType = ()=> {
       context_menu.ref_setter_contextualised_link,
       context_menu.tagContext,
       context_menu.showContextZDDRef
-    )
+    )()
     osp_context_menu.contextualised_zdt.current!(undefined)
   }
   return context_menu
