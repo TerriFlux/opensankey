@@ -64,14 +64,14 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
 export const SankeyPlusMenuPreferenceLabels : FunctionComponent<SankeyPlusMenuPreferenceLabelsFType> = ({
   t,
   data,
-  ComponentUpdater
+  updateMenus
 })=>{
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
     isChecked={data.accordeonToShow.includes('LL')}
     onChange={() => {
       preferenceCheck('LL',data)
-      ComponentUpdater.updateComponentMenuConfig.current()
+      updateMenus[1](!updateMenus[0])
     }}>
     {t('Menu.LL')}
   </Checkbox>

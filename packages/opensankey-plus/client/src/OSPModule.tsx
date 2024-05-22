@@ -393,6 +393,7 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
 // we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
 export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   additionalMenus,
+  updateMenus,
   applicationContext,
   dict_variable_application_data,
   applicationDraw,
@@ -484,7 +485,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     <SankeyPlusMenuPreferenceLabels
       t={applicationContext.t}
       data={dict_variable_application_data.data as SankeyPlusData}
-      ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
+      updateMenus={updateMenus}
     />
   )
   //- Builds Configuration Menus FreeLabel

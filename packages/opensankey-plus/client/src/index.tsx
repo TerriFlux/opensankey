@@ -295,6 +295,7 @@ root.render(
     initializeAdditionalMenus={
       (
         additionalMenus,
+        updateMenus,
         applicationContext,
         dict_variable_application_data,
         applicationDraw,
@@ -311,11 +312,13 @@ root.render(
       )=>{
         initializeAdditionalMenus(
           additionalMenus,
+          updateMenus,
           applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
           uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,contextMenu
         )
         OSPInitializeAdditionalMenus(
           additionalMenus,
+          updateMenus,
           applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
           uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,contextMenu
         )
