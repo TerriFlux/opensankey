@@ -83,6 +83,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 }) => {
 
   const [data, set_data] = useState<SankeyData>(initial_sankey_data)
+  const updateMenus = useState(false)
 
   // Logo, names, licences
   const applicationContext = initializeApplicationContext()
@@ -367,17 +368,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   )
   Object.assign(menu_configuration_nodes,additionalMenus.additional_menu_configuration_nodes)
 
-
-  const regular_ui=OpenSankeyDefaultModalePreferenceContent(
+  const regular_ui = OpenSankeyDefaultModalePreferenceContent(
     applicationContext.t,
     dict_variable_application_data,
     i18next,
-    ComponentUpdater,
+    updateMenus,
     node_function
   )
   regular_ui['form'] = [...regular_ui['form'],...additionalMenus.additional_preferences]
-
-
   
   const menu_configuration=initializeMenuConfiguration(
     dict_variable_application_data,
