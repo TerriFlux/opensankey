@@ -339,7 +339,7 @@ root.render(
             t={applicationContext.t}
             set_view_not_saved={plus_dict_app_data.set_view_not_saved}
             connected={PlusApplicationContext.has_open_sankey_plus}
-          />
+          />;
           (uiElementsRef as PlusUiElementsRefType).ViewSelector.current=selector_of_view
           additionalMenus.externale_navbar_item['view']=<SankeyPlusBannerView
             dict_variable_application_data={dict_variable_application_data as SankeyPlusApplicationDataType}
