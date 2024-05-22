@@ -1,6 +1,7 @@
 import { TFunction, i18n } from 'i18next'
-import { ComponentUpdaterType, NodeFunctionTypes, SankeyData, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
-
+import { 
+  NodeFunctionTypes, SankeyData, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType 
+} from '../../types/Types'
 
 export type OpenSankeyDefaultModalePreferenceContentFType=(
   t:TFunction,

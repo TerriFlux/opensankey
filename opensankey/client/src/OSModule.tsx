@@ -516,6 +516,7 @@ export const initializeUIElementsRef : initializeUIElementsRefType = ()=> {retur
 
 export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   additional_menus,
+  updateMenus,
   applicationContext,
   dict_variable_application_data,
   applicationDraw,
