@@ -1158,8 +1158,14 @@ export const NodeColor:NodeColorFuncType = (n: SankeyNode,data:SankeyData): stri
 
 export const GetVerticalMarginForSankeyZone:GetVerticalMarginForSankeyZoneFuncType=(): number=>{
   // Get height of elements ahead and below the sankeydraw zone
-  const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
-  const footer_size=document.getElementsByClassName('sankeyFooter')[0]?.getBoundingClientRect().height
+  let shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
+  if (shift_top == undefined) {
+    shift_top = 0
+  }
+  let footer_size=document.getElementsByClassName('sankeyFooter')[0]?.getBoundingClientRect().height
+  if (footer_size == undefined) {
+    footer_size = 0
+  }
   return shift_top+footer_size
 }
 /**
