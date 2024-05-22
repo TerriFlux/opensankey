@@ -686,6 +686,7 @@ export type AdditionalMenusType = {
 
 export type initializeAdditionalMenusType = (
   additional_menus:AdditionalMenusType,
+  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   applicationContext:applicationContextType,
   dict_variable_application_data:dict_variable_application_dataType,
   applicationDraw:applicationDrawType,

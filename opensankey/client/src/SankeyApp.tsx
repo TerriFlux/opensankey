@@ -262,6 +262,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   initializeAdditionalMenus(
     additionalMenus,
+    updateMenus,
     applicationContext,
     dict_variable_application_data,
     applicationDraw,
