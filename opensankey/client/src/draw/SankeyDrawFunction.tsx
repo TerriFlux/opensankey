@@ -928,7 +928,6 @@ const AddShiftHandle = (
   inv_scale:(t:number)=>number,
 
 ) => {
-  // const {data}=dict_variable_application_data
   const {multi_selected_links}=dict_variable_elements_selected
   if (!d3.select(' .opensankey #gg_link_handle_'+link.idLink).empty()) {
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
