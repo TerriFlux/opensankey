@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 
 // import { Form,  Button, ButtonGroup, InputGroup} from 'react-bootstrap'
 
@@ -14,7 +14,7 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
   t:TFunction,
   dict_variable_application_data,
   trad:i18n,
-  ComponentUpdater,
+  updateMenus,
   node_function
 )=>{
   const {data,display_nodes}=dict_variable_application_data
@@ -46,15 +46,18 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
             onClick={() => {
               sessionStorage.removeItem('modepref')
               data.accordeonToShow = ['MEP']
-              ComponentUpdater.updateComponentMenuConfig.current()
-
+              // ComponentUpdater.updateComponentMenuConfig.current()
+              // ComponentUpdater.updatePreference.current()
+              updateMenus[1](!updateMenus[0])
             }}
           >Mode Simple</Button>
           <Button variant='menuconfigpanel_option_button_right'
             onClick={() => {
               sessionStorage.setItem('modepref','expert')
               data.accordeonToShow = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
-              ComponentUpdater.updateComponentMenuConfig.current()
+              // ComponentUpdater.updateComponentMenuConfig.current()
+              // ComponentUpdater.updatePreference.current()
+              updateMenus[1](!updateMenus[0])
             }}
           >Mode Expert</Button>
         </Box>
@@ -65,8 +68,9 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         isChecked={data.accordeonToShow.includes('MEP')}
         onChange={() => {
           preferenceCheck('MEP',data)
-          ComponentUpdater.updateComponentMenuConfig.current()
-
+          // ComponentUpdater.updateComponentMenuConfig.current()
+          // ComponentUpdater.updatePreference.current()
+          updateMenus[1](!updateMenus[0])
         }}>
         {t('Menu.MEP')}
       </Checkbox>,
@@ -84,8 +88,9 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         isChecked={data.accordeonToShow.includes('EN')}
         onChange={() => {
           preferenceCheck('EN',data)
-          ComponentUpdater.updateComponentMenuConfig.current()
-
+          // ComponentUpdater.updateComponentMenuConfig.current()
+          // ComponentUpdater.updatePreference.current()
+          updateMenus[1](!updateMenus[0])
         }}>
         {t('Menu.EN')}
       </Checkbox>,
@@ -103,8 +108,9 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         isChecked={data.accordeonToShow.includes('EF')}
         onChange={() => {
           preferenceCheck('EF',data)
-          ComponentUpdater.updateComponentMenuConfig.current()
-
+          // ComponentUpdater.updateComponentMenuConfig.current()
+          // ComponentUpdater.updatePreference.current()
+          updateMenus[1](!updateMenus[0])
         }}>
         {t('Menu.EF')}
       </Checkbox>,
@@ -114,8 +120,9 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
         isChecked={data.accordeonToShow.includes('ED')}
         onChange={() => {
           preferenceCheck('ED',data)
-          ComponentUpdater.updateComponentMenuConfig.current()
-
+          // ComponentUpdater.updateComponentMenuConfig.current()
+          // ComponentUpdater.updatePreference.current()
+          updateMenus[1](!updateMenus[0])
         }}>
         {t('Menu.ED')}
       </Checkbox>,
@@ -127,7 +134,10 @@ export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModaleP
           variant='menuconfigpanel_option_input' value={data.node_label_separator} 
           onChange={evt=>{
             data.node_label_separator=evt.target.value
-            ComponentUpdater.updateComponentMenuConfig.current()}}
+            // ComponentUpdater.updateComponentMenuConfig.current()
+            // ComponentUpdater.updatePreference.current()
+            updateMenus[1](!updateMenus[0])
+          }}
           onBlur={()=>node_function.RedrawNodes(Object.values(display_nodes))}
         />
       </Box></OSTooltip>,

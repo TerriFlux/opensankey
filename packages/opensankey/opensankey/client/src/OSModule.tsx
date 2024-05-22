@@ -495,6 +495,7 @@ export const initializeComponentUpdater : ()=>ComponentUpdaterType = ()=> {
     updateComponentBtnUpdateLayout : useRef(()=>null),
     updateMenuConfigTextNodeTooltip:useRef([] as (()=>void)[]),
     updateMenuConfigTextLinkTooltip:useRef([] as (()=>void)[]),
+    updatePreference:useRef(()=>null)
   }
   _.updateMenuConfigTextNodeTooltip.current=[]
   _.updateMenuConfigTextLinkTooltip.current=[]

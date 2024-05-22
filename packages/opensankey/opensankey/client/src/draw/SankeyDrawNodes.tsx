@@ -152,6 +152,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
       // if the right mouse button is clicked we switch to selection mode
       // dict_variable_elements_selected.ref_setter_mode_selection.current('s')
       // dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
+      // d3.select(' .opensankey #svg').attr('class','mode_selection')
       return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)
     }}
   )

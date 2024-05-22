@@ -54,7 +54,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
       {t('Menu.background')}
     </Box>
 
-    /* Couleur du fond de la page */
+    {/* Couleur du fond de la page */}
     <Box
       as='span'
       layerStyle='menuconfigpanel_row_2cols'
@@ -80,8 +80,8 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
 
     {extra_background_element}
 
-    /* Quadrillage */
-    /* Afficher le quadrillage */
+    {/* Quadrillage */}
+    {/* Afficher le quadrillage */}
     <Box as='span'>
 
       <Checkbox
@@ -101,7 +101,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
 
     </Box>
 
-    /* Taille de la grille */
+    {/* Taille de la grille */}
     <Box
       as='span'
       layerStyle='menuconfigpanel_row_2cols'
@@ -160,7 +160,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
       </Box>
     </Box>
 
-    /* Taille minimale du flux */
+    {/* Taille minimale du flux */}
     <Box
       layerStyle='menuconfigpanel_2row_3cols'
     >

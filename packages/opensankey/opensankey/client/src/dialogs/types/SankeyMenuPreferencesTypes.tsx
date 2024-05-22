@@ -6,7 +6,7 @@ export type OpenSankeyDefaultModalePreferenceContentFType=(
   t:TFunction,
   dict_variable_application_data:dict_variable_application_dataType,
   trad:i18n,
-  ComponentUpdater:ComponentUpdaterType,
+  updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   node_function:NodeFunctionTypes
 )=> { lang: JSX.Element; form: JSX.Element[]; node_label_sep: JSX.Element; }
 
