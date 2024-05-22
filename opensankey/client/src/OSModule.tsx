@@ -896,10 +896,8 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
 }
 
 export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  applicationContext,
-  dict_variable_application_data,
-  applicationDraw,
-  node_function,
-  link_function)=>{
+  dict_variable_application_data
+)=>{
   return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>

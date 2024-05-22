@@ -1604,7 +1604,7 @@ export const convert_data:ConvertDataFuncType = (
   //   data.style_node['default'] = DefaultNodeStyle()
   // }
   
-  let defaut_style = Object.values(data.style_link).filter(s=>s.name==="Style par défaut") as SankeyLinkStyle & SankeyLinkStyle[]
+  let defaut_style = Object.values(data.style_link).filter(s=>s.name==='Style par défaut') as SankeyLinkStyle & SankeyLinkStyle[]
   if (defaut_style.length>0) {
     defaut_style = defaut_style[0] as SankeyLinkStyle & SankeyLinkStyle[]
     defaut_style.idLink = 'default'
