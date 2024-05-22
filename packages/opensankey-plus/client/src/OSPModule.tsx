@@ -15,7 +15,8 @@ import {
   InstallEventsOnSVGType,
   NodeFunctionTypes,
   SankeyNode,
-  InitalizeSelectorDetailNodesType} from 'open-sankey/src/types/Types'
+  InitalizeSelectorDetailNodesType
+} from 'open-sankey/src/types/Types'
 import { 
   OSPApplicationDataVarType,
   OSPGetDefaultData,
@@ -56,7 +57,8 @@ import {
   updateDrawNodeShape,
   RedrawNodesLabel,
   DrawAllNodes,
-  AddAllDropDownNode
+  AddAllDropDownNode,
+  AdjustSankeyZone
 } from './import/OpenSankey'
 import { os_all_element_to_transform } from 'open-sankey/dist/dialogs/SankeyMenuDialogs'
 import { SankeyPlusNodeFO } from './SankeyPlusForeignObject'
@@ -242,7 +244,10 @@ export const OSPInitializeApplicationDraw : OSPInitializeApplicationDrawType= (
       updateLayoutOSTyped(data,new_layout,mode,synchronize)
       plus_sankey_layout(data as SankeyPlusData,new_layout as SankeyPlusData,mode)
     },
-    all_element_UpdateLayout : [...os_all_element_to_transform,...plus_all_element_to_transform]
+    all_element_UpdateLayout : [...os_all_element_to_transform,...plus_all_element_to_transform],
+    reAdjustSankey:()=>(()=>{
+      AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
+    })()
   }
   return _ as PlusApplicationDrawVarType
 }

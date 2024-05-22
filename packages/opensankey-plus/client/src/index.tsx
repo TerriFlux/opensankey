@@ -31,7 +31,7 @@ import {
   initializeMenuConfiguration,
   initializeKeyHandler
 } from './import/OpenSankey'
-import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from '../types/Types'
+import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from '../types/Types'
 import { 
   OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected, 
   OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization, 
@@ -43,6 +43,17 @@ import {
 import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
 import { ClickSaveDiagram } from 'open-sankey/dist/dialogs/SankeyPersistence'
+import { SankeyPlusBannerView, SelecteurView } from './SankeyPlusViews'
+
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+  sankey: {
+    filiere?:string
+    footer?:boolean
+    header?:string
+  }
+}
 
 window.React = React
 
@@ -84,6 +95,16 @@ if (json_data !== null && json_data != '' && json_data!='null') {
   complete_sankey_data(data,get_default_data,DefaultNode,DefaultLink)
 }
 
+// window.SankeyToolsStatic = true
+// if (!window.sankey) {
+//   window.sankey = { 
+//     footer: true,
+//     header: 'Sankey Viewer'
+//   }
+// }
+if (window.sankey.filiere) {
+  Object.assign(data, window.sankey.filiere)
+}
 
 // Cahnge data to list of node contianing icons from the icon lib
 // data = generate_data_example_icons(get_default_data)
@@ -306,6 +327,26 @@ root.render(
         contextMenu
 
       )=>{
+        if (window.SankeyToolsStatic) {
+          const plus_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
+          const PlusApplicationContext=applicationContext as PlusApplicationContextType
+          const selector_of_view=SelecteurView(
+            plus_dict_app_data,
+            dict_variable_elements_selected as PlusElementsSelectedType,
+            applicationContext.t,
+            plus_dict_app_data.set_view_not_saved,
+            PlusApplicationContext.has_open_sankey_plus,
+          );
+          (uiElementsRef as PlusUiElementsRefType).ViewSelector.current=selector_of_view
+          additionalMenus.externale_navbar_item['view']=SankeyPlusBannerView(
+            dict_variable_application_data as SankeyPlusApplicationDataType,
+            PlusApplicationContext ,
+            (dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType) ,
+            dict_variable_application_data.convert_data,
+            selector_of_view
+          )
+          return
+        }
         initializeAdditionalMenus(
           additionalMenus,
           applicationContext,dict_variable_application_data,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
