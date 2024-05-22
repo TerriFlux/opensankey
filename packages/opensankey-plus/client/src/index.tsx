@@ -33,7 +33,7 @@ import {
   initializeKeyHandler,
   ClickSaveDiagram
 } from './import/OpenSankey'
-import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from '../types/Types'
+import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from '../types/Types'
 import { 
   OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected, 
   OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization, 
@@ -44,8 +44,18 @@ import {
   OSPInitalizeSelectorDetailNodes} from './OSPModule'
 import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
 import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
-//import { ClickSaveDiagram } from 'open-sankey/dist/dialogs/SankeyPersistence'
 import { SaveDiagramOptionsType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
+import { SankeyPlusBannerView, SelecteurView } from './SankeyPlusViews'
+
+declare const window: Window &
+typeof globalThis & {
+  SankeyToolsStatic: boolean
+  sankey: {
+    filiere?:string
+    footer?:boolean
+    header?:string
+  }
+}
 
 window.React = React
 
@@ -87,6 +97,16 @@ if (json_data !== null && json_data != '' && json_data!='null') {
   complete_sankey_data(data,get_default_data,DefaultNode,DefaultLink)
 }
 
+// window.SankeyToolsStatic = true
+// if (!window.sankey) {
+//   window.sankey = { 
+//     footer: true,
+//     header: 'Sankey Viewer'
+//   }
+// }
+if (window.sankey.filiere) {
+  Object.assign(data, window.sankey.filiere)
+}
 
 // Cahnge data to list of node contianing icons from the icon lib
 // data = generate_data_example_icons(get_default_data)
@@ -310,6 +330,26 @@ root.render(
         contextMenu
 
       )=>{
+        if (window.SankeyToolsStatic) {
+          const plus_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
+          const PlusApplicationContext=applicationContext as PlusApplicationContextType
+          const selector_of_view=<SelecteurView
+            dict_variable_application_data={plus_dict_app_data}
+            dict_variable_elements_selected={dict_variable_elements_selected as PlusElementsSelectedType}
+            t={applicationContext.t}
+            set_view_not_saved={plus_dict_app_data.set_view_not_saved}
+            connected={PlusApplicationContext.has_open_sankey_plus}
+          />
+          (uiElementsRef as PlusUiElementsRefType).ViewSelector.current=selector_of_view
+          additionalMenus.externale_navbar_item['view']=<SankeyPlusBannerView
+            dict_variable_application_data={dict_variable_application_data as SankeyPlusApplicationDataType}
+            applicationContext={PlusApplicationContext}
+            dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType)}
+            convert_data={dict_variable_application_data.convert_data}
+            view_selector={(uiElementsRef as PlusUiElementsRefType).ViewSelector.current as JSX.Element}
+          />
+          return
+        }
         initializeAdditionalMenus(
           additionalMenus,
           updateMenus,
