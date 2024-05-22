@@ -436,6 +436,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       applicationDraw.GetSankeyMinWidthAndHeight,
       applicationDraw
     )
+
     // Zoom Behavior
     applyZoomEvent(
       dict_variable_application_data,
@@ -455,6 +456,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         applicationDraw      
       )
     }
+    setTimeout(() => {
+      applicationDraw.reAdjustSankey()
+    }, 100)
   },[data])
   /*************************************************************************************************/
 

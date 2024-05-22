@@ -463,12 +463,11 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
         </ChakraButton>
       </OSTooltip>
     ]
-    
-    Object.entries(externale_navbar_item).forEach(ext_nav=>{
-      ui[ext_nav[0]]=[ext_nav[1]]
-    })
-
   }
+
+  Object.entries(externale_navbar_item).forEach(ext_nav=>{
+    ui[ext_nav[0]]=[ext_nav[1]]
+  })
 
   return ui
 }
