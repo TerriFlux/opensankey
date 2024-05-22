@@ -707,8 +707,8 @@ export const convert_tags:convert_tagsFuncType = (
   })
 
   // Convertie les nodeTags avec pour bannière 'level' en levelTags
-  if(has_not_converted_nodeTags_as_levelTags(data)){
-    data.levelTags = Object.assign({},data.levelTags,Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level')))
+  if(has_not_converted_nodeTags_as_levelTags(data) || 'Primaire' in data.nodeTags){
+    data.levelTags = Object.assign({},data.levelTags,Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner === 'level' || nt[0] == 'Primaire')))
     data.nodeTags=Object.fromEntries(Object.entries(data.nodeTags).filter(nt=>nt[1].banner!=='level'))
   }
 
