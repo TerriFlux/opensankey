@@ -1,6 +1,6 @@
 import { LinkFunctionTypes, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
 import { 
-  PlusApplicationContextType, PlusComponentUpdaterType, 
+  PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, 
   PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, 
   SankeyPlusContextMenuType, SankeyPlusData, 
   SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode
@@ -17,6 +17,7 @@ export type PlusDrawLabelsFType = (
   applicationContext:PlusApplicationContextType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   closeAllMenuContext:()=>void,
+  applicationDraw:PlusApplicationDrawType,
   ComponentUpdater:PlusComponentUpdaterType,
   object_to_update:SankeyPlusLabel[],
   link_function:LinkFunctionTypes,

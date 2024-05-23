@@ -33,7 +33,7 @@ import {
   initializeKeyHandler,
   ClickSaveDiagram
 } from './import/OpenSankey'
-import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from '../types/Types'
+import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from '../types/Types'
 import { 
   OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected, 
   OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization, 
@@ -46,6 +46,7 @@ import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConver
 import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
 import { SaveDiagramOptionsType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
 import { SankeyPlusBannerView, SelecteurView } from './SankeyPlusViews'
+import { PlusDrawLabels, sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 
 declare const window: Window &
 typeof globalThis & {
@@ -161,18 +162,33 @@ root.render(
         start_point :{ current: number[]; },
         resizeCanvas :() => void
       )=>{
-        const _ = {
-          ...initializeApplicationDraw(
-            dict_variable_application_data,dict_variable_elements_selected,contextMenu,
-            applicationContext, ComponentUpdater, uiElementsRef, node_function, link_function,
-            start_point, resizeCanvas
-          ),
-          ...OSPInitializeApplicationDraw(
-            dict_variable_application_data,dict_variable_elements_selected,contextMenu,
-            applicationContext,ComponentUpdater,uiElementsRef,node_function,link_function,
-            start_point, resizeCanvas
+        const _ = initializeApplicationDraw(
+          dict_variable_application_data,dict_variable_elements_selected,contextMenu,
+          applicationContext, ComponentUpdater, uiElementsRef, node_function, link_function,
+          start_point, resizeCanvas
+        )
+        Object.assign(_,OSPInitializeApplicationDraw(
+          dict_variable_application_data,dict_variable_elements_selected,contextMenu,
+          applicationContext,ComponentUpdater,uiElementsRef,node_function,link_function,
+          start_point, resizeCanvas
+        ));
+        (_ as PlusApplicationDrawType).reDrawPlusLabels = (object_to_update:SankeyPlusLabel[])=>{
+          PlusDrawLabels(
+              dict_variable_application_data as SankeyPlusApplicationDataType,
+              dict_variable_elements_selected as PlusElementsSelectedType,
+              uiElementsRef as PlusUiElementsRefType,
+              contextMenu as SankeyPlusContextMenuType,
+              applicationContext as PlusApplicationContextType,
+              sankey_plus_min_width_and_height,
+              contextMenu.closeAllMenuContext,
+              _ as unknown as PlusApplicationDrawType,
+              ComponentUpdater as PlusComponentUpdaterType,
+              object_to_update,
+              link_function,
+              start_point,
+              resizeCanvas
           )
-        }
+          ComponentUpdater.updateComponenSaveInCache.current(false)}
         return _
       }
     }

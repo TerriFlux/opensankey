@@ -13,7 +13,8 @@ import {
   SankeyPlusApplicationDataType,
   SankeyPlusContextMenuType,
   PlusApplicationContextType,
-  PlusComponentUpdaterType
+  PlusComponentUpdaterType,
+  PlusApplicationDrawType
 } from '../types/Types'
 import {
   PlusDrawLabelsFType,
@@ -29,7 +30,7 @@ import {
 } from './import/OpenSankey'
 
 // OpenSankey types
-import { LinkFunctionTypes } from 'open-sankey/src/types/Types'
+import { LinkFunctionTypes, applicationDrawType } from 'open-sankey/src/types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 // OpenSankey jscode
@@ -49,6 +50,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   applicationContext,
   GetSankeyMinWidthAndHeight,
   closeAllMenuContext:()=>void,
+  applicationDraw,
   ComponentUpdater,
   object_to_update,
   link_function,
@@ -90,7 +92,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
           .attr('stroke', d.color_border)
           .attr('rx', 5)
 
-        draw_text_zone_handles(applicaTionData,d,multi_selected_label,ComponentUpdater,link_function)
+        draw_text_zone_handles(applicaTionData,d,multi_selected_label,applicationDraw,ComponentUpdater,link_function)
 
         gg_label.on('click', (event) => eventLabelClick(
           event,d,uiElementsRef,dict_variable_elements_selected,multi_selected_label,multi_selected_nodes,multi_selected_links,ComponentUpdater
@@ -390,18 +392,30 @@ export const zone_selection_label : zone_selection_labelFType = (
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
 
     }
-
   }
 }
 
-const draw_text_zone_handles=(dict_variable_application_data:SankeyPlusApplicationDataType,zdt:SankeyPlusLabel,multi_selected_label:{current:SankeyPlusLabel[]},ComponentUpdater:PlusComponentUpdaterType,link_function:LinkFunctionTypes)=>{
+const draw_text_zone_handles=(
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  zdt:SankeyPlusLabel,
+  multi_selected_label:{current:SankeyPlusLabel[]},
+  applicationDraw:PlusApplicationDrawType,
+  ComponentUpdater:PlusComponentUpdaterType,
+  link_function:LinkFunctionTypes
+)=>{
   d3.select('.opensankey #g_label_handles').append('g').attr('id','gg_zdt_handles_'+zdt.idLabel).attr('class','gg_zdt_handles').classed('selected',multi_selected_label.current.includes(zdt));
   ['top','bottom','left','right'].forEach(pos=>{
-    add_zdt_handle(zdt,pos,dict_variable_application_data,ComponentUpdater,link_function)
+    add_zdt_handle(zdt,pos,dict_variable_application_data,applicationDraw,ComponentUpdater,link_function)
   })
 }
 const size_zdt_handle=10
-const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,dict_variable_application_data:SankeyPlusApplicationDataType,ComponentUpdater:PlusComponentUpdaterType,link_function:LinkFunctionTypes)=>{
+const add_zdt_handle=(
+  zdt:SankeyPlusLabel,pos:string,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationDraw:PlusApplicationDrawType,
+  ComponentUpdater:PlusComponentUpdaterType,
+  link_function:LinkFunctionTypes
+)=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
   if(d3.select('.opensankey #svg').nodes().length>0){
@@ -420,7 +434,9 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,dict_variable_application_d
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
-    .call(drag_text_zone_hande(zdt,pos,dict_variable_application_data,ComponentUpdater,link_function))
+    .call(drag_text_zone_hande(
+      zdt,pos,dict_variable_application_data,applicationDraw,ComponentUpdater,link_function
+    ))
   // Position the handle
   switch (pos){
   case 'top':
@@ -449,7 +465,14 @@ const add_zdt_handle=(zdt:SankeyPlusLabel,pos:string,dict_variable_application_d
   }
 }
 
-const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,dict_variable_application_data:SankeyPlusApplicationDataType,ComponentUpdater:PlusComponentUpdaterType,link_function:LinkFunctionTypes)=>{
+const drag_text_zone_hande=(
+  zdt:SankeyPlusLabel,
+  pos:string,
+  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationDraw:PlusApplicationDrawType,
+  ComponentUpdater:PlusComponentUpdaterType,
+  link_function:LinkFunctionTypes
+)=>{
   const {data}=dict_variable_application_data
   const g_zdt_h=d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_'+pos)
   const text_zone_shape=d3.select('#'+zdt.idLabel+' rect')
@@ -534,6 +557,7 @@ const drag_text_zone_hande=(zdt:SankeyPlusLabel,pos:string,dict_variable_applica
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
       ComponentUpdater.updateComponenSaveInCache.current(false)
       link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+      applicationDraw.reDrawPlusLabels([zdt])
     })
 
 
