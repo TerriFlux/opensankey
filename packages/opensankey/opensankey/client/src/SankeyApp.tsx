@@ -389,6 +389,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     link_function,
     applicationDraw,
     ComponentUpdater,
+    updateMenus,
     menu_configuration_nodes,
     config_link_data,
     config_link_attr,
@@ -412,7 +413,8 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       dict_hook_ref_setter_show_dialog_components,
       applicationContext,
       node_function,
-      applicationDraw)
+      applicationDraw
+    )
   }
   document.onkeydown = formatKeyHandler
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
