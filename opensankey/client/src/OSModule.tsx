@@ -797,6 +797,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   link_function,
   applicationDraw,
   ComponentUpdater,
+  updateMenus,
   menu_configuration_nodes,
   config_link_data,
   config_link_attr,
@@ -827,6 +828,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       node_function={node_function}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
+      updateMenus={updateMenus}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
     <SankeySettingsEditionElementTags
@@ -837,6 +839,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       node_function={node_function}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
+      updateMenus={updateMenus}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
     <SankeySettingsEditionElementTags
@@ -847,6 +850,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
       node_function={node_function}
       link_function={link_function}
       ComponentUpdater={ComponentUpdater}
+      updateMenus={updateMenus}
       reDrawLegend={applicationDraw.reDrawLegend}
     />,
     menu_configuration_nodes,
