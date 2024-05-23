@@ -412,7 +412,6 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
 ) => {
   const PlusApplicationContext=applicationContext as PlusApplicationContextType
   const plus_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
-  const plus_updater=ComponentUpdater as PlusComponentUpdaterType
 
   (uiElementsRef as PlusUiElementsRefType).ViewSelector.current=<SelecteurView
     dict_variable_application_data={plus_dict_app_data}
