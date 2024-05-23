@@ -778,12 +778,9 @@ export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
   }
 }
 export const SvgDragMiddleMouseStart: SvgDragMiddleMouseStartFuncType = () => {
-  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0')
-  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('display', 'none')
+  d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('display', 'none')
+  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('display', 'none')
 }
 
 export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unknown, unknown>, data: SankeyData) => {
