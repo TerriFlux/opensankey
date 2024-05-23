@@ -521,6 +521,15 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
       />
     )
   }
+
+  const component_apply_transfor_OSP= <PlusTranformationElements
+    dict_variable_application_data={plusData}
+    applicationContext={applicationContext as PlusApplicationContextType}
+    ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
+  />
+
+  // Add buttons in the menu transformation for adding ZDT and views as variable transferable in SuiteUpdateLayout
+  additionalMenus.apply_transformation_additional_elements = [component_apply_transfor_OSP]
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
