@@ -549,7 +549,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               additionalMenus.additional_nav_item
             }
             convert_data={dict_variable_application_data.convert_data}
-            apply_transformation_additional_elements={[<></>]}
+            apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
             DiagramSelector={initializeDiagrammSelector(dict_variable_application_data)}
             callback={()=>null}
             ref_alt_key_pressed={ref_alt_key_pressed}
