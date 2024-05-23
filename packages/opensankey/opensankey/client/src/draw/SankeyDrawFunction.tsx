@@ -836,10 +836,10 @@ const AddCenterHandle=(
       .append('circle')
       .attr('id', 'center_handle_' + link.idLink)
       .attr('class','center_handle')
-      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?1:0)
+      .attr('fill-opacity', 1)
       .attr('r','5')
       .attr('stroke','black')
-      .attr('stroke-opacity',(multi_selected_links.current.includes(link))?1:0)
+      .attr('display',(multi_selected_links.current.includes(link))?'':'none')
       .attr('fill','black')
       .attr('transform',pos_d[0])
       .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
@@ -934,7 +934,7 @@ const AddShiftHandle = (
       .append('rect')
       .attr('id', shift_name + link.idLink)
       .attr('class','handle')
-      .attr('fill-opacity', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?1:0)
+      .attr('display', (multi_selected_links.current.includes(link) && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'':'none')
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
       .attr('cursor',(multi_selected_links.current.includes(link)&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'ew-resize':'pointer')
@@ -1543,19 +1543,15 @@ export const ValueSelectedParameter:ValueSelectedParameterFuncType = (
 export const DeselectVisualyLinks : DeselectVisualyLinksFType = (
   d:SankeyLink
 )=>{
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '0')
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('cursor', 'pointer')
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink +' rect.handle').attr('display', 'none')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('display','none')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('display', 'none')
 
 }
 export const SelectVisualyLinks : SelectVisualyLinksFType=(d:SankeyLink)=>{
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' rect.handle').attr('fill-opacity', '1')
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('stroke-opacity', '1')
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('stroke-opacity', '1')
-  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('fill-opacity', '1')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink +' rect.handle').attr('display', '')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .drag_zone').attr('display','')
+  d3.selectAll(' .opensankey #gg_link_handle_'+d.idLink + ' .center_handle').attr('display', '')
 }
 
 export const DeselectVisualyNodes:DeselectVisualyNodesFuncType=(n:SankeyNode)=>{

@@ -112,11 +112,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           SvgDragMiddleMouseMove(event,dict_variable_application_data.data)
         })
         .on('end',()=>{
-          
-          [dict_variable_application_data.data.width,dict_variable_application_data.data.height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
-          svgSankey.style('width', dict_variable_application_data.data.width + 'px')
-          svgSankey.style('height', dict_variable_application_data.data.height + 'px')
-          DrawGrid(dict_variable_application_data.data)
+          dict_variable_application_data.set_data({...dict_variable_application_data.data})
         })
 
       )

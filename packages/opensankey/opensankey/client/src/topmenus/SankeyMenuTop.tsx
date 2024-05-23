@@ -1282,9 +1282,9 @@ export const pre_process_export_svg =()=>{
   svg.selectAll('.box_width_threshold').remove()
   d3.selectAll('.gg_nodes .node_shape').style('stroke-width',null)
   d3.selectAll('.gg_nodes .node_shape').style('stroke',null)
-  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('fill-opacity', '0').attr('cursor', 'pointer')
+  d3.selectAll(' .opensankey .gg_link_handles rect.handle').attr('display', 'none')
   d3.selectAll(' .opensankey .gg_link_handles .drag_zone').attr('cursor', 'pointer').attr('stroke-opacity', '0')
-  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('stroke-opacity', '0').attr('fill-opacity', '0')
+  d3.selectAll(' .opensankey .gg_link_handles .center_handle').attr('display', 'none').attr('fill-opacity', '0')
   d3.selectAll('.opensankey .gg_label rect').attr('stroke-width','1')
   d3.selectAll('.opensankey .fo_input_label').remove()
 
