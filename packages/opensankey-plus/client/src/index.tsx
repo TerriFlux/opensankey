@@ -104,7 +104,7 @@ if (json_data !== null && json_data != '' && json_data!='null') {
 //     header: 'Sankey Viewer'
 //   }
 // }
-if (window.sankey.filiere) {
+if (window.sankey && window.sankey.filiere) {
   Object.assign(data, window.sankey.filiere)
 }
 
@@ -204,14 +204,24 @@ root.render(
         link_function,
         applicationDraw,
         ComponentUpdater,
+        updateMenus,
         menu_configuration_nodes,
         config_link_data,
         config_link_attr,
         contextMenu,
         ref_alt_key_pressed
       )=>{
-        const menu_conf= initializeMenuConfiguration(dict_variable_application_data,dict_variable_elements_selected,applicationContext,uiElementsRef,dict_hook_ref_setter_show_dialog_components,additional_menus,node_function,link_function,applicationDraw,ComponentUpdater,menu_configuration_nodes,config_link_data,config_link_attr,contextMenu,ref_alt_key_pressed)
-        
+        const menu_conf= initializeMenuConfiguration(
+          dict_variable_application_data,
+          dict_variable_elements_selected,
+          applicationContext,uiElementsRef,
+          dict_hook_ref_setter_show_dialog_components,additional_menus,node_function,link_function,
+          applicationDraw,
+          ComponentUpdater,
+          updateMenus,
+          menu_configuration_nodes,config_link_data,config_link_attr,
+          contextMenu,ref_alt_key_pressed
+        )
         OSPUpdateMenuConf(menu_conf,dict_variable_application_data,applicationContext,uiElementsRef)
         return menu_conf
   
