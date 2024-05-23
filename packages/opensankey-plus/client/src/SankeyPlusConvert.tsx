@@ -333,8 +333,8 @@ export const PlusTranformationElements : FunctionComponent<PlusTranformationElem
         }}
       }
     >{dataVarToUpdate.current.includes('freeLabels')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+  </InputGroup>
 
-  </InputGroup>,
   <OSTooltip label={!is_current_data_master?applicationContext.t('Menu.Transformation.disabled_view'):''} >
     <InputGroup>
       <InputGroup.Text
@@ -359,7 +359,7 @@ export const PlusTranformationElements : FunctionComponent<PlusTranformationElem
         }
       >{dataVarToUpdate.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
     </InputGroup>
-  </OSTooltip>,
+  </OSTooltip>
 
   <OSTooltip label={applicationContext.t('Menu.Transformation.list_icon_tooltip')} >
     <InputGroup>
@@ -370,7 +370,7 @@ export const PlusTranformationElements : FunctionComponent<PlusTranformationElem
         className='btn_menu_config'
         style={{width:'20%'}}
         disabled={!is_current_data_master}
-        variant={dataVarToUpdate.current.includes('Views')?'primary':'outline-primary'}
+        variant={dataVarToUpdate.current.includes('icon_catalog')?'primary':'outline-primary'}
         onClick={() => {
           if(!dataVarToUpdate.current.includes('icon_catalog')){
             dataVarToUpdate.current.push('icon_catalog')

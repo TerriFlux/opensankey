@@ -440,14 +440,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     view_selector={(uiElementsRef as PlusUiElementsRefType).ViewSelector.current as JSX.Element}
   />
 
-  // add option for updateLayout (OSP var to update)
-  // (Only add these options if connected with OSP)
-  additionalMenus.apply_transformation_additional_elements=[<PlusTranformationElements
-    dict_variable_application_data={plus_dict_app_data}
-    applicationContext={applicationContext as PlusApplicationContextType}
-    ComponentUpdater={plus_updater}
-  />]
-    
+
   // Menu conf nodes
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon']=<SankeyPlusNodeIcon
     t={applicationContext.t}
@@ -521,7 +514,9 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
       />
     )
   }
-
+ 
+  // add option for updateLayout (OSP var to update)
+  // (Only add these options if connected with OSP)
   const component_apply_transfor_OSP= <PlusTranformationElements
     dict_variable_application_data={plusData}
     applicationContext={applicationContext as PlusApplicationContextType}
@@ -529,7 +524,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   />
 
   // Add buttons in the menu transformation for adding ZDT and views as variable transferable in SuiteUpdateLayout
-  additionalMenus.apply_transformation_additional_elements = [component_apply_transfor_OSP]
+  additionalMenus.apply_transformation_additional_elements.push(component_apply_transfor_OSP)
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
