@@ -934,6 +934,7 @@ export const DefaultLinkStyle:DefaultLinkStyleFuncType=()=>{
     curvature: 0.5,
     label_visible: true,
     label_on_path: true,
+    label_pos_auto:false,
     label_font_size:20,
     orientation: 'hh',
     left_horiz_shift: 0.05,
@@ -1010,7 +1011,6 @@ export const DefaultLink :DefaultLinkFuncType= (data: SankeyData): SankeyLink =>
 
     colorTag: '',
     style:'default',
-    label_pos_auto:false,
     local:{}
   }
 }
