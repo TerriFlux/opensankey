@@ -9,7 +9,7 @@ import { SankeyData,
   SankeyLinkAttrLocal,
   SankeyLinkStyle,
   TagsCatalog,
-  dict_variable_application_dataType,
+  applicationDataType,
   dict_variable_elements_selectedType} from '../types/Types'
 import * as d3 from 'd3'
 import colormap from 'colormap'
@@ -197,7 +197,7 @@ export const FindMaxLinkValue:FindMaxLinkValueFuncType = (
 export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   inv_scale:(t:number)=>number,
   node: SankeyNode,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   TestLinkValue: TestLinkValueFuncType,
   ref_link: SankeyLink | undefined = undefined,
   GetLinkValue:GetLinkValueFuncType
@@ -205,7 +205,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
   if (node == undefined) {
     return [0,0,0,0]
   }
-  const { data, display_links, display_nodes } = dict_variable_application_data
+  const { data, display_links, display_nodes } = applicationData
   const { nodes, links} = data
   let offset_height_left = 0
   let offset_height_right = 0
@@ -335,11 +335,11 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
         the_id = top_flux[i - 1]
       }
 
-      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
+      let v = TestLinkValue(applicationData, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(applicationData.min_link_thickness)))?+v:inv_scale(applicationData.min_link_thickness)
 
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
@@ -350,7 +350,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free ) {
         // if flux is displayed thin
-        offset_width_top += inv_scale(dict_variable_application_data.min_link_thickness)
+        offset_width_top += inv_scale(applicationData.min_link_thickness)
       } else {
         offset_width_top += +v
       }
@@ -369,11 +369,11 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (bottom_order !== -1) {
         the_id = bottom_flux[i - 1]
       }
-      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
+      let v = TestLinkValue(applicationData, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(applicationData.min_link_thickness)))?+v:inv_scale(applicationData.min_link_thickness)
 
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
@@ -384,7 +384,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_width_bottom += inv_scale(dict_variable_application_data.min_link_thickness)
+        offset_width_bottom += inv_scale(applicationData.min_link_thickness)
       } else {
         offset_width_bottom += +v
       }
@@ -404,11 +404,11 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (left_order !== -1) {
         the_id = left_flux[i - 1]
       }
-      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
+      let v = TestLinkValue(applicationData, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(applicationData.min_link_thickness)))?+v:inv_scale(applicationData.min_link_thickness)
 
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
@@ -419,7 +419,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_height_left += inv_scale(dict_variable_application_data.min_link_thickness)
+        offset_height_left += inv_scale(applicationData.min_link_thickness)
       } else {
         offset_height_left += +v
       }
@@ -439,11 +439,11 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
       if (right_order !== -1) {
         the_id = right_flux[i - 1]
       }
-      let v = TestLinkValue(dict_variable_application_data, links[the_id],GetLinkValue)
+      let v = TestLinkValue(applicationData, links[the_id],GetLinkValue)
       if (v === undefined) {
         return
       }
-      v=((v!=='' && +v==0)||(+v>=inv_scale(dict_variable_application_data.min_link_thickness)))?+v:inv_scale(dict_variable_application_data.min_link_thickness)
+      v=((v!=='' && +v==0)||(+v>=inv_scale(applicationData.min_link_thickness)))?+v:inv_scale(applicationData.min_link_thickness)
       const extension = GetLinkValue(data, links[the_id].idLink).extension
       if (!extension) {
         return
@@ -453,7 +453,7 @@ export const ComputeTotalOffsets:ComputeTotalOffsetsFuncType = (
                       data.show_structure !== 'free_value'
       if (extension.display_thin || is_free) {
         // if flux is displayed thin
-        offset_height_right += inv_scale(dict_variable_application_data.min_link_thickness)
+        offset_height_right += inv_scale(applicationData.min_link_thickness)
       } else {
         offset_height_right += +v
       }
@@ -534,11 +534,11 @@ export const LinkText:LinkTextFuncType = (
 
 
 export const TestLinkValue:TestLinkValueFuncType = (
-  dict_variable_application_data,
+  applicationData,
   d: SankeyLink,
   GetLinkValue:GetLinkValueFuncType
 ) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const { dataTags } = data
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -547,7 +547,7 @@ export const TestLinkValue:TestLinkValueFuncType = (
     .range([0, 100])
     .domain([0, data.user_scale])
   if (data.show_structure == 'structure' ) {
-    return inv_scale(dict_variable_application_data.min_link_thickness)
+    return inv_scale(applicationData.min_link_thickness)
   }
   if (data.show_structure == 'data' ) {
     const link_value = GetLinkValue(data, d.idLink)
@@ -557,7 +557,7 @@ export const TestLinkValue:TestLinkValueFuncType = (
       const inv_scale = d3.scaleLinear()
         .domain([0, 100])
         .range([0, data.user_scale])
-      return inv_scale(dict_variable_application_data.min_link_thickness)
+      return inv_scale(applicationData.min_link_thickness)
     }
   }
   let val = d.value
@@ -1171,18 +1171,18 @@ export const GetVerticalMarginForSankeyZone:GetVerticalMarginForSankeyZoneFuncTy
 /**
  *Function used to fit the sankey in the visibiel screen
  *
- * @param {*} dict_variable_application_data dict containing var concerning the data of the sankey
+ * @param {*} applicationData dict containing var concerning the data of the sankey
  * @param {*} GetSankeyMinWidthAndHeight return the size of the sankey (max position to the right & bottom)
  * @param {boolean} [show_nav=false] if the config menu is open then we take it into account
  * @param {boolean} [vertical=false] Var to fit the sankey vertically instead of horizontally
  */
 export const AdjustSankeyZone:AdjustSankeyZoneFuncType =(
-  dict_variable_application_data,
+  applicationData,
   GetSankeyMinWidthAndHeight,
   show_nav=false,vertical=false
 ): void=>{
-  const {data}=dict_variable_application_data;
-  [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
+  const {data}=applicationData;
+  [applicationData.data.width, applicationData.data.height] = GetSankeyMinWidthAndHeight(applicationData)
   let size_menu=0
   if(show_nav){
     size_menu=menu_config_width
@@ -1716,11 +1716,11 @@ export const ApplyStyleToNodes:ApplyStyleToNodesFuncType = (
 
 }
 
-export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
+export const AddNewNode:AddNewNodeFuncType = (applicationData,
   multi_selected_nodes:{current:SankeyNode[]},
   node_function
 ) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const { nodes } = data
   const node: SankeyNode = DefaultNode(data)
 
@@ -1743,7 +1743,7 @@ export const AddNewNode:AddNewNodeFuncType = (dict_variable_application_data,
   //WARNING : le set_multi_select ne semble pas changer les noeuds sélectionnés avant d'appliquer le style
   multi_selected_nodes.current = [node]
   ApplyStyleToNodes(multi_selected_nodes,node_function)
-  dict_variable_application_data.display_nodes[node.idNode]=node
+  applicationData.display_nodes[node.idNode]=node
   node_function.CreateNodesOnSVG([node])
 }
 
@@ -2003,27 +2003,27 @@ export const updateLinkTagValue=(d:SankeyLink,
 }
 
 export const deleteSelectedNodeFromData=(
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType
 )=>{
-  const {data} = dict_variable_application_data
+  const {data} = applicationData
   const {multi_selected_nodes}=dict_variable_elements_selected
   multi_selected_nodes.current.map(d => DeleteNode(data, d))
   multi_selected_nodes.current = []
   const tmp_node=Object.keys(data.nodes)
-  Object.entries(dict_variable_application_data.display_nodes).filter(n=>{
+  Object.entries(applicationData.display_nodes).filter(n=>{
     return !tmp_node.includes(n[0])
   }).forEach(n=>{
     DeleteGNodes([n[0]])
-    delete dict_variable_application_data.display_nodes[n[0]]
+    delete applicationData.display_nodes[n[0]]
   })
 
   const tmp_link=Object.keys(data.links)
-  Object.entries(dict_variable_application_data.display_links).filter(l=>{
+  Object.entries(applicationData.display_links).filter(l=>{
     return !tmp_link.includes(l[0])
   }).forEach(l=>{
     DeleteGLinks([l[0]])
-    delete dict_variable_application_data.display_links[l[0]]
+    delete applicationData.display_links[l[0]]
   })
 }
 

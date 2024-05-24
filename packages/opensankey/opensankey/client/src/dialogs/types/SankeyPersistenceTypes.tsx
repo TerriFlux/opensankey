@@ -2,7 +2,7 @@ import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTy
 
 import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
-import { SankeyData, callbackFuncType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { SankeyData, callbackFuncType, applicationDataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 /**
@@ -28,7 +28,7 @@ export type CounterFType = (
 ) => unknown
 
 export type ProcessExampleFuncType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
     updateLayout: updateLayoutFuncType,
     convert_data: ConvertDataFuncType,
     callback: (server_data: SankeyData) => void,
@@ -36,7 +36,7 @@ export type ProcessExampleFuncType = (
 ) => SankeyData
 
 export type RetrieveExcelResultsFuncType = (
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   text: string,
   updateLayout: updateLayoutFuncType,
   callback: callbackFuncType,
@@ -51,7 +51,7 @@ export type SaveDiagramOptionsType = {
 }
 
 export type ClickSaveDiagramFuncType = (
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   data:SankeyData,
   elementsSelected:dict_variable_elements_selectedType,
   options: SaveDiagramOptionsType

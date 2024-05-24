@@ -10,21 +10,21 @@ import { windowSankey } from '../configmenus/SankeyUtils'
 
 
 export const updateDrawAllNodesLabel : DrawAllNodesLabelFType = (
-  dict_variable_application_data,
+  applicationData,
   GetLinkValue,
   t,
   node_function
 ) => {
-  RedrawNodesLabel(dict_variable_application_data,[],GetLinkValue,t,node_function)
+  RedrawNodesLabel(applicationData,[],GetLinkValue,t,node_function)
 }
 
 export const RedrawNodesLabel : DrawAddNodesFtype = (
-  dict_variable_application_data,
+  applicationData,
   nodes_to_redraw,
   GetLinkValue,t,
   node_function
 ) => {
-  const { data,display_nodes,display_links } = dict_variable_application_data
+  const { data,display_nodes,display_links } = applicationData
   //------------------LABEL------------------------
   // Add node label and apply parameter
   const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyNode, d3.BaseType, unknown>)

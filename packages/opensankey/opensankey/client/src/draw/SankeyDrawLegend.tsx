@@ -1,4 +1,4 @@
-import { ComponentUpdaterType, SankeyData, SankeyNode, dict_variable_application_dataType } from '../types/Types'
+import { ComponentUpdaterType, SankeyData, SankeyNode, applicationDataType } from '../types/Types'
 import React, { FunctionComponent, useState } from 'react'
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
@@ -15,7 +15,7 @@ typeof globalThis & {
 }
 
 export const DrawLegend : DrawLegendFType= (
-  dict_variable_application_data,
+  applicationData,
   applicationContext,
   contextMenu,
   GetLinkValue,
@@ -24,7 +24,7 @@ export const DrawLegend : DrawLegendFType= (
   reDrawLegend,
   resizeCanvas
 ) => {
-  const {data,display_nodes}=dict_variable_application_data
+  const {data,display_nodes}=applicationData
   const {t}=applicationContext
   const {pointer_pos,tagContext}=contextMenu
   // Function that add legend of tags
@@ -72,7 +72,7 @@ export const DrawLegend : DrawLegendFType= (
         let h=document.getElementById('g_legend')?.getBoundingClientRect().height
         h=h?h:50
 
-        draw_legend_handles(dict_variable_application_data,legend_clicked.current ,h,ComponentUpdater,reDrawLegend,resizeCanvas)
+        draw_legend_handles(applicationData,legend_clicked.current ,h,ComponentUpdater,reDrawLegend,resizeCanvas)
       })
 
 
@@ -340,7 +340,7 @@ export const DrawLegend : DrawLegendFType= (
     }
 
     d3.select('.opensankey #svg').append('g').attr('class','g_legend_handles').attr('id','g_legend_handles')
-    draw_legend_handles(dict_variable_application_data,legend_clicked.current,h,ComponentUpdater,reDrawLegend,resizeCanvas)
+    draw_legend_handles(applicationData,legend_clicked.current,h,ComponentUpdater,reDrawLegend,resizeCanvas)
   }
   if(data.mask_legend){
     drawLegend()
@@ -358,7 +358,7 @@ export const drag_legend : drag_legendFType = (
   resizeCanvas,
   node_function,
   link_function,
-  dict_variable_application_data
+  applicationData
 
 )=>d3.drag<SVGGElement, unknown>()
   .subject(Object).on('drag', function (event) {
@@ -366,13 +366,13 @@ export const drag_legend : drag_legendFType = (
     if(d3.select('.opensankey #svg').nodes().length>0){
       DragLegendGElement(data,event)
       if(data.legend_position[0]==0 ||data.legend_position[1]==0){
-        OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),dict_variable_application_data,{current:[]})
+        OpposingDragElements([({x: data.legend_position[0], y:data.legend_position[1]} as SankeyNode)],event,({} as SankeyNode),applicationData,{current:[]})
       }
     }
   }).on('end',()=>{
-    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
-    resizeCanvas(dict_variable_application_data)
+    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+    link_function.RedrawLinks(Object.values(applicationData.display_links))
+    resizeCanvas(applicationData)
   })
 
 export const DragLegendGElement:drag_legend_g_elementFuncType=(
@@ -409,14 +409,14 @@ export const DragLegendGElement:drag_legend_g_elementFuncType=(
 
 export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   GetLinkValue,
   ComponentUpdater
 })=>{
   const [ tag_contextualised, set_tag_contextualised] = useState<string>()
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {t}=applicationContext
   const {pointer_pos,tagContext}=contextMenu
   if (tagContext.current!.length === 0) {
@@ -474,31 +474,31 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
 }
 
 export const draw_legend_handles =(
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   legend_clicked:boolean,
   h:number,
   ComponentUpdater:ComponentUpdaterType,
   reDrawLegend:()=>void,
-  resizeCanvas:(_:dict_variable_application_dataType)=>void,
+  resizeCanvas:(_:applicationDataType)=>void,
 )=>{
   d3.select('.opensankey #g_legend_handles').selectAll('*').remove();
   ['left','right'].forEach(pos=>{
-    add_legend_handle(pos,dict_variable_application_data,legend_clicked,h,ComponentUpdater,reDrawLegend,resizeCanvas)
+    add_legend_handle(pos,applicationData,legend_clicked,h,ComponentUpdater,reDrawLegend,resizeCanvas)
   })
 }
 const size_zdt_handle=10
 
 const add_legend_handle=(
   pos:string,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   legend_clicked:boolean,
   h:number,
   ComponentUpdater:ComponentUpdaterType,
   reDrawLegend:()=>void,
-  resizeCanvas:(_:dict_variable_application_dataType)=>void,
+  resizeCanvas:(_:applicationDataType)=>void,
 
 )=>{
-  const {data} = dict_variable_application_data
+  const {data} = applicationData
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
   let  svg_k_factor=1
   if(d3.select('.opensankey #svg').nodes().length>0){
@@ -519,7 +519,7 @@ const add_legend_handle=(
     .attr('height',size_zdt_handle*svg_k_factor)
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
-    .call(drag_legend_handle(pos,dict_variable_application_data,svg_k_factor,ComponentUpdater,reDrawLegend,resizeCanvas))
+    .call(drag_legend_handle(pos,applicationData,svg_k_factor,ComponentUpdater,reDrawLegend,resizeCanvas))
   // Position the handle
   switch (pos){
 
@@ -539,14 +539,14 @@ const add_legend_handle=(
 
 const drag_legend_handle=(
   pos:string,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   svg_k_factor:number,
   ComponentUpdater:ComponentUpdaterType,
   reDrawLegend:()=>void,
-  resizeCanvas:(_:dict_variable_application_dataType)=>void,
+  resizeCanvas:(_:applicationDataType)=>void,
 
 )=>{
-  const {data} = dict_variable_application_data
+  const {data} = applicationData
   const g_zdt_h=d3.select('.opensankey #g_legend_handles .legend_handle'+pos)
   const text_zone_shape=d3.select('.g_drag_zone_leg rect')
   const g_text_zone=d3.select('#g_legend')
@@ -580,7 +580,7 @@ const drag_legend_handle=(
     .on('end',()=>{
       ComponentUpdater.updateComponentMenuConfigLayout.current()
       reDrawLegend()
-      resizeCanvas(dict_variable_application_data)
+      resizeCanvas(applicationData)
 
     })
 

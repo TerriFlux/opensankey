@@ -1,7 +1,7 @@
 import { DragBehavior, SubjectPosition } from 'd3'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { 
-  SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, dict_variable_application_dataType,  display_styleType, 
+  SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, applicationDataType,  display_styleType, 
   dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes
 } from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from '../../configmenus/types/SankeyUtilsTypes'
@@ -26,13 +26,13 @@ export type ReturnOutOfBoundElementFuncType = (dragged: SankeyNode,
 export type opposing_DragElementsFuncType = (
   out_of_zone_item: (SankeyNode)[], event: {dx: number;dy: number;x: number;y: number;}, 
   dragged: SankeyNode, 
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
    multi_selected_nodes: {current: SankeyNode[];}
 ) => void
 
 export type DragElementsFuncType = (
   dragged: SankeyNode,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   event: {dx: number;dy: number;x: number;y: number;},
@@ -64,7 +64,7 @@ export type drag_node_textFuncType = (node: SankeyNode, event: d3.D3DragEvent<El
  * @returns
  */
 export type DragLinkEventFType=(
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   error_msg: { text: string | undefined } | undefined,
@@ -106,7 +106,7 @@ export type dragLinkTextEventFType =(
  */
 export type DragLinkIOPositionFType=(
   link:SankeyLink,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   error_msg: { text: string | undefined } | undefined,
@@ -140,7 +140,7 @@ export type DragLinkIOPositionFType=(
  */
 export type DragLinkCenterHandleEventFType=(
   link:SankeyLink,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   selected_tags:TagsCatalog,
@@ -177,7 +177,7 @@ export type DragLinkCenterHandleEventFType=(
  * @returns {...}
  */
 export type DragLinkShiftHandleEventFType=(
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   link:SankeyLink,
@@ -218,7 +218,7 @@ export type DragLinkShiftHandleEventFType=(
  * @returns {{}, DrawGrid: () => void, scale: (t: number) => number, inv_scale: ...}
  */
 export type DragGNodeEventFType=(
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>,
@@ -230,7 +230,7 @@ export type DragGNodeEventFType=(
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  resizeCanvas:(_:dict_variable_application_dataType)=>void
+  resizeCanvas:(_:applicationDataType)=>void
 )=>DragBehavior<SVGGElement, SankeyNode, SankeyNode | SubjectPosition>
 
 /**
@@ -269,7 +269,7 @@ export type dragNodeTextEventWidthBoxEventFType = (
 export type DragNodesFType = (
   node:SankeyNode,
   event: { dx: number; dy: number,x:number,y:number },
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   LinkText:LinkTextFuncType,
@@ -305,7 +305,7 @@ export type DragNodesFType = (
  */
 export type DragHandleFType = (
   link: SankeyLink,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   display_style: display_styleType,
@@ -345,7 +345,7 @@ export type DragHandleFType = (
  */
 export type AddDragLinkZoneFType=(
   link: SankeyLink,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
     default_handle_size:number,

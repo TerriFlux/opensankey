@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, dict_variable_elements_selectedType } from '../../types/Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
@@ -12,7 +12,7 @@ export type setDiagramFuncType = (
 ) => void
 
 export type addSimpleLevelDropDownFType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   redrawNodeLinkLegend:()=>void,
   node_function:NodeFunctionTypes,
@@ -29,7 +29,7 @@ export type col_title_level_filterFType=(
 export type addAllDropDownNodeFType = {
   applicationContext:applicationContextType,
   ComponentUpdater:ComponentUpdaterType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   level:boolean,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
@@ -42,7 +42,7 @@ export type addAllDropDownNodeFType = {
  */
 export type ToolbarBuilderFType = {
   applicationContext:applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   filter:number,
   set_current_filter:(n:number)=>void,
@@ -59,7 +59,7 @@ export type ToolbarBuilderFType = {
 }
 
 export type stretchButtonsFType=(
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   t:TFunction
 )=>JSX.Element

@@ -51,7 +51,7 @@ import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
  * Function triggerd on click on nodes
  * Add or delete visual element to show that the node is selected like a thickker border
  *
- * @param dict_variable_application_data
+ * @param applicationData
  * @param uiElementsRef
  * @param dict_variable_elements_selected
  * @param event
@@ -59,7 +59,7 @@ import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
  * @param sankeyTooltip
  */
 export const EventNodeClick : EventNodeClickFType =(
-  //dict_variable_application_data,
+  //applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   event:React.MouseEvent<HTMLButtonElement>,
@@ -161,7 +161,7 @@ export const EventNodeContextMenu: EventNodeContextMenuFType = (
 }
 
 export const EventLinkContextMenu: EventLinkContextMenuFType = (
-  dict_variable_application_data,
+  applicationData,
   ev,
   l: SankeyLink,
   ref_setter_contextualised_link,
@@ -169,7 +169,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   dict_variable_elements_selected,
   tags_selected,
 ) => {
-  const { data } = dict_variable_application_data
+  const { data } = applicationData
   const {displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef,multi_selected_links,ref_display_link_opacity}=dict_variable_elements_selected
   ev.preventDefault()
   pointer_pos.current = [ev.pageX, ev.pageY]
@@ -186,7 +186,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   let new_tags_selected = tags_selected
 
   let valueLinkInContext:SankeyLinkValue=ValueSelectedParameter(
-    dict_variable_application_data,
+    applicationData,
     multi_selected_links,
     new_tags_selected
   )
@@ -203,7 +203,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
     }
 
     valueLinkInContext=ValueSelectedParameter(
-      dict_variable_application_data,
+      applicationData,
       multi_selected_links,
       tags_selected
     )
@@ -225,7 +225,7 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
       n_t_s[dt] = tmp[i]
     })
     valueLinkInContext=ValueSelectedParameter(
-      dict_variable_application_data,
+      applicationData,
       multi_selected_links,
       n_t_s
     )
@@ -259,7 +259,7 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
 }
 
 export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
   token,
@@ -270,7 +270,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
 ) => {
   // Special cast usefull for when the app is used in SankeySuiteManager
   const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
-  const { data } = dict_variable_application_data
+  const { data } = applicationData
   const { ref_getter_mode_selection, first_selected_node } = dict_variable_elements_selected
   closeAllMenuContext()
   const evt2=evt as unknown as {target:string,ctrlKey:boolean,metaKey:boolean,which:number}
@@ -308,7 +308,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
           new_node1.y = pos[1] - ((ReturnValueNode(data, new_node1, 'node_height') as number) / 2)
           start_point.current = pos
           first_selected_node.current = new_node1
-          dict_variable_application_data.display_nodes[new_node1.idNode]=new_node1
+          applicationData.display_nodes[new_node1.idNode]=new_node1
 
           node_function.CreateNodesOnSVG([new_node1])
 
@@ -325,12 +325,12 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
 
 }
 export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   evt: MouseEvent,
   start_point: { current: number[]}
 ) => {
-  const { data } = dict_variable_application_data
+  const { data } = applicationData
   const { ref_getter_mode_selection,first_selected_node } = dict_variable_elements_selected
   //Empêche lors du drag de la souris d'avoir
   // l'effet sélection de texte sur les labels des éléments de diagramme
@@ -406,7 +406,7 @@ export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
   }
 }
 export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
@@ -420,7 +420,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   reDrawLegend,
   resizeCanvas
 ) => {
-  const { data, display_links } = dict_variable_application_data
+  const { data, display_links } = applicationData
   const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = dict_variable_elements_selected
   const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
   const {updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode,updateComponenSaveInCache}=ComponentUpdater
@@ -431,7 +431,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   d3.select('.opensankey #g_legend .drag_zone_leg').attr('stroke-dasharray', () => '')
   let h = document.getElementById('g_legend')?.getBoundingClientRect().height
   h = h ? h : 50
-  draw_legend_handles(dict_variable_application_data, legend_clicked.current, h,ComponentUpdater,reDrawLegend,resizeCanvas)
+  draw_legend_handles(applicationData, legend_clicked.current, h,ComponentUpdater,reDrawLegend,resizeCanvas)
 
   const OpenLinksMenu = () => {
     if (button_ref && button_ref.current && accordion_ref && accordion_ref.current == null) {
@@ -566,8 +566,8 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       // Deselect old selected links to then only select the new one
       Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
 
-      dict_variable_application_data.display_nodes[new_node1.idNode]=new_node1
-      dict_variable_application_data.display_links[new_link.idLink]=new_link
+      applicationData.display_nodes[new_node1.idNode]=new_node1
+      applicationData.display_links[new_link.idLink]=new_link
 
       node_function.CreateNodesOnSVG([new_node1])
       link_function.CreateLinksOnSVG([new_link])
@@ -612,8 +612,8 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
 
       first_selected_node.current = undefined
-      dict_variable_application_data.display_nodes[n_node.idNode]=n_node
-      dict_variable_application_data.display_links[n_link.idLink]=n_link
+      applicationData.display_nodes[n_node.idNode]=n_node
+      applicationData.display_links[n_link.idLink]=n_link
 
       node_function.CreateNodesOnSVG([n_node])
       link_function.CreateLinksOnSVG([n_link])
@@ -627,7 +627,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
 export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType = (
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   uiElementsRef,
   applicationContext,
@@ -635,7 +635,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   link_function,
   node_function
 ) => {
-  const { data,display_links } = dict_variable_application_data
+  const { data,display_links } = applicationData
   const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,ref_getter_mode_selection} = dict_variable_elements_selected
   const { accordion_ref, links_accordion_ref,button_ref } = uiElementsRef
   const {GetLinkValue}=link_function
@@ -644,7 +644,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     if (d.name.includes('_tmp')) {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       d.name = d.idNode
-      RedrawNodesLabel(dict_variable_application_data,[d],GetLinkValue,applicationContext.t,node_function)
+      RedrawNodesLabel(applicationData,[d],GetLinkValue,applicationContext.t,node_function)
     } else {
       d3.selectAll(' .opensankey #svg #path-flux').remove()
       const n_link = DefaultLink(data)
@@ -672,7 +672,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
       Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
 
       first_selected_node.current = undefined
-      dict_variable_application_data.display_links[n_link.idLink]=n_link
+      applicationData.display_links[n_link.idLink]=n_link
 
       link_function.CreateLinksOnSVG([n_link])
 
@@ -731,20 +731,20 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
     // Deselect old selected links to then only select the new one
     Object.values(display_links).forEach(l=>DeselectVisualyLinks(l))
 
-    dict_variable_application_data.display_links[new_link.idLink]=new_link
+    applicationData.display_links[new_link.idLink]=new_link
 
     link_function.CreateLinksOnSVG([new_link])
 
   }
 }
 export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>,
-  dict_variable_application_data,
+  applicationData,
   GetSankeyMinWidthAndHeight
 ) => {
 
   const t = 'translate(0,0) scale(' + evt.transform.k + ')'
   const svgSankey = d3.select('.opensankey #svg')
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   svgSankey
     .attr('transform', t)
   //Compensate the scale of the legend when we dezoom so the legend has alway a readable size
@@ -753,7 +753,7 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
     .style('border', Math.max(1, Math.round(2 / evt.transform.k)) + 'px solid #d3d3d3')
   d3.select(' .opensankey #svg #g_legend').attr('transform', 'translate(' + (data.legend_position[0]) + ',' + data.legend_position[1] + ') scale(' + (scale_legend) + ')')
   d3.select(' .opensankey #svg #g_legend .measurment_scale').html(String(Math.round((data.user_scale / 2) * scale_legend)))
-  actualizeDrawAreaFrame(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  actualizeDrawAreaFrame(applicationData,GetSankeyMinWidthAndHeight)
 
 }
 
@@ -803,25 +803,25 @@ export const SvgDragMiddleMouseMove: SvgDragMiddleMouseMoveFuncType = (event: d3
 
 }
 
-export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(dict_variable_application_data,GetSankeyMinWidthAndHeight)=>{
-  [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
+export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(applicationData,GetSankeyMinWidthAndHeight)=>{
+  [applicationData.data.width, applicationData.data.height] = GetSankeyMinWidthAndHeight(applicationData)
   const scale_svg=returnScaleOfDrawArea()
-  d3.select('.scroll_zone').style('width',((dict_variable_application_data.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
-  d3.select('.scroll_zone').style('height',((dict_variable_application_data.data.height+200)*scale_svg-(200*(scale_svg-1.1)))+'px')
+  d3.select('.scroll_zone').style('width',((applicationData.data.width+600)*scale_svg-(600*(scale_svg-1.1)))+'px')
+  d3.select('.scroll_zone').style('height',((applicationData.data.height+200)*scale_svg-(200*(scale_svg-1.1)))+'px')
 
-  d3.select('#svg').style('width',dict_variable_application_data.data.width+'px')
-  d3.select('#svg').style('height',dict_variable_application_data.data.height+'px')
+  d3.select('#svg').style('width',applicationData.data.width+'px')
+  d3.select('#svg').style('height',applicationData.data.height+'px')
 }
 
 
 export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInSelectionZoneFType=(
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   ComponentUpdater,
   evt,
   start_point
 )=>{
-  const {data,display_links}=dict_variable_application_data
+  const {data,display_links}=applicationData
   const {multi_selected_nodes,multi_selected_links}=dict_variable_elements_selected
   const {updateComponentMenuConfigNode,
     updateComponentMenuConfigNodeAppearence,
@@ -873,7 +873,7 @@ export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInS
   updateComponenSaveInCache.current(true)
 }
 
-export const applyZoomEvent:applyZoomEventFType=(dict_variable_application_data,GetSankeyMinWidthAndHeight)=>{
+export const applyZoomEvent:applyZoomEventFType=(applicationData,GetSankeyMinWidthAndHeight)=>{
   // Zoom Behavior
   const svgSankey = d3.select('.opensankey #svg');
   (svgSankey as d3.Selection<Element, unknown, HTMLElement, unknown>)
@@ -885,7 +885,7 @@ export const applyZoomEvent:applyZoomEventFType=(dict_variable_application_data,
         return -ev.deltaY * (ev.deltaMode === 1 ? 0.05 : ev.deltaMode ? 1 : 0.002)
       })
       .on('zoom', function (evt) {
-        ZoomFunction(evt,dict_variable_application_data,GetSankeyMinWidthAndHeight)
+        ZoomFunction(evt,applicationData,GetSankeyMinWidthAndHeight)
       }))
     .on('dblclick.zoom', null)
 }

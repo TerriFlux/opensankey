@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { NodeFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, dict_variable_application_dataType } from '../../types/Types'
+import { NodeFunctionTypes, SankeyData, SankeyLink, SankeyLinkAttrLocal, SankeyLinkStyle, SankeyLinkValue, SankeyLinkValueDict, SankeyNode, SankeyNodeAttrLocal, SankeyNodeStyle, TagsCatalog, TagsGroup, applicationDataType } from '../../types/Types'
 import { PlacementWithLogical } from '@chakra-ui/react'
 import { ReactNode } from 'react'
 
@@ -22,14 +22,14 @@ export type IsAllNodeNotLocalAttrSameValueFType =(data:SankeyData,m_s_n:SankeyNo
 export type GetLinkValueFuncType=(data: SankeyData,idLink: string,up?:boolean)=> SankeyLinkValue
 
 export type TestLinkValueFuncType = (
-  dict_variable_application_data: dict_variable_application_dataType,
+  applicationData: applicationDataType,
   d: SankeyLink,
   GetLinkValue: GetLinkValueFuncType
 ) => string | number | SankeyLinkValue
 
 export type ComputeTotalOffsetsFuncType=(inv_scale:(t:number)=>number,
 node: SankeyNode,
-dict_variable_application_data:dict_variable_application_dataType,
+applicationData:applicationDataType,
 TestLinkValue: TestLinkValueFuncType,
 ref_link: SankeyLink | undefined,
 GetLinkValue:GetLinkValueFuncType
@@ -75,9 +75,9 @@ export type NodeColorFuncType = (n: SankeyNode,data:SankeyData)=> string
 
 export type GetVerticalMarginForSankeyZoneFuncType = ()=>number
 
-export type AdjustSankeyZoneFuncType = (dict_variable_application_data : dict_variable_application_dataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,show_nav?:boolean,vertical?:boolean)=>void
+export type AdjustSankeyZoneFuncType = (applicationData : applicationDataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,show_nav?:boolean,vertical?:boolean)=>void
 
-export type GetSankeyMinWidthAndHeightFuncType = (dict_variable_application_data:dict_variable_application_dataType)=>number[]
+export type GetSankeyMinWidthAndHeightFuncType = (applicationData:applicationDataType)=>number[]
 
 export type ToPrecisionFuncType = (v: number,t:TFunction,nb_scientific?:number)=> string | number
 
@@ -142,7 +142,7 @@ export type ApplyStyleToNodesFuncType = (
   node_function:NodeFunctionTypes
     ) => void
 
-export type AddNewNodeFuncType = (dict_variable_application_data:dict_variable_application_dataType, multi_selected_nodes: {current: SankeyNode[];},
+export type AddNewNodeFuncType = (applicationData:applicationDataType, multi_selected_nodes: {current: SankeyNode[];},
   node_function:NodeFunctionTypes
   ) => void
 

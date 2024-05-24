@@ -1,7 +1,7 @@
 import React,{ FunctionComponent, useEffect, useState, } from 'react'
 import { Button,FormGroup,Form,Col,Row,Modal, ButtonGroup } from 'react-bootstrap'
 import Spinner  from 'react-bootstrap/Spinner'
-import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, dict_variable_application_dataType, SankeyData, callbackFuncType, SankeyLink } from '../types/Types'
+import { processFunctionsType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, applicationDrawType, applicationDataType, SankeyData, callbackFuncType, SankeyLink } from '../types/Types'
 import { ConvertDataFuncType } from '../configmenus/types/SankeyConvertTypes'
 import * as d3 from 'd3'
 import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, DownloadExamplesFuncType, ProcessExampleFuncType, RetrieveExcelResultsFuncType, UploadExcelImplFuncType, UploadExempleFuncType } from './types/SankeyPersistenceTypes'
@@ -17,7 +17,7 @@ import { LinkVisibleOnSvg, NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
 interface SankeyLoadProdTypes {
   applicationContext: applicationContextType,
   applicationDraw: applicationDrawType,
-  dict_variable_application_data: dict_variable_application_dataType,
+  applicationData: applicationDataType,
   successAction: () => void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   processFunctions:processFunctionsType,
@@ -28,7 +28,7 @@ interface SankeyLoadProdTypes {
 const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
   applicationContext,
   applicationDraw,
-  dict_variable_application_data,
+  applicationData,
   successAction,
   processFunctions,
   dict_hook_ref_setter_show_dialog_components,
@@ -81,13 +81,13 @@ const SankeyLoad : FunctionComponent<SankeyLoadProdTypes> = ({
       response.text().then(text => {
         try {
           RetrieveExcelResults(
-            dict_variable_application_data,
+            applicationData,
             text,
             applicationDraw.updateLayout,
             callback,
             applicationDraw.GetSankeyMinWidthAndHeight,
             convert_data,
-            dict_variable_application_data.get_default_data
+            applicationData.get_default_data
           )
         } catch(err) {
           alert(err)
@@ -264,7 +264,7 @@ export const Counter = ({
 export default SankeyLoad
 
 export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
-  dict_variable_application_data,
+  applicationData,
   text: string,
   updateLayout: updateLayoutFuncType,
   callback: (server_data: SankeyData) => void,
@@ -272,7 +272,7 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   convert_data: ConvertDataFuncType,
   defaultData: () => SankeyData
 ) => {
-  const {set_data}=dict_variable_application_data
+  const {set_data}=applicationData
   const default_data = defaultData()
   const server_data = JSON.parse(text)
   let default_nstyle = default_data.style_node['default']
@@ -286,8 +286,8 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
     default_lstyle = JSON.parse(JSON.stringify(default_data.style_link['default']))
   }
   const new_data = Object.assign(default_data, server_data) as SankeyData
-  dict_variable_application_data.data=new_data
-  ProcessExample(dict_variable_application_data, updateLayout, convert_data, callback, DefaultSankeyData)
+  applicationData.data=new_data
+  ProcessExample(applicationData, updateLayout, convert_data, callback, DefaultSankeyData)
   new_data.style_node['default'] = default_nstyle
   new_data.style_link['default'] = default_lstyle
   delete (new_data as SankeyData & { layout?: SankeyData} ).layout
@@ -312,16 +312,16 @@ export const RetrieveExcelResults: RetrieveExcelResultsFuncType = (
   }
   set_data({ ...new_data })
   setTimeout(() => {
-    AdjustSankeyZone(dict_variable_application_data, GetSankeyMinWidthAndHeight)
+    AdjustSankeyZone(applicationData, GetSankeyMinWidthAndHeight)
   }, 100)
 }
 export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
-  dict_variable_application_data,
+  applicationData,
   data,
   dict_hook_ref_setter_show_dialog_components,
   options
 ): void => {
-  // const data_to_save = { ...dict_variable_application_data.data }
+  // const data_to_save = { ...applicationData.data }
   // const str_data = JSON.stringify(data_to_save)
   // Crée une copie pour d'abord enregitrer avec les changements
   // (ClickSaveDiagram utilise data donc on doit faire un set_data avant mais aussi garder la version sans les changements)
@@ -364,14 +364,14 @@ export const ClickSaveDiagram: ClickSaveDiagramFuncType = (
 }
 
 export const ProcessExample: ProcessExampleFuncType = (
-  dict_variable_application_data,
+  applicationData,
   updateLayout: updateLayoutFuncType,
   convert_data: ConvertDataFuncType,
   callback: (server_data: SankeyData) => void,
   DefaultSankeyData: () => SankeyData
 
 ): SankeyData => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
   convert_data(data, DefaultSankeyData)
   if ((data as SankeyData & layout_type).layout === undefined) {
@@ -385,7 +385,7 @@ export const ProcessExample: ProcessExampleFuncType = (
         Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
         // Select current tag to compute position
         tag_prim.selected=true
-        ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
+        ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
       })
     }else if((lvl_tag_keys.length > 1)){
     // If data have multiple level Tag
@@ -398,13 +398,13 @@ export const ProcessExample: ProcessExampleFuncType = (
           Object.values(data.levelTags[kt].tags).forEach(t=>t.selected=false)
           // Select current tag to compute position
           tag_prim.selected=true
-          ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
+          ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
         })
       })
 
     }
     else{
-      ComputeAutoSankey(dict_variable_application_data, data.h_space ? data.h_space : 200,true)
+      ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
 
     }
     callback(data)

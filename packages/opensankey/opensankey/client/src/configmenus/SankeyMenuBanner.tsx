@@ -9,7 +9,7 @@ import { Row,
   Popover,
   FormControl,
   Overlay } from 'react-bootstrap'
-import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, dict_variable_application_dataType} from '../types/Types'
+import { LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyLink, TagsCatalog, TagsGroup, applicationDataType} from '../types/Types'
 import { MultiSelect } from 'react-multi-select-component'
 import {
   FindMaxLinkValue,
@@ -80,14 +80,14 @@ const delete_local_aggregation=(data:SankeyData)=>{
 }
 
 export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
-  dict_variable_application_data,
+  applicationData,
   GetSankeyMinWidthAndHeight,
   redrawNodeLinkLegend,
   node_function,
   link_function,
   recomputeDisplayedElement
 ) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {levelTags} = data
 
   if(Object.keys(levelTags).includes('Primaire')){
@@ -106,7 +106,7 @@ export const addSimpleLevelDropDown : addSimpleLevelDropDownFType = (
               delete_local_aggregation(data)
               handleSimpleDropdown(evt, levelTags['Primaire'])
               redrawSankeyWithSelectedTag(
-                dict_variable_application_data,
+                applicationData,
                 GetSankeyMinWidthAndHeight,
                 recomputeDisplayedElement,
                 redrawNodeLinkLegend,
@@ -148,14 +148,14 @@ export const col_title_level_filter : col_title_level_filterFType = (
 export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = ({
   applicationContext,
   ComponentUpdater,
-  dict_variable_application_data,
+  applicationData,
   level,
   node_function,
   link_function,
   applicationDraw}
 ) => {
   const color = 'black'
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {t}=applicationContext
   const {nodeTags,levelTags} = data
   const {recomputeDisplayedElement}=node_function
@@ -172,8 +172,8 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
   }
 
   const redrawNodeLinkLegend=()=>{
-    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+    link_function.RedrawLinks(Object.values(applicationData.display_links))
     reDrawLegend()
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
@@ -198,7 +198,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                   key={tags_group.group_name}
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                     handleSimpleDropdown(evt, tags_group)
-                    redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
 
                   }}>{
@@ -230,7 +230,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                       data.nodesColorMap = tags_selected[0]
                       data['nodeTags'][tags_selected[0]].show_legend = true
                     }
-                    redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
                   }}
                 />
@@ -260,7 +260,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                   delete_local_aggregation(data)
                   handleSimpleDropdown(evt, tags_group)
                   redrawSankeyWithSelectedTag(
-                    dict_variable_application_data,
+                    applicationData,
                     GetSankeyMinWidthAndHeight,
                     recomputeDisplayedElement,
                     redrawNodeLinkLegend,
@@ -288,7 +288,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                     // Opposed to current tag group
                     tags_group.siblings.forEach(sibling=>data.levelTags[sibling].activated = !tags_group.activated)
                     redrawSankeyWithSelectedTag(
-                      dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function
+                      applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function
                     )
                     setForceUpdate(!forceUpdate)
                   }}
@@ -327,7 +327,7 @@ export const AddAllDropDownNode : FunctionComponent<addAllDropDownNodeFType> = (
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
                     HandleMultiDropdown(selected, tags_group, data)
-                    redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
                   }}
                 />
@@ -446,7 +446,7 @@ export const setDiagram:setDiagramFuncType = (
  */
 export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   filter,
   set_current_filter,
@@ -462,7 +462,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   applicationDraw
 }) => {
 
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {t}=applicationContext
   const { ref_getter_mode_selection,ref_setter_mode_selection } = dict_variable_elements_selected
   const {updateComponentToolbar} =ComponentUpdater
@@ -531,8 +531,8 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   max_link_value += 1
 
   const redrawNodeLinkLegend=()=>{
-    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+    link_function.RedrawLinks(Object.values(applicationData.display_links))
     reDrawLegend()
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
@@ -603,7 +603,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
               max={max_link_value}
               value={data.display_style.filter_label}
               onChange={evt => {
-                dict_variable_application_data.data.display_style.filter_label = +evt.target.value
+                applicationData.data.display_style.filter_label = +evt.target.value
                 setForceUpdate(!forceUpdate)
                 redrawNodeLinkLegend()
               }}
@@ -621,7 +621,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
                 if(tmp>max_link_value){
                   tmp=max_link_value
                 }
-                dict_variable_application_data.data.display_style.filter_label = tmp
+                applicationData.data.display_style.filter_label = tmp
                 setForceUpdate(!forceUpdate)
                 redrawNodeLinkLegend()
               }}
@@ -678,7 +678,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   const node_tag_filter_content=<AddAllDropDownNode 
     applicationContext={applicationContext}
     ComponentUpdater={ComponentUpdater}
-    dict_variable_application_data={dict_variable_application_data}
+    applicationData={applicationData}
     level={false}
     node_function={node_function}
     link_function={link_function}
@@ -705,7 +705,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
       {legend_filter}
       <FormGroup as={Row}>
         <Col xs={10}>
-          {addAllDropDownLinks(dict_variable_application_data,redrawNodeLinkLegend,recomputeDisplayedElement)}
+          {addAllDropDownLinks(applicationData,redrawNodeLinkLegend,recomputeDisplayedElement)}
         </Col>
         <Col xs={2}>
           <FormCheck
@@ -746,7 +746,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
     <Popover.Header as="h3">{t('Banner.fdf')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px'}}>
       {legend_filter}
-      {AddAllDropDownFlux(t, data.fluxTags, dict_variable_application_data,redrawNodeLinkLegend,recomputeDisplayedElement,node_function,link_function,GetSankeyMinWidthAndHeight)}
+      {AddAllDropDownFlux(t, data.fluxTags, applicationData,redrawNodeLinkLegend,recomputeDisplayedElement,node_function,link_function,GetSankeyMinWidthAndHeight)}
     </Popover.Body>
   </Popover>
 
@@ -961,7 +961,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
     {btn_show_data_filter}
     { btn_show_data_type}
 
-    {stretchButtons(dict_variable_application_data,GetSankeyMinWidthAndHeight,t)}
+    {stretchButtons(applicationData,GetSankeyMinWidthAndHeight,t)}
 
     {btn_show_help_in_static}
 
@@ -974,17 +974,17 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
 
 
 export const stretchButtons : stretchButtonsFType =(
-  dict_variable_application_data,
+  applicationData,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   t:TFunction
 )=>{
   return <> <OSTooltip placement='left' label={t('Banner.tooltipAdjustH')}>
-    <Button variant='dark' onClick={() => {AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)}} >
+    <Button variant='dark' onClick={() => {AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)}} >
       <Col><FontAwesomeIcon icon={faArrowsLeftRight} /></Col>
     </Button>
   </OSTooltip>
   <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='dark' onClick={() => {AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight,false,true)}} >
+    <Button variant='dark' onClick={() => {AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight,false,true)}} >
       <Col><FontAwesomeIcon icon={faArrowsUpDown} /></Col>
     </Button>
   </OSTooltip></>
@@ -996,7 +996,7 @@ export const stretchButtons : stretchButtonsFType =(
 export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
   t:TFunction,
   fluxTags: TagsCatalog,
-  dict_variable_application_data,
+  applicationData,
   redrawNodeLinkLegend,
   recomputeDisplayedElement,
   node_function,
@@ -1005,7 +1005,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
 ) =>
 {
   const [forceUpdate,setForceUpdate]=useState(false)
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const banner_grouptag = Object.values(fluxTags).filter(tags_group => { return ((tags_group as TagsGroup).banner == 'one' || (tags_group as TagsGroup).banner == 'multi') })
   const allDD = banner_grouptag.map(tags_group => {
     const the_tags_group = tags_group as TagsGroup
@@ -1026,7 +1026,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                   key={the_tags_group.group_name}
                   onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                     handleSimpleDropdown(evt, the_tags_group)
-                    redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
                   }}>{
                     Object.entries(the_tags_group.tags).map(([tag_key, tag],i) => {
@@ -1095,7 +1095,7 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
                   options={options}
                   onChange={(selected: [{ label: string, value: string }]) => {
                     HandleMultiDropdown(selected, the_tags_group, data)
-                    redrawSankeyWithSelectedTag(dict_variable_application_data,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
+                    redrawSankeyWithSelectedTag(applicationData,GetSankeyMinWidthAndHeight,recomputeDisplayedElement,redrawNodeLinkLegend,node_function,link_function)
                     setForceUpdate(!forceUpdate)
 
                   }}
@@ -1141,12 +1141,12 @@ export const AddAllDropDownFlux : AddAllDropDownFluxFType = (
 /** Function that return a simple or multiple dropdown of groupTag of data and links
  This allow us to choose wich grouptag to select and wich tag of these group to display*/
 const addAllDropDownLinks = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   redrawNodeLinkLegend:()=>void,
   recomputeDisplayedElement:()=>void
 
 ) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const [forceUpdate,setForceUpdate]=useState(false)
 
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
@@ -1259,34 +1259,34 @@ const addAllDropDownLinks = (
 }
 
 const redrawSankeyWithSelectedTag=(
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   recomputeDisplayedElement:()=>void,
   redrawNodeLinkLegend:()=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes
 )=>{
-  const {data}=dict_variable_application_data
-  const old_displayed_nodes=Object.values(dict_variable_application_data.display_nodes).map(n=>n.idNode)
-  const old_displayed_links=Object.values(dict_variable_application_data.display_links).map(l=>l.idLink)
+  const {data}=applicationData
+  const old_displayed_nodes=Object.values(applicationData.display_nodes).map(n=>n.idNode)
+  const old_displayed_links=Object.values(applicationData.display_links).map(l=>l.idLink)
 
   recomputeDisplayedElement()
 
-  const new_displayed_nodes=Object.values(dict_variable_application_data.display_nodes).map(n=>n.idNode)
-  const new_displayed_links=Object.values(dict_variable_application_data.display_links).map(l=>l.idLink)
+  const new_displayed_nodes=Object.values(applicationData.display_nodes).map(n=>n.idNode)
+  const new_displayed_links=Object.values(applicationData.display_links).map(l=>l.idLink)
 
   // Delete Nodes/Links no longer in displayed elements
   DeleteGNodes(old_displayed_nodes.filter(nid=>!new_displayed_nodes.includes(nid)).map(id=>id))
   DeleteGLinks(old_displayed_links.filter(lid=>!new_displayed_links.includes(lid)).map(id=>id))
 
   // Create Nodes/Links that are now visually present with the new aggregation levels
-  const node_to_add_svg=new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>dict_variable_application_data.data.nodes[id])
+  const node_to_add_svg=new_displayed_nodes.filter(nid=>!old_displayed_nodes.includes(nid)).map(id=>applicationData.data.nodes[id])
   node_function.CreateNodesOnSVG(node_to_add_svg)
   const ll = new_displayed_links.filter(lid=>!old_displayed_links.includes(lid))
   if (ll.length !=0) {
     link_function.CreateLinksOnSVG(ll.map(id=>data.links[id]))
     // Still redraw already present nodes/links because they can have some shape variation with the appearence of new nodes/links
     //redrawNodeLinkLegend()
-    actualizeDrawAreaFrame(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+    actualizeDrawAreaFrame(applicationData,GetSankeyMinWidthAndHeight)
   }
 }
