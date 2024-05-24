@@ -1,17 +1,17 @@
-import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, dict_variable_application_dataType, display_styleType } from '../../types/Types'
+import { SankeyData, SankeyLink, SankeyLinkValue, SankeyNode, applicationDataType, display_styleType } from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { TFunction } from 'i18next'
 
 
 export type ValueSelectedParameterFuncType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   multi_selected_links:{current: SankeyLink[] },
   tags_selected:{[k: string]: string}
   ) => SankeyLinkValue
 
 export type SetNodeHeightFuncType = (
   n: SankeyNode, 
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType
@@ -19,7 +19,7 @@ export type SetNodeHeightFuncType = (
 
 export type DrawArrowsType = (
   n: SankeyNode,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
@@ -43,7 +43,7 @@ export type StrokeDasharrayFType =(
 // Function that return the Y position of link label
 export type TextLinkPosDYFType = (
   l:SankeyLink,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
@@ -93,7 +93,7 @@ export type SortOutputLinksIdByYPosFType = (
 )=> string[]
 
 export type SetNodesHeightFType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   d: SankeyLink,
   GetLinkValue:GetLinkValueFuncType,
   scale:(t:number)=>number,
@@ -151,7 +151,7 @@ export type SelectVisualyNodesFType = (n:SankeyNode)=> void
 
 // Function that compute the link width
 export type LinkStrokeWidthFType = (l:SankeyLink,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
@@ -161,8 +161,8 @@ export type RepositionneSidebarFuncType = (show_nav: boolean) => void
 
 export type clipFType  = (subjectPolygon: number[][], clipPolygon: number[][]) => void  
 
-export type resizeDrawingAreaFuncType=(dict_variable_application_data:dict_variable_application_dataType,
+export type resizeDrawingAreaFuncType=(applicationData:applicationDataType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType
 )=>void
 
-export type hideLinkOnDragElementFuncType=(dict_variable_application_data:dict_variable_application_dataType)=>void
+export type hideLinkOnDragElementFuncType=(applicationData:applicationDataType)=>void

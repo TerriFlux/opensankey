@@ -10,12 +10,12 @@ import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 export const OpenSankeyDefaultModalePreferenceContent : OpenSankeyDefaultModalePreferenceContentFType =(
   t:TFunction,
-  dict_variable_application_data,
+  applicationData,
   trad:i18n,
   updateMenus,
   node_function
 )=>{
-  const {data,display_nodes}=dict_variable_application_data
+  const {data,display_nodes}=applicationData
   const ui={
     'lang':  <Box layerStyle='menuconfigpanel_row_2cols' >
 

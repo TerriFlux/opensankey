@@ -15,7 +15,7 @@ const list_palette_color=[d3.interpolateBlues,d3.interpolateBrBG,d3.interpolateB
 
 const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionElementTagsTypes> = ({ 
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   elementTagNameProp,
   elementNameProp,
   node_function,
@@ -24,7 +24,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   updateMenus,
   reDrawLegend
 }) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {t}=applicationContext
   const isNodeTags=elementTagNameProp === 'nodeTags' ? 'nodeTags' : 'fluxTags'
   const type_tag_name=elementTagNameProp === 'dataTags' ? 'dataTags' : isNodeTags
@@ -42,8 +42,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<SankeySettingsEditionE
   ]
 
   const redrawGenereal=()=>{
-    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+    link_function.RedrawLinks(Object.values(applicationData.display_links))
     updateComponentToolbar.current()
     updateComponenSaveInCache.current(false)
     reDrawLegend()

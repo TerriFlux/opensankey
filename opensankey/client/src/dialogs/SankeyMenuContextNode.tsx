@@ -23,7 +23,7 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
 
 export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   dict_hook_ref_setter_show_dialog_components,
@@ -38,7 +38,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   contextMenu.ref_setter_contextualised_node.current=set_contextualised_node
   const [forceUpdate,setForceUpdate]=useState(false)
   const { t } = applicationContext
-  const { data, set_data } = dict_variable_application_data
+  const { data, set_data } = applicationData
   const { multi_selected_nodes,multi_selected_links } = dict_variable_elements_selected
   const { pointer_pos } = contextMenu
   const {RedrawNodes}=node_function
@@ -99,7 +99,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
     })
 
     multi_selected_nodes.current.forEach(n=>{
-      d3.select('#ggg_' + n.idNode).attr('transform',nodeTransform(n,dict_variable_application_data.display_nodes,dict_variable_application_data.display_links))})
+      d3.select('#ggg_' + n.idNode).attr('transform',nodeTransform(n,applicationData.display_nodes,applicationData.display_links))})
     let link_to_update:string[]=[]
     multi_selected_nodes.current.forEach(n=>{
       link_to_update=link_to_update.concat(n.outputLinksId)
@@ -377,7 +377,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   }}>{t('Noeud.context_agregate')}</Button>:<></>
 
   const btn_desagregate=multi_selected_nodes.current.filter(n=>n!=contextualised_node).length==0 && contextualised_node &&NodeContextHasDesaggregate(contextualised_node,data)?<Button variant='light' onClick={()=>{
-    Desaggregate(contextualised_node,dict_variable_application_data,agregation)
+    Desaggregate(contextualised_node,applicationData,agregation)
     multi_selected_nodes.current =[]
     node_function.recomputeDisplayedElement()
     set_data({...data})
@@ -461,23 +461,23 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
             contextMenu.ref_contextualised_node.current = undefined
 
             const tmp_node=Object.keys(data.nodes)
-            Object.entries(dict_variable_application_data.display_nodes).filter(n=>{
+            Object.entries(applicationData.display_nodes).filter(n=>{
               return !tmp_node.includes(n[0])
             }).forEach(n=>{
               DeleteGNodes([n[0]])
-              delete dict_variable_application_data.display_nodes[n[0]]
+              delete applicationData.display_nodes[n[0]]
             })
 
             const tmp_link=Object.keys(data.links)
-            Object.entries(dict_variable_application_data.display_links).filter(l=>{
+            Object.entries(applicationData.display_links).filter(l=>{
               return !tmp_link.includes(l[0])
             }).forEach(l=>{
               DeleteGLinks([l[0]])
-              delete dict_variable_application_data.display_links[l[0]]
+              delete applicationData.display_links[l[0]]
             })
 
-            RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-            RedrawLinks(Object.values(dict_variable_application_data.display_links))
+            RedrawNodes(Object.values(applicationData.display_nodes))
+            RedrawLinks(Object.values(applicationData.display_links))
             ComponentUpdater.updateComponenSaveInCache.current(false)
 
           }}>

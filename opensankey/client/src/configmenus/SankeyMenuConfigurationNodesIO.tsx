@@ -494,7 +494,7 @@ const tab_pos_link=(
 
 export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   GetLinkValue,
   node_function,
@@ -503,7 +503,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
   menu_for_modal
 }) => {
   const { t } = applicationContext
-  const { data, display_nodes, display_links } = dict_variable_application_data
+  const { data, display_nodes, display_links } = applicationData
   const { multi_selected_nodes, multi_selected_links } = dict_variable_elements_selected
   const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
   const [ link_io, set_link_io ] = useState('output')
@@ -590,8 +590,8 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
               reorganize_node_inputLinksId(data,d, data.nodes, data.links)
               reorganize_node_outputLinksId(data,d, data.nodes, data.links)
             })
-          node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-          link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+          node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+          link_function.RedrawLinks(Object.values(applicationData.display_links))
           ComponentUpdater.updateComponenSaveInCache.current(false)
           setForceUpdate(!forceUpdate)
         }}

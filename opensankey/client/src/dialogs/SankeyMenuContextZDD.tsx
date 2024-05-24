@@ -15,7 +15,7 @@ const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   contextMenu,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -26,7 +26,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
 
   const [ show_context_zdd, set_show_context_zdd ] = useState(false)
   contextMenu.showContextZDDRef.current=[ show_context_zdd, set_show_context_zdd ]
-  const { data,set_data} = dict_variable_application_data
+  const { data,set_data} = applicationData
   const { t } = applicationContext
   const { pointer_pos } = contextMenu
   const {RedrawNodes} =node_function
@@ -85,7 +85,7 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       // data[elementTagName][tags_group_key].tags[element_tags[i]].color=d3.color(color_selected(+i/size_color))?.formatHex()
       AssignNodeLocalAttribute(data.nodes[n_keys[i]],'color',(d3.color(color_selected(+i/size_color))?.formatHex() as string))
     }
-    RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+    RedrawNodes(Object.values(applicationData.display_nodes))
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }}>{t('Menu.rand_node_color')}</Button>
   </>
@@ -104,8 +104,8 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
           onChange={evt => {
             data.user_scale = +evt.target.value
             setForceUpdate(!forceUpdate)
-            RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-            RedrawLinks(Object.values(dict_variable_application_data.display_links))
+            RedrawNodes(Object.values(applicationData.display_nodes))
+            RedrawLinks(Object.values(applicationData.display_links))
             ComponentUpdater.updateComponenSaveInCache.current(false)
 
           }}
@@ -160,12 +160,12 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
       </Dropdown>
 
       <Dropdown.Item as={Button} variant='light' onClick={() => {
-        dict_variable_application_data.function_on_wait.current=()=>{
-          ComputeAutoSankey(dict_variable_application_data, node_hspace,false)
-          Object.values(dict_variable_application_data.display_nodes).forEach(n=>{
+        applicationData.function_on_wait.current=()=>{
+          ComputeAutoSankey(applicationData, node_hspace,false)
+          Object.values(applicationData.display_nodes).forEach(n=>{
             d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
           })
-          RedrawLinks(Object.values(dict_variable_application_data.display_links))
+          RedrawLinks(Object.values(applicationData.display_links))
           ComponentUpdater.updateComponenSaveInCache.current(false)
         }
         dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
@@ -188,10 +188,10 @@ export const ContextMenuZdd : FunctionComponent<ContextMenuZddFType> =({
   const button_an=<Button variant='light'
     onClick={() => {
       arrangeNodes(data)
-      RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-      RedrawLinks(Object.values(dict_variable_application_data.display_links))
+      RedrawNodes(Object.values(applicationData.display_nodes))
+      RedrawLinks(Object.values(applicationData.display_links))
       ComponentUpdater.updateComponenSaveInCache.current(false)
-      Object.values(dict_variable_application_data.display_nodes).filter(n=>n.position!='relative').forEach(n=>{
+      Object.values(applicationData.display_nodes).filter(n=>n.position!='relative').forEach(n=>{
         d3.select('#ggg_'+n.idNode).attr('transform','translate('+n.x+','+n.y+')')
       })
     }}>

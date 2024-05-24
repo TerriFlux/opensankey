@@ -29,7 +29,7 @@ import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
 export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType> = ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_hook_ref_setter_show_dialog_components,
   ref_selected_style_node,
   ComponentUpdater,
@@ -38,7 +38,7 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
   node_attribute_tab
 }) => {
   const { t } = applicationContext
-  const { data } = dict_variable_application_data
+  const { data } = applicationData
   const { updateComponentMenuConfigNodeAppearence } = ComponentUpdater
   const { RedrawNodes } = node_function
 
@@ -118,7 +118,7 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
           set_selected_style_node(new_style)
           ref_selected_style_node.current=new_style
           updateComponentMenuConfigNodeAppearence.current()
-          RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+          RedrawNodes(Object.values(applicationData.display_nodes))
           ComponentUpdater.updateComponenSaveInCache.current(false)
           setForceUpdate(!forceUpdate)
         }}
@@ -179,7 +179,7 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
 //Modal et fonctions pour l'edition et affectation des style de flux
 export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>= ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
   pointer_pos,
@@ -187,7 +187,7 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
   link_function,
   ComponentUpdater
 }) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {t}=applicationContext
   const {ref_selected_style_link}=dict_variable_elements_selected
   const {updateComponentMenuConfigLink}=ComponentUpdater
@@ -266,7 +266,7 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
           ref_selected_style_link.current='default'
           setForceUpdate(!forceUpdate)
           updateComponentMenuConfigLink.current()
-          link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+          link_function.RedrawLinks(Object.values(applicationData.display_links))
         }}
       >
         <FaMinus />
@@ -305,7 +305,7 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
 
     {
       <MenuConfigurationLinksAppearence
-        dict_variable_application_data={dict_variable_application_data}
+        applicationData={applicationData}
         dict_variable_elements_selected={dict_variable_elements_selected}
         applicationContext={applicationContext}
         additional_link_appearence_items={additional_link_appearence_items}

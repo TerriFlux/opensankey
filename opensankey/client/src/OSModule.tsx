@@ -9,7 +9,7 @@ import {
   ComponentUpdaterType,
   contextMenuType,
   dict_hook_ref_setter_show_dialog_componentsType,
-  dict_variable_application_dataType,
+  applicationDataType,
   dict_variable_elements_selectedType,
   DrawAllType,
   InitalizeSelectorDetailNodesType,
@@ -148,11 +148,11 @@ export const initializeElementSelected : initializeElementSelectedType = ()=> {
 
 // Réinitialise data et vide les noeud/liens sélectionnés
 export const initializeReinitialization : initializeReinitializationType = (
-  dict_variable_application_data :dict_variable_application_dataType,
+  applicationData :applicationDataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType
 ) => ()=>{
-  const new_data = dict_variable_application_data.get_default_data()
+  const new_data = applicationData.get_default_data()
   dict_variable_elements_selected.multi_selected_nodes.current = []
   dict_variable_elements_selected.multi_selected_links.current = []
   localStorage.removeItem('diff')
@@ -166,7 +166,7 @@ export const initializeReinitialization : initializeReinitializationType = (
   contextMenu.ref_setter_contextualised_link.current!(undefined)
   contextMenu.tagContext.current![0][1](undefined)
   contextMenu.showContextZDDRef.current![1](false)
-  dict_variable_application_data.set_data(new_data)
+  applicationData.set_data(new_data)
   sessionStorage.setItem('dismiss_warning_sankey_plus','0')
   sessionStorage.setItem('dismiss_warning_sankey_mfa','0')
 }
@@ -194,7 +194,7 @@ export const initializeApplicationData : initializeApplicationDataType = (
 }
 // General functions necessay to draw the diagram
 export const initializeApplicationDraw : initializeApplicationDrawType = ( 
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu:contextMenuType,
   applicationContext,
@@ -205,12 +205,12 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
   start_point,
   resizeCanvas
 )=> {
-  const reAdjustSankey=(dict_variable_application_data:dict_variable_application_dataType)=>()=>{
-    AdjustSankeyZone(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+  const reAdjustSankey=(applicationData:applicationDataType)=>()=>{
+    AdjustSankeyZone(applicationData,GetSankeyMinWidthAndHeight)
   }
   const reDrawLegend=()=>{
     DrawLegend(
-      dict_variable_application_data,
+      applicationData,
       applicationContext,
       contextMenu,
       GetLinkValue,
@@ -222,18 +222,18 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
     //if(!windowSankey.SankeyToolsStatic){ TODO
     const g_legend=d3.select(' .opensankey #g_legend .g_drag_zone_leg') as d3.Selection<SVGGElement,unknown,HTMLElement,unknown>
     g_legend.call( drag_legend(
-      dict_variable_application_data.data,
+      applicationData.data,
       resizeCanvas,
       node_function,
       link_function,
-      dict_variable_application_data
+      applicationData
     ))
   }
   return {
     GetSankeyMinWidthAndHeight,
     updateLayout,
     resizeCanvas,
-    reAdjustSankey: reAdjustSankey(dict_variable_application_data),
+    reAdjustSankey: reAdjustSankey(applicationData),
     all_element_UpdateLayout:os_all_element_to_transform,
     start_point,
     reDrawLegend
@@ -241,7 +241,7 @@ export const initializeApplicationDraw : initializeApplicationDrawType = (
 }
 // Functions necessay to draw the links
 export const initializeLinkFunctions : initializeLinkFunctionsType = (
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   applicationContext,
@@ -254,7 +254,7 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
   (data:SankeyData,n: SankeyNode) => !NodeDisplayed(data,n) || (n.inputLinksId.length === 0) || (!ReturnValueLink(data,data.links[n.inputLinksId[0]],'arrow')) ? false : true
 
   // Color for the sabot when the source node is an arrow
-  const {data} = dict_variable_application_data
+  const {data} = applicationData
   const LinkSabotColor=LinkColor
   const OSDrawLinkStartSabot=(node_to_update:SankeyNode[])=>{
     const scale = d3.scaleLinear()
@@ -264,7 +264,7 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
       .domain([0, 100])
       .range([0, data.user_scale])
     node_to_update.forEach(n=>{
-      DrawLinkStartSabot(dict_variable_application_data,n,scale,inv_scale,GetLinkValue,LinkSabotColor)
+      DrawLinkStartSabot(applicationData,n,scale,inv_scale,GetLinkValue,LinkSabotColor)
     })
   }
   const _ = {
@@ -284,7 +284,7 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
   }
   _.RedrawLinks=(links_to_update:SankeyLink[])=>{
     drawLinkShape(
-      dict_variable_application_data,
+      applicationData,
       dict_variable_elements_selected,
       applicationContext,
       _,
@@ -293,7 +293,7 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
     )
     AddDrawLinksEvent(
       contextMenu,
-      dict_variable_application_data,
+      applicationData,
       uiElementsRef,
       dict_variable_elements_selected,
       _,
@@ -308,7 +308,7 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
   _.CreateLinksOnSVG=(links_to_update:SankeyLink[])=>{
     drawAddLinks(
       contextMenu,
-      dict_variable_application_data,
+      applicationData,
       uiElementsRef,
       dict_variable_elements_selected,
       applicationContext,
@@ -327,7 +327,7 @@ export const initializeLinkFunctions : initializeLinkFunctionsType = (
 
 // Functions necessay to draw the nodes
 export const initializeNodeFunctions : initializeNodeFunctionsType = (
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   applicationContext,
@@ -348,14 +348,14 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
     CreateNodesOnSVG:(()=>null) as unknown as (nodes_to_update: SankeyNode[]) => null ,
   }
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
-    updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
-    RedrawNodesLabel(dict_variable_application_data,nodes_to_update,GetLinkValue,applicationContext.t,_)
+    updateDrawNodeShape(applicationData,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
+    RedrawNodesLabel(applicationData,nodes_to_update,GetLinkValue,applicationContext.t,_)
     return null
   }
   _.CreateNodesOnSVG=(nodes_to_update:SankeyNode[])=>{
     drawAddNodes(
       contextMenu,
-      dict_variable_application_data,
+      applicationData,
       uiElementsRef,
       dict_variable_elements_selected,
       applicationContext,
@@ -377,7 +377,7 @@ export const initializeNodeFunctions : initializeNodeFunctionsType = (
 
 export const DrawAll : DrawAllType = (
   contextMenu,
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   applicationContext,
@@ -393,7 +393,7 @@ export const DrawAll : DrawAllType = (
 )=>{
   node_function.DrawAllNodes(
     contextMenu,
-    dict_variable_application_data,
+    applicationData,
     uiElementsRef,
     dict_variable_elements_selected,
     applicationContext,
@@ -410,7 +410,7 @@ export const DrawAll : DrawAllType = (
   )
   link_function.DrawAllLinks(
     contextMenu,
-    dict_variable_application_data,
+    applicationData,
     uiElementsRef,
     dict_variable_elements_selected,
     applicationContext,
@@ -430,7 +430,7 @@ export const DrawAll : DrawAllType = (
 
 export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   contextMenu,
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   link_function,
@@ -443,7 +443,7 @@ export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   
   svgSankey.on('mousedown',evt=>{
     EventOnZoneMouseDown(
-      dict_variable_application_data,
+      applicationData,
       dict_variable_elements_selected,
       dict_hook_ref_setter_show_dialog_components,
       false,
@@ -455,7 +455,7 @@ export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   })
   svgSankey.on('mousemove',evt=>{
     EventOnZoneMouseMove(
-      dict_variable_application_data,
+      applicationData,
       dict_variable_elements_selected,
       evt,
       applicationDraw.start_point
@@ -463,7 +463,7 @@ export const InstallEventsOnSVG : InstallEventsOnSVGType = (
   })
   svgSankey.on('mouseup',evt=>{
     EventOnZoneMouseUp(
-      dict_variable_application_data,
+      applicationData,
       uiElementsRef,
       dict_variable_elements_selected,
       dict_hook_ref_setter_show_dialog_components,
@@ -518,7 +518,7 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = (
   additional_menus,
   updateMenus,
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   applicationDraw,
   ComponentUpdater
 ) => {
@@ -533,7 +533,7 @@ export const initializeAdditionalMenus : initializeAdditionalMenusType = (
 // Modal Dialogs
 export const moduleDialogs : module_dialogsType = (
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   applicationDraw,
@@ -558,7 +558,7 @@ export const moduleDialogs : module_dialogsType = (
     'ref_setter_show_menu_node_io',
     <SankeyMenuConfigurationNodesIO
       applicationContext={applicationContext}
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_variable_elements_selected={dict_variable_elements_selected}
       GetLinkValue={GetLinkValue}
       node_function={node_function}
@@ -573,7 +573,7 @@ export const moduleDialogs : module_dialogsType = (
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_link_data',
     <MenuConfigurationLinksData
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_variable_elements_selected={dict_variable_elements_selected}
       applicationContext={applicationContext}
       additional_data_element={additional_menus.additional_data_element}
@@ -588,7 +588,7 @@ export const moduleDialogs : module_dialogsType = (
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_link_appearence',
     <MenuConfigurationLinksAppearence
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_variable_elements_selected={dict_variable_elements_selected}
       applicationContext={applicationContext}
       additional_link_appearence_items={additional_menus.additional_link_appearence_items}
@@ -603,7 +603,7 @@ export const moduleDialogs : module_dialogsType = (
     dict_hook_ref_setter_show_dialog_components,
     'ref_setter_show_menu_layout',
     <OpenSankeyMenuConfigurationLayout
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_variable_elements_selected={dict_variable_elements_selected}
       applicationContext={applicationContext}
       extra_background_element={additional_menus.extra_background_element}
@@ -633,7 +633,7 @@ export const moduleDialogs : module_dialogsType = (
     'ref_setter_show_menu_node_tags',
     <SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_variable_elements_selected={dict_variable_elements_selected}
       node_function={node_function}
       ComponentUpdater={ComponentUpdater}
@@ -647,7 +647,7 @@ export const moduleDialogs : module_dialogsType = (
     'ref_setter_show_menu_link_tags',
     <MenuConfigurationLinksTags
       applicationContext={applicationContext}
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_variable_elements_selected={dict_variable_elements_selected}
       menu_for_modal={true}
       ComponentUpdater={ComponentUpdater}
@@ -787,7 +787,7 @@ export const initializeProcessFunctions : (
     return _
   }
 export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   applicationContext,
   uiElementsRef,
@@ -805,13 +805,13 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
   ref_alt_key_pressed
 )=>{
   return OpenSankeyConfigurationsMenus(
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     applicationContext,
     uiElementsRef,
     dict_hook_ref_setter_show_dialog_components,
     <OpenSankeyMenuConfigurationLayout
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_variable_elements_selected={dict_variable_elements_selected}
       applicationContext={applicationContext}
       extra_background_element={additional_menus.extra_background_element}
@@ -822,7 +822,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     />,
     <SankeySettingsEditionElementTags
       applicationContext={applicationContext}
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       elementTagNameProp='nodeTags'
       elementNameProp='nodes'
       node_function={node_function}
@@ -833,7 +833,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     />,
     <SankeySettingsEditionElementTags
       applicationContext={applicationContext}
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       elementTagNameProp='fluxTags'
       elementNameProp='links'
       node_function={node_function}
@@ -844,7 +844,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     />,
     <SankeySettingsEditionElementTags
       applicationContext={applicationContext}
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       elementTagNameProp='dataTags'
       elementNameProp='links'
       node_function={node_function}
@@ -855,7 +855,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
     />,
     menu_configuration_nodes,
     MenuConfigurationLinks(
-      dict_variable_application_data,
+      applicationData,
       dict_variable_elements_selected,
       applicationContext,
       config_link_data,
@@ -874,7 +874,7 @@ export const initializeMenuConfiguration:initializeMenuConfigurationFuncType=(
 }
 
 export const initializeKeyHandler:initializeKeyHandlerType=(
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   contextMenu,
   e,
@@ -891,7 +891,7 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
   applicationDraw,
 )=>{
   keyHandler(
-    dict_variable_application_data,
+    applicationData,
     uiElementsRef,
     contextMenu,
     e,
@@ -911,19 +911,19 @@ export const initializeKeyHandler:initializeKeyHandlerType=(
 
 export const InitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   applicationDraw,
   node_function,
   link_function)=>{
-  // const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-  // const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+  // const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+  // const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(applicationData.display_links))
 
   return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
     <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
     <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-      <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
+      <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
         {addSimpleLevelDropDown(
-          dict_variable_application_data,
+          applicationData,
           GetSankeyMinWidthAndHeight,
           ()=>null,
           node_function,

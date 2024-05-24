@@ -5,7 +5,7 @@ import { updateLinkTagValue } from './SankeyUtils'
 import { MenuConfigurationLinksTagsFType } from './types/SankeyMenuConfigurationLinksTagsTypes'
 
 export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   applicationContext,
   menu_for_modal,
@@ -13,7 +13,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   node_function,
   link_function
 })=>{
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {multi_selected_links}=dict_variable_elements_selected
   const {t}=applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
@@ -137,7 +137,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
                 Object.values(data.links).filter(f => multi_selected_links.current.map(d => d.idLink).includes(f.idLink)).map(d => {
                   updateLinkTagValue(d,data_tags_selected,tags_group_key,tag_key,visible)
                 })
-                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
+                node_function.RedrawNodes(Object.values(applicationData.display_nodes))
                 link_function.RedrawLinks(multi_selected_links.current)
                 ComponentUpdater.updateComponenSaveInCache.current(false)
                 

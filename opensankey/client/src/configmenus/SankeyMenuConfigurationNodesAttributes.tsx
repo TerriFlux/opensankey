@@ -59,7 +59,7 @@ import { OpenSankeyConfigurationNodesAttributesFType, SankeyWrapperConfigInModal
 
 export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   menu_for_style,
   ref_selected_style_node,
@@ -71,7 +71,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
   node_function
 }) => {
   const { t } = applicationContext
-  const { data } = dict_variable_application_data
+  const { data } = applicationData
   const { multi_selected_nodes } = dict_variable_elements_selected
   const [forceUpdate,setForceUpdate]=useState(false)
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
@@ -81,7 +81,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
   const {RedrawLinks}=link_function
   updateComponentMenuConfigNodeAppearence.current=()=>setForceUpdate(!forceUpdate)
 
-  const element_to_update=menu_for_style?Object.values(dict_variable_application_data.display_nodes):multi_selected_nodes.current
+  const element_to_update=menu_for_style?Object.values(applicationData.display_nodes):multi_selected_nodes.current
 
   const updateMenuConfigNode=()=>{
     ComponentUpdater.updateComponenSaveInCache.current(false)
@@ -106,7 +106,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
       const list_links=link_to_update.map(lid=>data.links[lid])
       RedrawLinks(list_links)
     } else {
-      RedrawLinks(Object.values(dict_variable_application_data.display_links))
+      RedrawLinks(Object.values(applicationData.display_links))
     }
   }
 
@@ -477,7 +477,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           {t('Noeud.apparence.TML')}
         </Box>
         <ConfigNodeAttributeNumberInput
-          data={dict_variable_application_data.data}
+          data={applicationData.data}
           parameter_to_modify={parameter_to_modify}
           selected_parameter={selected_parameter}
           menu_for_style={menu_for_style}
@@ -501,7 +501,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
           {t('Noeud.apparence.TMH')}
         </Box>
         <ConfigNodeAttributeNumberInput
-          data={dict_variable_application_data.data}
+          data={applicationData.data}
           parameter_to_modify={parameter_to_modify}
           selected_parameter={selected_parameter}
           menu_for_style={menu_for_style}
@@ -677,7 +677,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
               }
             </Select>
             <ConfigNodeAttributeNumberInput
-              data={dict_variable_application_data.data}
+              data={applicationData.data}
               parameter_to_modify={parameter_to_modify}
               selected_parameter={selected_parameter}
               menu_for_style={menu_for_style}
@@ -728,7 +728,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
               </Box>
 
               <ConfigNodeAttributeNumberInput
-                data={dict_variable_application_data.data}
+                data={applicationData.data}
                 parameter_to_modify={parameter_to_modify}
                 selected_parameter={selected_parameter}
                 menu_for_style={menu_for_style}
@@ -963,7 +963,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
             </Box>
 
             <ConfigNodeAttributeNumberInput
-              data={dict_variable_application_data.data}
+              data={applicationData.data}
               parameter_to_modify={parameter_to_modify}
               selected_parameter={selected_parameter}
               menu_for_style={menu_for_style}
@@ -1261,7 +1261,7 @@ type ConfigLayoutNumberInputType={
 /**
  * Component developped for number input of the nodes attributs config menu
  * 
- * @param {dict_variable_application_dataType} dict_variable_application_data
+ * @param {applicationDataType} applicationData
  * @param {keyof SankeyNodeAttrLocal} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
  * @param {{[_: string]: SankeyNodeStyle;} | {[_: string]: SankeyNode;}} parameter_to_modify multi_selected_nodes or dict of node style
  * @param {SankeyNodeStyle[] | SankeyNode[]} selected_parameter either modify node style or selected node depending on if we are in the edition of style or configuration menu

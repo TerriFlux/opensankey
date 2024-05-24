@@ -314,7 +314,7 @@ export interface SankeyAppState {
 
 export type SankeyDrawCurve={
   curve:(
-    dict_variable_application_data:dict_variable_application_dataType,
+    applicationData:applicationDataType,
     dict_variable_elements_selected:dict_variable_elements_selectedType,
     applicationContext:applicationContextType,
     display_style : display_styleType,
@@ -426,7 +426,7 @@ export type agregationType = {
 
 export type MenuTypes = {
   applicationContext : applicationContextType,
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   uiElementsRef : uiElementsRefType,
   contextMenu : contextMenuType,
@@ -495,14 +495,14 @@ export type dict_variable_elements_selectedType = {
 export type initializeElementSelectedType = ()=>dict_variable_elements_selectedType
 
 export type initializeReinitializationType = (
-  dict_variable_application_data :dict_variable_application_dataType,
+  applicationData :applicationDataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType
 ) => ()=>void
 /*****************************************************************************/
 // Data
 export type OSGetDefaultData=()=>SankeyData
-export type dict_variable_application_dataType = {
+export type applicationDataType = {
   data : SankeyData,
   set_data : (_:SankeyData)=>void,
   get_default_data : OSGetDefaultData,
@@ -522,12 +522,12 @@ export type initializeApplicationDataType = (
   display_nodes : {[_:string]:SankeyNode},
   display_links : {[_:string]:SankeyLink},
   
-)=>dict_variable_application_dataType
+)=>applicationDataType
 
 /*****************************************************************************/
 // Draw
 export type initializeApplicationDrawType = (
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   contextMenu : contextMenuType,
   applicationContext : applicationContextType,
@@ -557,7 +557,7 @@ export type LinkFunctionTypes = {
   CreateLinksOnSVG:CreateLinksOnSVGFType,
 }
 export type initializeLinkFunctionsType = (
-  dict_variable_application_data: dict_variable_application_dataType,
+  applicationData: applicationDataType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
   contextMenu:contextMenuType,
   applicationContext: applicationContextType,
@@ -578,13 +578,13 @@ export type NodeFunctionTypes = {
   recomputeDisplayedElement:()=>void
 }
 export type initializeNodeFunctionsType = (
-  dict_variable_application_data: dict_variable_application_dataType,
+  applicationData: applicationDataType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
   contextMenu:contextMenuType,
   applicationContext: applicationContextType,
   ComponentUpdater: ComponentUpdaterType,
   uiElementsRef:uiElementsRefType,
-  resizeCanvas:(_:dict_variable_application_dataType)=>void,
+  resizeCanvas:(_:applicationDataType)=>void,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   ref_alt_key_pressed: React.MutableRefObject<boolean>,
   accept_simple_click: React.MutableRefObject<boolean>,
@@ -594,7 +594,7 @@ export type initializeNodeFunctionsType = (
 
 export type DrawAllType = (
   contextMenu:contextMenuType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
@@ -611,7 +611,7 @@ export type DrawAllType = (
 
 export type InstallEventsOnSVGType = (
   contextMenu:contextMenuType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   link_function:LinkFunctionTypes,
@@ -690,7 +690,7 @@ export type initializeAdditionalMenusType = (
   additional_menus:AdditionalMenusType,
   updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   applicationContext:applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   applicationDraw:applicationDrawType,
   ComponentUpdater:ComponentUpdaterType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
@@ -705,7 +705,7 @@ export type initializeAdditionalMenusType = (
 
 export type module_dialogsType = (
   applicationContext:applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   contextMenu : contextMenuType,
   applicationDraw:applicationDrawType,
@@ -758,7 +758,7 @@ export type SankeyAppTypes = {
 }
 
 export type initializeMenuConfigurationFuncType=(
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
 dict_variable_elements_selected:dict_variable_elements_selectedType,
 applicationContext:applicationContextType,
 uiElementsRef:uiElementsRefType,
@@ -777,7 +777,7 @@ ref_alt_key_pressed: React.MutableRefObject<boolean>
 )=>JSX.Element[]
 
 export type initializeKeyHandlerType=(
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   uiElementsRef : uiElementsRefType,
   contextMenu : contextMenuType,
   e: KeyboardEvent,
@@ -798,7 +798,7 @@ export type initializeKeyHandlerType=(
 
 export type InitalizeSelectorDetailNodesType=(
   applicationContext:applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   applicationDraw:applicationDrawType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,

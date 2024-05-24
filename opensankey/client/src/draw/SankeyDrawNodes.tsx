@@ -24,7 +24,7 @@ typeof globalThis & {
 
 export const DrawAllNodes : DrawAllNodesFType = (
   contextMenu,
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   applicationContext,
@@ -38,7 +38,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
   GetSankeyMinWidthAndHeight,
   resizeCanvas
 ) => {
-  const {display_nodes}=dict_variable_application_data
+  const {display_nodes}=applicationData
   const { multi_selected_nodes } = dict_variable_elements_selected
   const {GetLinkValue}=link_function
   const {t}=applicationContext
@@ -46,14 +46,14 @@ export const DrawAllNodes : DrawAllNodesFType = (
   // Or if you want information about the type of these variable, you can find them in file types.tsx
   d3.selectAll(' .opensankey .gg_nodes').remove()
   drawAddNodes(
-    contextMenu, dict_variable_application_data, uiElementsRef, dict_variable_elements_selected,applicationContext,
+    contextMenu, applicationData, uiElementsRef, dict_variable_elements_selected,applicationContext,
     alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
     Object.values(display_nodes),
     GetSankeyMinWidthAndHeight,
     resizeCanvas
   )
-  updateDrawNodeShape(dict_variable_application_data,link_function,multi_selected_nodes,Object.values(display_nodes))
-  RedrawNodesLabel(dict_variable_application_data,Object.values(display_nodes),GetLinkValue,t,node_function)
+  updateDrawNodeShape(applicationData,link_function,multi_selected_nodes,Object.values(display_nodes))
+  RedrawNodesLabel(applicationData,Object.values(display_nodes),GetLinkValue,t,node_function)
 
 
 }
@@ -63,7 +63,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
  */
 export const AddDrawNodesEvent : AddDrawNodesFType = (
   contextMenu,
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   applicationContext,
@@ -78,7 +78,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   resizeCanvas
 ) => {
   const { LinkText, GetLinkValue } = link_function
-  const { data, display_nodes } = dict_variable_application_data
+  const { data, display_nodes } = applicationData
   const { ref_getter_mode_selection, multi_selected_nodes, first_selected_node } = dict_variable_elements_selected
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -126,7 +126,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
         .on('mouseup',  (event, d) =>EventOnMouseUpAddNodesAndLink(
           event,
           d,
-          dict_variable_application_data,
+          applicationData,
           dict_variable_elements_selected,
           uiElementsRef,
           applicationContext,
@@ -140,7 +140,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     if(ref_getter_mode_selection.current=='s' && window.SankeyToolsStatic!==true ){
       ggg_nodes.call(
         DragGNodeEvent(
-          dict_variable_application_data,dict_variable_elements_selected,applicationContext,
+          applicationData,dict_variable_elements_selected,applicationContext,
           alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater,node_function,link_function,GetSankeyMinWidthAndHeight,resizeCanvas
         )
       )
@@ -199,12 +199,12 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
  * Update visual elements linked to the shape of nodes  
  */
 export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
-  dict_variable_application_data,
+  applicationData,
   link_function,
   multi_selected_nodes,
   node_to_update
 ) =>{
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {GetLinkValue}=link_function
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -269,7 +269,7 @@ export const updateDrawNodeShape:updateDrawNodeShapeFType  = (
 
  
   node_to_update.forEach(n=>{
-    SetNodeHeight(n,dict_variable_application_data,scale,inv_scale,GetLinkValue)
+    SetNodeHeight(n,applicationData,scale,inv_scale,GetLinkValue)
     d3.select(' .opensankey #gg_' + n.idNode).style('display', () => {
       if (HasLinksZero(data,n)) {
         return 'none'
@@ -351,7 +351,7 @@ const HasLinksZero=(data:SankeyData,node:SankeyNode)=>{
  */
 export const drawAddNodes : drawNodeShapeFType = (
   contextMenu,
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   applicationContext,
@@ -368,7 +368,7 @@ export const drawAddNodes : drawNodeShapeFType = (
 
 ) => {
   const {multi_selected_nodes } = dict_variable_elements_selected
-  const { data,display_nodes, display_links } = dict_variable_application_data
+  const { data,display_nodes, display_links } = applicationData
   const {t} = applicationContext
   // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
   const filtered_data = Object.values(display_nodes).filter(n=>node_to_draw.includes(n))
@@ -399,13 +399,13 @@ export const drawAddNodes : drawNodeShapeFType = (
       .attr('transform', d => nodeTransform(d, display_nodes, display_links))
   })
   updateDrawNodeShape(
-    dict_variable_application_data,
+    applicationData,
     link_function,
     multi_selected_nodes,
     node_to_draw
   )
   RedrawNodesLabel(
-    dict_variable_application_data,
+    applicationData,
     node_to_draw,
     link_function.GetLinkValue,
     t,
@@ -413,7 +413,7 @@ export const drawAddNodes : drawNodeShapeFType = (
   )
   AddDrawNodesEvent(
     contextMenu,
-    dict_variable_application_data,
+    applicationData,
     uiElementsRef,
     dict_variable_elements_selected,
     applicationContext,

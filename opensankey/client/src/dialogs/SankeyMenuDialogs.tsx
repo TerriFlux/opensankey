@@ -1,7 +1,7 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { Form, FormLabel, Row, Col, Button, InputGroup, Tabs,Tab,FormControl, Modal} from 'react-bootstrap'
-import { dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType, dict_variable_elements_selectedType, } from '../types/Types'
+import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, dict_variable_elements_selectedType, } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultLink, DefaultNode, OSTooltip } from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
@@ -32,7 +32,7 @@ export   const os_all_element_to_transform = [
  */
 export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   t,dict_hook_ref_setter_show_dialog_components,
-  dict_variable_application_data,
+  applicationData,
   applicationDraw,convert_data,
   diagramSelector,
   apply_transformation_additional_elements,
@@ -40,7 +40,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
   ComponentUpdater
 }) => {
   const {updateLayout,all_element_UpdateLayout}=applicationDraw
-  const {data,set_data,dataVarToUpdate}=dict_variable_application_data
+  const {data,set_data,dataVarToUpdate}=applicationData
   const [prev_sankey_data,set_prev_sankey_data] = useState(data)
   const [forceUpdate,setForceUpdate] = useState(true)
   const [stretchFactorH,set_stretchFactorH]=useState(1)
@@ -483,8 +483,8 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
           <Button
             size="sm"
             onClick={() => {
-              dict_variable_application_data.function_on_wait.current=()=>{
-                ComputeAutoSankey(dict_variable_application_data, node_hspace,false)
+              applicationData.function_on_wait.current=()=>{
+                ComputeAutoSankey(applicationData, node_hspace,false)
                 set_data({ ...data })
               }
               dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
@@ -526,7 +526,7 @@ export const ApplyLayoutDialog : FunctionComponent<ApplyLayoutDialogTypes> = ({
  */
 export type ApplySaveJSONTypes = {
   t : TFunction
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   additional_file_save_json_option:JSX.Element[],
@@ -541,7 +541,7 @@ export type ApplySaveJSONTypes = {
 export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
   {
     t,
-    dict_variable_application_data,
+    applicationData,
     dict_hook_ref_setter_show_dialog_components,
     dict_variable_elements_selected,
     additional_file_save_json_option,
@@ -593,8 +593,8 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
         onClick={
           () => {
             ClickSaveDiagram(
-              dict_variable_application_data,
-              dict_variable_application_data.data,
+              applicationData,
+              applicationData.data,
               dict_variable_elements_selected,
               {
                 mode_save,
@@ -723,21 +723,21 @@ export const OpenSankeyDiagramSelector : OpenSankeyDiagramSelectorFType = (
 
 // export const PopoverSelectorDetailNodes:FunctionComponent<popoverSelectorDetailNodesFType>=({
 //   applicationContext,
-//   dict_variable_application_data,
+//   applicationData,
 //   applicationDraw,
 //   node_function,
 //   link_function
 // }
 // )=>{
-//   const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-//   const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+//   const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+//   const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(applicationData.display_links))
 
 //   return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
 //     <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
 //     <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-//       <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
+//       <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
 //         {addSimpleLevelDropDown(
-//           dict_variable_application_data,applicationDraw.reDrawLegend,redrawAllNodes,redrawAllLinks,node_function.recomputeDisplayedElement
+//           applicationData,applicationDraw.reDrawLegend,redrawAllNodes,redrawAllLinks,node_function.recomputeDisplayedElement
 //         )}</>
 //       ) : (<>
 //         <Form.Control placeholder="Pas de filtrage" style={{ opacity: !windowSankey.SankeyToolsStatic ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>

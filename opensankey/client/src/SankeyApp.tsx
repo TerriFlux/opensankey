@@ -12,7 +12,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import {
   AdditionalMenusType,
   agregationType,
-  dict_variable_application_dataType,
+  applicationDataType,
   SankeyAppTypes,
   SankeyData,
   SankeyLink,
@@ -88,7 +88,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   // Logo, names, licences
   const applicationContext = initializeApplicationContext()
   // Data, displayed data, default data
-  const dict_variable_application_data = initializeApplicationData(
+  const applicationData = initializeApplicationData(
     data,
     set_data,
     get_default_data,
@@ -96,7 +96,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     {}
   )
   const dict_variable_elements_selected = initializeElementSelected()
-  dict_variable_elements_selected.userScaleRef.current = dict_variable_application_data.data.user_scale // TODO
+  dict_variable_elements_selected.userScaleRef.current = applicationData.data.user_scale // TODO
   const dict_hook_ref_setter_show_dialog_components = initializeShowDialog() 
   const contextMenu = initializeContextMenu()
 
@@ -108,37 +108,37 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const recomputeDisplayedElement=()=>{
     const node_visible_svg=NodeVisibleOnsSvg()
-    dict_variable_application_data.display_nodes = Object.keys(dict_variable_application_data.data.nodes)
-      .filter((key) => NodeDisplayed(dict_variable_application_data.data,dict_variable_application_data.data.nodes[key]))
+    applicationData.display_nodes = Object.keys(applicationData.data.nodes)
+      .filter((key) => NodeDisplayed(applicationData.data,applicationData.data.nodes[key]))
       .reduce((obj, key) => {
         return Object.assign(obj, {
-          [key]: dict_variable_application_data.data.nodes[key]
+          [key]: applicationData.data.nodes[key]
         })
       }, {}) as {[idNode:string]:SankeyNode}
 
-    const pre_display_links=Object.keys(dict_variable_application_data.data.links)
+    const pre_display_links=Object.keys(applicationData.data.links)
       .filter((key) =>LinkVisible(
-        dict_variable_application_data.data.links[key],
-        dict_variable_application_data.data,
-        dict_variable_application_data.display_nodes))
+        applicationData.data.links[key],
+        applicationData.data,
+        applicationData.display_nodes))
       .reduce((obj, key) => {
         return Object.assign(obj, {
-          [key]: dict_variable_application_data.data.links[key]
+          [key]: applicationData.data.links[key]
         })
       }, {}) as {[idLink:string]:SankeyLink}
     const pre_link_key=Object.keys(pre_display_links)
 
-    dict_variable_application_data.display_links={}
-    dict_variable_application_data.data.linkZIndex=pre_link_key
-    pre_link_key.forEach(lid=>dict_variable_application_data.display_links[lid]=data.links[lid])
+    applicationData.display_links={}
+    applicationData.data.linkZIndex=pre_link_key
+    pre_link_key.forEach(lid=>applicationData.display_links[lid]=data.links[lid])
 
     // delete element no longer displayed
-    const curr_displayed_nodes= Object.keys(dict_variable_application_data.display_nodes)
+    const curr_displayed_nodes= Object.keys(applicationData.display_nodes)
     const node_to_delete=node_visible_svg.filter(nid=>!curr_displayed_nodes.includes(nid))
     DeleteGNodes(node_to_delete)
 
     applyZoomEvent(
-      dict_variable_application_data,
+      applicationData,
       applicationDraw.GetSankeyMinWidthAndHeight
     )
   }
@@ -159,7 +159,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
 
   const link_function = initializeLinkFunctions(
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     contextMenu,
     applicationContext,
@@ -170,14 +170,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   )
 
   const node_function = initializeNodeFunctions(
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     contextMenu,
     applicationContext,
     ComponentUpdater,
     uiElementsRef,
-    (dict_variable_application_data:dict_variable_application_dataType)=>{
-      resizeDrawingArea(dict_variable_application_data,GetSankeyMinWidthAndHeight) //TODO
+    (applicationData:applicationDataType)=>{
+      resizeDrawingArea(applicationData,GetSankeyMinWidthAndHeight) //TODO
     },
     dict_hook_ref_setter_show_dialog_components,
     ref_alt_key_pressed,
@@ -186,11 +186,11 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     link_function
   )
   const resizeCanvas=()=>{
-    resizeDrawingArea(dict_variable_application_data,GetSankeyMinWidthAndHeight)
+    resizeDrawingArea(applicationData,GetSankeyMinWidthAndHeight)
   }
   const start_point = useRef([0,0])
   const applicationDraw = initializeApplicationDraw(
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     contextMenu,
     applicationContext,
@@ -208,7 +208,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   /*******************************************************************************/
 
   const Reinitialization = initializeReinitialization(
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     contextMenu
   )
@@ -264,7 +264,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     additionalMenus,
     updateMenus,
     applicationContext,
-    dict_variable_application_data,
+    applicationData,
     applicationDraw,
     ComponentUpdater,
     dict_variable_elements_selected,
@@ -279,7 +279,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
     applicationContext={applicationContext}
-    dict_variable_application_data={dict_variable_application_data}
+    applicationData={applicationData}
     dict_variable_elements_selected={dict_variable_elements_selected}
     menu_for_style={false}
     ref_selected_style_node={dict_variable_elements_selected.ref_selected_style_node}
@@ -294,22 +294,22 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   const sankey_menus = OpenSankeyMenus(
     applicationContext.t,
     Reinitialization,
-    dict_variable_application_data.get_default_data,
+    applicationData.get_default_data,
     dict_hook_ref_setter_show_dialog_components,
     dict_variable_elements_selected.never_see_again,
-    dict_variable_application_data.data,
-    dict_variable_application_data.set_data,
+    applicationData.data,
+    applicationData.set_data,
     additionalMenus.external_edition_item,
     additionalMenus.external_file_item,
     additionalMenus.external_file_export_item,
     additionalMenus.externale_save_item,
     additionalMenus.externale_navbar_item,
-    dict_variable_application_data.convert_data,
-    dict_variable_application_data.setDiagram,
+    applicationData.convert_data,
+    applicationData.setDiagram,
   )
 
   const config_link_data = <MenuConfigurationLinksData
-    dict_variable_application_data={dict_variable_application_data}
+    applicationData={applicationData}
     dict_variable_elements_selected={dict_variable_elements_selected}
     applicationContext={applicationContext}
     additional_data_element={additionalMenus.additional_data_element}
@@ -318,7 +318,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     link_function={link_function}
   />
   const config_link_attr = <MenuConfigurationLinksAppearence
-    dict_variable_application_data={dict_variable_application_data}
+    applicationData={applicationData}
     dict_variable_elements_selected={dict_variable_elements_selected}
     applicationContext={applicationContext}
     additional_link_appearence_items={additionalMenus.additional_link_appearence_items}
@@ -327,21 +327,21 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     ComponentUpdater={ComponentUpdater}
   />
 
-  const {filter}=dict_variable_application_data.data.display_style
+  const {filter}=applicationData.data.display_style
 
   sankey_menus['toolbar']= <ToolbarBuilder
     applicationContext={applicationContext}
-    dict_variable_application_data={dict_variable_application_data}
+    applicationData={applicationData}
     dict_variable_elements_selected={dict_variable_elements_selected}
     filter={filter}
     set_current_filter= {
       ( new_current_filter: number ) => {
-        const { display_style } = dict_variable_application_data.data
+        const { display_style } = applicationData.data
         display_style.filter = +new_current_filter
-        dict_variable_application_data.set_data({ ...dict_variable_application_data.data })
+        applicationData.set_data({ ...applicationData.data })
       }}
     detail_level={InitalizeSelectorDetailNodes(  applicationContext,
-      dict_variable_application_data,
+      applicationData,
       applicationDraw,
       node_function,
       link_function,ComponentUpdater)}
@@ -360,7 +360,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const menu_configuration_nodes = OpenSankeyMenuConfigurationNodes(
     applicationContext,
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     menu_configuration_nodes_attributes,
     GetLinkValue,
@@ -371,7 +371,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const regular_ui = OpenSankeyDefaultModalePreferenceContent(
     applicationContext.t,
-    dict_variable_application_data,
+    applicationData,
     i18next,
     updateMenus,
     node_function
@@ -379,7 +379,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   regular_ui['form'] = [...regular_ui['form'],...additionalMenus.additional_preferences]
   
   const menu_configuration=initializeMenuConfiguration(
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     applicationContext,
     uiElementsRef,
@@ -399,7 +399,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
 
   const formatKeyHandler=(e:KeyboardEvent)=>{
-    initializeKeyHandler(dict_variable_application_data,
+    initializeKeyHandler(applicationData,
       uiElementsRef,
       contextMenu,
       e,
@@ -424,7 +424,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
     // Generic function which draws all graphical elements (nodes, links, label, legend...)
     DrawAll(
       contextMenu,
-      dict_variable_application_data,
+      applicationData,
       uiElementsRef,
       dict_variable_elements_selected,
       applicationContext,
@@ -441,14 +441,14 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
     // Zoom Behavior
     applyZoomEvent(
-      dict_variable_application_data,
+      applicationData,
       applicationDraw.GetSankeyMinWidthAndHeight
     )
 
     if( !windowSankey.SankeyToolsStatic ){
       installEventOnSVG(
         contextMenu,
-        dict_variable_application_data,
+        applicationData,
         uiElementsRef,
         dict_variable_elements_selected,
         link_function,
@@ -469,7 +469,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       <div className='div-Menu' style={{ 'backgroundColor' : 'WhiteSmoke'}} >
         {moduleDialogs(
           applicationContext,
-          dict_variable_application_data,
+          applicationData,
           dict_variable_elements_selected,
           contextMenu,
           applicationDraw,
@@ -487,7 +487,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
           <Menu
             applicationContext={applicationContext}
             dict_variable_elements_selected={dict_variable_elements_selected}
-            dict_variable_application_data={dict_variable_application_data}
+            applicationData={applicationData}
             uiElementsRef={uiElementsRef}
             contextMenu={contextMenu}
             processFunctions={processFunctions}
@@ -499,7 +499,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             external_modal={[
               <React.Fragment key={'modale_style_link'}><SankeyModalStyleLink
                 applicationContext={applicationContext}
-                dict_variable_application_data={dict_variable_application_data}
+                applicationData={applicationData}
                 dict_variable_elements_selected={dict_variable_elements_selected}
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
                 pointer_pos={contextMenu.pointer_pos}
@@ -510,7 +510,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
               </React.Fragment>,
               <React.Fragment key={'modale_style_node'}><SankeyModalStyleNode
                 applicationContext={applicationContext}
-                dict_variable_application_data={dict_variable_application_data}
+                applicationData={applicationData}
                 dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
                 ref_selected_style_node={dict_variable_elements_selected.ref_selected_style_node}
                 ComponentUpdater={ComponentUpdater}
@@ -519,7 +519,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
                 node_attribute_tab={
                   <OpenSankeyConfigurationNodesAttributes
                     applicationContext={applicationContext}
-                    dict_variable_application_data={dict_variable_application_data}
+                    applicationData={applicationData}
                     dict_variable_elements_selected={dict_variable_elements_selected}
                     menu_for_style={true}
                     ref_selected_style_node={dict_variable_elements_selected.ref_selected_style_node}
@@ -548,9 +548,9 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
             additional_nav_item={
               additionalMenus.additional_nav_item
             }
-            convert_data={dict_variable_application_data.convert_data}
+            convert_data={applicationData.convert_data}
             apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
-            DiagramSelector={initializeDiagrammSelector(dict_variable_application_data)}
+            DiagramSelector={initializeDiagrammSelector(applicationData)}
             callback={()=>null}
             ref_alt_key_pressed={ref_alt_key_pressed}
             accept_simple_click={accept_simple_click}
@@ -563,7 +563,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
         <ApplySaveJSONDialog
           t={applicationContext.t}
           dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-          dict_variable_application_data={dict_variable_application_data}
+          applicationData={applicationData}
           dict_variable_elements_selected={dict_variable_elements_selected}
           additional_file_save_json_option={additionalMenus.additional_file_save_json_option}
           ClickSaveDiagram={ClickSaveDiagram}
@@ -571,7 +571,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       </div>
       <ContextMenuNode
         applicationContext = {applicationContext}
-        dict_variable_application_data = {dict_variable_application_data}
+        applicationData = {applicationData}
         dict_variable_elements_selected = {dict_variable_elements_selected}
         contextMenu = {contextMenu}
         dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
@@ -584,7 +584,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       />
       <ContextMenuLink
         applicationContext = {applicationContext}
-        dict_variable_application_data = {dict_variable_application_data}
+        applicationData = {applicationData}
         dict_variable_elements_selected = {dict_variable_elements_selected}
         contextMenu = {contextMenu}
         dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
@@ -594,7 +594,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       />
       <ContextMenuZdd
         applicationContext = {applicationContext}
-        dict_variable_application_data = {dict_variable_application_data}
+        applicationData = {applicationData}
         contextMenu = {contextMenu}
         dict_hook_ref_setter_show_dialog_components = {dict_hook_ref_setter_show_dialog_components}
         node_function={node_function}
@@ -605,7 +605,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       />
       <ContextLegendTags
         applicationContext = {applicationContext}
-        dict_variable_application_data = {dict_variable_application_data}
+        applicationData = {applicationData}
         dict_variable_elements_selected = {dict_variable_elements_selected}
         contextMenu = {contextMenu}
         GetLinkValue = {GetLinkValue}
@@ -614,7 +614,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
       <SankeyDraw
         contextMenu={contextMenu}
-        dict_variable_application_data={dict_variable_application_data}
+        applicationData={applicationData}
         animation={useRef(false)}
         dict_variable_elements_selected={dict_variable_elements_selected}
         agregation={agregation}
@@ -623,7 +623,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       />
     </div>
     {<ToastWaitFunc
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
       applicationContext={applicationContext}
     />}

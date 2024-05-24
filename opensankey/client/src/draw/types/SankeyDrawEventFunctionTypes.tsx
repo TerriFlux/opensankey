@@ -1,6 +1,6 @@
 
 import { MutableRefObject, Dispatch, SetStateAction } from 'react'
-import { dict_variable_application_dataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType, NodeFunctionTypes } from '../../types/Types'
+import { applicationDataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType, NodeFunctionTypes } from '../../types/Types'
 import * as d3 from 'd3'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
@@ -8,7 +8,7 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
 
 // Add or delete visual element to show that the node is selected like a thickker border
 export type EventNodeClickFType = (
-  //dict_variable_application_data:dict_variable_application_dataType,
+  //applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   event:React.MouseEvent<HTMLButtonElement>,
@@ -26,7 +26,7 @@ export type EventNodeContextMenuFType = (
 ) => void
 
 export type EventLinkContextMenuFType = (
-  dict_variable_application_data: dict_variable_application_dataType,
+  applicationData: applicationDataType,
   ev: React.MouseEvent<HTMLButtonElement>,
   l: SankeyLink,
   ref_setter_contextualised_link: MutableRefObject<Dispatch<SetStateAction<SankeyLink | undefined>> | undefined>,
@@ -45,7 +45,7 @@ export type EventZDDContextMenuFType = (
 export type EventOnMouseUpAddNodesAndLinkFType = (
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   uiElementsRef : uiElementsRefType,
   applicationContext:applicationContextType,
@@ -54,7 +54,7 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   node_function:NodeFunctionTypes
 )=> void
 export type EventOnZoneMouseDownFuncType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   token:boolean,
@@ -66,14 +66,14 @@ export type EventOnZoneMouseDownFuncType = (
 ) => void
 
 export type EventOnZoneMouseMoveFuncType = (
-  dict_variable_application_data: dict_variable_application_dataType,
+  applicationData: applicationDataType,
   dict_variable_elements_selected: dict_variable_elements_selectedType,
   evt: MouseEvent,
   start_point: { current: number[]} 
 ) => void
 
 export type EventOnZoneMouseUpFuncType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
@@ -104,16 +104,16 @@ export type SimpleGNodeClickFuncType = (
 
 ) => void
 
-export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, dict_variable_application_data:dict_variable_application_dataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType) => void
+export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, applicationData:applicationDataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType) => void
 
-export type actualizeDrawAreaFrameFType=(_:dict_variable_application_dataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType)=>void
+export type actualizeDrawAreaFrameFType=(_:applicationDataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType)=>void
 
 export type selectOpensankeyElementsInSelectionZoneFType=(
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   ComponentUpdater:ComponentUpdaterType,
   evt:MouseEvent,
   start_point: {current: number[]}
   )=>void
 
-export type applyZoomEventFType=(dict_variable_application_data:dict_variable_application_dataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType)=>void
+export type applyZoomEventFType=(applicationData:applicationDataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType)=>void

@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, TagsCatalog, applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType } from '../../types/Types'
 import {MutableRefObject } from 'react'
 import { setDiagramFuncType } from '../../configmenus/types/SankeyMenuBannerTypes'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
@@ -15,7 +15,7 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
 export type AddAllDropDownFluxFType = (
   t:TFunction,
   fluxTags: TagsCatalog,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   redrawNodeLinkLegend:()=>void,
   recomputeDisplayedElement:()=>void,
   node_function:NodeFunctionTypes,
@@ -82,7 +82,7 @@ export type SankeyMenuFileExportFType=(
   )=> JSX.Element
 
 export type ToastWaitFuncFType={
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   applicationContext:applicationContextType
 }
@@ -90,7 +90,7 @@ export type ToastWaitFuncFType={
 export type Modale_resolution_pngFType=(
   t:TFunction,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   pointer_pos:{current:number[]},
 
 

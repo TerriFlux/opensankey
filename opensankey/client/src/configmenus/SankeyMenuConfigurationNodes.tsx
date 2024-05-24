@@ -26,7 +26,7 @@ import {
   SankeyData,
   SankeyNode,
   applicationContextType,
-  dict_variable_application_dataType,
+  applicationDataType,
   dict_variable_elements_selectedType,
   treeFolderType
 } from '../types/Types'
@@ -54,7 +54,7 @@ import { selected_type } from '../topmenus/SankeyMenuTop'
 /*************************************************************************************************/
 type SankeyEditionTypes = {
   applicationContext:applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes : {[s:string]: JSX.Element},
@@ -66,14 +66,14 @@ type SankeyEditionTypes = {
 /*************************************************************************************************/
 export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   menu_configuration_nodes_attributes,
   GetLinkValue:GetLinkValueFuncType,
   node_function,link_function,
   ComponentUpdater
 ) => {
-  const { data } = dict_variable_application_data
+  const { data } = applicationData
 
   const ui : {[s:string] : JSX.Element}= {
     'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
@@ -92,7 +92,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   if (Object.keys(data.nodeTags).length > 0 && data.accordeonToShow.includes('EN') ) {
     ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
-      dict_variable_application_data={dict_variable_application_data}
+      applicationData={applicationData}
       dict_variable_elements_selected={dict_variable_elements_selected}
       node_function={node_function}
       ComponentUpdater={ComponentUpdater}
@@ -102,7 +102,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 
   ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
     applicationContext={applicationContext}
-    dict_variable_application_data={dict_variable_application_data}
+    applicationData={applicationData}
     dict_variable_elements_selected={dict_variable_elements_selected}
     GetLinkValue={GetLinkValue}
     node_function={node_function}
@@ -117,7 +117,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
 const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {
     applicationContext,
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     multi_selected_nodes,
     menu_configuration_nodes,
@@ -133,7 +133,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   }=ComponentUpdater
   updateComponentMenuConfigNode.current=()=>setForceUpdate(!forceUpdate)
   
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {t}=applicationContext
   const node_visible=NodeVisibleOnsSvg()
 
@@ -320,8 +320,8 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             variant='menuconfigpanel_add_button'
             isDisabled={!applicationContext.has_free_account && Object.keys(data.nodes).length>15}
             onClick={() => {
-              Object.values(dict_variable_application_data.display_nodes).forEach(n=>DeselectVisualyNodes(n))
-              AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
+              Object.values(applicationData.display_nodes).forEach(n=>DeselectVisualyNodes(n))
+              AddNewNode(applicationData,multi_selected_nodes,node_function)
               ComponentUpdater.updateComponenSaveInCache.current(false)
               SelectVisualyNodes(multi_selected_nodes.current[0])
               updateMenuConfigTextNodeTooltip.current.forEach(f=>f())
@@ -343,11 +343,11 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             isDisabled={multi_selected_nodes.current.length == 0}
             onClick={
               () => {
-                deleteSelectedNodeFromData(dict_variable_application_data,dict_variable_elements_selected)
+                deleteSelectedNodeFromData(applicationData,dict_variable_elements_selected)
 
                 node_function.recomputeDisplayedElement()
-                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+                link_function.RedrawLinks(Object.values(applicationData.display_links))
                 updateComponentMenuConfigNode.current()
                 updateComponentMenuConfigLink.current()
                 ComponentUpdater.updateComponenSaveInCache.current(false)

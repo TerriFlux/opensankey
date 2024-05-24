@@ -20,7 +20,7 @@ typeof globalThis & {
 }
 const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   contextMenu,
-  dict_variable_application_data,
+  applicationData,
   animation,
   dict_variable_elements_selected,
   agregation,
@@ -57,10 +57,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     if (animation.current) {
       return
     }
-    [dict_variable_application_data.data.width, dict_variable_application_data.data.height] = GetSankeyMinWidthAndHeight(dict_variable_application_data)
+    [applicationData.data.width, applicationData.data.height] = GetSankeyMinWidthAndHeight(applicationData)
 
     RemoveAnimate()
-    d3.select('#svg').style('background-color',dict_variable_application_data.data.couleur_fond_sankey)
+    d3.select('#svg').style('background-color',applicationData.data.couleur_fond_sankey)
     // Permet d'affecter une class au svg selon le mode
     if (ref_getter_mode_selection.current=='s') {
       d3.select(' .opensankey #svg').attr('class','mode_selection')
@@ -87,9 +87,9 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 
     const svgSankey = d3.select('.opensankey #svg')
 
-    svgSankey.style('width', dict_variable_application_data.data.width + 'px')
+    svgSankey.style('width', applicationData.data.width + 'px')
 
-    svgSankey.style('height', dict_variable_application_data.data.height + 'px');
+    svgSankey.style('height', applicationData.data.height + 'px');
 
 
 
@@ -109,10 +109,10 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
           SvgDragMiddleMouseStart()
         })
         .on('drag', event=> {
-          SvgDragMiddleMouseMove(event,dict_variable_application_data.data)
+          SvgDragMiddleMouseMove(event,applicationData.data)
         })
         .on('end',()=>{
-          dict_variable_application_data.set_data({...dict_variable_application_data.data})
+          applicationData.set_data({...applicationData.data})
         })
 
       )
@@ -120,7 +120,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       if(!window.SankeyToolsStatic && d3.select(evt.target).attr('class')=='mode_selection'){return EventZDDContextMenu(evt,contextMenu)}
     })
 
-    DrawGrid(dict_variable_application_data.data)
+    DrawGrid(applicationData.data)
 
     const shift_top=document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().y+document.getElementsByClassName('MenuNavigation')[0]?.getBoundingClientRect().height
 
@@ -147,13 +147,13 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
     border = '2px solid #d3d3d3'
   }
 
-  const width_to_display=((dict_variable_application_data.data.width) ? dict_variable_application_data.data.width : window.innerWidth*0.975)
+  const width_to_display=((applicationData.data.width) ? applicationData.data.width : window.innerWidth*0.975)
   return (
     <>
       <div className="span12" id='visualization_div' >
         <div id="svg-container" className='opensankey' style={{ 'position': position }}>
           <div className='scroll_zone' >
-            <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': dict_variable_application_data.data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
+            <svg id='svg' transform-origin='0 0' style={{margin:'10px', 'height': applicationData.data.height, 'width': width_to_display, 'border': border,boxShadow:'2px 2px 2px #d3d3d3,-2px -2px 2px #d3d3d3' }} preserveAspectRatio="xMidYMin meet">
               <g className='grid' id='grid'></g>
               <g className='g_links' id='g_links' style={{ 'position': position }} ></g>
               <g className='g_nodes' id='g_nodes' style={{ 'position': position }} ></g>
@@ -165,7 +165,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
       </div>
       <AgregationModal
         agregationRef={agregation}
-        dict_variable_application_data={dict_variable_application_data}
+        applicationData={applicationData}
       />
     </>
   )
@@ -178,7 +178,7 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
 // ctrl + s save a view of the data
 // Delete key allow us to delete selected elments (nodes,links, free label)
 export const keyHandler : keyHandlerFType = (
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   contextMenu,
   e: KeyboardEvent,
@@ -194,7 +194,7 @@ export const keyHandler : keyHandlerFType = (
   node_function,
   applicationDraw
 ) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
   const{updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
   if (
@@ -286,7 +286,7 @@ export const keyHandler : keyHandlerFType = (
       d3.selectAll('#ggg_' + n.idNode).attr('transform', 'translate(' + n.x + ',' + n.y + ')')
     })
     link_to_update=[...new Set(link_to_update)]
-    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    link_function.RedrawLinks(Object.values(applicationData.display_links))
 
   } else if (e.key == 'Escape') {
     ref_setter_mode_selection.current('s')
@@ -308,7 +308,7 @@ export const keyHandler : keyHandlerFType = (
     closeAllMenu()
     AddDrawNodesEvent(
       contextMenu,
-      dict_variable_application_data,
+      applicationData,
       uiElementsRef,
       dict_variable_elements_selected,
       applicationContext,
@@ -334,13 +334,13 @@ export const keyHandler : keyHandlerFType = (
         DeleteLink(data,el)
       })
 
-      deleteSelectedNodeFromData(dict_variable_application_data,dict_variable_elements_selected)
+      deleteSelectedNodeFromData(applicationData,dict_variable_elements_selected)
       multi_selected_nodes.current=[]
       multi_selected_links.current=[]
 
       node_function.recomputeDisplayedElement()
-      node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-      link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+      node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+      link_function.RedrawLinks(Object.values(applicationData.display_links))
       updateComponentMenuConfigNode.current()
       updateComponentMenuConfigLink.current()
 
@@ -361,7 +361,7 @@ export const keyHandler : keyHandlerFType = (
     (document.activeElement as HTMLInputElement).blur()
   }else if(e.key=='s' && e.ctrlKey && !e.shiftKey){
     e.preventDefault()
-    dict_variable_application_data.function_on_wait.current=()=>{
+    applicationData.function_on_wait.current=()=>{
       localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
       localStorage.setItem('last_save', 'true')
       ComponentUpdater.updateComponenSaveInCache.current(true)
@@ -371,8 +371,8 @@ export const keyHandler : keyHandlerFType = (
   }else if((e.key=='s' && e.ctrlKey && e.shiftKey)||(e.key=='S' && e.ctrlKey && e.shiftKey)){
     e.preventDefault()
     ClickSaveDiagram(
-      dict_variable_application_data,
-      dict_variable_application_data.data,
+      applicationData,
+      applicationData.data,
       dict_variable_elements_selected,
       {mode_save:true,mode_visible_element:false}
     )

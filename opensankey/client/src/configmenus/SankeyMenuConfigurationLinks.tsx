@@ -17,7 +17,7 @@ import {
   SankeyLink,
   SankeyNode,
   applicationContextType,
-  dict_variable_application_dataType,
+  applicationDataType,
   dict_variable_elements_selectedType
 } from '../types/Types'
 import {  SankeyMenuConfigurationLinksTypes } from './types/SankeyMenuConfigurationLinksTypes'
@@ -45,7 +45,7 @@ import { faRotate} from '@fortawesome/free-solid-svg-icons'
 import { reorganize_inputLinksId } from '../draw/SankeyDrawLayout'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
   menu_config_link_data,
@@ -55,7 +55,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   node_function,
 ) => {
   const {t}=applicationContext
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {multi_selected_links}=dict_variable_elements_selected
 
   const { fluxTags } = data
@@ -79,7 +79,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   }
   const pre_tag_menu=<MenuConfigurationLinksTags
     applicationContext={applicationContext}
-    dict_variable_application_data={dict_variable_application_data}
+    applicationData={applicationData}
     dict_variable_elements_selected={dict_variable_elements_selected}
     menu_for_modal={false}
     ComponentUpdater={ComponentUpdater}
@@ -96,7 +96,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
 
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
-  { dict_variable_application_data,
+  { applicationData,
     dict_variable_elements_selected,
     applicationContext,
     menu_configuration_links,
@@ -114,7 +114,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
   updateComponentMenuConfigLink.current=()=>setForceUpdate(!forceUpdate)
 
   const {t}=applicationContext
-  const {data,set_data}=dict_variable_application_data
+  const {data,set_data}=applicationData
   const { multi_selected_links,multi_selected_nodes, displayedInputLinkValueSetterRef}=dict_variable_elements_selected
   const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
@@ -199,7 +199,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   tags_selected = new_tags_selected
                   displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
                     ValueSelectedParameter(
-                      dict_variable_application_data,
+                      applicationData,
                       multi_selected_links,
                       new_tags_selected
                     ).value as string
@@ -218,7 +218,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                   tags_selected = (n_t_s)
                   displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
                     ValueSelectedParameter(
-                      dict_variable_application_data,
+                      applicationData,
                       multi_selected_links,
                       n_t_s
                     ).value as string
@@ -226,13 +226,13 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
                 }else{
                   displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
                     ValueSelectedParameter(
-                      dict_variable_application_data,
+                      applicationData,
                       multi_selected_links,
                       new_tags_selected
                     ).value as string))
                 }
               }
-              Object.values(dict_variable_application_data.display_links).forEach(l=>DeselectVisualyLinks(l))
+              Object.values(applicationData.display_links).forEach(l=>DeselectVisualyLinks(l))
               multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
               updateComponentMenuConfigLink.current()
               setForceUpdate(!forceUpdate)
@@ -251,9 +251,9 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
     if (Object.keys(nodes).length < 2) {
       if (Object.keys(nodes).length == 0) {
-        AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
+        AddNewNode(applicationData,multi_selected_nodes,node_function)
       }
-      AddNewNode(dict_variable_application_data,multi_selected_nodes,node_function)
+      AddNewNode(applicationData,multi_selected_nodes,node_function)
     }
     const link: SankeyLink = DefaultLink(data)
     // Méthode pour incrementer idNode
@@ -398,7 +398,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           onClick={
             () => {
               add_new_link()
-              link_function.DrawAllLinks(contextMenu,dict_variable_application_data,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+              link_function.DrawAllLinks(contextMenu,applicationData,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
             }}>
           <FaPlus/>
         </Button>

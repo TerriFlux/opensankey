@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { NodeFunctionTypes, SankeyData, SankeyNode, dict_variable_application_dataType } from '../../types/Types'
+import { NodeFunctionTypes, SankeyData, SankeyNode, applicationDataType } from '../../types/Types'
 
 export type OpenSankeyDrawNodesLabelFType = (
   data:SankeyData, 
@@ -11,14 +11,14 @@ export type OpenSankeyDrawNodesLabelFType = (
 ) => void
 
 export type DrawAllNodesLabelFType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   GetLinkValue:GetLinkValueFuncType,
   t:TFunction,
   node_function:NodeFunctionTypes
 ) => void
 
 export type DrawAddNodesFtype = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   nodes_to_redraw:SankeyNode[],
   GetLinkValue:GetLinkValueFuncType,
   t:TFunction,

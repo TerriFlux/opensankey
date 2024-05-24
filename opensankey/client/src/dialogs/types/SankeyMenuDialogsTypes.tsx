@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, applicationContextType, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, applicationContextType, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType } from '../../types/Types'
 import { ConvertDataFuncType  } from '../../configmenus/types/SankeyConvertTypes'
 import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
@@ -17,7 +17,7 @@ export type OpenSankeyDiagramSelectorFType = (
   DefaultSankeyData: ()=>SankeyData
 ) => JSX.Element
 
-export type initializeDiagrammSelectorFType=(dict_variable_application_data:dict_variable_application_dataType)=>OpenSankeyDiagramSelectorFType
+export type initializeDiagrammSelectorFType=(applicationData:applicationDataType)=>OpenSankeyDiagramSelectorFType
 
 /**
  * Define ApplyLayoutDialog
@@ -27,7 +27,7 @@ export type initializeDiagrammSelectorFType=(dict_variable_application_data:dict
 export type ApplyLayoutDialogTypes = {
   t:TFunction,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   applicationDraw:applicationDrawType,
   convert_data:ConvertDataFuncType,
   diagramSelector: OpenSankeyDiagramSelectorFType,
@@ -38,7 +38,7 @@ export type ApplyLayoutDialogTypes = {
 
 export type popoverSelectorDetailNodesFType={
   applicationContext:applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   applicationDraw:applicationDrawType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes

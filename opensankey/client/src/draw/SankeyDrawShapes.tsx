@@ -528,14 +528,14 @@ export const bezier_link_classic_recycling = (
   }
 }
 export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
-  dict_variable_application_data,
+  applicationData,
   n: SankeyNode,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType,
   LinkSabotColor: LinkColorFuncType
 ) => {
-  const {data,display_nodes}=dict_variable_application_data
+  const {data,display_nodes}=applicationData
   let cum_v_left = 0
   let cum_h_top = 0
   let cum_v_right = 0
@@ -555,7 +555,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
   const res = ComputeTotalOffsets(
     inv_scale,
     n,
-    dict_variable_application_data,
+    applicationData,
     TestLinkValue,
     undefined,
     GetLinkValue
@@ -598,11 +598,11 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
       continue
     }
 
-    let link_value = TestLinkValue(dict_variable_application_data, l, GetLinkValue)
+    let link_value = TestLinkValue(applicationData, l, GetLinkValue)
     if (link_value === undefined) {
       continue
     }
-    link_value = (+link_value == 0 || (+link_value >= inv_scale(dict_variable_application_data.min_link_thickness))) ? +link_value : inv_scale(dict_variable_application_data.min_link_thickness)
+    link_value = (+link_value == 0 || (+link_value >= inv_scale(applicationData.min_link_thickness))) ? +link_value : inv_scale(applicationData.min_link_thickness)
     const extension = GetLinkValue(data, n.outputLinksId[i]).extension
     if (extension) {
       const display_free_as_dashed = data.show_structure !== 'free_interval' && data.show_structure !== 'free_value'
@@ -611,11 +611,11 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
         const link_value_is_free = (extension?.free_mini !== undefined)
         if (link_value_is_free) {
           // Link value is free should be displayed dashed without text
-          link_value = inv_scale(dict_variable_application_data.min_link_thickness)
+          link_value = inv_scale(applicationData.min_link_thickness)
         }
       }
       if (extension.display_thin) {
-        link_value = inv_scale(dict_variable_application_data.min_link_thickness)
+        link_value = inv_scale(applicationData.min_link_thickness)
       }
     }
 
@@ -649,7 +649,7 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
     if (!data.display_style.filter || link_value >= data.display_style.filter) {
       //selection
       d3.select('#gg_' + l.idLink + ' .start_corner').remove() // supression dans le cas du drag notamment
-      SetNodeHeight(n, dict_variable_application_data,scale, inv_scale, GetLinkValue)
+      SetNodeHeight(n, applicationData,scale, inv_scale, GetLinkValue)
       d3.select('#gg_' + l.idLink)
         .append('path')
         .attr('class', 'start_corner')
@@ -709,23 +709,23 @@ export const DrawLinkStartSabot: DrawLinkStartSabotFType = (
 export const ComputeEndPoints: ComputeEndPointsFType = (
   source_node: SankeyNode,
   target_node: SankeyNode,
-  dict_variable_application_data,
+  applicationData,
   link: SankeyLink,
   scale: (t: number) => number,
   inv_scale: (t: number) => number,
   GetLinkValue: GetLinkValueFuncType
 
 ) => {
-  const {data,display_links}=dict_variable_application_data
+  const {data,display_links}=applicationData
   if (!display_links) {
     return [0, 0, 0, 0]
   }
-  let link_value = TestLinkValue(dict_variable_application_data, link, GetLinkValue)
+  let link_value = TestLinkValue(applicationData, link, GetLinkValue)
   if (link_value === undefined) {
     return [0, 0, 0, 0]
   }
-  //inv_scale(dict_variable_application_data.min_link_thickness) = epaisseur minimum d'un flux (5px)
-  link_value = ((link_value!=='' && link_value == 0) || (+link_value >= inv_scale(dict_variable_application_data.min_link_thickness))) ? +link_value : inv_scale(dict_variable_application_data.min_link_thickness)
+  //inv_scale(applicationData.min_link_thickness) = epaisseur minimum d'un flux (5px)
+  link_value = ((link_value!=='' && link_value == 0) || (+link_value >= inv_scale(applicationData.min_link_thickness))) ? +link_value : inv_scale(applicationData.min_link_thickness)
 
   const theLinkValue = GetLinkValue(data, link.idLink)
   let is_structure = false
@@ -747,12 +747,12 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
     }
   }
   if (is_structure) {
-    link_value = inv_scale(dict_variable_application_data.min_link_thickness)
+    link_value = inv_scale(applicationData.min_link_thickness)
   }
 
-  let res = ComputeTotalOffsets(inv_scale, source_node, dict_variable_application_data,TestLinkValue, undefined, GetLinkValue)
+  let res = ComputeTotalOffsets(inv_scale, source_node, applicationData,TestLinkValue, undefined, GetLinkValue)
   const [s_total_offset_height_left, s_total_offset_height_right, s_total_offset_width_top, s_total_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale, target_node, dict_variable_application_data,TestLinkValue, undefined, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, target_node, applicationData,TestLinkValue, undefined, GetLinkValue)
   const [t_total_offset_height_left, t_total_offset_height_right, t_total_offset_width_top, t_total_offset_width_bottom] = res
   let node_size_s_width = inv_scale((ReturnValueNode(data, source_node, 'node_width') as number))
   let node_size_t_width = inv_scale(ReturnValueNode(data, target_node, 'node_width') as number)
@@ -774,9 +774,9 @@ export const ComputeEndPoints: ComputeEndPointsFType = (
       inv_scale((ReturnValueNode(data, target_node, 'node_height') as number)), t_total_offset_height_left, t_total_offset_height_right
     )
   }
-  res = ComputeTotalOffsets(inv_scale, source_node, dict_variable_application_data,TestLinkValue, link, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, source_node, applicationData,TestLinkValue, link, GetLinkValue)
   const [s_offset_height_left, s_offset_height_right, s_offset_width_top, s_offset_width_bottom] = res
-  res = ComputeTotalOffsets(inv_scale, target_node, dict_variable_application_data,TestLinkValue, link, GetLinkValue)
+  res = ComputeTotalOffsets(inv_scale, target_node, applicationData,TestLinkValue, link, GetLinkValue)
   const [t_offset_height_left, t_offset_height_right, t_offset_width_top, t_offset_width_bottom] = res
   const delta_s_width_bottom = Math.max(0, (node_size_s_width - s_total_offset_width_bottom) / 2)
   const delta_s_width_top = Math.max(0, (node_size_s_width - s_total_offset_width_top) / 2)

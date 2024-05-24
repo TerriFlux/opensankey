@@ -1,11 +1,11 @@
 import { TFunction, i18n } from 'i18next'
 import { 
-  NodeFunctionTypes, SankeyData, dict_hook_ref_setter_show_dialog_componentsType, dict_variable_application_dataType 
+  NodeFunctionTypes, SankeyData, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType 
 } from '../../types/Types'
 
 export type OpenSankeyDefaultModalePreferenceContentFType=(
   t:TFunction,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   trad:i18n,
   updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>],
   node_function:NodeFunctionTypes
