@@ -8,7 +8,7 @@ import SankeyListIcons from './icons/lib_of_icons.json'
 
 export type ModalSelectionIconsType={
   t:TFunction,
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   node_function:PlusNodeFuntionType
@@ -18,13 +18,13 @@ type KeysOfIcon = keyof typeof SankeyListIcons
 
 export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
   t,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
   node_function
 }
 )=>{
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {multi_selected_nodes }=dict_variable_elements_selected
   const imported_icon=localStorage.getItem('icon_imported')
   const init_imported_svg:{[s:string]:{path:string,Vb:string}}=imported_icon != null && imported_icon!=='' ? JSON.parse(imported_icon) : {}

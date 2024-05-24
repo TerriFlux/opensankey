@@ -559,7 +559,7 @@ const calcPath = (
 }
 
 const node_mouse_click=(
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   uiElementsRef:uiElementsRefType,
   animating:MutableRefObject<boolean>,
@@ -569,7 +569,7 @@ const node_mouse_click=(
   GetLinkValue:GetLinkValueFuncType,
   ComponentUpdater:ComponentUpdaterType,
 )=>{
-  const {data,display_links,display_nodes}=dict_variable_application_data
+  const {data,display_links,display_nodes}=applicationData
 
   const sankeyTooltip=d3.select('.sankey-tooltip')
   const data_plus =data as SankeyPlusData
@@ -721,7 +721,7 @@ const direct_son_as_distant_sibling=(
 }
 
 export const PlusNodeClickEvent : PlusNodeClickEventFType =(
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   uiElementsRef,
   animating,
@@ -734,7 +734,7 @@ export const PlusNodeClickEvent : PlusNodeClickEventFType =(
     .on('click', (event, d) => {
       // Apply some style change to element before starting the animation
       node_mouse_click(
-        dict_variable_application_data,dict_variable_elements_selected,uiElementsRef,
+        applicationData,dict_variable_elements_selected,uiElementsRef,
         animating,
         event,
         (d as SankeyPlusNode),
@@ -911,12 +911,12 @@ export const OpposingDragElementsPlus : OpposingDragElementsPlusFType = (
   out_of_zone_item:(SankeyNode|SankeyPlusLabel)[],
   event:{ dx: number; dy: number,x:number,y:number },
   dragged:SankeyNode|SankeyPlusLabel,
-  dict_variable_application_data,
+  applicationData,
   multi_selected_nodes:{current:SankeyNode[]},
   multi_selected_label:{current:SankeyPlusLabel[]},
 )=>{
-  const {data}=dict_variable_application_data
-  OpposingDragElements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,dict_variable_application_data,multi_selected_nodes)
+  const {data}=applicationData
+  OpposingDragElements(out_of_zone_item as SankeyNode[],event,dragged as SankeyNode,applicationData,multi_selected_nodes)
 
   if((out_of_zone_item[0].x<=0 && event.x<0) || (out_of_zone_item[0].x<=0 && event.dx<0)){
     // Shift not selected zdt to opposing direction
@@ -1025,7 +1025,7 @@ export const PlusNodeDragEvent : PlusNodeDragEventFType =(
 }
 
 const SankeyPlusDragGNodeEvent = (
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   applicationContext:PlusApplicationContextType,
   alt_key_pressed:boolean,
@@ -1047,14 +1047,14 @@ const SankeyPlusDragGNodeEvent = (
       d3.selectAll('.node_shape').nodes().forEach(element => {
         node_visible.push(d3.select(element).attr('id'))
       })
-      hideLinkOnDragElement(dict_variable_application_data)
+      hideLinkOnDragElement(applicationData)
     })
     .on('drag', function (event,node) {
       if(ref_getter_mode_selection.current==='s'){
         if(d3.select(event.subject.sourceEvent.target).node().tagName==='tspan' && alt_key_pressed && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)){
           drag_node_text(node, event)
         }else {
-          PlusDragNodes(dict_variable_application_data,
+          PlusDragNodes(applicationData,
             dict_variable_elements_selected,applicationContext,
             node,
             event,
@@ -1067,15 +1067,15 @@ const SankeyPlusDragGNodeEvent = (
     })
     .on('end',()=>{
       if(d3.select(document.activeElement).attr('class')!=='input_label'){
-        node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-        link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+        node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+        link_function.RedrawLinks(Object.values(applicationData.display_links))
       }
       applicationDraw.resizeCanvas()
     })
 }
 
 const PlusDragNodes = (
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   applicationContext:PlusApplicationContextType,
   node:SankeyPlusNode,
@@ -1090,7 +1090,7 @@ const PlusDragNodes = (
   ComponentUpdater:ComponentUpdaterType
 ) => {
   RemoveAnimate()
-  const {data,}=dict_variable_application_data
+  const {data,}=applicationData
   const {multi_selected_nodes,multi_selected_label}=dict_variable_elements_selected
 
   // Cherche si des element seront hors zone si on les drag
@@ -1099,15 +1099,15 @@ const PlusDragNodes = (
 
   // Pousse les element non sélectionnés dans la direction opposé
   if(out_of_zone_item.length>0){
-    OpposingDragElementsPlus(out_of_zone_item,event,node,dict_variable_application_data,multi_selected_nodes,multi_selected_label)
+    OpposingDragElementsPlus(out_of_zone_item,event,node,applicationData,multi_selected_nodes,multi_selected_label)
   }
   PlusDragElements(
-    dict_variable_application_data,dict_variable_elements_selected,applicationContext,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
+    applicationData,dict_variable_elements_selected,applicationContext,node,event,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
   )
 }
 
 export const PlusDragElements : PlusDragElementsFType = (
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   applicationContext,
   dragged:SankeyPlusNode|SankeyPlusLabel,
@@ -1124,7 +1124,7 @@ export const PlusDragElements : PlusDragElementsFType = (
   const {multi_selected_label}=dict_variable_elements_selected
 
   DragElements(
-    dragged as SankeyNode,dict_variable_application_data,dict_variable_elements_selected,applicationContext, event,LinkText,GetSankeyMinWidthAndHeight,
+    dragged as SankeyNode,applicationData,dict_variable_elements_selected,applicationContext, event,LinkText,GetSankeyMinWidthAndHeight,
     GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
   )
 
@@ -1136,12 +1136,12 @@ export const PlusDragElements : PlusDragElementsFType = (
     l.y = (new_pos_y>0)?new_pos_y:0
 
     const pos_zdt=sizeOfZdtInDrawArea(l)
-    const margin=dict_variable_application_data.data.grid_square_size*2
-    if((pos_zdt[0]+margin)>dict_variable_application_data.data.width){
+    const margin=applicationData.data.grid_square_size*2
+    if((pos_zdt[0]+margin)>applicationData.data.width){
       const svgSankey = d3.select('.opensankey #svg')
       svgSankey.style('width', (pos_zdt[0]+margin) + 'px')
     }
-    if((pos_zdt[1]+margin)>dict_variable_application_data.data.height){
+    if((pos_zdt[1]+margin)>applicationData.data.height){
       const svgSankey = d3.select('.opensankey #svg')
       svgSankey.style('height', (pos_zdt[1]+margin) + 'px')
     }

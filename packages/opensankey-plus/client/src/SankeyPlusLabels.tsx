@@ -248,7 +248,7 @@ export const eventLabelClick : eventLabelClickFType =(
 // To be dragged you need to select the free label
 
 const dragLabelEvent = (
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   applicationContext:PlusApplicationContextType,
   d:SankeyPlusLabel,
@@ -261,7 +261,7 @@ const dragLabelEvent = (
   resizeCanvas:()=>void
 )=>{
   const { LinkText,GetLinkValue,DrawArrows,RedrawLinks}=link_function
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {multi_selected_label,multi_selected_nodes,ref_getter_mode_selection}=dict_variable_elements_selected
   const {updateComponenSaveInCache}= ComponentUpdater
   const node_visible=[] as string[]
@@ -281,7 +281,7 @@ const dragLabelEvent = (
           .append('rect').attr('x',pos[0]).attr('y',pos[1]).attr('width',2).attr('height',2).attr('fill','none').attr('stroke','black').attr('stroke-width','2px').attr('stroke-dasharray','5,5')
       }
       if(!(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0)){
-        hideLinkOnDragElement(dict_variable_application_data)
+        hideLinkOnDragElement(applicationData)
       }
     })
     .subject(Object).on('drag', function (event) {
@@ -305,10 +305,10 @@ const dragLabelEvent = (
         const out_of_zone_item=PlusReturnOutOfBoundElements(d,data,event,multi_selected_nodes,node_visible)
         // Pousse les element non sélectionnés dans la direction opposé
         if(out_of_zone_item.length>0){
-          OpposingDragElementsPlus(out_of_zone_item,event,d,dict_variable_application_data,multi_selected_nodes,multi_selected_label)
+          OpposingDragElementsPlus(out_of_zone_item,event,d,applicationData,multi_selected_nodes,multi_selected_label)
         }
         PlusDragElements(
-          dict_variable_application_data,
+          applicationData,
           dict_variable_elements_selected,
           applicationContext,
           d,event,LinkText,
@@ -319,10 +319,10 @@ const dragLabelEvent = (
     .on('end',(evt)=>{
       if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
         zone_selection_label(data_plus,multi_selected_label,evt,ComponentUpdater)
-        selectOpensankeyElementsInSelectionZone(dict_variable_application_data,dict_variable_elements_selected,ComponentUpdater,evt,start_point)
+        selectOpensankeyElementsInSelectionZone(applicationData,dict_variable_elements_selected,ComponentUpdater,evt,start_point)
 
       }else if (multi_selected_label.current.length>0){
-        RedrawLinks(Object.values(dict_variable_application_data.display_links))
+        RedrawLinks(Object.values(applicationData.display_links))
         resizeCanvas()
         updateComponenSaveInCache.current(false)
       }
@@ -333,11 +333,11 @@ const dragLabelEvent = (
 
 
 export const sankey_plus_min_width_and_height : sankey_plus_min_width_and_heightFType = (
-  dict_variable_application_data
+  applicationData
 ) => {
 
-  const {data}=dict_variable_application_data
-  const [width,height]=GetSankeyMinWidthAndHeight(dict_variable_application_data)
+  const {data}=applicationData
+  const [width,height]=GetSankeyMinWidthAndHeight(applicationData)
   let height_plus=0
   let width_plus=0
   const data_plus=data as SankeyPlusData
@@ -396,7 +396,7 @@ export const zone_selection_label : zone_selection_labelFType = (
 }
 
 const draw_text_zone_handles=(
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   zdt:SankeyPlusLabel,
   multi_selected_label:{current:SankeyPlusLabel[]},
   applicationDraw:PlusApplicationDrawType,
@@ -405,13 +405,13 @@ const draw_text_zone_handles=(
 )=>{
   d3.select('.opensankey #g_label_handles').append('g').attr('id','gg_zdt_handles_'+zdt.idLabel).attr('class','gg_zdt_handles').classed('selected',multi_selected_label.current.includes(zdt));
   ['top','bottom','left','right'].forEach(pos=>{
-    add_zdt_handle(zdt,pos,dict_variable_application_data,applicationDraw,ComponentUpdater,link_function)
+    add_zdt_handle(zdt,pos,applicationData,applicationDraw,ComponentUpdater,link_function)
   })
 }
 const size_zdt_handle=10
 const add_zdt_handle=(
   zdt:SankeyPlusLabel,pos:string,
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   applicationDraw:PlusApplicationDrawType,
   ComponentUpdater:PlusComponentUpdaterType,
   link_function:LinkFunctionTypes
@@ -435,7 +435,7 @@ const add_zdt_handle=(
     .attr('fill','black')
     .style('cursor',(pos==='top'||pos==='bottom')?'ns-resize':'ew-resize')
     .call(drag_text_zone_hande(
-      zdt,pos,dict_variable_application_data,applicationDraw,ComponentUpdater,link_function
+      zdt,pos,applicationData,applicationDraw,ComponentUpdater,link_function
     ))
   // Position the handle
   switch (pos){
@@ -468,19 +468,19 @@ const add_zdt_handle=(
 const drag_text_zone_hande=(
   zdt:SankeyPlusLabel,
   pos:string,
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   applicationDraw:PlusApplicationDrawType,
   ComponentUpdater:PlusComponentUpdaterType,
   link_function:LinkFunctionTypes
 )=>{
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const g_zdt_h=d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_'+pos)
   const text_zone_shape=d3.select('#'+zdt.idLabel+' rect')
   const g_text_zone=d3.select('#'+zdt.idLabel)
   return d3.drag<SVGRectElement, unknown, HTMLElement>()
     .subject(Object)
     .on('start',()=>{
-      hideLinkOnDragElement(dict_variable_application_data)
+      hideLinkOnDragElement(applicationData)
     })
     .on('drag', function (event) {
       // The handles change the width and height of the text_zone
@@ -498,7 +498,7 @@ const drag_text_zone_hande=(
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('y',zdt.y+ zdt.label_height/2-(size_zdt_handle/2))
 
         if(zdt.y<0){
-          OpposingDragElementsPlus([zdt],event,zdt,dict_variable_application_data,{current:[]},{current:[]})
+          OpposingDragElementsPlus([zdt],event,zdt,applicationData,{current:[]},{current:[]})
           d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('y',zdt.y+ zdt.label_height)
 
         }
@@ -531,7 +531,7 @@ const drag_text_zone_hande=(
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_top').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
         d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_bottom').attr('x',zdt.x+zdt.label_width/2-(size_zdt_handle/2))
         if(zdt.x<0){
-          OpposingDragElementsPlus([zdt],event,zdt,dict_variable_application_data,{current:[]},{current:[]})
+          OpposingDragElementsPlus([zdt],event,zdt,applicationData,{current:[]},{current:[]})
           d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel+' .zdt_handle_right').attr('x',zdt.x+ zdt.label_width)
         }
         break
@@ -556,7 +556,7 @@ const drag_text_zone_hande=(
     .on('end',()=>{
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
       ComponentUpdater.updateComponenSaveInCache.current(false)
-      link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+      link_function.RedrawLinks(Object.values(applicationData.display_links))
       applicationDraw.reDrawPlusLabels([zdt])
     })
 

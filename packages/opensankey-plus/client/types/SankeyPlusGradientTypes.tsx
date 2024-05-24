@@ -27,7 +27,7 @@ export type dragNodeRedrawGradientFType=(
 
 export type SankeyPlusDrawArrowsFType = (
   n: SankeyNode,
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,

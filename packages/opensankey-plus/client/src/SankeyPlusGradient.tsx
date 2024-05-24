@@ -533,15 +533,15 @@ export const dragNodeRedrawGradient : dragNodeRedrawGradientFType =(
 
 export const SankeyPlusDrawArrows : DrawArrowsType = (
   n: SankeyNode,
-  dict_variable_application_data,
+  applicationData,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType,
   display_style: display_styleType,
 
 ) => {
-  const {data}=dict_variable_application_data
-  DrawArrows(n,dict_variable_application_data,scale,inv_scale,GetLinkValue,display_style)
+  const {data}=applicationData
+  DrawArrows(n,applicationData,scale,inv_scale,GetLinkValue,display_style)
   for (const id_link of n.inputLinksId) {
     const l_arrow=ReturnValueLink(data,data.links[id_link],'arrow')
     const l_grad=PlusReturnValueLink(data as SankeyPlusData,data.links[id_link] as SankeyPlusLink,'gradient')

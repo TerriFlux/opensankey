@@ -242,7 +242,7 @@ export const RecomputeViews : RecomputeViewsFType = (
 export const OSPKeyHandler : OSPKeyHandlerFType = (
   applicationContext,
   e: KeyboardEvent,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
   reDrawPlusLabels,
@@ -250,9 +250,9 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
 ) => {
   const {t,has_open_sankey_plus}=applicationContext
   const {show_toast_new_view}=dict_hook_ref_setter_show_dialog_components
-  const {data,set_data,master_data,set_master_data,view,set_view,set_view_not_saved}=dict_variable_application_data
+  const {data,set_data,master_data,set_master_data,view,set_view,set_view_not_saved}=applicationData
   const {multi_selected_label}=dict_variable_elements_selected
-  const is_master=dict_variable_application_data.view==='none'
+  const is_master=applicationData.view==='none'
   if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
     multi_selected_label.current=Object.values(data.labels)
@@ -318,7 +318,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
   if(e.key==='s' && e.ctrlKey && !e.shiftKey){
     e.preventDefault()
 
-    dict_variable_application_data.function_on_wait.current=()=>{
+    applicationData.function_on_wait.current=()=>{
       ComponentUpdater.updateComponenSaveInCache.current(false)
 
       if(view!=='none'){
@@ -545,13 +545,13 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
 }
 
 export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   t,
   set_view_not_saved,
   connected
 })=>{
-  const {data,set_data,master_data,set_master_data,view,set_view}=dict_variable_application_data
+  const {data,set_data,master_data,set_master_data,view,set_view}=applicationData
   const {multi_selected_nodes,multi_selected_links,multi_selected_label}= dict_variable_elements_selected
 
   let vname = ''
@@ -638,14 +638,14 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
   return connected && s_select_or_edit==='edit'?editeur_name:selecteur
 }
 export const viewsAccordion : viewsAccordionFType = (
-  dict_variable_application_data,
+  applicationData,
   t:TFunction,
   is_activated:boolean,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
   DefaultSankeyData: ()=>SankeyPlusData,
   view_selector
 ) => {
-  const {data,set_data,master_data,set_master_data,view,set_view}= dict_variable_application_data
+  const {data,set_data,master_data,set_master_data,view,set_view}= applicationData
   const _load_json = useRef<HTMLInputElement>(null)
 
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
@@ -894,13 +894,13 @@ declare const window: Window &
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType> =({
-  dict_variable_application_data,
+  applicationData,
   applicationContext,
   dict_hook_ref_setter_show_dialog_components,
   convert_data,
   view_selector
 })=>{
-  const {data,set_data,master_data,set_master_data,get_default_data,view,set_view}=dict_variable_application_data
+  const {data,set_data,master_data,set_master_data,get_default_data,view,set_view}=applicationData
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const m_d=master_data?master_data:data
   const [show_modify_name_view,set_show_modify_name_view]=useState(false)
@@ -1292,9 +1292,9 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
   view_not_saved:string,
   set_view_not_saved:(s:string)=>void,
   t:TFunction,
-  dict_variable_application_data
+  applicationData
 )=>{
-  const {data,set_data,view,master_data,set_master_data}=dict_variable_application_data
+  const {data,set_data,view,master_data,set_master_data}=applicationData
   return (
     <Modal
       size="lg"
@@ -1390,15 +1390,15 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 
 export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   dict_hook_ref_setter_show_dialog_components,
-  dict_variable_application_data,
+  applicationData,
   t:TFunction
 )=>{
-  const current_view=dict_variable_application_data.master_data?.view.filter(v=>v.id===dict_variable_application_data.master_data!.current_view)[0]??{} as ViewType
-  const {data,set_data,master_data,set_master_data}=dict_variable_application_data as SankeyPlusApplicationDataType
+  const current_view=applicationData.master_data?.view.filter(v=>v.id===applicationData.master_data!.current_view)[0]??{} as ViewType
+  const {data,set_data,master_data,set_master_data}=applicationData as SankeyPlusApplicationDataType
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const [show_modal,set_show_modal]=useState(false)
   ref_setter_show_modal_transparent_view_attr.current=set_show_modal
-  if(master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && dict_variable_application_data.data!==undefined){
+  if(master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && applicationData.data!==undefined){
 
     return  <Modal size='xl' isOpen={show_modal} onClose={()=>{
       RecomputeViews(data,data,set_data as (d: SankeyPlusData | undefined) => void)

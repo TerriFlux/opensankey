@@ -86,13 +86,13 @@ export const SankeyPlusMenuPreferenceLabels : FunctionComponent<SankeyPlusMenuPr
 export interface selected_type  {'label':string;'value':string}
 
 export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlusMenuConfigurationFreeLabelsFType> = ({
-  dict_variable_application_data,
+  applicationData,
   applicationContext,
   dict_variable_elements_selected,
   ComponentUpdater,
   reDrawPlusLabels
 }) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {multi_selected_label}=dict_variable_elements_selected
   const {t,has_open_sankey_plus}=applicationContext 
   const r_editor_ZDT= useRef<ReactQuill>() as {current:ReactQuill}
@@ -664,13 +664,13 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
 export const context_zdt : context_zdtFType =(
   contextMenu,
   t:TFunction,
-  dict_variable_application_data,
+  applicationData,
   dict_hook_ref_setter_show_dialog_components,
   dict_variable_elements_selected,
   ComponentUpdater,
   reDrawPlusLabels
 )=>{
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {pointer_pos,contextualised_zdt}=(contextMenu as SankeyPlusContextMenuType)
   const {multi_selected_label}=dict_variable_elements_selected
   const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<SankeyPlusLabel>()

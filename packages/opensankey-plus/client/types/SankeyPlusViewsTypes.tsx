@@ -58,7 +58,7 @@ export type RecomputeViewsFType = (
 export type OSPKeyHandlerFType = (
   applicationContext:PlusApplicationContextType,
   e: KeyboardEvent,
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   reDrawPlusLabels:reDrawPlusLabelsFType,
@@ -66,7 +66,7 @@ export type OSPKeyHandlerFType = (
 ) => void
 
 export type SelecteurViewFType = {
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   t:TFunction,
   set_view_not_saved:(s:string)=>void,
@@ -74,7 +74,7 @@ export type SelecteurViewFType = {
 }
 
 export type viewsAccordionFType = (
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   t:TFunction,
   is_activated:boolean,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
@@ -100,7 +100,7 @@ export type CheckCurrentViewSavedFType = (
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
 export type SankeyPlusBannerViewFType = {
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   applicationContext:PlusApplicationContextType,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
@@ -117,12 +117,12 @@ export type SankeyPlusMenuPreferenceViewFType = (
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
 export type modal_view_not_savedFType = (view_not_saved:string,set_view_not_saved:(s:string)=>void,t:TFunction,
-  dict_variable_application_data:SankeyPlusApplicationDataType
+  applicationData:SankeyPlusApplicationDataType
 )=> JSX.Element
 
 export type modal_transparent_view_attrFType = (
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   t:TFunction
 )=> JSX.Element
 

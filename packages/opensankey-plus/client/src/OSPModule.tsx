@@ -217,7 +217,7 @@ export const OSPcloseAllMenu = closeAllMenu
 
 // Modify Application Draw
 export const OSPInitializeApplicationDraw : OSPInitializeApplicationDrawType= (  
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   applicationContext,
@@ -231,7 +231,7 @@ export const OSPInitializeApplicationDraw : OSPInitializeApplicationDrawType= (
   const _ = {
     reDrawPlusLabels : (object_to_update:SankeyPlusLabel[])=>{
       PlusDrawLabels(
-          dict_variable_application_data as SankeyPlusApplicationDataType,
+          applicationData as SankeyPlusApplicationDataType,
           dict_variable_elements_selected as PlusElementsSelectedType,
           uiElementsRef as PlusUiElementsRefType,
           contextMenu as SankeyPlusContextMenuType,
@@ -259,7 +259,7 @@ export const OSPInitializeApplicationDraw : OSPInitializeApplicationDrawType= (
     },
     all_element_UpdateLayout : [...os_all_element_to_transform,...plus_all_element_to_transform],
     reAdjustSankey:()=>(()=>{
-      AdjustSankeyZone(dict_variable_application_data,sankey_plus_min_width_and_height)
+      AdjustSankeyZone(applicationData,sankey_plus_min_width_and_height)
     })()
   }
   return _ as PlusApplicationDrawVarType
@@ -274,15 +274,15 @@ export const OSPInitializeComponentUpdater : OSPInitializeComponentUpdaterType  
 }
 
 export const OSPInitializeReinitialization : OSPInitializeReinitializationType = (
-  dict_variable_application_data ,
+  applicationData ,
   dict_variable_elements_selected 
 ) => ()=> {
   const recast_selected_dict=dict_variable_elements_selected as PlusElementsSelectedType
   recast_selected_dict.multi_selected_label.current = []
   localStorage.removeItem('icon_imported')
   sessionStorage.setItem('dismiss_warning_sankey_plus','0');
-  (dict_variable_application_data as SankeyPlusApplicationDataType).set_master_data(undefined);
-  (dict_variable_application_data as SankeyPlusApplicationDataType).set_view('none')
+  (applicationData as SankeyPlusApplicationDataType).set_master_data(undefined);
+  (applicationData as SankeyPlusApplicationDataType).set_view('none')
 }
 
 // Modify context menu
@@ -320,7 +320,7 @@ export const OSPInitializeLinkFunctions : OSPInitializeLinkFuntionType = () => {
 }
 
 export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (  
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   applicationContext,
@@ -336,7 +336,7 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
   const animating = useRef(false) //TODO
   const reDrawIllustration = (nodes_to_update:SankeyPlusNode[])=>{
     SankeyPlusDrawNodesIllustration(
-      dict_variable_application_data.data as SankeyPlusData,
+      applicationData.data as SankeyPlusData,
       nodes_to_update,
       dict_variable_elements_selected as PlusElementsSelectedType,
       NodeTooltipsContent,
@@ -348,7 +348,7 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
     reDrawIllustration : reDrawIllustration,
     reDrawPlusNodeEvent : (nodes_to_update:SankeyPlusNode[])=>{
       PlusNodeClickEvent(
-        dict_variable_application_data as SankeyPlusApplicationDataType,
+        applicationData as SankeyPlusApplicationDataType,
         dict_variable_elements_selected as PlusElementsSelectedType,
         uiElementsRef,
         animating,
@@ -360,14 +360,14 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
     } 
   } as unknown as NodeFunctionTypes
   _.RedrawNodes=(nodes_to_update:SankeyNode[])=>{
-    updateDrawNodeShape(dict_variable_application_data,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
-    RedrawNodesLabel(dict_variable_application_data,nodes_to_update,link_function.GetLinkValue,applicationContext.t,_)
+    updateDrawNodeShape(applicationData,link_function,dict_variable_elements_selected.multi_selected_nodes,nodes_to_update)
+    RedrawNodesLabel(applicationData,nodes_to_update,link_function.GetLinkValue,applicationContext.t,_)
     reDrawIllustration(nodes_to_update as SankeyPlusNode[])
     return null
   }
   _.DrawAllNodes  = (
     contextMenu,
-    dict_variable_application_data,
+    applicationData,
     uiElementsRef,
     dict_variable_elements_selected,
     applicationContext,
@@ -383,7 +383,7 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
   ) => {
     DrawAllNodes(
       contextMenu,
-      dict_variable_application_data,
+      applicationData,
       uiElementsRef,
       dict_variable_elements_selected,
       applicationContext,
@@ -397,7 +397,7 @@ export const OSPInitializeNodeFunctions : OSPInitializeNodeFunctionsType = (
       GetSankeyMinWidthAndHeight,
       resizeCanvas      
     )
-    reDrawIllustration(Object.values(dict_variable_application_data.display_nodes) as SankeyPlusNode[])    
+    reDrawIllustration(Object.values(applicationData.display_nodes) as SankeyPlusNode[])    
   }
   return _ as PlusNodeFuntionType
 }
@@ -408,7 +408,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   additionalMenus,
   updateMenus,
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   applicationDraw,
   ComponentUpdater,
   dict_variable_elements_selected,
@@ -418,10 +418,10 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   link_function
 ) => {
   const PlusApplicationContext=applicationContext as PlusApplicationContextType
-  const plus_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
+  const plus_dict_app_data=applicationData as SankeyPlusApplicationDataType
 
   (uiElementsRef as PlusUiElementsRefType).ViewSelector.current=<SelecteurView
-    dict_variable_application_data={plus_dict_app_data}
+    applicationData={plus_dict_app_data}
     dict_variable_elements_selected={dict_variable_elements_selected as PlusElementsSelectedType}
     t={applicationContext.t}
     set_view_not_saved={plus_dict_app_data.set_view_not_saved}
@@ -433,16 +433,16 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   // Page settings
   additionalMenus.extra_background_element = <ImportImageAsSvgBg
     t={applicationContext.t}
-    data={dict_variable_application_data.data as SankeyPlusData}
-    set_data={dict_variable_application_data.set_data as (_:SankeyPlusData)=>void}
+    data={applicationData.data as SankeyPlusData}
+    set_data={applicationData.set_data as (_:SankeyPlusData)=>void}
     has_open_sankey_plus={true}
   />
 
   additionalMenus.externale_navbar_item['view']=<SankeyPlusBannerView
-    dict_variable_application_data={dict_variable_application_data as SankeyPlusApplicationDataType}
+    applicationData={applicationData as SankeyPlusApplicationDataType}
     applicationContext={PlusApplicationContext}
     dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType)}
-    convert_data={dict_variable_application_data.convert_data}
+    convert_data={applicationData.convert_data}
     view_selector={(uiElementsRef as PlusUiElementsRefType).ViewSelector.current as JSX.Element}
   />
 
@@ -450,7 +450,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   // Menu conf nodes
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon']=<SankeyPlusNodeIcon
     t={applicationContext.t}
-    data={dict_variable_application_data.data as SankeyPlusData}
+    data={applicationData.data as SankeyPlusData}
     multi_selected_nodes={dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; }}
     is_activated={true}
     menu_for_modal={false}
@@ -460,7 +460,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   />
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo']= <SankeyPlusNodeFO
     t={applicationContext.t}
-    data={dict_variable_application_data.data as SankeyPlusData}
+    data={applicationData.data as SankeyPlusData}
     multi_selected_nodes={dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; }}
     is_activated={true}
     dict_variable_elements_selected={dict_variable_elements_selected as PlusElementsSelectedType}
@@ -468,7 +468,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   />
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl']=<SankeyPlusHyperLink
     t={applicationContext.t}
-    data={dict_variable_application_data.data as SankeyPlusData}
+    data={applicationData.data as SankeyPlusData}
     multi_selected_nodes={dict_variable_elements_selected.multi_selected_nodes as { current: SankeyPlusNode[]; }}
     is_activated={true}
     node_function={node_function as PlusNodeFuntionType}
@@ -479,7 +479,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     applicationContext={applicationContext as PlusApplicationContextType}
     ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
     multi_selected_links={dict_variable_elements_selected.multi_selected_links}
-    data={dict_variable_application_data.data as SankeyPlusData}
+    data={applicationData.data as SankeyPlusData}
     link_function={link_function}
     is_activated={true}
     menu_for_style={false}
@@ -489,19 +489,19 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   additionalMenus.additional_preferences.push(
     <SankeyPlusMenuPreferenceLabels
       t={applicationContext.t}
-      data={dict_variable_application_data.data as SankeyPlusData}
+      data={applicationData.data as SankeyPlusData}
       updateMenus={updateMenus}
     />
   )
   //- Builds Configuration Menus FreeLabel
   additionalMenus.additional_configuration_menus.push(
     <ZDTMenuAsAccordeonItem
-      data={dict_variable_application_data.data as SankeyPlusData}
+      data={applicationData.data as SankeyPlusData}
       uiElementsRef={uiElementsRef as PlusUiElementsRefType}
       applicationContext={applicationContext as PlusApplicationContextType}
       content_menu_zdt={
         <SankeyPlusMenuConfigurationFreeLabels
-          dict_variable_application_data={dict_variable_application_data as SankeyPlusApplicationDataType}
+          applicationData={applicationData as SankeyPlusApplicationDataType}
           applicationContext={applicationContext as PlusApplicationContextType}
           dict_variable_elements_selected={(dict_variable_elements_selected as PlusElementsSelectedType)}
           reDrawPlusLabels={(applicationDraw as PlusApplicationDrawType).reDrawPlusLabels}
@@ -511,7 +511,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
     />
   )
 
-  const plusData = dict_variable_application_data as SankeyPlusApplicationDataType
+  const plusData = applicationData as SankeyPlusApplicationDataType
   if (plusData.master_data && plusData.master_data.current_view && plusData.master_data.current_view!=='none') {
     additionalMenus.additional_file_save_json_option.push(
       <MenuEnregistrerView
@@ -524,7 +524,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
   const component_apply_transfor_OSP= <PlusTranformationElements
-    dict_variable_application_data={plusData}
+    applicationData={plusData}
     applicationContext={applicationContext as PlusApplicationContextType}
     ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
   />
@@ -537,7 +537,7 @@ export const OSPInitializeAdditionalMenus : OSPInitializeAdditionalMenusType = (
 // we don't need to recast it ( and don't need additionnal parameters for OSP dialogs)
 export const OSPModuleDialogs : module_dialogsType = (
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   applicationDraw,
@@ -552,14 +552,14 @@ export const OSPModuleDialogs : module_dialogsType = (
 ) => {
   const OSP_elements_selected = dict_variable_elements_selected as PlusElementsSelectedType
   const OSP_dict_hook_ref=dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType
-  const OSP_dict_app_data=dict_variable_application_data as SankeyPlusApplicationDataType
+  const OSP_dict_app_data=applicationData as SankeyPlusApplicationDataType
   const OSP_node_function=node_function as PlusNodeFuntionType
   return [
     MenuDraggable(
       OSP_dict_hook_ref,
     'ref_setter_show_menu_zdt' as unknown as keyof dict_hook_ref_setter_show_dialog_componentsType,
     <SankeyPlusMenuConfigurationFreeLabels
-      dict_variable_application_data={OSP_dict_app_data}
+      applicationData={OSP_dict_app_data}
       reDrawPlusLabels={(applicationDraw as PlusApplicationDrawType).reDrawPlusLabels}
       applicationContext={applicationContext as PlusApplicationContextType}
       ComponentUpdater={ComponentUpdater as PlusComponentUpdaterType}
@@ -586,11 +586,11 @@ export const OSPModuleDialogs : module_dialogsType = (
       OSP_dict_app_data.view_not_saved, 
       OSP_dict_app_data.set_view_not_saved,
       applicationContext.t,
-      dict_variable_application_data as SankeyPlusApplicationDataType
+      applicationData as SankeyPlusApplicationDataType
     ),
     <ModalSelectionIcon 
       t={applicationContext.t}
-      dict_variable_application_data={OSP_dict_app_data}
+      applicationData={OSP_dict_app_data}
       dict_variable_elements_selected={OSP_elements_selected}
       dict_hook_ref_setter_show_dialog_components={OSP_dict_hook_ref}
       node_function={OSP_node_function }
@@ -608,7 +608,7 @@ export const OSPModuleDialogs : module_dialogsType = (
 // we don't need to recast it ( and don't need additionnal parameters for OSP draw elements functions)
 export const OSPDrawAll : DrawAllType = (
   contextMenu,
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   applicationContext,
@@ -635,7 +635,7 @@ export const OSPDrawAll : DrawAllType = (
 
   // Free Labels
   PlusDrawLabels(
-    dict_variable_application_data as SankeyPlusApplicationDataType,
+    applicationData as SankeyPlusApplicationDataType,
     dict_variable_elements_selected as PlusElementsSelectedType,
     uiElementsRef as PlusUiElementsRefType,
     contextMenu as SankeyPlusContextMenuType,
@@ -644,7 +644,7 @@ export const OSPDrawAll : DrawAllType = (
     contextMenu.closeAllMenuContext,
     applicationDraw as PlusApplicationDrawType,
     ComponentUpdater as PlusComponentUpdaterType,
-    Object.values((dict_variable_application_data as SankeyPlusApplicationDataType).data.labels),
+    Object.values((applicationData as SankeyPlusApplicationDataType).data.labels),
     link_function,
     applicationDraw.start_point,
     applicationDraw.resizeCanvas
@@ -655,7 +655,7 @@ export const OSPDrawAll : DrawAllType = (
 // we don't need to recast it ( and don't need additionnal parameters for OSP add event functions)
 export const OSPInstallEventsOnSVG : InstallEventsOnSVGType = (
   contextMenu,
-  dict_variable_application_data,
+  applicationData,
   uiElementsRef,
   dict_variable_elements_selected,
   link_function,
@@ -668,7 +668,7 @@ export const OSPInstallEventsOnSVG : InstallEventsOnSVGType = (
   svgSankey.on('mousedown',evt=>{
     blur_ZDT_wysiwyg((dict_variable_elements_selected as unknown as PlusElementsSelectedVarType).r_editor_ZDT as { current: ReactQuill; })
     EventOnZoneMouseDown(
-      dict_variable_application_data,
+      applicationData,
       dict_variable_elements_selected,
       dict_hook_ref_setter_show_dialog_components,
       false,
@@ -680,13 +680,13 @@ export const OSPInstallEventsOnSVG : InstallEventsOnSVGType = (
   })
   svgSankey.on('mouseup',evt=>{
     zone_selection_label(
-      dict_variable_application_data.data as SankeyPlusData,
+      applicationData.data as SankeyPlusData,
       (dict_variable_elements_selected as PlusElementsSelectedType).multi_selected_label,
       evt,
       ComponentUpdater as PlusComponentUpdaterType
     )
     EventOnZoneMouseUp(
-      dict_variable_application_data,
+      applicationData,
       uiElementsRef,
       dict_variable_elements_selected,
       dict_hook_ref_setter_show_dialog_components,
@@ -704,11 +704,11 @@ export const OSPInstallEventsOnSVG : InstallEventsOnSVGType = (
 }
 
 export const OSPUpdateMenuConf:OSPUpdateMenuConfType=(menu_conf,
-  dict_variable_application_data,
+  applicationData,
   applicationContext,
   uiElementsRef
 )=>{
-  const SankeyPlusApplicationData=dict_variable_application_data as SankeyPlusApplicationDataType
+  const SankeyPlusApplicationData=applicationData as SankeyPlusApplicationDataType
   const  PlusUiElementsRef=uiElementsRef as PlusUiElementsRefType
 
   const PlusApplicationContext=applicationContext as PlusApplicationContextType
@@ -728,7 +728,7 @@ export const OSPUpdateMenuConf:OSPUpdateMenuConfType=(menu_conf,
 export const OSPInitializeKeyHandler:OSPInitializeKeyHandlerType=(
   applicationContext,
   e,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   dict_hook_ref_setter_show_dialog_components,
   reDrawPlusLabels,
@@ -737,7 +737,7 @@ export const OSPInitializeKeyHandler:OSPInitializeKeyHandlerType=(
   OSPKeyHandler(
     applicationContext,
     e,
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     dict_hook_ref_setter_show_dialog_components,
     reDrawPlusLabels,
@@ -746,7 +746,7 @@ export const OSPInitializeKeyHandler:OSPInitializeKeyHandlerType=(
 }
 
 export const OSPInitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=(  applicationContext,
-  dict_variable_application_data,
+  applicationData,
   applicationDraw,
   node_function,
   link_function,
@@ -757,7 +757,7 @@ export const OSPInitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=( 
   const mutiple_level_tag_filter=<AddAllDropDownNode 
     applicationContext={applicationContext}
     ComponentUpdater={ComponentUpdater}
-    dict_variable_application_data={dict_variable_application_data}
+    applicationData={applicationData}
     level={true}
     node_function={node_function}
     link_function={link_function}
@@ -771,7 +771,7 @@ export const OSPInitalizeSelectorDetailNodes:InitalizeSelectorDetailNodesType=( 
           {t('Menu.group')}
         </Col>
       </FormGroup>
-      <>{(Object.entries(dict_variable_application_data.data.levelTags).length > 0) ? (<>
+      <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
         {mutiple_level_tag_filter}</>
       ) : (<>
         <Form.Control placeholder="Pas de filtrage" style={{ opacity: opacity_advanced, color: '#6c757d' }} disabled /></>)}</>

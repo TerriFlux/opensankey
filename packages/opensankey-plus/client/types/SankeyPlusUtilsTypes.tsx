@@ -11,7 +11,7 @@ export  type DragLegendPlusFType = (data:SankeyPlusData,
   resizeCanvas:()=>void,
   node_function:PlusNodeFuntionType,
   link_function:PlusLinkFuntionType,
-  dict_variable_application_data:SankeyPlusApplicationDataType
+  applicationData:SankeyPlusApplicationDataType
 ) => d3.DragBehavior<SVGGElement, unknown, unknown>
 
 export type ImportImageAsSvgBgFType = {

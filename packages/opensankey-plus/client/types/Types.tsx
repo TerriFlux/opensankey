@@ -9,7 +9,7 @@ import {
   SankeyLinkStyle,
   SankeyLinkAttrLocal,
   dict_hook_ref_setter_show_dialog_componentsType,
-  dict_variable_application_dataType,
+  applicationDataType,
   dict_variable_elements_selectedType,
   contextMenuType,
   applicationContextType,
@@ -136,7 +136,7 @@ export type SankeyPlusShowMenuComponentsVarType={
 
 export type OSPConvertDataFuncType = (data: SankeyPlusData, DefaultSankeyData: OSPGetDefaultData) => void
 
-// SankeyPlus type that overwrite or add variable to for dict_variable_application_dataType
+// SankeyPlus type that overwrite or add variable to for applicationDataType
 export type OSPApplicationDataVarType = {
   // Recast some OS var to OSP type 
   data: SankeyPlusData,
@@ -154,7 +154,7 @@ export type OSPApplicationDataVarType = {
   set_view_not_saved:(s:string)=>void,
   is_catalog:boolean
 }
-export type SankeyPlusApplicationDataType = dict_variable_application_dataType & OSPApplicationDataVarType
+export type SankeyPlusApplicationDataType = applicationDataType & OSPApplicationDataVarType
 
 export type PlusElementsSelectedType = dict_variable_elements_selectedType & PlusElementsSelectedVarType
 export type PlusElementsSelectedVarType={
@@ -269,7 +269,7 @@ export type OSPInitializeLinkFuntionType = RecastReturnTypeOfFunction<paramIniti
 
 export type OSPUpdateMenuConfType=(
   menu_conf:JSX.Element[],
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   applicationContext:applicationContextType,
   uiElementsRef:uiElementsRefType,
 
@@ -278,7 +278,7 @@ export type OSPUpdateMenuConfType=(
 export type OSPInitializeKeyHandlerType=(
   applicationContext:PlusApplicationContextType,
   e: KeyboardEvent,
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   reDrawPlusLabels:reDrawPlusLabelsFType,

@@ -1,4 +1,4 @@
-import { LinkFunctionTypes, dict_variable_application_dataType } from 'open-sankey/src/types/Types'
+import { LinkFunctionTypes, applicationDataType } from 'open-sankey/src/types/Types'
 import { 
   PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, 
   PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, 
@@ -41,7 +41,7 @@ export type eventLabelClickFType=(
 // To be dragged you need to select the free label
 
 export type sankey_plus_min_width_and_heightFType = (
-  dict_variable_application_data:dict_variable_application_dataType
+  applicationData:applicationDataType
 ) => [number,number]
 
 export type zone_selection_labelFType=(data:SankeyPlusData,

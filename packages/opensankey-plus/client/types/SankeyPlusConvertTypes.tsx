@@ -7,11 +7,11 @@ export type plus_convert_dataFType = (
 )=> void
 
 export type SankeyPlusDiagramSelectorFType = (
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
 ) => OpenSankeyDiagramSelectorFType
 
 export type PlusTranformationElementsFType = {
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   applicationContext:PlusApplicationContextType,
   ComponentUpdater:PlusComponentUpdaterType
 }

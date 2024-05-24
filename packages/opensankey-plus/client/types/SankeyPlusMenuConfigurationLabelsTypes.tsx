@@ -12,7 +12,7 @@ export type SankeyPlusMenuPreferenceLabelsFType={
 export interface selected_type  {'label':string;'value':string}
 
 export type SankeyPlusMenuConfigurationFreeLabelsFType = {
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   applicationContext:PlusApplicationContextType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   ComponentUpdater:PlusComponentUpdaterType,
@@ -23,7 +23,7 @@ export type SankeyPlusMenuConfigurationFreeLabelsFType = {
 export type context_zdtFType=(
   contextMenu:contextMenuType,
   t:TFunction,
-  dict_variable_application_data:SankeyPlusApplicationDataType,
+  applicationData:SankeyPlusApplicationDataType,
   dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
   dict_variable_elements_selected:PlusElementsSelectedType,
   ComponentUpdater:PlusComponentUpdaterType,

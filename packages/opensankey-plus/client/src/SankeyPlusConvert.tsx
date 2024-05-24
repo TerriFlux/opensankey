@@ -171,9 +171,9 @@ export const plus_convert_data : plus_convert_dataFType = (
 }
 
 export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
-  dict_variable_application_data
+  applicationData
 ) => {
-  const {master_data,set_master_data,view,get_default_data} =dict_variable_application_data
+  const {master_data,set_master_data,view,get_default_data} =applicationData
   const [s_diagram_type, sDiagramType] = useState('File')
   const [view_selected, set_view_selected] = useState('none')
 
@@ -303,11 +303,11 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
 }
 
 export const PlusTranformationElements : FunctionComponent<PlusTranformationElementsFType> = ({
-  dict_variable_application_data,
+  applicationData,
   applicationContext,
   ComponentUpdater
 }) => {
-  const {data,master_data,dataVarToUpdate}=dict_variable_application_data
+  const {data,master_data,dataVarToUpdate}=applicationData
   const data_to_use=master_data?master_data:data
   // Variable used to check if we are in a view, if so we disabled the possibility to check Views in the menu transfromation
   const is_current_data_master=data_to_use.current_view==='none'
