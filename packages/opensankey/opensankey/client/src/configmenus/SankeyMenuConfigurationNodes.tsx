@@ -27,7 +27,7 @@ import {
   SankeyNode,
   applicationContextType,
   applicationDataType,
-  dict_variable_elements_selectedType,
+  applicationStateType,
   treeFolderType
 } from '../types/Types'
 import { GetLinkValueFuncType } from './types/SankeyUtilsTypes'
@@ -55,7 +55,7 @@ import { selected_type } from '../topmenus/SankeyMenuTop'
 type SankeyEditionTypes = {
   applicationContext:applicationContextType,
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   multi_selected_nodes:{current:SankeyNode[]},
   menu_configuration_nodes : {[s:string]: JSX.Element},
   link_function:LinkFunctionTypes,
@@ -67,7 +67,7 @@ type SankeyEditionTypes = {
 export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodesFType = (
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   menu_configuration_nodes_attributes,
   GetLinkValue:GetLinkValueFuncType,
   node_function,link_function,
@@ -83,7 +83,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     />,
     'Noeud.tabs.infos': <SankeyMenuConfigurationNodesTooltip
       applicationContext={applicationContext}
-      dict_variable_elements_selected ={dict_variable_elements_selected}
+      applicationState ={applicationState}
       ComponentUpdater={ComponentUpdater}
       menu_for_modal = {false}
     />
@@ -93,7 +93,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
     ui['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
       applicationContext={applicationContext}
       applicationData={applicationData}
-      dict_variable_elements_selected={dict_variable_elements_selected}
+      applicationState={applicationState}
       node_function={node_function}
       ComponentUpdater={ComponentUpdater}
       menu_for_modal={false}
@@ -103,7 +103,7 @@ export const OpenSankeyMenuConfigurationNodes : OpenSankeyMenuConfigurationNodes
   ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
     applicationContext={applicationContext}
     applicationData={applicationData}
-    dict_variable_elements_selected={dict_variable_elements_selected}
+    applicationState={applicationState}
     GetLinkValue={GetLinkValue}
     node_function={node_function}
     link_function={link_function}
@@ -118,7 +118,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
   {
     applicationContext,
     applicationData,
-    dict_variable_elements_selected,
+    applicationState,
     multi_selected_nodes,
     menu_configuration_nodes,
     link_function,
@@ -343,7 +343,7 @@ const SankeyNodeEdition: FunctionComponent<SankeyEditionTypes> = (
             isDisabled={multi_selected_nodes.current.length == 0}
             onClick={
               () => {
-                deleteSelectedNodeFromData(applicationData,dict_variable_elements_selected)
+                deleteSelectedNodeFromData(applicationData,applicationState)
 
                 node_function.recomputeDisplayedElement()
                 node_function.RedrawNodes(Object.values(applicationData.display_nodes))

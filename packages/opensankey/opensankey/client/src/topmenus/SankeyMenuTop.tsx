@@ -609,7 +609,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   {
     applicationContext,
     applicationData,
-    dict_variable_elements_selected,
+    applicationState,
     uiElementsRef,
     contextMenu,
     processFunctions,
@@ -635,7 +635,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   }
 ) => {
   const {ref_setter_show_modale_tuto,ref_setter_show_modal_template}=dict_hook_ref_setter_show_dialog_components
-  const {ref_setter_mode_selection} = dict_variable_elements_selected
+  const {ref_setter_mode_selection} = applicationState
   const [show_nav,set_show_nav] = useState(false)
   const [show_tuto,set_show_tuto]=useState(false)
   const [show_template,set_show_template]=useState(false)
@@ -850,7 +850,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
           contextMenu,
           applicationData,
           uiElementsRef,
-          dict_variable_elements_selected,
+          applicationState,
           applicationContext,
           ref_alt_key_pressed,
           accept_simple_click,

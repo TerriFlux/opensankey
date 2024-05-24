@@ -6,7 +6,7 @@ import { MenuConfigurationLinksTagsFType } from './types/SankeyMenuConfiguration
 
 export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLinksTagsFType> = ({
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   menu_for_modal,
   ComponentUpdater,
@@ -14,7 +14,7 @@ export const MenuConfigurationLinksTags : FunctionComponent<MenuConfigurationLin
   link_function
 })=>{
   const {data}=applicationData
-  const {multi_selected_links}=dict_variable_elements_selected
+  const {multi_selected_links}=applicationState
   const {t}=applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {

@@ -2,7 +2,7 @@ import { DefaultSankeyDataFuncType } from '../../configmenus/types/SankeyUtilsTy
 
 import { ConvertDataFuncType } from '../../configmenus/types/SankeyConvertTypes'
 import { updateLayoutFuncType } from '../../draw/types/SankeyDrawLayoutTypes'
-import { SankeyData, callbackFuncType, applicationDataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { SankeyData, callbackFuncType, applicationDataType, applicationStateType } from '../../types/Types'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
 /**
@@ -53,7 +53,7 @@ export type SaveDiagramOptionsType = {
 export type ClickSaveDiagramFuncType = (
   applicationData : applicationDataType,
   data:SankeyData,
-  elementsSelected:dict_variable_elements_selectedType,
+  elementsSelected:applicationStateType,
   options: SaveDiagramOptionsType
 ) => void
 
