@@ -43,8 +43,9 @@ export type StrokeDasharrayFType =(
 // Function that return the Y position of link label
 export type TextLinkPosDYFType = (
   l:SankeyLink,
-  data:SankeyData,
+  dict_variable_application_data:dict_variable_application_dataType,
   scale:(t:number)=>number,
+  inv_scale:(t:number)=>number,
   GetLinkValue:GetLinkValueFuncType
 )=> string
  

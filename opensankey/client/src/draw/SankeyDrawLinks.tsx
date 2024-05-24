@@ -43,11 +43,9 @@ import {
   drawLinkShapeFType
 } from './types/SankeyDrawLinksTypes'
 import {
-  GetLinkValueFuncType
-} from '../configmenus/types/SankeyUtilsTypes'
-import {
   DragLinkEvent
 } from './SankeyDragLinks'
+import { TextLinkPosDYFType } from './types/SankeyDrawFunctionTypes'
 
 declare const window: Window &
 typeof globalThis & {
@@ -84,13 +82,21 @@ const TextLinkSide=(link:SankeyLink,data:SankeyData)=>{
 }
 
 // Function that return the Y position of link label
-const TextLinkPosDY=(
-  l:SankeyLink,
-  data:SankeyData,
-  scale:(t:number)=>number,
-  GetLinkValue:GetLinkValueFuncType
+const TextLinkPosDY:TextLinkPosDYFType=(
+  l,
+  dict_variable_application_data,
+  scale,
+  inv_scale,
+  GetLinkValue
 )=>{
-  const pos=ReturnValueLink(data,l,'orthogonal_label_position')
+  const {data}=dict_variable_application_data
+  let pos=ReturnValueLink(data,l,'orthogonal_label_position') as string
+  const label_size=ReturnValueLink(data,l,'label_font_size') as number
+
+  // If the link has label_pos_auto at true and le link stroke width is thinnier than the label font size then we put the label above the link
+  if(ReturnValueLink(data, l, 'label_pos_auto') && (LinkStrokeWidth(l,dict_variable_application_data,scale,inv_scale,GetLinkValue) < label_size)){
+    pos= 'above'
+  }
   if (pos === 'middle') {
     return '0.3em'
   } else if (pos === 'below') {
@@ -616,7 +622,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
       d =>ReturnValueLink(data,d,'label_on_path') === true
     )
     .select('text')
-    .attr('dy', l =>TextLinkPosDY(l,data,scale,GetLinkValue))
+    .attr('dy', l =>TextLinkPosDY(l,dict_variable_application_data,scale,inv_scale,GetLinkValue))
     .append('textPath')
     .attr('id', d => 'text_' + d.idLink)
     .attr('side', link => TextLinkSide(link,data))
