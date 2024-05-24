@@ -45,7 +45,6 @@ import {
   SetNodesHeightFType,
   SortOutputLinksIdByYPosFType,
   StrokeDasharrayFType,
-  TextLinkPosDYFType,
   TextLinkSideFType,
   TextNodeValueFType,
   TextNodeWrapFType,
@@ -112,27 +111,6 @@ export const StrokeDasharray : StrokeDasharrayFType =(
   }
 }
 
-// Function that return the Y position of link label
-export const TextLinkPosDY : TextLinkPosDYFType  =(
-  l:SankeyLink,
-  data:SankeyData,
-  scale:(t:number)=>number,
-  GetLinkValue:GetLinkValueFuncType
-)=>{
-  const orth_pos= ReturnValueLink(data,l,'orthogonal_label_position')
-  if (orth_pos === 'middle') {
-    return '0.3em'
-  } else if (orth_pos === 'below') {
-    const tmp=GetLinkValue(data, l.idLink).value as number
-
-    return scale((tmp)?tmp:0) / 2 + 10 + 'px'
-  } else if (orth_pos === 'above') {
-    const tmp=GetLinkValue(data, l.idLink).value as number
-
-    return -scale((tmp)?tmp:0) / 2 + 'px'
-  }
-  return '0.3em'
-}
 // Function that return the side of link label
 export const TextLinkSide : TextLinkSideFType = (
   link:SankeyLink,data:SankeyData
@@ -706,7 +684,12 @@ export const DrawLinkText = (
   if (!label_on_path || label_on_path === undefined) {
 
     const label_size= ReturnValueLink(data, link, 'label_font_size') as number
-    const orth_lab_pos= ReturnValueLink(data, link, 'orthogonal_label_position')
+    let orth_lab_pos= ReturnValueLink(data, link, 'orthogonal_label_position') as string
+
+    // If the link has label_pos_auto at true and le link stroke width is thinnier than the label font size then we put the label above the link
+    if(ReturnValueLink(data, link, 'label_pos_auto') && (LinkStrokeWidth(link,dict_variable_application_data,scale,inv_scale,GetLinkValue) < label_size)){
+      orth_lab_pos= 'above'
+    }
     let x_pos = 0
     let y_pos = 0
 
