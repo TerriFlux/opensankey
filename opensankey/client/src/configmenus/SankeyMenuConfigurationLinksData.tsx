@@ -225,9 +225,9 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
           multi_selected_links.current.map(d => {
             node_to_update.push(data.nodes[d.idSource])
             node_to_update.push(data.nodes[d.idTarget])
-            const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
-            AssignLinkLocalAttribute(d,'dashed',(was_empty)?false:dashed)
-
+            if(was_empty){
+              delete d.local?.dashed
+            }
             val = d.value
             Object.values(tags_selected).forEach(tag => {
               if (val[tag] === undefined) {
