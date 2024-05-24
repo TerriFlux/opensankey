@@ -21,14 +21,14 @@ import { SankeyMenuConfigurationNodesTagsFType } from './types/SankeyMenuConfigu
 export const SankeyMenuConfigurationNodesTags : FunctionComponent<SankeyMenuConfigurationNodesTagsFType> = ({
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   node_function,
   ComponentUpdater,
   menu_for_modal
 })=> {
   const { t } = applicationContext
   const { data } = applicationData
-  const { multi_selected_nodes } = dict_variable_elements_selected
+  const { multi_selected_nodes } = applicationState
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(data.nodeTags).length > 0 ? Object.keys(data.nodeTags)[0] : '')
   const [forceUpdate, setForceUpdate]=useState(false)
   const tags_visible = Object.keys(data.nodeTags).length > 0

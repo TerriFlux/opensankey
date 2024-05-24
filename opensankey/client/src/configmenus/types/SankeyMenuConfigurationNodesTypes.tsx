@@ -4,7 +4,7 @@ import {
   LinkFunctionTypes,
   NodeFunctionTypes,
   SankeyData, SankeyNode, applicationContextType,
-  applicationDataType, dict_variable_elements_selectedType, treeFolderType
+  applicationDataType, applicationStateType, treeFolderType
 } from '../../types/Types'
 import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 
@@ -12,7 +12,7 @@ import { GetLinkValueFuncType } from './SankeyUtilsTypes'
 export type OpenSankeyMenuConfigurationNodesFType = (
   applicationContext : applicationContextType,
   applicationData : applicationDataType,
-  dict_variable_elements_selected : dict_variable_elements_selectedType,
+  applicationState : applicationStateType,
   menu_configuration_nodes_attributes:JSX.Element,
   GetLinkValue:GetLinkValueFuncType,
   node_function:NodeFunctionTypes,

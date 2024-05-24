@@ -1,11 +1,11 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, applicationDataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, applicationDataType, applicationStateType } from '../../types/Types'
 import { MutableRefObject } from 'react'
 
 export type OpenSankeyConfigurationNodesAttributesFType = {
   applicationContext : applicationContextType,
   applicationData : applicationDataType,
-  dict_variable_elements_selected : dict_variable_elements_selectedType,
+  applicationState : applicationStateType,
   menu_for_style:boolean,
   ref_selected_style_node:MutableRefObject<string>,
   advanced_appearence_content:JSX.Element[],

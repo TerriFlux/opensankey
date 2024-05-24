@@ -10,7 +10,7 @@ import { SankeyData,
   SankeyLinkStyle,
   TagsCatalog,
   applicationDataType,
-  dict_variable_elements_selectedType} from '../types/Types'
+  applicationStateType} from '../types/Types'
 import * as d3 from 'd3'
 import colormap from 'colormap'
 import { menu_config_width } from '../topmenus/SankeyMenuTop'
@@ -2004,10 +2004,10 @@ export const updateLinkTagValue=(d:SankeyLink,
 
 export const deleteSelectedNodeFromData=(
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType
+  applicationState:applicationStateType
 )=>{
   const {data} = applicationData
-  const {multi_selected_nodes}=dict_variable_elements_selected
+  const {multi_selected_nodes}=applicationState
   multi_selected_nodes.current.map(d => DeleteNode(data, d))
   multi_selected_nodes.current = []
   const tmp_node=Object.keys(data.nodes)

@@ -1,7 +1,7 @@
 import { MutableRefObject } from 'react'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { GetLinkValueFuncType, LinkColorFuncType, LinkTextFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, SankeyLink, SankeyNode, applicationDataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType, LinkFunctionTypes, dict_hook_ref_setter_show_dialog_componentsType, ComponentUpdaterType, applicationContextType } from '../../types/Types'
+import { SankeyData, SankeyLink, SankeyNode, applicationDataType, contextMenuType, applicationStateType, uiElementsRefType, LinkFunctionTypes, dict_hook_ref_setter_show_dialog_componentsType, ComponentUpdaterType, applicationContextType } from '../../types/Types'
 import { TFunction } from 'i18next'
 
 export type LinkStrokeFuncType = (l: SankeyLink, data: SankeyData, GetLinkValue: GetLinkValueFuncType) => string
@@ -10,7 +10,7 @@ export type DrawLinksFType = (
   contextMenu:contextMenuType,
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>,
   position:'absolute' | 'relative',
@@ -30,7 +30,7 @@ export type DrawAllLinksFType = (
   contextMenu:contextMenuType,
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>,
   position:'absolute' | 'relative',
@@ -44,7 +44,7 @@ export type AddDrawLinksEventsFType = (
   contextMenu:contextMenuType,
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   link_functions : LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,
   applicationContext:applicationContextType,
@@ -54,7 +54,7 @@ export type AddDrawLinksEventsFType = (
 export type drawAddLinksFType=  (contextMenu:contextMenuType,
 applicationData:applicationDataType,
 uiElementsRef:uiElementsRefType,
-dict_variable_elements_selected:dict_variable_elements_selectedType,
+applicationState:applicationStateType,
 applicationContext:applicationContextType,
 alt_key_pressed:MutableRefObject<boolean>,
 link_functions : LinkFunctionTypes,
@@ -64,7 +64,7 @@ link_to_redraw:SankeyLink[])=>void
 
 export type  drawLinkShapeFType  = (
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   link_functions: LinkFunctionTypes,
   link_to_redraw:SankeyLink[],

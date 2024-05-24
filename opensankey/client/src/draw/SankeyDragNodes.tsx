@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import { ReturnValueNode, AssignNodeLocalAttribute } from '../configmenus/SankeyUtils'
 import { LinkTextFuncType, GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType } from '../configmenus/types/SankeyUtilsTypes'
-import { applicationDataType, dict_variable_elements_selectedType, SankeyNode, SankeyData, SankeyLink } from '../types/Types'
+import { applicationDataType, applicationStateType, SankeyNode, SankeyData, SankeyLink } from '../types/Types'
 import { RemoveAnimate, DrawArrows, drawCurveFunction, LinkStrokeWidth, returnScaleOfDrawArea, sizeOfNodeInDrawArea, DrawGrid } from './SankeyDrawFunction'
 import { DragGNodeEventFType, dragNodeTextEventWidthBoxEventFType, DragNodesFType, drag_node_textFuncType, ReturnOutOfBoundElementFuncType, opposing_DragElementsFuncType, DragElementsFuncType } from './types/SankeyDragTypes'
 import { DrawArrowsType } from './types/SankeyDrawFunctionTypes'
@@ -29,7 +29,7 @@ typeof globalThis & {
 
 export const DragGNodeEvent: DragGNodeEventFType = (
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   alt_key_pressed,
   LinkText,
@@ -42,7 +42,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
   GetSankeyMinWidthAndHeight,
   resizeCanvas
 ) => {
-  const {ref_getter_mode_selection}=dict_variable_elements_selected
+  const {ref_getter_mode_selection}=applicationState
   const {data} = applicationData
   const node_visible = [] as string[]
   return d3.drag<SVGGElement, SankeyNode>()
@@ -60,12 +60,12 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
           drag_node_text(node, event)
         } else if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && !alt_key_pressed.current) {
-          DragNodes(node, event, applicationData, dict_variable_elements_selected,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
+          DragNodes(node, event, applicationData, applicationState,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater
           )
         }
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'rect' || d3.select(event.subject.sourceEvent.target).node().tagName == 'ellipse') {
-          DragNodes(node, event, applicationData, dict_variable_elements_selected,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
+          DragNodes(node, event, applicationData, applicationState,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater
           )
         }
@@ -147,7 +147,7 @@ export const DragNodes: DragNodesFType = (
   node: SankeyNode,
   event: { dx: number; dy: number; x: number; y: number} ,
   applicationData: applicationDataType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
+  applicationState: applicationStateType,
   applicationContext,
   LinkText,
   GetSankeyMinWidthAndHeight,
@@ -159,7 +159,7 @@ export const DragNodes: DragNodesFType = (
   ComponentUpdater
 ) => {
   // const { data } = applicationData
-  // const { multi_selected_nodes } = dict_variable_elements_selected
+  // const { multi_selected_nodes } = applicationState
   // Cherche si des element seront hors zone si on les drag 
   // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
   // const out_of_zone_item = ReturnOutOfBoundElement(node, data, event, multi_selected_nodes, node_visible)
@@ -170,7 +170,7 @@ export const DragNodes: DragNodesFType = (
 
   DragElements(
     node, applicationData, 
-    dict_variable_elements_selected,applicationContext, 
+    applicationState,applicationContext, 
     event, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, 
     DrawArrows, scale, inv_scale,ComponentUpdater
   )
@@ -297,7 +297,7 @@ export const OpposingDragElements: opposing_DragElementsFuncType = (out_of_zone_
 export const DragElements: DragElementsFuncType = (
   dragged: SankeyNode,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   event: { dx: number; dy: number; x: number; y: number} ,
   LinkText: LinkTextFuncType,
@@ -310,7 +310,7 @@ export const DragElements: DragElementsFuncType = (
 
 ) => {
   const { data } = applicationData
-  const { multi_selected_nodes } = dict_variable_elements_selected
+  const { multi_selected_nodes } = applicationState
   let error_msg: { text: string | undefined}  | undefined
   const node = Object.keys(dragged).includes('idNode') ? dragged as SankeyNode : {} as SankeyNode
   d3.selectAll('.ggg_nodes').filter((d) => {
@@ -364,7 +364,7 @@ export const DragElements: DragElementsFuncType = (
         d3.select(' .opensankey #path_' + l.idLink).attr('d',
           drawCurveFunction.curve(
             applicationData,
-            dict_variable_elements_selected,
+            applicationState,
             applicationContext,
             data.display_style,
             data.nodeTags, l, error_msg, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue,
@@ -379,7 +379,7 @@ export const DragElements: DragElementsFuncType = (
       d3.select(' .opensankey #path_' + l.idLink).attr('d',
         drawCurveFunction.curve(
           applicationData,
-          dict_variable_elements_selected,
+          applicationState,
           applicationContext,
           data.display_style,
           data.nodeTags, l, error_msg, LinkText,

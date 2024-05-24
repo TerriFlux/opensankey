@@ -1,7 +1,7 @@
 import { MutableRefObject} from 'react'
 
 import { 
-  applicationDataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,
+  applicationDataType, contextMenuType, applicationStateType, uiElementsRefType,
   LinkFunctionTypes, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, SankeyNode, NodeFunctionTypes
 } from '../../types/Types'
 import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
@@ -12,7 +12,7 @@ export type DrawAllNodesFType = (
   contextMenu:contextMenuType,
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
@@ -31,7 +31,7 @@ export type AddDrawNodesFType = (
   contextMenu:contextMenuType,
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},
@@ -48,7 +48,7 @@ export type drawNodeShapeFType = (
   contextMenu:contextMenuType,
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>,
   accept_simple_click:{current:boolean},

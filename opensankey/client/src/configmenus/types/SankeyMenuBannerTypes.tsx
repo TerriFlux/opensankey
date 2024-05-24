@@ -1,5 +1,5 @@
 import { TFunction } from 'i18next'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyData, SankeyNode, applicationContextType, applicationDrawType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType } from '../../types/Types'
 import { ConvertDataFuncType } from './SankeyConvertTypes'
 import { DefaultSankeyDataFuncType, GetSankeyMinWidthAndHeightFuncType } from './SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
@@ -43,7 +43,7 @@ export type addAllDropDownNodeFType = {
 export type ToolbarBuilderFType = {
   applicationContext:applicationContextType,
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   filter:number,
   set_current_filter:(n:number)=>void,
   detail_level: React.ReactElement,

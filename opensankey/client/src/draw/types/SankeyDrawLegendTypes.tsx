@@ -1,6 +1,6 @@
 import { MutableRefObject } from 'react'
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, applicationContextType, applicationDataType, contextMenuType, dict_variable_elements_selectedType, ComponentUpdaterType, NodeFunctionTypes, LinkFunctionTypes } from '../../types/Types'
+import { SankeyData, applicationContextType, applicationDataType, contextMenuType, applicationStateType, ComponentUpdaterType, NodeFunctionTypes, LinkFunctionTypes } from '../../types/Types'
 
 export type DrawLegendFType = (
   applicationData:applicationDataType,
@@ -25,7 +25,7 @@ export type drag_legendFType=(
 export type ContextLegendTagsFType = {
   applicationContext:applicationContextType,
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
   ComponentUpdater:ComponentUpdaterType

@@ -25,7 +25,7 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
  *  Define configuration menu
  *
  * @param { TODO type } applicationData - TODO description
- * @param { TODO type } dict_variable_elements_selected - TODO description
+ * @param { TODO type } applicationState - TODO description
  * @param { TODO type } applicationContext - TODO description
  * @param { TODO type } uiElementsRef - TODO description
  * @param { TODO type } dict_hook_ref_setter_show_dialog_components - TODO description
@@ -41,7 +41,7 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
  */
 export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType = (
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   uiElementsRef,
   dict_hook_ref_setter_show_dialog_components,
@@ -62,7 +62,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   const {data}=applicationData
   const {t}=applicationContext
   const {links_accordion_ref, nodes_accordion_ref,accordion_ref} = uiElementsRef
-  const {multi_selected_nodes}=dict_variable_elements_selected
+  const {multi_selected_nodes}=applicationState
   // const {ref_setter_show_menu_config}=dict_hook_ref_setter_show_dialog_components
   const show_menu_config_tag = (
     (data.accordeonToShow.includes('EN') ||
@@ -127,7 +127,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               <SankeyNodeEdition
                 applicationContext={applicationContext}
                 applicationData={applicationData}
-                dict_variable_elements_selected={dict_variable_elements_selected}
+                applicationState={applicationState}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={menu_configuration_nodes}
                 link_function={link_function}
@@ -155,7 +155,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
               <SankeyMenuConfigurationLinks
                 applicationData={applicationData}
                 applicationContext={applicationContext}
-                dict_variable_elements_selected={dict_variable_elements_selected}
+                applicationState={applicationState}
                 menu_configuration_links={menu_configuration_links}
                 link_function={link_function}
                 ComponentUpdater={ComponentUpdater}

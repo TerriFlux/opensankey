@@ -60,7 +60,7 @@ import { OpenSankeyConfigurationNodesAttributesFType, SankeyWrapperConfigInModal
 export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSankeyConfigurationNodesAttributesFType> = ({
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   menu_for_style,
   ref_selected_style_node,
   advanced_appearence_content,
@@ -72,7 +72,7 @@ export const OpenSankeyConfigurationNodesAttributes : FunctionComponent<OpenSank
 }) => {
   const { t } = applicationContext
   const { data } = applicationData
-  const { multi_selected_nodes } = dict_variable_elements_selected
+  const { multi_selected_nodes } = applicationState
   const [forceUpdate,setForceUpdate]=useState(false)
   const parameter_to_modify=(menu_for_style)?data.style_node:data.nodes
   const selected_parameter=(menu_for_style)?[data.style_node[ref_selected_style_node.current]]:multi_selected_nodes.current

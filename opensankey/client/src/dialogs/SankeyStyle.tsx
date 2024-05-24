@@ -180,7 +180,7 @@ export const SankeyModalStyleNode : FunctionComponent<SankeyModalStyleNodeFType>
 export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>= ({
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   dict_hook_ref_setter_show_dialog_components,
   pointer_pos,
   additional_link_appearence_items,
@@ -189,7 +189,7 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
 }) => {
   const {data}=applicationData
   const {t}=applicationContext
-  const {ref_selected_style_link}=dict_variable_elements_selected
+  const {ref_selected_style_link}=applicationState
   const {updateComponentMenuConfigLink}=ComponentUpdater
 
   const [selected_style_link,set_selected_style_link] = useState('default')
@@ -306,7 +306,7 @@ export const SankeyModalStyleLink : FunctionComponent<SankeyModalStyleLinkFType>
     {
       <MenuConfigurationLinksAppearence
         applicationData={applicationData}
-        dict_variable_elements_selected={dict_variable_elements_selected}
+        applicationState={applicationState}
         applicationContext={applicationContext}
         additional_link_appearence_items={additional_link_appearence_items}
         menu_for_style={true}

@@ -3,7 +3,7 @@ import {
   ComponentUpdaterType,
   LinkFunctionTypes,
   NodeFunctionTypes,
-  applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, dict_variable_elements_selectedType 
+  applicationContextType, dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType 
 } from '../../types/Types'
 
 export type SankeyModalStyleNodeFType = {
@@ -21,7 +21,7 @@ export type SankeyModalStyleNodeFType = {
 export type SankeyModalStyleLinkFType = {
     applicationContext:applicationContextType,
     applicationData:applicationDataType,
-    dict_variable_elements_selected:dict_variable_elements_selectedType,
+    applicationState:applicationStateType,
     dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
     pointer_pos:{current:number[]},
     additional_link_appearence_items:JSX.Element[],

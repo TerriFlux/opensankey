@@ -495,7 +495,7 @@ const tab_pos_link=(
 export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfigurationNodesIOFType> = ({
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   GetLinkValue,
   node_function,
   link_function,
@@ -504,7 +504,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
 }) => {
   const { t } = applicationContext
   const { data, display_nodes, display_links } = applicationData
-  const { multi_selected_nodes, multi_selected_links } = dict_variable_elements_selected
+  const { multi_selected_nodes, multi_selected_links } = applicationState
   const { updateComponentMenuNodeIOSelectSideNode } = ComponentUpdater
   const [ link_io, set_link_io ] = useState('output')
   const [ link_pos, set_link_pos ] = useState('right')
@@ -749,7 +749,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
               .map(d => {
                 multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.outputLinksId.includes(l.idLink)))
                 const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
+                applicationState.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
               })
             multi_selected_links
               .current
@@ -770,7 +770,7 @@ export const SankeyMenuConfigurationNodesIO : FunctionComponent<SankeyMenuConfig
               .map(d => {
                 multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
                 const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
+                applicationState.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
               })
             multi_selected_links
               .current

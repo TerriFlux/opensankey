@@ -6,7 +6,7 @@ import {
   SankeyData,
   SankeyNode,
   applicationDataType,
-  dict_variable_elements_selectedType,
+  applicationStateType,
   ComponentUpdaterType
 } from '../types/Types'
 import {
@@ -156,12 +156,12 @@ const eventLinkClick=(
   button_ref:MutableRefObject<HTMLLabelElement|null>,
   links_accordion_ref:MutableRefObject<HTMLDivElement|null>,
   applicationData : applicationDataType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
+  applicationState: applicationStateType,
   data: SankeyData,
   ComponentUpdater:ComponentUpdaterType,
 
 )=>{
-  const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef}=dict_variable_elements_selected
+  const {multi_selected_links,ref_getter_mode_selection,displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef}=applicationState
   const {updateComponentMenuConfigLink,updateMenuConfigTextLinkTooltip}=ComponentUpdater
   const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
     return (Object.keys(dataTag.tags).length > 0) ? [
@@ -186,7 +186,7 @@ const eventLinkClick=(
       } else {
         multi_selected_links.current.push(d)
         SelectVisualyLinks(d)
-        dict_variable_elements_selected.ref_display_link_opacity.current.forEach(
+        applicationState.ref_display_link_opacity.current.forEach(
           setter=>setter(ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string)
         )
       }
@@ -278,7 +278,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   contextMenu,
   applicationData,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   link_functions,
   ComponentUpdater,
   applicationContext,
@@ -338,13 +338,13 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   gg_links.on('contextmenu', (ev, l) => {
     if(!window.SankeyToolsStatic){
       // if the right mouse button is clicked we switch to selection mode
-      // dict_variable_elements_selected.ref_setter_mode_selection.current('s')
-      // dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
-      dict_variable_elements_selected.multi_selected_links.current = [l]
+      // applicationState.ref_setter_mode_selection.current('s')
+      // applicationState.ref_getter_mode_selection.current = 's'
+      applicationState.multi_selected_links.current = [l]
       // d3.select(' .opensankey #svg').attr('class','mode_selection')
       return EventLinkContextMenu(
         applicationData,ev,l,ref_setter_contextualised_link,pointer_pos,
-        dict_variable_elements_selected,tags_selected,
+        applicationState,tags_selected,
       )}}
   )
 
@@ -422,7 +422,7 @@ export const AddDrawLinksEvent : AddDrawLinksEventsFType = (
   paths.on('click', (event, d) =>eventLinkClick(
     event,d,sankeyTooltip,
     accordion_ref,button_ref,
-    links_accordion_ref,applicationData,dict_variable_elements_selected,data,
+    links_accordion_ref,applicationData,applicationState,data,
     ComponentUpdater
   )
   )
@@ -432,7 +432,7 @@ export const DrawAllLinks : DrawAllLinksFType = (
   contextMenu,
   applicationData,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   alt_key_pressed,
   position,
@@ -448,7 +448,7 @@ export const DrawAllLinks : DrawAllLinksFType = (
     contextMenu,
     applicationData,
     uiElementsRef,
-    dict_variable_elements_selected,
+    applicationState,
     applicationContext,
     alt_key_pressed,
     link_functions,
@@ -469,7 +469,7 @@ export const drawAddLinks:drawAddLinksFType = (
   contextMenu,
   applicationData,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   alt_key_pressed,
   link_functions,
@@ -506,7 +506,7 @@ export const drawAddLinks:drawAddLinksFType = (
       let error_msg: { text: string | undefined } | undefined
       paths.call(
         DragLinkEvent(
-          applicationData,dict_variable_elements_selected,applicationContext,error_msg,data.display_style,drawCurveFunction,
+          applicationData,applicationState,applicationContext,error_msg,data.display_style,drawCurveFunction,
           scale,inv_scale,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,ComponentUpdater
         )
       )
@@ -515,7 +515,7 @@ export const drawAddLinks:drawAddLinksFType = (
 
   drawLinkShape(
     applicationData,
-    dict_variable_elements_selected,
+    applicationState,
     applicationContext,
     link_functions,link_to_redraw,ComponentUpdater
   )
@@ -524,7 +524,7 @@ export const drawAddLinks:drawAddLinksFType = (
     contextMenu,
     applicationData,
     uiElementsRef,
-    dict_variable_elements_selected,
+    applicationState,
     link_functions,ComponentUpdater,
     applicationContext,alt_key_pressed
   )
@@ -535,7 +535,7 @@ export const drawAddLinks:drawAddLinksFType = (
  */
 export const drawLinkShape:drawLinkShapeFType  = (
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   link_functions,
   link_to_redraw,
@@ -543,9 +543,9 @@ export const drawLinkShape:drawLinkShapeFType  = (
 
 ) => {
   const { GetLinkValue,LinkStroke,LinkText,DrawArrows,LinkSabotColor } = link_functions
-  const { multi_selected_links } = dict_variable_elements_selected
+  const { multi_selected_links } = applicationState
   const{ data, display_nodes} = applicationData
-  const { ref_getter_mode_selection} = dict_variable_elements_selected
+  const { ref_getter_mode_selection} = applicationState
   const max_filter_label=Math.max(data.display_style.filter, data.display_style.filter_label)
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -661,7 +661,7 @@ export const drawLinkShape:drawLinkShapeFType  = (
 
   paths.attr('d', d => {
     return drawCurveFunction.curve(
-      applicationData,dict_variable_elements_selected,
+      applicationData,applicationState,
       applicationContext,
       display_style,
       data.nodeTags, d, error_msg,

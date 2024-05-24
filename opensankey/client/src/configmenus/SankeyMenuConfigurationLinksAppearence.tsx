@@ -63,7 +63,7 @@ const svg_label_center=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 2
 
 export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurationLinksAppearenceFType> = ({
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   additional_link_appearence_items,
   menu_for_style,
@@ -73,7 +73,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
   const {t}=applicationContext
   const {data}=applicationData
   const [forceUpdate,setForceUpdate] = useState(false)
-  const {ref_selected_style_link,multi_selected_links}=dict_variable_elements_selected
+  const {ref_selected_style_link,multi_selected_links}=applicationState
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
   const selected_parameter=(menu_for_style)?[data.style_link[ref_selected_style_link.current]]:multi_selected_links.current
   const [, set_style_to_apply_to_link] = useState('default')

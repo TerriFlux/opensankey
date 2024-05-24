@@ -18,7 +18,7 @@ import {
   SankeyNode,
   applicationContextType,
   applicationDataType,
-  dict_variable_elements_selectedType
+  applicationStateType
 } from '../types/Types'
 import {  SankeyMenuConfigurationLinksTypes } from './types/SankeyMenuConfigurationLinksTypes'
 import {
@@ -46,7 +46,7 @@ import { reorganize_inputLinksId } from '../draw/SankeyDrawLayout'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   menu_config_link_data,
   menu_config_link_attr,
@@ -56,7 +56,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
 ) => {
   const {t}=applicationContext
   const {data}=applicationData
-  const {multi_selected_links}=dict_variable_elements_selected
+  const {multi_selected_links}=applicationState
 
   const { fluxTags } = data
   const ui : {[s:string] : JSX.Element}= {
@@ -80,7 +80,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
   const pre_tag_menu=<MenuConfigurationLinksTags
     applicationContext={applicationContext}
     applicationData={applicationData}
-    dict_variable_elements_selected={dict_variable_elements_selected}
+    applicationState={applicationState}
     menu_for_modal={false}
     ComponentUpdater={ComponentUpdater}
     node_function={node_function}
@@ -97,7 +97,7 @@ export const MenuConfigurationLinks : MenuConfigurationLinksFType = (
 
 const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLinksTypes> = (
   { applicationData,
-    dict_variable_elements_selected,
+    applicationState,
     applicationContext,
     menu_configuration_links,
     link_function,
@@ -115,14 +115,14 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
 
   const {t}=applicationContext
   const {data,set_data}=applicationData
-  const { multi_selected_links,multi_selected_nodes, displayedInputLinkValueSetterRef}=dict_variable_elements_selected
+  const { multi_selected_links,multi_selected_nodes, displayedInputLinkValueSetterRef}=applicationState
   const { fluxTags, dataTags } = data
   const [tags_group_key, set_tags_group_key] = useState(Object.keys(fluxTags).length > 0 ? Object.keys(fluxTags)[0] : '')
   const [pre_idSource,set_pre_idSource]=useState('none')
   const [pre_idTarget,set_pre_idTarget]=useState('none')
-  dict_variable_elements_selected.ref_pre_idSource.current = pre_idSource
-  dict_variable_elements_selected.ref_pre_idTarget.current = pre_idTarget
-  const { ref_pre_idSource, ref_pre_idTarget } = dict_variable_elements_selected
+  applicationState.ref_pre_idSource.current = pre_idSource
+  applicationState.ref_pre_idTarget.current = pre_idTarget
+  const { ref_pre_idSource, ref_pre_idTarget } = applicationState
 
   const {RedrawNodes}=node_function
   const set_show_link = useState(true)[1]
@@ -178,7 +178,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
               const m_s = Object.values(data.links).filter(d => (new_sel.includes(d.idLink)))
               multi_selected_links.current = m_s
               if(m_s.length>0){
-                dict_variable_elements_selected.ref_display_link_opacity.current.forEach(
+                applicationState.ref_display_link_opacity.current.forEach(
                   setter=>setter(ReturnValueLink(data,m_s[0],'opacity') as string)
                 )
               }
@@ -285,7 +285,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
     nodes[idt].inputLinksId.push(link.idLink)
 
     multi_selected_links.current = [link]
-    dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(
+    applicationState.ref_display_link_opacity.current.forEach(setter=>setter(
       ReturnCorrectLinkAttributeValue(data,link,'opacity',false) as string)
     )
     data.linkZIndex.push(link.idLink)
@@ -398,7 +398,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<SankeyMenuConfigurationLin
           onClick={
             () => {
               add_new_link()
-              link_function.DrawAllLinks(contextMenu,applicationData,uiElementsRef,dict_variable_elements_selected,applicationContext,alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
+              link_function.DrawAllLinks(contextMenu,applicationData,uiElementsRef,applicationState,applicationContext,alt_key_pressed,(windowSankey.SankeyToolsStatic ? windowSankey.SankeyToolsStatic : false) ? 'relative' : 'absolute',link_function,ComponentUpdater,dict_hook_ref_setter_show_dialog_components)
             }}>
           <FaPlus/>
         </Button>

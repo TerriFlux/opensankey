@@ -1,8 +1,8 @@
-import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, applicationContextType, applicationDataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, SankeyData, applicationContextType, applicationDataType, applicationStateType } from '../../types/Types'
 
 export type MenuConfigurationLinksAppearenceFType = {
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   additional_link_appearence_items:JSX.Element[],
   menu_for_style:boolean,

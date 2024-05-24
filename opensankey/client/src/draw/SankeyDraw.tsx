@@ -22,12 +22,12 @@ const SankeyDraw: FunctionComponent<SankeyDrawTypes> = ({
   contextMenu,
   applicationData,
   animation,
-  dict_variable_elements_selected,
+  applicationState,
   agregation,
   ref_alt_key_pressed,
   GetSankeyMinWidthAndHeight,
 }) => {
-  const {ref_getter_mode_selection,ref_setter_mode_selection}=dict_variable_elements_selected
+  const {ref_getter_mode_selection,ref_setter_mode_selection}=applicationState
   // Il faut détruire les tooltips à chaque passage dans le draw
   d3.selectAll('.sankey-tooltip').remove()
 
@@ -182,7 +182,7 @@ export const keyHandler : keyHandlerFType = (
   uiElementsRef,
   contextMenu,
   e: KeyboardEvent,
-  dict_variable_elements_selected,
+  applicationState,
   closeAllMenu:()=>void,
   ref_alt_key_pressed,
   accept_simple_click,
@@ -195,7 +195,7 @@ export const keyHandler : keyHandlerFType = (
   applicationDraw
 ) => {
   const {data}=applicationData
-  const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=dict_variable_elements_selected
+  const {multi_selected_nodes,multi_selected_links,ref_setter_mode_selection}=applicationState
   const{updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence}=ComponentUpdater
   if (
     ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
@@ -290,7 +290,7 @@ export const keyHandler : keyHandlerFType = (
 
   } else if (e.key == 'Escape') {
     ref_setter_mode_selection.current('s')
-    dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
+    applicationState.ref_getter_mode_selection.current = 's'
     d3.select(' .opensankey #svg').attr('class','mode_selection')
 
     // Visualy deselect nodes then deselect in the app data
@@ -310,7 +310,7 @@ export const keyHandler : keyHandlerFType = (
       contextMenu,
       applicationData,
       uiElementsRef,
-      dict_variable_elements_selected,
+      applicationState,
       applicationContext,
       ref_alt_key_pressed,
       accept_simple_click,
@@ -334,7 +334,7 @@ export const keyHandler : keyHandlerFType = (
         DeleteLink(data,el)
       })
 
-      deleteSelectedNodeFromData(applicationData,dict_variable_elements_selected)
+      deleteSelectedNodeFromData(applicationData,applicationState)
       multi_selected_nodes.current=[]
       multi_selected_links.current=[]
 
@@ -373,7 +373,7 @@ export const keyHandler : keyHandlerFType = (
     ClickSaveDiagram(
       applicationData,
       applicationData.data,
-      dict_variable_elements_selected,
+      applicationState,
       {mode_save:true,mode_visible_element:false}
     )
   }else  if((e.key==='f') && !e.ctrlKey && document.activeElement?.tagName!=='INPUT'){

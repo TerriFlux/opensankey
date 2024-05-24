@@ -2,7 +2,7 @@ import { DragBehavior, SubjectPosition } from 'd3'
 import { DrawArrowsType } from './SankeyDrawFunctionTypes'
 import { 
   SankeyData, SankeyDrawCurve, SankeyLink, SankeyNode, TagsCatalog, applicationDataType,  display_styleType, 
-  dict_variable_elements_selectedType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes
+  applicationStateType, ComponentUpdaterType, applicationContextType, NodeFunctionTypes, LinkFunctionTypes
 } from '../../types/Types'
 import { GetLinkValueFuncType, GetSankeyMinWidthAndHeightFuncType, LinkTextFuncType, } from '../../configmenus/types/SankeyUtilsTypes'
 import { MutableRefObject } from 'react'
@@ -33,7 +33,7 @@ export type opposing_DragElementsFuncType = (
 export type DragElementsFuncType = (
   dragged: SankeyNode,
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   event: {dx: number;dy: number;x: number;y: number;},
   LinkText: LinkTextFuncType,
@@ -65,7 +65,7 @@ export type drag_node_textFuncType = (node: SankeyNode, event: d3.D3DragEvent<El
  */
 export type DragLinkEventFType=(
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   error_msg: { text: string | undefined } | undefined,
   display_style: display_styleType,
@@ -107,7 +107,7 @@ export type dragLinkTextEventFType =(
 export type DragLinkIOPositionFType=(
   link:SankeyLink,
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   error_msg: { text: string | undefined } | undefined,
   drawCurveFunction : SankeyDrawCurve,
@@ -141,7 +141,7 @@ export type DragLinkIOPositionFType=(
 export type DragLinkCenterHandleEventFType=(
   link:SankeyLink,
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   selected_tags:TagsCatalog,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
@@ -178,7 +178,7 @@ export type DragLinkCenterHandleEventFType=(
  */
 export type DragLinkShiftHandleEventFType=(
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   link:SankeyLink,
   display_style: display_styleType,
@@ -219,7 +219,7 @@ export type DragLinkShiftHandleEventFType=(
  */
 export type DragGNodeEventFType=(
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   alt_key_pressed:MutableRefObject<boolean>,
   LinkText:LinkTextFuncType,
@@ -270,7 +270,7 @@ export type DragNodesFType = (
   node:SankeyNode,
   event: { dx: number; dy: number,x:number,y:number },
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   LinkText:LinkTextFuncType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
@@ -306,7 +306,7 @@ export type DragNodesFType = (
 export type DragHandleFType = (
   link: SankeyLink,
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   display_style: display_styleType,
   selected_tags: TagsCatalog,
@@ -346,7 +346,7 @@ export type DragHandleFType = (
 export type AddDragLinkZoneFType=(
   link: SankeyLink,
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
     default_handle_size:number,
   default_horiz_shift:number,
