@@ -62,7 +62,7 @@ const svg_label_center=<svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 2
 
 
 export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurationLinksAppearenceFType> = ({
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   applicationContext,
   additional_link_appearence_items,
@@ -71,7 +71,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
   ComponentUpdater
 })=>{
   const {t}=applicationContext
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const [forceUpdate,setForceUpdate] = useState(false)
   const {ref_selected_style_link,multi_selected_links}=dict_variable_elements_selected
   const parameter_to_modify=(menu_for_style)?data.style_link:data.links
@@ -79,7 +79,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
   const [, set_style_to_apply_to_link] = useState('default')
   //const {updateComponentMenuConfigLink}=ComponentUpdater
 
-  const element_to_update=menu_for_style?Object.values(dict_variable_application_data.display_links):multi_selected_links.current
+  const element_to_update=menu_for_style?Object.values(applicationData.display_links):multi_selected_links.current
 
   const updateMenuConfigLink=()=>{
     ComponentUpdater.updateComponenSaveInCache.current(false)
@@ -299,7 +299,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
         <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
             
           <ConfigLinkAttributeNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             local_var_of_node={'arrow_size'}
             parameter_to_modify={parameter_to_modify}
             selected_parameter={selected_parameter}
@@ -341,7 +341,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
         <OSTooltip label={t('Flux.apparence.tooltips.courbure')}>
             
           <ConfigLinkAttributeNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             local_var_of_node={'curvature'}
             parameter_to_modify={parameter_to_modify}
             selected_parameter={selected_parameter}
@@ -476,7 +476,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
       <InputGroup variant='menuconfigpanel_option_input' >
         <OSTooltip label={t('Flux.apparence.tooltips.opacity')}>
           <ConfigLinkAttributeNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             local_var_of_node={'opacity'}
             parameter_to_modify={parameter_to_modify}
             selected_parameter={selected_parameter}
@@ -553,7 +553,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
         <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
 
           <ConfigLinkAttributeNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             local_var_of_node={'scientific_precision'}
             parameter_to_modify={parameter_to_modify}
             selected_parameter={selected_parameter}
@@ -623,7 +623,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
           <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
 
             <ConfigLinkAttributeNumberInput
-              data={dict_variable_application_data.data}
+              data={applicationData.data}
               local_var_of_node={'nb_digit'}
               parameter_to_modify={parameter_to_modify}
               selected_parameter={selected_parameter}
@@ -749,7 +749,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
           </Select>
 
           <ConfigLinkAttributeNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             local_var_of_node={'label_font_size'}
             parameter_to_modify={parameter_to_modify}
             selected_parameter={selected_parameter}
@@ -1189,7 +1189,7 @@ type ConfigLinkNumberInputType={
 /**
  * Component developped for number input of the nodes attributs config menu
  * 
- * @param {dict_variable_application_dataType} dict_variable_application_data
+ * @param {applicationDataType} applicationData
  * @param {keyof SankeyNodeAttrLocal} var_of_data keyof of the variable we want to reference in the inputn the variable in SankeyData need to be a number
  * @param {{[_: string]: SankeyNodeStyle;} | {[_: string]: SankeyNode;}} parameter_to_modify multi_selected_nodes or dict of node style
  * @param {SankeyNodeStyle[] | SankeyNode[]} selected_parameter either modify node style or selected node depending on if we are in the edition of style or configuration menu

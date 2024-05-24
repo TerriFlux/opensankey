@@ -5,12 +5,12 @@ import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfiguration
 
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
 import { AssignLinkLocalAttribute, OSTooltip } from './SankeyUtils'
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyLink, SankeyNode, dict_variable_application_dataType } from '../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyLink, SankeyNode, applicationDataType } from '../types/Types'
 import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLinksDataFType> = ({
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   applicationContext,
   additional_data_element,
@@ -20,7 +20,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
 }) => {
   const { t } = applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
-  const { data } = dict_variable_application_data
+  const { data } = applicationData
   const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef,displayedInputLinkDataTagSetterRef  } = dict_variable_elements_selected
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
   
@@ -70,7 +70,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
                 // } )
                 displayedInputLinkValueSetterRef.current.forEach(setter=>setter(
                   ValueSelectedParameter(
-                    dict_variable_application_data,
+                    applicationData,
                     multi_selected_links,
                     tmp
                   ).value as string
@@ -100,7 +100,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
           {t('Flux.data.vpp')}
         </Box>
         <ConfigLinkDataNumberInput
-          dict_variable_application_data={dict_variable_application_data}
+          applicationData={applicationData}
           multi_selected_links={multi_selected_links}
           tags_selected={tags_selected}
           node_function={node_function}
@@ -130,7 +130,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
         >
           <Input
             variant='menuconfigpanel_option_input'
-            value={ ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).display_value}
+            value={ ValueSelectedParameter(applicationData,multi_selected_links,tags_selected).display_value}
             onChange={evt => {
               let val = Object(multi_selected_links.current[0].value)
               multi_selected_links.current.map(d => {
@@ -160,7 +160,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
 
 
 type ConfigLinkDataNumberInputType={
-  dict_variable_application_data:dict_variable_application_dataType
+  applicationData:applicationDataType
   multi_selected_links:{current:SankeyLink[]}
   tags_selected: {[k: string]: string;}
   node_function:NodeFunctionTypes
@@ -181,21 +181,21 @@ type ConfigLinkDataNumberInputType={
  * @return {JSX.Elmement}
  */
 export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInputType>=({
-  dict_variable_application_data,
+  applicationData,
   multi_selected_links,
   tags_selected,
   node_function,
   link_function,
   ComponentUpdater,
 })=>{
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const [update,setUpdate]=useState(false)
   const ref_input=useRef<HTMLInputElement>(null)
   const variantOfInput='menuconfigpanel_option_numberinput'
   const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
 
   const val_of_key=ValueSelectedParameter(
-    dict_variable_application_data,
+    applicationData,
     multi_selected_links,
     tags_selected
   )
@@ -206,8 +206,8 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
   </NumberInputStepper>
 
   const f_onBlur=()=>{
-    node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-    link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+    node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+    link_function.RedrawLinks(Object.values(applicationData.display_links))
     ComponentUpdater.updateComponenSaveInCache.current(false)
   }
   return <InputGroup variant='menuconfigpanel_option_input' >
@@ -218,7 +218,7 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
       onChange={evt=>{
         const formatedValue=evt.replace(',','.')
         if(formatedValue!=='' && !isNaN(+formatedValue )){
-          const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
+          const was_empty=ValueSelectedParameter(applicationData,multi_selected_links,tags_selected).value===''
           let val = Object(multi_selected_links.current[0].value)
           const node_to_update:SankeyNode[]=[]
 

@@ -1,30 +1,30 @@
 import { MutableRefObject } from 'react'
 import { GetLinkValueFuncType } from '../../configmenus/types/SankeyUtilsTypes'
-import { SankeyData, applicationContextType, dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, ComponentUpdaterType, NodeFunctionTypes, LinkFunctionTypes } from '../../types/Types'
+import { SankeyData, applicationContextType, applicationDataType, contextMenuType, dict_variable_elements_selectedType, ComponentUpdaterType, NodeFunctionTypes, LinkFunctionTypes } from '../../types/Types'
 
 export type DrawLegendFType = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   applicationContext:applicationContextType,
   contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,
   legend_clicked:MutableRefObject<boolean>,
   ComponentUpdater:ComponentUpdaterType,
   reDrawLegend:()=>void,
-  resizeCanvas:(dict_variable_application_data:dict_variable_application_dataType)=>void
+  resizeCanvas:(applicationData:applicationDataType)=>void
 ) => JSX.Element
 
 export type drag_legendFType=(
   data:SankeyData,
-  resizeCanvas:(dict_variable_application_data:dict_variable_application_dataType)=>void,
+  resizeCanvas:(applicationData:applicationDataType)=>void,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
-  dict_variable_application_data:dict_variable_application_dataType
+  applicationData:applicationDataType
 
 )=> (selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, ...args: unknown[]) => void
 
 export type ContextLegendTagsFType = {
   applicationContext:applicationContextType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   contextMenu:contextMenuType,
   GetLinkValue:GetLinkValueFuncType,

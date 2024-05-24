@@ -17,7 +17,7 @@ const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 
 export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   contextMenu,
   dict_hook_ref_setter_show_dialog_components,
@@ -30,7 +30,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   const [forceUpdate,setForceUpdate]=useState(false)
   const { pointer_pos } = contextMenu
   const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef } = dict_variable_elements_selected
-  const { data } = dict_variable_application_data
+  const { data } = applicationData
   const { t } = applicationContext
   const {RedrawNodes} = node_function
   const {RedrawLinks} = link_function
@@ -92,10 +92,10 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   }
 
   const remake_display_links=()=>{
-    const pre_link_key=Object.keys(dict_variable_application_data.display_links)
+    const pre_link_key=Object.keys(applicationData.display_links)
     const new_display_links={} as {[idLink:string]:SankeyLink}
-    data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>new_display_links[lk]=dict_variable_application_data.display_links[lk])
-    dict_variable_application_data.display_links=new_display_links
+    data.linkZIndex.filter(lk=>pre_link_key.includes(lk)).forEach(lk=>new_display_links[lk]=applicationData.display_links[lk])
+    applicationData.display_links=new_display_links
     redraw_selected_links()
   }
 
@@ -303,7 +303,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           onBlur={evt=>{
             const formatedValue=evt.target.value.replace(',','.')
             if(formatedValue!=='' && !isNaN(+formatedValue )){
-              const was_empty=ValueSelectedParameter(dict_variable_application_data,multi_selected_links,tags_selected).value===''
+              const was_empty=ValueSelectedParameter(applicationData,multi_selected_links,tags_selected).value===''
               let val = Object(multi_selected_links.current[0].value)
               const impacted_node:SankeyNode[]=[]
 

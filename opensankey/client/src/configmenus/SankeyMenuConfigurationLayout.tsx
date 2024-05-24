@@ -21,7 +21,7 @@ import { OSTooltip } from './SankeyUtils'
 
 export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMenuConfigurationLayoutFType> = ({
   applicationContext,
-  dict_variable_application_data,
+  applicationData,
   extra_background_element,
   node_function,
   link_function,
@@ -29,7 +29,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
   ComponentUpdater
 }) => {
   const { t } = applicationContext
-  const { data, set_data} = dict_variable_application_data
+  const { data, set_data} = applicationData
   const {RedrawNodes} = node_function
   const {RedrawLinks} = link_function
 
@@ -114,7 +114,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <OSTooltip label={t('MEP.tooltips.TCG')}>
 
           <ConfigLayoutNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             var_of_data={'grid_square_size'}
             function_onBlur={()=>DrawGrid(data)}
             minimum_value={10}
@@ -144,12 +144,12 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
       <Box>
 
         <ConfigLayoutNumberInput
-          data={dict_variable_application_data.data}
+          data={applicationData.data}
           var_of_data={'user_scale'}
           function_onBlur={()=>{
             reDrawLegend()
-            RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-            RedrawLinks(Object.values(dict_variable_application_data.display_links))
+            RedrawNodes(Object.values(applicationData.display_nodes))
+            RedrawLinks(Object.values(applicationData.display_links))
             ComponentUpdater.updateComponenSaveInCache.current(false)
           }}
           minimum_value={1}
@@ -202,11 +202,11 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <OSTooltip label={t('MEP.tooltips.MinFlux')}>
 
           <ConfigLayoutNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             var_of_data={'minimum_flux'}
             function_onBlur={()=>{
-              RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-              RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              RedrawNodes(Object.values(applicationData.display_nodes))
+              RedrawLinks(Object.values(applicationData.display_links))
               ComponentUpdater.updateComponenSaveInCache.current(false)
             }}
             unitText={right_addon_pixel(data.minimum_flux!)}
@@ -223,11 +223,11 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
 
           <ConfigLayoutNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             var_of_data={'maximum_flux'}
             function_onBlur={()=>{
-              RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-              RedrawLinks(Object.values(dict_variable_application_data.display_links))
+              RedrawNodes(Object.values(applicationData.display_nodes))
+              RedrawLinks(Object.values(applicationData.display_links))
               ComponentUpdater.updateComponenSaveInCache.current(false)
             }}
             unitText={right_addon_pixel(data.maximum_flux!)}
@@ -283,7 +283,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <OSTooltip label={t('Menu.tooltips.fontSize')}>
 
           <ConfigLayoutNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             var_of_data={'legend_police'}
             function_onBlur={()=>{
               reDrawLegend()
@@ -335,7 +335,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
 
           <ConfigLayoutNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             var_of_data={'legend_bg_opacity'}
             function_onBlur={()=>{
               reDrawLegend()
@@ -460,7 +460,7 @@ export const OpenSankeyMenuConfigurationLayout : FunctionComponent<OpenSankeyMen
         <OSTooltip label={t('Menu.tooltips.LegWidth')}>
 
           <ConfigLayoutNumberInput
-            data={dict_variable_application_data.data}
+            data={applicationData.data}
             var_of_data={'legend_width'}
             function_onBlur={()=>{
               reDrawLegend()

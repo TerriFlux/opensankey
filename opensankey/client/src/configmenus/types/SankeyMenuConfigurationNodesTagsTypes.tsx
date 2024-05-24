@@ -1,4 +1,4 @@
-import { ComponentUpdaterType, NodeFunctionTypes, SankeyNode, applicationContextType, dict_variable_application_dataType, dict_variable_elements_selectedType } from '../../types/Types'
+import { ComponentUpdaterType, NodeFunctionTypes, SankeyNode, applicationContextType, applicationDataType, dict_variable_elements_selectedType } from '../../types/Types'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
@@ -9,7 +9,7 @@ import { ComponentUpdaterType, NodeFunctionTypes, SankeyNode, applicationContext
    */
 export type SankeyMenuConfigurationNodesTagsFType = {
   applicationContext : applicationContextType,
-  dict_variable_application_data : dict_variable_application_dataType,
+  applicationData : applicationDataType,
   dict_variable_elements_selected : dict_variable_elements_selectedType,
   node_function:NodeFunctionTypes,
   ComponentUpdater:ComponentUpdaterType,

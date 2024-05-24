@@ -24,7 +24,7 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
 /**
  *  Define configuration menu
  *
- * @param { TODO type } dict_variable_application_data - TODO description
+ * @param { TODO type } applicationData - TODO description
  * @param { TODO type } dict_variable_elements_selected - TODO description
  * @param { TODO type } applicationContext - TODO description
  * @param { TODO type } uiElementsRef - TODO description
@@ -40,7 +40,7 @@ import { OpenSankeyConfigurationsMenusFType } from './types/SankeyMenuConfigurat
  *
  */
 export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType = (
-  dict_variable_application_data,
+  applicationData,
   dict_variable_elements_selected,
   applicationContext,
   uiElementsRef,
@@ -59,7 +59,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
   node_function
 
 ) => {
-  const {data}=dict_variable_application_data
+  const {data}=applicationData
   const {t}=applicationContext
   const {links_accordion_ref, nodes_accordion_ref,accordion_ref} = uiElementsRef
   const {multi_selected_nodes}=dict_variable_elements_selected
@@ -126,7 +126,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             <AccordionPanel>
               <SankeyNodeEdition
                 applicationContext={applicationContext}
-                dict_variable_application_data={dict_variable_application_data}
+                applicationData={applicationData}
                 dict_variable_elements_selected={dict_variable_elements_selected}
                 multi_selected_nodes={multi_selected_nodes}
                 menu_configuration_nodes={menu_configuration_nodes}
@@ -153,7 +153,7 @@ export const OpenSankeyConfigurationsMenus : OpenSankeyConfigurationsMenusFType 
             </AccordionButton>
             <AccordionPanel>
               <SankeyMenuConfigurationLinks
-                dict_variable_application_data={dict_variable_application_data}
+                applicationData={applicationData}
                 applicationContext={applicationContext}
                 dict_variable_elements_selected={dict_variable_elements_selected}
                 menu_configuration_links={menu_configuration_links}

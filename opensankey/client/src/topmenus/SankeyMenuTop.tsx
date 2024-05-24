@@ -39,7 +39,7 @@ import {
   MenuTypes,
   NodeFunctionTypes,
   LinkFunctionTypes,
-  dict_variable_application_dataType,
+  applicationDataType,
   ComponentUpdaterType} from '../types/Types'
 
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
@@ -473,7 +473,7 @@ export const OpenSankeyMenus : OpenSankeyMenusFType = (
 export const Modale_resolution_png : Modale_resolution_pngFType =(
   t:TFunction,
   dict_hook_ref_setter_show_dialog_components,
-  dict_variable_application_data,
+  applicationData,
   pointer_pos
 )=>{
   const [h,set_h]=useState<number>()
@@ -540,7 +540,7 @@ export const Modale_resolution_png : Modale_resolution_pngFType =(
       </InputGroup>
     </Box>
     <Button variant='primary' disabled={!valid_input} onClick={()=>{
-      dict_variable_application_data.function_on_wait.current=()=>{
+      applicationData.function_on_wait.current=()=>{
         clickSavePNG(h,v)
       }
       dict_hook_ref_setter_show_dialog_components.ref_setter_show_waiting.current(true)
@@ -608,7 +608,7 @@ const clickSavePNG = (
 export const Menu: FunctionComponent<MenuTypes> = (
   {
     applicationContext,
-    dict_variable_application_data,
+    applicationData,
     dict_variable_elements_selected,
     uiElementsRef,
     contextMenu,
@@ -651,7 +651,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const [modale_sub_tuto,set_modale_sub_tuto]=useState(Object.keys(formations_menu)[0]!==undefined?Object.keys(formations_menu)[0]:'')
   const [update,setUpdate] = useState(false)
   let max_link_value = 0
-  Object.values(dict_variable_application_data.data.links).forEach(link => {
+  Object.values(applicationData.data.links).forEach(link => {
     const new_max_link_value = FindMaxLinkValue(
       max_link_value,
       link.value
@@ -664,7 +664,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
   const toggleShow = () => {
     set_show_nav(!show_nav)
     if(!show_nav){
-      actualizeDrawAreaFrame(dict_variable_application_data,applicationDraw.GetSankeyMinWidthAndHeight)
+      actualizeDrawAreaFrame(applicationData,applicationDraw.GetSankeyMinWidthAndHeight)
     }else{
       d3.select('.scroll_zone').style('width',null)
     }
@@ -733,9 +733,9 @@ export const Menu: FunctionComponent<MenuTypes> = (
               <Button variant='primary'
                 onClick={() => {
                   UploadExemple(
-                    ('Formations/Tutoriels/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
+                    ('Formations/Tutoriels/'+(d[0])+'/sankey/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                   )
-                  dict_variable_application_data.set_data({...dict_variable_application_data.data})
+                  applicationData.set_data({...applicationData.data})
                   set_show_tuto(false)
                 }}
               >{applicationContext.t('useTutoJSON')}</Button>
@@ -744,7 +744,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                   onClick={() => {
                     processFunctions.launch('Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
+                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                     )
                     set_show_tuto(false)
                   }
@@ -756,7 +756,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                   onClick={() => {
                     processFunctions.launch('Formations/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, dict_variable_application_data.data, dict_variable_application_data.set_data,Reinitialization,convert_data,dict_variable_application_data.get_default_data
+                      'Formations/Tutoriels/'+(d[0])+'/'+dd.replace('_layout.json','_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
                     )
                     set_show_tuto(false)
                   }
@@ -824,16 +824,16 @@ export const Menu: FunctionComponent<MenuTypes> = (
 
   const modal_support= MenuDraggable(dict_hook_ref_setter_show_dialog_components,'ref_setter_show_modale_support',content_support,contextMenu.pointer_pos,applicationContext.t('Menu.c_support'))
 
-  const data_tags = Object.assign({},dict_variable_application_data.data.dataTags)
+  const data_tags = Object.assign({},applicationData.data.dataTags)
   const show_data=Object.values(data_tags).length>0
   let DDDT=[] as (JSX.Element|undefined)[]
   if(show_data){
     DDDT=DataTagsDDNavBar(
-      dict_variable_application_data,node_function,link_function,ComponentUpdater
+      applicationData,node_function,link_function,ComponentUpdater
     )
   }
   const modal_resolution_png=Modale_resolution_png(applicationContext.t,
-    dict_hook_ref_setter_show_dialog_components,dict_variable_application_data,contextMenu.pointer_pos
+    dict_hook_ref_setter_show_dialog_components,applicationData,contextMenu.pointer_pos
   )
   return (
     <>
@@ -848,7 +848,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
         ref_setter_mode_selection.current('s')
         AddDrawNodesEvent(
           contextMenu,
-          dict_variable_application_data,
+          applicationData,
           uiElementsRef,
           dict_variable_elements_selected,
           applicationContext,
@@ -957,12 +957,12 @@ export const Menu: FunctionComponent<MenuTypes> = (
       <ApplyLayoutDialog
         t={applicationContext.t}
         dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-        dict_variable_application_data={dict_variable_application_data}
+        applicationData={applicationData}
         applicationDraw={applicationDraw}
         convert_data={convert_data}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={DiagramSelector}
-        DefaultSankeyData={dict_variable_application_data.get_default_data}
+        DefaultSankeyData={applicationData.get_default_data}
         ComponentUpdater={ComponentUpdater}
       />
 
@@ -979,7 +979,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       <SankeyLoad
         applicationContext={applicationContext}
         applicationDraw={applicationDraw}
-        dict_variable_application_data={dict_variable_application_data}
+        applicationData={applicationData}
         successAction={()=>DownloadExamples(
           processFunctions.path.current,
           applicationContext.url_prefix,
@@ -1058,14 +1058,14 @@ export const MenuDraggable : MenuDraggableFType=(
 }
 
 const  DataTagsDDNavBar = (
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   node_function:NodeFunctionTypes,
   link_function:LinkFunctionTypes,
   ComponentUpdater:ComponentUpdaterType
   // set_tags_selected:(o:{[x:string]:string})=>void
 ) => {
   const {updateComponentMenu}=ComponentUpdater
-  const {data,set_data}=dict_variable_application_data
+  const {data,set_data}=applicationData
   const banner_grouptag = Object.entries(data.dataTags).filter(([, tags_group]) => { return (tags_group.banner == 'one' || tags_group.banner == 'multi') })
   const allDD = banner_grouptag.map(([, tags_group]) => {
     if (tags_group.banner == 'one') {
@@ -1114,8 +1114,8 @@ const  DataTagsDDNavBar = (
                 data.links=pureLinks
                 handleSimpleDropdown(evt, tags_group)
                 node_function.recomputeDisplayedElement()
-                node_function.RedrawNodes(Object.values(dict_variable_application_data.display_nodes))
-                link_function.RedrawLinks(Object.values(dict_variable_application_data.display_links))
+                node_function.RedrawNodes(Object.values(applicationData.display_nodes))
+                link_function.RedrawLinks(Object.values(applicationData.display_links))
                 updateComponentMenu.current()
                 // const newEntries = new Map(Object.entries(data.dataTags).map(([dataTagKey, dataTag]) => {
                 //   return (Object.keys(dataTag.tags).length > 0) ? [
@@ -1300,7 +1300,7 @@ export const post_process_export_svg=()=>{
 }
 
 export const ToastWaitFunc=({
-  dict_variable_application_data,
+  applicationData,
   dict_hook_ref_setter_show_dialog_components,
   applicationContext}:ToastWaitFuncFType
 )=>{
@@ -1309,8 +1309,8 @@ export const ToastWaitFunc=({
 
   return     <Toast onEntered={()=>{
     setTimeout(()=>{
-      dict_variable_application_data.function_on_wait.current()
-      dict_variable_application_data.function_on_wait.current=()=>null
+      applicationData.function_on_wait.current()
+      applicationData.function_on_wait.current=()=>null
       set_show_toast_wait(false)
     },50
     )

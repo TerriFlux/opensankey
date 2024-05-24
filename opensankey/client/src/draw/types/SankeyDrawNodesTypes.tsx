@@ -1,7 +1,7 @@
 import { MutableRefObject} from 'react'
 
 import { 
-  dict_variable_application_dataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,
+  applicationDataType, contextMenuType, dict_variable_elements_selectedType, uiElementsRefType,
   LinkFunctionTypes, ComponentUpdaterType, dict_hook_ref_setter_show_dialog_componentsType, applicationContextType, SankeyNode, NodeFunctionTypes
 } from '../../types/Types'
 import { NodeTooltipsContentFType } from './SankeyTooltipTypes'
@@ -10,7 +10,7 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
 
 export type DrawAllNodesFType = (
   contextMenu:contextMenuType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
@@ -22,14 +22,14 @@ export type DrawAllNodesFType = (
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  resizeCanvas:(_:dict_variable_application_dataType)=>void
+  resizeCanvas:(_:applicationDataType)=>void
 ) => void
 
   
 
 export type AddDrawNodesFType = (
   contextMenu:contextMenuType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
@@ -41,12 +41,12 @@ export type AddDrawNodesFType = (
   dict_hook_ref_setter_show_dialog_components: dict_hook_ref_setter_show_dialog_componentsType,
   node_function:NodeFunctionTypes,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  resizeCanvas:(_:dict_variable_application_dataType)=>void,
+  resizeCanvas:(_:applicationDataType)=>void,
 ) => void
   
 export type drawNodeShapeFType = (
   contextMenu:contextMenuType,
-  dict_variable_application_data:dict_variable_application_dataType,
+  applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
   dict_variable_elements_selected:dict_variable_elements_selectedType,
   applicationContext:applicationContextType,
@@ -59,11 +59,11 @@ export type drawNodeShapeFType = (
   node_function:NodeFunctionTypes,
   node_to_draw:SankeyNode[],
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
-  resizeCanvas:(_:dict_variable_application_dataType)=>void,
+  resizeCanvas:(_:applicationDataType)=>void,
 ) => void
 
 export type updateDrawNodeShapeFType  = (
-    dict_variable_application_data:dict_variable_application_dataType,
+    applicationData:applicationDataType,
     link_function:LinkFunctionTypes,
     multi_selected_nodes : { current : SankeyNode[] },
     node_to_update:SankeyNode[])=>void

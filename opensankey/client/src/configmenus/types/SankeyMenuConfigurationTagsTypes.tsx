@@ -1,8 +1,8 @@
-import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, dict_variable_application_dataType } from '../../types/Types'
+import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, applicationContextType, applicationDataType } from '../../types/Types'
 
 export type SankeySettingsEditionElementTagsTypes = {
     applicationContext:applicationContextType,
-    dict_variable_application_data : dict_variable_application_dataType,
+    applicationData : applicationDataType,
     elementTagNameProp: 'nodeTags' | 'fluxTags' | 'dataTags',
     elementNameProp: 'nodes' | 'links' | 'none',
     node_function:NodeFunctionTypes,
