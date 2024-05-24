@@ -602,11 +602,11 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
             } else {
               new_master_data= JSON.parse(JSON.stringify(master_data)) as SankeyPlusData
             }
-            set_view(evt.target.value)
             const data_view=GetDataFromView(new_master_data,evt.target.value) as SankeyPlusData
             set_data(JSON.parse(JSON.stringify(data_view)))
             new_master_data.current_view=evt.target.value
-            set_data(JSON.parse(JSON.stringify(new_master_data)))
+            set_master_data(JSON.parse(JSON.stringify(new_master_data)))
+            set_view(evt.target.value)
           } else if(evt.target.value === 'none'){
             set_view(evt.target.value)
             set_data(JSON.parse(JSON.stringify(master_data)))

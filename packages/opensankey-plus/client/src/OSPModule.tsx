@@ -144,7 +144,14 @@ export const OSPInitializeApplicationData : OSPinitializeApplicationDataVarType=
 ) => {
   const data_plus=data as SankeyPlusData
   const [master_data, set_master_data] = useState<SankeyPlusData>() // useState OK
-  const [view, set_view] = useState(data_plus.current_view) // useState OK
+  const [view, pre_set_view] = useState(data_plus.current_view) // useState OK
+  const set_view=(s:string)=>{
+    data_plus.current_view=s
+    if(master_data){
+      master_data.current_view=s
+    }
+    pre_set_view(s)
+  }
   const [view_not_saved,set_view_not_saved]=useState('')
   const plus_display_nodes=display_nodes as {[_:string]:SankeyPlusNode}
   const plus_display_links=display_links as {[_:string]:SankeyPlusLink}
