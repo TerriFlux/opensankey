@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
 
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
-import { ReturnValueLink,AssignLinkLocalAttribute, OSTooltip } from './SankeyUtils'
+import { AssignLinkLocalAttribute, OSTooltip } from './SankeyUtils'
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyLink, SankeyNode, dict_variable_application_dataType } from '../types/Types'
 import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
 /*************************************************************************************************/
