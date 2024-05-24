@@ -15,8 +15,6 @@ import {
   FindMaxLinkValue,
   AdjustSankeyZone,
   RecursionDataTag,
-  IsAllLinkNotLocalAttrSameValue,
-  SmoothClasses,
   OSTooltip} from './SankeyUtils'
 import * as d3 from 'd3'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -552,30 +550,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
 
   // ===================Create the popover diplayed near the buttons========================
   // Checkbox that adjust the label position according to the link stroke width
-  const isAllLinksLabelPosOrthAuto=IsAllLinkNotLocalAttrSameValue(data,Object.values(data.links),['label_pos_auto'])
-  const content_adjust_label_pos =<>
-    {/* Button to adjust label position in case the label is bigger than the link */}
-    <OSTooltip label={t('Flux.tooltips.ajust_label')}>
-      <Form.Group as={Row}>
-        <Col>
-          <Checkbox
-
-            sx={SmoothClasses({})}
-            className='btn_menu_config'
-            isChecked={isAllLinksLabelPosOrthAuto['label_pos_auto'][0] as boolean}
-            isIndeterminate={isAllLinksLabelPosOrthAuto['label_pos_auto'][1]}
-            iconColor={isAllLinksLabelPosOrthAuto['label_pos_auto'][1]?'#78C2AD':'white'}
-            maxW={'100%'}
-            onChange={
-              (evt) => {
-                Object.entries(data.links).map(d => {
-                  d[1].label_pos_auto=evt.target.checked
-                })
-                setForceUpdate(!forceUpdate)
-                redrawNodeLinkLegend()
-              }}>{t('Flux.ajust_label')}</Checkbox></Col>
-      </Form.Group></OSTooltip>
-  </>
+  
   //Popover element to handle filter on links, it contians :
   // - filter on link (if value of link is inferior to filter then the link is not displayed)
   // - filter on link label
@@ -653,14 +628,10 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
             />
           </Col>
         </Form.Group>
-        {content_adjust_label_pos}
         {additional_link_visual_filter_content}
       </Form>
     </Popover.Body>
   </Popover>
-
-
-
 
 
   const struc_data_reconciled=<Popover id='popover-details-level' style={{zIndex:1}}>

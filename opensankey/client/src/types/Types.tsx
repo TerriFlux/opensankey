@@ -143,6 +143,7 @@ export type SankeyLinkAttrLocal ={
   label_position?:string,
   orthogonal_label_position?:string,
   label_on_path?:boolean,
+  label_pos_auto?:boolean,
 
   //Attributes link
   arrow?:boolean,
@@ -183,6 +184,8 @@ export type SankeyLinkStyle ={
   label_position: string,
   orthogonal_label_position: string,
   label_on_path: boolean,
+  label_pos_auto:boolean,
+
   label_visible: boolean,
   label_font_size: number,
   text_color: string,
@@ -214,7 +217,6 @@ export type SankeyLink = {
   //style
   style:string,
 
-  label_pos_auto:boolean,
   local?:SankeyLinkAttrLocal
 }
 

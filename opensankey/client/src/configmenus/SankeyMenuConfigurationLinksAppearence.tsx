@@ -5,7 +5,7 @@ import { FaAngleDoubleDown, FaAngleDoubleUp, FaAngleDown, FaAngleUp } from 'reac
 
 import { Box, Button, Checkbox, Input, InputGroup, InputRightAddon, Menu, MenuButton, MenuItem, MenuList, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
 
-import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,TooltipValueSurcharge, IsAllLinkNotLocalAttrSameValue, OSTooltip} from './SankeyUtils'
+import { ReturnCorrectLinkAttributeValue,AssignLinkValueToCorrectVar,IsAllLinkAttrSameValue,IsLinkDiplayingValueLocal,CutName,TooltipValueSurcharge, OSTooltip} from './SankeyUtils'
 import { MenuConfigurationLinksAppearenceFType, handleDownLinkFType, handleUpLinkFType } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
 
 const logo_hv=<svg  xmlns="http://www.w3.org/2000/svg"
@@ -87,13 +87,10 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
     //updateComponentMenuConfigLink.current()
     setForceUpdate(!forceUpdate)
   }
-  const list_key=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible','color',
+  const list_key:(keyof SankeyLinkAttrLocal)[]=['dashed','label_on_path','to_precision','custom_digit','label_unit_visible','color',
     'label_visible','font_family','recycling','arrow','curved',
-    'text_color','label_position','orthogonal_label_position'] as (keyof SankeyLinkAttrLocal)[]
+    'text_color','label_position','orthogonal_label_position','label_pos_auto']
   const list_value=IsAllLinkAttrSameValue(data,selected_parameter,list_key,menu_for_style)
-
-  const isAllLinksLabelPosOrthAuto=IsAllLinkNotLocalAttrSameValue(data,(menu_for_style)?[]:multi_selected_links.current,['label_pos_auto'])
-
 
   const shiftCenter = () => {
     if (selected_parameter.length == 0) {
@@ -767,7 +764,27 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
         <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
       Position
         </Box>
-
+        {/* Button to adjust label position in case the label is bigger than the link */}
+        <OSTooltip label={t('Flux.tooltips.ajust_label')}>
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            iconColor={list_value['label_pos_auto'][1]?'#78C2AD':'white'}
+            isIndeterminate={list_value['label_pos_auto'][1]}
+            isChecked={list_value['label_pos_auto'][0] as boolean}
+            onChange={
+              (evt) => {
+                Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+                  const orth_pos=ReturnCorrectLinkAttributeValue(data,d,'orthogonal_label_position',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_pos_auto',evt.target.checked,menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'label_position','beginning',menu_for_style)
+                  AssignLinkValueToCorrectVar(d,'orthogonal_label_position',(orth_pos=='frozen')?'middle':orth_pos,menu_for_style)
+                  delete d.x_label
+                  delete d.y_label
+                  delete d.drag_label_offset
+                })
+                updateMenuConfigLink()
+              }}>{t('Flux.ajust_label')}</Checkbox>
+        </OSTooltip>
         {/* Positionnement lateral des label */}
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name'>
@@ -856,7 +873,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                   paddingStart='0'
                   paddingEnd='0'
                   minWidth='0'
-                  variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] &&!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='below'?'menuconfigpanel_option_button_activated_left':'menuconfigpanel_option_button_left'}
+                  variant={!list_value['label_pos_auto'][0] &&!list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='below'?'menuconfigpanel_option_button_activated_left':'menuconfigpanel_option_button_left'}
                   onClick={
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -880,7 +897,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                   paddingStart='0'
                   paddingEnd='0'
                   minWidth='0'
-                  variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='middle'?'menuconfigpanel_option_button_activated_center':'menuconfigpanel_option_button_center'}
+                  variant={!list_value['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='middle'?'menuconfigpanel_option_button_activated_center':'menuconfigpanel_option_button_center'}
                   onClick={
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
@@ -904,7 +921,7 @@ export const MenuConfigurationLinksAppearence : FunctionComponent<MenuConfigurat
                   paddingStart='0'
                   paddingEnd='0'
                   minWidth='0'
-                  variant={!isAllLinksLabelPosOrthAuto['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='above'?'menuconfigpanel_option_button_activated_right':'menuconfigpanel_option_button_right'}
+                  variant={!list_value['label_pos_auto'][0] && !list_value['orthogonal_label_position'][1] && list_value['orthogonal_label_position'][0]==='above'?'menuconfigpanel_option_button_activated_right':'menuconfigpanel_option_button_right'}
                   onClick={
                     () => {
                       Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
