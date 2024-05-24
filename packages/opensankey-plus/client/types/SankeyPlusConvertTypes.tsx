@@ -1,23 +1,23 @@
-import { PlusApplicationContextType, PlusComponentUpdaterType, SankeyPlusApplicationDataType, SankeyPlusData } from './Types'
+import { OSPApplicationContextType, OSPComponentUpdaterType, OSPApplicationDataType, OSPData } from './Types'
 import { OpenSankeyDiagramSelectorFType } from 'open-sankey/src/dialogs/types/SankeyMenuDialogsTypes'
 
 export type plus_convert_dataFType = (
-  data:SankeyPlusData,
-  DefaultSankeyData: ()=>SankeyPlusData
+  data:OSPData,
+  DefaultSankeyData: ()=>OSPData
 )=> void
 
-export type SankeyPlusDiagramSelectorFType = (
-  applicationData:SankeyPlusApplicationDataType,
+export type OSPDiagramSelectorFType = (
+  applicationData:OSPApplicationDataType,
 ) => OpenSankeyDiagramSelectorFType
 
-export type PlusTranformationElementsFType = {
-  applicationData:SankeyPlusApplicationDataType,
-  applicationContext:PlusApplicationContextType,
-  ComponentUpdater:PlusComponentUpdaterType
+export type OSPTransformationElementsFType = {
+  applicationData:OSPApplicationDataType,
+  applicationContext:OSPApplicationContextType,
+  ComponentUpdater:OSPComponentUpdaterType
 }
 
 export type plus_sankey_layoutFType=(
-  data:SankeyPlusData,
-  new_layout:SankeyPlusData,
+  data:OSPData,
+  new_layout:OSPData,
   mode:string[]
 )=> void

@@ -12,23 +12,23 @@ import {
 
 // Internal imports
 import {
-  SankeyPlusData,
-  SankeyPlusLabel,
-  SankeyPlusLink,
-  SankeyPlusLinkAttrLocal,
-  SankeyPlusLinkStyle,
-  SankeyPlusNode,
-  SankeyPlusNodeVar,
+  OSPData,
+  OSPLabel,
+  OSPLink,
+  OSPLinkAttrLocal,
+  OSPLinkStyle,
+  OSPNode,
+  OSPNodeVar,
 } from '../types/Types'
 import {
-  DefaultSankeyPlusStyleLinkFType,
-  DragLegendPlusFType,
+  DefaultOSPStyleLinkFType,
+  DragLegendOSPFType,
   ImportImageAsSvgBgFType,
   IsAllZdtAttrSameValueFType,
   OSPIsAllNodeNotLocalAttrSameValueFType,
-  PlusAssignLinkValueToCorrectVarFType,
-  PlusLinkSabotColorFType,
-  PlusReturnValueLinkFType,
+  OSPAssignLinkValueToCorrectVarFType,
+  OSPLinkSabotColorFType,
+  OSPReturnValueLinkFType,
   SetSvgBgFType,
   ValueOf,
   clickSaveSVGFType,
@@ -55,20 +55,20 @@ import {pre_process_export_svg,post_process_export_svg} from 'open-sankey/dist/t
 
 
 // Local imports
-// import { SankeyPlusData,SankeyPlusNode, } from './types'
+// import { OSPData,OSPNode, } from './types'
 import SankeyListIcons from './icons/lib_of_icons.json'
 
 
 
-export const DefaultSankeyPlusStyleLink : DefaultSankeyPlusStyleLinkFType = () => {
-  const style=DefaultLinkStyle() as SankeyPlusLinkStyle
+export const DefaultOSPStyleLink : DefaultOSPStyleLinkFType = () => {
+  const style=DefaultLinkStyle() as OSPLinkStyle
   style.gradient=false
   return style
 }
 
-export  const DragLegendPlus : DragLegendPlusFType = (
-  data:SankeyPlusData,
-  multi_selected_label:{current:SankeyPlusLabel[]},
+export  const DragLegendOSP : DragLegendOSPFType = (
+  data:OSPData,
+  multi_selected_label:{current:OSPLabel[]},
   ComponentUpdater,
   resizeCanvas,
   node_function,
@@ -81,9 +81,9 @@ export  const DragLegendPlus : DragLegendPlusFType = (
       DragLegendGElementOSTyped(data,event)
       if (data.legend_position[0]===0 || data.legend_position[1]===0) {
         OpposingDragElementsPlus(
-          [({x: data.legend_position[0], y:data.legend_position[1]} as SankeyPlusNode)],
+          [({x: data.legend_position[0], y:data.legend_position[1]} as OSPNode)],
           event,
-          ({} as SankeyPlusNode),applicationData,{current:[]},
+          ({} as OSPNode),applicationData,{current:[]},
           multi_selected_label)
       }
     }
@@ -121,7 +121,7 @@ export const ImportImageAsSvgBg : FunctionComponent<ImportImageAsSvgBgFType> = (
       >
         {t('MEP.show_image')}
       </Checkbox>
-      <OSTooltip label={!has_open_sankey_plus?t('Menu.sankeyPlusDisabled'):''} >
+      <OSTooltip label={!has_open_sankey_plus?t('Menu.sankeyOSPDisabled'):''} >
         <Box>
           <Button
             variant='menuconfigpanel_option_button'
@@ -163,7 +163,7 @@ export const ImportImageAsSvgBg : FunctionComponent<ImportImageAsSvgBgFType> = (
   return content_image
 }
 
-export const SetSvgBg : SetSvgBgFType =(data:SankeyPlusData)=>{
+export const SetSvgBg : SetSvgBgFType =(data:OSPData)=>{
 
   d3.select('#svg')
     .filter(()=> !data.show_background_image ||data.background_image===undefined || data.background_image==='')
@@ -179,9 +179,9 @@ export const SetSvgBg : SetSvgBgFType =(data:SankeyPlusData)=>{
 }
 
 export const IsAllZdtAttrSameValue  : IsAllZdtAttrSameValueFType = (
-  data:SankeyPlusData,
-  m_s_zdt:SankeyPlusLabel[],
-  k:keyof SankeyPlusLabel
+  data:OSPData,
+  m_s_zdt:OSPLabel[],
+  k:keyof OSPLabel
 )=>{
   if(m_s_zdt.length===0){
     return [null,null]
@@ -193,18 +193,18 @@ export const IsAllZdtAttrSameValue  : IsAllZdtAttrSameValueFType = (
   })
   return (all_same?[first_value,false]:[0,true])
 }
-// export const PlusIsAllNodeNotLocalAttrSameValue=(data:SankeyPlusData,m_s_n:SankeyPlusNode[],k_list:(keyof SankeyPlusNode)[])=>{
+// export const PlusIsAllNodeNotLocalAttrSameValue=(data:OSPData,m_s_n:OSPNode[],k_list:(keyof OSPNode)[])=>{
 // return IsAllNodeNotLocalAttrSameValue(data,m_s_n,k_list)
 // }
 export const OSPIsAllNodeNotLocalAttrSameValue : OSPIsAllNodeNotLocalAttrSameValueFType = (
-  data:SankeyPlusData,
-  m_s_n:SankeyPlusNode[],
-  k_list:(keyof SankeyPlusNode)[]
+  data:OSPData,
+  m_s_n:OSPNode[],
+  k_list:(keyof OSPNode)[]
 )=>{
   // store_value : variable that contain an array forEach key we are looking for
   // Each array contain in first position the value of the selected nodes attribute
   // In second position it contain a boolean that return true if all selected nodes have the same value for the key
-  const store_value={} as {[x:string]:[ValueOf<SankeyPlusNode>|false,boolean]}
+  const store_value={} as {[x:string]:[ValueOf<OSPNode>|false,boolean]}
 
   if(m_s_n.length>0){
     // For each selected nodes
@@ -231,23 +231,23 @@ export const OSPIsAllNodeNotLocalAttrSameValue : OSPIsAllNodeNotLocalAttrSameVal
   return store_value
 }
 
-export const PlusReturnValueLink : PlusReturnValueLinkFType = (
-  data:SankeyPlusData,
-  l:SankeyPlusLink,
-  k:keyof SankeyPlusLinkAttrLocal | keyof SankeyPlusLinkStyle
+export const OSPReturnValueLink : OSPReturnValueLinkFType = (
+  data:OSPData,
+  l:OSPLink,
+  k:keyof OSPLinkAttrLocal | keyof OSPLinkStyle
 )=>{
   return ReturnValueLink(data,l,((k as unknown) as (keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle)))
 }
-export const PlusAssignLinkValueToCorrectVar : PlusAssignLinkValueToCorrectVarFType =(l:SankeyPlusLink|SankeyPlusLinkStyle,k:keyof SankeyPlusLinkAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
+export const OSPAssignLinkValueToCorrectVar : OSPAssignLinkValueToCorrectVarFType =(l:OSPLink|OSPLinkStyle,k:keyof OSPLinkAttrLocal,v:boolean|string|number,menu_for_style:boolean)=>{
   return AssignLinkValueToCorrectVar(l,k as unknown as keyof SankeyLinkAttrLocal,v,menu_for_style)
 }
 
-export const PlusLinkSabotColor : PlusLinkSabotColorFType = (
-  l: SankeyPlusLink,
-  data:SankeyPlusData,
+export const OSPLinkSabotColor : OSPLinkSabotColorFType = (
+  l: OSPLink,
+  data:OSPData,
   GetLinkValue:GetLinkValueFuncType
 ) => {
-  return PlusReturnValueLink(data,l,'gradient')===true ? NodeColor(data.nodes[l.idSource],data) : LinkColor(l,data,GetLinkValue)
+  return OSPReturnValueLink(data,l,'gradient')===true ? NodeColor(data.nodes[l.idSource],data) : LinkColor(l,data,GetLinkValue)
 }
 
 // Function used before exporting a sankey to svg format
@@ -309,14 +309,14 @@ export const clickSaveSVG : clickSaveSVGFType = () => {
     .then(showFile).then(cleanFile)
 }
 
-export const PlusItemExport:FunctionComponent=(
+export const OSPItemExport:FunctionComponent=(
 )=>{
   return <MenuItem onClick={clickSaveSVG} >SVG</MenuItem>
 }
 
-export const OSPDefaultNode=(data:SankeyPlusData)=>{
+export const OSPDefaultNode=(data:OSPData)=>{
   const os_def_node= DefaultNode(data)
-  const def_plus_data_var:SankeyPlusNodeVar={
+  const def_plus_data_var:OSPNodeVar={
     iconName: '',
     iconColor: '',
     iconVisible: false,
@@ -339,8 +339,8 @@ export const OSPDefaultNode=(data:SankeyPlusData)=>{
 
 type KeysOfIcon = keyof typeof SankeyListIcons
 
-export const generate_data_example_icons=(get_default_data:()=>SankeyPlusData)=>{
-  const data_sankey=get_default_data() as SankeyPlusData
+export const generate_data_example_icons=(get_default_data:()=>OSPData)=>{
+  const data_sankey=get_default_data() as OSPData
   data_sankey.icon_catalog={}
   data_sankey.style_node['default'].node_height=100
   data_sankey.style_node['default'].node_width=100

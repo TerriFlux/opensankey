@@ -13,9 +13,9 @@ import {
 } from '@chakra-ui/react'
 
 // Local libs
-import {SankeyPlusShortcutFType} from '../types/SankeyPlusItemShortcutTypes'
+import {OSPShortcutFType} from '../types/SankeyPlusItemShortcutTypes'
 
-export const SankeyPlusShortcut : SankeyPlusShortcutFType =(t:TFunction)=>{
+export const OSPShortcut : OSPShortcutFType =(t:TFunction)=>{
   return (<Accordion>
     <AccordionItem
       // eventKey='OSP'

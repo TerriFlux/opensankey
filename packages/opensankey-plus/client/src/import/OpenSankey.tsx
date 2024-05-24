@@ -83,7 +83,7 @@ import { reorganize_node_inputLinksIdFuncType, reorganize_node_outputLinksIdFunc
   updateLayoutFuncType,
 } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
 
-import {EventOnZoneMouseDownFuncType, EventOnZoneMouseMoveFuncType, EventOnZoneMouseUpFuncType, SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType, ZoomFunctionFuncType, actualizeDrawAreaFrameFType, applyZoomEventFType, selectOpensankeyElementsInSelectionZoneFType} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
+import {EventOnZoneMouseDownFuncType, EventOnZoneMouseMoveFuncType, EventOnZoneMouseUpFuncType, SimpleGNodeClickFuncType, SvgDragMiddleMouseMoveFuncType, SvgDragMiddleMouseStartFuncType, ZoomFunctionFuncType, actualizeDrawAreaFrameFType, applyZoomEventFType, selectOpenSankeyElementsInSelectionZoneFType} from 'open-sankey/src/draw/types/SankeyDrawEventFunctionTypes'
 import { ClickSaveDiagramFuncType, ClickSaveExcelFuncType, RetrieveExcelResultsFuncType, UploadExempleFuncType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
 import { SankeyMenuConfigurationNodesTooltipFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationNodesTooltipTypes'
 import { MenuConfigurationLinksTooltipFType } from 'open-sankey/src/configmenus/types/SankeyMenuConfigurationLinksTooltipTypes'
@@ -310,7 +310,7 @@ export const drag_node_text:drag_node_textFuncType = sankeyDragNodeFunc.drag_nod
 export const synchronizeNodesandLinksIdOSTyped:synchronizeNodesandLinksIdFuncType = SankeyLayout.synchronizeNodesandLinksId
 export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType = SankeyDrawEventFunc.actualizeDrawAreaFrame
 export const DragElements:DragElementsFuncType = sankeyDragNodeFunc.DragElements
-export const selectOpensankeyElementsInSelectionZone : selectOpensankeyElementsInSelectionZoneFType = SankeyDrawEventFunc.selectOpensankeyElementsInSelectionZone
+export const selectOpenSankeyElementsInSelectionZone : selectOpenSankeyElementsInSelectionZoneFType = SankeyDrawEventFunc.selectOpenSankeyElementsInSelectionZone
 
 export const initializeCloseAllMenuContext:initializeCloseAllMenuContextType =OSModule.initializeCloseAllMenuContext
 export const initializeKeyHandler:initializeKeyHandlerType = OSModule.initializeKeyHandler

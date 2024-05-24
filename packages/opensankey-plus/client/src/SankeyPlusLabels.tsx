@@ -2,22 +2,22 @@ import * as d3 from 'd3'
 
 // Local imports
 import {
-  PlusDragElements,
-  PlusReturnOutOfBoundElements,
+  OSPDragElements,
+  OSPReturnOutOfBoundElements,
   OpposingDragElementsPlus
 } from './SankeyPlusNodes'
 import {
-  SankeyPlusData,
-  SankeyPlusLabel,
-  PlusElementsSelectedType,
-  SankeyPlusApplicationDataType,
-  SankeyPlusContextMenuType,
-  PlusApplicationContextType,
-  PlusComponentUpdaterType,
-  PlusApplicationDrawType
+  OSPData,
+  OSPLabel,
+  OSPElementsSelectedType,
+  OSPApplicationDataType,
+  OSPContextMenuType,
+  OSPApplicationContextType,
+  OSPComponentUpdaterType,
+  OSPApplicationDrawType
 } from '../types/Types'
 import {
-  PlusDrawLabelsFType,
+  OSPDrawLabelsFType,
   eventLabelClickFType,
   sankey_plus_min_width_and_heightFType,
   sankey_plus_zoom_text_zoneFType,
@@ -26,7 +26,7 @@ import {
 import {
   GetSankeyMinWidthAndHeight,
   hideLinkOnDragElement,
-  selectOpensankeyElementsInSelectionZone
+  selectOpenSankeyElementsInSelectionZone
 } from './import/OpenSankey'
 
 // OpenSankey types
@@ -42,9 +42,9 @@ typeof globalThis & {
 }
 
 
-export const PlusDrawLabels : PlusDrawLabelsFType = (
+export const OSPDrawLabels : OSPDrawLabelsFType = (
   applicaTionData,
-  dict_variable_elements_selected,
+  applicationState,
   uiElementsRef,
   contextMenu,
   applicationContext,
@@ -58,7 +58,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   resizeCanvas
 ) => {
   const {data}=applicaTionData
-  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=dict_variable_elements_selected
+  const {multi_selected_nodes,multi_selected_links,multi_selected_label}=applicationState
   const {pointer_pos}=contextMenu
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
@@ -66,7 +66,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
   const scale = d3.scaleLinear()
     .range([0, 100])
     .domain([0, data.user_scale])
-  const data_plus=data as SankeyPlusData
+  const data_plus=data as OSPData
   d3.selectAll('#g_label_handles *').remove()
 
   const add_labels = () => {
@@ -95,7 +95,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
         draw_text_zone_handles(applicaTionData,d,multi_selected_label,applicationDraw,ComponentUpdater,link_function)
 
         gg_label.on('click', (event) => eventLabelClick(
-          event,d,uiElementsRef,dict_variable_elements_selected,multi_selected_label,multi_selected_nodes,multi_selected_links,ComponentUpdater
+          event,d,uiElementsRef,applicationState,multi_selected_label,multi_selected_nodes,multi_selected_links,ComponentUpdater
         ))
         gg_label.on('mousedown',()=>closeAllMenuContext())
         gg_label.on('contextmenu',evt=>{
@@ -104,16 +104,16 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
             evt.preventDefault()
             pointer_pos.current=[evt.pageX,evt.pageY]
             if(multi_selected_label.current.includes(d)){
-              dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
-            (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
+              applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
+            (contextMenu as OSPContextMenuType).contextualised_zdt.current!(d)
             }else{
               multi_selected_label.current.forEach(l=>{
                 deselect_visualy_zdt(l)
               })
               multi_selected_label.current=[d]
               select_visualy_zdt(d)
-              dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
-              (contextMenu as SankeyPlusContextMenuType).contextualised_zdt.current!(d)
+              applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content));
+              (contextMenu as OSPContextMenuType).contextualised_zdt.current!(d)
             }
           }
         })
@@ -144,7 +144,7 @@ export const PlusDrawLabels : PlusDrawLabelsFType = (
         if (!window.SankeyToolsStatic) {
           gg_label.call(
             dragLabelEvent(
-              applicaTionData,dict_variable_elements_selected,
+              applicaTionData,applicationState,
               applicationContext,
               d,
               GetSankeyMinWidthAndHeight,
@@ -179,7 +179,7 @@ export const eventLabelClick : eventLabelClickFType =(
   event,
   d,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   multi_selected_label,
   multi_selected_nodes,
   multi_selected_links,
@@ -222,13 +222,13 @@ export const eventLabelClick : eventLabelClickFType =(
       multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',false))
       multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',false))
       // If we deselect a zdt use the last one selected as displayed in config
-      if(multi_selected_label.current.length>0)dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(multi_selected_label.current[multi_selected_label.current.length-1].content))
+      if(multi_selected_label.current.length>0)applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(multi_selected_label.current[multi_selected_label.current.length-1].content))
     } else {
       multi_selected_label.current.push(d)
       multi_selected_label.current.forEach(l=>d3.select('#'+l.idLabel).classed('selected',true))
       multi_selected_label.current.forEach(l=>d3.select('#gg_zdt_handles_'+l.idLabel).classed('selected',true))
       // Display the content of the last zdt selected in the menu config
-      dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content))
+      applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(d.content))
     }
     ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
 
@@ -248,24 +248,24 @@ export const eventLabelClick : eventLabelClickFType =(
 // To be dragged you need to select the free label
 
 const dragLabelEvent = (
-  applicationData:SankeyPlusApplicationDataType,
-  dict_variable_elements_selected:PlusElementsSelectedType,
-  applicationContext:PlusApplicationContextType,
-  d:SankeyPlusLabel,
+  applicationData:OSPApplicationDataType,
+  applicationState:OSPElementsSelectedType,
+  applicationContext:OSPApplicationContextType,
+  d:OSPLabel,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   scale:(t:number)=>number,
   inv_scale:(t:number)=>number,
-  ComponentUpdater:PlusComponentUpdaterType,
+  ComponentUpdater:OSPComponentUpdaterType,
   link_function:LinkFunctionTypes,
   start_point:{current:number[]},
   resizeCanvas:()=>void
 )=>{
   const { LinkText,GetLinkValue,DrawArrows,RedrawLinks}=link_function
   const {data}=applicationData
-  const {multi_selected_label,multi_selected_nodes,ref_getter_mode_selection}=dict_variable_elements_selected
+  const {multi_selected_label,multi_selected_nodes,ref_getter_mode_selection}=applicationState
   const {updateComponenSaveInCache}= ComponentUpdater
   const node_visible=[] as string[]
-  const data_plus = data as SankeyPlusData
+  const data_plus = data as OSPData
   return (d3.drag<SVGGElement, unknown>()
     .on('start',(evt)=>{
 
@@ -302,14 +302,14 @@ const dragLabelEvent = (
         // Drag zdt
         // Cherche si des element seront hors zone si on les drag
         // Si c'est le cas, pousse les éléments qui ne sont pas sélectionnés dans la direction opposé
-        const out_of_zone_item=PlusReturnOutOfBoundElements(d,data,event,multi_selected_nodes,node_visible)
+        const out_of_zone_item=OSPReturnOutOfBoundElements(d,data,event,multi_selected_nodes,node_visible)
         // Pousse les element non sélectionnés dans la direction opposé
         if(out_of_zone_item.length>0){
           OpposingDragElementsPlus(out_of_zone_item,event,d,applicationData,multi_selected_nodes,multi_selected_label)
         }
-        PlusDragElements(
+        OSPDragElements(
           applicationData,
-          dict_variable_elements_selected,
+          applicationState,
           applicationContext,
           d,event,LinkText,
           GetSankeyMinWidthAndHeight,GetLinkValue,DrawArrows,scale,inv_scale,ComponentUpdater
@@ -319,7 +319,7 @@ const dragLabelEvent = (
     .on('end',(evt)=>{
       if(ref_getter_mode_selection.current==='s' && d3.selectAll('.selection_zone').nodes().length>0){
         zone_selection_label(data_plus,multi_selected_label,evt,ComponentUpdater)
-        selectOpensankeyElementsInSelectionZone(applicationData,dict_variable_elements_selected,ComponentUpdater,evt,start_point)
+        selectOpenSankeyElementsInSelectionZone(applicationData,applicationState,ComponentUpdater,evt,start_point)
 
       }else if (multi_selected_label.current.length>0){
         RedrawLinks(Object.values(applicationData.display_links))
@@ -340,7 +340,7 @@ export const sankey_plus_min_width_and_height : sankey_plus_min_width_and_height
   const [width,height]=GetSankeyMinWidthAndHeight(applicationData)
   let height_plus=0
   let width_plus=0
-  const data_plus=data as SankeyPlusData
+  const data_plus=data as OSPData
   Object.values(data_plus.labels).forEach(n => {
     height_plus =  Math.max(height_plus, n.y+n.label_height)
     width_plus = Math.max(width_plus, (n.x+n.label_width))
@@ -357,8 +357,8 @@ export const sankey_plus_min_width_and_height : sankey_plus_min_width_and_height
 }
 
 export const zone_selection_label : zone_selection_labelFType = (
-  data:SankeyPlusData,
-  multi_selected_label:{current:SankeyPlusLabel[]},
+  data:OSPData,
+  multi_selected_label:{current:OSPLabel[]},
   evt:MouseEvent,
   ComponentUpdater
 )=>{
@@ -396,11 +396,11 @@ export const zone_selection_label : zone_selection_labelFType = (
 }
 
 const draw_text_zone_handles=(
-  applicationData:SankeyPlusApplicationDataType,
-  zdt:SankeyPlusLabel,
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  applicationDraw:PlusApplicationDrawType,
-  ComponentUpdater:PlusComponentUpdaterType,
+  applicationData:OSPApplicationDataType,
+  zdt:OSPLabel,
+  multi_selected_label:{current:OSPLabel[]},
+  applicationDraw:OSPApplicationDrawType,
+  ComponentUpdater:OSPComponentUpdaterType,
   link_function:LinkFunctionTypes
 )=>{
   d3.select('.opensankey #g_label_handles').append('g').attr('id','gg_zdt_handles_'+zdt.idLabel).attr('class','gg_zdt_handles').classed('selected',multi_selected_label.current.includes(zdt));
@@ -410,10 +410,10 @@ const draw_text_zone_handles=(
 }
 const size_zdt_handle=10
 const add_zdt_handle=(
-  zdt:SankeyPlusLabel,pos:string,
-  applicationData:SankeyPlusApplicationDataType,
-  applicationDraw:PlusApplicationDrawType,
-  ComponentUpdater:PlusComponentUpdaterType,
+  zdt:OSPLabel,pos:string,
+  applicationData:OSPApplicationDataType,
+  applicationDraw:OSPApplicationDrawType,
+  ComponentUpdater:OSPComponentUpdaterType,
   link_function:LinkFunctionTypes
 )=>{
   // Compute the zoom of the svg so we increase the size of the handles if the svg is de-zoomed
@@ -466,11 +466,11 @@ const add_zdt_handle=(
 }
 
 const drag_text_zone_hande=(
-  zdt:SankeyPlusLabel,
+  zdt:OSPLabel,
   pos:string,
-  applicationData:SankeyPlusApplicationDataType,
-  applicationDraw:PlusApplicationDrawType,
-  ComponentUpdater:PlusComponentUpdaterType,
+  applicationData:OSPApplicationDataType,
+  applicationDraw:OSPApplicationDrawType,
+  ComponentUpdater:OSPComponentUpdaterType,
   link_function:LinkFunctionTypes
 )=>{
   const {data}=applicationData
@@ -557,7 +557,7 @@ const drag_text_zone_hande=(
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
       ComponentUpdater.updateComponenSaveInCache.current(false)
       link_function.RedrawLinks(Object.values(applicationData.display_links))
-      applicationDraw.reDrawPlusLabels([zdt])
+      applicationDraw.reDrawOSPLabels([zdt])
     })
 
 
@@ -570,23 +570,23 @@ export const sankey_plus_zoom_text_zone : sankey_plus_zoom_text_zoneFType =(evt:
     d3.selectAll('.opensankey .zdt_handles').attr('r',10*(1/k_factor))
   }
 }
-const select_visualy_zdt=(zdt:SankeyPlusLabel)=>{
+const select_visualy_zdt=(zdt:OSPLabel)=>{
   d3.select('#'+zdt.idLabel+ ' rect').attr('stroke-width',3)
   d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display','inline')
 }
-const deselect_visualy_zdt=(zdt:SankeyPlusLabel)=>{
+const deselect_visualy_zdt=(zdt:OSPLabel)=>{
   d3.select('#'+zdt.idLabel+ ' rect').attr('stroke-width',1)
   d3.select('.opensankey #gg_zdt_handles_'+zdt.idLabel).style('display','none')
 }
 
 export const deleteGLabel=(
-  zdt_to_delete:SankeyPlusLabel[],
-  dict_variable_elements_selected:PlusElementsSelectedType)=>{
+  zdt_to_delete:OSPLabel[],
+  applicationState:OSPElementsSelectedType)=>{
   zdt_to_delete.forEach(zdt=>{
     d3.select('#'+zdt.idLabel).remove()
     d3.selectAll('#gg_zdt_handles_'+zdt.idLabel).remove()
   })
 
-  dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+  applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
 
 }

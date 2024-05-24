@@ -19,14 +19,14 @@ import {
   FilterView
 } from './SankeyPlusViews'
 import {
-  SankeyPlusData,
-  SankeyPlusLabel,
+  OSPData,
+  OSPLabel,
   DiffType,
   ViewType
 } from '../types/Types'
 import {
-  SankeyPlusDiagramSelectorFType,
-  PlusTranformationElementsFType,
+  OSPDiagramSelectorFType,
+  OSPTransformationElementsFType,
   plus_convert_dataFType,
   plus_sankey_layoutFType
 } from '../types/SankeyPlusConvertTypes'
@@ -42,12 +42,12 @@ import {
   OSTooltip
 } from './import/OpenSankey'
 
-// Opensankey types
+// OpenSankey types
 import { SankeyData } from 'open-sankey/src/types/Types'
 import { updateLayoutFuncType } from 'open-sankey/src/draw/types/SankeyDrawLayoutTypes'
 
 
-interface SankeyPlusLabelToConvert extends SankeyPlusLabel{
+interface OSPLabelToConvert extends OSPLabel{
   transparent?:boolean,
   name?:string,
   font_size?:number
@@ -58,8 +58,8 @@ export const plus_all_element_to_transform = [
 ]
 
 export const plus_convert_data : plus_convert_dataFType = (
-  data:SankeyPlusData,
-  DefaultSankeyData: ()=>SankeyPlusData
+  data:OSPData,
+  DefaultSankeyData: ()=>OSPData
 )=>{
 
   data.background_image=(data.background_image===undefined)?'':data.background_image
@@ -73,7 +73,7 @@ export const plus_convert_data : plus_convert_dataFType = (
     data.accordeonToShow.push('LL')
   }
   if(data.labels){
-    Object.values(data.labels).forEach((l:SankeyPlusLabelToConvert)=>{
+    Object.values(data.labels).forEach((l:OSPLabelToConvert)=>{
       if(l.title===undefined){
         let idZdt = Object.keys(data.labels).length
         const tab_title=Object.values(data.labels).map(zdt=>zdt.title)
@@ -85,19 +85,19 @@ export const plus_convert_data : plus_convert_dataFType = (
       // CONVERT TEXT ZONE TRANSPARENT -> OPACITY (0-100)
       if(l.transparent!==undefined){
         l.opacity=l.transparent?0:100
-        delete ((l as unknown) as SankeyPlusLabelToConvert ).transparent
+        delete ((l as unknown) as OSPLabelToConvert ).transparent
       }
 
-      if(((l as unknown) as SankeyPlusLabelToConvert ).name!==undefined){
-        const new_content=((l as unknown) as SankeyPlusLabelToConvert).name
-        if (((l as unknown) as SankeyPlusLabelToConvert).font_size === 40) {
+      if(((l as unknown) as OSPLabelToConvert ).name!==undefined){
+        const new_content=((l as unknown) as OSPLabelToConvert).name
+        if (((l as unknown) as OSPLabelToConvert).font_size === 40) {
           l.content=new_content?'<h3>'+new_content+'</h3>':''
-        } else if (((l as unknown) as SankeyPlusLabelToConvert).font_size === 30) {
+        } else if (((l as unknown) as OSPLabelToConvert).font_size === 30) {
           l.content=new_content?'<h4>'+new_content+'</h4>':''
         } else {
           l.content=new_content?new_content:''
         }
-        delete ((l as unknown) as SankeyPlusLabelToConvert ).name
+        delete ((l as unknown) as OSPLabelToConvert ).name
       }
       const keys = ['idLabel','title','content','opacity','color','color_border','transparent_border','label_width','label_height','x','y','x_label','y_label','is_image','image_src']
       const keys_to_remove : string[]=[]
@@ -131,20 +131,20 @@ export const plus_convert_data : plus_convert_dataFType = (
     if(v.heredited_attr_from_master===undefined){
       v.heredited_attr_from_master=['']
     }
-    if((v.view_data as unknown as SankeyPlusData ).version){
+    if((v.view_data as unknown as OSPData ).version){
       complete_sankey_data(
-        v.view_data as SankeyPlusData,
+        v.view_data as OSPData,
         DefaultSankeyData,
         DefaultNode,DefaultLink);
-      (v.view_data as unknown as SankeyPlusData ).view= []
-      convert_tags(v.view_data as unknown as SankeyPlusData)
-      convert_nodes(v.view_data as unknown as SankeyPlusData)
-      convert_links(v.view_data as unknown as SankeyPlusData)
-      convert_data(v.view_data as unknown as SankeyPlusData, DefaultSankeyData)
-      plus_convert_data((v.view_data as unknown as SankeyPlusData ),DefaultSankeyData)
+      (v.view_data as unknown as OSPData ).view= []
+      convert_tags(v.view_data as unknown as OSPData)
+      convert_nodes(v.view_data as unknown as OSPData)
+      convert_links(v.view_data as unknown as OSPData)
+      convert_data(v.view_data as unknown as OSPData, DefaultSankeyData)
+      plus_convert_data((v.view_data as unknown as OSPData ),DefaultSankeyData)
     }
     else if ((v.view_data as unknown as DiffType).diff!==undefined) {
-      const d_view = GetDataFromView(data, v.id) as SankeyPlusData
+      const d_view = GetDataFromView(data, v.id) as OSPData
       convert_data(d_view, DefaultSankeyData)
       plus_convert_data(d_view, DefaultSankeyData)
       const copy_data = {...data}
@@ -170,14 +170,14 @@ export const plus_convert_data : plus_convert_dataFType = (
   })
 }
 
-export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
+export const OSPDiagramSelector : OSPDiagramSelectorFType = (
   applicationData
 ) => {
   const {master_data,set_master_data,view,get_default_data} =applicationData
   const [s_diagram_type, sDiagramType] = useState('File')
   const [view_selected, set_view_selected] = useState('none')
 
-  const SankeyPlusDiagramSelectorInner = (
+  const OSPDiagramSelectorInner = (
     t: TFunction,
     convert_data: (s:SankeyData,DefaultSankeyData: ()=>SankeyData)=>void,
     sankey_data: SankeyData,
@@ -244,7 +244,7 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
                 // No update of view by itself
                 return
               }
-              const data_view=GetDataFromView(master_data,view_selected) as SankeyPlusData
+              const data_view=GetDataFromView(master_data,view_selected) as OSPData
               updateLayout(sankey_data,data_view,dataVarToUpdate.current)
               const copy_data = JSON.parse(JSON.stringify(sankey_data))
               set_sankey_data(copy_data)
@@ -299,10 +299,10 @@ export const SankeyPlusDiagramSelector : SankeyPlusDiagramSelectorFType = (
 
     </InputGroup>)
   }
-  return SankeyPlusDiagramSelectorInner
+  return OSPDiagramSelectorInner
 }
 
-export const PlusTranformationElements : FunctionComponent<PlusTranformationElementsFType> = ({
+export const OSPTransformationElements : FunctionComponent<OSPTransformationElementsFType> = ({
   applicationData,
   applicationContext,
   ComponentUpdater
@@ -386,8 +386,8 @@ export const PlusTranformationElements : FunctionComponent<PlusTranformationElem
 }
 
 export const plus_sankey_layout : plus_sankey_layoutFType =(
-  data:SankeyPlusData,
-  new_layout:SankeyPlusData,
+  data:OSPData,
+  new_layout:OSPData,
   mode:string[]
 )=>{
   if (mode.includes('freeLabels') && new_layout.labels) {
@@ -408,12 +408,12 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
       new_layout.view.forEach ((view_of_new_layout:ViewType )=> {
         const view_data=JSON.parse(JSON.stringify(new_layout))
         if (data.view.filter(d_view=>d_view.nom === view_of_new_layout.nom ).length===0) {
-          if((view_of_new_layout.view_data as SankeyPlusData ).version) {
+          if((view_of_new_layout.view_data as OSPData ).version) {
             // Views are copied identical to what they were
             view_of_new_layout.heredited_attr_from_master = ['']
             // nodeId and linkId must be synchronized with new master
             synchronizeNodesandLinksIdOSTyped(
-              view_of_new_layout.view_data as SankeyPlusData,
+              view_of_new_layout.view_data as OSPData,
               data)
             data.view.push(view_of_new_layout)
           }
@@ -423,7 +423,7 @@ export const plus_sankey_layout : plus_sankey_layoutFType =(
               .forEach((difference) => applyChange(view_data, {}, difference))
             // nodeId and linkId must be synchronized with new master
             synchronizeNodesandLinksIdOSTyped(view_data,data)
-            const data_view_diff = getDiff(data, view_data) as Diff<undefined, SankeyPlusData>[]
+            const data_view_diff = getDiff(data, view_data) as Diff<undefined, OSPData>[]
             (view_of_new_layout.view_data as DiffType).diff = data_view_diff.filter((d) => !(d.path!.includes('view')))
             // Views are copied identical to what they were
             view_of_new_layout.heredited_attr_from_master = ['']

@@ -60,10 +60,10 @@ import {
   MenuEnregistrerViewFType,
   modal_transparent_view_attrFType,
   modal_view_not_savedFType,
-  OpenSankeyPlusCheckpointButtonFType,
+  OpenOSPCheckpointButtonFType,
   RecomputeViewsFType,
-  SankeyPlusBannerViewFType,
-  SankeyPlusMenuPreferenceViewFType,
+  OSPBannerViewFType,
+  OSPMenuPreferenceViewFType,
   SelecteurViewFType,
   setValueFType,
   ViewToast_update_viewFType,
@@ -72,11 +72,11 @@ import {
 } from '../types/SankeyPlusViewsTypes'
 
 import {
-  SankeyPlusData,
+  OSPData,
   differenceType,
   DiffType,
   ViewType,
-  SankeyPlusApplicationDataType,
+  OSPApplicationDataType,
   SankeyUnitData
 } from '../types/Types'
 import {
@@ -86,14 +86,14 @@ import {
 import { deleteGLabel } from './SankeyPlusLabels'
 
 export const getSetDiagramFunc : getSetDiagramFType = (
-  set_master_data: (d:SankeyPlusData | undefined)=>void,
+  set_master_data: (d:OSPData | undefined)=>void,
   set_view: (s:string)=>void,
-  DefaultSankeyData: ()=>SankeyPlusData
+  DefaultSankeyData: ()=>OSPData
 )  => {
   return (
     the_diagram : string,
-    set_data : (d:SankeyPlusData)=>void,
-    convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void
+    set_data : (d:OSPData)=>void,
+    convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void
   ) => {
     const sous_filieres = window.sankey.sous_filieres
 
@@ -101,13 +101,13 @@ export const getSetDiagramFunc : getSetDiagramFType = (
       JSON.stringify(
         window.sankey[sous_filieres[the_diagram]]
       )
-    ) as SankeyPlusData
+    ) as OSPData
     convert_data(new_data,DefaultSankeyData)
     d3.select(' .opensankey #svg').on('.zoom', null)
     if (window.SankeyToolsStatic && new_data.view.length > 0) {
       set_master_data(new_data)
       set_view(new_data.view[0].id)
-      set_data(GetDataFromView(new_data,new_data.view[0].id) as SankeyPlusData)
+      set_data(GetDataFromView(new_data,new_data.view[0].id) as OSPData)
     } else {
       set_master_data(undefined)
       set_data(new_data)
@@ -158,7 +158,7 @@ export const setValue : setValueFType = (
 }
 
 export const GetDataFromView : GetDataFromViewFType = (
-  master_data:SankeyPlusData|undefined,
+  master_data:OSPData|undefined,
   id_view_to_see:string
 )=>{
   // Copy master data
@@ -168,7 +168,7 @@ export const GetDataFromView : GetDataFromViewFType = (
   }
   const copy_master_data= JSON.parse(JSON.stringify(master_data))
   copy_master_data.view = []
-  let data_init=JSON.parse(JSON.stringify(copy_master_data)) as SankeyPlusData
+  let data_init=JSON.parse(JSON.stringify(copy_master_data)) as OSPData
   // Get the difference from the view
   if (master_data.view.filter(v=>v.id === id_view_to_see).length === 0) {
     alert('view not found')
@@ -183,7 +183,7 @@ export const GetDataFromView : GetDataFromViewFType = (
     }
     diff_view.forEach((d) => applyChange(data_init, {}, d))
   }else{
-    data_init=view_object.view_data as SankeyPlusData
+    data_init=view_object.view_data as OSPData
   }
   updateLayoutOSTyped(data_init,master_data,view_object.heredited_attr_from_master)
   // updateLayout(data_init,master_data,view_object.heredited_attr_from_master)
@@ -206,23 +206,23 @@ export const FilterView : FilterViewFType = (pre_diff) => {
       if(d.kind === 'E'){
         delete ((d as unknown) as differenceType).lhs
       }
-      return d as Diff<undefined, SankeyPlusData>
+      return d as Diff<undefined, OSPData>
     })
 }
 
 export const RecomputeViews : RecomputeViewsFType = (
-  new_master_data: SankeyPlusData | undefined,
-  prev_master_data: SankeyPlusData| undefined,
-  set_master_data: (d:SankeyPlusData| undefined,)=>void
+  new_master_data: OSPData | undefined,
+  prev_master_data: OSPData| undefined,
+  set_master_data: (d:OSPData| undefined,)=>void
 ) =>{
   if ( prev_master_data) {
     new_master_data!.view.forEach(current_v => {
       if ( prev_master_data.view.filter(v=>v.id===current_v.id).length === 0) {
         return
       }
-      const data_view=GetDataFromView(prev_master_data,current_v.id) as SankeyPlusData
+      const data_view=GetDataFromView(prev_master_data,current_v.id) as OSPData
 
-      if((current_v.view_data as SankeyPlusData).version){
+      if((current_v.view_data as OSPData).version){
         current_v.view_data=data_view
       }
       else{
@@ -243,20 +243,20 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
   applicationContext,
   e: KeyboardEvent,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   dict_hook_ref_setter_show_dialog_components,
-  reDrawPlusLabels,
+  reDrawOSPLabels,
   ComponentUpdater
 ) => {
   const {t,has_open_sankey_plus}=applicationContext
   const {show_toast_new_view}=dict_hook_ref_setter_show_dialog_components
   const {data,set_data,master_data,set_master_data,view,set_view,set_view_not_saved}=applicationData
-  const {multi_selected_label}=dict_variable_elements_selected
+  const {multi_selected_label}=applicationState
   const is_master=applicationData.view==='none'
   if(e.key==='a' && e.ctrlKey){
     e.preventDefault()
     multi_selected_label.current=Object.values(data.labels)
-    reDrawPlusLabels(multi_selected_label.current)
+    reDrawOSPLabels(multi_selected_label.current)
     ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
   }
   // Clone current data,if its a view clone the view
@@ -392,7 +392,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
       } else if (ind===0) {
         ind = Object.keys(master_data!.view).length
       }
-      const data_view=GetDataFromView(master_data,master_data!.view[ind-1].id) as SankeyPlusData
+      const data_view=GetDataFromView(master_data,master_data!.view[ind-1].id) as OSPData
 
       // Check if there is unsaved change before we switch view
       // If there is, we open the modal to know if the user want to save the current unsaved changes befor eswitching view
@@ -406,12 +406,12 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
         }
       }
       if(saved){
-        set_data({...data_view as SankeyPlusData})
+        set_data({...data_view as OSPData})
         set_view(master_data!.view[ind-1].id)
       }
 
     } else if (e.key === 'F9') {
-      let new_master_data : SankeyPlusData | undefined
+      let new_master_data : OSPData | undefined
       if (is_master) {
         new_master_data = data
         RecomputeViews(new_master_data,master_data,set_master_data)
@@ -444,7 +444,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
           set_view(master_data!.view[ind+1].id)
         }
       }
-      const data_view=GetDataFromView(new_master_data,new_master_data!.view[ind+1].id) as SankeyPlusData
+      const data_view=GetDataFromView(new_master_data,new_master_data!.view[ind+1].id) as OSPData
       if(saved){
         set_data(JSON.parse(JSON.stringify(data_view)))
         set_view(new_master_data!.view[ind+1].id)
@@ -520,7 +520,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
         }
       })
     }
-    reDrawPlusLabels(multi_selected_label.current)
+    reDrawOSPLabels(multi_selected_label.current)
   }
 
   // Add deselection of all selected zdt
@@ -536,7 +536,7 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
   if(e.key==='Delete' && (!document.activeElement?.className.includes('ql-editor'))){
     if(document.activeElement?.tagName!=='INPUT' || d3.select(document.activeElement).attr('value')==='menuConfigButton')
     {
-      deleteGLabel(multi_selected_label.current,dict_variable_elements_selected)
+      deleteGLabel(multi_selected_label.current,applicationState)
       data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
       multi_selected_label.current=[]
       ComponentUpdater.updateComponentMenuConfigZdt.current.forEach(f=>f())
@@ -546,13 +546,13 @@ export const OSPKeyHandler : OSPKeyHandlerFType = (
 
 export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   t,
   set_view_not_saved,
   connected
 })=>{
   const {data,set_data,master_data,set_master_data,view,set_view}=applicationData
-  const {multi_selected_nodes,multi_selected_links,multi_selected_label}= dict_variable_elements_selected
+  const {multi_selected_nodes,multi_selected_links,multi_selected_label}= applicationState
 
   let vname = ''
   if ((master_data && master_data.current_view && master_data.current_view!=='none' &&master_data.view.length>0)) {
@@ -564,7 +564,7 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
   }
   const [s_value_editor_name_view,sValueEditorNameView]=useState(vname)
   const [s_select_or_edit,sSelectOrEdit]=useState('select')
-  dict_variable_elements_selected.r_setter_value_editor_name_view.current=sValueEditorNameView
+  applicationState.r_setter_value_editor_name_view.current=sValueEditorNameView
 
   const selecteur=<Select
     variant='menuconfigpanel_option_select'
@@ -595,14 +595,14 @@ export const SelecteurView : FunctionComponent<SelecteurViewFType> =({
           if (evt.target.value === '') {
             return
           } else if(evt.target.value !== 'none'){
-            let new_master_data : SankeyPlusData
+            let new_master_data : OSPData
             if (view === 'none') {
               new_master_data = JSON.parse(JSON.stringify(data))
               RecomputeViews(new_master_data,master_data,set_master_data)
             } else {
-              new_master_data= JSON.parse(JSON.stringify(master_data)) as SankeyPlusData
+              new_master_data= JSON.parse(JSON.stringify(master_data)) as OSPData
             }
-            const data_view=GetDataFromView(new_master_data,evt.target.value) as SankeyPlusData
+            const data_view=GetDataFromView(new_master_data,evt.target.value) as OSPData
             set_data(JSON.parse(JSON.stringify(data_view)))
             new_master_data.current_view=evt.target.value
             set_master_data(JSON.parse(JSON.stringify(new_master_data)))
@@ -641,8 +641,8 @@ export const viewsAccordion : viewsAccordionFType = (
   applicationData,
   t:TFunction,
   is_activated:boolean,
-  convert_data:(d:SankeyPlusData,DefaultSankeyData: ()=>SankeyPlusData)=>void,
-  DefaultSankeyData: ()=>SankeyPlusData,
+  convert_data:(d:OSPData,DefaultSankeyData: ()=>OSPData)=>void,
+  DefaultSankeyData: ()=>OSPData,
   view_selector
 ) => {
   const {data,set_data,master_data,set_master_data,view,set_view}= applicationData
@@ -670,7 +670,7 @@ export const viewsAccordion : viewsAccordionFType = (
           {t('view.storytelling')}
         </Box>
         {(!is_activated)?
-          <OSTooltip label={t('Menu.sankeyPlusDisabled')}>
+          <OSTooltip label={t('Menu.sankeyOSPDisabled')}>
             <Badge pill
               bg="white"
               style={{marginLeft:'5px', fontSize:'1.3em'}}>
@@ -776,7 +776,7 @@ export const viewsAccordion : viewsAccordionFType = (
                           }else if(master_data.is_catalog && master_data.view.length>0){
                           // If master is a catalog and the catalog is not empty then we got to the first view
                             set_view(master_data.view[0].id)
-                            const tmp=GetDataFromView(master_data,master_data.view[0].id) as SankeyPlusData
+                            const tmp=GetDataFromView(master_data,master_data.view[0].id) as OSPData
                             set_data(JSON.parse(JSON.stringify(tmp)))
                           }
                           if(master_data.view.length===0){
@@ -826,7 +826,7 @@ export const viewsAccordion : viewsAccordionFType = (
                   difference:[]
               )
             )
-            difference = (difference as Diff<undefined, SankeyPlusData>[]).filter((d) => !(d.path!.includes('view')))
+            difference = (difference as Diff<undefined, OSPData>[]).filter((d) => !(d.path!.includes('view')))
             cur_view.view_data = { diff: difference }
 
             cur_view.nom = (files[0].name).replace('.json','')
@@ -845,8 +845,8 @@ export const viewsAccordion : viewsAccordionFType = (
 // Function to check if the current data of the view is unsaved
 // We compare the differences saved in the master_data with the current changement of the view
 export const CheckCurrentViewSaved : CheckCurrentViewSavedFType =(
-  master_data:SankeyPlusData| undefined,
-  data:SankeyPlusData| undefined,
+  master_data:OSPData| undefined,
+  data:OSPData| undefined,
   view:string
 ) => {
   const view_data = GetDataFromView(master_data,view)
@@ -881,7 +881,7 @@ declare const window: Window &
       excel: string
       structure: boolean,
       advanced: boolean
-    } & { [key: string]: SankeyPlusData }
+    } & { [key: string]: OSPData }
   }
 
 // Fucntion that return a toolbar to navigate,create or modify view, it contain :
@@ -893,7 +893,7 @@ declare const window: Window &
 // - a button to choose variable of the view that get their value from master
 // - a button to clone the actual view
 // a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
-export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType> =({
+export const OSPBannerView : FunctionComponent<OSPBannerViewFType> =({
   applicationData,
   applicationContext,
   dict_hook_ref_setter_show_dialog_components,
@@ -911,7 +911,7 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
   const next_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === m_d.view.length-1)
   const prev_button_disabled = m_d.view && (m_d.view.map(d=>d.id).indexOf(view) === 0 || view === 'none')
 
-  const buttonCreateView=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCreateView')}>
+  const buttonCreateView=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.buttonCreateView')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -948,7 +948,7 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
 
   const button_heredited_attr_from_master=!(special_cast_for_unit_sankey.unitary_node && special_cast_for_unit_sankey.unitary_node.length>0)?<OSTooltip
     placement='bottom'
-    label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.buttonCloneMasterAttrView')}>
+    label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.buttonCloneMasterAttrView')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -975,7 +975,7 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
     </Box>
   </OSTooltip>:<></>
 
-  const create_data_catalog=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.catalog_data')}>
+  const create_data_catalog=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.catalog_data')}>
     <Box>
       <Button
         variant= {master_data && master_data.is_catalog?'submenu_nav_btn':'submenu_nav_btn'}
@@ -1007,7 +1007,7 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
   </OSTooltip>
 
 
-  const button_delete_actual_view=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.button_delete_actual_view')}>
+  const button_delete_actual_view=<OSTooltip placement='bottom' label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.button_delete_actual_view')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -1028,7 +1028,7 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
             }else if(master_data!.is_catalog && master_data!.view.length>0){
               // If master is a catalog and the catalog is not empty then we got to the first view
               set_view(master_data!.view[0].id)
-              const tmp=GetDataFromView(master_data,master_data!.view[0].id) as SankeyPlusData
+              const tmp=GetDataFromView(master_data,master_data!.view[0].id) as OSPData
               set_data(JSON.parse(JSON.stringify(tmp)))
             }
             if(master_data!.view.length===0){
@@ -1100,14 +1100,14 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
           return (e: ProgressEvent<FileReader>) => {
             const result = String((e.target as FileReader).result)
             const result_data = JSON.parse(result)
-            const imported_data=JSON.parse(JSON.stringify(result_data)) as SankeyPlusData
+            const imported_data=JSON.parse(JSON.stringify(result_data)) as OSPData
             convert_data(imported_data,get_default_data)
             let new_ind = 'view_' + String(new Date().getTime())
-            let first_data={} as SankeyPlusData
+            let first_data={} as OSPData
             if(imported_data.view && imported_data.view.length>0){
               // Import all view from the coming file
               imported_data.view.forEach((v,i2)=>{
-                const view_from_imported_data=GetDataFromView(imported_data,v.id) as SankeyPlusData
+                const view_from_imported_data=GetDataFromView(imported_data,v.id) as OSPData
                 convert_data(view_from_imported_data,get_default_data)
 
                 if(i2===0 && i==='0'){
@@ -1164,7 +1164,7 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
   </Overlay>
   {window.SankeyToolsStatic ? <></> : file_reder_for_catalog}
   {window.SankeyToolsStatic ? <></> : create_data_catalog}
-  {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.home')}>
+  {window.SankeyToolsStatic ? <></> : <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.home')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -1197,7 +1197,7 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
   {window.SankeyToolsStatic ? <></> : buttonCreateView}
 
 
-  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyPlusDisabled'):t('view.tooltips.PrevViewButton')}>
+  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?t('Menu.sankeyOSPDisabled'):t('view.tooltips.PrevViewButton')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -1226,7 +1226,7 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
     </Box>
   </OSTooltip>
 
-  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.NextViewButton')}>
+  <OSTooltip placement='bottom' label={(!has_open_sankey_plus && !has_views)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.NextViewButton')}>
     <Box>
       <Button
         variant='submenu_nav_btn'
@@ -1268,11 +1268,11 @@ export const SankeyPlusBannerView : FunctionComponent<SankeyPlusBannerViewFType>
   </>
 }
 
-export const SankeyPlusMenuPreferenceView : SankeyPlusMenuPreferenceViewFType =(
+export const OSPMenuPreferenceView : OSPMenuPreferenceViewFType =(
   t:TFunction,
-  data:SankeyPlusData,
-  set_data:(_:SankeyPlusData)=>void,
-  preferenceCheck:(str: string, data: SankeyPlusData) => void
+  data:OSPData,
+  set_data:(_:OSPData)=>void,
+  preferenceCheck:(str: string, data: OSPData) => void
 )=>{
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
@@ -1313,7 +1313,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
             onClick={()=>{
             // Don't save the view before changing to the selected one
               if(view !== 'none'){
-                const data_view=GetDataFromView(master_data,view) as SankeyPlusData
+                const data_view=GetDataFromView(master_data,view) as OSPData
                 set_data(JSON.parse(JSON.stringify(data_view)))
               } else if(view === 'none'){
                 set_data(JSON.parse(JSON.stringify(master_data)))
@@ -1331,7 +1331,7 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
             master_data!.view.filter(v => v.id === view_not_saved)[0].view_data = {diff:difference}
 
             if(view !== 'none'){
-              const data_view=GetDataFromView(master_data,view) as SankeyPlusData
+              const data_view=GetDataFromView(master_data,view) as OSPData
               set_master_data(JSON.parse(JSON.stringify(master_data)))
               set_data(JSON.parse(JSON.stringify(data_view)))
 
@@ -1346,15 +1346,15 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
     </Modal>)
 }
 
-// export const toolbar_fullscreen=(data:SankeyPlusData,
-//   set_data:(d:SankeyPlusData)=>void,
+// export const toolbar_fullscreen=(data:OSPData,
+//   set_data:(d:OSPData)=>void,
 //   view:string,
 //   set_view:(s:string)=>void,
-//   multi_selected_nodes:{current:SankeyPlusNode[]},
-//   multi_selected_links:{current:SankeyPlusLink[]},
-//   multi_selected_label:{current:SankeyPlusLabel[]},
-//   master_data:SankeyPlusData,
-//   set_master_data:(d:SankeyPlusData)=>void,
+//   multi_selected_nodes:{current:OSPNode[]},
+//   multi_selected_links:{current:OSPLink[]},
+//   multi_selected_label:{current:OSPLabel[]},
+//   master_data:OSPData,
+//   set_master_data:(d:OSPData)=>void,
 //   t:TFunction,
 //   has_open_sankey_plus:boolean,
 //   view_not_saved:string,
@@ -1369,9 +1369,9 @@ export const modal_view_not_saved : modal_view_not_savedFType =(
 //   sValueEditorNameView:(s:string)=>void,
 //   select_or_edit:'select'|'edit',
 //   sSelectOrEdit:(s:'select'|'edit')=>void,
-//   convert_data:(d:SankeyPlusData)=>void
+//   convert_data:(d:OSPData)=>void
 // )=>{
-//   const buttons_view= SankeyPlusBannerView(data,set_data,
+//   const buttons_view= OSPBannerView(data,set_data,
 //     view,set_view,view_not_saved,
 //     multi_selected_nodes,multi_selected_links,multi_selected_label,
 //     master_data,set_master_data,
@@ -1394,14 +1394,14 @@ export const modal_transparent_view_attr : modal_transparent_view_attrFType =(
   t:TFunction
 )=>{
   const current_view=applicationData.master_data?.view.filter(v=>v.id===applicationData.master_data!.current_view)[0]??{} as ViewType
-  const {data,set_data,master_data,set_master_data}=applicationData as SankeyPlusApplicationDataType
+  const {data,set_data,master_data,set_master_data}=applicationData as OSPApplicationDataType
   const {ref_setter_show_modal_transparent_view_attr}=dict_hook_ref_setter_show_dialog_components
   const [show_modal,set_show_modal]=useState(false)
   ref_setter_show_modal_transparent_view_attr.current=set_show_modal
   if(master_data && master_data.current_view!==undefined && master_data?.current_view!=='none' && applicationData.data!==undefined){
 
     return  <Modal size='xl' isOpen={show_modal} onClose={()=>{
-      RecomputeViews(data,data,set_data as (d: SankeyPlusData | undefined) => void)
+      RecomputeViews(data,data,set_data as (d: OSPData | undefined) => void)
       set_show_modal(false)}}>
       <ModalContent>
         <ModalHeader>{t('view.setTransparentAttr')}</ModalHeader>
@@ -1668,9 +1668,9 @@ export const MenuEnregistrerView : FunctionComponent<MenuEnregistrerViewFType> =
   </Checkbox>
 }
 
-export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFType = (
-  master_data:SankeyPlusData|undefined,
-  data:SankeyPlusData,
+export const OpenOSPCheckpointButton : OpenOSPCheckpointButtonFType = (
+  master_data:OSPData|undefined,
+  data:OSPData,
   view:string,
   view_not_saved:string,
   has_open_sankey_plus:boolean,
@@ -1690,7 +1690,7 @@ export const OpenSankeyPlusCheckpointButton : OpenSankeyPlusCheckpointButtonFTyp
   }
 
   return   <OSTooltip
-    label={(!has_open_sankey_plus)?(t('Menu.sankeyPlusDisabled')):t('view.tooltips.saveView')}>
+    label={(!has_open_sankey_plus)?(t('Menu.sankeyOSPDisabled')):t('view.tooltips.saveView')}>
     <Button
       isDisabled={!has_open_sankey_plus}
       variant='light'

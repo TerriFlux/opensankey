@@ -6,20 +6,20 @@ import { TabPanel } from '@chakra-ui/react'
 
 import { reorganize_node_outputLinksIdOSTyped,reorganize_node_inputLinksIdOSTyped
 } from './import/OpenSankey'
-import { SankeyPlusMenuConfigurationNodesAgregationFType } from '../types/SankeyPlusNodesAggregationTypes'
+import { OSPMenuConfigurationNodesAgregationFType } from '../types/SankeyPlusNodesAggregationTypes'
 
-import { SankeyPlusData, SankeyPlusLink, SankeyPlusNode } from '../types/Types'
+import { OSPData, OSPLink, OSPNode } from '../types/Types'
 
-export const SankeyPlusMenuConfigurationNodesAgregation : SankeyPlusMenuConfigurationNodesAgregationFType = (
+export const OSPMenuConfigurationNodesAgregation : OSPMenuConfigurationNodesAgregationFType = (
   t:TFunction,
-  data:SankeyPlusData,
-  set_data:(d:SankeyPlusData)=>void,
-  multi_selected_nodes:{current:SankeyPlusNode[]},
+  data:OSPData,
+  set_data:(d:OSPData)=>void,
+  multi_selected_nodes:{current:OSPNode[]},
   parent_visible:boolean,
   set_parent_visible:(_:boolean)=>void,
   cube_dimension:string,
   set_cube_dimension:(_:string)=>void,
-  SankeyPlusDefaultLink : (_:SankeyPlusData)=>SankeyPlusLink
+  OSPDefaultLink : (_:OSPData)=>OSPLink
 ) => {
 
   if (Object.values(data.levelTags).length > 0 && cube_dimension === 'Primaire') {
@@ -104,7 +104,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation : SankeyPlusMenuConfigur
                   output_links.forEach( idLink => new_output_nodes.push(data.links[idLink].idTarget))
                 })
                 new_input_nodes.forEach(idSource => {
-                  const new_link = SankeyPlusDefaultLink(data)
+                  const new_link = OSPDefaultLink(data)
                   new_link.idSource = idSource
                   new_link.idTarget = d.idNode
                   new_link.idLink = 'link' + idLink
@@ -114,7 +114,7 @@ export const SankeyPlusMenuConfigurationNodesAgregation : SankeyPlusMenuConfigur
                   reorganize_node_outputLinksIdOSTyped(data,data.nodes[new_link.idSource], data.nodes, data.links)
                 })
                 new_output_nodes.forEach(() => {
-                  const new_link = SankeyPlusDefaultLink(data)
+                  const new_link = OSPDefaultLink(data)
                   new_link.idSource = d.idNode
                   new_link.idLink = 'link' + idLink
                   data.links[new_link.idLink] = new_link

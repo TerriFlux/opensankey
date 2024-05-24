@@ -3,15 +3,15 @@ import { Box, Card, CardBody, Divider, Heading, Input, Modal, ModalBody, ModalCl
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import { FaPlus } from 'react-icons/fa'
-import { SankeyPlusApplicationDataType, PlusElementsSelectedType, SankeyPlusShowMenuComponentsType, PlusNodeFuntionType, SankeyPlusNode } from '../types/Types'
+import { OSPApplicationDataType, OSPElementsSelectedType, OSPShowMenuComponentsType, OSPNodeFuntionType, OSPNode } from '../types/Types'
 import SankeyListIcons from './icons/lib_of_icons.json'
 
 export type ModalSelectionIconsType={
   t:TFunction,
-  applicationData:SankeyPlusApplicationDataType,
-  dict_variable_elements_selected:PlusElementsSelectedType,
-  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
-  node_function:PlusNodeFuntionType
+  applicationData:OSPApplicationDataType,
+  applicationState:OSPElementsSelectedType,
+  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
+  node_function:OSPNodeFuntionType
 }
 
 type KeysOfIcon = keyof typeof SankeyListIcons
@@ -19,16 +19,16 @@ type KeysOfIcon = keyof typeof SankeyListIcons
 export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
   t,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   dict_hook_ref_setter_show_dialog_components,
   node_function
 }
 )=>{
   const {data}=applicationData
-  const {multi_selected_nodes }=dict_variable_elements_selected
+  const {multi_selected_nodes }=applicationState
   const imported_icon=localStorage.getItem('icon_imported')
   const init_imported_svg:{[s:string]:{path:string,Vb:string}}=imported_icon != null && imported_icon!=='' ? JSON.parse(imported_icon) : {}
-  const plus_multi_selected_nodes=(multi_selected_nodes as {[x:string]:SankeyPlusNode[]})
+  const plus_multi_selected_nodes=(multi_selected_nodes as {[x:string]:OSPNode[]})
   const [filter_name,set_filter_name]=useState('')
   const _load_svg = useRef<HTMLInputElement>(null)
   const import_svg=useRef<{[s:string]:{path:string,Vb:string}}>(init_imported_svg)
@@ -71,7 +71,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
             delete d.iconViewBox
 
           })
-          node_function.reDrawIllustration(plus_multi_selected_nodes.current as SankeyPlusNode[])
+          node_function.reDrawIllustration(plus_multi_selected_nodes.current as OSPNode[])
           sShowModal(false)
         }}
       >
@@ -163,7 +163,7 @@ export const ModalSelectionIcon:FunctionComponent<ModalSelectionIconsType>=({
           d.iconViewBox=import_svg.current[ki].Vb
           d.iconColor='#000000'
         })
-        node_function.reDrawIllustration(plus_multi_selected_nodes.current as SankeyPlusNode[])
+        node_function.reDrawIllustration(plus_multi_selected_nodes.current as OSPNode[])
         sShowModal(false)
       }}
     >

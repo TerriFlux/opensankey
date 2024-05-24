@@ -1,59 +1,59 @@
 import { TFunction } from 'i18next'
-import { PlusLinkFuntionType, PlusNodeFuntionType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusLabel, SankeyPlusLink, SankeyPlusLinkAttrLocal, SankeyPlusLinkStyle, SankeyPlusNode } from './Types'
+import { OSPLinkFuntionType, OSPNodeFuntionType, OSPApplicationDataType, OSPData, OSPLabel, OSPLink, OSPLinkAttrLocal, OSPLinkStyle, OSPNode } from './Types'
 import { GetLinkValueFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 import { ComponentUpdaterType } from 'open-sankey/src/types/Types'
 
-export type DefaultSankeyPlusStyleLinkFType = () => SankeyPlusLinkStyle
+export type DefaultOSPStyleLinkFType = () => OSPLinkStyle
 
-export  type DragLegendPlusFType = (data:SankeyPlusData,
-  multi_selected_label:{current:SankeyPlusLabel[]},
+export  type DragLegendOSPFType = (data:OSPData,
+  multi_selected_label:{current:OSPLabel[]},
   ComponentUpdater:ComponentUpdaterType,
   resizeCanvas:()=>void,
-  node_function:PlusNodeFuntionType,
-  link_function:PlusLinkFuntionType,
-  applicationData:SankeyPlusApplicationDataType
+  node_function:OSPNodeFuntionType,
+  link_function:OSPLinkFuntionType,
+  applicationData:OSPApplicationDataType
 ) => d3.DragBehavior<SVGGElement, unknown, unknown>
 
 export type ImportImageAsSvgBgFType = {
   t:TFunction,
-  data:SankeyPlusData,set_data:(d:SankeyPlusData)=>void,
+  data:OSPData,set_data:(d:OSPData)=>void,
   has_open_sankey_plus:boolean
 }
 
 export type SetSvgBgFType = (
-  data:SankeyPlusData
+  data:OSPData
 ) => void
 
 export type IsAllZdtAttrSameValueFType = (
-  data:SankeyPlusData,
-  m_s_zdt:SankeyPlusLabel[],
-  k:keyof SankeyPlusLabel
+  data:OSPData,
+  m_s_zdt:OSPLabel[],
+  k:keyof OSPLabel
 )=> null[] | (string | number | boolean)[]
 
-export type PlusReturnValueLinkFType = (
-  data:SankeyPlusData,
-  l:SankeyPlusLink,
-  k:keyof SankeyPlusLinkAttrLocal | keyof SankeyPlusLinkStyle
+export type OSPReturnValueLinkFType = (
+  data:OSPData,
+  l:OSPLink,
+  k:keyof OSPLinkAttrLocal | keyof OSPLinkStyle
 ) => string | number | boolean
 
-export type PlusAssignLinkValueToCorrectVarFType = (
-  l:SankeyPlusLink|SankeyPlusLinkStyle,
-  k:keyof SankeyPlusLinkAttrLocal,
+export type OSPAssignLinkValueToCorrectVarFType = (
+  l:OSPLink|OSPLinkStyle,
+  k:keyof OSPLinkAttrLocal,
   v:boolean|string|number,menu_for_style:boolean
 )=>void
 
-export type PlusLinkSabotColorFType = (
-  l: SankeyPlusLink,data:SankeyPlusData,
+export type OSPLinkSabotColorFType = (
+  l: OSPLink,data:OSPData,
   GetLinkValue:GetLinkValueFuncType
 ) => string
 
 export type ValueOf<T>=T[keyof T]
 
 export type OSPIsAllNodeNotLocalAttrSameValueFType = (
-  data:SankeyPlusData,
-  m_s_n:SankeyPlusNode[],
-  k_list:(keyof SankeyPlusNode)[]
-) => { [x: string]: [ValueOf<SankeyPlusNode>|boolean, boolean]; }
+  data:OSPData,
+  m_s_n:OSPNode[],
+  k_list:(keyof OSPNode)[]
+) => { [x: string]: [ValueOf<OSPNode>|boolean, boolean]; }
 
 
 

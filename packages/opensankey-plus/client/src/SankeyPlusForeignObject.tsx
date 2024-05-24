@@ -8,8 +8,8 @@ import { Box, Button, Checkbox, TabPanel, Textarea } from '@chakra-ui/react'
 
 // Local imports
 import { OSPIsAllNodeNotLocalAttrSameValue } from './SankeyPlusUtils'
-import { SankeyPlusData, SankeyPlusNode } from '../types/Types'
-import { PlusDrawNodesFOFType, SankeyPlusNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
+import { OSPData, OSPNode } from '../types/Types'
+import { OSPDrawNodesFOFType, OSPNodeFOFType } from '../types/SankeyPlusForeignObjectTypes'
 import { NodeDisplayed } from './import/OpenSankey'
 
 // OpenSankey types
@@ -23,19 +23,19 @@ typeof globalThis & {
   SankeyToolsStatic: boolean
 }
 
-export const SankeyPlusNodeFO : FunctionComponent<SankeyPlusNodeFOFType> = ({
+export const OSPNodeFO : FunctionComponent<OSPNodeFOFType> = ({
   t,
   data,
   multi_selected_nodes,
   is_activated,
-  dict_variable_elements_selected,
+  applicationState,
   node_function
 })=> {
   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
   const [forceUpdate, setForceUpdate] = useState(false)
 
   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
-  dict_variable_elements_selected.r_setter_editor_content_fo_node.current = sEditorContentFoNode
+  applicationState.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
   let s_tmp_editor_content_changed = false
   if (multi_selected_nodes.current.length>0) {
@@ -129,7 +129,7 @@ export const SankeyPlusNodeFO : FunctionComponent<SankeyPlusNodeFOFType> = ({
   //     {t('Noeud.tabs.fo')}
   //     {
   //       (!is_activated)?
-  //         <OSTooltip label={t('Menu.sankeyPlusDisabled')}>
+  //         <OSTooltip label={t('Menu.sankeyOSPDisabled')}>
   //           <Badge
   //             pill
   //             bg="none"
@@ -171,7 +171,7 @@ export const SankeyPlusNodeFO : FunctionComponent<SankeyPlusNodeFOFType> = ({
           setForceUpdate(!forceUpdate)
         }}
       >
-        {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyPlusDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
+        {is_activated?<>{t('Noeud.foreign_object.Visibilité')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
       </Checkbox>
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
@@ -189,13 +189,13 @@ export const SankeyPlusNodeFO : FunctionComponent<SankeyPlusNodeFOFType> = ({
           setForceUpdate(!forceUpdate)
         }}
       >
-        {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyPlusDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
+        {is_activated?<>{t('Noeud.foreign_object.raw')}</>:<OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
       </Checkbox>
 
       {
         (multi_selected_nodes.current.length>0)?
 
-          <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyPlusDisabled')}>
+          <OSTooltip label={is_activated?(!value_of_key['has_FO'][0]?t('Noeud.foreign_object.not_activated'):''):t('Menu.sankeyOSPDisabled')}>
             {
               (multi_selected_nodes.current[0].is_FO_raw)?
                 editor_fo_raw:
@@ -273,28 +273,28 @@ export const SankeyPlusNodeFO : FunctionComponent<SankeyPlusNodeFOFType> = ({
 }
 
 
-export const PlusDrawNodesFO : PlusDrawNodesFOFType = (
-  data : SankeyPlusData,
-  display_nodes : { [node_id: string]: SankeyPlusNode },
-  dict_variable_elements_selected,
+export const OSPDrawNodesFO : OSPDrawNodesFOFType = (
+  data : OSPData,
+  display_nodes : { [node_id: string]: OSPNode },
+  applicationState,
   NodeTooltipsContent: NodeTooltipsContentFType,
   GetLinkValue:GetLinkValueFuncType,
   trad
 ) => {
-  const {ref_getter_mode_selection} =dict_variable_elements_selected
-  const node_mouse_over=(data:SankeyPlusData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
+  const {ref_getter_mode_selection} =applicationState
+  const node_mouse_over=(data:OSPData,t:d3.BaseType,event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
     d3.select(t).attr('cursor', (ref_getter_mode_selection.current === 's')? 'pointer' : 'unset')
-    if (NodeDisplayed(data,(d as SankeyPlusNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
+    if (NodeDisplayed(data,(d as OSPNode)) && (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
       sankeyTooltip
         .style('opacity', 1)
-        .html(NodeTooltipsContent(data,display_nodes, d as SankeyPlusNode,GetLinkValue,trad))
+        .html(NodeTooltipsContent(data,display_nodes, d as OSPNode,GetLinkValue,trad))
     }
   }
 
   const node_mouse_move=(event:React.MouseEvent<HTMLButtonElement>,d:unknown)=>{
-    if ((NodeDisplayed(data,(d as SankeyPlusNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
+    if ((NodeDisplayed(data,(d as OSPNode))) && (window.SankeyToolsStatic || event.shiftKey)) {
       const sankeyTooltip=d3.select('.sankey-tooltip')
 
       const h_tooltip=Number(sankeyTooltip.style('height').replace('px',''))
@@ -321,7 +321,7 @@ export const PlusDrawNodesFO : PlusDrawNodesFOFType = (
     // then apply selected parameter
     const sankeyTooltip=(d3.select('div.sankey-tooltip') as d3.Selection<HTMLDivElement, unknown, HTMLElement, unknown>)
 
-    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, SankeyPlusNode, d3.BaseType, unknown>)
+    const ggg_nodes=(d3.selectAll('.ggg_nodes') as d3.Selection<SVGGElement, OSPNode, d3.BaseType, unknown>)
 
     ggg_nodes.filter((d)=>{
       return d.has_FO

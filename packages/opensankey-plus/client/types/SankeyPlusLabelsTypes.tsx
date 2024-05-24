@@ -1,25 +1,25 @@
 import { LinkFunctionTypes, applicationDataType } from 'open-sankey/src/types/Types'
 import { 
-  PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, 
-  PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, 
-  SankeyPlusContextMenuType, SankeyPlusData, 
-  SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode
+  OSPApplicationContextType, OSPApplicationDrawType, OSPComponentUpdaterType, 
+  OSPElementsSelectedType, OSPUiElementsRefType, OSPApplicationDataType, 
+  OSPContextMenuType, OSPData, 
+  OSPLabel, OSPLink, OSPNode
 } from './Types'
 import { GetSankeyMinWidthAndHeightFuncType } from 'open-sankey/src/configmenus/types/SankeyUtilsTypes'
 
 import * as d3 from 'd3'
 
-export type PlusDrawLabelsFType = (
-  applicaTionData:SankeyPlusApplicationDataType,
-  dict_variable_elements_selected:PlusElementsSelectedType,
-  uiElementsRef:PlusUiElementsRefType,
-  contextMenu:SankeyPlusContextMenuType,
-  applicationContext:PlusApplicationContextType,
+export type OSPDrawLabelsFType = (
+  applicaTionData:OSPApplicationDataType,
+  applicationState:OSPElementsSelectedType,
+  uiElementsRef:OSPUiElementsRefType,
+  contextMenu:OSPContextMenuType,
+  applicationContext:OSPApplicationContextType,
   GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
   closeAllMenuContext:()=>void,
-  applicationDraw:PlusApplicationDrawType,
-  ComponentUpdater:PlusComponentUpdaterType,
-  object_to_update:SankeyPlusLabel[],
+  applicationDraw:OSPApplicationDrawType,
+  ComponentUpdater:OSPComponentUpdaterType,
+  object_to_update:OSPLabel[],
   link_function:LinkFunctionTypes,
   start_point:{current:number[]},
   resizeCanvas:()=>void
@@ -28,13 +28,13 @@ export type PlusDrawLabelsFType = (
 // Function triggered when a free label is selected, it add a thicker border ans some pointer events
 export type eventLabelClickFType=(
   event:React.MouseEvent<HTMLButtonElement>,
-  d:SankeyPlusLabel,
-  uiElementsRef:PlusUiElementsRefType,
-  dict_variable_elements_selected:PlusElementsSelectedType,
-  multi_selected_label:{current:SankeyPlusLabel[]},
-  multi_selected_nodes:{current:SankeyPlusNode[]},
-  multi_selected_links:{current:SankeyPlusLink[]},
-  ComponentUpdater:PlusComponentUpdaterType,
+  d:OSPLabel,
+  uiElementsRef:OSPUiElementsRefType,
+  applicationState:OSPElementsSelectedType,
+  multi_selected_label:{current:OSPLabel[]},
+  multi_selected_nodes:{current:OSPNode[]},
+  multi_selected_links:{current:OSPLink[]},
+  ComponentUpdater:OSPComponentUpdaterType,
 )=> void
 
 // Function used to drag the free label
@@ -44,10 +44,10 @@ export type sankey_plus_min_width_and_heightFType = (
   applicationData:applicationDataType
 ) => [number,number]
 
-export type zone_selection_labelFType=(data:SankeyPlusData,
-  multi_selected_label:{current:SankeyPlusLabel[]},
+export type zone_selection_labelFType=(data:OSPData,
+  multi_selected_label:{current:OSPLabel[]},
   evt:MouseEvent,
-  ComponentUpdater:PlusComponentUpdaterType
+  ComponentUpdater:OSPComponentUpdaterType
 ) => void
 
 export type sankey_plus_zoom_text_zoneFType = (

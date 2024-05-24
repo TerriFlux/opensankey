@@ -1,33 +1,33 @@
 import { TFunction } from 'i18next'
-import {  PlusApplicationContextType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusData, SankeyPlusShowMenuComponentsType, reDrawPlusLabelsFType } from './Types'
+import {  OSPApplicationContextType, OSPComponentUpdaterType, OSPElementsSelectedType, OSPUiElementsRefType, OSPApplicationDataType, OSPData, OSPShowMenuComponentsType, reDrawOSPLabelsFType } from './Types'
 import ReactQuill from 'react-quill'
 import { contextMenuType } from 'open-sankey/src/types/Types'
 
-export type SankeyPlusMenuPreferenceLabelsFType={
+export type OSPMenuPreferenceLabelsFType={
   t:TFunction,
-  data:SankeyPlusData,
+  data:OSPData,
   updateMenus:[boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 
 export interface selected_type  {'label':string;'value':string}
 
-export type SankeyPlusMenuConfigurationFreeLabelsFType = {
-  applicationData:SankeyPlusApplicationDataType,
-  applicationContext:PlusApplicationContextType,
-  dict_variable_elements_selected:PlusElementsSelectedType,
-  ComponentUpdater:PlusComponentUpdaterType,
-  reDrawPlusLabels:reDrawPlusLabelsFType
+export type OSPMenuConfigurationFreeLabelsFType = {
+  applicationData:OSPApplicationDataType,
+  applicationContext:OSPApplicationContextType,
+  applicationState:OSPElementsSelectedType,
+  ComponentUpdater:OSPComponentUpdaterType,
+  reDrawOSPLabels:reDrawOSPLabelsFType
 }
 
 
 export type context_zdtFType=(
   contextMenu:contextMenuType,
   t:TFunction,
-  applicationData:SankeyPlusApplicationDataType,
-  dict_hook_ref_setter_show_dialog_components:SankeyPlusShowMenuComponentsType,
-  dict_variable_elements_selected:PlusElementsSelectedType,
-  ComponentUpdater:PlusComponentUpdaterType,
-  reDrawPlusLabels:reDrawPlusLabelsFType
+  applicationData:OSPApplicationDataType,
+  dict_hook_ref_setter_show_dialog_components:OSPShowMenuComponentsType,
+  applicationState:OSPElementsSelectedType,
+  ComponentUpdater:OSPComponentUpdaterType,
+  reDrawOSPLabels:reDrawOSPLabelsFType
 ) => JSX.Element
 
 export type blur_ZDT_wysiwygFType=(
@@ -35,8 +35,8 @@ export type blur_ZDT_wysiwygFType=(
 ) =>void
 
 export type ZDTMenuAsAccordeonItemType={
-  data:SankeyPlusData,
-  uiElementsRef:PlusUiElementsRefType,
-  applicationContext:PlusApplicationContextType,
+  data:OSPData,
+  uiElementsRef:OSPUiElementsRefType,
+  applicationContext:OSPApplicationContextType,
   content_menu_zdt:JSX.Element
 }

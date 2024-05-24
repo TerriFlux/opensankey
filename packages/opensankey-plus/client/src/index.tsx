@@ -11,7 +11,7 @@ import './traduction'
 import { 
   applicationDataType, ComponentUpdaterType, 
   LinkFunctionTypes, NodeFunctionTypes, applicationContextType, contextMenuType, 
-  dict_variable_elements_selectedType, uiElementsRefType, dict_hook_ref_setter_show_dialog_componentsType, 
+  applicationStateType, uiElementsRefType, dict_hook_ref_setter_show_dialog_componentsType, 
   applicationDrawType, 
   AdditionalMenusType,
   processFunctionsType,
@@ -33,7 +33,7 @@ import {
   initializeKeyHandler,
   ClickSaveDiagram
 } from './import/OpenSankey'
-import { PlusApplicationContextType, PlusApplicationDrawType, PlusComponentUpdaterType, PlusElementsSelectedType, PlusUiElementsRefType, SankeyPlusApplicationDataType, SankeyPlusContextMenuType, SankeyPlusData, SankeyPlusDataVar, SankeyPlusLabel, SankeyPlusLink, SankeyPlusNode, SankeyPlusShowMenuComponentsType } from '../types/Types'
+import { OSPApplicationContextType, OSPApplicationDrawType, OSPComponentUpdaterType, OSPElementsSelectedType, OSPUiElementsRefType, OSPApplicationDataType, OSPContextMenuType, OSPData, OSPDataVar, OSPLabel, OSPLink, OSPNode, OSPShowMenuComponentsType } from '../types/Types'
 import { 
   OSPInitializeApplicationContext, OSPInitializeApplicationData, OSPInitializeElementSelected, 
   OSPInitializeApplicationDraw, OSPInitializeShowDialog, OSPInitializeComponentUpdater, OSPInitializeReinitialization, 
@@ -42,11 +42,11 @@ import {
   OSPUpdateMenuConf,
   OSPInitializeKeyHandler,
   OSPInitalizeSelectorDetailNodes} from './OSPModule'
-import { SankeyPlusDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
-import { DefaultSankeyPlusStyleLink } from './SankeyPlusUtils'
+import { OSPDiagramSelector, plus_convert_data } from './SankeyPlusConvert'
+import { DefaultOSPStyleLink } from './SankeyPlusUtils'
 import { SaveDiagramOptionsType } from 'open-sankey/src/dialogs/types/SankeyPersistenceTypes'
-import { SankeyPlusBannerView, SelecteurView } from './SankeyPlusViews'
-import { PlusDrawLabels, sankey_plus_min_width_and_height } from './SankeyPlusLabels'
+import { OSPBannerView, SelecteurView } from './SankeyPlusViews'
+import { OSPDrawLabels, sankey_plus_min_width_and_height } from './SankeyPlusLabels'
 
 declare const window: Window &
 typeof globalThis & {
@@ -64,20 +64,20 @@ window.React = React
 const get_default_data=()=>{
   const os_var = DefaultSankeyData()
 
-  const osp_var:SankeyPlusDataVar={
-    nodes:os_var.nodes as {[x:string]:SankeyPlusNode},
-    links:os_var.links as {[x:string]:SankeyPlusLink},
+  const osp_var:OSPDataVar={
+    nodes:os_var.nodes as {[x:string]:OSPNode},
+    links:os_var.links as {[x:string]:OSPLink},
     is_catalog:false,
     view:[],
     current_view:'none',
     labels:{},
     icon_catalog:{},
-    style_link:{'default':DefaultSankeyPlusStyleLink()},
+    style_link:{'default':DefaultOSPStyleLink()},
     background_image:'',
     show_background_image:false,
     style_node:os_var.style_node
   }
-  const tmp:SankeyPlusData=Object.assign(os_var,osp_var)
+  const tmp:OSPData=Object.assign(os_var,osp_var)
   
   return tmp
 }
@@ -94,7 +94,7 @@ if (json_data !== null && json_data != '' && json_data!='null') {
   const new_data = JSON.parse(json_data)
   Object.assign(data, new_data)
   convert_data(data,get_default_data)
-  plus_convert_data(data as SankeyPlusData, get_default_data as () => SankeyPlusData)
+  plus_convert_data(data as OSPData, get_default_data as () => OSPData)
   complete_sankey_data(data,get_default_data,DefaultNode,DefaultLink)
 }
 
@@ -116,7 +116,7 @@ const container=document.getElementById('react-container') as Element | Document
 const root=createRoot(container)
 root.render(
   <SankeyApp
-    initial_sankey_data={data as SankeyPlusData}
+    initial_sankey_data={data as OSPData}
     get_default_data={get_default_data}
     initializeApplicationContext={
       ()=>{
@@ -138,7 +138,7 @@ root.render(
         return {
           ...initializeApplicationData(data,set_data,get_default_data,display_nodes,display_links),
           ...OSPInitializeApplicationData(data,set_data,get_default_data,display_nodes,display_links)
-        } as SankeyPlusApplicationDataType
+        } as OSPApplicationDataType
       }
     }
     initializeElementSelected={
@@ -152,7 +152,7 @@ root.render(
     initializeApplicationDraw={
       (  
         applicationData : applicationDataType,
-        dict_variable_elements_selected : dict_variable_elements_selectedType,
+        applicationState : applicationStateType,
         contextMenu : contextMenuType,
         applicationContext : applicationContextType,
         ComponentUpdater : ComponentUpdaterType,
@@ -163,26 +163,26 @@ root.render(
         resizeCanvas :() => void
       )=>{
         const _ = initializeApplicationDraw(
-          applicationData,dict_variable_elements_selected,contextMenu,
+          applicationData,applicationState,contextMenu,
           applicationContext, ComponentUpdater, uiElementsRef, node_function, link_function,
           start_point, resizeCanvas
         )
         Object.assign(_,OSPInitializeApplicationDraw(
-          applicationData,dict_variable_elements_selected,contextMenu,
+          applicationData,applicationState,contextMenu,
           applicationContext,ComponentUpdater,uiElementsRef,node_function,link_function,
           start_point, resizeCanvas
         ));
-        (_ as PlusApplicationDrawType).reDrawPlusLabels = (object_to_update:SankeyPlusLabel[])=>{
-          PlusDrawLabels(
-              applicationData as SankeyPlusApplicationDataType,
-              dict_variable_elements_selected as PlusElementsSelectedType,
-              uiElementsRef as PlusUiElementsRefType,
-              contextMenu as SankeyPlusContextMenuType,
-              applicationContext as PlusApplicationContextType,
+        (_ as OSPApplicationDrawType).reDrawOSPLabels = (object_to_update:OSPLabel[])=>{
+          OSPDrawLabels(
+              applicationData as OSPApplicationDataType,
+              applicationState as OSPElementsSelectedType,
+              uiElementsRef as OSPUiElementsRefType,
+              contextMenu as OSPContextMenuType,
+              applicationContext as OSPApplicationContextType,
               sankey_plus_min_width_and_height,
               contextMenu.closeAllMenuContext,
-              _ as unknown as PlusApplicationDrawType,
-              ComponentUpdater as PlusComponentUpdaterType,
+              _ as unknown as OSPApplicationDrawType,
+              ComponentUpdater as OSPComponentUpdaterType,
               object_to_update,
               link_function,
               start_point,
@@ -211,7 +211,7 @@ root.render(
     initializeMenuConfiguration={
       (
         applicationData,
-        dict_variable_elements_selected,
+        applicationState,
         applicationContext,
         uiElementsRef,
         dict_hook_ref_setter_show_dialog_components,
@@ -229,7 +229,7 @@ root.render(
       )=>{
         const menu_conf= initializeMenuConfiguration(
           applicationData,
-          dict_variable_elements_selected,
+          applicationState,
           applicationContext,uiElementsRef,
           dict_hook_ref_setter_show_dialog_components,additional_menus,node_function,link_function,
           applicationDraw,
@@ -246,12 +246,12 @@ root.render(
     initializeReinitialization={
       (
         applicationData,
-        dict_variable_elements_selected,
+        applicationState,
         contextMenu
       )=>{
         return () => {
-          initializeReinitialization(applicationData,dict_variable_elements_selected,contextMenu)()
-          OSPInitializeReinitialization(applicationData,dict_variable_elements_selected,contextMenu)()
+          initializeReinitialization(applicationData,applicationState,contextMenu)()
+          OSPInitializeReinitialization(applicationData,applicationState,contextMenu)()
         }
       }
     }
@@ -291,7 +291,7 @@ root.render(
     initializeLinkFunctions={
       (  
         applicationData: applicationDataType,
-        dict_variable_elements_selected: dict_variable_elements_selectedType,
+        applicationState: applicationStateType,
         contextMenu:contextMenuType,
         applicationContext: applicationContextType,
         ComponentUpdater: ComponentUpdaterType,
@@ -300,11 +300,11 @@ root.render(
         ref_alt_key_pressed: React.MutableRefObject<boolean>
       )=>{
         const _= initializeLinkFunctions(
-          applicationData,dict_variable_elements_selected,contextMenu,applicationContext,
+          applicationData,applicationState,contextMenu,applicationContext,
           ComponentUpdater,uiElementsRef,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed
         )
         Object.assign(_,OSPInitializeLinkFunctions(
-          applicationData,dict_variable_elements_selected,contextMenu,applicationContext,
+          applicationData,applicationState,contextMenu,applicationContext,
           ComponentUpdater,uiElementsRef,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed
         ))
         return _
@@ -313,7 +313,7 @@ root.render(
     initializeNodeFunctions={
       (
         applicationData: applicationDataType,
-        dict_variable_elements_selected: dict_variable_elements_selectedType,
+        applicationState: applicationStateType,
         contextMenu:contextMenuType,
         applicationContext: applicationContextType,
         ComponentUpdater: ComponentUpdaterType,
@@ -326,12 +326,12 @@ root.render(
         link_function: LinkFunctionTypes
       )=>{
         const _ = initializeNodeFunctions(
-          applicationData,dict_variable_elements_selected,contextMenu,applicationContext,ComponentUpdater,
+          applicationData,applicationState,contextMenu,applicationContext,ComponentUpdater,
           uiElementsRef,resizeCanvas,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed,accept_simple_click,
           recomputeDisplayedElement,link_function
         )
         Object.assign(_,OSPInitializeNodeFunctions(
-          applicationData,dict_variable_elements_selected,contextMenu,applicationContext,ComponentUpdater,
+          applicationData,applicationState,contextMenu,applicationContext,ComponentUpdater,
           uiElementsRef,resizeCanvas,dict_hook_ref_setter_show_dialog_components,ref_alt_key_pressed,accept_simple_click,
           recomputeDisplayedElement,link_function
         ))
@@ -346,7 +346,7 @@ root.render(
         applicationData,
         applicationDraw,
         ComponentUpdater,
-        dict_variable_elements_selected,
+        applicationState,
         uiElementsRef,
         dict_hook_ref_setter_show_dialog_components,
         node_function,
@@ -357,35 +357,35 @@ root.render(
 
       )=>{
         if (window.SankeyToolsStatic) {
-          const plus_dict_app_data=applicationData as SankeyPlusApplicationDataType
-          const PlusApplicationContext=applicationContext as PlusApplicationContextType
+          const plus_dict_app_data=applicationData as OSPApplicationDataType
+          const OSPApplicationContext=applicationContext as OSPApplicationContextType
           const selector_of_view=<SelecteurView
             applicationData={plus_dict_app_data}
-            dict_variable_elements_selected={dict_variable_elements_selected as PlusElementsSelectedType}
+            applicationState={applicationState as OSPElementsSelectedType}
             t={applicationContext.t}
             set_view_not_saved={plus_dict_app_data.set_view_not_saved}
-            connected={PlusApplicationContext.has_open_sankey_plus}
+            connected={OSPApplicationContext.has_open_sankey_plus}
           />;
-          (uiElementsRef as PlusUiElementsRefType).ViewSelector.current=selector_of_view
-          additionalMenus.externale_navbar_item['view']=<SankeyPlusBannerView
-            applicationData={applicationData as SankeyPlusApplicationDataType}
-            applicationContext={PlusApplicationContext}
-            dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType)}
+          (uiElementsRef as OSPUiElementsRefType).ViewSelector.current=selector_of_view
+          additionalMenus.externale_navbar_item['view']=<OSPBannerView
+            applicationData={applicationData as OSPApplicationDataType}
+            applicationContext={OSPApplicationContext}
+            dict_hook_ref_setter_show_dialog_components={(dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType)}
             convert_data={applicationData.convert_data}
-            view_selector={(uiElementsRef as PlusUiElementsRefType).ViewSelector.current as JSX.Element}
+            view_selector={(uiElementsRef as OSPUiElementsRefType).ViewSelector.current as JSX.Element}
           />
           return
         }
         initializeAdditionalMenus(
           additionalMenus,
           updateMenus,
-          applicationContext,applicationData,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
+          applicationContext,applicationData,applicationDraw,ComponentUpdater,applicationState,
           uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,contextMenu
         )
         OSPInitializeAdditionalMenus(
           additionalMenus,
           updateMenus,
-          applicationContext,applicationData,applicationDraw,ComponentUpdater,dict_variable_elements_selected,
+          applicationContext,applicationData,applicationDraw,ComponentUpdater,applicationState,
           uiElementsRef,dict_hook_ref_setter_show_dialog_components,node_function,link_function,processFunctions,Reinitialization,contextMenu
         )
       }
@@ -394,7 +394,7 @@ root.render(
       (  
         applicationContext:applicationContextType,
         applicationData:applicationDataType,
-        dict_variable_elements_selected:dict_variable_elements_selectedType,
+        applicationState:applicationStateType,
         contextMenu : contextMenuType,
         applicationDraw:applicationDrawType,
         uiElementsRef:uiElementsRefType,
@@ -411,7 +411,7 @@ root.render(
           ...moduleDialogs(
             applicationContext,
             applicationData,
-            dict_variable_elements_selected,
+            applicationState,
             contextMenu,
             applicationDraw,
             uiElementsRef,
@@ -427,7 +427,7 @@ root.render(
           ...OSPModuleDialogs(
             applicationContext,
             applicationData,
-            dict_variable_elements_selected,
+            applicationState,
             contextMenu,
             applicationDraw,
             uiElementsRef,
@@ -448,7 +448,7 @@ root.render(
         contextMenu:contextMenuType,
         applicationData:applicationDataType,
         uiElementsRef:uiElementsRefType,
-        dict_variable_elements_selected:dict_variable_elements_selectedType,
+        applicationState:applicationStateType,
         applicationContext:applicationContextType,
         alt_key_pressed:MutableRefObject<boolean>,
         accept_simple_click:{current:boolean},
@@ -464,7 +464,7 @@ root.render(
           contextMenu,
           applicationData,
           uiElementsRef,
-          dict_variable_elements_selected,
+          applicationState,
           applicationContext,
           alt_key_pressed,
           accept_simple_click,
@@ -480,7 +480,7 @@ root.render(
           contextMenu,
           applicationData,
           uiElementsRef,
-          dict_variable_elements_selected,
+          applicationState,
           applicationContext,
           alt_key_pressed,
           accept_simple_click,
@@ -499,7 +499,7 @@ root.render(
       uiElementsRef,
       contextMenu,
       e,
-      dict_variable_elements_selected,
+      applicationState,
       closeAllMenu,
       ref_alt_key_pressed,
       accept_simple_click,
@@ -512,19 +512,19 @@ root.render(
       applicationDraw
     )=>{
       // Recasted var for OSP key handler func
-      const plus_dict_app_data=applicationData as SankeyPlusApplicationDataType
-      const plus_applicationContext=applicationContext as PlusApplicationContextType
-      const  plus_app_draw_func= applicationDraw as PlusApplicationDrawType
-      const plus_elem_selected=dict_variable_elements_selected as PlusElementsSelectedType
-      const plus_dict_hook=dict_hook_ref_setter_show_dialog_components as SankeyPlusShowMenuComponentsType
-      const plus_updater=ComponentUpdater as PlusComponentUpdaterType
+      const plus_dict_app_data=applicationData as OSPApplicationDataType
+      const plus_applicationContext=applicationContext as OSPApplicationContextType
+      const  plus_app_draw_func= applicationDraw as OSPApplicationDrawType
+      const plus_elem_selected=applicationState as OSPElementsSelectedType
+      const plus_dict_hook=dict_hook_ref_setter_show_dialog_components as OSPShowMenuComponentsType
+      const plus_updater=ComponentUpdater as OSPComponentUpdaterType
 
       initializeKeyHandler(
         applicationData,
         uiElementsRef,
         contextMenu,
         e,
-        dict_variable_elements_selected,
+        applicationState,
         closeAllMenu,
         ref_alt_key_pressed,
         accept_simple_click,
@@ -538,7 +538,7 @@ root.render(
       )
       OSPInitializeKeyHandler(
         plus_applicationContext,e,plus_dict_app_data,plus_elem_selected,
-        plus_dict_hook,plus_app_draw_func.reDrawPlusLabels,plus_updater
+        plus_dict_hook,plus_app_draw_func.reDrawOSPLabels,plus_updater
       )
     }
     }
@@ -547,8 +547,8 @@ root.render(
     // but OSP can use its view as imported data
     // )
     initializeDiagrammSelector={(applicationData)=>{
-      const plus_app_data=applicationData as SankeyPlusApplicationDataType
-      return SankeyPlusDiagramSelector(
+      const plus_app_data=applicationData as OSPApplicationDataType
+      return OSPDiagramSelector(
         plus_app_data
       )}
 
@@ -557,15 +557,15 @@ root.render(
       (
         applicationData: applicationDataType, 
         data:SankeyData,
-        dict_variable_elements_selected:dict_variable_elements_selectedType,
+        applicationState:applicationStateType,
         options:SaveDiagramOptionsType
       ) => {
-        const {master_data} = applicationData as SankeyPlusApplicationDataType
-        const PlusElementsSelected = dict_variable_elements_selected as PlusElementsSelectedType
-        let data_to_save = data as SankeyPlusData
+        const {master_data} = applicationData as OSPApplicationDataType
+        const OSPElementsSelected = applicationState as OSPElementsSelectedType
+        let data_to_save = data as OSPData
         if (master_data && (master_data.view.length > 0)) {
           //if views are present there are two cases. If save only view data is saved otherwise master data is saved.
-          if ( PlusElementsSelected.saveViewGetter.current ) {
+          if ( OSPElementsSelected.saveViewGetter.current ) {
             data_to_save.current_view='none'
           } else {
             data_to_save = master_data
@@ -574,7 +574,7 @@ root.render(
         ClickSaveDiagram(
           applicationData,
           data_to_save,
-          dict_variable_elements_selected,
+          applicationState,
           options
         )
       }
@@ -584,7 +584,7 @@ root.render(
         contextMenu,
         applicationData,
         uiElementsRef,
-        dict_variable_elements_selected,
+        applicationState,
         link_function,
         ComponentUpdater,
         dict_hook_ref_setter_show_dialog_components,
@@ -595,7 +595,7 @@ root.render(
           contextMenu,
           applicationData,
           uiElementsRef,
-          dict_variable_elements_selected,
+          applicationState,
           link_function,
           ComponentUpdater,
           dict_hook_ref_setter_show_dialog_components,
@@ -606,7 +606,7 @@ root.render(
           contextMenu,
           applicationData,
           uiElementsRef,
-          dict_variable_elements_selected,
+          applicationState,
           link_function,
           ComponentUpdater,
           dict_hook_ref_setter_show_dialog_components,

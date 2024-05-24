@@ -38,10 +38,10 @@ import { faUpRightFromSquare, faLock} from '@fortawesome/free-solid-svg-icons'
 // Local libs
 import { IsAllZdtAttrSameValue } from './SankeyPlusUtils'
 import { deleteGLabel } from './SankeyPlusLabels'
-import { SankeyPlusContextMenuType,SankeyPlusLabel} from '../types/Types'
+import { OSPContextMenuType,OSPLabel} from '../types/Types'
 import {
-  SankeyPlusMenuConfigurationFreeLabelsFType,
-  SankeyPlusMenuPreferenceLabelsFType,
+  OSPMenuConfigurationFreeLabelsFType,
+  OSPMenuPreferenceLabelsFType,
   blur_ZDT_wysiwygFType,
   context_zdtFType,
   ZDTMenuAsAccordeonItemType
@@ -57,11 +57,11 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
  *  TODO
  *
  * @param { TFunction } t - TODO description
- * @param { SankeyPlusData } data - TODO description
+ * @param { OSPData } data - TODO description
  * @param { Function } set_data - TODO description
  *
  */
-export const SankeyPlusMenuPreferenceLabels : FunctionComponent<SankeyPlusMenuPreferenceLabelsFType> = ({
+export const OSPMenuPreferenceLabels : FunctionComponent<OSPMenuPreferenceLabelsFType> = ({
   t,
   data,
   updateMenus
@@ -85,15 +85,15 @@ export const SankeyPlusMenuPreferenceLabels : FunctionComponent<SankeyPlusMenuPr
  */
 export interface selected_type  {'label':string;'value':string}
 
-export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlusMenuConfigurationFreeLabelsFType> = ({
+export const OSPMenuConfigurationFreeLabels : FunctionComponent<OSPMenuConfigurationFreeLabelsFType> = ({
   applicationData,
   applicationContext,
-  dict_variable_elements_selected,
+  applicationState,
   ComponentUpdater,
-  reDrawPlusLabels
+  reDrawOSPLabels
 }) => {
   const {data}=applicationData
-  const {multi_selected_label}=dict_variable_elements_selected
+  const {multi_selected_label}=applicationState
   const {t,has_open_sankey_plus}=applicationContext 
   const r_editor_ZDT= useRef<ReactQuill>() as {current:ReactQuill}
   const zdt_or_image=(multi_selected_label.current.length>0?(multi_selected_label.current[0].is_image===true?'image':'zdt'):'zdt')
@@ -105,7 +105,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
   const [forceUpdate,setForceUpdate]=useState(false)
   const {updateComponentMenuConfigZdt} = ComponentUpdater
   updateComponentMenuConfigZdt.current.push(()=>setForceUpdate(!forceUpdate))
-  dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
+  applicationState.r_setter_editor_content_fo_zdt.current!.push(sEditorContentFOZdt)
   //Dépalce la place des labels libres sélectionnés vers le debut dans le tableau de flux de data
   //Permet donc de les déssiner après
   const handleUplabel = (i: string) => {
@@ -114,13 +114,13 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     const posElemt = listElmt.indexOf(i)
     listElmt.splice(posElemt, 1)
     listElmt.splice(posElemt - 1, 0, i)
-    const new_cat: { [key: string]: SankeyPlusLabel } = {}
+    const new_cat: { [key: string]: OSPLabel } = {}
     listElmt.forEach(elt => {
       new_cat[elt] = labels[elt]
     })
     for (const member in labels) delete labels[member]
     Object.assign(labels, new_cat)
-    reDrawPlusLabels(Object.values(data.labels))
+    reDrawOSPLabels(Object.values(data.labels))
     setForceUpdate(!forceUpdate)
   }
   //Dépalce la place des labels libres sélectionnés vers la fin dans le tableau de flux de data
@@ -131,13 +131,13 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
     const posElemt = listElmt.indexOf(i)
     listElmt.splice(posElemt, 1)
     listElmt.splice(posElemt + 1, 0, i)
-    const new_cat: { [key: string]: SankeyPlusLabel } = {}
+    const new_cat: { [key: string]: OSPLabel } = {}
     listElmt.forEach(elt => {
       new_cat[elt] = labels[elt]
     })
     for (const member in labels) delete labels[member]
     Object.assign(labels, new_cat)
-    reDrawPlusLabels(Object.values(data.labels))
+    reDrawOSPLabels(Object.values(data.labels))
     setForceUpdate(!forceUpdate)
   }
 
@@ -166,12 +166,12 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
               const new_sel = selected.map(d => d.value)
               const m_s = Object.values(data.labels).filter(d => (new_sel.includes(d.idLabel)))
               multi_selected_label.current = m_s
-              reDrawPlusLabels(multi_selected_label.current)
+              reDrawOSPLabels(multi_selected_label.current)
               if(multi_selected_label.current.length>0){
                 const tmp = multi_selected_label.current[multi_selected_label.current.length-1].content
-                dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(tmp))
+                applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(tmp))
               }else{
-                dict_variable_elements_selected.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
+                applicationState.r_setter_editor_content_fo_zdt.current?.forEach(f=>f(''))
               }
               updateComponentMenuConfigZdt.current.forEach(f=>f())
             }}
@@ -277,7 +277,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
       Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel)).map(d => {
         d.content = s_editor_content_fo_zdt
       })
-      reDrawPlusLabels(multi_selected_label.current)
+      reDrawOSPLabels(multi_selected_label.current)
       setForceUpdate(!forceUpdate)
     }}
 
@@ -302,7 +302,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
 
   const content_image = <>
     {/* Import image */}
-    <OSTooltip label={!has_open_sankey_plus?t('Menu.sankeyPlusDisabled'):''} >
+    <OSTooltip label={!has_open_sankey_plus?t('Menu.sankeyOSPDisabled'):''} >
 
       <Box
         as='span'
@@ -326,7 +326,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
                 Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
                   .forEach(n=>n.image_src=(res as string))
 
-                reDrawPlusLabels(multi_selected_label.current)
+                reDrawOSPLabels(multi_selected_label.current)
                 setForceUpdate(!forceUpdate)
 
               }
@@ -372,7 +372,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           data.labels[new_label.idLabel] = new_label
           multi_selected_label.current = [new_label]
 
-          reDrawPlusLabels(multi_selected_label.current)
+          reDrawOSPLabels(multi_selected_label.current)
           setForceUpdate(!forceUpdate)
         }
         }><FaPlus /></Button>
@@ -383,7 +383,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
         variant='menuconfigpanel_del_button'
         isDisabled={disable_options}
         onClick={() => {
-          deleteGLabel(multi_selected_label.current,dict_variable_elements_selected)
+          deleteGLabel(multi_selected_label.current,applicationState)
           data.labels = Object.fromEntries(Object.entries(data.labels).filter(d => !multi_selected_label.current.map(l => l.idLabel).includes(d[0])))
           multi_selected_label.current = []
           updateComponentMenuConfigZdt.current.forEach(f=>f())
@@ -462,7 +462,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             Object.values(data.labels).filter(f => multi_selected_label.current.map(d => d.idLabel).includes(f.idLabel))
               .forEach(n=>n.is_image=false)
             set_button_icon_or_image('zdt')
-            reDrawPlusLabels(multi_selected_label.current)
+            reDrawOSPLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
           }}>Texte</Button>
 
@@ -475,7 +475,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
               .forEach(n=>n.is_image=true)
 
             set_button_icon_or_image('image')
-            reDrawPlusLabels(multi_selected_label.current)
+            reDrawOSPLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
 
           }}>Image</Button></Box>
@@ -506,7 +506,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             onChange={evt => {
               multi_selected_label.current.map(d => d.label_height = +evt)
 
-              reDrawPlusLabels(multi_selected_label.current)
+              reDrawOSPLabels(multi_selected_label.current)
               setForceUpdate(!forceUpdate)
             }}
           >
@@ -536,7 +536,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             onChange={evt => {
               multi_selected_label.current.map(d => d.label_width = +evt)
 
-              reDrawPlusLabels(multi_selected_label.current)
+              reDrawOSPLabels(multi_selected_label.current)
               setForceUpdate(!forceUpdate)
             }}
           >
@@ -572,7 +572,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             const val = evt.target.value
             multi_selected_label.current.map(d => d.color = val)
 
-            reDrawPlusLabels(multi_selected_label.current)
+            reDrawOSPLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
           }}
         />
@@ -598,7 +598,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
               const value=+evt
               multi_selected_label.current.map(d => d.opacity = value)
 
-              reDrawPlusLabels(multi_selected_label.current)
+              reDrawOSPLabels(multi_selected_label.current)
               setForceUpdate(!forceUpdate)
             }}
           >
@@ -634,7 +634,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
             const val = evt.target.value
             multi_selected_label.current.map(d => d.color_border = val)
 
-            reDrawPlusLabels(multi_selected_label.current)
+            reDrawOSPLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
           }}
         />
@@ -648,7 +648,7 @@ export const SankeyPlusMenuConfigurationFreeLabels : FunctionComponent<SankeyPlu
           onChange={(evt) => {
             multi_selected_label.current.map(d => d.transparent_border = evt.target.checked)
 
-            reDrawPlusLabels(multi_selected_label.current)
+            reDrawOSPLabels(multi_selected_label.current)
             setForceUpdate(!forceUpdate)
           }}>
           {t('LL.bt')}
@@ -666,14 +666,14 @@ export const context_zdt : context_zdtFType =(
   t:TFunction,
   applicationData,
   dict_hook_ref_setter_show_dialog_components,
-  dict_variable_elements_selected,
+  applicationState,
   ComponentUpdater,
-  reDrawPlusLabels
+  reDrawOSPLabels
 )=>{
   const {data}=applicationData
-  const {pointer_pos,contextualised_zdt}=(contextMenu as SankeyPlusContextMenuType)
-  const {multi_selected_label}=dict_variable_elements_selected
-  const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<SankeyPlusLabel>()
+  const {pointer_pos,contextualised_zdt}=(contextMenu as OSPContextMenuType)
+  const {multi_selected_label}=applicationState
+  const [zdt_to_contextualise, set_zdt_to_contextualise] = useState<OSPLabel>()
   const {updateComponentMenuConfigZdt} = ComponentUpdater
   contextualised_zdt.current=set_zdt_to_contextualise
   dict_hook_ref_setter_show_dialog_components.ref_setter_show_menu_zdt.current
@@ -687,7 +687,7 @@ export const context_zdt : context_zdtFType =(
   const btn_mask_border=<Button onClick={()=>{
     multi_selected_label.current.forEach(zdt=>zdt.transparent_border=!valAllLabelBorderTransparent[0])
     set_zdt_to_contextualise(undefined)
-    reDrawPlusLabels(multi_selected_label.current)
+    reDrawOSPLabels(multi_selected_label.current)
     updateComponentMenuConfigZdt.current.forEach(f=>f())
   }} variant='light'>{valAllLabelBorderTransparent[0]?t('LL.display_border'):t('LL.hide_border')}</Button>
 
@@ -706,7 +706,7 @@ export const context_zdt : context_zdtFType =(
       onChange={evt => {
         const val = evt.target.value
         multi_selected_label.current.map(d => d.color = val)
-        reDrawPlusLabels(multi_selected_label.current)
+        reDrawOSPLabels(multi_selected_label.current)
         updateComponentMenuConfigZdt.current.forEach(f=>f())
       }}
     />
@@ -744,7 +744,7 @@ export const blur_ZDT_wysiwyg : blur_ZDT_wysiwygFType = (
 /**
  *  Function that return content_menu_zdt with JSX to imbricate it in the config menu
  *
- * @param {SankeyPlusData} data
+ * @param {OSPData} data
  * @param {uiElementsRefType} uiElementsRef
  * @param {boolean} has_open_sankey_plus
  * @param {TFunction} t
@@ -773,7 +773,7 @@ export const ZDTMenuAsAccordeonItem:FunctionComponent<ZDTMenuAsAccordeonItemType
       </Box>
       {
         (!has_open_sankey_plus)?
-          <OSTooltip label={t('Menu.sankeyPlusDisabled')} >
+          <OSTooltip label={t('Menu.sankeyOSPDisabled')} >
             <Badge pill
               bg="white"
               style={{marginLeft:'5px', fontSize:'1.3em'}}>
