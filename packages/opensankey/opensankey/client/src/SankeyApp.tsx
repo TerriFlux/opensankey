@@ -345,7 +345,7 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
       applicationDraw,
       node_function,
       link_function,ComponentUpdater)}
-    url_prefix={''}
+    url_prefix={applicationContext.url_prefix}
     first_selected_node={dict_variable_elements_selected.first_selected_node}
     dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
     never_see_again={dict_variable_elements_selected.never_see_again}
