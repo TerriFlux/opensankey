@@ -26,7 +26,7 @@ export const DrawAllNodes : DrawAllNodesFType = (
   contextMenu,
   applicationData,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   alt_key_pressed,
   accept_simple_click,
@@ -39,14 +39,14 @@ export const DrawAllNodes : DrawAllNodesFType = (
   resizeCanvas
 ) => {
   const {display_nodes}=applicationData
-  const { multi_selected_nodes } = dict_variable_elements_selected
+  const { multi_selected_nodes } = applicationState
   const {GetLinkValue}=link_function
   const {t}=applicationContext
   // The majority of data used to design the node are located in data['nodes']
   // Or if you want information about the type of these variable, you can find them in file types.tsx
   d3.selectAll(' .opensankey .gg_nodes').remove()
   drawAddNodes(
-    contextMenu, applicationData, uiElementsRef, dict_variable_elements_selected,applicationContext,
+    contextMenu, applicationData, uiElementsRef, applicationState,applicationContext,
     alt_key_pressed, accept_simple_click, link_function,NodeTooltipsContent,ComponentUpdater,dict_hook_ref_setter_show_dialog_components,node_function,
     Object.values(display_nodes),
     GetSankeyMinWidthAndHeight,
@@ -65,7 +65,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   contextMenu,
   applicationData,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   alt_key_pressed,
   accept_simple_click,
@@ -79,7 +79,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
 ) => {
   const { LinkText, GetLinkValue } = link_function
   const { data, display_nodes } = applicationData
-  const { ref_getter_mode_selection, multi_selected_nodes, first_selected_node } = dict_variable_elements_selected
+  const { ref_getter_mode_selection, multi_selected_nodes, first_selected_node } = applicationState
   const inv_scale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, data.user_scale])
@@ -112,7 +112,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     ggg_nodes
       .filter(()=>!(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))
       .on('click', (event, d) => SimpleGNodeClick(
-        uiElementsRef,dict_variable_elements_selected,event,d,accept_simple_click,ComponentUpdater
+        uiElementsRef,applicationState,event,d,accept_simple_click,ComponentUpdater
       )
       )
       .on('dblclick',(event, d)=> DoubleGNodeClick(event,d))
@@ -127,7 +127,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
           event,
           d,
           applicationData,
-          dict_variable_elements_selected,
+          applicationState,
           uiElementsRef,
           applicationContext,
           ComponentUpdater,
@@ -140,7 +140,7 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
     if(ref_getter_mode_selection.current=='s' && window.SankeyToolsStatic!==true ){
       ggg_nodes.call(
         DragGNodeEvent(
-          applicationData,dict_variable_elements_selected,applicationContext,
+          applicationData,applicationState,applicationContext,
           alt_key_pressed,LinkText,GetLinkValue,scale,inv_scale,ComponentUpdater,node_function,link_function,GetSankeyMinWidthAndHeight,resizeCanvas
         )
       )
@@ -150,8 +150,8 @@ export const AddDrawNodesEvent : AddDrawNodesFType = (
   ggg_nodes.on('contextmenu', (ev, n) => {
     if(!window.SankeyToolsStatic){
       // if the right mouse button is clicked we switch to selection mode
-      // dict_variable_elements_selected.ref_setter_mode_selection.current('s')
-      // dict_variable_elements_selected.ref_getter_mode_selection.current = 's'
+      // applicationState.ref_setter_mode_selection.current('s')
+      // applicationState.ref_getter_mode_selection.current = 's'
       // d3.select(' .opensankey #svg').attr('class','mode_selection')
       return EventNodeContextMenu(ev,n,contextMenu,multi_selected_nodes)
     }}
@@ -353,7 +353,7 @@ export const drawAddNodes : drawNodeShapeFType = (
   contextMenu,
   applicationData,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   alt_key_pressed,
   accept_simple_click,
@@ -367,7 +367,7 @@ export const drawAddNodes : drawNodeShapeFType = (
   resizeCanvas,
 
 ) => {
-  const {multi_selected_nodes } = dict_variable_elements_selected
+  const {multi_selected_nodes } = applicationState
   const { data,display_nodes, display_links } = applicationData
   const {t} = applicationContext
   // const filtered_data = multi_selected_nodes.current.length>0 ? multi_selected_nodes.current : Object.values(display_nodes)
@@ -415,7 +415,7 @@ export const drawAddNodes : drawNodeShapeFType = (
     contextMenu,
     applicationData,
     uiElementsRef,
-    dict_variable_elements_selected,
+    applicationState,
     applicationContext,
     alt_key_pressed,
     accept_simple_click,

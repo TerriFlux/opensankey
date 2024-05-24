@@ -11,7 +11,7 @@ import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper,
 
 export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLinksDataFType> = ({
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   applicationContext,
   additional_data_element,
   ComponentUpdater,
@@ -21,7 +21,7 @@ export const MenuConfigurationLinksData : FunctionComponent<MenuConfigurationLin
   const { t } = applicationContext
   const [forceUpdate,setForceUpdate]=useState(false)
   const { data } = applicationData
-  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef,displayedInputLinkDataTagSetterRef  } = dict_variable_elements_selected
+  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef,displayedInputLinkDataTagSetterRef  } = applicationState
   const [ displayed_input_link_value, set_displayed_input_link_value ] = useState('')
   
   displayedInputLinkValueSetterRef.current.push(set_displayed_input_link_value)

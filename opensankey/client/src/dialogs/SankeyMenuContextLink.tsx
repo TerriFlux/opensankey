@@ -18,7 +18,7 @@ const checked=(b:boolean)=><span style={{float:'right'}}>{b?'✓':''}</span>
 export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   contextMenu,
   dict_hook_ref_setter_show_dialog_components,
   node_function,
@@ -29,7 +29,7 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
   contextMenu.ref_setter_contextualised_link.current = set_contextualised_link
   const [forceUpdate,setForceUpdate]=useState(false)
   const { pointer_pos } = contextMenu
-  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef } = dict_variable_elements_selected
+  const { multi_selected_links,displayedInputLinkValueSetterRef,displayedInputLinkValueRef } = applicationState
   const { data } = applicationData
   const { t } = applicationContext
   const {RedrawNodes} = node_function

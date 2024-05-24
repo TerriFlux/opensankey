@@ -4,7 +4,7 @@ import {
   applicationContextType,
   ComponentUpdaterType,
   applicationDataType,
-  dict_variable_elements_selectedType,
+  applicationStateType,
   display_styleType,
   SankeyData,
   SankeyDrawCurve,
@@ -767,7 +767,7 @@ export const DrawLinkText = (
 // Draw the center handle of each selected links
 const AddCenterHandle=(
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   link:SankeyLink,
   selected_tags: TagsCatalog,
@@ -779,7 +779,7 @@ const AddCenterHandle=(
   inv_scale:(t:number)=>number,
 )=>{
   const {data,display_links}=applicationData
-  const {multi_selected_links}=dict_variable_elements_selected
+  const {multi_selected_links}=applicationState
   const recy= ReturnValueLink(data, link, 'recycling') as boolean
   const ori= ReturnValueLink(data, link, 'orientation')
 
@@ -828,7 +828,7 @@ const AddCenterHandle=(
       .attr('cursor',(multi_selected_links.current.includes(link) && (ori=='vv' ||ori=='hh'))?'ew-resize':'pointer')
       .call(
         DragLinkCenterHandleEvent(
-          link,applicationData,dict_variable_elements_selected,applicationContext,selected_tags,
+          link,applicationData,applicationState,applicationContext,selected_tags,
           GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,ComponentUpdater
         )
       )
@@ -896,7 +896,7 @@ const CenterHandlePosition=(
 // Draw the shift handle of each selected links
 const AddShiftHandle = (
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   link: SankeyLink,
   display_style: display_styleType,
@@ -911,7 +911,7 @@ const AddShiftHandle = (
   inv_scale:(t:number)=>number,
 
 ) => {
-  const {multi_selected_links}=dict_variable_elements_selected
+  const {multi_selected_links}=applicationState
   if (!d3.select(' .opensankey #gg_link_handle_'+link.idLink).empty()) {
     d3.select(' .opensankey #gg_link_handle_'+link.idLink)
       .append('rect')
@@ -921,7 +921,7 @@ const AddShiftHandle = (
       .attr('width', default_handle_size)
       .attr('height', default_handle_size)
       .attr('cursor',(multi_selected_links.current.includes(link)&& !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false))?'ew-resize':'pointer')
-      .call(DragLinkShiftHandleEvent(applicationData,dict_variable_elements_selected,applicationContext,link,display_style,selected_tags,position,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,ComponentUpdater)
+      .call(DragLinkShiftHandleEvent(applicationData,applicationState,applicationContext,link,display_style,selected_tags,position,GetSankeyMinWidthAndHeight,default_horiz_shift,DrawGrid,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,ComponentUpdater)
       )
   }
 
@@ -932,7 +932,7 @@ const AddShiftHandle = (
 // Function that call AddShiftHandle for the shift handle of each side of the links
 const add_shift_handles = (
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   link: SankeyLink,
   display_style: display_styleType,
@@ -968,7 +968,7 @@ const add_shift_handles = (
   for (let i = 0; i < shift_handles.length; i++) {
     const selection = d3.select(' .opensankey #' + shift_handles[i][0] + link.idLink)
     if (selection.empty()) { // if the handle do not exist, create it
-      AddShiftHandle(applicationData,dict_variable_elements_selected,applicationContext,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale
+      AddShiftHandle(applicationData,applicationState,applicationContext,link, display_style, selected_tags, shift_handles[i][0], shift_handles[i][1],LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale
       )
     }
   }
@@ -987,7 +987,7 @@ const add_shift_handles = (
 // DRAW LINK
 const DrawCurve = (
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   applicationContext:applicationContextType,
   display_style: display_styleType,
   nodeTags: TagsCatalog,
@@ -1038,9 +1038,9 @@ const DrawCurve = (
 
   let [xs, ys, xt, yt] = ComputeEndPoints(source_node, target_node, applicationData,link,scale,inv_scale,GetLinkValue)
   if(ori=='vv' ||ori=='hh'){
-    add_shift_handles(applicationData,dict_variable_elements_selected,applicationContext,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
-    AddDragLinkZone(link,applicationData,dict_variable_elements_selected,applicationContext,default_handle_size,default_horiz_shift,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,DrawArrows,ComponentUpdater)
-    AddCenterHandle(applicationData,dict_variable_elements_selected,applicationContext,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
+    add_shift_handles(applicationData,applicationState,applicationContext,link,display_style, nodeTags, xs, ys, xt, yt,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
+    AddDragLinkZone(link,applicationData,applicationState,applicationContext,default_handle_size,default_horiz_shift,scale,inv_scale,drawCurveFunction,LinkText,GetLinkValue,DrawArrows,ComponentUpdater)
+    AddCenterHandle(applicationData,applicationState,applicationContext,link,nodeTags,LinkText,GetSankeyMinWidthAndHeight,GetLinkValue,ComponentUpdater,scale,inv_scale)
   }
 
 

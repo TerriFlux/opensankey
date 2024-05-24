@@ -24,7 +24,7 @@ const sep=<Button variant='light' disabled><hr style={{ borderStyle: 'none', mar
 export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   contextMenu,
   dict_hook_ref_setter_show_dialog_components,
   agregation,
@@ -39,7 +39,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
   const [forceUpdate,setForceUpdate]=useState(false)
   const { t } = applicationContext
   const { data, set_data } = applicationData
-  const { multi_selected_nodes,multi_selected_links } = dict_variable_elements_selected
+  const { multi_selected_nodes,multi_selected_links } = applicationState
   const { pointer_pos } = contextMenu
   const {RedrawNodes}=node_function
   const {RedrawLinks} = link_function
@@ -314,7 +314,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
             multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>d.outputLinksId.includes(l.idLink)))
             const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-            dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
+            applicationState.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
           })
           multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
           set_contextualised_node(undefined)
@@ -328,7 +328,7 @@ export const ContextMenuNode : FunctionComponent<ContextMenuNodeFType> = ({
           Object.values(data.nodes).filter(f => multi_selected_nodes.current.map(d => d.idNode).includes(f.idNode)).map(d => {
             multi_selected_links.current = multi_selected_links.current.concat(Object.values(data.links).filter(l=>  d.inputLinksId.includes(l.idLink)))
             const opacity=ReturnValueLink(data,multi_selected_links.current[0],'opacity') as string
-            dict_variable_elements_selected.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
+            applicationState.ref_display_link_opacity.current.forEach(setter=>setter(opacity))
           })
           multi_selected_links.current.forEach(l=>SelectVisualyLinks(l))
           set_contextualised_node(undefined)

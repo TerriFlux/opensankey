@@ -410,7 +410,7 @@ export const DragLegendGElement:drag_legend_g_elementFuncType=(
 export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   contextMenu,
   GetLinkValue,
   ComponentUpdater
@@ -422,7 +422,7 @@ export const ContextLegendTags : FunctionComponent<ContextLegendTagsFType> = ({
   if (tagContext.current!.length === 0) {
     tagContext.current!.push([ tag_contextualised, set_tag_contextualised])
   }
-  const {multi_selected_links,multi_selected_nodes}=dict_variable_elements_selected
+  const {multi_selected_links,multi_selected_nodes}=applicationState
   let style_c_t='0px 0px auto auto'
   if(tag_contextualised ){
     style_c_t=(pointer_pos.current[1]-20)+'px auto auto '+(pointer_pos.current[0]+10)+'px'

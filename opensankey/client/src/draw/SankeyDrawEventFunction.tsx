@@ -40,7 +40,7 @@ import {
   ZoomFunctionFuncType,
   actualizeDrawAreaFrameFType,
   applyZoomEventFType,
-  selectOpensankeyElementsInSelectionZoneFType
+  selectOpenSankeyElementsInSelectionZoneFType
 } from './types/SankeyDrawEventFunctionTypes'
 import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
 
@@ -53,7 +53,7 @@ import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
  *
  * @param applicationData
  * @param uiElementsRef
- * @param dict_variable_elements_selected
+ * @param applicationState
  * @param event
  * @param d
  * @param sankeyTooltip
@@ -61,13 +61,13 @@ import { RedrawNodesLabel } from './SankeyDrawNodesLabel'
 export const EventNodeClick : EventNodeClickFType =(
   //applicationData,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
   ComponentUpdater,
 )=>{
-  const {ref_getter_mode_selection, multi_selected_nodes}=dict_variable_elements_selected
+  const {ref_getter_mode_selection, multi_selected_nodes}=applicationState
   const {nodes_accordion_ref,accordion_ref,button_ref}=uiElementsRef
   const {updateComponentMenuConfigNode,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode,updateMenuConfigTextNodeTooltip}=ComponentUpdater
   multi_selected_nodes.current.forEach(n=>DeselectVisualyNodes(n))
@@ -166,11 +166,11 @@ export const EventLinkContextMenu: EventLinkContextMenuFType = (
   l: SankeyLink,
   ref_setter_contextualised_link,
   pointer_pos,
-  dict_variable_elements_selected,
+  applicationState,
   tags_selected,
 ) => {
   const { data } = applicationData
-  const {displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef,multi_selected_links,ref_display_link_opacity}=dict_variable_elements_selected
+  const {displayedInputLinkValueSetterRef,displayedInputLinkDataTagSetterRef,multi_selected_links,ref_display_link_opacity}=applicationState
   ev.preventDefault()
   pointer_pos.current = [ev.pageX, ev.pageY]
   if (multi_selected_links.current.includes(l)) {
@@ -260,7 +260,7 @@ export const EventZDDContextMenu: EventZDDContextMenuFType = (
 
 export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   dict_hook_ref_setter_show_dialog_components,
   token,
   evt,
@@ -271,7 +271,7 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
   // Special cast usefull for when the app is used in SankeySuiteManager
   const setter_limited_application = (dict_hook_ref_setter_show_dialog_components as unknown as { ref_setter_show_toast_limit_node?: React.MutableRefObject<React.Dispatch<React.SetStateAction<boolean>> | undefined>} )
   const { data } = applicationData
-  const { ref_getter_mode_selection, first_selected_node } = dict_variable_elements_selected
+  const { ref_getter_mode_selection, first_selected_node } = applicationState
   closeAllMenuContext()
   const evt2=evt as unknown as {target:string,ctrlKey:boolean,metaKey:boolean,which:number}
 
@@ -326,12 +326,12 @@ export const EventOnZoneMouseDown: EventOnZoneMouseDownFuncType = (
 }
 export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   evt: MouseEvent,
   start_point: { current: number[]}
 ) => {
   const { data } = applicationData
-  const { ref_getter_mode_selection,first_selected_node } = dict_variable_elements_selected
+  const { ref_getter_mode_selection,first_selected_node } = applicationState
   //Empêche lors du drag de la souris d'avoir
   // l'effet sélection de texte sur les labels des éléments de diagramme
   //si le mode de souris est noeud+flux et que le bouton de la souris est toujours pressé
@@ -408,7 +408,7 @@ export const EventOnZoneMouseMove: EventOnZoneMouseMoveFuncType = (
 export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   applicationData,
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   dict_hook_ref_setter_show_dialog_components,
   token,
   evt,
@@ -421,7 +421,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
   resizeCanvas
 ) => {
   const { data, display_links } = applicationData
-  const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = dict_variable_elements_selected
+  const { ref_getter_mode_selection,multi_selected_links, multi_selected_nodes, first_selected_node, displayedInputLinkValueSetterRef } = applicationState
   const { links_accordion_ref, button_ref, accordion_ref } = uiElementsRef
   const {updateComponentMenuConfigNode,updateComponentMenuConfigLink,updateComponentMenuConfigNodeAppearence,updateComponentMenuNodeIOSelectSideNode,updateComponenSaveInCache}=ComponentUpdater
   // Special cast usefull for when the app is used in SankeySuiteManager
@@ -628,7 +628,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   uiElementsRef,
   applicationContext,
   ComponentUpdater,
@@ -636,7 +636,7 @@ export const EventOnMouseUpAddNodesAndLink: EventOnMouseUpAddNodesAndLinkFType =
   node_function
 ) => {
   const { data,display_links } = applicationData
-  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,ref_getter_mode_selection} = dict_variable_elements_selected
+  const { first_selected_node, multi_selected_links, displayedInputLinkValueSetterRef,ref_getter_mode_selection} = applicationState
   const { accordion_ref, links_accordion_ref,button_ref } = uiElementsRef
   const {GetLinkValue}=link_function
   const {updateComponentMenuConfigLink}=ComponentUpdater
@@ -759,7 +759,7 @@ export const ZoomFunction: ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElemen
 
 export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
   uiElementsRef,
-  dict_variable_elements_selected,
+  applicationState,
   event,
   d,
   accept_simple_click,
@@ -769,12 +769,12 @@ export const SimpleGNodeClick: SimpleGNodeClickFuncType = (
   if ((event.target as HTMLSpanElement).tagName === 'tspan') {
     setTimeout(() => {
       if (accept_simple_click.current) {
-        EventNodeClick( uiElementsRef, dict_variable_elements_selected, event, d, sankeyTooltip,ComponentUpdater)
+        EventNodeClick( uiElementsRef, applicationState, event, d, sankeyTooltip,ComponentUpdater)
       }
     }, 200)
   } else {
 
-    EventNodeClick(uiElementsRef, dict_variable_elements_selected, event, d, sankeyTooltip,ComponentUpdater)
+    EventNodeClick(uiElementsRef, applicationState, event, d, sankeyTooltip,ComponentUpdater)
   }
 }
 export const SvgDragMiddleMouseStart: SvgDragMiddleMouseStartFuncType = () => {
@@ -814,15 +814,15 @@ export const actualizeDrawAreaFrame:actualizeDrawAreaFrameFType=(applicationData
 }
 
 
-export const selectOpensankeyElementsInSelectionZone:selectOpensankeyElementsInSelectionZoneFType=(
+export const selectOpenSankeyElementsInSelectionZone:selectOpenSankeyElementsInSelectionZoneFType=(
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   ComponentUpdater,
   evt,
   start_point
 )=>{
   const {data,display_links}=applicationData
-  const {multi_selected_nodes,multi_selected_links}=dict_variable_elements_selected
+  const {multi_selected_nodes,multi_selected_links}=applicationState
   const {updateComponentMenuConfigNode,
     updateComponentMenuConfigNodeAppearence,
     updateComponentMenuConfigLink,

@@ -447,7 +447,7 @@ export const setDiagram:setDiagramFuncType = (
 export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
   applicationContext,
   applicationData,
-  dict_variable_elements_selected,
+  applicationState,
   filter,
   set_current_filter,
   detail_level,
@@ -464,7 +464,7 @@ export const ToolbarBuilder : FunctionComponent<ToolbarBuilderFType> = ({
 
   const {data}=applicationData
   const {t}=applicationContext
-  const { ref_getter_mode_selection,ref_setter_mode_selection } = dict_variable_elements_selected
+  const { ref_getter_mode_selection,ref_setter_mode_selection } = applicationState
   const {updateComponentToolbar} =ComponentUpdater
   const {recomputeDisplayedElement}=node_function
   const {GetSankeyMinWidthAndHeight,reDrawLegend}=applicationDraw

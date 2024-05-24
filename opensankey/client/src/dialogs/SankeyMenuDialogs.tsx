@@ -1,7 +1,7 @@
 import React, { ChangeEvent, FunctionComponent, useState,  } from 'react'
 
 import { Form, FormLabel, Row, Col, Button, InputGroup, Tabs,Tab,FormControl, Modal} from 'react-bootstrap'
-import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, dict_variable_elements_selectedType, } from '../types/Types'
+import { dict_hook_ref_setter_show_dialog_componentsType, applicationDataType, applicationStateType, } from '../types/Types'
 import { complete_sankey_data } from '../configmenus/SankeyConvert'
 import { DefaultLink, DefaultNode, OSTooltip } from '../configmenus/SankeyUtils'
 import { NodeVisibleOnsSvg } from '../draw/SankeyDrawFunction'
@@ -528,7 +528,7 @@ export type ApplySaveJSONTypes = {
   t : TFunction
   applicationData : applicationDataType,
   dict_hook_ref_setter_show_dialog_components:dict_hook_ref_setter_show_dialog_componentsType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   additional_file_save_json_option:JSX.Element[],
   ClickSaveDiagram:ClickSaveDiagramFuncType
 }
@@ -543,7 +543,7 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
     t,
     applicationData,
     dict_hook_ref_setter_show_dialog_components,
-    dict_variable_elements_selected,
+    applicationState,
     additional_file_save_json_option,
     ClickSaveDiagram
   }: ApplySaveJSONTypes
@@ -595,7 +595,7 @@ export const ApplySaveJSONDialog : FunctionComponent<ApplySaveJSONTypes> = (
             ClickSaveDiagram(
               applicationData,
               applicationData.data,
-              dict_variable_elements_selected,
+              applicationState,
               {
                 mode_save,
                 mode_visible_element

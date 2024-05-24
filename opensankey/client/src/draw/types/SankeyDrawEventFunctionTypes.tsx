@@ -1,6 +1,6 @@
 
 import { MutableRefObject, Dispatch, SetStateAction } from 'react'
-import { applicationDataType, uiElementsRefType, dict_variable_elements_selectedType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType, NodeFunctionTypes } from '../../types/Types'
+import { applicationDataType, uiElementsRefType, applicationStateType, SankeyNode, contextMenuType, SankeyLink, dict_hook_ref_setter_show_dialog_componentsType, SankeyData, LinkFunctionTypes, ComponentUpdaterType, applicationContextType, NodeFunctionTypes } from '../../types/Types'
 import * as d3 from 'd3'
 import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/SankeyUtilsTypes'
 
@@ -10,7 +10,7 @@ import { GetSankeyMinWidthAndHeightFuncType } from '../../configmenus/types/Sank
 export type EventNodeClickFType = (
   //applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   sankeyTooltip:d3.Selection<HTMLDivElement,unknown,HTMLElement,unknown>,
@@ -31,7 +31,7 @@ export type EventLinkContextMenuFType = (
   l: SankeyLink,
   ref_setter_contextualised_link: MutableRefObject<Dispatch<SetStateAction<SankeyLink | undefined>> | undefined>,
   pointer_pos: { current: number[]} ,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   tags_selected: { [k: string]: string} ,
 ) => void
 
@@ -46,7 +46,7 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
   event:React.MouseEvent<HTMLButtonElement>,
   d:SankeyNode,
   applicationData : applicationDataType,
-  dict_variable_elements_selected : dict_variable_elements_selectedType,
+  applicationState : applicationStateType,
   uiElementsRef : uiElementsRefType,
   applicationContext:applicationContextType,
   ComponentUpdater:ComponentUpdaterType,
@@ -55,7 +55,7 @@ export type EventOnMouseUpAddNodesAndLinkFType = (
 )=> void
 export type EventOnZoneMouseDownFuncType = (
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   token:boolean,
   evt:MouseEvent,
@@ -67,7 +67,7 @@ export type EventOnZoneMouseDownFuncType = (
 
 export type EventOnZoneMouseMoveFuncType = (
   applicationData: applicationDataType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
+  applicationState: applicationStateType,
   evt: MouseEvent,
   start_point: { current: number[]} 
 ) => void
@@ -75,7 +75,7 @@ export type EventOnZoneMouseMoveFuncType = (
 export type EventOnZoneMouseUpFuncType = (
   applicationData:applicationDataType,
   uiElementsRef:uiElementsRefType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   dict_hook_ref_setter_show_dialog_components : dict_hook_ref_setter_show_dialog_componentsType,
   token:boolean,
   evt:MouseEvent,
@@ -96,7 +96,7 @@ export type SvgDragMiddleMouseMoveFuncType = (event: d3.D3DragEvent<Element, unk
 
 export type SimpleGNodeClickFuncType = (
   uiElementsRef: uiElementsRefType,
-  dict_variable_elements_selected: dict_variable_elements_selectedType,
+  applicationState: applicationStateType,
   event: React.MouseEvent<HTMLButtonElement>,
   d: SankeyNode,
   accept_simple_click: { current: boolean} ,
@@ -108,9 +108,9 @@ export type ZoomFunctionFuncType = (evt: d3.D3ZoomEvent<SVGElement, unknown>, ap
 
 export type actualizeDrawAreaFrameFType=(_:applicationDataType,GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType)=>void
 
-export type selectOpensankeyElementsInSelectionZoneFType=(
+export type selectOpenSankeyElementsInSelectionZoneFType=(
   applicationData:applicationDataType,
-  dict_variable_elements_selected:dict_variable_elements_selectedType,
+  applicationState:applicationStateType,
   ComponentUpdater:ComponentUpdaterType,
   evt:MouseEvent,
   start_point: {current: number[]}

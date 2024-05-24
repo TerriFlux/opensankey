@@ -5,13 +5,13 @@ import { OSTooltip } from './SankeyUtils'
 
 export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<SankeyMenuConfigurationNodesTooltipFType> = ({
   applicationContext,
-  dict_variable_elements_selected,
+  applicationState,
   ComponentUpdater,
   menu_for_modal
 }) => {
   const { t } = applicationContext
   const {updateMenuConfigTextNodeTooltip}=ComponentUpdater
-  const { multi_selected_nodes } = dict_variable_elements_selected
+  const { multi_selected_nodes } = applicationState
   const [ forceUpdate, setForceUpdate ]=useState(false)
 
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
