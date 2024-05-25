@@ -4,7 +4,7 @@ import './css/colors/red.css'
 import './css/style_elements_sankey.css'
 import React, { MutableRefObject } from 'react'
 import { createRoot } from 'react-dom/client'
-
+import * as d3 from 'd3'
 import LZString from 'lz-string'
 import './traduction'
 
@@ -460,6 +460,9 @@ root.render(
         GetSankeyMinWidthAndHeight:GetSankeyMinWidthAndHeightFuncType,
         applicationDraw:applicationDrawType
       )=>{
+        // Call the function that add links to the sankey
+        d3.selectAll(' .opensankey #svg #sankey_def').remove()
+        d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
         DrawAll(
           contextMenu,
           applicationData,

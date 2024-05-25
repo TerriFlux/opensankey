@@ -629,9 +629,9 @@ export const OSPDrawAll : DrawAllType = (
   d3.select('.opensankey #svg').insert('g','#g_links').attr('class','g_label').attr('id','g_label')
   d3.select('.opensankey #svg').append('g').attr('class','g_label_handles').attr('id','g_label_handles')
 
-  // Call the function that add links to the sankey
-  d3.selectAll(' .opensankey #svg #sankey_def').remove()
-  d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
+  // // Call the function that add links to the sankey
+  // d3.selectAll(' .opensankey #svg #sankey_def').remove()
+  // d3.select(' .opensankey #svg').append('defs').attr('id', 'sankey_def')
 
   // Free Labels
   OSPDrawLabels(
