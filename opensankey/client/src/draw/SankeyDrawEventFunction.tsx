@@ -569,6 +569,7 @@ export const EventOnZoneMouseUp: EventOnZoneMouseUpFuncType = (
       applicationData.display_nodes[new_node1.idNode]=new_node1
       applicationData.display_links[new_link.idLink]=new_link
 
+      node_function.RedrawNodes([data.nodes[new_link.idSource]])
       node_function.CreateNodesOnSVG([new_node1])
       link_function.CreateLinksOnSVG([new_link])
       // update link congig panel
