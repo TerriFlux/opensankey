@@ -221,7 +221,8 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
     .attr('stroke','grey')
     .attr('stroke-width','2px')
     .attr('cursor','ew-resize')
-    .attr('visibility',n=>(nodes_to_redraw.length==1 && nodes_to_redraw.includes(n as SankeyNode)?'visible':'hidden'))
+    //.attr('visibility',n=>(nodes_to_redraw.length==1 && nodes_to_redraw.includes(n as SankeyNode)?'visible':'hidden'))
+    .attr('visibility','hidden')
   // .filter(()=>windowSankey.SankeyToolsStatic!==true)
   // .call(dragNodeTextEventWidthBoxEvent(data,set_data))
 }
