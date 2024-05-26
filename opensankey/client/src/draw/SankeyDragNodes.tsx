@@ -82,8 +82,9 @@ export const DragGNodeEvent: DragGNodeEventFType = (
           link_to_update=link_to_update.concat(node.outputLinksId.map(lid=>data.links[lid]))
           link_to_update=link_to_update.concat(node.inputLinksId.map(lid=>data.links[lid]))
         })
-        node_function.RedrawNodes(node_to_update)
-        link_function.RedrawLinks(link_to_update)
+        // Seems not necessary and if decommented it desactivates the click
+        // node_function.RedrawNodes(node_to_update)
+        //link_function.RedrawLinks(link_to_update)
         resizeCanvas(applicationData)
       }
     })
