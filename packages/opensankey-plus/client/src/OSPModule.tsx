@@ -66,7 +66,7 @@ import { OSPDrawArrows, OSPLinkStroke, MenuConfLinkApparenceGradient } from './S
 import { OSPDrawLabels, sankey_plus_min_width_and_height, zone_selection_label } from './SankeyPlusLabels'
 import { OSPMenuPreferenceLabels, ZDTMenuAsAccordeonItem, OSPMenuConfigurationFreeLabels, context_zdt, blur_ZDT_wysiwyg } from './SankeyPlusMenuConfigurationLabels'
 import { OSPDrawNodesIllustration, OSPNodeClickEvent, OSPNodeIcon, OSPHyperLink } from './SankeyPlusNodes'
-import { DefaultOSPStyleLink,  ImportImageAsSvgBg, OSPItemExport, OSPLinkSabotColor } from './SankeyPlusUtils'
+import { DefaultOSPStyleLink,  ImportImageAsSvgBg, OSPItemExport, OSPLinkSabotColor, SetSvgBg } from './SankeyPlusUtils'
 import { plus_convert_data, plus_sankey_layout, plus_all_element_to_transform, OSPTransformationElements, } from './SankeyPlusConvert'
 import { 
   GetDataFromView, MenuEnregistrerView, OSPKeyHandler, OSPBannerView, 
@@ -649,6 +649,7 @@ export const OSPDrawAll : DrawAllType = (
     applicationDraw.start_point,
     applicationDraw.resizeCanvas
   )
+  SetSvgBg(applicationData.data as OSPData)
 }
 
 // Function to add event on elements on svg area it return nothing
