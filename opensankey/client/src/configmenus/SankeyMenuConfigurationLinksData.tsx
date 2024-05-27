@@ -189,16 +189,22 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
   ComponentUpdater,
 })=>{
   const {data}=applicationData
-  const [update,setUpdate]=useState(false)
   const ref_input=useRef<HTMLInputElement>(null)
   const variantOfInput='menuconfigpanel_option_numberinput'
   const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
 
-  const val_of_key=ValueSelectedParameter(
-    applicationData,
-    multi_selected_links,
-    tags_selected
-  )
+  
+  // Initialise hook with first link selected value
+  const [displayed_value,setDisplayedValue]=useState(()=>{
+    const val_of_key=ValueSelectedParameter(
+      applicationData,
+      multi_selected_links,
+      tags_selected
+    )
+    
+    return val_of_key.value as string
+  })
+
   // Add stepper addon if specified
   const stepperBtn=<NumberInputStepper>
     <NumberIncrementStepper/>
@@ -214,10 +220,26 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
     <NumberInput allowMouseWheel 
       variant={variantOfInput} 
       step={1} 
-      value={val_of_key.value}
-      onChange={evt=>{
-        const formatedValue=evt.replace(',','.')
-        if(formatedValue!=='' && !isNaN(+formatedValue )){
+      value={displayed_value}
+      onChange={(_)=>{
+        // Launch/reset timeout before the input auto blur (and update the value in data)
+        if(isModifying.current){
+          clearTimeout(isModifying.current)
+        }
+        isModifying.current=setTimeout(()=>{
+          f_onBlur()
+          ref_input.current?.blur()
+        },2000)
+        
+        // Update displayed value
+        setDisplayedValue(_)
+      }}
+
+      onBlur={()=>{
+        clearTimeout(isModifying.current)
+
+        // const formatedValue=displayed_value.replace(',','.')
+        if(displayed_value!=='' && !isNaN(+displayed_value )){
           let val = Object(multi_selected_links.current[0].value)
           const node_to_update:SankeyNode[]=[]
 
@@ -231,16 +253,16 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
               }
               val = val[tag]
             })
-            val.value = +formatedValue
+            val.value = +displayed_value
           })
           const scale = d3.scaleLinear()
             .domain([0, data.user_scale])
             .range([0, 100])
-          if (scale(+formatedValue) > 500) {
-            data.user_scale = +formatedValue
+          if (scale(+displayed_value) > 500) {
+            data.user_scale = +displayed_value
           }
         }
-        else if(formatedValue=='') {
+        else if(displayed_value=='') {
           let val = Object(multi_selected_links.current[0].value)
           const node_to_update:SankeyNode[]=[]
           multi_selected_links.current.map(d => {
@@ -257,17 +279,6 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
           })
           
         }
-        if(isModifying.current){
-          clearTimeout(isModifying.current)
-        }
-        isModifying.current=setTimeout(()=>{
-          f_onBlur()
-          ref_input.current?.blur()
-        },2000)
-        setUpdate(!update)
-      }}
-      onBlur={()=>{
-        clearTimeout(isModifying.current)
         f_onBlur()
       }}
     >
