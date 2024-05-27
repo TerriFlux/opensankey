@@ -1215,19 +1215,22 @@ export const ConfigLinkAttributeNumberInput:FunctionComponent<ConfigLinkNumberIn
   unitText,
   function_onBlur
 })=>{
-  const [update,setUpdate]=useState(false)
   const ref_input=useRef<HTMLInputElement>(null)
   const isModifying:MutableRefObject<NodeJS.Timeout|undefined>=useRef<NodeJS.Timeout>()
-  let val=0
   const variantOfInput=unitText?'menuconfigpanel_option_numberinput_with_right_addon':'menuconfigpanel_option_numberinput'
   
-  if(selected_parameter[0]){
-    val=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],local_var_of_node,menu_for_style) as number
-    if (val == null) {
+  // Initialise hook with first link selected value
+  const [displayed_value,setDisplayedValue]=useState(()=>{
+    let val=0
+    if(selected_parameter[0]){
+      val=ReturnCorrectLinkAttributeValue(data,selected_parameter[0],local_var_of_node,menu_for_style) as number
+      if (val == null) {
       //TODO investigate
-      val = 0
+        val = 0
+      }
     }
-  }
+    return String(val)
+  })
 
   // Add stepper addon if specified
   const stepperBtn=stepper?<NumberInputStepper>
@@ -1240,13 +1243,10 @@ export const ConfigLinkAttributeNumberInput:FunctionComponent<ConfigLinkNumberIn
 
   return <InputGroup variant='menuconfigpanel_option_input' >
     <NumberInput allowMouseWheel variant={variantOfInput} min={minimum_value} max={maximum_value} step={step} 
-      value={val}
-      onChange={(_,value)=>{
-
-        Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
-          AssignLinkValueToCorrectVar(d,local_var_of_node,Number(value),menu_for_style)
-        })
-
+      value={displayed_value}
+      onChange={(_)=>{
+        
+        // Launch/reset timeout before the input auto blur (and update the value in data)
         if(!menu_for_style){
         // reset timeout if exist
           if(isModifying.current){
@@ -1258,13 +1258,17 @@ export const ConfigLinkAttributeNumberInput:FunctionComponent<ConfigLinkNumberIn
             ref_input.current?.blur()
           },2000)
         }
-
-        setUpdate(!update)
+        // Update displayed value
+        setDisplayedValue(_)
       }}
       onBlur={()=>{
         if(!menu_for_style){
           clearTimeout(isModifying.current)
         }
+        // Update selected elements value
+        Object.values(parameter_to_modify).filter(f => selected_parameter.map(d => d.idLink).includes(f.idLink)).map(d => {
+          AssignLinkValueToCorrectVar(d,local_var_of_node,Number(displayed_value),menu_for_style)
+        })
         function_onBlur()
       }}
     >
