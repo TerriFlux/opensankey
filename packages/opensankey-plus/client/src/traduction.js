@@ -7,7 +7,7 @@ import { open_resources } from 'open-sankey/src/traduction.js'
 // THE TRANSLATIONS
 // (tip move them in a JSON file and import them,
 // or even better, manage them separated from your code: https://react.i18next.com/guides/multiple-translation-files)
-const resources = {
+export const sankeyplus_resources = {
   //=======================================================
   //EN
   //=======================================================
@@ -1009,13 +1009,13 @@ const deep_assign = (s, t) => {
   })
 }
 
-deep_assign(open_resources, resources)
+deep_assign(open_resources, sankeyplus_resources)
 // deep_assign(icon_resources, resources)
 i18next
   .use(LanguageDetector)
   .use(initReactI18next) // passes i18n down to react-i18next
   .init({
-    resources,
+    sankeyplus_resources,
     ns: ['translation', 'terms_of_uses'],
     defaultNS: 'translation',
     interpolation: {
