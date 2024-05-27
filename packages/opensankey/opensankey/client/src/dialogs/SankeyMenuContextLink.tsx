@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 import { AssignLinkLocalAttribute, ReturnValueLink, updateLinkTagValue } from '../configmenus/SankeyUtils'
 import * as d3 from 'd3'
-import { ValueSelectedParameter } from '../draw/SankeyDrawFunction'
 import { Placement } from 'react-bootstrap/esm/types'
 
 const icon_open_modal=<FontAwesomeIcon style={{float:'right'}} icon={faUpRightFromSquare} />
@@ -303,13 +302,10 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
           onBlur={evt=>{
             const formatedValue=evt.target.value.replace(',','.')
             if(formatedValue!=='' && !isNaN(+formatedValue )){
-              const was_empty=ValueSelectedParameter(applicationData,multi_selected_links,tags_selected).value===''
               let val = Object(multi_selected_links.current[0].value)
               const impacted_node:SankeyNode[]=[]
 
               multi_selected_links.current.map(d => {
-                const dashed=ReturnValueLink(data,multi_selected_links.current[0],'dashed') as boolean
-                AssignLinkLocalAttribute(d,'dashed',(was_empty)?false:dashed)
 
                 val = d.value
                 Object.values(tags_selected).forEach(tag => {
@@ -343,7 +339,6 @@ export const ContextMenuLink : FunctionComponent<ContextMenuLinkFType> = ({
               let val = Object(multi_selected_links.current[0].value)
               multi_selected_links.current.map(d => {
                 val = d.value
-                AssignLinkLocalAttribute(d,'dashed',true)
                 Object.values(tags_selected).forEach(tag => {
                   if (val[tag] === undefined) {
                     val[tag] = {}
