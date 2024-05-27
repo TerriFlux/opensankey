@@ -57,6 +57,10 @@ export const DragGNodeEvent: DragGNodeEventFType = (
     })
     .on('drag', function (event, node) {
       if (ref_getter_mode_selection.current == 's') {
+        // If we drag the node label we check if we press 'alt' key
+        // If true then we only drag the label and 'detach' it from the node 
+        // (the position of the label is not by label_vert & label_horiz, but by coordinate relative to the node )
+        // Else if we don't press 'alt' we drag the node (with the label)
         if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && alt_key_pressed.current && !(window.SankeyToolsStatic ? window.SankeyToolsStatic : false)) {
           drag_node_text(node, event)
         } else if (d3.select(event.subject.sourceEvent.target).node().tagName == 'tspan' && !alt_key_pressed.current) {
@@ -64,7 +68,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
             ComponentUpdater
           )
         }
-        if (d3.select(event.subject.sourceEvent.target).node().tagName == 'rect' || d3.select(event.subject.sourceEvent.target).node().tagName == 'ellipse') {
+        if (d3.select(event.subject.sourceEvent.target).node().tagName == 'rect' || d3.select(event.subject.sourceEvent.target).node().tagName == 'ellipse' || d3.select(event.subject.sourceEvent.target).node().tagName == 'path') {
           DragNodes(node, event, applicationData, applicationState,applicationContext, LinkText, GetSankeyMinWidthAndHeight, GetLinkValue, DrawArrows, scale, inv_scale, node_visible,
             ComponentUpdater
           )
@@ -85,6 +89,7 @@ export const DragGNodeEvent: DragGNodeEventFType = (
         // Seems not necessary and if decommented it desactivates the click
         // node_function.RedrawNodes(node_to_update)
         //link_function.RedrawLinks(link_to_update)
+        ComponentUpdater.updateComponenSaveInCache.current(false)
         resizeCanvas(applicationData)
       }
     })
