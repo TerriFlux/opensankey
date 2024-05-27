@@ -54,6 +54,14 @@ import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyl
 import { opensankey_theme } from './chakra/Theme'
 import { DeleteGNodes } from './draw/SankeyDrawNodes'
 
+
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      toolbar: true,
+    }
+  }
+
 /*************************************************************************************************/
 export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   initial_sankey_data,
@@ -329,32 +337,34 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
 
   const {filter}=applicationData.data.display_style
 
-  sankey_menus['toolbar']= <ToolbarBuilder
-    applicationContext={applicationContext}
-    applicationData={applicationData}
-    applicationState={applicationState}
-    filter={filter}
-    set_current_filter= {
-      ( new_current_filter: number ) => {
-        const { display_style } = applicationData.data
-        display_style.filter = +new_current_filter
-        applicationData.set_data({ ...applicationData.data })
-      }}
-    detail_level={InitalizeSelectorDetailNodes(  applicationContext,
-      applicationData,
-      applicationDraw,
-      node_function,
-      link_function,ComponentUpdater)}
-    url_prefix={applicationContext.url_prefix}
-    first_selected_node={applicationState.first_selected_node}
-    dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
-    never_see_again={applicationState.never_see_again}
-    additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
-    node_function={node_function}
-    link_function={link_function}
-    ComponentUpdater={ComponentUpdater}
-    applicationDraw={applicationDraw}
-  />
+  if (window.sankey === undefined || window.sankey.toolbar === undefined || window.sankey.toolbar === true) {
+    sankey_menus['toolbar']= <ToolbarBuilder
+      applicationContext={applicationContext}
+      applicationData={applicationData}
+      applicationState={applicationState}
+      filter={filter}
+      set_current_filter= {
+        ( new_current_filter: number ) => {
+          const { display_style } = applicationData.data
+          display_style.filter = +new_current_filter
+          applicationData.set_data({ ...applicationData.data })
+        }}
+      detail_level={InitalizeSelectorDetailNodes(  applicationContext,
+        applicationData,
+        applicationDraw,
+        node_function,
+        link_function,ComponentUpdater)}
+      url_prefix={applicationContext.url_prefix}
+      first_selected_node={applicationState.first_selected_node}
+      dict_hook_ref_setter_show_dialog_components={dict_hook_ref_setter_show_dialog_components}
+      never_see_again={applicationState.never_see_again}
+      additional_link_visual_filter_content={additionalMenus.additional_link_visual_filter_content}
+      node_function={node_function}
+      link_function={link_function}
+      ComponentUpdater={ComponentUpdater}
+      applicationDraw={applicationDraw}
+    />
+  }
 
   Object.assign(sankey_menus,additionalMenus.sankey_menus)
 
