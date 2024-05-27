@@ -2,7 +2,6 @@ import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { open_resources } from 'open-sankey/src/traduction.js'
-// import { icon_resources } from 'sankeyicons/src/traduction.js'
 
 // THE TRANSLATIONS
 // (tip move them in a JSON file and import them,
