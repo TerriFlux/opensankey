@@ -2,7 +2,7 @@ import { SankeyNode } from '../types/Types'
 import * as d3 from 'd3'
 
 import {TextNodeValue,NodeLabelPosX,NodeLabelPosY,NodeLabelValuePosX,NodeLabelValuePosY,NodeLabeLText,TextNodeWrap, returnScaleOfDrawArea} from './SankeyDrawFunction'
-import { ReturnValueNode } from '../configmenus/SankeyUtils'
+import { ReturnValueNode, defaultElementColor } from '../configmenus/SankeyUtils'
 import { DrawAddNodesFtype, DrawAllNodesLabelFType } from './types/SankeyDrawNodesLabelTypes'
 import { windowSankey } from '../configmenus/SankeyUtils'
 
@@ -216,9 +216,9 @@ export const RedrawNodesLabel : DrawAddNodesFtype = (
       return (h!=undefined)?h:25
 
     })
-    .attr('fill','grey')
+    .attr('fill',defaultElementColor)
     .attr('fill-opacity','0')
-    .attr('stroke','grey')
+    .attr('stroke',defaultElementColor)
     .attr('stroke-width','2px')
     .attr('cursor','ew-resize')
     //.attr('visibility',n=>(nodes_to_redraw.length==1 && nodes_to_redraw.includes(n as SankeyNode)?'visible':'hidden'))
