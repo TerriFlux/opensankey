@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { MenuConfigurationLinksDataFType } from './types/SankeyMenuConfigurationLinksDataTypes'
 
 import { ValueSelectedParameter } from '../draw/SankeyDrawFunction' 
-import { AssignLinkLocalAttribute, OSTooltip } from './SankeyUtils'
+import { OSTooltip } from './SankeyUtils'
 import { ComponentUpdaterType, LinkFunctionTypes, NodeFunctionTypes, SankeyLink, SankeyNode, applicationDataType } from '../types/Types'
 import { Box, Input, InputGroup, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Select } from '@chakra-ui/react'
 /*************************************************************************************************/
@@ -218,16 +218,12 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
       onChange={evt=>{
         const formatedValue=evt.replace(',','.')
         if(formatedValue!=='' && !isNaN(+formatedValue )){
-          const was_empty=ValueSelectedParameter(applicationData,multi_selected_links,tags_selected).value===''
           let val = Object(multi_selected_links.current[0].value)
           const node_to_update:SankeyNode[]=[]
 
           multi_selected_links.current.map(d => {
             node_to_update.push(data.nodes[d.idSource])
             node_to_update.push(data.nodes[d.idTarget])
-            if(was_empty){
-              delete d.local?.dashed
-            }
             val = d.value
             Object.values(tags_selected).forEach(tag => {
               if (val[tag] === undefined) {
@@ -251,7 +247,6 @@ export const ConfigLinkDataNumberInput:FunctionComponent<ConfigLinkDataNumberInp
             node_to_update.push(data.nodes[d.idSource])
             node_to_update.push(data.nodes[d.idTarget])
             val = d.value
-            AssignLinkLocalAttribute(d,'dashed',true)
             Object.values(tags_selected).forEach(tag => {
               if (val[tag] === undefined) {
                 val[tag] = {}
