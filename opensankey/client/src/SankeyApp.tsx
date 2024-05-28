@@ -7,6 +7,7 @@ import React, {
   useState
 } from 'react'
 import i18next from 'i18next'
+import LZString from 'lz-string'
 import { ChakraProvider } from '@chakra-ui/react'
 /*************************************************************************************************/
 import {
@@ -430,6 +431,15 @@ export const SankeyApp : FunctionComponent<SankeyAppTypes> = ({
   }
   document.onkeydown = formatKeyHandler
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
+
+  useEffect(() => {
+
+    // Setup logic here
+    return () => {
+      localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
+    }
+
+  }, [])
 
   /*************************************************************************************************/
   useEffect(() => {
