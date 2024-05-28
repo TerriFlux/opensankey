@@ -334,7 +334,7 @@ export const DrawLegend : DrawLegendFType= (
     h=h?h:50
     d3.select('#g_legend .drag_zone_leg').attr('height',h)
     const w=document.getElementById('g_legend')?.getBoundingClientRect().width
-    if (w && w>data.legend_width) {
+    if (w && w>data.legend_width*1.1) {
       d3.select('#g_legend .drag_zone_leg').attr('width',w)
       data.legend_width = w
     }
